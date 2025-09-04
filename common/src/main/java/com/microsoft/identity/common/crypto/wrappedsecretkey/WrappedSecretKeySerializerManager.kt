@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto.wrappedsecretkey
 
+import com.microsoft.identity.common.logging.Logger
 import java.nio.ByteBuffer
 
 /**
@@ -57,6 +58,7 @@ import java.nio.ByteBuffer
  * @see WrappedSecretKeyJsonObjectSerializer
  */
 object WrappedSecretKeySerializerManager {
+    private const val TAG = "WrappedSecretKeySerializerManager"
     /** Size in bytes for the header identifier field */
     const val HEADER_ID_FIELD_SIZE_BYTES = Int.SIZE_BYTES
 
@@ -88,7 +90,9 @@ object WrappedSecretKeySerializerManager {
      * @return The version number (0-255) if the data uses the new format, 0 if legacy format or invalid data
      */
     fun getVersion(rawData: ByteArray): Int {
+        val methodTag = "$TAG:getVersion"
         if ((rawData.size < HEADER_ID_FIELD_SIZE_BYTES + METADATA_LENGTH_FIELD_SIZE_BYTES)) {
+            Logger.warn(methodTag, "Data too small to contain header, assuming legacy format")
             return WrappedSecretKeyLegacySerializer.VERSION
         }
         val buffer = ByteBuffer.wrap(rawData)
@@ -97,6 +101,7 @@ object WrappedSecretKeySerializerManager {
         return if ((headerValue and NEW_FORMAT_HEADER_MASK.toInt()) == NEW_FORMAT_HEADER_IDENTIFIER) {
             headerValue and VERSION_BYTE_MASK // Return the version byte
         } else {
+            Logger.warn(methodTag, "Data does not match known format identifier, assuming legacy format")
             WrappedSecretKeyLegacySerializer.VERSION // Legacy format
         }
     }
@@ -117,6 +122,8 @@ object WrappedSecretKeySerializerManager {
      * @throws IllegalArgumentException if the version is not supported
      */
     fun getSerializer(version: Int): IWrappedSecretKeySerializer {
+        val methodTag = "$TAG:getSerializer"
+        Logger.info(methodTag, "Getting serializer for version: $version")
         return when (version) {
             WrappedSecretKeyJsonObjectSerializer.VERSION -> WrappedSecretKeyJsonObjectSerializer()
             WrappedSecretKeyLegacySerializer.VERSION -> WrappedSecretKeyLegacySerializer()

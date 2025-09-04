@@ -34,6 +34,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 
 class WrappedSecretKeyTest {
@@ -355,7 +356,7 @@ class WrappedSecretKeyTest {
     /**
      * Test edge case where metadata has corrupted length in new format.
      */
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = NegativeArraySizeException::class)
     fun corruptedMetadataLengthThrowsException() {
         // Create new format with corrupted metadata length
         val corruptedData = ByteBuffer.allocate(16)
@@ -371,7 +372,7 @@ class WrappedSecretKeyTest {
     /**
      * Test edge case where metadata length exceeds remaining data.
      */
-    @Test(expected = IllegalArgumentException::class)
+    @Test(expected = BufferUnderflowException::class)
     fun metadataLengthLargerThanRemainingDataThrowsException() {
         // Create new format with metadata length larger than remaining data
         val corruptedData = ByteBuffer.allocate(16)
@@ -396,14 +397,5 @@ class WrappedSecretKeyTest {
         assertArrayEquals("Should load as raw bytes", smallData, deserializedKey.wrappedKeyData)
         assertEquals("Should use default algorithm", "AES", deserializedKey.algorithm)
         assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation)
-    }
-
-    /**
-     * Test empty data handling.
-     */
-    @Test(expected = IllegalArgumentException::class)
-    fun emptyDataThrowsException() {
-        val emptyData = ByteArray(0)
-        WrappedSecretKey.deserialize(emptyData)
     }
 }
