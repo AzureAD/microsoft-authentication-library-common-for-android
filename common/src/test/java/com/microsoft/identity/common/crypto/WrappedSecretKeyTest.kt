@@ -22,7 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto
 
-import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKey
+import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKeySerializerManager
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import io.mockk.every
@@ -32,27 +33,21 @@ import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import java.io.File
 import java.nio.ByteBuffer
 
 class WrappedSecretKeyTest {
-
-    @get:Rule
-    val tempFolder = TemporaryFolder()
 
     private val testKeyBytes = "test-key-data-12345".toByteArray()
     private val testAlgorithm = "AES"
     private val testCipherTransformation = "RSA/ECB/PKCS1Padding"
 
-    companion object{
+    companion object {
         // New format constants matching the implementation
-        private const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF12AB
+        private const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF3C01
         private const val FORMAT_VERSION_1 = 1
-
     }
+
     @Before
     fun setUp() {
         mockkObject(CommonFlightsManager)
@@ -73,96 +68,66 @@ class WrappedSecretKeyTest {
     }
 
     @Test
-    fun loadFromFileReturnsNullWhenFileDoesNotExist() {
-        val nonExistentFile = File("non-existent-file.dat")
-
-        val result = WrappedSecretKey.loadFromFile(nonExistentFile, 1024)
-
-        assertNull(result)
-    }
-
-    @Test
-    fun loadFromFileReturnsNullWhenFileIsEmpty() {
-        val testFile = tempFolder.newFile("empty-file.dat")
-
-        val result = WrappedSecretKey.loadFromFile(testFile, 1024)
-
-        assertNull(result)
-    }
-
-    @Test
-    fun roundTripStoreAndLoadWithNewFormatPreservesData() {
-        val testFile = tempFolder.newFile("test-new-format.dat")
+    fun serializeAndDeserializeWithNewFormatPreservesData() {
         val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Mock flight to enable new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        // Mock flight to enable new format (version 1)
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
 
-        // Store with new format (controlled by flight)
-        originalKey.storeOnFile(testFile)
+        // Serialize and deserialize
+        val serializedData = originalKey.serialize()
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
 
-        // Load back
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-
-        assertNotNull(loadedKey)
-        assertArrayEquals(originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
-        assertEquals(originalKey.algorithm, loadedKey.algorithm)
-        assertEquals(originalKey.cipherTransformation, loadedKey.cipherTransformation)
+        assertArrayEquals(originalKey.wrappedKeyData, deserializedKey.wrappedKeyData)
+        assertEquals(originalKey.algorithm, deserializedKey.algorithm)
+        assertEquals(originalKey.cipherTransformation, deserializedKey.cipherTransformation)
     }
 
     @Test
-    fun roundTripStoreAndLoadWithOldFormatPreservesKeyData() {
-        val testFile = tempFolder.newFile("test-old-format.dat")
+    fun serializeAndDeserializeWithLegacyFormatPreservesKeyData() {
         val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Mock flight to disable new format (use old format)
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
+        // Mock flight to use legacy format (version 0)
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
 
-        // Store with old format (controlled by flight)
-        originalKey.storeOnFile(testFile)
+        // Serialize and deserialize
+        val serializedData = originalKey.serialize()
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
 
-        // Load back (should use default values for algorithm and cipher)
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-
-        assertNotNull(loadedKey)
-        assertArrayEquals(originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
-        assertEquals("AES", loadedKey.algorithm) // Default value
-        assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation) // Default value
+        assertArrayEquals(originalKey.wrappedKeyData, deserializedKey.wrappedKeyData)
+        assertEquals("AES", deserializedKey.algorithm) // Default value for legacy format
+        assertEquals("RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation) // Default value for legacy format
     }
 
     @Test
-    fun newFormatStoresLargerFileThanOldFormat() {
-        val newFormatFile = tempFolder.newFile("new-format.dat")
-        val oldFormatFile = tempFolder.newFile("old-format.dat")
+    fun newFormatCreatesLargerDataThanLegacyFormat() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
         // Test new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
-        wrappedKey.storeOnFile(newFormatFile)
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
+        val newFormatData = wrappedKey.serialize()
 
-        // Test old format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
-        wrappedKey.storeOnFile(oldFormatFile)
+        // Test legacy format
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
+        val legacyFormatData = wrappedKey.serialize()
 
-        assertTrue("New format should create larger file due to metadata",
-                newFormatFile.length() > oldFormatFile.length())
-        assertEquals("Old format should only contain key bytes",
-                testKeyBytes.size.toLong(), oldFormatFile.length())
+        assertTrue("New format should create larger data due to metadata",
+                newFormatData.size > legacyFormatData.size)
+        assertEquals("Legacy format should only contain key bytes",
+                testKeyBytes.size, legacyFormatData.size)
     }
 
     @Test
-    fun newFormatFileContainsValidBinaryStructure() {
-        val testFile = tempFolder.newFile("binary-structure.dat")
+    fun newFormatContainsValidBinaryStructure() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
         // Mock flight to enable new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
 
-        wrappedKey.storeOnFile(testFile)
+        val serializedData = wrappedKey.serialize()
 
         // Read and verify the binary structure
-        val fileBytes = testFile.readBytes()
-        val buffer = ByteBuffer.wrap(fileBytes)
+        val buffer = ByteBuffer.wrap(serializedData)
 
         // Verify header identifier (4 bytes)
         val headerIdentifier = buffer.getInt()
@@ -170,7 +135,7 @@ class WrappedSecretKeyTest {
 
         // Verify metadata length (4 bytes)
         val metadataLength = buffer.getInt()
-        assertTrue("Metadata length should be reasonable", metadataLength > 0 && metadataLength < fileBytes.size)
+        assertTrue("Metadata length should be reasonable", metadataLength > 0 && metadataLength < serializedData.size)
 
         // Read and verify metadata
         val metadataBytes = ByteArray(metadataLength)
@@ -190,209 +155,139 @@ class WrappedSecretKeyTest {
 
     @Test
     fun largeKeyDataIsHandledCorrectly() {
-        val testFile = tempFolder.newFile("large-key.dat")
         val largeKeyData = ByteArray(8192) { it.toByte() } // 8KB test data
         val wrappedKey = WrappedSecretKey(largeKeyData, testAlgorithm, testCipherTransformation)
 
         // Mock flight to enable new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
 
-        // Store and load
-        wrappedKey.storeOnFile(testFile)
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 10240)
+        // Serialize and deserialize
+        val serializedData = wrappedKey.serialize()
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
 
-        assertNotNull(loadedKey)
-        assertArrayEquals(largeKeyData, loadedKey!!.wrappedKeyData)
-        assertEquals(testAlgorithm, loadedKey.algorithm)
-        assertEquals(testCipherTransformation, loadedKey.cipherTransformation)
+        assertArrayEquals(largeKeyData, deserializedKey.wrappedKeyData)
+        assertEquals(testAlgorithm, deserializedKey.algorithm)
+        assertEquals(testCipherTransformation, deserializedKey.cipherTransformation)
     }
 
     @Test
-    fun oldFormatDetectionWorksWithBinaryData() {
-        val testFile = tempFolder.newFile("binary-data.dat")
+    fun legacyFormatDetectionWorksWithBinaryData() {
         val binaryData = ByteArray(256) { (it % 256).toByte() } // Random binary data
 
-        // Write raw binary data (simulating old format)
-        testFile.writeBytes(binaryData)
+        // Deserialize raw binary data (simulating legacy format)
+        val deserializedKey = WrappedSecretKey.deserialize(binaryData)
 
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-
-        assertNotNull(loadedKey)
-        assertArrayEquals(binaryData, loadedKey!!.wrappedKeyData)
-        assertEquals("AES", loadedKey.algorithm)
-        assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
+        assertArrayEquals(binaryData, deserializedKey.wrappedKeyData)
+        assertEquals("AES", deserializedKey.algorithm)
+        assertEquals("RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation)
     }
 
     @Test
-    fun corruptedNewFormatFallsBackToOldFormat() {
-        val testFile = tempFolder.newFile("corrupted.dat")
-
+    fun corruptedNewFormatFallsBackToLegacyFormat() {
         // Create invalid new format data (wrong header identifier)
         val invalidData = ByteBuffer.allocate(20)
                 .putInt(0x12345678) // Wrong header identifier
                 .putInt(100)        // Metadata length larger than available data
                 .put("invalid".toByteArray())
                 .array()
-        testFile.writeBytes(invalidData)
 
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
+        val deserializedKey = WrappedSecretKey.deserialize(invalidData)
 
-        assertNotNull(loadedKey)
-        assertArrayEquals(invalidData, loadedKey!!.wrappedKeyData) // Should load as raw bytes (old format)
-        assertEquals("AES", loadedKey.algorithm)
-        assertEquals("RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
+        assertArrayEquals(invalidData, deserializedKey.wrappedKeyData) // Should load as raw bytes (legacy format)
+        assertEquals("AES", deserializedKey.algorithm)
+        assertEquals("RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation)
     }
 
     @Test
-    fun storeOnFileUsesOldFormatWhenFlightDisabled() {
-        val testFile = tempFolder.newFile("flight-disabled.dat")
+    fun serializeUsesLegacyFormatWhenFlightIsZero() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Mock flight to disable new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
+        // Mock flight to use legacy format
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
 
-        wrappedKey.storeOnFile(testFile)
+        val serializedData = wrappedKey.serialize()
 
-        // Verify old format: file should only contain raw key bytes
-        val fileBytes = testFile.readBytes()
-        assertArrayEquals(testKeyBytes, fileBytes)
+        // Verify legacy format: data should only contain raw key bytes
+        assertArrayEquals(testKeyBytes, serializedData)
     }
 
     @Test
-    fun storeOnFileUsesNewFormatWhenFlightEnabled() {
-        val testFile = tempFolder.newFile("flight-enabled.dat")
+    fun serializeUsesNewFormatWhenFlightIsOne() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
         // Mock flight to enable new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
 
-        wrappedKey.storeOnFile(testFile)
+        val serializedData = wrappedKey.serialize()
 
-        // Verify new format: file should be larger than just key bytes
-        val fileBytes = testFile.readBytes()
-        assertTrue("New format file should be larger than raw key", fileBytes.size > testKeyBytes.size)
+        // Verify new format: data should be larger than just key bytes
+        assertTrue("New format data should be larger than raw key", serializedData.size > testKeyBytes.size)
 
-        // Verify it can be loaded correctly
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull(loadedKey)
-        assertArrayEquals(testKeyBytes, loadedKey!!.wrappedKeyData)
-        assertEquals(testAlgorithm, loadedKey.algorithm)
-        assertEquals(testCipherTransformation, loadedKey.cipherTransformation)
+        // Verify it can be deserialized correctly
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
+        assertArrayEquals(testKeyBytes, deserializedKey.wrappedKeyData)
+        assertEquals(testAlgorithm, deserializedKey.algorithm)
+        assertEquals(testCipherTransformation, deserializedKey.cipherTransformation)
     }
 
     /**
-     * Test that verifies backward compatibility when rolling back the ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT flight.
-     * This test ensures that keys stored with the new format can still be read when the flight is disabled,
-     * which is critical for production rollback scenarios.
+     * Test backward compatibility: key serialized with new format can be read when flight is changed back.
      */
     @Test
-    fun flightRollbackScenario_keyStoredWithNewFormatCanBeReadWithFlightDisabled() {
-        val testFile = tempFolder.newFile("rollback-scenario.dat")
+    fun testBackwardCompatibility_NewFormatToLegacy() {
         val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Step 1: Enable flight and store key using new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        // Phase 1: Serialize with new format (version 1)
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
+        val serializedData = originalKey.serialize()
 
-        originalKey.storeOnFile(testFile)
+        // Validate key is serialized with new format
+        val buffer = ByteBuffer.wrap(serializedData)
+        val headerIdentifier = buffer.getInt()
+        assertEquals("Key should be serialized with new format", NEW_FORMAT_HEADER_IDENTIFIER, headerIdentifier)
 
-        // Verify the file was created with new format (contains metadata)
-        val fileBytes = testFile.readBytes()
-        assertTrue("File should be larger than raw key bytes due to metadata header",
-                   fileBytes.size > testKeyBytes.size)
-
-        // Verify it can be read with flight enabled
-        val keyWithFlightEnabled = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Key should be readable with flight enabled", keyWithFlightEnabled)
-        assertArrayEquals("Key data should match", originalKey.wrappedKeyData, keyWithFlightEnabled!!.wrappedKeyData)
-        assertEquals("Algorithm should match", originalKey.algorithm, keyWithFlightEnabled.algorithm)
-        assertEquals("Cipher transformation should match", originalKey.cipherTransformation, keyWithFlightEnabled.cipherTransformation)
-
-        // Step 2: Disable flight (simulate rollback) and verify key can still be read
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
-
-        val keyAfterRollback = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Key should still be readable after flight rollback", keyAfterRollback)
-        assertArrayEquals("Key data should remain intact after rollback", originalKey.wrappedKeyData, keyAfterRollback!!.wrappedKeyData)
-        assertEquals("Algorithm should be preserved from metadata", originalKey.algorithm, keyAfterRollback.algorithm)
-        assertEquals("Cipher transformation should be preserved from metadata", originalKey.cipherTransformation, keyAfterRollback.cipherTransformation)
-
-        // Verify that the format detection correctly identifies this as new format
-        // even when the flight is disabled (loadFromFile should still work)
-        assertEquals("Both reads should return identical key data",
-                     keyWithFlightEnabled.wrappedKeyData.contentToString(),
-                     keyAfterRollback.wrappedKeyData.contentToString())
-        assertEquals("Both reads should return identical algorithm",
-                     keyWithFlightEnabled.algorithm,
-                     keyAfterRollback.algorithm)
-        assertEquals("Both reads should return identical cipher transformation",
-                     keyWithFlightEnabled.cipherTransformation,
-                     keyAfterRollback.cipherTransformation)
+        // Phase 2: Deserialize (automatic format detection should work regardless of flight value)
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
+        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, deserializedKey.wrappedKeyData)
+        assertEquals("Algorithm should be preserved from metadata", originalKey.algorithm, deserializedKey.algorithm)
+        assertEquals("Cipher transformation should be preserved from metadata", originalKey.cipherTransformation, deserializedKey.cipherTransformation)
     }
 
     /**
-     * Test that verifies forward compatibility when enabling the ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT flight.
-     * This test ensures that keys stored with the old format can still be read when the flight is enabled,
-     * which is important when rolling out the new feature.
+     * Test forward compatibility: key serialized with legacy format can be read when flight is enabled.
      */
     @Test
-    fun flightRolloutScenario_keyStoredWithOldFormatCanBeReadWithFlightEnabled() {
-        val testFile = tempFolder.newFile("rollout-scenario.dat")
+    fun testForwardCompatibility_LegacyToNewFormat() {
         val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Step 1: Disable flight and store key using old format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
+        // Phase 1: Serialize with legacy format (version 0)
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
+        val serializedData = originalKey.serialize()
 
-        originalKey.storeOnFile(testFile)
+        // Validate key is serialized with legacy format
+        assertArrayEquals("Key should be serialized with legacy format", testKeyBytes, serializedData)
 
-        // Verify the file was created with old format (only raw key bytes)
-        val fileBytes = testFile.readBytes()
-        assertArrayEquals("Old format should contain only raw key bytes", testKeyBytes, fileBytes)
-
-        // Verify it can be read with flight disabled (uses default algorithm and cipher)
-        val keyWithFlightDisabled = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Key should be readable with flight disabled", keyWithFlightDisabled)
-        assertArrayEquals("Key data should match", originalKey.wrappedKeyData, keyWithFlightDisabled!!.wrappedKeyData)
-        assertEquals("Should use default algorithm", "AES", keyWithFlightDisabled.algorithm)
-        assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", keyWithFlightDisabled.cipherTransformation)
-
-        // Step 2: Enable flight (simulate rollout) and verify key can still be read
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
-
-        val keyAfterRollout = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Key should still be readable after flight rollout", keyAfterRollout)
-        assertArrayEquals("Key data should remain intact after rollout", originalKey.wrappedKeyData, keyAfterRollout!!.wrappedKeyData)
-        assertEquals("Should still use default algorithm for old format", "AES", keyAfterRollout.algorithm)
-        assertEquals("Should still use default cipher transformation for old format", "RSA/ECB/PKCS1Padding", keyAfterRollout.cipherTransformation)
-
-        // Verify that both reads return the same data (backward compatibility maintained)
-        assertEquals("Both reads should return identical key data",
-                     keyWithFlightDisabled.wrappedKeyData.contentToString(),
-                     keyAfterRollout.wrappedKeyData.contentToString())
-        assertEquals("Both reads should return identical algorithm",
-                     keyWithFlightDisabled.algorithm,
-                     keyAfterRollout.algorithm)
-        assertEquals("Both reads should return identical cipher transformation",
-                     keyWithFlightDisabled.cipherTransformation,
-                     keyAfterRollout.cipherTransformation)
+        // Phase 2: Deserialize (should work regardless of current flight value)
+        val deserializedKey = WrappedSecretKey.deserialize(serializedData)
+        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, deserializedKey.wrappedKeyData)
+        assertEquals("Should use default algorithm for legacy format", "AES", deserializedKey.algorithm)
+        assertEquals("Should use default cipher transformation for legacy format", "RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation)
     }
 
     /**
-     * Test that validates the wrapped key is using the new format when the flight is enabled.
-     * This test verifies that the stored key contains the proper binary structure and metadata.
+     * Test that validates serialized data uses new format structure.
      */
     @Test
-    fun validateNewFormatKeyStructure() {
-        val testFile = tempFolder.newFile("new-format-validation.dat")
+    fun validateNewFormatStructure() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Enable new format flight
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
+        // Enable new format
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
 
-        wrappedKey.storeOnFile(testFile)
+        val serializedData = wrappedKey.serialize()
 
-        // Validate the file structure manually
-        val fileBytes = testFile.readBytes()
-        val buffer = ByteBuffer.wrap(fileBytes)
+        // Validate the structure manually
+        val buffer = ByteBuffer.wrap(serializedData)
 
         // Check header identifier
         val headerIdentifier = buffer.getInt()
@@ -416,162 +311,99 @@ class WrappedSecretKeyTest {
     }
 
     /**
-     * Test that validates the wrapped key is using the legacy (old) format when the flight is disabled.
-     * This test verifies that the stored key contains only raw key bytes without metadata.
+     * Test that validates serialized data uses legacy format structure.
      */
     @Test
-    fun validateLegacyFormatKeyStructure() {
-        val testFile = tempFolder.newFile("legacy-format-validation.dat")
+    fun validateLegacyFormatStructure() {
         val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Disable new format flight
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
+        // Use legacy format
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
 
-        wrappedKey.storeOnFile(testFile)
+        val serializedData = wrappedKey.serialize()
 
-        // Validate the file contains only raw key bytes
-        val fileBytes = testFile.readBytes()
-        assertArrayEquals("Legacy format should contain only raw key bytes", testKeyBytes, fileBytes)
-        assertEquals("Legacy format file size should equal key size", testKeyBytes.size.toLong(), testFile.length())
+        // Validate contains only raw key bytes
+        assertArrayEquals("Legacy format should contain only raw key bytes", testKeyBytes, serializedData)
+        assertEquals("Legacy format size should equal key size", testKeyBytes.size, serializedData.size)
     }
 
     /**
-     * Test that creates a key with new format enabled, then disables the flight and reads the key.
-     * This simulates a rollback scenario where the key should still be readable.
+     * Test version detection from serialized data.
      */
     @Test
-    fun testBackwardCompatibility_NewFormatToLegacy() {
-        val testFile = tempFolder.newFile("backward-compatibility.dat")
-        val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
+    fun testVersionDetection() {
+        val wrappedKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
 
-        // Phase 1: Enable flight and create key with new format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
-        originalKey.storeOnFile(testFile)
+        // Test new format version detection
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
+        val newFormatData = wrappedKey.serialize()
+        val detectedNewVersion = WrappedSecretKeySerializerManager.getVersion(newFormatData)
+        assertEquals("Should detect version 1 for new format", 1, detectedNewVersion)
 
-        // Validate key is created with new format
-        val fileBytes = testFile.readBytes()
-        val buffer = ByteBuffer.wrap(fileBytes)
-        val headerIdentifier = buffer.getInt()
-        assertEquals("Key should be created with new format", NEW_FORMAT_HEADER_IDENTIFIER, headerIdentifier)
+        // Test legacy format version detection
+        every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
+        val legacyFormatData = wrappedKey.serialize()
+        val detectedLegacyVersion = WrappedSecretKeySerializerManager.getVersion(legacyFormatData)
+        assertEquals("Should detect version 0 for legacy format", 0, detectedLegacyVersion)
 
-        // Phase 2: Disable flight and read the key (rollback scenario)
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
-
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Key should still be readable after flight rollback", loadedKey)
-        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
-        assertEquals("Algorithm should be preserved from metadata", originalKey.algorithm, loadedKey.algorithm)
-        assertEquals("Cipher transformation should be preserved from metadata", originalKey.cipherTransformation, loadedKey.cipherTransformation)
+        // Test raw binary data (should be detected as legacy)
+        val rawData = "random-binary-data".toByteArray()
+        val detectedRawVersion = WrappedSecretKeySerializerManager.getVersion(rawData)
+        assertEquals("Should detect version 0 for raw data", 0, detectedRawVersion)
     }
 
     /**
-     * Test that creates a key with legacy format, then enables the flight and reads the key.
-     * This simulates a rollout scenario where existing legacy keys should still be readable.
+     * Test edge case where metadata has corrupted length in new format.
      */
-    @Test
-    fun testForwardCompatibility_LegacyToNewFormat() {
-        val testFile = tempFolder.newFile("forward-compatibility.dat")
-        val originalKey = WrappedSecretKey(testKeyBytes, testAlgorithm, testCipherTransformation)
-
-        // Phase 1: Disable flight and create key with legacy format
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns false
-        originalKey.storeOnFile(testFile)
-
-        // Validate key is created with legacy format
-        val fileBytes = testFile.readBytes()
-        assertArrayEquals("Key should be created with legacy format", testKeyBytes, fileBytes)
-
-        // Phase 2: Enable flight and read the key (rollout scenario)
-        every { CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT) } returns true
-
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
-        assertNotNull("Legacy key should still be readable after flight rollout", loadedKey)
-        assertArrayEquals("Key data should be preserved", originalKey.wrappedKeyData, loadedKey!!.wrappedKeyData)
-        assertEquals("Should use default algorithm for legacy format", "AES", loadedKey.algorithm)
-        assertEquals("Should use default cipher transformation for legacy format", "RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
-    }
-
-    /**
-     * Test edge case where metadata length is corrupted but header identifier is correct.
-     * Since the header identifier matches new format, it should throw an exception rather than fall back.
-     */
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun corruptedMetadataLengthThrowsException() {
-        val testFile = tempFolder.newFile("corrupted-metadata-length.dat")
-
         // Create new format with corrupted metadata length
         val corruptedData = ByteBuffer.allocate(16)
                 .putInt(NEW_FORMAT_HEADER_IDENTIFIER) // Correct header identifier
                 .putInt(-1)                           // Invalid metadata length (negative)
                 .put("test".toByteArray())
                 .array()
-        testFile.writeBytes(corruptedData)
 
-        // Should throw ClientException because it detects new format but has invalid metadata length
-        try {
-            WrappedSecretKey.loadFromFile(testFile, 1024)
-            fail("Should have thrown ClientException for corrupted new format")
-        } catch (e: ClientException) {
-            assertEquals("Should throw KEY_LOAD_FAILURE error",
-                        ClientException.KEY_LOAD_FAILURE,
-                        e.errorCode)
-
-        }
+        // Should throw exception because it detects new format but has invalid metadata length
+        WrappedSecretKey.deserialize(corruptedData)
     }
 
     /**
-     * Test edge case where metadata length is larger than remaining buffer size.
+     * Test edge case where metadata length exceeds remaining data.
      */
-    @Test
+    @Test(expected = IllegalArgumentException::class)
     fun metadataLengthLargerThanRemainingDataThrowsException() {
-        val testFile = tempFolder.newFile("metadata-too-large.dat")
-
         // Create new format with metadata length larger than remaining data
         val corruptedData = ByteBuffer.allocate(16)
                 .putInt(NEW_FORMAT_HEADER_IDENTIFIER) // Correct header identifier
                 .putInt(1000)                         // Metadata length larger than remaining data
                 .put("test".toByteArray())
                 .array()
-        testFile.writeBytes(corruptedData)
 
-        // Should throw ClientException because metadata length exceeds remaining buffer
-        try {
-            WrappedSecretKey.loadFromFile(testFile, 1024)
-            fail("Should have thrown ClientException for metadata length exceeding buffer size")
-        } catch (e: ClientException) {
-            assertEquals("Should throw KEY_LOAD_FAILURE error",
-                        ClientException.KEY_LOAD_FAILURE,
-                        e.errorCode)
-        }
+        // Should throw exception because metadata length exceeds remaining buffer
+        WrappedSecretKey.deserialize(corruptedData)
     }
 
     /**
-     * Test that verifies empty file handling.
+     * Test very small data handling (less than header size).
      */
     @Test
-    fun emptyFileReturnsNull() {
-        val testFile = tempFolder.newFile("empty.dat")
-        // File exists but is empty
-
-        val result = WrappedSecretKey.loadFromFile(testFile, 1024)
-
-        assertNull("Empty file should return null", result)
-    }
-
-    /**
-     * Test that verifies very small file handling (less than header size).
-     */
-    @Test
-    fun smallFileIsDetectedAsOldFormat() {
-        val testFile = tempFolder.newFile("small.dat")
+    fun smallDataIsDetectedAsLegacyFormat() {
         val smallData = "test".toByteArray() // Less than 8 bytes needed for header
-        testFile.writeBytes(smallData)
 
-        val loadedKey = WrappedSecretKey.loadFromFile(testFile, 1024)
+        val deserializedKey = WrappedSecretKey.deserialize(smallData)
 
-        assertNotNull("Small file should be treated as old format", loadedKey)
-        assertArrayEquals("Should load as raw bytes", smallData, loadedKey!!.wrappedKeyData)
-        assertEquals("Should use default algorithm", "AES", loadedKey.algorithm)
-        assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", loadedKey.cipherTransformation)
+        assertArrayEquals("Should load as raw bytes", smallData, deserializedKey.wrappedKeyData)
+        assertEquals("Should use default algorithm", "AES", deserializedKey.algorithm)
+        assertEquals("Should use default cipher transformation", "RSA/ECB/PKCS1Padding", deserializedKey.cipherTransformation)
+    }
+
+    /**
+     * Test empty data handling.
+     */
+    @Test(expected = IllegalArgumentException::class)
+    fun emptyDataThrowsException() {
+        val emptyData = ByteArray(0)
+        WrappedSecretKey.deserialize(emptyData)
     }
 }

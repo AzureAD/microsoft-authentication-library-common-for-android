@@ -24,6 +24,7 @@ package com.microsoft.identity.common.crypto
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKey
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter
 import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator
@@ -199,12 +200,10 @@ class KeyStoreBackedSecretKeyProvider(
                 Logger.info(methodTag, "No existing keypair found. Generating a new one.")
                 generateKeyPair()
             }
-        val (keyWrapped, cipher) = wrapSecretKey(newSecretKey, keyPair)
-        WrappedSecretKey(
-            wrappedKeyData = keyWrapped,
-            algorithm = AES256SecretKeyGenerator.AES_ALGORITHM,
-            cipherTransformation = cipher.transformation
-        ).storeOnFile(keyFile)
+        val wrappedSecretKey = wrapSecretKey(newSecretKey, keyPair)
+
+
+        FileUtil.writeDataToFile(wrappedSecretKey.serialize(), keyFile)
         return newSecretKey
     }
 
@@ -224,8 +223,7 @@ class KeyStoreBackedSecretKeyProvider(
                 deleteSecretKeyFromStorage()
                 return null
             }
-
-            val wrappedSecretKey = WrappedSecretKey.loadFromFile(keyFile, KEY_FILE_SIZE)
+            val wrappedSecretKey = loadSecretKeyFromFile()
             if (wrappedSecretKey == null) {
                 Logger.warn(methodTag, "Key file is empty")
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
@@ -250,7 +248,7 @@ class KeyStoreBackedSecretKeyProvider(
     private fun wrapSecretKey(
         secretKey: SecretKey,
         keyPair: KeyPair
-    ): Pair<ByteArray, CipherSpec> {
+    ): WrappedSecretKey {
         val methodTag = "$TAG:wrapSecretKey"
         val span = OTelUtility.createSpanFromParent(
             SpanName.SecretKeyWrapping.name,
@@ -277,7 +275,11 @@ class KeyStoreBackedSecretKeyProvider(
                     cipherParamsSpec.algorithmParameterSpec
                 )
                 span.setStatus(StatusCode.OK)
-                wrappedKey to cipherParamsSpec
+                WrappedSecretKey(
+                    wrappedKeyData = wrappedKey,
+                    algorithm = secretKey.algorithm,
+                    cipherTransformation = cipherTransformation
+                )
             }
         } catch (exception: Exception) {
             Logger.error(methodTag, "Failed to wrap secret key", exception)
@@ -502,5 +504,24 @@ class KeyStoreBackedSecretKeyProvider(
         SpanExtension.current().setStatus(StatusCode.ERROR)
         SpanExtension.current().recordException(finalError)
         throw ExceptionAdapter.clientExceptionFromException(finalError)
+    }
+
+    /**
+     * Loads a wrapped secret key from file, automatically detecting the storage format.
+     *
+     * @return WrappedSecretKey instance or null if file doesn't exist or is empty
+     */
+    private fun loadSecretKeyFromFile(): WrappedSecretKey? {
+        val methodTag = "$TAG:loadFromFile"
+        if (!keyFile.exists()) {
+            Logger.warn(methodTag, "Key file does not exist")
+            return null
+        }
+        val rawData = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
+        if (rawData == null || rawData.isEmpty()) {
+            Logger.warn(methodTag, "Key file is empty")
+            return null
+        }
+        return WrappedSecretKey.deserialize(rawData)
     }
 }

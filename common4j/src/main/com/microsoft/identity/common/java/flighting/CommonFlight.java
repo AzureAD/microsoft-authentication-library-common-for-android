@@ -132,9 +132,9 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", false),
 
     /**
-     * Flight to enable the new wrapped secret key format.
+     * Flight to control the WrappedSecretKey serializer version
      */
-    ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT("EnableNewWrappedSecretKeyFormat", false),
+    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
 
     /**
      * Flight to enable handling the UI in edge to edge mode
