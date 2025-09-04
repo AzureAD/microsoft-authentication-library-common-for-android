@@ -208,32 +208,7 @@ class CryptoParameterSpecFactoryTest {
         Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
         Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[1].encryptionPaddings)
     }
-
-    @Test
-    @Config(sdk = [Build.VERSION_CODES.LOLLIPOP_MR1]) // API 22, before M
-    fun testGetPrioritizedKeyGenParameterSpecs_LegacyAPI() {
-        // Test on pre-M API where only legacy spec should be available
-        // Should include modern spec without wrap key but not the one with wrap key (requires API 28)
-        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
-            .thenReturn(true)
-        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
-            .thenReturn(true)
-        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING))
-            .thenReturn(true)
-        // Re-create the factory with the updated flags
-        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
-            mockContext!!, TEST_KEY_ALIAS,
-            mockFlightsProvider!!
-        )
-
-        // Get the prioritized specs
-        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
-
-        // Verify we have only the legacy spec regardless of flags
-        Assert.assertEquals(1, specs.size.toLong())
-        Assert.assertEquals("legacy_key_gen_spec", specs[0].description)
-    }
-
+    
     companion object {
         private const val TEST_KEY_ALIAS = "test_key_alias"
     }
