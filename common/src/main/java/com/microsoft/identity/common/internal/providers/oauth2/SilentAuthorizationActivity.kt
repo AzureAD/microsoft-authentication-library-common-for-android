@@ -26,6 +26,7 @@ import android.graphics.Color
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.Fragment
@@ -42,25 +43,20 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         // ensure edge to edge settings.
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        )
+        setFinishOnTouchOutside(false)
         setEdgeToEdge()
     }
 
     override fun setFragment(fragment: Fragment) {
-        // Create a container for the fragment, but do not display it.
-        val container = FrameLayout(this).apply {
-            id = View.generateViewId()
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.TRANSPARENT)
-            visibility = View.GONE
-        }
-        setContentView(container)
-
         supportFragmentManager
             .beginTransaction()
-            .replace(container.id, fragment)
+            .replace(android.R.id.content, fragment)
             .commitNow()
     }
 

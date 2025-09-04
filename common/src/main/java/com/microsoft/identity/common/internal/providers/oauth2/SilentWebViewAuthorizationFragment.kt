@@ -22,10 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.lifecycle.lifecycleScope
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
@@ -57,10 +59,16 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? = super.onCreateView(inflater, container, savedInstanceState)?.apply {
-        visibility = View.GONE
-        setBackgroundColor(android.graphics.Color.TRANSPARENT) // Ensure the view is transparent
+    ): View = super.onCreateView(inflater, container, savedInstanceState).apply {
+        // Ensure the view is transparent
+        visibility = View.INVISIBLE
+        setBackgroundColor(Color.TRANSPARENT)
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -222,7 +222,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mUtid = state.getString(UTID);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final String methodTag = TAG + ":onCreateView";

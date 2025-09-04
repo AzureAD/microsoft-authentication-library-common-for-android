@@ -32,6 +32,6 @@ import java.io.Serializable
  * It can contain id token.
  */
 data class SignInWithGoogleCredential internal constructor(
-    @SerializedName("idToken") internal val idToken: String) : MsaFederatedCredential(MsaFederatedSignInProviderName.GOOGLE), Serializable {
+    @SerializedName("idToken") val idToken: String) : MsaFederatedCredential(MsaFederatedSignInProviderName.GOOGLE), Serializable {
 }
 
