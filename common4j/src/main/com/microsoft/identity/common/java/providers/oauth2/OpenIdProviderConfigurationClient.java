@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
@@ -154,7 +155,10 @@ public class OpenIdProviderConfigurationClient {
             );
 
             if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_OPENID_ISSUER_VALIDATION_REPORTING)) {
-                validateIssuer(parsedConfig, baseConfigUrlStr);
+                final Attributes attrs = validateIssuer(parsedConfig, baseConfigUrlStr);
+                if (attrs != null) {
+                    sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attrs);
+                }
             }
             // Cache our config in memory for later
             cacheConfiguration(configUri, parsedConfig);
@@ -179,12 +183,15 @@ public class OpenIdProviderConfigurationClient {
     }
 
     /**
-     * Validate the issuer from the metadata document against the request authority, which was used to
-     * request the openid-configuration document.
-     * @param config OpenID Provider configuration
+     * Performs the issuer validation and returns telemetry attributes describing the failure/skip.
+     * Returns null if validation succeeds.
+     *
+     * @param config OpenID Provider configuration.
      * @param requestAuthorityStr The authority URL string used to request the configuration document.
+     * @return Attributes representing a validation failure/skip; null if validation succeeds.
      */
-    void validateIssuer(
+    @Nullable
+    Attributes validateIssuer(
             @NonNull final OpenIdProviderConfiguration config,
             @NonNull final String requestAuthorityStr
     ) {
@@ -193,17 +200,14 @@ public class OpenIdProviderConfigurationClient {
         final AttributesBuilder attributesBuilder = Attributes.builder();
         if (StringUtil.isNullOrEmpty(config.getIssuer())) {
             Logger.warn(methodTag, "Issuer is missing in the metadata.");
-            attributesBuilder
-                    .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_missing")
-                    .build();
-            sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
-            return;
+            attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_missing");
+            return attributesBuilder.build();
         }
 
         // 1. exact match
         final String issuer = config.getIssuer();
         if (requestAuthorityStr.equals(issuer)) {
-            return;
+            return null; // success, no telemetry
         }
 
         attributesBuilder.put(AttributeName.openid_config_request_authority.name(), requestAuthorityStr);
@@ -213,11 +217,8 @@ public class OpenIdProviderConfigurationClient {
             issuerUrl = new URL(issuer);
         } catch (final MalformedURLException e) {
             Logger.warn(methodTag, "Issuer URL is malformed. " + e.getMessage());
-            attributesBuilder
-                    .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_malformed")
-                    .build();
-            sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
-            return;
+            attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_malformed");
+            return attributesBuilder.build();
         }
 
         // 2. Known Microsoft Cloud issuer validation
@@ -230,34 +231,21 @@ public class OpenIdProviderConfigurationClient {
                 // Valid if clouds match OR (issuer URL is valid AAD cloud AND request targets public AAD cloud)
                 if (issuerCloud != null && issuerCloud.isValidated() &&
                         (Objects.equals(requestCloud, issuerCloud) || AzureActiveDirectory.isPublicAzureActiveDirectoryCloud(requestAuthorityUrl))) {
-                    return;
+                    return null; // success
                 }
-                attributesBuilder
-                        .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_aad_host_mismatch")
-                        .build();
-                sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
-                return;
+                attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_aad_host_mismatch");
+                return attributesBuilder.build();
             }
         } catch (final MalformedURLException e) {
-            Logger.error(
-                    methodTag,
-                    "Request URL is malformed.",
-                    e
-            );
+            Logger.error(methodTag, "Request URL is malformed.", e);
         } catch (final ClientException e) {
-            Logger.error(
-                    methodTag,
-                    "Failed to complete AAD cloud discovery.",
-                    e
-            );
+            Logger.error(methodTag, "Failed to complete AAD cloud discovery.", e);
         }
 
         // For other authorities (e.g. B2C, CIAM), we skip issuer validation
         // since we don't have a clear format of known valid issuers
-        attributesBuilder
-                .put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_validation_skipped") // not necessarily invalid
-                .build();
-        sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attributesBuilder.build());
+        attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_validation_skipped"); // not necessarily invalid
+        return attributesBuilder.build();
     }
 
     private String getConfigRequestBaseUrl(@NonNull final String issuerUrl) {
