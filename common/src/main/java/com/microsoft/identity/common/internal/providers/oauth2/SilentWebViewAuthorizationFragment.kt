@@ -67,8 +67,10 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
+        isClickable = false
+        isFocusable = false
+        isFocusableInTouchMode = false
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

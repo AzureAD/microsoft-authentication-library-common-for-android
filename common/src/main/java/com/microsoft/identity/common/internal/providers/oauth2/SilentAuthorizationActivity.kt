@@ -56,7 +56,7 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     override fun setFragment(fragment: Fragment) {
         supportFragmentManager
             .beginTransaction()
-            .replace(android.R.id.content, fragment)
+            .add(android.R.id.content, fragment, fragment.javaClass.simpleName)
             .commitNow()
     }
 
