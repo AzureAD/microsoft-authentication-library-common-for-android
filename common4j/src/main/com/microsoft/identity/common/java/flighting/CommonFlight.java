@@ -155,7 +155,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
-    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false),
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", true),
 
     /**
      * Flight to enable adding username field in broker request for UiRequiredException from broker.
@@ -170,7 +170,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable WebView security settings to prevent unauthorized access.
      */
-    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false);
+    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false),
+
+    /**
+     * Flight to skip ests telemetry.
+     */
+    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false);
 
     private String key;
     private Object defaultValue;

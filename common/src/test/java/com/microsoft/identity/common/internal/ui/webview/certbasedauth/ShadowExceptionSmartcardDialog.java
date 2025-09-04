@@ -20,11 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import android.view.WindowManager;
+
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
 /**
- * Declares as a separate class so that we can specify attributes exclusively to :auth process
- * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
+ * Doesn't rely on resources to create a dialog and throws exception upon Show.
  */
-public class BrokerAuthorizationActivity extends AuthorizationActivity {
+@Implements(SmartcardDialog.class)
+public class ShadowExceptionSmartcardDialog {
+    @Implementation
+    public void show() {
+        throw new WindowManager.BadTokenException("Thrown from show. Better handle this gracefully!");
+    }
+
+    @Implementation
+    public void dismiss() {
+        throw new WindowManager.BadTokenException("Thrown from dismiss. Better handle this gracefully!");
+    }
 }

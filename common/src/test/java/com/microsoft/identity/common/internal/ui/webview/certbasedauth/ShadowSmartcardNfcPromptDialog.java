@@ -20,11 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
+
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
 /**
- * Declares as a separate class so that we can specify attributes exclusively to :auth process
- * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
+ * Shadow implementation of {@link SmartcardNfcPromptDialog} for use in unit tests.
  */
-public class BrokerAuthorizationActivity extends AuthorizationActivity {
+@Implements(SmartcardNfcPromptDialog.class)
+public class ShadowSmartcardNfcPromptDialog extends ShadowExceptionSmartcardDialog {
+    /**
+     * Shadow implementation for createDialog().
+     * This is intentionally left empty to avoid actual UI operations during tests.
+     */
+    @Implementation
+    protected void createDialog() {
+        // Intentionally empty implementation for testing
+    }
 }

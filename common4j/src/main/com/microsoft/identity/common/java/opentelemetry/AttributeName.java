@@ -450,6 +450,11 @@ public enum AttributeName {
     web_cp_flight_get_time,
 
     /**
+     * Indicates if ests telemetry was skipped.
+     */
+    skipped_ests_telemetry,
+
+    /**
      * Records the Cipher transformation used to encrypt/decrypt the keypair.
      */
     secret_key_wrapping_transformation,
