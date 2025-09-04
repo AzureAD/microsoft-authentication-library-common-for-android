@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 22.1.0-RC1
+Version 22.1.0
 ----------
 - [PATCH] Fix Switch browser back stack (#2750)
 - [MINOR] Move ests telemetry behind feature flag (#2742)
