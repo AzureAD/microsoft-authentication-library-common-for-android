@@ -517,11 +517,11 @@ class KeyStoreBackedSecretKeyProvider(
             Logger.warn(methodTag, "Key file does not exist")
             return null
         }
-        val rawData = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
-        if (rawData == null || rawData.isEmpty()) {
+        val wrappedSecretKeyData = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
+        if (wrappedSecretKeyData == null || wrappedSecretKeyData.isEmpty()) {
             Logger.warn(methodTag, "Key file is empty")
             return null
         }
-        return WrappedSecretKey.deserialize(rawData)
+        return WrappedSecretKey.deserialize(wrappedSecretKeyData)
     }
 }
