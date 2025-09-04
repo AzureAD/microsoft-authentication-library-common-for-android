@@ -82,14 +82,14 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      * <p>
      * Phase 1 represents the baseline configuration with both new format flights disabled:
      * - ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING = false (uses PKCS1 padding)
-     * - ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT = false (uses legacy format without metadata)
+     * - WRAPPED_SECRET_KEY_SERIALIZER_VERSION = 0 (uses legacy format without metadata)
      * <p>
      * This configuration is used to test scenarios where applications are running
      * with the original crypto implementation before any flight rollouts.
      *
      */
     private void enablePhase1Flights() {
-        configureFlights(false, false);
+        configureFlights(false, 0);
     }
 
     /**
@@ -98,7 +98,7 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      * Phase 2 represents the intermediate configuration where only the new wrapped
      * secret key format flight is enabled:
      * - ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING = false (still uses PKCS1 padding)
-     * - ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT = true (uses new format with metadata)
+     * - WRAPPED_SECRET_KEY_SERIALIZER_VERSION = 1 (uses new format with metadata)
      * <p>
      * This configuration is used to test scenarios where the new wrapped secret key
      * format has been rolled out but OAEP padding has not yet been enabled.
@@ -107,7 +107,7 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      *
      */
     private void enablePhase2Flights() {
-        configureFlights(false, true);
+        configureFlights(false, 1);
     }
 
     /**
@@ -115,7 +115,7 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      * <p>
      * Phase 3 represents the final configuration with both flights enabled:
      * - ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING = true (uses OAEP with SHA and MGF1 padding)
-     * - ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT = true (uses new format with metadata)
+     * - WRAPPED_SECRET_KEY_SERIALIZER_VERSION = 1 (uses new format with metadata)
      * <p>
      * This configuration is used to test scenarios where all crypto enhancements
      * have been fully rolled out. It represents the target state for maximum
@@ -123,7 +123,7 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      *
      */
     private void enablePhase3Flights() {
-        configureFlights(true, true);
+        configureFlights(true, 1);
     }
 
     /**
@@ -131,13 +131,13 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      * This method reduces code duplication across the enablePhase methods.
      *
      * @param enableOAEPWithSHAAndMGF1Padding whether to enable OAEP with SHA and MGF1 padding
-     * @param enableNewWrappedSecretKeyFormat whether to enable new wrapped secret key format
+     * @param wrappedSecretKeySerializerVersion the version of the wrapped secret key serializer (0=legacy, 1=JSON format)
      */
     private void configureFlights(final boolean enableOAEPWithSHAAndMGF1Padding,
-                                  final boolean enableNewWrappedSecretKeyFormat) {
+                                  final int wrappedSecretKeySerializerVersion) {
         final IFlightsProvider mockFlightsProvider = createFlightsProvider(
                 enableOAEPWithSHAAndMGF1Padding,
-                enableNewWrappedSecretKeyFormat);
+                wrappedSecretKeySerializerVersion);
         final IFlightsManager flightsManager = createFlightsManager(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
     }
@@ -146,11 +146,11 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
      * Creates a mock flights provider with the specified flight configurations.
      *
      * @param enableOAEPWithSHAAndMGF1Padding whether to enable OAEP with SHA and MGF1 padding
-     * @param enableNewWrappedSecretKeyFormat whether to enable new wrapped secret key format
+     * @param wrappedSecretKeySerializerVersion the version of the wrapped secret key serializer (0=legacy, 1=JSON format)
      * @return configured mock IFlightsProvider
      */
     private IFlightsProvider createFlightsProvider(final boolean enableOAEPWithSHAAndMGF1Padding,
-                                                  final boolean enableNewWrappedSecretKeyFormat) {
+                                                  final int wrappedSecretKeySerializerVersion) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
 
         // These flights are always enabled for key generation spec improvements
@@ -162,8 +162,8 @@ public class KeyStoreBackedSecretKeyProviderRolloutTest {
         // Configure the phase-specific flights
         Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING))
                 .thenReturn(enableOAEPWithSHAAndMGF1Padding);
-        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_WRAPPED_SECRET_KEY_FORMAT))
-                .thenReturn(enableNewWrappedSecretKeyFormat);
+        Mockito.when(mockFlightsProvider.getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION))
+                .thenReturn(wrappedSecretKeySerializerVersion);
 
         return mockFlightsProvider;
     }

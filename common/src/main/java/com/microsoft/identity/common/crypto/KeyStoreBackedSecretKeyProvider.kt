@@ -278,7 +278,7 @@ class KeyStoreBackedSecretKeyProvider(
                 WrappedSecretKey(
                     wrappedKeyData = wrappedKey,
                     algorithm = secretKey.algorithm,
-                    cipherTransformation = cipherTransformation
+                    cipherTransformation = cipherParamsSpec.transformation
                 )
             }
         } catch (exception: Exception) {
