@@ -59,7 +59,7 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View = super.onCreateView(inflater, container, savedInstanceState).apply {
+    ): View? = super.onCreateView(inflater, container, savedInstanceState)?.apply {
         // Ensure the view is transparent
         visibility = View.INVISIBLE
         setBackgroundColor(Color.TRANSPARENT)
