@@ -84,4 +84,18 @@ class OpenIdProviderConfigurationClientTest {
         val key = AttributeKey.stringKey("openid_issuer_invalid_reason")
         Assert.assertEquals("issuer_validation_skipped", result!!.get(key))
     }
+
+    @Test
+    fun validateIssuer_aadHostMismatch() {
+        // request authority: US gov cloud (not public Azure)
+        val requestAuthority = "https://login.microsoftonline.us/tenant/v2.0"
+        // issuer from public Azure cloud
+        val config = configWithIssuer("https://login.microsoftonline.com/tenant/v2.0")
+        val client = OpenIdProviderConfigurationClient()
+        val result = client.validateIssuer(config, requestAuthority)
+        // Depending on cloud discovery this should produce issuer_aad_host_mismatch
+        Assert.assertNotNull(result)
+        val key = AttributeKey.stringKey("openid_issuer_invalid_reason")
+        Assert.assertEquals("issuer_aad_host_mismatch", result!!.get(key))
+    }
 }
