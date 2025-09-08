@@ -50,7 +50,7 @@
 # keep everything in this package from being removed or renamed
 -keep class io.opentelemetry.** { *; }
 
-# keep names
+# keep names only to allow keeping them logs and exceptions
 -keepnames class com.microsoft.identity.** { *; }
 
 # Prevent R8 from leaving Data object members always null
@@ -65,6 +65,7 @@
   *;
 }
 
+# Runtime annotations
 -keep class net.jcip.annotations.GuardedBy
 -keep class net.jcip.annotations.Immutable
 -keep class net.jcip.annotations.ThreadSafe
@@ -77,4 +78,3 @@
 -dontwarn com.google.auto.value.AutoValue$CopyAnnotations
 -dontwarn com.google.auto.value.AutoValue
 -dontwarn com.google.auto.value.extension.memoized.Memoized
-

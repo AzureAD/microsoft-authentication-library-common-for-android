@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.base64.IBase64
  * you'll need to make change in [Base64Util] too.
  *
  * see [Base64Util] for more info.
+ * This is called using reflection from [Base64Util], hence the @Keep annotation.
  **/
 @Keep
 class AndroidBase64 : IBase64 {
