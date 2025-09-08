@@ -48,6 +48,8 @@ object NativeAuthConstants {
         const val PASSWORD = "password"
         //Authentication is done by presenting an Out of band token
         const val OOB = "oob"
+        // Authentication is done by presenting a MFA Out of band token
+        const val MFA_OOB = "mfa_oob"
         //Authentication is done by presenting a continuation token
         const val CONTINUATION_TOKEN = "continuation_token"
         //Authentication must be performed by following the redirect url
