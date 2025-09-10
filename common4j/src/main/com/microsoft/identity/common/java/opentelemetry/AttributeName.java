@@ -313,7 +313,7 @@ public enum AttributeName {
     /**
      * Indicates the error code from a Android KeyStore operation exception.
      */
-    keystore_internal_error_code,
+    keystore_numeric_error_code,
 
     /**
      * Indicates the new nonce found in the eSTS request.

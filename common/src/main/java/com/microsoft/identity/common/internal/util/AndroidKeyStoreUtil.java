@@ -86,6 +86,11 @@ public class AndroidKeyStoreUtil {
      */
     private static final String ANDROID_KEY_STORE_TYPE = "AndroidKeyStore";
 
+    /**
+     * Max length of stack trace to search for a keystore exception
+     */
+    private static int KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH = 20;
+
     private AndroidKeyStoreUtil() {
     }
 
@@ -449,27 +454,38 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
             String ksMessage;
+            final String errorType;
             final String ksNumericErrorCode;
-            if (keyStoreException != null) {
-                ksMessage = keyStoreException.getMessage();
-                if (ksMessage == null) {
-                    ksMessage = "Keystore exception found, no error message";
+
+            // Check API Level before attempting to extract KeyStoreException details
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
+                if (keyStoreException != null) {
+                    ksMessage = keyStoreException.getMessage();
+                    if (ksMessage == null) {
+                        ksMessage = "Keystore exception found, no error message";
+                    }
+                    errorType = "KeyStoreException";
+                    ksNumericErrorCode = String.valueOf(keyStoreException.getNumericErrorCode());
+                } else {
+                    ksMessage = "No keystore exception found";
+                    errorType = "InvalidKeyException";
+                    ksNumericErrorCode = "";
                 }
-                ksNumericErrorCode = getNumericErrorCodeFromKeyStoreException(keyStoreException);
             } else {
-                ksMessage = "No keystore exception found";
+                ksMessage = "API Level below 33, keystore exception not available";
+                errorType = "InvalidKeyException";
                 ksNumericErrorCode = "";
             }
 
             final Attributes attributes = Attributes.builder()
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
-                    .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
-                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
+                    .put(AttributeName.error_type.name(), errorType)
+                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(exception))
                     .put(AttributeName.keystore_exception_message.name(), ksMessage)
-                    .put(AttributeName.keystore_internal_error_code.name(), ksNumericErrorCode)
+                    .put(AttributeName.keystore_numeric_error_code.name(), ksNumericErrorCode)
                     .build();
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
@@ -490,30 +506,16 @@ public class AndroidKeyStoreUtil {
      * @return The found KeyStoreException, or null if none was found or the API level is below 33.
      */
     private static @Nullable android.security.KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            while (throwable != null) {
-                if (throwable instanceof android.security.KeyStoreException) {
-                    return (android.security.KeyStoreException) throwable;
-                }
-                throwable = throwable.getCause();
+        // Check up to a max depth to avoid infinite loops in case of circular references
+        int count = 0;
+        while (throwable != null && count < KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH) {
+            if (throwable instanceof android.security.KeyStoreException) {
+                return (android.security.KeyStoreException) throwable;
             }
-            return null;
-        } else {
-            return null;
+            throwable = throwable.getCause();
+            count++;
         }
-    }
 
-    /**
-     * Extracts the numeric error code from a KeyStoreException if available.
-     *
-     * @param exception The KeyStoreException from which to extract the error code.
-     * @return The numeric error code as a String, or an empty string if not available.
-     */
-    private static String getNumericErrorCodeFromKeyStoreException(@NonNull android.security.KeyStoreException exception) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return String.valueOf(exception.getNumericErrorCode());
-        } else {
-            return "";
-        }
+        return null;
     }
 }
