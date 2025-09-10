@@ -514,16 +514,20 @@ public class AndroidKeyStoreUtil {
      * @return The found KeyStoreException, or null if none was found or the API level is below 33.
      */
     private static @Nullable android.security.KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
-        // Check up to a max depth to avoid infinite loops in case of circular references
-        int count = 0;
-        while (throwable != null && count < KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH) {
-            if (throwable instanceof android.security.KeyStoreException) {
-                return (android.security.KeyStoreException) throwable;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Check up to a max depth to avoid infinite loops in case of circular references
+            int count = 0;
+            while (throwable != null && count < KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH) {
+                if (throwable instanceof android.security.KeyStoreException) {
+                    return (android.security.KeyStoreException) throwable;
+                }
+                throwable = throwable.getCause();
+                count++;
             }
-            throwable = throwable.getCause();
-            count++;
-        }
 
-        return null;
+            return null;
+        } else {
+            return null;
+        }
     }
 }
