@@ -455,7 +455,7 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final Attributes attributes = populateAttributesFromInvalidKeyException((InvalidKeyException) exception)
+            final Attributes attributes = createAttributesBuilderFromInvalidKeyException((InvalidKeyException) exception)
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
                     .build();
@@ -475,7 +475,7 @@ public class AndroidKeyStoreUtil {
      * Populate attributes from an InvalidKeyException, attempting to extract details from a nested
      * KeyStoreException if available (API Level 33+).
      */
-    private static AttributesBuilder populateAttributesFromInvalidKeyException(final InvalidKeyException exception) {
+    private static AttributesBuilder createAttributesBuilderFromInvalidKeyException(final InvalidKeyException exception) {
         String ksMessage;
         final String errorType;
         final String ksNumericErrorCode;
