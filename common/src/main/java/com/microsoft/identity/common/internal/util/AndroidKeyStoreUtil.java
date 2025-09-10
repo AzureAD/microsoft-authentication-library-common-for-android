@@ -57,6 +57,7 @@ import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import lombok.NonNull;
 
@@ -454,39 +455,11 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            String ksMessage;
-            final String errorType;
-            final String ksNumericErrorCode;
-
-            // Check API Level before attempting to extract KeyStoreException details
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
-                if (keyStoreException != null) {
-                    ksMessage = keyStoreException.getMessage();
-                    if (ksMessage == null) {
-                        ksMessage = "Keystore exception found, no error message";
-                    }
-                    errorType = "KeyStoreException";
-                    ksNumericErrorCode = String.valueOf(keyStoreException.getNumericErrorCode());
-                } else {
-                    ksMessage = "No keystore exception found";
-                    errorType = "InvalidKeyException";
-                    ksNumericErrorCode = "";
-                }
-            } else {
-                ksMessage = "API Level below 33, keystore exception not available";
-                errorType = "InvalidKeyException";
-                ksNumericErrorCode = "";
-            }
-
-            final Attributes attributes = Attributes.builder()
+            final Attributes attributes = populateAttributesFromInvalidKeyException((InvalidKeyException) exception)
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
-                    .put(AttributeName.error_type.name(), errorType)
-                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(exception))
-                    .put(AttributeName.keystore_exception_message.name(), ksMessage)
-                    .put(AttributeName.keystore_numeric_error_code.name(), ksNumericErrorCode)
                     .build();
+
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
         Logger.error(
@@ -496,6 +469,43 @@ public class AndroidKeyStoreUtil {
         );
 
         throw clientException;
+    }
+
+    /**
+     * Populate attributes from an InvalidKeyException, attempting to extract details from a nested
+     * KeyStoreException if available (API Level 33+).
+     */
+    private static AttributesBuilder populateAttributesFromInvalidKeyException(final InvalidKeyException exception) {
+        String ksMessage;
+        final String errorType;
+        final String ksNumericErrorCode;
+
+        // Check API Level before attempting to extract KeyStoreException details
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
+            if (keyStoreException != null) {
+                ksMessage = keyStoreException.getMessage();
+                if (ksMessage == null) {
+                    ksMessage = "Keystore exception found, no error message";
+                }
+                errorType = "KeyStoreException";
+                ksNumericErrorCode = String.valueOf(keyStoreException.getNumericErrorCode());
+            } else {
+                ksMessage = "No keystore exception found";
+                errorType = "InvalidKeyException";
+                ksNumericErrorCode = "";
+            }
+        } else {
+            ksMessage = "API Level below 33, keystore exception not available";
+            errorType = "InvalidKeyException";
+            ksNumericErrorCode = "";
+        }
+
+        return Attributes.builder()
+                .put(AttributeName.error_type.name(), errorType)
+                .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(exception))
+                .put(AttributeName.keystore_exception_message.name(), ksMessage)
+                .put(AttributeName.keystore_numeric_error_code.name(), ksNumericErrorCode);
     }
 
     /**
