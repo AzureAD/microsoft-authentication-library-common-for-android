@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MAJOR] Update proguard rules in common (#2756)
+- [MINOR] Add client scenario to JwtRequestBody (#2755)
 
 Version 22.1.0
 ----------
