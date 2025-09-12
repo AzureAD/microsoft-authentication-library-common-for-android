@@ -220,6 +220,7 @@ class SignInOAuthStrategyTest {
         every { parameters.getCode() } returns OOB
         every { parameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { parameters.correlationId } returns correlationId
+        every { parameters.getIsMFAGrantType() } returns false
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
@@ -243,6 +244,7 @@ class SignInOAuthStrategyTest {
         every { parameters.getCode() } returns OOB
         every { parameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { parameters.correlationId } returns correlationId
+        every { parameters.getIsMFAGrantType() } returns false
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters

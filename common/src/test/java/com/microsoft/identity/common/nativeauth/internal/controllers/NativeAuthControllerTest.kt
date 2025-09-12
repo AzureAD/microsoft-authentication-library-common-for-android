@@ -1608,7 +1608,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInSubmitCodeCommandParameters(correlationId: String): SignInSubmitCodeCommandParameters {
+    private fun createSignInSubmitCodeCommandParameters(correlationId: String, isMFAGrantYpe: Boolean = false): SignInSubmitCodeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1624,6 +1624,7 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .correlationId(correlationId)
+            .isMFAGrantType(isMFAGrantYpe)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
