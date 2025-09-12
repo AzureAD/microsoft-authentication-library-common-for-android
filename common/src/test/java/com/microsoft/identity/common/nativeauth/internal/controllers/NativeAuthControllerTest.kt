@@ -538,10 +538,10 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
-    fun `testMFAChallenge introspect returns redirect should return RedirectResult`() {
+    fun `testsignInWithPasswordReturnMFARequired`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.Introspect,
+            endpointType = MockApiEndpoint.SignInChallenge,
             correlationId = correlationId,
             responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
         )
@@ -549,6 +549,48 @@ class NativeAuthControllerTest {
         val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testSubmitPasswordReturnMFARequiredIntrospectRedirect_checkResult() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.CHALLENGE_TYPE_REDIRECT
+        )
+
+        val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitPassword(signInParameters)
+        assert(signInResult is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkAuthMethods() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+
+        val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.count() == 2)
+        assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
+        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
     }
 
     @Test
