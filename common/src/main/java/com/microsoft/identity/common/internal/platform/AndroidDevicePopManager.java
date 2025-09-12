@@ -357,7 +357,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                             final boolean enableImport,
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         final boolean unnecessaryCryptoPurposesDisabled =
-                CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_UNNECESSARY_CRYPTO_PURPOSES);
+                CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER);
 
         int purposes = KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY;
         if (!unnecessaryCryptoPurposesDisabled) {
@@ -383,7 +383,8 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                               final int keySize,
                               final boolean useStrongbox,
                               final boolean trySetAttestationChallenge,
-                              final int purposes) throws InvalidAlgorithmParameterException {
+                              final int purposes,
+                              final boolean unnecessaryCryptoPurposesDisabled) throws InvalidAlgorithmParameterException {
         KeyGenParameterSpec.Builder builder;
 
         builder = new KeyGenParameterSpec.Builder(
@@ -398,6 +399,13 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
                 );
+
+        if (!unnecessaryCryptoPurposesDisabled) {
+            builder.setEncryptionPaddings(
+                    KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                    KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+            );
+        }
 
         if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder = setAttestationChallenge(builder);
