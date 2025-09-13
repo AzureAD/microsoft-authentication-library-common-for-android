@@ -17,7 +17,24 @@
 #}
 
 ##---------------Begin: proguard configuration for Common  --------
-# Intentionally blank, left to consumers of common to implement.
+-keep class !com.microsoft.identity.common.java.nativeauth.**, !com.microsoft.identity.common.nativeauth.**, com.microsoft.identity.** { *; }
+-keepattributes SourceFile,LineNumberTable
+
+#For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+  *;
+}
+
+# Runtime annotations
+-keep class net.jcip.annotations.GuardedBy
+-keep class net.jcip.annotations.Immutable
+-keep class net.jcip.annotations.ThreadSafe
+
+# Compile time annotations
+-dontwarn edu.umd.cs.findbugs.annotations.NonNull
+-dontwarn edu.umd.cs.findbugs.annotations.Nullable
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
 ##---------------Begin: proguard configuration for Nimbus  ----------
 # Intentionally blank, left to consumers of common to implement.
@@ -53,10 +70,4 @@
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
-}
-
-#For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
--if class androidx.credentials.CredentialManager
--keep class androidx.credentials.playservices.** {
-  *;
 }
