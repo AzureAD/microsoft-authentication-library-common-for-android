@@ -56,10 +56,18 @@
 -keepnames class com.microsoft.identity.** { *; }
 
 # Prevent R8 from leaving Data object members always null
--keepclassmembers class * {
+-keepclassmembers class com.microsoft.identity.** {
   @com.google.gson.annotations.SerializedName <fields>;
   @com.squareup.moshi.Json <fields>;
 }
+
+-keep class * extends com.microsoft.identity.common.java.authorities.Authority { *; }
+-keep class * extends com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience { *; }
+-keep class * extends com.microsoft.identity.common.java.cache.ICacheRecord { *; }
+-keep class * extends com.microsoft.identity.common.java.cache.ITokenCacheItem { *; }
+-keep class * extends com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme { *; }
+-keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *;}
+
 
 #For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
 -if class androidx.credentials.CredentialManager
