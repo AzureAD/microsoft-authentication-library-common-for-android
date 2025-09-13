@@ -18,55 +18,14 @@
 
 ##---------------Begin: proguard configuration for Common  --------
 # Intentionally blank, left to consumers of common to implement.
-
-##---------------Begin: proguard configuration for Nimbus  ----------
-# Intentionally blank, left to consumers of common to implement.
-
-##---------------Begin: proguard configuration for Lombok  ----------
--dontwarn lombok.**
-
-##---------------Begin: proguard configuration for Gson  --------
-# Gson uses generic type information stored in a class file when working with fields. Proguard
-# removes such information by default, so configure it to keep all of it.
--keepattributes Signature
-
-# For using GSON @Expose annotation
--keepattributes *Annotation*
-
-# Gson specific classes
--dontwarn sun.misc.**
-#-keep class com.google.gson.stream.** { *; }
-
-# Application classes that will be serialized/deserialized over Gson
--keep class com.google.gson.examples.android.model.** { <fields>; }
-
-# Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
-# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
--keep class * extends com.google.gson.TypeAdapter
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
--keep class com.google.gson.reflect.TypeToken { *; }
--keep class * extends com.google.gson.reflect.TypeToken { *; }
-
-# keep everything in this package from being removed or renamed
--keep class io.opentelemetry.** { *; }
-
-# keep names only to allow keeping them logs and exceptions
--keepnames class com.microsoft.identity.** { *; }
-
-# Prevent R8 from leaving Data object members always null
--keepclassmembers class com.microsoft.identity.** {
-  @com.google.gson.annotations.SerializedName <fields>;
-  @com.squareup.moshi.Json <fields>;
-}
-
+# keep with optmizations and shrinking, but do not obfuscate
+-keep,allowoptimization,allowshrinking class !com.microsoft.identity.common.java.nativeauth.**, !com.microsoft.identity.common.nativeauth.**, com.microsoft.identity.** { *; }
 -keep class * extends com.microsoft.identity.common.java.authorities.Authority { *; }
 -keep class * extends com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience { *; }
 -keep class * extends com.microsoft.identity.common.java.cache.ICacheRecord { *; }
 -keep class * extends com.microsoft.identity.common.java.cache.ITokenCacheItem { *; }
 -keep class * extends com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme { *; }
--keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *;}
+-keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *; }
 
 
 #For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
@@ -85,6 +44,47 @@
 -dontwarn edu.umd.cs.findbugs.annotations.Nullable
 -dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
+-keepattributes SourceFile,LineNumberTable
+
+##---------------Begin: proguard configuration for Nimbus  ----------
+# Intentionally blank, left to consumers of common to implement.
+
+##---------------Begin: proguard configuration for Lombok  ----------
+-dontwarn lombok.**
+
+##---------------Begin: proguard configuration for Gson  --------
+# Gson uses generic type information stored in a class file when working with fields. Proguard
+# removes such information by default, so configure it to keep all of it.
+-keepattributes Signature,SourceFile,LineNumberTable
+
+# For using GSON @Expose annotation
+-keepattributes *Annotation*
+
+# Gson specific classes
+-dontwarn sun.misc.**
+#-keep class com.google.gson.stream.** { *; }
+
+# Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
+# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
+-keep class * extends com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken { *; }
+
+##---------------Begin: proguard configuration for OpenTelemetry  --------
+# keep everything in this package from being removed or renamed
+-keep class io.opentelemetry.** { *; }
+
+# Prevent R8 from leaving Data object members always null
+-keepclassmembers class com.microsoft.identity.** {
+  @com.google.gson.annotations.SerializedName <fields>;
+  @com.squareup.moshi.Json <fields>;
+}
+
+## Other
+# Compile time annotation
 -dontwarn com.google.auto.value.AutoValue$CopyAnnotations
 -dontwarn com.google.auto.value.AutoValue
 -dontwarn com.google.auto.value.extension.memoized.Memoized
