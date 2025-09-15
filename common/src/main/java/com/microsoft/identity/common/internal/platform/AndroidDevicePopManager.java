@@ -368,7 +368,7 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes);
+            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge, purposes, unnecessaryCryptoPurposesDisabled);
         } else {
             if (!unnecessaryCryptoPurposesDisabled && enableImport) {
                 purposes |= KeyProperties.PURPOSE_WRAP_KEY;
