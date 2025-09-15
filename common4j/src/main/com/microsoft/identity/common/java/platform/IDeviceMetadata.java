@@ -67,6 +67,14 @@ public interface IDeviceMetadata {
     String getOsForMats();
 
     /**
+     * Get the Android Release OS of this device (i.e 14, 15, 16).
+     *
+     * @return a String representing the Release OS information
+     */
+    @NonNull
+    String getAndroidReleaseOs();
+
+    /**
      * Get the model name of this device.
      *
      * @return a String representing the device's model
