@@ -61,13 +61,13 @@ object TenantUtil {
      * @param correlationId Correlation ID for the request to be logged.
      * @return a tenant ID if found, null otherwise.
      */
-    fun getTenantIdFromLoginHint(loginHint: String?, correlationId : String?): String? {
+    fun getTenantIdFromLoginHint(loginHint: String?, correlationId: String?): String? {
         val methodTag = "$TAG:getTenantIdFromLoginHint"
         if (loginHint.isNullOrBlank()) {
             Logger.info(methodTag, correlationId, "Login hint is empty")
             return null
         }
-        val tenantName  = getTenantFromIdentifier(loginHint)
+        val tenantName = getTenantFromIdentifier(loginHint)
         if (tenantName.isNullOrBlank()) {
             Logger.warn(methodTag, correlationId, "Tenant name is empty")
             return null
