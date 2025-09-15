@@ -30,7 +30,7 @@ import java.util.regex.Pattern
 
 object TenantUtil {
     private const val TAG: String = "TenantUtil"
-    private const val IDENTIFIER_REGEX: String = "(.*@.*|^[0-9A-Fa-f\\-]{36}$)"
+    private const val IDENTIFIER_REGEX: String = "^(.*@.*|[0-9A-Fa-f\\-]{36})$"
     private val PAIR_REGEX: Pattern = Pattern.compile(IDENTIFIER_REGEX)
 
     /**
