@@ -101,6 +101,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -123,6 +124,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import io.opentelemetry.api.metrics.LongCounter;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -150,6 +152,12 @@ public class BrokerMsalController extends BaseController {
     private BrokerOperationExecutor mOperationExecutor;
 
     private String mMaxMsalBrokerProtocolVersion;
+
+    // telemetry count metric for tracking getCurrentAccount() SDM failures
+    private static final LongCounter sGetCurrentAccountFailedNoSDMCount = OTelUtility.createLongCounter(
+            "get_current_account_failed_no_sdm_count",
+            "Number of failed getCurrentAccount calls due to no SDM"
+    );
 
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
@@ -947,6 +955,7 @@ public class BrokerMsalController extends BaseController {
 
         if (!parameters.isSharedDevice()) {
             Logger.verbose(TAG + methodName, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
+            sGetCurrentAccountFailedNoSDMCount.add(1); // TODO: Any useful attributes? How is this omitted?
             return getAccounts(parameters);
         }
 
