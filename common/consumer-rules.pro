@@ -17,7 +17,6 @@
 #}
 
 ##---------------Begin: proguard configuration for Common  --------
-# Intentionally blank, left to consumers of common to implement.
 # keep with optmizations and shrinking, but do not obfuscate
 -keep,allowoptimization,allowshrinking class !com.microsoft.identity.common.java.nativeauth.**, !com.microsoft.identity.common.nativeauth.**, com.microsoft.identity.** { *; }
 -keep class * extends com.microsoft.identity.common.java.authorities.Authority { *; }
