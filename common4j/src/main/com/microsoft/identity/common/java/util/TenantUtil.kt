@@ -34,7 +34,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
  */
 object TenantUtil {
     private const val TAG: String = "TenantUtil"
-    private val EMAIL_REGEX = Regex("""^.*@.*$""")
+    private val EMAIL_REGEX = Regex("""^[^@]+@[^@]+\.[^@]+$""")
     private val UUID_REGEX = Regex("""^[0-9A-Fa-f\-]{36}$""")
 
 
