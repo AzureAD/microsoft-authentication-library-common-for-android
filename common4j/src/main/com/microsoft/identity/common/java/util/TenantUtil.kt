@@ -78,12 +78,8 @@ object TenantUtil {
      * resolve it to a tenant ID by loading the OpenID provider configuration metadata
      * for the specified tenant.
      *
-     * @param loginHint The login hint string which could be:
-     *                  - An email address or UPN (e.g., "user@contoso.com")
-     *                  - A GUID representing a tenant ID
-     *                  - Can be null or blank
-     * @param correlationId Correlation ID for the request, used for logging and debugging purposes.
-     *                      Can be null.
+     * @param loginHint The login hint string (e.g., "user@contoso.com")
+     * @param correlationId Correlation ID for the request, u
      * @return The resolved tenant ID if successful, null if the login hint is invalid,
      *         the tenant cannot be resolved, or if an error occurs during resolution
      */
