@@ -25,51 +25,72 @@ package com.microsoft.identity.common.java.util
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
+/**
+ * Utility object for tenant-related operations.
+ *
+ * Provides methods to extract tenant information from various identifier formats
+ * such as email addresses, UPNs (User Principal Names), and tenant GUIDs.
+ */
 object TenantUtil {
     private const val TAG: String = "TenantUtil"
-    private const val IDENTIFIER_REGEX: String = "^(.*@.*|[0-9A-Fa-f\\-]{36})$"
-    private val PAIR_REGEX: Pattern = Pattern.compile(IDENTIFIER_REGEX)
+    private val EMAIL_REGEX = Regex("""^.*@.*$""")
+    private val UUID_REGEX = Regex("""^[0-9A-Fa-f\-]{36}$""")
+
 
     /**
-     * Extracts tenant from an identifier.
+     * Extracts tenant information from an identifier.
      *
-     * @param identifier {@link String} This could be an email address/UPN or a GUID (tenant ID).
-     * @return a tenant (hostname or tenant ID).
+     * This method can handle two types of identifiers:
+     * - Email addresses/UPNs: Returns the domain part after the "@" symbol
+     * - Tenant GUIDs: Returns the GUID as-is
+     *
+     * @param identifier The identifier string which could be:
+     *                   - An email address or UPN (e.g., "user@contoso.com")
+     *                   - A GUID representing a tenant ID (e.g., "12345678-1234-1234-1234-123456789012")
+     *                   - Can be null or blank
+     * @return The extracted tenant (hostname for UPNs or tenant ID for GUIDs),
+     *         or null if the identifier is invalid, null, or blank
      */
     fun getTenantFromIdentifier(identifier: String?): String? {
+        val methodTag = "$TAG:getTenantFromIdentifier"
         if (identifier.isNullOrBlank()) {
             return null
         }
-        val matcher: Matcher = PAIR_REGEX.matcher(identifier)
-        if (!matcher.matches()) {
-            return null
+
+        if (UUID_REGEX.matches(identifier)) {
+            return identifier
         }
-        // If identifier is a UPN, extracts a host from it.
-        if (identifier.contains("@")) {
-            return identifier.substring(identifier.indexOf("@") + 1).trim()
+
+        if (EMAIL_REGEX.matches(identifier)) {
+            identifier.substringAfter("@").trim()
         }
-        return identifier
+
+        Logger.warn(methodTag, "Identifier is neither a valid email/UPN nor a GUID.")
+        return null
     }
 
+
     /**
-     * Extracts tenant ID from login hint.
+     * Extracts tenant ID from a login hint by resolving the tenant information.
      *
-     * @param loginHint {@link String} This could be an email address/UPN or a GUID (tenant ID).
-     * @param correlationId Correlation ID for the request to be logged.
-     * @return a tenant ID if found, null otherwise.
+     * This method first extracts the tenant name from the login hint, then attempts to
+     * resolve it to a tenant ID by loading the OpenID provider configuration metadata
+     * for the specified tenant.
+     *
+     * @param loginHint The login hint string which could be:
+     *                  - An email address or UPN (e.g., "user@contoso.com")
+     *                  - A GUID representing a tenant ID
+     *                  - Can be null or blank
+     * @param correlationId Correlation ID for the request, used for logging and debugging purposes.
+     *                      Can be null.
+     * @return The resolved tenant ID if successful, null if the login hint is invalid,
+     *         the tenant cannot be resolved, or if an error occurs during resolution
      */
     fun getTenantIdFromLoginHint(loginHint: String?, correlationId: String?): String? {
         val methodTag = "$TAG:getTenantIdFromLoginHint"
-        if (loginHint.isNullOrBlank()) {
-            Logger.info(methodTag, correlationId, "Login hint is empty")
-            return null
-        }
-        val tenantName = getTenantFromIdentifier(loginHint)
-        if (tenantName.isNullOrBlank()) {
-            Logger.warn(methodTag, correlationId, "Tenant name is empty")
+        val tenantName = getTenantFromIdentifier(loginHint) ?: run {
+            Logger.warn(methodTag, correlationId, "Login hint is invalid or empty.")
             return null
         }
         try {
