@@ -101,8 +101,6 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
-import com.microsoft.identity.common.java.opentelemetry.OtelCountMetrics;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -125,7 +123,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import io.opentelemetry.api.metrics.LongCounter;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -153,12 +150,6 @@ public class BrokerMsalController extends BaseController {
     private BrokerOperationExecutor mOperationExecutor;
 
     private String mMaxMsalBrokerProtocolVersion;
-
-    // telemetry count metric for tracking getCurrentAccount() calls where no SDM is present
-    private static final LongCounter sGetCurrentAccountWithNoSDMCount = OTelUtility.createLongCounter(
-            OtelCountMetrics.get_current_account_with_no_sdm_count.name(),
-            "Number of getCurrentAccount calls with no SDM present"
-    );
 
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
@@ -956,7 +947,6 @@ public class BrokerMsalController extends BaseController {
 
         if (!parameters.isSharedDevice()) {
             Logger.verbose(TAG + methodName, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
-            sGetCurrentAccountWithNoSDMCount.add(1); // TODO: Any useful attributes to add? How is this emitted?
             return getAccounts(parameters);
         }
 
