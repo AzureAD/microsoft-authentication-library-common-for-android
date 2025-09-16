@@ -63,7 +63,7 @@ object TenantUtil {
         }
 
         if (EMAIL_REGEX.matches(identifier)) {
-            identifier.substringAfter("@").trim()
+            return identifier.substringAfter("@").trim()
         }
 
         Logger.warn(methodTag, "Identifier is neither a valid email/UPN nor a GUID.")
