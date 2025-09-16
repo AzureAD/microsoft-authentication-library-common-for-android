@@ -955,7 +955,7 @@ public class BrokerMsalController extends BaseController {
 
         if (!parameters.isSharedDevice()) {
             Logger.verbose(TAG + methodName, "Not a shared device, invoke getAccounts() instead of getCurrentAccount()");
-            sGetCurrentAccountFailedNoSDMCount.add(1); // TODO: Any useful attributes? How is this omitted?
+            sGetCurrentAccountFailedNoSDMCount.add(1); // TODO: Any useful attributes? How is this emitted?
             return getAccounts(parameters);
         }
 
