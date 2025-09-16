@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.util
 
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience
-import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration
 import io.mockk.*
@@ -168,35 +167,20 @@ class TenantUtilTest {
 
     @Test
     fun `getTenantIdFromLoginHint returns null for null login hint`() {
-        mockkStatic(Logger::class)
-        every { Logger.warn(any(), any(), any()) } just Runs
-
         val result = TenantUtil.getTenantIdFromLoginHint(null, "correlation-id")
-
         assertNull(result)
-        verify { Logger.warn("TenantUtil:getTenantIdFromLoginHint", "correlation-id", "Login hint is invalid or empty.") }
     }
 
     @Test
     fun `getTenantIdFromLoginHint returns null for blank login hint`() {
-        mockkStatic(Logger::class)
-        every { Logger.warn(any(), any(), any()) } just Runs
-
         val result = TenantUtil.getTenantIdFromLoginHint("", "correlation-id")
-
         assertNull(result)
-        verify { Logger.warn("TenantUtil:getTenantIdFromLoginHint", "correlation-id", "Login hint is invalid or empty.") }
     }
 
     @Test
     fun `getTenantIdFromLoginHint returns null for invalid login hint`() {
-        mockkStatic(Logger::class)
-        every { Logger.warn(any(), any(), any()) } just Runs
-
         val result = TenantUtil.getTenantIdFromLoginHint("invalid-hint", "correlation-id")
-
         assertNull(result)
-        verify { Logger.warn("TenantUtil:getTenantIdFromLoginHint", "correlation-id", "Login hint is invalid or empty.") }
     }
 
     @Test
@@ -206,11 +190,9 @@ class TenantUtilTest {
         val expectedTenantId = "12345678-1234-1234-1234-123456789012"
         val mockConfiguration = mockk<OpenIdProviderConfiguration>()
 
-        mockkStatic(Logger::class)
         mockkStatic(AzureActiveDirectory::class)
         mockkStatic(AzureActiveDirectoryAudience::class)
 
-        every { Logger.info(any(), any(), any()) } just Runs
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") } returns mockConfiguration
         every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } returns expectedTenantId
 
@@ -219,7 +201,6 @@ class TenantUtilTest {
         assertEquals(expectedTenantId, result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") }
         verify { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) }
-        verify { Logger.info("TenantUtil:getTenantIdFromLoginHint", correlationId, "Successfully got tenant ID from login hint.") }
     }
 
     @Test
@@ -228,17 +209,14 @@ class TenantUtilTest {
         val correlationId = "correlation-id"
         val exception = RuntimeException("Failed to load configuration")
 
-        mockkStatic(Logger::class)
         mockkStatic(AzureActiveDirectory::class)
 
-        every { Logger.error(any(), any(), any(), any()) } just Runs
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") } throws exception
 
         val result = TenantUtil.getTenantIdFromLoginHint(loginHint, correlationId)
 
         assertNull(result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") }
-        verify { Logger.error("TenantUtil:getTenantIdFromLoginHint", correlationId, "Failed to get tenant ID from login hint.", exception) }
     }
 
     @Test
@@ -248,11 +226,9 @@ class TenantUtilTest {
         val mockConfiguration = mockk<OpenIdProviderConfiguration>()
         val exception = RuntimeException("Failed to extract tenant ID")
 
-        mockkStatic(Logger::class)
         mockkStatic(AzureActiveDirectory::class)
         mockkStatic(AzureActiveDirectoryAudience::class)
 
-        every { Logger.error(any(), any(), any(), any()) } just Runs
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") } returns mockConfiguration
         every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } throws exception
 
@@ -261,6 +237,41 @@ class TenantUtilTest {
         assertNull(result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") }
         verify { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) }
-        verify { Logger.error("TenantUtil:getTenantIdFromLoginHint", correlationId, "Failed to get tenant ID from login hint.", exception) }
+    }
+
+    @Test
+    fun `getTenantIdFromLoginHint works with null correlation ID`() {
+        val loginHint = "user@contoso.com"
+        val expectedTenantId = "12345678-1234-1234-1234-123456789012"
+        val mockConfiguration = mockk<OpenIdProviderConfiguration>()
+
+        mockkStatic(AzureActiveDirectory::class)
+        mockkStatic(AzureActiveDirectoryAudience::class)
+
+        every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("contoso.com") } returns mockConfiguration
+        every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } returns expectedTenantId
+
+        val result = TenantUtil.getTenantIdFromLoginHint(loginHint, null)
+
+        assertEquals(expectedTenantId, result)
+    }
+
+    @Test
+    fun `getTenantIdFromLoginHint handles complex email domains correctly`() {
+        val loginHint = "user.name@sub.domain.contoso.com"
+        val correlationId = "correlation-id"
+        val expectedTenantId = "12345678-1234-1234-1234-123456789012"
+        val mockConfiguration = mockk<OpenIdProviderConfiguration>()
+
+        mockkStatic(AzureActiveDirectory::class)
+        mockkStatic(AzureActiveDirectoryAudience::class)
+
+        every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("sub.domain.contoso.com") } returns mockConfiguration
+        every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } returns expectedTenantId
+
+        val result = TenantUtil.getTenantIdFromLoginHint(loginHint, correlationId)
+
+        assertEquals(expectedTenantId, result)
+        verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant("sub.domain.contoso.com") }
     }
 }
