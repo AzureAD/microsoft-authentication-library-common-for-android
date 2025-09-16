@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MAJOR] Update proguard rules in common (#2756)
 - [MINOR] Add query parameter for Android Release OS Version (#2754)
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
 
