@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.OtelCountMetrics;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 import com.microsoft.identity.common.java.util.ported.DateUtilities;
 
@@ -94,7 +95,7 @@ public class AndroidKeyStoreUtil {
     }
 
     private static final LongCounter sFailedAndroidKeyStoreUnwrapOperationCount = OTelUtility.createLongCounter(
-            "failed_keystore_key_unwrap_operation_count",
+            OtelCountMetrics.failed_keystore_key_unwrap_operation_count.name(),
             "Number of failed Android KeyStore unwrap operations"
     );
 
