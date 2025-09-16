@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add metric for tracking sdm error in getCurrentAccount() (#2762)
 - [MINOR] Add query parameter for Android Release OS Version (#2754)
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
 
