@@ -1,6 +1,9 @@
 vNext
 ----------
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
+- [MINOR] Implement TenantUtil (#2761)
+- [MAJOR] Update proguard rules in common (#2756)
+- [MINOR] Add query parameter for Android Release OS Version (#2754)
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
 
 Version 22.1.0
