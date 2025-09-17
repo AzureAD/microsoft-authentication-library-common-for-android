@@ -63,7 +63,7 @@ abstract class WrappedSecretKeySerializerWithMetadata: IWrappedSecretKeySerializ
         /** Size in bytes for the metadata length field */
         const val METADATA_LENGTH_FIELD_SIZE_BYTES = Int.SIZE_BYTES
 
-        /** Base header identifier for new format */
+        /** Header identifier for new format */
         const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF3CAB
 
         /**
@@ -152,27 +152,29 @@ abstract class WrappedSecretKeySerializerWithMetadata: IWrappedSecretKeySerializ
 
     override fun deserialize(wrappedSecretKeyByteArray: ByteArray): WrappedSecretKey {
         val methodTag = "$TAG:loadFromNewFormat"
-        Logger.info(methodTag, "Loading key using JSON metadata format")
+        Logger.info(methodTag, "Loading key using metadata format")
         val buffer = ByteBuffer.wrap(wrappedSecretKeyByteArray)
 
         // Skip header identifier (already validated in isNewFormat)
         buffer.getInt()
 
+        // Skip serializer ID (we already know which serializer we are)
+        buffer.getInt()
+
         // Read metadata length
         val metadataLength = buffer.getInt()
 
-        // Extract and parse JSON metadata
+        // Extract and parse metadata
         val metadataBytes = ByteArray(metadataLength)
         buffer.get(metadataBytes)
 
         val metadata = deserializeMetadata(metadataBytes)
 
-
         // Validate key data length
         if (metadata.keyLength != buffer.remaining()) {
             Logger.warn(
                 methodTag,
-                "Key data length mismatch. Expected: $metadata.keyLength, Actual: ${buffer.remaining()}"
+                "Key data length mismatch. Expected: ${metadata.keyLength}, Actual: ${buffer.remaining()}"
             )
         }
 
