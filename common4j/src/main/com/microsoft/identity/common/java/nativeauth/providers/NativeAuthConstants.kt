@@ -34,8 +34,6 @@ object NativeAuthConstants {
     object ChallengeChannel {
         //Challenge is sent using the email channel
         const val EMAIL = "email"
-        //Challenge is sent using the voice channel
-        const val VOICE = "voice"
         //Challenge is sent using the SMS channel
         const val SMS = "sms"
     }
