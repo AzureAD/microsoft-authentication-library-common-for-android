@@ -664,6 +664,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = result.correlationId
                     )
                 }
+                is JITChallengeApiResult.BlockedVerificationContact -> {
+                    val customDescription = "Verification contact blocked. " +
+                            "Please try using another email or phone number, or select an alternative authentication method."
+                    JITCommandResult.BlockedVerificationContact(
+                        error = result.error,
+                        errorDescription = customDescription + result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
                 is JITChallengeApiResult.OOBRequired -> {
                     JITCommandResult.VerificationRequired(
                         correlationId = result.correlationId,
