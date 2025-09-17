@@ -68,7 +68,7 @@ class AuthUxJavaScriptInterface {
                 url = URL(urlString)
             } catch (e: MalformedURLException) {
                 // If url is not a valid URL, return false
-                Logger.warn(TAG, "Malformed URL passed.")
+                Logger.warn(TAG, "Malformed URL passed: ${e.message}")
                 return false
 
             }
