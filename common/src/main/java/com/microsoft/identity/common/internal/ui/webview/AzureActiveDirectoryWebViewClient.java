@@ -244,14 +244,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
-        Logger.info(methodTag, "handleUrl Called, would've validated on the redirect url: " + url);
+        Logger.info(methodTag, "handleUrl Called, would've validated on the redirect url: " + url + " with result: " + shouldExposeJavaScriptInterface(url));
 
-//        // Re-evaluate adding AuthUx JavaScript Interface
+        // Re-evaluate adding AuthUx JavaScript Interface
 //        if (shouldExposeJavaScriptInterface(url)) {
-//            // If broker request, and a valid url, expose JavaScript API
-//            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-//            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-//            mAuthUxJavaScriptInterfaceAdded = true;
+            // If broker request, and a valid url, expose JavaScript API
+        Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
+        view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+        mAuthUxJavaScriptInterfaceAdded = true;
 //        } else if (mAuthUxJavaScriptInterfaceAdded) {
 //            // Remove AuthUx JavaScript Interface
 //            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");

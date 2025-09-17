@@ -68,12 +68,13 @@ class AuthUxJavaScriptInterface {
                 url = URL(urlString)
             } catch (e: MalformedURLException) {
                 // If url is not a valid URL, return false
-                Logger.warn(TAG, "Malformed URL passed: ${e.message}")
+                Logger.warn(TAG, "Malformed URL passed. url: $urlString, Message: ${e.message}")
                 return false
 
             }
 
             val host = url.host
+            Logger.info(TAG, "Host for the URL is: $host")
 
             // Otherwise, make sure url is a valid url
             // We only want to allow URLs that have the AAD or MSA url hosts
