@@ -60,6 +60,7 @@ import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import lombok.NonNull;
 
@@ -88,6 +89,11 @@ public class AndroidKeyStoreUtil {
      * {@see https://developer.android.com/training/articles/keystore#UsingAndroidKeyStore}
      */
     private static final String ANDROID_KEY_STORE_TYPE = "AndroidKeyStore";
+
+    /**
+     * Max length of stack trace to search for a keystore exception
+     */
+    private static int KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH = 20;
 
     private AndroidKeyStoreUtil() {
     }
@@ -461,12 +467,11 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final Attributes attributes = Attributes.builder()
+            final Attributes attributes = createAttributesBuilderFromInvalidKeyException((InvalidKeyException) exception)
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
-                    .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
-                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
                     .build();
+
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
         Logger.error(
