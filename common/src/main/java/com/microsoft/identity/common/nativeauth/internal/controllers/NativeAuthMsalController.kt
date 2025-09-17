@@ -229,6 +229,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
+                is SignInTokenApiResult.MFARequired -> {
+                    // when MFA is required, we retrieve the list of auth methods available
+                    performIntrospectCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInWithContinuationTokenCommandResult
+                }
                 is SignInTokenApiResult.JITRequired -> {
                     // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
                     performJITIntrospect(
@@ -244,8 +252,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         redirectReason = tokenApiResult.redirectReason
                     )
                 }
-                is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
+                is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.CodeIncorrect,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UnknownError -> {
                     Logger.warnWithObject(
@@ -325,9 +332,26 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         redirectReason = tokenApiResult.redirectReason
                     )
                 }
+                is SignInTokenApiResult.MFARequired -> {
+                    // when MFA is required, we retrieve the list of auth methods available
+                    performIntrospectCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInSubmitCodeCommandResult
+                }
+                is SignInTokenApiResult.JITRequired -> {
+                    // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
+                    performJITIntrospect(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parameters = parametersWithScopes,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInSubmitCodeCommandResult
+                }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.JITRequired -> {
+                is SignInTokenApiResult.InvalidCredentials,
+                is SignInTokenApiResult.UserNotFound -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -402,7 +426,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound,
-                    // This will change once SMS MFA is supported
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.JITRequired -> {
                     Logger.warnWithObject(
                         TAG,
