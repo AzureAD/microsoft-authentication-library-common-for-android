@@ -23,111 +23,87 @@
 package com.microsoft.identity.common.crypto.wrappedsecretkey
 
 import com.microsoft.identity.common.logging.Logger
-import java.nio.ByteBuffer
 
 /**
- * Manager for handling different versions of [WrappedSecretKey] serialization formats.
+ * Manager for handling different IDs of [WrappedSecretKey] serialization formats.
  *
  * This object provides centralized management for serializing and deserializing wrapped secret keys
- * across different format versions. It handles version detection, serializer selection, and
+ * across different format IDs. It handles ID detection, serializer selection, and
  * maintains backward compatibility between legacy and modern formats.
  *
  * **Supported formats:**
- * - **Version 0 (Legacy)**: Raw key data only, no metadata or header
- * - **Version 1 (JSON)**: Header + JSON metadata + raw key data
- * - **Future versions**: Extensible design for new serialization formats
+ * - **ID 0 (Legacy)**: wrappedSecretKey data only, no metadata or header
+ * - **ID 1 (Binary Stream)**: metadata with structured header
+ * - **Future IDs**: Extensible design for new serialization formats
  *
  * **Header structure for new formats:**
  * ```
- * [Header ID: 4 bytes][Metadata Length: 4 bytes][Metadata][Raw Key Data]
+ * [Header ID: 4 bytes][Serializer ID: 4 bytes][Metadata Length: 4 bytes][Metadata][wrappedSecretKey]
  * ```
  *
- * **Version encoding:**
- * The header identifier uses the first 3 bytes (0x00FF3C) as a format identifier,
- * with the last byte encoding the version number (0x00-0xFF), allowing for 256 different versions.
+ * **ID encoding:**
+ * The header identifier uses the first 3 bytes (0x00FF3CAB) as a format identifier,
+ * with the serializer ID stored separately, allowing for 256 different format IDs.
  *
- * **Version detection algorithm:**
+ * **ID detection algorithm:**
  * 1. Check if data has minimum header size
  * 2. Extract header identifier (first 4 bytes)
- * 3. Mask and compare first 3 bytes against known format identifier
- * 4. Extract version from last byte, or assume legacy format (version 0)
+ * 3. Compare first 3 bytes against known format identifier
+ * 4. Extract serializer ID from header, or assume legacy format (ID 0)
  *
  * @see IWrappedSecretKeySerializer
  * @see WrappedSecretKey
  * @see WrappedSecretKeyLegacySerializer
- * @see WrappedSecretKeyJsonObjectSerializer
+ * @see WrappedSecretKeyBinaryStreamSerializer
  */
 object WrappedSecretKeySerializerManager {
     private const val TAG = "WrappedSecretKeySerializerManager"
-    /** Size in bytes for the header identifier field */
-    const val HEADER_ID_FIELD_SIZE_BYTES = Int.SIZE_BYTES
-
-    /** Size in bytes for the metadata length field */
-    const val METADATA_LENGTH_FIELD_SIZE_BYTES = Int.SIZE_BYTES
-
-    /** Base header identifier for new format (first 3 bytes), with version byte as 0x00 */
-    private const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF3C00
-
-    /** Mask to isolate the first 3 bytes of the header for format identification */
-    private const val NEW_FORMAT_HEADER_MASK = 0xFFFFFF00 // Mask to compare only first 3 bytes
-
-    /** Mask to extract the version byte (last byte) from the header identifier */
-    private const val VERSION_BYTE_MASK = 0x000000FF
 
     /**
-     * Extracts the serializer version from the header of wrapped key data.
+     * Extracts the serializer ID from the header of wrapped key data.
      *
-     * The version is stored in the last byte of the 4-byte header identifier.
+     * The ID is stored in the header identifier of metadata format data.
      * This allows for backward compatibility when introducing new serialization formats.
      *
-     * **Version detection logic:**
-     * 1. If data is too small for a header, assume legacy format (version 0)
+     * **ID detection logic:**
+     * 1. If data is too small for a header, assume legacy format (ID 0)
      * 2. Extract the 4-byte header identifier
      * 3. Use bit masking to compare only the first 3 bytes against the known format identifier
-     * 4. If matched, extract the version from the last byte; otherwise, return legacy version
+     * 4. If matched, extract the ID from the header; otherwise, return legacy ID
      *
-     * @param rawData The raw bytes read from file containing the wrapped key data
-     * @return The version number (0-255) if the data uses the new format, 0 if legacy format or invalid data
+     * @param wrappedSecretKeyByteArray The byte array to inspect
+     * @return The serializer ID (0-255) if the data uses the new format, 0 if legacy format or invalid data
      */
-    fun getVersion(rawData: ByteArray): Int {
-        val methodTag = "$TAG:getVersion"
-        if ((rawData.size < HEADER_ID_FIELD_SIZE_BYTES + METADATA_LENGTH_FIELD_SIZE_BYTES)) {
-            Logger.warn(methodTag, "Data too small to contain header, assuming legacy format")
-            return WrappedSecretKeyLegacySerializer.VERSION
-        }
-        val buffer = ByteBuffer.wrap(rawData)
-        val headerValue = buffer.getInt()
-        // Mask out the version byte (last byte) and compare only the first 3 bytes
-        return if ((headerValue and NEW_FORMAT_HEADER_MASK.toInt()) == NEW_FORMAT_HEADER_IDENTIFIER) {
-            headerValue and VERSION_BYTE_MASK // Return the version byte
-        } else {
-            Logger.warn(methodTag, "Data does not match known format identifier, assuming legacy format")
-            WrappedSecretKeyLegacySerializer.VERSION // Legacy format
-        }
+    fun identifySerializer(wrappedSecretKeyByteArray: ByteArray): Int {
+        val methodTag = "$TAG:identifySerializer"
+        val serializerId = WrappedSecretKeySerializerWithMetadata
+            .getSerializerIdFromByteArray(wrappedSecretKeyByteArray)
+        Logger.info(methodTag, "Detected serializer ID: $serializerId")
+        return serializerId ?: WrappedSecretKeyLegacySerializer.ID // Legacy format
     }
 
     /**
-     * Returns the appropriate serializer instance for the specified version.
+     * Returns the appropriate serializer instance for the specified ID.
      *
-     * Creates and returns a serializer that can handle the specified format version.
+     * Creates and returns a serializer that can handle the specified format ID.
      * This factory method ensures that the correct serialization strategy is used
-     * for each supported format version.
+     * for each supported format ID.
      *
-     * **Supported versions:**
-     * - Version 0: [WrappedSecretKeyLegacySerializer] for legacy format
-     * - Version 1: [WrappedSecretKeyJsonObjectSerializer] for JSON metadata format
+     * **Supported IDs:**
+     * - ID 0: [WrappedSecretKeyLegacySerializer] for legacy format
+     * - ID 1: [WrappedSecretKeyBinaryStreamSerializer] for binary stream format
      *
-     * @param version The serialization format version number
-     * @return An [IWrappedSecretKeySerializer] instance capable of handling the specified version
-     * @throws IllegalArgumentException if the version is not supported
+     * @param serializerId The serialization format ID number
+     * @return An [IWrappedSecretKeySerializer] instance capable of handling the specified ID
+     * @throws IllegalArgumentException if the ID is not supported
      */
-    fun getSerializer(version: Int): IWrappedSecretKeySerializer {
+    fun getSerializer(serializerId: Int): IWrappedSecretKeySerializer {
         val methodTag = "$TAG:getSerializer"
-        Logger.info(methodTag, "Getting serializer for version: $version")
-        return when (version) {
-            WrappedSecretKeyJsonObjectSerializer.VERSION -> WrappedSecretKeyJsonObjectSerializer()
-            WrappedSecretKeyLegacySerializer.VERSION -> WrappedSecretKeyLegacySerializer()
-            else -> throw IllegalArgumentException("Unsupported WrappedSecretKey version: $version")
+        Logger.info(methodTag, "Getting serializer for ID: $serializerId")
+        return when (serializerId) {
+            WrappedSecretKeyBinaryStreamSerializer.ID -> WrappedSecretKeyBinaryStreamSerializer()
+            WrappedSecretKeyLegacySerializer.ID -> WrappedSecretKeyLegacySerializer()
+            else -> throw IllegalArgumentException("Unsupported serializer ID: $serializerId")
         }
     }
 }

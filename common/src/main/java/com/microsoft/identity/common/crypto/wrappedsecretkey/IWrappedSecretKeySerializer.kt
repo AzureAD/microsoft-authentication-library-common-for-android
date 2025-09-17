@@ -23,33 +23,40 @@
 package com.microsoft.identity.common.crypto.wrappedsecretkey
 
 /**
- * Interface for serializing and deserializing WrappedSecretKey objects.
+ * Interface for serializing and deserializing [WrappedSecretKey] objects.
  *
- * Implementations can define different serialization formats and versions.
+ * Each implementation handles a specific format and provides bidirectional
+ * conversion between [WrappedSecretKey] objects and their byte array representations.
+ *
+ * @see WrappedSecretKey
+ * @see WrappedSecretKeySerializerManager
  */
 interface IWrappedSecretKeySerializer {
 
     /**
-     * Serialize the given WrappedSecretKey into a byte array.
+     * Serializes a [WrappedSecretKey] into its byte array representation.
      *
-     * @param wrappedSecretKey The WrappedSecretKey to serialize.
-     * @return The serialized byte array representation of the WrappedSecretKey.
+     * @param wrappedSecretKey The wrapped secret key to serialize
+     * @return The serialized byte array representation
+     * @throws IllegalArgumentException if the input is invalid
      */
     fun serialize(wrappedSecretKey: WrappedSecretKey): ByteArray
 
     /**
-     * Deserialize the given byte array into a WrappedSecretKey object.
+     * Deserializes a byte array into a [WrappedSecretKey] object.
      *
-     * @param data The byte array to deserialize.
-     * @return The deserialized WrappedSecretKey object.
-     * @throws Exception if deserialization fails.
+     * @param wrappedSecretKeyByteArray The serialized byte array to deserialize
+     * @return The reconstructed [WrappedSecretKey] object
+     * @throws Exception if deserialization fails due to invalid format or corruption
      */
-    fun deserialize(data: ByteArray): WrappedSecretKey
+    fun deserialize(wrappedSecretKeyByteArray: ByteArray): WrappedSecretKey
 
     /**
-     * Get the version of the serialization format used by this serializer.
+     * The unique identifier for this serialization format.
      *
-     * @return The version number as an integer.
+     * Used by [WrappedSecretKeySerializerManager] for format detection and serializer selection.
+     *
+     * @return The unique serializer format identifier (0-255)
      */
-    fun getVersion(): Int
+    val id: Int
 }

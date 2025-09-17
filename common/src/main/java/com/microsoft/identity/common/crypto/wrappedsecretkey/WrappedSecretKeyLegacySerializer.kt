@@ -24,47 +24,50 @@ package com.microsoft.identity.common.crypto.wrappedsecretkey
 
 
 /**
- * Legacy serializer for [WrappedSecretKey] that maintains backward compatibility with the original format.
+ * Legacy serializer for [WrappedSecretKey] that maintains backward compatibility.
  *
- * This serializer handles the legacy format where only the raw wrapped key data is stored
- * without any additional metadata such as algorithm or cipher transformation information.
- * When deserializing legacy data, it applies default values for missing metadata to ensure
- * proper key reconstruction.
+ * Handles the original format with raw key data only, applying default metadata
+ * during deserialization for proper key reconstruction.
  *
- * **Format characteristics:**
- * - Version: 0 (legacy)
- * - Data: Raw wrapped key bytes only
- * - No metadata header
- * - Default algorithm: AES
- * - Default cipher transformation: RSA/ECB/PKCS1Padding
+ * **Format:**
+ * - **ID**: 0 (legacy)
+ * - **Structure**: Raw wrapped key bytes only
+ * - **Defaults**: AES algorithm, RSA/ECB/PKCS1Padding transformation
  *
- * This serializer is essential for maintaining compatibility when migrating from older
- * key storage formats to newer metadata-aware formats.
+ * **Use cases:**
+ * - Deserializing pre-metadata format keys
+ * - Backward compatibility with existing storage
+ * - Migration to newer metadata-aware formats
  *
  * @see IWrappedSecretKeySerializer
- * @see WrappedSecretKey
  */
 class WrappedSecretKeyLegacySerializer : IWrappedSecretKeySerializer {
 
     companion object {
-        /** Version identifier for the legacy format */
-        const val VERSION = 0
-
         /** Default algorithm used when no metadata is available */
         private const val DEFAULT_ALGORITHM = "AES"
 
         /** Default cipher transformation used when no metadata is available */
         private const val DEFAULT_CIPHER_TRANSFORMATION = "RSA/ECB/PKCS1Padding"
+
+        /** Unique identifier for the legacy serialization format */
+        const val ID = 0
     }
 
     /**
      * Serializes a [WrappedSecretKey] to the legacy format.
      *
      * In the legacy format, only the raw wrapped key data is stored without any metadata.
-     * This maintains compatibility with older storage implementations.
+     * This maintains compatibility with older storage implementations that expect
+     * direct key data without headers or metadata sections.
+     *
+     * **Output format:**
+     * ```
+     * [Raw Key Data]
+     * ```
      *
      * @param wrappedSecretKey The wrapped secret key to serialize
-     * @return Raw wrapped key data as byte array
+     * @return Raw wrapped key data as byte array (no headers or metadata)
      */
     override fun serialize(wrappedSecretKey: WrappedSecretKey): ByteArray {
         return wrappedSecretKey.wrappedKeyData
@@ -75,26 +78,31 @@ class WrappedSecretKeyLegacySerializer : IWrappedSecretKeySerializer {
      *
      * Since the legacy format doesn't include metadata, this method applies default
      * values for algorithm and cipher transformation to reconstruct a complete
-     * [WrappedSecretKey] instance.
+     * [WrappedSecretKey] instance. The default values are chosen to maintain
+     * compatibility with the most common cryptographic configurations.
      *
-     * @param data Raw wrapped key data from legacy format
+     * **Default metadata applied:**
+     * - Algorithm: "AES"
+     * - Cipher transformation: "RSA/ECB/PKCS1Padding"
+     *
+     * @param wrappedSecretKeyByteArray The byte array containing the raw wrapped key data
      * @return [WrappedSecretKey] instance with legacy data and default metadata
+     * @throws IllegalArgumentException if data is null or empty
      */
-    override fun deserialize(data: ByteArray): WrappedSecretKey {
+    override fun deserialize(wrappedSecretKeyByteArray: ByteArray): WrappedSecretKey {
         // Legacy format does not include metadata, use defaults
         return WrappedSecretKey(
-            wrappedKeyData = data,
+            wrappedKeyData = wrappedSecretKeyByteArray,
             algorithm = DEFAULT_ALGORITHM,
             cipherTransformation = DEFAULT_CIPHER_TRANSFORMATION
         )
     }
 
     /**
-     * Returns the version identifier for this serializer.
+     * The unique identifier for this serialization format.
      *
-     * @return Version 0, indicating the legacy format
+     * Returns 0 to indicate the legacy format, which is used by the
+     * [WrappedSecretKeySerializerManager] for format detection and serializer selection.
      */
-    override fun getVersion(): Int {
-        return VERSION
-    }
+    override val id = ID
 }

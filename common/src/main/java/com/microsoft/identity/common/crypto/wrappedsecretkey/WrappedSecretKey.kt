@@ -32,9 +32,9 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager
  * Supports multiple serialization formats controlled by flight configuration for backward compatibility.
  *
  * **Formats:**
- * - Version 0: Legacy (raw key data only)
- * - Version 1: JSON metadata format
- * - Future versions: Extensible via flight config
+ * - ID 0: Legacy (raw wrappedSecretKey data only)
+ * - ID 1: Binary stream with metadata (UTF strings + int)
+ * - Future IDs: Extensible via flight config
  *
  * @property wrappedKeyData The encrypted secret key bytes
  * @property algorithm The key algorithm (e.g., "AES")
@@ -71,13 +71,13 @@ data class WrappedSecretKey(
     /**
      * Serializes the key using the format specified by flight configuration.
      *
-     * @return Serialized byte array
+     * @return Serialized byte array using the configured serializer ID
      */
     fun serialize(): ByteArray {
-        val serializerVersion = CommonFlightsManager.getFlightsProvider()
+        val serializerId = CommonFlightsManager.getFlightsProvider()
             .getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION)
         return WrappedSecretKeySerializerManager
-            .getSerializer(serializerVersion)
+            .getSerializer(serializerId)
             .serialize(this)
     }
 
@@ -87,12 +87,12 @@ data class WrappedSecretKey(
          *
          * @param data The serialized byte data
          * @return Reconstructed [WrappedSecretKey]
-         * @throws IllegalArgumentException if format is unsupported
+         * @throws IllegalArgumentException if serializer ID is unsupported
          */
         fun deserialize(data: ByteArray): WrappedSecretKey {
-            val serializerVersion = WrappedSecretKeySerializerManager.getVersion(data)
+            val serializerId = WrappedSecretKeySerializerManager.identifySerializer(data)
             return WrappedSecretKeySerializerManager
-                .getSerializer(serializerVersion)
+                .getSerializer(serializerId)
                 .deserialize(data)
         }
     }

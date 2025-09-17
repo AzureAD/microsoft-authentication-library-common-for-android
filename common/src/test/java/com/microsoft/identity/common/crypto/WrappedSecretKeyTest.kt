@@ -338,18 +338,18 @@ class WrappedSecretKeyTest {
         // Test new format version detection
         every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 1
         val newFormatData = wrappedKey.serialize()
-        val detectedNewVersion = WrappedSecretKeySerializerManager.getVersion(newFormatData)
+        val detectedNewVersion = WrappedSecretKeySerializerManager.identifySerializer(newFormatData)
         assertEquals("Should detect version 1 for new format", 1, detectedNewVersion)
 
         // Test legacy format version detection
         every { CommonFlightsManager.getFlightsProvider().getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION) } returns 0
         val legacyFormatData = wrappedKey.serialize()
-        val detectedLegacyVersion = WrappedSecretKeySerializerManager.getVersion(legacyFormatData)
+        val detectedLegacyVersion = WrappedSecretKeySerializerManager.identifySerializer(legacyFormatData)
         assertEquals("Should detect version 0 for legacy format", 0, detectedLegacyVersion)
 
         // Test raw binary data (should be detected as legacy)
         val rawData = "random-binary-data".toByteArray()
-        val detectedRawVersion = WrappedSecretKeySerializerManager.getVersion(rawData)
+        val detectedRawVersion = WrappedSecretKeySerializerManager.identifySerializer(rawData)
         assertEquals("Should detect version 0 for raw data", 0, detectedRawVersion)
     }
 
