@@ -24,17 +24,16 @@ package com.microsoft.identity.common.crypto
 
 import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKey
 import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKeySerializerManager
+import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKeySerializerWithMetadata.Companion.METADATA_FORMAT_MAGIC_BYTES
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 
 class WrappedSecretKeyTest {
@@ -45,8 +44,7 @@ class WrappedSecretKeyTest {
 
     companion object {
         // New format constants matching the implementation
-        private const val NEW_FORMAT_HEADER_IDENTIFIER = 0x00FF3C01
-        private const val FORMAT_VERSION_1 = 1
+        private const val NEW_SERIALIZER_ID_1 = 1
     }
 
     @Before
@@ -130,28 +128,37 @@ class WrappedSecretKeyTest {
         // Read and verify the binary structure
         val buffer = ByteBuffer.wrap(serializedData)
 
-        // Verify header identifier (4 bytes)
-        val headerIdentifier = buffer.getInt()
-        assertEquals("Header identifier should match expected value", NEW_FORMAT_HEADER_IDENTIFIER, headerIdentifier)
+        // Verify magic bytes identifier (4 bytes)
+        val magicBytes = buffer.getInt()
+        assertEquals("Magic bytes should match expected value", METADATA_FORMAT_MAGIC_BYTES, magicBytes)
+
+        // Verify serializer ID (4 bytes)
+        val serializerId = buffer.getInt()
+        assertEquals("Should use binary stream serializer ID", NEW_SERIALIZER_ID_1, serializerId)
 
         // Verify metadata length (4 bytes)
         val metadataLength = buffer.getInt()
         assertTrue("Metadata length should be reasonable", metadataLength > 0 && metadataLength < serializedData.size)
 
-        // Read and verify metadata
+        // Read and verify binary metadata using DataInputStream
         val metadataBytes = ByteArray(metadataLength)
         buffer.get(metadataBytes)
 
-        val metadata = JSONObject(String(metadataBytes, Charsets.UTF_8))
-        assertEquals(testAlgorithm, metadata.getString("algorithm"))
-        assertEquals(testCipherTransformation, metadata.getString("cipherTransformation"))
-        assertEquals(FORMAT_VERSION_1, metadata.getInt("version"))
-        assertEquals(testKeyBytes.size, metadata.getInt("keyDataLength"))
+        val dataInputStream = java.io.DataInputStream(java.io.ByteArrayInputStream(metadataBytes))
+
+        // Read binary metadata fields (algorithm, cipherTransformation, keyDataLength)
+        val algorithmFromMetadata = dataInputStream.readUTF()
+        val cipherTransformationFromMetadata = dataInputStream.readUTF()
+        val keyDataLengthFromMetadata = dataInputStream.readInt()
+
+        assertEquals("Algorithm should match", testAlgorithm, algorithmFromMetadata)
+        assertEquals("Cipher transformation should match", testCipherTransformation, cipherTransformationFromMetadata)
+        assertEquals("Key data length should match", testKeyBytes.size, keyDataLengthFromMetadata)
 
         // Verify remaining data is the key
         val remainingKeyData = ByteArray(buffer.remaining())
         buffer.get(remainingKeyData)
-        assertArrayEquals(testKeyBytes, remainingKeyData)
+        assertArrayEquals("Remaining data should be the original key", testKeyBytes, remainingKeyData)
     }
 
     @Test
@@ -245,7 +252,7 @@ class WrappedSecretKeyTest {
         // Validate key is serialized with new format
         val buffer = ByteBuffer.wrap(serializedData)
         val headerIdentifier = buffer.getInt()
-        assertEquals("Key should be serialized with new format", NEW_FORMAT_HEADER_IDENTIFIER, headerIdentifier)
+        assertEquals("Key should be serialized with new format", METADATA_FORMAT_MAGIC_BYTES, headerIdentifier)
 
         // Phase 2: Deserialize (automatic format detection should work regardless of flight value)
         val deserializedKey = WrappedSecretKey.deserialize(serializedData)
@@ -290,25 +297,38 @@ class WrappedSecretKeyTest {
         // Validate the structure manually
         val buffer = ByteBuffer.wrap(serializedData)
 
-        // Check header identifier
-        val headerIdentifier = buffer.getInt()
-        assertEquals("New format should have correct header identifier", NEW_FORMAT_HEADER_IDENTIFIER, headerIdentifier)
+        // Check magic bytes identifier
+        val magicBytes = buffer.getInt()
+        assertEquals("New format should have correct magic bytes identifier", METADATA_FORMAT_MAGIC_BYTES, magicBytes)
 
-        // Check metadata
+        // Check serializer ID
+        val serializerId = buffer.getInt()
+        assertEquals("Should use binary stream serializer ID", NEW_SERIALIZER_ID_1, serializerId)
+
+        // Check metadata length
         val metadataLength = buffer.getInt()
+        assertTrue("Metadata length should be positive", metadataLength > 0)
+        assertTrue("Metadata length should be reasonable", metadataLength < serializedData.size)
+
+        // Read and validate binary metadata using DataInputStream
         val metadataBytes = ByteArray(metadataLength)
         buffer.get(metadataBytes)
-        val metadata = JSONObject(String(metadataBytes, Charsets.UTF_8))
 
-        assertTrue("Metadata should contain algorithm", metadata.has("algorithm"))
-        assertTrue("Metadata should contain cipherTransformation", metadata.has("cipherTransformation"))
-        assertTrue("Metadata should contain version", metadata.has("version"))
-        assertTrue("Metadata should contain keyDataLength", metadata.has("keyDataLength"))
+        val dataInputStream = java.io.DataInputStream(java.io.ByteArrayInputStream(metadataBytes))
 
-        assertEquals("Algorithm should match", testAlgorithm, metadata.getString("algorithm"))
-        assertEquals("Cipher transformation should match", testCipherTransformation, metadata.getString("cipherTransformation"))
-        assertEquals("Version should be 1", FORMAT_VERSION_1, metadata.getInt("version"))
-        assertEquals("Key data length should match", testKeyBytes.size, metadata.getInt("keyDataLength"))
+        // Read binary metadata fields (algorithm, cipherTransformation, keyDataLength)
+        val algorithmFromMetadata = dataInputStream.readUTF()
+        val cipherTransformationFromMetadata = dataInputStream.readUTF()
+        val keyDataLengthFromMetadata = dataInputStream.readInt()
+
+        assertEquals("Algorithm should match", testAlgorithm, algorithmFromMetadata)
+        assertEquals("Cipher transformation should match", testCipherTransformation, cipherTransformationFromMetadata)
+        assertEquals("Key data length should match", testKeyBytes.size, keyDataLengthFromMetadata)
+
+        // Verify remaining data is the key
+        val remainingKeyData = ByteArray(buffer.remaining())
+        buffer.get(remainingKeyData)
+        assertArrayEquals("Remaining data should be the original key", testKeyBytes, remainingKeyData)
     }
 
     /**
@@ -356,11 +376,11 @@ class WrappedSecretKeyTest {
     /**
      * Test edge case where metadata has corrupted length in new format.
      */
-    @Test(expected = NegativeArraySizeException::class)
+    @Test(expected = IllegalArgumentException::class)
     fun corruptedMetadataLengthThrowsException() {
         // Create new format with corrupted metadata length
         val corruptedData = ByteBuffer.allocate(16)
-                .putInt(NEW_FORMAT_HEADER_IDENTIFIER) // Correct header identifier
+                .putInt(METADATA_FORMAT_MAGIC_BYTES) // Correct header identifier
                 .putInt(-1)                           // Invalid metadata length (negative)
                 .put("test".toByteArray())
                 .array()
@@ -372,11 +392,11 @@ class WrappedSecretKeyTest {
     /**
      * Test edge case where metadata length exceeds remaining data.
      */
-    @Test(expected = BufferUnderflowException::class)
+    @Test(expected = IllegalArgumentException::class)
     fun metadataLengthLargerThanRemainingDataThrowsException() {
         // Create new format with metadata length larger than remaining data
         val corruptedData = ByteBuffer.allocate(16)
-                .putInt(NEW_FORMAT_HEADER_IDENTIFIER) // Correct header identifier
+                .putInt(METADATA_FORMAT_MAGIC_BYTES) // Correct header identifier
                 .putInt(1000)                         // Metadata length larger than remaining data
                 .put("test".toByteArray())
                 .array()

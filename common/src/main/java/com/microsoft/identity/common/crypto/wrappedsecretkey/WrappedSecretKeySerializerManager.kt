@@ -38,18 +38,7 @@ import com.microsoft.identity.common.logging.Logger
  *
  * **Header structure for new formats:**
  * ```
- * [Header ID: 4 bytes][Serializer ID: 4 bytes][Metadata Length: 4 bytes][Metadata][wrappedSecretKey]
- * ```
- *
- * **ID encoding:**
- * The header identifier uses the first 3 bytes (0x00FF3CAB) as a format identifier,
- * with the serializer ID stored separately, allowing for 256 different format IDs.
- *
- * **ID detection algorithm:**
- * 1. Check if data has minimum header size
- * 2. Extract header identifier (first 4 bytes)
- * 3. Compare first 3 bytes against known format identifier
- * 4. Extract serializer ID from header, or assume legacy format (ID 0)
+ * [Magic Bytes: 4 bytes][Serializer ID: 4 bytes][Metadata Length: 4 bytes][Metadata][wrappedSecretKey]
  *
  * @see IWrappedSecretKeySerializer
  * @see WrappedSecretKey
@@ -60,19 +49,23 @@ object WrappedSecretKeySerializerManager {
     private const val TAG = "WrappedSecretKeySerializerManager"
 
     /**
-     * Extracts the serializer ID from the header of wrapped key data.
+     * Extracts the serializer ID from wrapped secret key data.
      *
-     * The ID is stored in the header identifier of metadata format data.
-     * This allows for backward compatibility when introducing new serialization formats.
+     * Analyzes the byte array to determine which serialization format was used.
+     * This enables automatic format detection and backward compatibility across different versions.
      *
-     * **ID detection logic:**
-     * 1. If data is too small for a header, assume legacy format (ID 0)
-     * 2. Extract the 4-byte header identifier
-     * 3. Use bit masking to compare only the first 3 bytes against the known format identifier
-     * 4. If matched, extract the ID from the header; otherwise, return legacy ID
+     * **Detection logic:**
+     * 1. Check if data contains metadata format magic bytes (0x00FF3CAB)
+     * 2. If magic bytes found, extract serializer ID from header
+     * 3. If no magic bytes or insufficient data, assume legacy format (ID 0)
      *
-     * @param wrappedSecretKeyByteArray The byte array to inspect
-     * @return The serializer ID (0-255) if the data uses the new format, 0 if legacy format or invalid data
+     * **Supported formats:**
+     * - **ID 0**: Legacy format (raw wrapped key data only)
+     * - **ID 1**: Binary stream with metadata header
+     *
+     * @param wrappedSecretKeyByteArray The serialized wrapped secret key data to analyze
+     * @return The detected serializer ID (0 for legacy, 1+ for metadata formats)
+     * @see WrappedSecretKeySerializerWithMetadata.getSerializerIdFromByteArray
      */
     fun identifySerializer(wrappedSecretKeyByteArray: ByteArray): Int {
         val methodTag = "$TAG:identifySerializer"

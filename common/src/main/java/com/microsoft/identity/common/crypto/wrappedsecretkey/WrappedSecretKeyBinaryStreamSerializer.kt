@@ -33,7 +33,6 @@ import java.io.DataOutputStream
  * Uses DataInputStream/DataOutputStream for compact binary metadata encoding.
  * More efficient than JSON but less human-readable.
  *
- * **Format:** ID 2, Header + binary metadata + raw key data
  * **Metadata:** UTF strings for algorithm/transformation, int for key length
  *
  * @see IWrappedSecretKeySerializer
@@ -56,6 +55,7 @@ class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMeta
      * @param wrappedSecretKey The wrapped secret key containing metadata to serialize
      * @return Binary encoded metadata as byte array
      */
+    @Throws(java.io.IOException::class)
     override fun serializeMetadata(wrappedSecretKey: WrappedSecretKey): ByteArray {
         return ByteArrayOutputStream().use { baos ->
             DataOutputStream(baos).use { dos ->
@@ -77,6 +77,7 @@ class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMeta
      * @return [WrappedSecretKeyMetadata] object with extracted information
      * @throws java.io.IOException if binary format is invalid or corrupted
      */
+    @Throws(java.io.IOException::class)
     override fun deserializeMetadata(metadataByteArray: ByteArray): WrappedSecretKeyMetadata {
         return ByteArrayInputStream(metadataByteArray).use { bais ->
             DataInputStream(bais).use { dis ->
