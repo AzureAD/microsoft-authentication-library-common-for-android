@@ -94,12 +94,13 @@ public class CommandUtil {
         return parameters.toBuilder()
                 .scopes(defaultScopes)
                 .correlationId(parameters.getCorrelationId())
+                .isMFAGrantType(parameters.getIsMFAGrantType())
                 .build();
     }
 
     /**
      * Adds scopes to [SignInSubmitPasswordCommandParameters] object and returns a new
-     * [SignInSubmitCodeCommandParameters] object.
+     * [SignInSubmitPasswordCommandParameters] object.
      * @param parameters input command parameter
      * @param correlationId correlationId to be used in the request
      * @param defaultScopes scopes to be added
@@ -306,6 +307,7 @@ public class CommandUtil {
                         .correlationId(parameters.getCorrelationId())
                         .challengeType(parameters.getChallengeType())
                         .claimsRequestJson(parameters.claimsRequestJson)
+                        .isMFAGrantType(true)
                         .build();
 
         return commandParameters;
