@@ -89,4 +89,9 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
         final String[] authorityUriParts = mAuthorityUrlString.split("/");
         return authorityUriParts[authorityUriParts.length - 1];
     }
+
+    public String getTenant(){
+        final String[] authorityUriParts = mAuthorityUrlString.split("/");
+        return authorityUriParts[authorityUriParts.length - 2];
+    }
 }

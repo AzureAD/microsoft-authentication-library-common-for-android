@@ -1362,6 +1362,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
 
         /**
+         * String for all SSO tokens result.
+         */
+        public static final String BROKER_GENERATE_ALL_SSO_TOKENS_RESULT = "broker_generate_all_sso_tokens";
+
+        /**
          * String for generate shr result.
          */
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
@@ -1673,6 +1678,9 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
 
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
+            // TODO: need to consider broker protocol version
+            GET_ALL_SSO_TOKENS(GET_ALL_SSO_TOKENS_PATH, null, null),
+
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
@@ -1847,6 +1855,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
+         * Api path for getting all SSO tokens based on authority.
+         */
+        public static final String GET_ALL_SSO_TOKENS_PATH = "/allSsoTokens";
 
         /**
          * ContentProvider path to get the preferred auth method.
