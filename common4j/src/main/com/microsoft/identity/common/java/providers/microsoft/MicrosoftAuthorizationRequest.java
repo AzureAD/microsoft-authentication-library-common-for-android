@@ -122,6 +122,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
+    @SerializedName("x-client-ReleaseOS")
+    private final String mDiagnosticReleaseOS;
+
+    @Expose()
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName("x-client-CPU")
     private final String mDiagnosticCPU;
 
@@ -186,9 +192,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         // If the flight is enabled, set the fields
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
             mDiagnosticMN = Device.getManufacturer();
+            mDiagnosticReleaseOS = Device.getAndroidReleaseOs();
             mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
         } else {
             mDiagnosticMN = null;
+            mDiagnosticReleaseOS = null;
             mWorkProfileAvailable = null;
         }
     }

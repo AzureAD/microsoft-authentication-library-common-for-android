@@ -55,6 +55,7 @@ import javax.crypto.SecretKey;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import lombok.NonNull;
 
@@ -83,6 +84,11 @@ public class AndroidKeyStoreUtil {
      * {@see https://developer.android.com/training/articles/keystore#UsingAndroidKeyStore}
      */
     private static final String ANDROID_KEY_STORE_TYPE = "AndroidKeyStore";
+
+    /**
+     * Max length of stack trace to search for a keystore exception
+     */
+    private static int KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH = 20;
 
     private AndroidKeyStoreUtil() {
     }
@@ -447,12 +453,11 @@ public class AndroidKeyStoreUtil {
                 exception
         );
         if (exception instanceof InvalidKeyException) {
-            final Attributes attributes = Attributes.builder()
+            final Attributes attributes = createAttributesBuilderFromInvalidKeyException((InvalidKeyException) exception)
                     .put(AttributeName.keystore_operation.name(), "unwrap")
                     .put(AttributeName.error_code.name(), errCode)
-                    .put(AttributeName.error_type.name(), clientException.getClass().getSimpleName())
-                    .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(clientException))
                     .build();
+
             sFailedAndroidKeyStoreUnwrapOperationCount.add(1, attributes);
         }
         Logger.error(
@@ -464,4 +469,65 @@ public class AndroidKeyStoreUtil {
         throw clientException;
     }
 
+    /**
+     * Populate attributes from an InvalidKeyException, attempting to extract details from a nested
+     * KeyStoreException if available (API Level 33+).
+     */
+    private static AttributesBuilder createAttributesBuilderFromInvalidKeyException(final InvalidKeyException exception) {
+        String ksMessage;
+        final String errorType;
+        final String ksNumericErrorCode;
+
+        // Check API Level before attempting to extract KeyStoreException details
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            final android.security.KeyStoreException keyStoreException = findKeyStoreException(exception);
+            if (keyStoreException != null) {
+                ksMessage = keyStoreException.getMessage();
+                if (ksMessage == null) {
+                    ksMessage = "Keystore exception found, no error message";
+                }
+                errorType = "KeyStoreException";
+                ksNumericErrorCode = String.valueOf(keyStoreException.getNumericErrorCode());
+            } else {
+                ksMessage = "No keystore exception found";
+                errorType = "InvalidKeyException";
+                ksNumericErrorCode = "";
+            }
+        } else {
+            ksMessage = "API Level below 33, keystore exception not available";
+            errorType = "InvalidKeyException";
+            ksNumericErrorCode = "";
+        }
+
+        return Attributes.builder()
+                .put(AttributeName.error_type.name(), errorType)
+                .put(AttributeName.keystore_exception_stack_trace.name(), ThrowableUtil.getStackTraceAsString(exception))
+                .put(AttributeName.keystore_exception_message.name(), ksMessage)
+                .put(AttributeName.keystore_numeric_error_code.name(), ksNumericErrorCode);
+    }
+
+    /**
+     * Searches the causal chain of the given throwable for an instance of
+     * {@link android.security.KeyStoreException}.
+     *
+     * @param throwable The throwable to search.
+     * @return The found KeyStoreException, or null if none was found or the API level is below 33.
+     */
+    private static @Nullable android.security.KeyStoreException findKeyStoreException(@NonNull Throwable throwable) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Check up to a max depth to avoid infinite loops in case of circular references
+            int count = 0;
+            while (throwable != null && count < KEYSTORE_EXCEPTION_CAUSE_CHAIN_MAX_DEPTH) {
+                if (throwable instanceof android.security.KeyStoreException) {
+                    return (android.security.KeyStoreException) throwable;
+                }
+                throwable = throwable.getCause();
+                count++;
+            }
+
+            return null;
+        } else {
+            return null;
+        }
+    }
 }
