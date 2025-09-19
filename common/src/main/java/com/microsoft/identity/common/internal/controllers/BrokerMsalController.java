@@ -1191,8 +1191,13 @@ public class BrokerMsalController extends BaseController {
         });
     }
 
-    public AcquirePrtSsoTokenBatchResult getAllSsoTokens(
-            @NonNull final AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
+    /**
+     * Get all SSO tokens from broker for given request authority.
+     * @param parameters {@link AcquirePrtSsoTokenCommandParameters}
+     * @return {@link AcquirePrtSsoTokenBatchResult} containing all relevant SSO tokens.
+     * @throws BaseException
+     */
+    public AcquirePrtSsoTokenBatchResult getAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
         return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<AcquirePrtSsoTokenBatchResult>() {
 
@@ -1200,8 +1205,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion =
-                                hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @NonNull
