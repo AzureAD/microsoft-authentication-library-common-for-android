@@ -124,4 +124,16 @@ public class OTelUtility {
                 .setUnit("count")
                 .build();
     }
+
+    /**
+     * Helper method to calculate and record the elapsed time since the provided start time.
+     *
+     * @param attributeName The name of the attribute to record in the telemetry
+     * @param startTimeMillis The start time in milliseconds
+     */
+    public static void recordElapsedTime(@NonNull final String attributeName, final long startTimeMillis) {
+        final long endTimeMillis = System.currentTimeMillis();
+        final long elapsedTimeMillis = endTimeMillis - startTimeMillis;
+        SpanExtension.current().setAttribute(attributeName, elapsedTimeMillis);
+    }
 }
