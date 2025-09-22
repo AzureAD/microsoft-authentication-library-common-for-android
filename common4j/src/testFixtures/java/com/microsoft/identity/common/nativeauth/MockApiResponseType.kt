@@ -38,6 +38,7 @@ enum class MockApiResponseType(val stringValue: String) {
     EXPIRED_TOKEN("ExpiredToken"),
     INITIATE_SUCCESS("InitiateSuccess"),
     INTROSPECT_SUCCESS("IntrospectSuccess"),
+    INTROSPECT_SMS_SUCCESS("IntrospectSMSSuccess"),
     INVALID_AUTHENTICATION_METHOD("InvalidAuthMethodForUser"),
     INVALID_CLIENT("InvalidClient"),
     INVALID_USERNAME("InvalidUsername"),
