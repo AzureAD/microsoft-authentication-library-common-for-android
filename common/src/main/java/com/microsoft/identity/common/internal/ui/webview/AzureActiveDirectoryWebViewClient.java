@@ -628,8 +628,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // Handles Playstore launch URLs originating from WebCP, specifically for installing the Company Portal app.
     private void handlePlaystoreLaunchUrlFromWebCp(@NonNull final String url) {
         final String methodTag = TAG + ":handlePlaystoreLaunchUrlFromWebCp";
-        Logger.info(methodTag, "Redirect to Playstore to install Company Portal app from WebCP flow.");
-        SpanExtension.current().setAttribute(AttributeName.isRedirectToPlaystoreLaunchFromWebCp.name(), true);
+        SpanExtension.current().setAttribute(AttributeName.is_redirect_to_playstore_launch_from_webcp.name(), true);
         openLinkInBrowser(url);
         returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
     }
@@ -640,7 +639,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return true if it is a redirect to Playstore to install Company Portal app.
      */
     private boolean isRedirectToPlaystoreToInstallCp(@NonNull final String url) {
-       if (url.contains(PLAY_STORE_INSTALL_APP_PREFIX) && url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+       if (url.contains(PLAY_STORE_INSTALL_APP_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME)) {
            Logger.info(TAG, "Redirect to Playstore to install Company Portal app.");
            return true;
        }

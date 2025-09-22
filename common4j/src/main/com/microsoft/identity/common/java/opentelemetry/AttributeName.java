@@ -492,5 +492,5 @@ public enum AttributeName {
     /**
      * Indicates if the request is a redirect to playstore launch from webcp.
      */
-    isRedirectToPlaystoreLaunchFromWebCp
+    is_redirect_to_playstore_launch_from_webcp
 }
