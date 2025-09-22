@@ -131,7 +131,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
-    private boolean mIsWebCpInWebViewFeatureEnabled = false;
+    private boolean mInWebCpFlow = false;
 
     private final String mUtid;
 
@@ -339,10 +339,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
-            } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpEnrollmentUrl(url)) {
+            } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
                 processWebCpEnrollmentUrl(view, url);
-            } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
+            } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
             }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
@@ -582,7 +582,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(SpanName.ProcessWebsiteRequest.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebsiteRequest.name());
-        span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), mIsWebCpInWebViewFeatureEnabled);
+        span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
                 processDeviceCaRequest(view, url);
@@ -590,7 +590,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return;
             }
 
-            if (isRedirectToPlaystoreToInstallCp(url) && mIsWebCpInWebViewFeatureEnabled) {
+            if (isRedirectToPlaystoreToInstallCp(url) && mInWebCpFlow) {
                 handlePlaystoreLaunchUrlFromWebCp(url);
                 span.setStatus(StatusCode.OK);
                 return;
@@ -617,7 +617,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void handleBrowserRedirect(@NonNull final String methodTag, @NonNull final String url) {
         Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
         openLinkInBrowser(url);
-        final RawAuthorizationResult.ResultCode resultCode = mIsWebCpInWebViewFeatureEnabled
+        final RawAuthorizationResult.ResultCode resultCode = mInWebCpFlow
                 ? RawAuthorizationResult.ResultCode.MDM_FLOW
                 : RawAuthorizationResult.ResultCode.CANCELLED;
 
@@ -742,7 +742,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isWebCpFlightEnabled) {
                 // Directly enabled via flight rollout.
                 Logger.info(methodTag, "WebCP in WebView feature is enabled.");
-                mIsWebCpInWebViewFeatureEnabled = true;
+                mInWebCpFlow = true;
                 return true;
             }
 

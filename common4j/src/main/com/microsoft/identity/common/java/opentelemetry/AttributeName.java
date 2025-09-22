@@ -492,5 +492,10 @@ public enum AttributeName {
     /**
      * Indicates if the request is a redirect to playstore launch from webcp.
      */
-    is_redirect_to_playstore_launch_from_webcp
+    is_redirect_to_playstore_launch_from_webcp,
+
+    /**
+     * Records if current flow is in webcp flow.
+     */
+    is_in_web_cp_flow
 }
