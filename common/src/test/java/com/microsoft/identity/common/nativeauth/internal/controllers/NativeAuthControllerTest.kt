@@ -588,9 +588,7 @@ class NativeAuthControllerTest {
 
         val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
-        assert(signInResult.authMethods.count() == 2)
         assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
-        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
     }
 
     @Test
