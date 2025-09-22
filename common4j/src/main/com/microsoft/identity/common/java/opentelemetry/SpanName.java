@@ -68,5 +68,6 @@ public enum SpanName {
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
 
-    ProvisionResourceAccount
+    ProvisionResourceAccount,
+    ProcessWebsiteRequest
 }

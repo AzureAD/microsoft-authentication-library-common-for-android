@@ -489,5 +489,8 @@ public enum AttributeName {
      */
     secret_key_wrapping_operation,
 
-
+    /**
+     * Indicates if the request is a redirect to playstore launch from webcp.
+     */
+    isRedirectToPlaystoreLaunchFromWebCp
 }
