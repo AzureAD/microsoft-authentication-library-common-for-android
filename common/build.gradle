@@ -175,6 +175,8 @@ dependencies {
     implementation "com.google.android.gms:play-services-fido:$rootProject.ext.LegacyFidoApiVersion"
     implementation "com.google.android.libraries.identity.googleid:googleid:$rootProject.ext.GoogleIdVersion"
     implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
+    implementation "androidx.webkit:webkit:1.14.0"
+
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {

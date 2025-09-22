@@ -53,6 +53,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.FragmentActivity;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -82,7 +83,10 @@ import java.util.HashMap;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
+import static kotlinx.coroutines.CoroutineScopeKt.CoroutineScope;
+
 import io.opentelemetry.api.trace.SpanContext;
+import kotlinx.coroutines.Dispatchers;
 
 /**
  * Authorization fragment with embedded webview.
@@ -327,6 +331,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+
+
+        WebViewMessageListener.INSTANCE.setup(mWebView, requireActivity());
+
+
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {

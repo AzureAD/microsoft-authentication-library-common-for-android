@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -51,6 +52,7 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.PasskeyWebListener;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -1105,6 +1107,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 mCertBasedAuthChallengeHandler.processChallenge(clientCertRequest);
             }
         });
+    }
+
+
+    @Override
+    public void onPageStarted(final WebView view,
+                              final String url,
+                              final Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        view.evaluateJavascript(PasskeyWebListener.INJECTED_VAL, null);
+
     }
 
     /**
