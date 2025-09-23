@@ -1229,7 +1229,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     AttributeName.calling_package_name
             );
             for (AttributeName attributeName : parentAttributeNames) {
-                String value = baggage.getEntryValue(attributeName.name());
+                final String value = baggage.getEntryValue(attributeName.name());
                 if (value != null) {
                     span.setAttribute(attributeName.name(), value);
                 }
