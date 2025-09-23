@@ -121,13 +121,10 @@ interface SignInCommandResult {
     data class MFARequired(
         override val correlationId: String,
         val continuationToken: String,
-        val error: String,
-        val errorDescription: String,
-        val errorCodes: List<Int>,
-        val subError: String
+        val authMethods: List<AuthenticationMethodApiResult>
     ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
-        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
 
-        override fun toString(): String = "MFARequired(correlationId=$correlationId)"
+        override fun toString(): String = "MFARequired(correlationId=$correlationId, authMethods=${authMethods})"
     }
 }
