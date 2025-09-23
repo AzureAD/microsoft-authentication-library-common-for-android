@@ -1,5 +1,6 @@
 vNext
 ----------
+
 - [MINOR] Add helper method to record elapsed time (#2768)
 - [MINOR] Implement TenantUtil (#2761)
 - [MAJOR] Update proguard rules in common (#2756)
