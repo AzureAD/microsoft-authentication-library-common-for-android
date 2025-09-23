@@ -847,6 +847,7 @@ class NativeAuthRequestProviderTest {
             .code(emptyString)
             .continuationToken(continuationToken)
             .correlationId(correlationId)
+            .isMFAGrantType(false)
             .build()
 
         nativeAuthRequestProvider.createOOBTokenRequest(
