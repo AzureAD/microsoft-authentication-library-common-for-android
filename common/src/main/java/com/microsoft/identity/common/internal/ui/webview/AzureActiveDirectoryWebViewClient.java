@@ -636,7 +636,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting
     protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
-        final Span span = createWebCpFlowSpan(SpanName.ProcessWebCpRedirects.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
@@ -709,7 +709,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCpEnrollmentUrl";
-        final Span span = createWebCpFlowSpan(SpanName.ProcessWebCpEnrollmentRedirect.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpEnrollmentRedirect.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             view.stopLoading();
             Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
@@ -1011,7 +1011,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processWebCpAuthorize(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCPAuthorize";
         Logger.info(methodTag, "Processing WebCP authorize request.");
-        final Span span = createWebCpFlowSpan(SpanName.ProcessWebCpAuthorizeUrlRedirect.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpAuthorizeUrlRedirect.name());
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1136,21 +1136,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Create a span for webcp flow with parent span context if available.
+     * Create a span for with parent span context if available.
      * @param spanName Name of the span to be created.
      * @return Created {@link Span}
      */
-    private Span createWebCpFlowSpan(@NonNull final String spanName) {
+    private Span createSpanWithAttributesFromParent(@NonNull final String spanName) {
         final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         final Span span = spanContext != null ?
                 OTelUtility.createSpanFromParent(spanName, spanContext) : OTelUtility.createSpan(spanName);
-        // Populate some of parent span's attributes to current span.
+        if (mUtid != null) {
+            span.setAttribute(AttributeName.tenant_id.name(), mUtid);
+        }
+        // Populate some of the parent span's attributes to current span.
         final Context oTelContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getOtelContext() : null;
         if (oTelContext != null) {
             final Baggage baggage = BaggageExtension.fromContext(oTelContext);
             final List<AttributeName> parentAttributeNames = Arrays.asList(
                     AttributeName.correlation_id,
-                    AttributeName.tenant_id,
                     AttributeName.calling_package_name
             );
             for (AttributeName attributeName : parentAttributeNames) {
