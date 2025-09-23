@@ -67,5 +67,7 @@ public enum SpanName {
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
 
-    ProvisionResourceAccount
+    ProvisionResourceAccount,
+    ProcessWebCpEnrollmentRedirect,
+    ProcessWebCpAuthorizeUrlRedirect
 }
