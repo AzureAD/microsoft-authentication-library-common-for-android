@@ -2,7 +2,6 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.app.Activity
 import android.net.Uri
-import android.util.Log
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.annotation.UiThread
@@ -12,6 +11,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
+import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -64,7 +64,7 @@ class PasskeyWebListener(
         isMainFrame: Boolean,
         replyProxy: JavaScriptReplyProxy,
     ) {
-        Log.i(TAG, "In Post Message : $message source: $sourceOrigin")
+        Logger.info(TAG, "In Post Message : $message source: $sourceOrigin")
         val messageData = message.data ?: return
         onRequest(messageData, sourceOrigin, isMainFrame, JavaScriptReplyChannel(replyProxy))
     }
@@ -110,7 +110,7 @@ class PasskeyWebListener(
             // the main “replyChannel” variable to null so it’s ready for the next request.
             val replyCurrent = replyChannel
             if (replyCurrent == null) {
-                Log.i(TAG, "reply channel was null, cannot continue")
+                Logger.info(TAG, "reply channel was null, cannot continue")
                 return
             }
 
@@ -122,7 +122,7 @@ class PasskeyWebListener(
                 GET_UNIQUE_KEY -> this.coroutineScope.launch {
                     handleGetFlow(credentialManagerHandler, message, replyCurrent)
                 }
-                else -> Log.i(TAG, "Incorrect request json")
+                else -> Logger.info(TAG, "Incorrect request json")
             }
         }
     }
@@ -192,7 +192,7 @@ class PasskeyWebListener(
     }
 
     private fun postErrorMessage(reply: ReplyChannel, errorMessage: String, type: String) {
-        Log.i(TAG, "Sending error message back to the page via replyChannel $errorMessage")
+        Logger.info(TAG, "Sending error message back to the page via replyChannel $errorMessage")
         val array: MutableList<Any?> = ArrayList()
         array.add("error")
         array.add(errorMessage)
@@ -208,7 +208,7 @@ class PasskeyWebListener(
             try {
                 reply.postMessage(message!!)
             }catch (t: Throwable) {
-                Log.i(TAG, "Reply failure due to: " + t.message);
+                Logger.info(TAG, "Reply failure due to: " + t.message);
             }
         }
     }

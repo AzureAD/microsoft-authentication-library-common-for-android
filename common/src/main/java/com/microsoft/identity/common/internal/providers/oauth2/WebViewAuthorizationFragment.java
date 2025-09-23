@@ -42,6 +42,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -333,6 +334,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.setWebViewClient(webViewClient);
 
 
+
         WebViewMessageListener.INSTANCE.setup(mWebView, requireActivity());
 
 
@@ -358,6 +360,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Logger.info(methodTag, consoleMessage.message() + " -- From line " +
+                        consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
+                return true;
+            }
+
         });
     }
 

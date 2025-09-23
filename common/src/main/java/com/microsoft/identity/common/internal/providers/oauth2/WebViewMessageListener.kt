@@ -9,7 +9,10 @@ import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewCompat.WebMessageListener
 import androidx.webkit.WebViewFeature
+import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 
 object WebViewMessageListener {
@@ -24,12 +27,16 @@ object WebViewMessageListener {
         }
 
     fun setup(webView: WebView, activity: Activity) {
+        val methodTag = "WebViewMessageListener:setup"
+        Logger.info(methodTag, "Setting up WebView message listener")
         WebView.setWebContentsDebuggingEnabled(true)
-        val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
+        val coroutineScope = CoroutineScope(Dispatchers.Default)
+        //val coroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.IO + SupervisorJob())
         val credentialManagerHandler = CredentialManagerHandler(activity)
 
         val rules = setOf("*")
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            Logger.info(methodTag, "WEB_MESSAGE_LISTENER supported on this device/WebView.")
             // Add listener for all origins — you can restrict to specific origins instead
             WebViewCompat.addWebMessageListener(
                 webView,
@@ -39,7 +46,7 @@ object WebViewMessageListener {
             )
         } else {
             // Fallback if feature not supported
-            println("WEB_MESSAGE_LISTENER not supported on this device/WebView.")
+            Logger.warn(methodTag, "WEB_MESSAGE_LISTENER not supported on this device/WebView.")
         }
     }
 }

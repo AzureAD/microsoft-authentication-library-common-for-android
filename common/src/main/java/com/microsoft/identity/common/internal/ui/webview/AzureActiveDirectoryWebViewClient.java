@@ -1115,7 +1115,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                               final String url,
                               final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        Logger.info(TAG, "onPageStarted: Inject JS");
         view.evaluateJavascript(PasskeyWebListener.INJECTED_VAL, null);
+        view.evaluateJavascript("console.log('evaluate works')", null);
 
     }
 
