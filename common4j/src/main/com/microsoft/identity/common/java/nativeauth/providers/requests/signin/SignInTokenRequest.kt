@@ -57,7 +57,8 @@ data class SignInTokenRequest private constructor(
             challengeType: String? = null,
             requestUrl: String,
             headers: Map<String, String?>,
-            claimsRequestJson: String?
+            claimsRequestJson: String?,
+            isMFAGrantType: Boolean
         ): SignInTokenRequest {
             // Check for empty Strings and empty Maps
             ArgUtils.validateNonNullArg(oob, "oob")
@@ -67,13 +68,12 @@ data class SignInTokenRequest private constructor(
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
-
             return SignInTokenRequest(
                 parameters = NativeAuthRequestSignInTokenRequestParameters(
                     oob = oob,
                     continuationToken = continuationToken,
                     clientId = clientId,
-                    grantType = NativeAuthConstants.GrantType.OOB,
+                    grantType = if (isMFAGrantType) NativeAuthConstants.GrantType.MFA_OOB else NativeAuthConstants.GrantType.OOB,
                     challengeType = challengeType,
                     scope = scopes?.joinToString(" "),
                     claimsRequestJson = claimsRequestJson

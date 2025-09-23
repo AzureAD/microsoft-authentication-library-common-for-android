@@ -6,6 +6,8 @@ import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFASubmitChallengeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,7 +58,7 @@ class CommandUtilTest {
     }
 
     @Test
-    fun testCreateSignInSubmitCodeCommandParameters_containsCorrectInfo() {
+    fun testCreateSignInSubmitCodeFromMFACommandParameters_containsCorrectInfo() {
         val mfaSubmitChallengeParams = MFASubmitChallengeCommandParameters.builder()
             .claimsRequestJson("claimsRequestJson")
             .clientId("clientId")
@@ -76,5 +78,34 @@ class CommandUtilTest {
         assert(submitCodeParams.getChallengeType()?.equals(mfaSubmitChallengeParams.getChallengeType()) == true)
         assert(submitCodeParams.getCode() == mfaSubmitChallengeParams.getChallenge())
         assert(submitCodeParams.redirectUri?.equals(mfaSubmitChallengeParams.redirectUri) == true)
+        assertTrue(submitCodeParams.getIsMFAGrantType())
     }
+
+    @Test
+    fun testCreateSignInSubmitCodeWithScopesCommandParameters_containsCorrectInfo() {
+        val signInSubmitCodeCommandParameters = SignInSubmitCodeCommandParameters.builder()
+            .claimsRequestJson("claimsRequestJson")
+            .clientId("clientId")
+            .challengeType(arrayListOf("OOB"))
+            .redirectUri("redirectUri")
+            .platformComponents(platformComponents)
+            .continuationToken("continuationToken")
+            .correlationId(UUID.randomUUID().toString())
+            .isMFAGrantType(false)
+            .code("123456")
+            .build()
+        val scopes = listOf("email", "profile")
+        val submitCodeParams = CommandUtil.createSignInSubmitCodeCommandParametersWithScopes(signInSubmitCodeCommandParameters, scopes)
+
+        assert(submitCodeParams.getContinuationToken().contentEquals(signInSubmitCodeCommandParameters.getContinuationToken()))
+        assert(submitCodeParams.correlationId?.contentEquals(signInSubmitCodeCommandParameters.correlationId) == true)
+        assert(submitCodeParams.getClaimsRequestJson().contentEquals(signInSubmitCodeCommandParameters.getClaimsRequestJson()))
+        assert(submitCodeParams.clientId?.contentEquals(signInSubmitCodeCommandParameters.clientId) == true)
+        assert(submitCodeParams.getChallengeType()?.equals(signInSubmitCodeCommandParameters.getChallengeType()) == true)
+        assert(submitCodeParams.redirectUri?.equals(signInSubmitCodeCommandParameters.redirectUri) == true)
+        assert(submitCodeParams.isMFAGrantType == signInSubmitCodeCommandParameters.getIsMFAGrantType())
+        assert(submitCodeParams.scopes.equals(scopes))
+        assert(submitCodeParams.getCode() == signInSubmitCodeCommandParameters.getCode())
+    }
+
 }
