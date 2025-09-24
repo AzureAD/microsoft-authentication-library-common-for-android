@@ -712,6 +712,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpEnrollmentRedirect.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             //view.stopLoading();
+            view.getSettings();
             Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
             // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
             openGoogleEnrollmentUrl(url);
