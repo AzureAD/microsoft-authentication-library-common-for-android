@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 
 /**
@@ -63,9 +64,9 @@ class AuthUxJavaScriptInterface {
                 return false
             }
 
-            val url: URL
+            val url: URI
             try {
-                url = URL(urlString)
+                url = URI(urlString)
             } catch (e: MalformedURLException) {
                 // If url is not a valid URL, return false
                 Logger.warn(TAG, "Malformed URL passed. url: $urlString, Message: ${e.message}")
