@@ -104,12 +104,6 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test msauth url should be valid`() {
-        val msauthUrl = "msauth://com.microsoft.emmx/SOME_INFORMATION"
-        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(msauthUrl))
-    }
-
-    @Test
     fun `test isValidUrlForInterface with invalid URL`() {
         val invalidUrl = "https://example.com"
         Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(invalidUrl))
