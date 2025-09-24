@@ -58,24 +58,24 @@ class AuthUxJavaScriptInterface {
          * @param url url being loaded
          * @return true if url is a valid, safe url, false otherwise
          */
-        fun isValidUrlForInterface(urlString: String?): Boolean {
+        fun isValidUrlForInterface(uriString: String?): Boolean {
             // If url is null, return false
-            if (urlString.isNullOrEmpty()) {
+            if (uriString.isNullOrEmpty()) {
                 return false
             }
 
-            val url: URI
+            val uri: URI
             try {
-                url = URI(urlString)
+                uri = URI(uriString)
             } catch (e: MalformedURLException) {
                 // If url is not a valid URL, return false
-                Logger.warn(TAG, "Malformed URL passed. url: $urlString, Message: ${e.message}")
+                Logger.warn(TAG, "Malformed uri passed. uri: $uriString, Message: ${e.message}")
                 return false
 
             }
 
-            val host = url.host
-            Logger.info(TAG, "Host for the URL is: $host")
+            val host = uri.host
+            Logger.info(TAG, "Host for the uri is: $host")
 
             // Otherwise, make sure url is a valid url
             // We only want to allow URLs that have the AAD or MSA url hosts
