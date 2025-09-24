@@ -426,6 +426,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
                 is SignInTokenApiResult.InvalidCredentials, is SignInTokenApiResult.UserNotFound,
+                    // This will change once SMS MFA is supported
                 is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.JITRequired -> {
                     Logger.warnWithObject(
                         TAG,

@@ -31,6 +31,7 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
     public static final String TEST_OS_ESTS = "TestOSEsts";
     public static final String TEST_OS_MATS = "TestOSMats";
     public static final String TEST_OS_DRS = "TestOSDrs";
+    public static final String TEST_RELEASE_OS = "TestReleaseOS";
     public static final String TEST_DEVICE_MODEL = "TestDeviceModel";
     public static final String TEST_MANUFACTURER = "TestManufacturer";
 
@@ -55,6 +56,11 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
     @Override
     public @NonNull String getOsForDrs() {
         return TEST_OS_DRS;
+    }
+
+    @Override
+    public @NonNull String getAndroidReleaseOs() {
+        return TEST_RELEASE_OS;
     }
 
     @Override

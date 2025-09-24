@@ -142,6 +142,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
                             "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-ReleaseOS=" + MockDeviceMetadata.TEST_RELEASE_OS +
                             "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                             "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                             "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
@@ -220,6 +221,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
                             "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-ReleaseOS=" + MockDeviceMetadata.TEST_RELEASE_OS +
                             "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                             "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                             "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
