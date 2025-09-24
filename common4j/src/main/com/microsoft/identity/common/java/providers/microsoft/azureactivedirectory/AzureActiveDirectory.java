@@ -48,6 +48,7 @@ import org.json.JSONException;
 
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -56,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -134,6 +136,18 @@ public class AzureActiveDirectory
      */
     public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
         return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
+    }
+
+
+    /**
+     * Checks if the passed in authority URL belongs to public cloud (cloud for login.microsoftonline.com).
+     */
+    public static synchronized boolean isPublicAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) throws ClientException {
+        try {
+            return Objects.equals(getAzureActiveDirectoryCloud(authorityUrl), getAzureActiveDirectoryCloud(new URL(getDefaultCloudUrl())));
+        } catch (final MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     /**
@@ -230,6 +244,17 @@ public class AzureActiveDirectory
             }
 
             sIsInitialized = true;
+        }
+    }
+
+    /**
+     * Ensures that cloud discovery has been completed. If not, it will perform cloud discovery.
+     */
+    public static synchronized void ensureCloudDiscoveryComplete() throws ClientException {
+        final String methodTag = TAG + ":ensureCloudDiscoveryComplete";
+        if (!sIsInitialized) {
+            Logger.info(methodTag, "Cloud metadata is not initialized. Performing cloud discovery.");
+            performCloudDiscovery();
         }
     }
 
