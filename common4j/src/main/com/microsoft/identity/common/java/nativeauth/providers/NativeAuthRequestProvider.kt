@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
@@ -35,11 +36,9 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITIntrospectRequest
-import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordPollCompletionRequest
@@ -52,6 +51,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
+import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.platform.Device
 import java.util.TreeMap
 
@@ -170,7 +170,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
             challengeType = config.challengeType,
             requestUrl = signInTokenEndpoint,
             headers = getRequestHeaders(commandParameters.getCorrelationId()),
-            claimsRequestJson = commandParameters.claimsRequestJson
+            claimsRequestJson = commandParameters.claimsRequestJson,
+            isMFAGrantType = commandParameters.isMFAGrantType
         )
     }
 
