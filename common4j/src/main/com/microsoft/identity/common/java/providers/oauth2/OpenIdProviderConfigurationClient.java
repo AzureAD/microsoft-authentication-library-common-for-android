@@ -67,8 +67,11 @@ public class OpenIdProviderConfigurationClient {
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
-    private static final LongCounter sOpenIdProviderConfigurationIssuerValidationFailed = OTelUtility.createLongCounter(
-            "openid_provider_configuration_issuer_validation_failed",
+    /**
+     * Counter to track failure in validating OpenID Provider configuration issuer via metrics.
+     */
+    private static final LongCounter sOpenIdProviderConfigurationIssuerValidationFailedCount = OTelUtility.createLongCounter(
+            "openid_provider_configuration_issuer_validation_failed_count",
             "Track failure in validating OpenID Provider configuration issuer"
     );
 
@@ -157,7 +160,7 @@ public class OpenIdProviderConfigurationClient {
             if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_OPENID_ISSUER_VALIDATION_REPORTING)) {
                 final Attributes attrs = validateIssuer(parsedConfig, baseConfigUrlStr);
                 if (attrs != null) {
-                    sOpenIdProviderConfigurationIssuerValidationFailed.add(1, attrs);
+                    sOpenIdProviderConfigurationIssuerValidationFailedCount.add(1, attrs);
                 }
             }
             // Cache our config in memory for later
