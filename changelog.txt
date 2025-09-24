@@ -1,10 +1,12 @@
 vNext
 ----------
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
+- [MINOR] Add helper method to record elapsed time (#2768)
 - [MINOR] Implement TenantUtil (#2761)
 - [MAJOR] Update proguard rules in common (#2756)
 - [MINOR] Add query parameter for Android Release OS Version (#2754)
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
+- [MINOR] Awaiting MFA Delegate now automatically returns the AuthMethods to be used when calling MFA Challenge (#2764)
 
 Version 22.1.0
 ----------

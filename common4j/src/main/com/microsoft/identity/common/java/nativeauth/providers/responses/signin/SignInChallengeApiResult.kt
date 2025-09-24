@@ -41,26 +41,6 @@ sealed interface SignInChallengeApiResult: ApiResult {
         override fun toString(): String = toUnsanitizedString()
     }
 
-    data class IntrospectRequired(
-        override val correlationId: String,
-        override val error: String,
-        override val subError: String,
-        override val errorDescription: String,
-        override val errorCodes: List<Int>,
-    ) : ApiErrorResult(
-        error = error,
-        subError = subError,
-        errorDescription = errorDescription,
-        errorCodes = errorCodes,
-        correlationId = correlationId
-    ), SignInChallengeApiResult {
-        override fun toUnsanitizedString(): String {
-            return "IntrospectRequired(correlationId=$correlationId)"
-        }
-
-        override fun toString(): String = toUnsanitizedString()
-    }
-
     data class OOBRequired(
         override val correlationId: String,
         val continuationToken: String,
