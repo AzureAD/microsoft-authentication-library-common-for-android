@@ -162,6 +162,10 @@ public enum CommonFlight implements IFlightConfig {
      */
     SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false),
 
+    /**
+     * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
+     * config endpoint and only reports the failure result.
+     */
     ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
 
     private String key;
