@@ -229,6 +229,14 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         tokenApiResult = tokenApiResult
                     )
                 }
+                is SignInTokenApiResult.MFARequired -> {
+                    // when MFA is required, we retrieve the list of auth methods available
+                    performIntrospectCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInWithContinuationTokenCommandResult
+                }
                 is SignInTokenApiResult.JITRequired -> {
                     // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
                     performJITIntrospect(
@@ -244,8 +252,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         redirectReason = tokenApiResult.redirectReason
                     )
                 }
-                is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.CodeIncorrect,
+                is SignInTokenApiResult.InvalidAuthenticationType, is SignInTokenApiResult.CodeIncorrect,
                 is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.InvalidCredentials,
                 is SignInTokenApiResult.UnknownError -> {
                     Logger.warnWithObject(
@@ -325,9 +332,26 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         redirectReason = tokenApiResult.redirectReason
                     )
                 }
+                is SignInTokenApiResult.MFARequired -> {
+                    // when MFA is required, we retrieve the list of auth methods available
+                    performIntrospectCall(
+                        oAuth2Strategy = oAuth2Strategy,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInSubmitCodeCommandResult
+                }
+                is SignInTokenApiResult.JITRequired -> {
+                    // when a registration of a new strong authentication method is required, we retrieve the list of auth methods available
+                    performJITIntrospect(
+                        oAuth2Strategy = oAuth2Strategy,
+                        parameters = parametersWithScopes,
+                        continuationToken = tokenApiResult.continuationToken,
+                        correlationId = tokenApiResult.correlationId
+                    ).toSignInStartCommandResult() as SignInSubmitCodeCommandResult
+                }
                 is SignInTokenApiResult.UnknownError, is SignInTokenApiResult.InvalidAuthenticationType,
-                is SignInTokenApiResult.MFARequired, is SignInTokenApiResult.InvalidCredentials,
-                is SignInTokenApiResult.UserNotFound, is SignInTokenApiResult.JITRequired -> {
+                is SignInTokenApiResult.InvalidCredentials,
+                is SignInTokenApiResult.UserNotFound -> {
                     Logger.warnWithObject(
                         TAG,
                         tokenApiResult.correlationId,
@@ -637,6 +661,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     JITCommandResult.IncorrectVerificationContact(
                         error = result.error,
                         errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
+                is JITChallengeApiResult.BlockedVerificationContact -> {
+                    val customDescription = "Verification contact blocked. " +
+                            "Please try using another email or phone number, or select an alternative authentication method."
+                    JITCommandResult.BlockedVerificationContact(
+                        error = result.error,
+                        errorDescription = customDescription + result.errorDescription,
                         errorCodes = result.errorCodes,
                         correlationId = result.correlationId
                     )

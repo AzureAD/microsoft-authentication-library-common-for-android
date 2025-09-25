@@ -572,7 +572,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkAuthMethods() {
+    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkEmailAuthMethod() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -589,6 +589,66 @@ class NativeAuthControllerTest {
         val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
         assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitCodeReturnMFARequiredIntrospectSuccess_checkEmailAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+
+        val signInCodeParameters = createSignInSubmitCodeCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitCode(signInCodeParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitCodeReturnMFARequiredIntrospectSuccess_checkSMSAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SMS_SUCCESS
+        )
+
+        val signInCodeParameters = createSignInSubmitCodeCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitCode(signInCodeParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkSMSAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SMS_SUCCESS
+        )
+
+        val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
     }
 
     @Test
@@ -1606,7 +1666,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInSubmitCodeCommandParameters(correlationId: String, isMFAGrantYpe: Boolean = false): SignInSubmitCodeCommandParameters {
+    private fun createSignInSubmitCodeCommandParameters(correlationId: String, isMFAGrantType: Boolean = false): SignInSubmitCodeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1622,7 +1682,7 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .correlationId(correlationId)
-            .isMFAGrantType(isMFAGrantYpe)
+            .isMFAGrantType(isMFAGrantType)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
