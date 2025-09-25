@@ -89,4 +89,10 @@ public class AcquirePrtSsoTokenResult {
     @SerializedName("telemetry")
     private final @NonNull Map<String, Object> mTelemetry;
 
+    /**
+     * The time when the token was acquired, in milliseconds since epoch.
+     */
+    @SerializedName("AcquisitionTimeMillis")
+    private final @Nullable Long mAcquisitionTimeMillis;
+
 }

@@ -1192,7 +1192,7 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Get all SSO tokens from broker for given request authority.
+     * Get all SSO tokens from broker by environment from given request authority.
      * @param parameters {@link AcquirePrtSsoTokenCommandParameters}
      * @return {@link AcquirePrtSsoTokenBatchResult} containing all relevant SSO tokens.
      * @throws BaseException
