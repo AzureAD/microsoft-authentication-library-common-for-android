@@ -117,6 +117,10 @@ internal fun Int?.isInvalidChallengeTarget(): Boolean {
     return this == 901001
 }
 
+internal fun Int?.isBlockedChallengeTarget(): Boolean {
+    return this == 550024
+}
+
 fun String?.isMFARequired(): Boolean {
     return this.contentEquals(other = "mfa_required", ignoreCase = true)
 }

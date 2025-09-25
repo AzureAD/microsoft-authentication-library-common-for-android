@@ -7,6 +7,7 @@ vNext
 - [MINOR] Add query parameter for Android Release OS Version (#2754)
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
 - [MINOR] Awaiting MFA Delegate now automatically returns the AuthMethods to be used when calling MFA Challenge (#2764)
+- [MINOR] SDK now handles SMS as strong authentication method #2766
 
 Version 22.1.0
 ----------

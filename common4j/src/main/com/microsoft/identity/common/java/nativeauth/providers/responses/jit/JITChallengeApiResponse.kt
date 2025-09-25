@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.util.isBlockedChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
@@ -78,7 +79,14 @@ class JITChallengeApiResponse(
                             correlationId = correlationId
                         )
                     }
-
+                    error.isInvalidRequest() && errorCodes?.first().isBlockedChallengeTarget() -> {
+                        JITChallengeApiResult.BlockedVerificationContact(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
                     else -> {
                         JITChallengeApiResult.UnknownError(
                             error = error.orEmpty(),
