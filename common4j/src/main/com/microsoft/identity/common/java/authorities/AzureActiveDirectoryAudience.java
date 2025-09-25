@@ -53,13 +53,6 @@ public abstract class AzureActiveDirectoryAudience {
     public static final String ALL = "common";
     public static final String MSA_MEGA_TENANT_ID = "9188040d-6c67-4c5b-b112-36a304b66dad";
 
-    public enum GenericTenantType {
-        COMMON,
-        ORGANIZATIONS,
-        CONSUMERS,
-        SPECIFIC
-    }
-
     public String getCloudUrl() {
         if (mCloudUrl == null) {
             return AzureActiveDirectory.getDefaultCloudUrl();
@@ -149,13 +142,6 @@ public abstract class AzureActiveDirectoryAudience {
         return tenantId.equalsIgnoreCase(ALL_ACCOUNTS_TENANT_ID)
                 || tenantId.equalsIgnoreCase(AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID)
                 || tenantId.equalsIgnoreCase(ORGANIZATIONS);
-    }
-
-    public static GenericTenantType classifyTenant(final String tenant) {
-        if (tenant.equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) return GenericTenantType.COMMON;
-        if (tenant.equalsIgnoreCase(AzureActiveDirectoryAudience.ORGANIZATIONS)) return GenericTenantType.ORGANIZATIONS;
-        if (tenant.equalsIgnoreCase(AzureActiveDirectoryAudience.CONSUMERS) || tenant.equalsIgnoreCase(AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID)) return GenericTenantType.CONSUMERS;
-        return GenericTenantType.SPECIFIC;
     }
 
     private static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadata(

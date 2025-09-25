@@ -42,7 +42,7 @@ import lombok.experimental.Accessors;
 public class AcquirePrtSsoTokenBatchResult {
 
     /**
-     * Map of successful per-account results keyed by home account id.
+     * List of successful per-account results keyed by home account id.
      */
     @SerializedName("results")
     private final @NonNull List<AcquirePrtSsoTokenResult> mResults;
@@ -55,13 +55,13 @@ public class AcquirePrtSsoTokenBatchResult {
     private final @Nullable Map<String, String> mFailedAccounts;
 
     /**
-     * Optional top-level error (e.g., service unavailable before processing any accounts).
+     * Optional top-level error.
      */
     @SerializedName("error")
     private final @Nullable String mError;
 
     /**
-     * Correlation / request id for diagnostics.
+     * Correlation id for diagnostics.
      */
     @SerializedName("correlationId")
     private final @Nullable String mCorrelationId;
