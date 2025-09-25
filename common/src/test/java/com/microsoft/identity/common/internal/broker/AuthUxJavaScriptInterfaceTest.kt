@@ -86,8 +86,20 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test isValidUrlForInterface with valid AAD URL`() {
+    fun `test isValidUrlForInterface with valid AAD Global URL`() {
         val validUrl = "https://login.microsoftonline.com/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with valid AAD US URL`() {
+        val validUrl = "https://login.microsoftonline.us/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with valid AAD China URL`() {
+        val validUrl = "https://login.microsoftonline.cn/common/oauth2/authorize"
         Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
     }
 

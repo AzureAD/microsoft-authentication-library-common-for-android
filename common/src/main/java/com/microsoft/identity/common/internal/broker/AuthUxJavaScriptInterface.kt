@@ -79,8 +79,10 @@ class AuthUxJavaScriptInterface {
 
             // Otherwise, make sure url is a valid url
             // We only want to allow URLs that have the AAD or MSA url hosts
-            return host.startsWith(AuthenticationConstants.Broker.AAD_URL_HOST_PREFIX) ||
-                    host.startsWith(AuthenticationConstants.Broker.MSA_URL_HOST_PREFIX)
+            return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST)
         }
     }
 
