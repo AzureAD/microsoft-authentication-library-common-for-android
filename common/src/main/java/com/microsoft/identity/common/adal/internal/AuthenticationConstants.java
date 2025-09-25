@@ -1856,7 +1856,7 @@ public final class AuthenticationConstants {
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
 
         /**
-         * Api path for getting all SSO tokens based on authority.
+         * Api path for getting all SSO tokens based on environment.
          */
         public static final String GET_ALL_SSO_TOKENS_PATH = "/allSsoTokens";
 
