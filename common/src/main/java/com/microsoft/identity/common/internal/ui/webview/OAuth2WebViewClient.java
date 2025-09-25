@@ -77,7 +77,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
     public boolean mAuthUxJavaScriptInterfaceAdded = false;
 
-    public static boolean mIsRunningInAuthProcess = false;
+    public boolean mIsRunningInAuthProcess = false;
 
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
@@ -268,7 +268,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
     }
 
-    public static boolean shouldExposeJavaScriptInterface(final String url) {
+    public boolean shouldExposeJavaScriptInterface(final String url) {
         return mIsRunningInAuthProcess
                 && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
