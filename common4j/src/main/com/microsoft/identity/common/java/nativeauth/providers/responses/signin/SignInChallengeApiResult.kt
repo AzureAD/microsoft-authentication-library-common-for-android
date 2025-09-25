@@ -56,6 +56,23 @@ sealed interface SignInChallengeApiResult: ApiResult {
                 "challengeChannel=$challengeChannel, codeLength=$codeLength)"
     }
 
+    data class BlockedAuthMethod(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), SignInChallengeApiResult {
+        override fun toUnsanitizedString() = "BlockedAuthMethod(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "BlockedAuthMethod(correlationId=$correlationId)"
+    }
+
     data class PasswordRequired(
         override val correlationId: String,
         val continuationToken: String

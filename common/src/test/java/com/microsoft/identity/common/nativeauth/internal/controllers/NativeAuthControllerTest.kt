@@ -538,7 +538,7 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
-    fun `testsignInWithPasswordReturnMFARequired`() {
+    fun testSignInWithPasswordReturnMFARequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,
@@ -549,6 +549,20 @@ class NativeAuthControllerTest {
         val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testTriggerMFAAuthMethodReturnsBlockedResponse() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is MFACommandResult.BlockedAuthMethod)
     }
 
     @Test
@@ -1525,6 +1539,25 @@ class NativeAuthControllerTest {
         )
         val result = controller.jitChallengeAuthMethod(parameters)
         assert(result is JITCommandResult.IncorrectVerificationContact)
+    }
+
+    @Test
+    fun testChallengeJITAuthMethodBlockedVerificationContact() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
+            verificationContact = "+353 658894628",
+            authMethodChallengeType = "oob",
+            challengeChannel = "sms",
+            correlationId = correlationId
+        )
+        val result = controller.jitChallengeAuthMethod(parameters)
+        assert(result is JITCommandResult.BlockedVerificationContact)
     }
 
     @Test
