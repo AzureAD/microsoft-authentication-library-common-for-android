@@ -64,7 +64,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyProvider = new AndroidWrappedKeyProvider(
+        mKeyStoreKeyProvider = KeyStoreBackedSecretKeyProviderFactory.INSTANCE.create(
                 WRAPPING_KEY_ALIAS,
                 WRAPPED_KEY_FILE_NAME,
                 context
