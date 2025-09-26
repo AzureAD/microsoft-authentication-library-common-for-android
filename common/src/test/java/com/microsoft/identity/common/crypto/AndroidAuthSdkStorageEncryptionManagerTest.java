@@ -63,7 +63,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
 
         final ISecretKeyProvider provider = manager.getKeyProviderForEncryption();
-        Assert.assertTrue(provider instanceof AndroidWrappedKeyProvider);
+        Assert.assertTrue(provider instanceof KeyStoreBackedSecretKeyProvider);
         Assert.assertNotEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(provider));
     }
 
@@ -87,7 +87,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
         Assert.assertEquals(1, keyproviderList.size());
-        Assert.assertTrue(keyproviderList.get(0) instanceof AndroidWrappedKeyProvider);
+        Assert.assertTrue(keyproviderList.get(0) instanceof KeyStoreBackedSecretKeyProvider);
         Assert.assertNotEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(keyproviderList.get(0)));
     }
 
@@ -102,7 +102,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
         Assert.assertEquals(1, keyproviderList.size());
-        Assert.assertTrue(keyproviderList.get(0) instanceof AndroidWrappedKeyProvider);
+        Assert.assertTrue(keyproviderList.get(0) instanceof KeyStoreBackedSecretKeyProvider);
         Assert.assertNotEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(keyproviderList.get(0)));
     }
 
