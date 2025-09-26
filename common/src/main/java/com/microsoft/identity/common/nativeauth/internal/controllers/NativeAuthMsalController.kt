@@ -482,7 +482,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                         correlationId = result.correlationId
                     )
                 }
-                is SignInChallengeApiResult.PasswordRequired -> {
+                is SignInChallengeApiResult.PasswordRequired, is SignInChallengeApiResult.BlockedAuthMethod -> {
                     Logger.warnWithObject(
                         TAG,
                         result.correlationId,
@@ -624,6 +624,16 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                     INativeAuthCommandResult.APIError(
                         error = result.error,
                         errorDescription = result.errorDescription,
+                        errorCodes = result.errorCodes,
+                        correlationId = result.correlationId
+                    )
+                }
+                is SignInChallengeApiResult.BlockedAuthMethod -> {
+                    val customDescription = "Strong authentication method blocked. " +
+                            "Reach out to customer support to seek assistance."
+                    MFACommandResult.BlockedAuthMethod(
+                        error = result.error,
+                        errorDescription = customDescription + result.errorDescription,
                         errorCodes = result.errorCodes,
                         correlationId = result.correlationId
                     )
@@ -1684,9 +1694,6 @@ class NativeAuthMsalController : BaseNativeAuthController() {
         )
     }
 
-
-
-
     private fun performSignInChallengeCall(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         continuationToken: String,
@@ -2667,6 +2674,21 @@ class NativeAuthMsalController : BaseNativeAuthController() {
                 )
             }
             is SignInChallengeApiResult.UnknownError -> {
+                Logger.warnWithObject(
+                    TAG,
+                    result.correlationId,
+                    "Unexpected result: ",
+                    result
+                )
+                INativeAuthCommandResult.APIError(
+                    error = result.error,
+                    errorDescription = result.errorDescription,
+                    errorCodes = result.errorCodes,
+                    correlationId = result.correlationId
+                )
+            }
+
+            is SignInChallengeApiResult.BlockedAuthMethod -> {
                 Logger.warnWithObject(
                     TAG,
                     result.correlationId,
