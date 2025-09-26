@@ -28,6 +28,8 @@ import com.microsoft.identity.common.java.base64.Base64Flags;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -86,6 +88,7 @@ public class ClientInfo implements Serializable {
 
         mUid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
         mUtid = clientInfoItems.get(ClientInfo.UNIQUE_TENANT_IDENTIFIER);
+        SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), mUtid);
         mTdbrClaim = clientInfoItems.get(ClientInfo.TDBR_CLAIM);
         mRawClientInfo = rawClientInfo;
     }

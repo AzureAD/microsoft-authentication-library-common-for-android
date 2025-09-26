@@ -28,10 +28,6 @@ package com.microsoft.identity.common.java.opentelemetry;
  */
 public enum AttributeName {
     /**
-     * The tenant id for the home tenant of the account for which PRT is required.
-     */
-    tenant_id,
-    /**
      * The length of the response body returned from network request.
      */
     response_body_length,
@@ -124,6 +120,13 @@ public enum AttributeName {
      * The correlation id sent from client app
      */
     correlation_id,
+
+    /**
+     * The correlation id sent from client app.
+     * This is a second attribute name to denote EUDB compliance.
+     * We will only emit this value when we have a tenant id, or when we are in unauthenticated scenarios.
+     */
+    correlation_id_v2,
 
     /**
      * Indicates if token was return from token cache
