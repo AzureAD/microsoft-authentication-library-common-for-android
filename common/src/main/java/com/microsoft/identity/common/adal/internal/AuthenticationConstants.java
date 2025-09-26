@@ -1238,6 +1238,21 @@ public final class AuthenticationConstants {
         public static final String AAD_US_URL_HOST_SUFFIX = ".microsoftonline.us";
 
         /**
+         * Suffix for Intune MDM urls
+         */
+        public static final String AAD_INTUNE_MDM_URL_HOST_SUFFIX = ".microsoft.com";
+
+        /**
+         * Suffix for legacy china cloud
+         */
+        public static final String AAD_LEGACY_CHINA_URL_HOST_SUFFIX = ".chinacloudapi.cn";
+
+        /**
+         * suffic for legacy entra url
+         */
+        public static final String AAD_LEGACY_ENTRA_URL_HOST_SUFFIX = ".windows.net";
+
+        /**
          * host for the MSA url
          */
         public static final String MSA_URL_HOST = "login.live.com";
