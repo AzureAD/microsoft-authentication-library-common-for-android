@@ -66,6 +66,10 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     @Expose
     private final String homeTenantId;
 
+    /**
+     * Indicates whether the request is for a resource account or not. Resource account ATS
+     * flow overrides it.
+     */
     public boolean isRequestForResourceAccount() {
         return false;
     }
