@@ -26,10 +26,6 @@ internal fun String?.isRedirect(): Boolean {
     return this.contentEquals(other = "redirect", ignoreCase = true)
 }
 
-internal fun String?.isIntrospectRequired(): Boolean {
-    return this.contentEquals(other = "introspect_required", ignoreCase = true)
-}
-
 internal fun String?.isOOB(): Boolean {
     return this.contentEquals(other = "oob", ignoreCase = true)
 }
@@ -119,6 +115,10 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
 
 internal fun Int?.isInvalidChallengeTarget(): Boolean {
     return this == 901001
+}
+
+internal fun Int?.isBlockedChallengeTarget(): Boolean {
+    return this == 550024
 }
 
 fun String?.isMFARequired(): Boolean {

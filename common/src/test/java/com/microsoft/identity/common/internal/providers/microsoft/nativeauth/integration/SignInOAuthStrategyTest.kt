@@ -23,14 +23,12 @@
 package com.microsoft.identity.common.internal.providers.microsoft.nativeauth.integration
 
 import android.os.Build
-import com.microsoft.identity.common.nativeauth.ApiConstants
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
+import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
-import com.microsoft.identity.common.java.interfaces.PlatformComponents
-import com.microsoft.identity.common.java.logging.DiagnosticContext
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
@@ -43,7 +41,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInInitiateApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInIntrospectApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.common.nativeauth.MockApiEndpoint
 import com.microsoft.identity.common.nativeauth.MockApiResponseType
 import com.microsoft.identity.common.nativeauth.MockApiUtils
@@ -220,6 +220,7 @@ class SignInOAuthStrategyTest {
         every { parameters.getCode() } returns OOB
         every { parameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { parameters.correlationId } returns correlationId
+        every { parameters.getIsMFAGrantType() } returns false
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
@@ -243,6 +244,7 @@ class SignInOAuthStrategyTest {
         every { parameters.getCode() } returns OOB
         every { parameters.getContinuationToken() } returns CONTINUATION_TOKEN
         every { parameters.correlationId } returns correlationId
+        every { parameters.getIsMFAGrantType() } returns false
 
         val signInChallengeResult = nativeAuthOAuth2Strategy.performOOBTokenRequest(
             parameters = parameters
@@ -342,22 +344,6 @@ class SignInOAuthStrategyTest {
         )
 
         Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.PasswordRequired)
-    }
-
-    @Test
-    fun testPerformSignInDefaultChallengeWithIntrospectRequired() {
-        val correlationId = UUID.randomUUID().toString()
-
-        MockApiUtils.configureMockApi(
-            endpointType = MockApiEndpoint.SignInChallenge,
-            correlationId = correlationId,
-            responseType = MockApiResponseType.INTROSPECT_REQUIRED
-        )
-        val signInChallengeResult = nativeAuthOAuth2Strategy.performSignInDefaultChallenge(
-            continuationToken = CONTINUATION_TOKEN,
-            correlationId = correlationId
-        )
-        Assert.assertTrue(signInChallengeResult is SignInChallengeApiResult.IntrospectRequired)
     }
 
     @Test
