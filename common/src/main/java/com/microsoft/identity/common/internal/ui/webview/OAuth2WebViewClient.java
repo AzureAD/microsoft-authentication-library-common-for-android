@@ -78,9 +78,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 
-    public boolean mAuthUxJavaScriptInterfaceAdded = false;
+    protected boolean mAuthUxJavaScriptInterfaceAdded = false;
 
-    public boolean mIsRunningInAuthProcess = false;
+    protected boolean mIsRunningInAuthProcess = false;
 
     /**
      * @return context
