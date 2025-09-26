@@ -269,7 +269,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
     public boolean shouldExposeJavaScriptInterface(final String url) {
         return mIsRunningInAuthProcess
-                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
+                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 }
