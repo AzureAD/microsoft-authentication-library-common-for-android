@@ -80,5 +80,6 @@ enum class MockApiResponseType(val stringValue: String) {
     // Typo below on Registraion is expected, on par with Mock API
     REGISTRATION_INTROSPECT_SUCCESS("RegistraionIntrospectSuccess"),
     REGISTRATION_CHALLENGE_SUCCESS("RegistraionChallengeSuccess"),
-    REGISTRATION_INVALID_CHALLENGE_TARGET("RegistraionInvalidChallengeTarget")
+    REGISTRATION_INVALID_CHALLENGE_TARGET("RegistraionInvalidChallengeTarget"),
+    AUTH_METHOD_BLOCKED("AuthMethodBlocked")
 }
