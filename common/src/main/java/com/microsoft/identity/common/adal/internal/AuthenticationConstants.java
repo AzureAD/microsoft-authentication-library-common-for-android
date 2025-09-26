@@ -1223,15 +1223,24 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
-         * Prefix for AAD urls
+         * Suffix for global AAD urls
          */
-        public static final String AAD_URL_HOST_PREFIX = "login.microsoftonline.";
+        public static final String AAD_GLOBAL_URL_HOST_SUFFIX = ".microsoftonline.com";
 
         /**
-         * Prefix for MSA urls
+         * Suffix for China AAD urls
          */
-        public static final String MSA_URL_HOST_PREFIX = "login.live.";
+        public static final String AAD_CHINA_URL_HOST_SUFFIX = ".microsoftonline.cn";
 
+        /**
+         * Suffix for US AAD urls
+         */
+        public static final String AAD_US_URL_HOST_SUFFIX = ".microsoftonline.us";
+
+        /**
+         * host for the MSA url
+         */
+        public static final String MSA_URL_HOST = "login.live.com";
         /**
          * Encoded delimiter for redirect.
          */

@@ -33,7 +33,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 import java.net.MalformedURLException
-import java.net.URL
+import java.net.URI
 
 /**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
@@ -57,28 +57,29 @@ class AuthUxJavaScriptInterface {
          * @param url url being loaded
          * @return true if url is a valid, safe url, false otherwise
          */
-        fun isValidUrlForInterface(urlString: String?): Boolean {
+        fun isValidUrlForInterface(uriString: String?): Boolean {
             // If url is null, return false
-            if (urlString.isNullOrEmpty()) {
+            if (uriString.isNullOrEmpty()) {
                 return false
             }
 
-            val url: URL
+            val uri: URI
             try {
-                url = URL(urlString)
+                uri = URI(uriString)
             } catch (e: MalformedURLException) {
                 // If url is not a valid URL, return false
-                Logger.warn(TAG, "Malformed URL passed.")
+                Logger.warn(TAG, "Malformed uri passed. uri: $uriString, Message: ${e.message}")
                 return false
-
             }
 
-            val host = url.host
+            val host = uri.host
 
             // Otherwise, make sure url is a valid url
             // We only want to allow URLs that have the AAD or MSA url hosts
-            return host.startsWith(AuthenticationConstants.Broker.AAD_URL_HOST_PREFIX) ||
-                    host.startsWith(AuthenticationConstants.Broker.MSA_URL_HOST_PREFIX)
+            return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST)
         }
     }
 

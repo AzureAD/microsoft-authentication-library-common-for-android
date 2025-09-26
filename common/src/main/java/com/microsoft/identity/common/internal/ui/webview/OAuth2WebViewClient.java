@@ -42,6 +42,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
@@ -50,7 +51,6 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -77,6 +77,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
+
+    public boolean mAuthUxJavaScriptInterfaceAdded = false;
+
+    public boolean mIsRunningInAuthProcess = false;
 
     /**
      * @return context
@@ -222,6 +226,20 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                               final Bitmap favicon) {
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
+
+        // Re-evaluate adding AuthUx JavaScript Interface
+        if (shouldExposeJavaScriptInterface(url)) {
+            // If broker request, and a valid url, expose JavaScript API
+            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
+            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
+            // Remove AuthUx JavaScript Interface
+            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
+            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
+        }
+
         Logger.info(methodTag,"WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
@@ -247,5 +265,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
             Logger.infoPII(methodTag,"Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
                     + " Path: " + uri.getPath());
         }
+    }
+
+    public boolean shouldExposeJavaScriptInterface(final String url) {
+        return mIsRunningInAuthProcess
+                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 }

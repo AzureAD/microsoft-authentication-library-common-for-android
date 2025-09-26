@@ -129,7 +129,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
     private boolean mIsWebCpInWebViewFeatureEnabled = false;
 
     private String mUtid;
@@ -144,6 +143,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        mIsRunningInAuthProcess = ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
         mUtid = utid;
     }
 
@@ -159,12 +159,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
-    }
-
-    private boolean shouldExposeJavaScriptInterface(final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 
     @Override
@@ -243,19 +237,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
-        // Re-evaluate adding AuthUx JavaScript Interface
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
-        } else if (mAuthUxJavaScriptInterfaceAdded) {
-            // Remove AuthUx JavaScript Interface
-            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
-            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = false;
-        }
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
