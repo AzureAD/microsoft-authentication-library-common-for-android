@@ -98,7 +98,6 @@ class NativeAuthControllerTest {
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
     private val scopes: List<String> = listOf("scope1", "scope2", "scope3")
     private val invalidGrantError = "invalid_grant"
-    private val credentialRequiredError = "credential_required"
     private val userNotFoundError = "user_not_found"
     private val continuationToken = "1234"
     private val newPassword = "newPassword".toCharArray()
