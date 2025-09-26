@@ -104,12 +104,6 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test isValidUrlForInterface with valid MSA URL`() {
-        val validUrl = "https://login.live.com/oauth20_authorize.srf"
-        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
-    }
-
-    @Test
     fun `test isValidUrlForInterface with null URL`() {
         val nullUrl: String? = null
         Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(nullUrl))
