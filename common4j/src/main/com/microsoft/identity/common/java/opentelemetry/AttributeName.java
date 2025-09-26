@@ -336,6 +336,21 @@ public enum AttributeName {
     key_pair_gen_successful_method,
 
     /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryptionPaddings,
+
+    /**
      * Indicates the exception in generating a keypair.
      */
     keypair_gen_exception,
@@ -463,4 +478,16 @@ public enum AttributeName {
      * Indicates the authority used to make the OpenID configuration request.
      */
     openid_config_request_authority,
+
+    /**
+     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     */
+    secret_key_wrapping_transformation,
+
+    /**
+     * Records the operation used to wrap/unwrap the secret key.
+     */
+    secret_key_wrapping_operation,
+
+
 }

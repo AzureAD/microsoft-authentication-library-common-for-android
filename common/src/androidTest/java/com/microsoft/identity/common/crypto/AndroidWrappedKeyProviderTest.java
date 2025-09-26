@@ -31,6 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -38,18 +39,81 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
+@RunWith(Parameterized.class)
 public class AndroidWrappedKeyProviderTest {
+
+    @Parameterized.Parameter(0)
+    public String providerType;
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {"KEYSTORE_BACKED"},
+                {"ANDROID_WRAPPED"}
+                // Add other provider types here as keywords
+        });
+    }
+
+    private ISecretKeyProvider createProvider() {
+        if ("KEYSTORE_BACKED".equals(providerType)) {
+            return new KeyStoreBackedSecretKeyProvider(context, MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH);
+        } else if ("ANDROID_WRAPPED".equals(providerType)) {
+            return new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        } else {
+            throw new IllegalArgumentException("Unsupported provider type: " + providerType);
+        }
+    }
+
+    private SecretKey getKeyFromCache(ISecretKeyProvider keyProvider) {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).getKeyFromCache();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).getKeyFromCache();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
+
+    private void clearKeyFromCache(ISecretKeyProvider keyProvider) {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            ((AndroidWrappedKeyProvider) keyProvider).clearKeyFromCache();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            ((KeyStoreBackedSecretKeyProvider) keyProvider).clearKeyFromCache();
+        } else {
+            throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+        }
+    }
+
+    private SecretKey readSecretKeyFromStorage(ISecretKeyProvider keyProvider) throws ClientException {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).readSecretKeyFromStorage();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).readSecretKeyFromStorage();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
+
+    private SecretKey generateNewSecretKey(ISecretKeyProvider keyProvider) throws ClientException {
+        if (keyProvider instanceof AndroidWrappedKeyProvider) {
+            return ((AndroidWrappedKeyProvider) keyProvider).generateRandomKey();
+        } else if (keyProvider instanceof KeyStoreBackedSecretKeyProvider) {
+            return ((KeyStoreBackedSecretKeyProvider) keyProvider).generateNewSecretKey();
+        }
+        throw new IllegalArgumentException("Unsupported key provider type: " + keyProvider.getClass().getName());
+    }
 
     final Context context = ApplicationProvider.getApplicationContext();
     final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
@@ -111,17 +175,17 @@ public class AndroidWrappedKeyProviderTest {
 
     @Test
     public void testGenerateKey() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey secretKey = keyProvider.generateRandomKey();
+        final ISecretKeyProvider keyProvider = createProvider();
+        final SecretKey secretKey = generateNewSecretKey(keyProvider);
 
         Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
     }
 
     @Test
     public void testReadKeyDirectly() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final ISecretKeyProvider keyProvider = initkeyProviderWithKeyEntry();
         final SecretKey secretKey = keyProvider.getKey();
-        final SecretKey storedSecretKey = keyProvider.readSecretKeyFromStorage();
+        final SecretKey storedSecretKey = readSecretKeyFromStorage(keyProvider);
 
         // They're not the same object!
         Assert.assertNotSame(secretKey, storedSecretKey);
@@ -139,12 +203,12 @@ public class AndroidWrappedKeyProviderTest {
     public void testLoadKey() throws ClientException {
         // Nothing exists. This load key function should generate a key if the key hasn't exist.
         Assert.assertNull(AndroidKeyStoreUtil.readKey(MOCK_KEY_ALIAS));
-        Assert.assertNull(FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE));
+        Assert.assertNull(FileUtil.readFromFile(getKeyFile(), KeyStoreBackedSecretKeyProvider.KEY_FILE_SIZE));
 
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final ISecretKeyProvider keyProvider = createProvider();
         final SecretKey secretKey = keyProvider.getKey();
 
-        final SecretKey key = keyProvider.getKeyFromCache();
+        final SecretKey key = getKeyFromCache(keyProvider);
         Assert.assertNotNull(key);
         Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
@@ -154,10 +218,10 @@ public class AndroidWrappedKeyProviderTest {
     @Test
     public void testLoadKeyFromCorruptedFile_TruncatedExisingKey() throws ClientException {
         // Create a new Keystore-wrapped key.
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyProvider.generateRandomKey();
+        final ISecretKeyProvider keyProvider = createProvider();
+        generateNewSecretKey(keyProvider);
 
-        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE);
+        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), KeyStoreBackedSecretKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
 
         // Overwrite the key file with corrupted data.
@@ -165,7 +229,7 @@ public class AndroidWrappedKeyProviderTest {
 
         // It should fail to read, with an exception, and everything should be wiped.
         try{
-            keyProvider.readSecretKeyFromStorage();
+            readSecretKeyFromStorage(keyProvider);
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(INVALID_KEY, e.getErrorCode());
@@ -175,16 +239,16 @@ public class AndroidWrappedKeyProviderTest {
         Assert.assertFalse(getKeyFile().exists());
 
         // the next read should be unblocked.
-        Assert.assertNull(keyProvider.readSecretKeyFromStorage());
+        Assert.assertNull(readSecretKeyFromStorage(keyProvider));
     }
 
     @Test
     public void testLoadKeyFromCorruptedFile_InjectGarbage() throws ClientException {
         // Create a new Keystore-wrapped key.
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyProvider.generateRandomKey();
+        final ISecretKeyProvider keyProvider = createProvider();
+        generateNewSecretKey(keyProvider);
 
-        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE);
+        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), KeyStoreBackedSecretKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
 
         // Overwrite the key file with corrupted data.
@@ -192,7 +256,7 @@ public class AndroidWrappedKeyProviderTest {
 
         // It should fail to read, with an exception, and everything should be wiped.
         try{
-            keyProvider.readSecretKeyFromStorage();
+            readSecretKeyFromStorage(keyProvider);
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(INVALID_KEY, e.getErrorCode());
@@ -202,14 +266,14 @@ public class AndroidWrappedKeyProviderTest {
         Assert.assertFalse(getKeyFile().exists());
 
         // the next read should be unblocked.
-        Assert.assertNull(keyProvider.readSecretKeyFromStorage());
+        Assert.assertNull(readSecretKeyFromStorage(keyProvider));
     }
 
     // 1s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
     @Ignore
     public void testPerf_WithCachedKey() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final ISecretKeyProvider keyProvider = createProvider();
 
         long timeStartLoop = System.nanoTime();
         for (int i = 0; i < TEST_LOOP; i++) {
@@ -224,11 +288,11 @@ public class AndroidWrappedKeyProviderTest {
     @Test
     @Ignore("Performance test, ignore in normal test run")
     public void testPerf_NoCachedKey() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final ISecretKeyProvider keyProvider = createProvider();
 
         long timeStartLoopNotCached = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            keyProvider.clearKeyFromCache();
+            clearKeyFromCache(keyProvider);
             keyProvider.getKey();
         }
         long timeFinishLoopNotCached = System.nanoTime();
@@ -241,31 +305,31 @@ public class AndroidWrappedKeyProviderTest {
      */
     @Test
     public void testLoadDeletedKeyStoreKey() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final ISecretKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
         // Cached key also be wiped.
-        final SecretKey key = keyProvider.getKeyFromCache();
+        final SecretKey key = getKeyFromCache(keyProvider);
         Assert.assertNull(key);
     }
 
     @Test
     public void testLoadDeletedKeyFile() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final ISecretKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         FileUtil.deleteFile(getKeyFile());
 
         // Cached key also be wiped.
-        final SecretKey key = keyProvider.getKeyFromCache();
+        final SecretKey key = getKeyFromCache(keyProvider);
         Assert.assertNull(key);
     }
 
-    private AndroidWrappedKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
-        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+    private ISecretKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
+        final ISecretKeyProvider keyProvider = createProvider();
         final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
-        Assert.assertNotNull(keyProvider.getKeyFromCache());
+        Assert.assertNotNull(getKeyFromCache(keyProvider));
         return keyProvider;
     }
 }

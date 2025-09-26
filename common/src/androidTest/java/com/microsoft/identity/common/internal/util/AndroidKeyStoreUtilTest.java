@@ -70,7 +70,8 @@ public class AndroidKeyStoreUtilTest {
         final byte[] wrapped = AndroidKeyStoreUtil.wrap(
                 mSecretKey,
                 mKeyPair,
-                TEST_WRAP_ALGORITHM
+                TEST_WRAP_ALGORITHM,
+                null
         );
 
         // Test successful unwrap
@@ -78,7 +79,8 @@ public class AndroidKeyStoreUtilTest {
                 wrapped,
                 TEST_KEY_ALGORITHM,
                 mKeyPair,
-                TEST_WRAP_ALGORITHM
+                TEST_WRAP_ALGORITHM,
+                null
         );
 
         assertNotNull(unwrapped);
@@ -91,14 +93,16 @@ public class AndroidKeyStoreUtilTest {
             final byte[] wrapped = AndroidKeyStoreUtil.wrap(
                     mSecretKey,
                     mKeyPair,
-                    TEST_WRAP_ALGORITHM
+                    TEST_WRAP_ALGORITHM,
+                    null
             );
 
             final SecretKey secretKey = AndroidKeyStoreUtil.unwrap(
                     wrapped,
                     TEST_KEY_ALGORITHM,
                     mKeyPair,
-                    "NoAlg"
+                    "NoAlg",
+                    null
             );
             fail("Should have thrown ClientException");
         } catch (final ClientException e) {
@@ -113,7 +117,8 @@ public class AndroidKeyStoreUtilTest {
                     TEST_WRAPPED_KEY_BYTES,
                     TEST_KEY_ALGORITHM,
                     mKeyPair,
-                    TEST_WRAP_ALGORITHM
+                    TEST_WRAP_ALGORITHM,
+                    null
             );
             fail("Should have thrown ClientException");
         } catch (final ClientException e) {

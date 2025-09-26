@@ -240,7 +240,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM, null);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
@@ -293,7 +293,7 @@ public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
                 span.end();
             }
         }
-        final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
+        final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM, null);
         FileUtil.writeDataToFile(keyWrapped, getKeyFile());
     }
 
