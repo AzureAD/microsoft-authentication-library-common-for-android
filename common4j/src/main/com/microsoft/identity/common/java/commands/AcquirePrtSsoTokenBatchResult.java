@@ -42,7 +42,7 @@ import lombok.experimental.Accessors;
 public class AcquirePrtSsoTokenBatchResult {
 
     /**
-     * List of successful per-account results keyed by home account id.
+     * List of successful per-account results.
      */
     @SerializedName("results")
     private final @NonNull List<AcquirePrtSsoTokenResult> mResults;
