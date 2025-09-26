@@ -80,8 +80,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
     protected boolean mAuthUxJavaScriptInterfaceAdded = false;
 
-    protected boolean mIsRunningInAuthProcess = false;
-
     /**
      * @return context
      */
@@ -268,7 +266,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     public boolean shouldExposeJavaScriptInterface(final String url) {
-        return mIsRunningInAuthProcess
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }

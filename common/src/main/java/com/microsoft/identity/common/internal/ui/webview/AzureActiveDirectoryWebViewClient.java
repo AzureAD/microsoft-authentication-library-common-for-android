@@ -143,7 +143,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
-        mIsRunningInAuthProcess = ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
         mUtid = utid;
     }
 
