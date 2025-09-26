@@ -465,6 +465,21 @@ public enum AttributeName {
     skipped_ests_telemetry,
 
     /**
+     * Indicates the OpenID issuer returned in the discovery document.
+     */
+    openid_issuer,
+
+    /**
+     * Indicates the reason for an invalid OpenID issuer.
+     */
+    openid_issuer_invalid_reason,
+
+    /**
+     * Indicates the authority used to make the OpenID configuration request.
+     */
+    openid_config_request_authority,
+
+    /**
      * Records the Cipher transformation used to encrypt/decrypt the keypair.
      */
     secret_key_wrapping_transformation,
@@ -472,5 +487,7 @@ public enum AttributeName {
     /**
      * Records the operation used to wrap/unwrap the secret key.
      */
-    secret_key_wrapping_operation
+    secret_key_wrapping_operation,
+
+
 }

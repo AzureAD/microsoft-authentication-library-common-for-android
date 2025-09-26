@@ -33,7 +33,7 @@ internal fun AuthenticationMethodApiResponse.toAuthenticationMethodApiResult(): 
     return AuthenticationMethodApiResult(
         id = this.id ?: throw IllegalStateException("Required field id is empty"),
         challengeType = this.challengeType ?: throw IllegalStateException("Required field challengeType is empty"),
-        loginHint = this.loginHint ?: throw IllegalStateException("Required loginHint id is empty"),
+        loginHint = this.loginHint,
         challengeChannel = this.challengeChannel ?: throw IllegalStateException("Required challengeChannel id is empty")
     )
 }
