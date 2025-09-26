@@ -50,10 +50,10 @@ import java.nio.ByteBuffer
  * @see WrappedSecretKeySerializerManager
  */
 
-abstract class WrappedSecretKeySerializerWithMetadata: IWrappedSecretKeySerializer {
+abstract class AbstractWrappedSecretKeySerializer: IWrappedSecretKeySerializer {
 
     companion object {
-        const val TAG = "WrappedSecretKeySerializerWithMetadata"
+        const val TAG = "AbstractWrappedSecretKeySerializer"
 
         /** Size in bytes for the magic bytes identifier field */
         const val MAGIC_BYTES_SIZE_BYTES = Int.SIZE_BYTES
@@ -130,7 +130,7 @@ abstract class WrappedSecretKeySerializerWithMetadata: IWrappedSecretKeySerializ
      * @return The deserialized metadata object
      * @throws Exception if metadata format is invalid or corrupted
      */
-    abstract fun deserializeMetadata(metadataByteArray: ByteArray): WrappedSecretKeyMetadata
+    protected abstract fun deserializeMetadata(metadataByteArray: ByteArray): WrappedSecretKeyMetadata
 
     override fun serialize(wrappedSecretKey: WrappedSecretKey): ByteArray {
 

@@ -37,7 +37,7 @@ import java.io.DataOutputStream
  *
  * @see IWrappedSecretKeySerializer
  */
-class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMetadata() {
+class WrappedSecretKeyBinaryStreamSerializer: AbstractWrappedSecretKeySerializer() {
 
     companion object {
         /** Unique identifier for the binary stream serialization format */
@@ -57,8 +57,8 @@ class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMeta
      */
     @Throws(java.io.IOException::class)
     override fun serializeMetadata(wrappedSecretKey: WrappedSecretKey): ByteArray {
-        return ByteArrayOutputStream().use { baos ->
-            DataOutputStream(baos).use { dos ->
+        return ByteArrayOutputStream().use { bytesOutputStream ->
+            DataOutputStream(bytesOutputStream).use { dos ->
                 // Write algorithm (writeUTF includes length prefix)
                 dos.writeUTF(wrappedSecretKey.algorithm)
                 // Write cipher transformation (writeUTF includes length prefix)
@@ -66,7 +66,7 @@ class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMeta
                 // Write key data length
                 dos.writeInt(wrappedSecretKey.wrappedKeyData.size)
             }
-            baos.toByteArray()
+            bytesOutputStream.toByteArray()
         }
     }
 
@@ -79,8 +79,8 @@ class WrappedSecretKeyBinaryStreamSerializer: WrappedSecretKeySerializerWithMeta
      */
     @Throws(java.io.IOException::class)
     override fun deserializeMetadata(metadataByteArray: ByteArray): WrappedSecretKeyMetadata {
-        return ByteArrayInputStream(metadataByteArray).use { bais ->
-            DataInputStream(bais).use { dis ->
+        return ByteArrayInputStream(metadataByteArray).use { byteArrayInputStream ->
+            DataInputStream(byteArrayInputStream).use { dis ->
                 val algorithm = dis.readUTF()
                 val cipherTransformation = dis.readUTF()
                 val keyLength = dis.readInt()

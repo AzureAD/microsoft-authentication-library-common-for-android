@@ -365,7 +365,6 @@ class KeyStoreBackedSecretKeyProvider(
         return compatibleSpecs
     }
 
-
     /**
      * Generates a new RSA key pair using prioritized specifications with fallback support.
      *

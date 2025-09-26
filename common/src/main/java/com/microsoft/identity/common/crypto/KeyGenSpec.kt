@@ -23,10 +23,8 @@
 package com.microsoft.identity.common.crypto
 
 import android.content.Context
-import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
-import androidx.annotation.RequiresApi
 import java.math.BigInteger
 import java.security.spec.AlgorithmParameterSpec
 import java.util.Calendar
@@ -86,7 +84,6 @@ data class KeyGenSpec(
         return encryptionPaddings.toTypedArray()
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override val algorithmParameterSpec: AlgorithmParameterSpec =
         KeyGenParameterSpec.Builder(keyAlias, purposes)
             .setKeySize(keySize)

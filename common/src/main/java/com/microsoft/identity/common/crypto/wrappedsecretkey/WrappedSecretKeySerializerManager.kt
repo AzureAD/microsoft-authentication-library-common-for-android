@@ -65,11 +65,11 @@ object WrappedSecretKeySerializerManager {
      *
      * @param wrappedSecretKeyByteArray The serialized wrapped secret key data to analyze
      * @return The detected serializer ID (0 for legacy, 1+ for metadata formats)
-     * @see WrappedSecretKeySerializerWithMetadata.getSerializerIdFromByteArray
+     * @see AbstractWrappedSecretKeySerializer.getSerializerIdFromByteArray
      */
     fun identifySerializer(wrappedSecretKeyByteArray: ByteArray): Int {
         val methodTag = "$TAG:identifySerializer"
-        val serializerId = WrappedSecretKeySerializerWithMetadata
+        val serializerId = AbstractWrappedSecretKeySerializer
             .getSerializerIdFromByteArray(wrappedSecretKeyByteArray)
         Logger.info(methodTag, "Detected serializer ID: $serializerId")
         return serializerId ?: WrappedSecretKeyLegacySerializer.ID // Legacy format

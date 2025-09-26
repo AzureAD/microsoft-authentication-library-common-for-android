@@ -129,7 +129,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", false),
+    ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", true),
 
     /**
      * Flight to control the WrappedSecretKey serializer version

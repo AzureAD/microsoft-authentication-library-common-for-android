@@ -39,7 +39,7 @@ package com.microsoft.identity.common.crypto.wrappedsecretkey
  *
  * @see WrappedSecretKey
  * @see IWrappedSecretKeySerializer
- * @see WrappedSecretKeySerializerWithMetadata
+ * @see AbstractWrappedSecretKeySerializer
  */
 data class WrappedSecretKeyMetadata(
     val algorithm: String,

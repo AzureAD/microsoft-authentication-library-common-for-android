@@ -24,7 +24,7 @@ package com.microsoft.identity.common.crypto
 
 import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKey
 import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKeySerializerManager
-import com.microsoft.identity.common.crypto.wrappedsecretkey.WrappedSecretKeySerializerWithMetadata.Companion.METADATA_FORMAT_MAGIC_BYTES
+import com.microsoft.identity.common.crypto.wrappedsecretkey.AbstractWrappedSecretKeySerializer.Companion.METADATA_FORMAT_MAGIC_BYTES
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import io.mockk.every
