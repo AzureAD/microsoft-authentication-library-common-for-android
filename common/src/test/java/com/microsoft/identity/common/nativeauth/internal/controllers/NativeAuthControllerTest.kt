@@ -98,7 +98,6 @@ class NativeAuthControllerTest {
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
     private val scopes: List<String> = listOf("scope1", "scope2", "scope3")
     private val invalidGrantError = "invalid_grant"
-    private val credentialRequiredError = "credential_required"
     private val userNotFoundError = "user_not_found"
     private val continuationToken = "1234"
     private val newPassword = "newPassword".toCharArray()
@@ -538,7 +537,7 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
-    fun `testsignInWithPasswordReturnMFARequired`() {
+    fun testSignInWithPasswordReturnMFARequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,
@@ -549,6 +548,20 @@ class NativeAuthControllerTest {
         val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testTriggerMFAAuthMethodReturnsBlockedResponse() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is MFACommandResult.BlockedAuthMethod)
     }
 
     @Test
@@ -692,8 +705,7 @@ class NativeAuthControllerTest {
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.APIError)
     }
-
-
+    
     @Test
     fun testMFAChallengeExpiredTokenShouldReturnAPIError() {
         val correlationId = UUID.randomUUID().toString()
@@ -1525,6 +1537,25 @@ class NativeAuthControllerTest {
         )
         val result = controller.jitChallengeAuthMethod(parameters)
         assert(result is JITCommandResult.IncorrectVerificationContact)
+    }
+
+    @Test
+    fun testChallengeJITAuthMethodBlockedVerificationContact() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
+            verificationContact = "+353 658894628",
+            authMethodChallengeType = "oob",
+            challengeChannel = "sms",
+            correlationId = correlationId
+        )
+        val result = controller.jitChallengeAuthMethod(parameters)
+        assert(result is JITCommandResult.BlockedVerificationContact)
     }
 
     @Test
