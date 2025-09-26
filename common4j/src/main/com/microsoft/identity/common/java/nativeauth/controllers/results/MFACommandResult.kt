@@ -42,4 +42,15 @@ interface MFACommandResult {
 
         override fun toString(): String = "VerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
+
+    data class BlockedAuthMethod(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>
+    ) : MFAChallengeCommandResult {
+        override fun toUnsanitizedString(): String = "BlockedAuthMethod(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "BlockedAuthMethod(correlationId=$correlationId)"
+    }
 }

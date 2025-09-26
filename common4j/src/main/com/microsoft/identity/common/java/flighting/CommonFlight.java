@@ -122,6 +122,21 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+
+    /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", true),
+
+    /**
+     * Flight to control the WrappedSecretKey serializer version
+     */
+    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
+
+    /**
      * Flight to enable handling the UI in edge to edge mode
      */
     ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
