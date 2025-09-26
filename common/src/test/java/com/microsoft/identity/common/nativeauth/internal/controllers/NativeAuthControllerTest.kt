@@ -705,8 +705,7 @@ class NativeAuthControllerTest {
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.APIError)
     }
-
-
+    
     @Test
     fun testMFAChallengeExpiredTokenShouldReturnAPIError() {
         val correlationId = UUID.randomUUID().toString()
