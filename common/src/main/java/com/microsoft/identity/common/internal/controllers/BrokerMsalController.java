@@ -1200,7 +1200,6 @@ public class BrokerMsalController extends BaseController {
     public AcquirePrtSsoTokenBatchResult getAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
         return getBrokerOperationExecutor().execute(parameters,
                 new BrokerOperation<AcquirePrtSsoTokenBatchResult>() {
-
                     private String negotiatedBrokerProtocolVersion;
 
                     @Override

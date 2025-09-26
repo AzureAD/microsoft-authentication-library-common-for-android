@@ -66,6 +66,6 @@ public enum SpanName {
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
-
-    ProvisionResourceAccount
+    ProvisionResourceAccount,
+    GetAllSsoTokens
 }
