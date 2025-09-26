@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -34,8 +36,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
-import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.interfaces.PlatformComponents
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest.Companion.toJsonString
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -847,6 +847,7 @@ class NativeAuthRequestProviderTest {
             .code(emptyString)
             .continuationToken(continuationToken)
             .correlationId(correlationId)
+            .isMFAGrantType(false)
             .build()
 
         nativeAuthRequestProvider.createOOBTokenRequest(
@@ -862,12 +863,14 @@ class NativeAuthRequestProviderTest {
             .correlationId(correlationId)
             .code("code")
             .claimsRequestJson("claims")
+            .isMFAGrantType(false)
             .build()
 
         val request = nativeAuthRequestProvider.createOOBTokenRequest(
             commandParameters = commandParameters
         )
         assertEquals(request.parameters.oob, commandParameters.code)
+        assertEquals(request.parameters.grantType, NativeAuthConstants.GrantType.OOB)
         assertEquals(request.parameters.claimsRequestJson, commandParameters.claimsRequestJson)
         assertEquals(request.parameters.continuationToken, commandParameters.continuationToken)
         assertEquals(request.parameters.challengeType, mockConfig.challengeType)

@@ -22,8 +22,6 @@
 //THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import javax.annotation.Nullable;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,15 +29,15 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * CommandParameters for calling /challenge as part of MFA flows.
+ * CommandParameters for calling /challenge with auth method ID as part of MFA flows.
  * extends from {@link BaseSignInTokenCommandParameters}
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class MFADefaultChallengeCommandParameters extends BaseSignInTokenCommandParameters {
-    private static final String TAG = MFADefaultChallengeCommandParameters.class.getSimpleName();
+public class MFAChallengeAuthMethodCommandParameters extends BaseSignInTokenCommandParameters {
+    private static final String TAG = MFAChallengeAuthMethodCommandParameters.class.getSimpleName();
 
     /**
      * The continuation token obtained from the token endpoint.
@@ -47,10 +45,17 @@ public class MFADefaultChallengeCommandParameters extends BaseSignInTokenCommand
     @NonNull
     public final String continuationToken;
 
+
+    /**
+     * The ID of the auth method that should be challenged.
+     */
+    @NonNull
+    public final String authMethodId;
+
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "MFADefaultChallengeCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ")";
+        return "MFAChallengeAuthMethodCommandParameters(authority=" + authority + ", challengeType=" + challengeType + ", authMethodId=" + authMethodId + ")";
     }
 
     @Override

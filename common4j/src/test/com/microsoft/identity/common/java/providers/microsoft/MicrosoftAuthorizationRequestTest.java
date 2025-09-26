@@ -87,6 +87,7 @@ public class MicrosoftAuthorizationRequestTest {
                             "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
                             "&x-client-SKU=" + MOCK_LIBRARY_NAME +
                             "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-ReleaseOS=" + MockDeviceMetadata.TEST_RELEASE_OS +
                             "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                             "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                             "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +
@@ -141,6 +142,7 @@ public class MicrosoftAuthorizationRequestTest {
                             "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
                             "&x-client-SKU=" + MOCK_LIBRARY_NAME +
                             "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
+                            "&x-client-ReleaseOS=" + MockDeviceMetadata.TEST_RELEASE_OS +
                             "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                             "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                             "&x-client-MN=" + MockDeviceMetadata.TEST_MANUFACTURER +

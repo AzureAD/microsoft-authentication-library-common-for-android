@@ -306,6 +306,16 @@ public enum AttributeName {
     keystore_exception_stack_trace,
 
     /**
+     * Indicates the exception message from a Android KeyStore operation exception.
+     */
+    keystore_exception_message,
+
+    /**
+     * Indicates the error code from a Android KeyStore operation exception.
+     */
+    keystore_numeric_error_code,
+
+    /**
      * Indicates the new nonce found in the eSTS request.
      */
     is_sso_nonce_found_in_ests_request,
@@ -437,7 +447,20 @@ public enum AttributeName {
     /**
      * Indicates if ests telemetry was skipped.
      */
-    skipped_ests_telemetry
+    skipped_ests_telemetry,
 
+    /**
+     * Indicates the OpenID issuer returned in the discovery document.
+     */
+    openid_issuer,
 
+    /**
+     * Indicates the reason for an invalid OpenID issuer.
+     */
+    openid_issuer_invalid_reason,
+
+    /**
+     * Indicates the authority used to make the OpenID configuration request.
+     */
+    openid_config_request_authority,
 }

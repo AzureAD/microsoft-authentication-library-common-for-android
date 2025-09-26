@@ -34,8 +34,6 @@ object NativeAuthConstants {
     object ChallengeChannel {
         //Challenge is sent using the email channel
         const val EMAIL = "email"
-        //Challenge is sent using the voice channel
-        const val VOICE = "voice"
         //Challenge is sent using the SMS channel
         const val SMS = "sms"
     }
@@ -48,6 +46,8 @@ object NativeAuthConstants {
         const val PASSWORD = "password"
         //Authentication is done by presenting an Out of band token
         const val OOB = "oob"
+        // Authentication is done by presenting a MFA Out of band token
+        const val MFA_OOB = "mfa_oob"
         //Authentication is done by presenting a continuation token
         const val CONTINUATION_TOKEN = "continuation_token"
         //Authentication must be performed by following the redirect url
