@@ -20,32 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
-import javax.crypto.SecretKey;
-
-import lombok.NonNull;
-
-public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
-    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
-    public static String MOCK_ERROR = "MOCK_ERROR";
-
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ERROR;
-    }
-
-    @Override
-    public @NonNull SecretKey getKey() throws ClientException {
-        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return MOCK_KEY_IDENTIFIER;
+/**
+ * Shadow implementation of {@link SmartcardNfcPromptDialog} for use in unit tests.
+ */
+@Implements(SmartcardNfcPromptDialog.class)
+public class ShadowSmartcardNfcPromptDialog extends ShadowExceptionSmartcardDialog {
+    /**
+     * Shadow implementation for createDialog().
+     * This is intentionally left empty to avoid actual UI operations during tests.
+     */
+    @Implementation
+    protected void createDialog() {
+        // Intentionally empty implementation for testing
     }
 }

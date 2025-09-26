@@ -414,7 +414,7 @@ public enum AuthenticationSettings {
      * @param shouldIgnore if true, ignores keyloader not found errors
      */
     @SuppressFBWarnings(ME_ENUM_FIELD_SETTER)
-    public void setIgnoreKeyLoaderNotFoundError(boolean shouldIgnore) {
+    public void setIgnoreKeyProviderNotFoundError(boolean shouldIgnore) {
         mIgnoreKeyLoaderNotFoundError = shouldIgnore;
     }
 

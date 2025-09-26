@@ -20,46 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import javax.crypto.SecretKey;
-
-import lombok.NonNull;
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
 /**
- * For loading an AES-256 key from a provided rawbytes array.
+ * Shadow implementation of {@link SmartcardNfcReminderDialog} for use in unit tests.
  */
-public class PredefinedKeyLoader extends AES256KeyLoader {
-
+@Implements(SmartcardNfcReminderDialog.class)
+public class ShadowSmartcardNfcReminderDialog extends ShadowExceptionSmartcardDialog {
     /**
-     * Indicate that the token item is encrypted with the user provided key.
+     * Shadow implementation for createDialog().
+     * This is intentionally left empty to avoid actual UI operations during tests.
      */
-    public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
-
-    private final String mAlias;
-    private final SecretKey mKey;
-
-    public PredefinedKeyLoader(@NonNull final String alias,
-                               @NonNull final byte[] rawBytes) {
-        mAlias = alias;
-        mKey = generateKeyFromRawBytes(rawBytes);
-    }
-
-    @Override
-    @NonNull
-    public String getAlias() {
-        return mAlias;
-    }
-
-    @Override
-    @NonNull
-    public SecretKey getKey() {
-        return mKey;
-    }
-
-    @Override
-    @NonNull
-    public String getKeyTypeIdentifier() {
-        return USER_PROVIDED_KEY_IDENTIFIER;
+    @Implementation
+    protected void createDialog() {
+        // Intentionally empty implementation for testing
     }
 }

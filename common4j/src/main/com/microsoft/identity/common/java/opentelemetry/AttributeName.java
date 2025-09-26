@@ -310,6 +310,16 @@ public enum AttributeName {
     keystore_exception_stack_trace,
 
     /**
+     * Indicates the exception message from a Android KeyStore operation exception.
+     */
+    keystore_exception_message,
+
+    /**
+     * Indicates the error code from a Android KeyStore operation exception.
+     */
+    keystore_numeric_error_code,
+
+    /**
      * Indicates the new nonce found in the eSTS request.
      */
     is_sso_nonce_found_in_ests_request,
@@ -370,6 +380,29 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
+     * The tenant id for the home tenant of the account for which PRT is required.
+     */
+    tenant_id,
+
+    /**
+     * Indicates the type of account such as AAD or MSA.
+     */
+    account_type,
+
+    /**
+     * Indicates the broker app that emits the event.
+     * The broker is not necessarily the active broker.
+     * e.g. An inactive broker app might be invoked during OnUpgrade.
+     * (It should be renamed, but that would mess up the dashboard)
+     */
+    active_broker_package_name,
+
+    /**
+     * Indicates the current broker package name processing the request.
+     */
+    current_broker_package_name,
+
+    /**
      * Records if the request is a webcp authorize request.
      */
     is_webcp_authorize_request,
@@ -388,5 +421,50 @@ public enum AttributeName {
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */
-    web_view_ssl_primary_error_code
+    web_view_ssl_primary_error_code,
+
+    /**
+     * Record action name from Webview JavaScript Payload
+     */
+    authux_js_action_name,
+
+    /**
+     * Record action component from Webview JavaScript Payload
+     */
+    authux_js_action_component,
+
+    /**
+     * Record operation name from Webview JavaScript Payload
+     */
+    authux_js_operation,
+
+    /**
+     * Record whether or not the request stored a number match entry.
+     */
+    stored_number_match_entry,
+
+    /**
+     * Records the time (in milliseconds) spent on flight check for webcp.
+     */
+    web_cp_flight_get_time,
+
+    /**
+     * Indicates if ests telemetry was skipped.
+     */
+    skipped_ests_telemetry,
+
+    /**
+     * Indicates the OpenID issuer returned in the discovery document.
+     */
+    openid_issuer,
+
+    /**
+     * Indicates the reason for an invalid OpenID issuer.
+     */
+    openid_issuer_invalid_reason,
+
+    /**
+     * Indicates the authority used to make the OpenID configuration request.
+     */
+    openid_config_request_authority,
 }

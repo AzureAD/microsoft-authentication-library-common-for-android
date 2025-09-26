@@ -78,7 +78,7 @@ interface SignInCommandResult {
         override val correlationId: String,
         val continuationToken: String,
         val authMethods: List<AuthenticationMethodApiResult>
-    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult, SignInWithContinuationTokenCommandResult {
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult, SignInSubmitCodeCommandResult, SignInWithContinuationTokenCommandResult {
         override fun toUnsanitizedString(): String = "StrongAuthMethodRegistrationRequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
 
         override fun toString(): String = "StrongAuthMethodRegistrationRequired(correlationId=$correlationId, authMethods=${authMethods})"
@@ -121,13 +121,10 @@ interface SignInCommandResult {
     data class MFARequired(
         override val correlationId: String,
         val continuationToken: String,
-        val error: String,
-        val errorDescription: String,
-        val errorCodes: List<Int>,
-        val subError: String
-    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult {
-        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, subError=$subError)"
+        val authMethods: List<AuthenticationMethodApiResult>
+    ) : SignInStartCommandResult, SignInSubmitPasswordCommandResult, SignInSubmitCodeCommandResult, SignInWithContinuationTokenCommandResult {
+        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
 
-        override fun toString(): String = "MFARequired(correlationId=$correlationId)"
+        override fun toString(): String = "MFARequired(correlationId=$correlationId, authMethods=${authMethods})"
     }
 }

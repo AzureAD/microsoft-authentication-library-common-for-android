@@ -38,6 +38,17 @@ interface JITCommandResult {
         override fun toString(): String = "VerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
 
+    data class BlockedVerificationContact(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>
+    ) : JITChallengeAuthMethodCommandResult {
+        override fun toUnsanitizedString(): String = "BlockedVerificationContact(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+
+        override fun toString(): String = "BlockedVerificationContact(correlationId=$correlationId)"
+    }
+
     data class IncorrectVerificationContact(
         override val correlationId: String,
         val error: String,

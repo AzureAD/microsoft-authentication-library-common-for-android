@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator.AES_ALGORITHM;
+
 import android.content.Context;
 import android.os.Build;
 import android.security.KeyPairGeneratorSpec;
@@ -29,10 +31,12 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -41,7 +45,6 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
-import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -54,6 +57,8 @@ import java.security.KeyStore;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
@@ -71,8 +76,16 @@ import lombok.NonNull;
  * Instead, the actual key that we use to encrypt/decrypt data is 'wrapped/encrypted' with the keystore key
  * before it get saved to the file.
  */
-public class AndroidWrappedKeyLoader extends AES256KeyLoader {
-    private static final String TAG = AndroidWrappedKeyLoader.class.getSimpleName() + "#";
+public class AndroidWrappedKeyProvider implements ISecretKeyProvider {
+
+    /**
+     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
+     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
+     * probably doing PKCS7. We decide to go with Java default string.
+     */
+    private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+
+    private static final String TAG = AndroidWrappedKeyProvider.class.getSimpleName() + "#";
 
     /**
      * Should KeyStore and key file check for validity before every key load be skipped.
@@ -98,6 +111,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     // Exposed for testing only.
     /* package */ static final int KEY_FILE_SIZE = 1024;
 
+    /**
+     * SecretKey cache. Maps wrapped secret key file path to the SecretKey.
+     */
+    private static final ConcurrentMap<String, SecretKey> sKeyCacheMap = new ConcurrentHashMap<>();
     private final Context mContext;
 
     /**
@@ -111,21 +128,23 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      */
     private final String mFilePath;
 
-    private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
-        @Override
-        public SecretKey getData() {
-            if (!sSkipKeyInvalidationCheck &&
-                    (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists())) {
-                this.clear();
-            }
-            return super.getData();
+    // Exposed for testing only.
+    @Nullable
+    @VisibleForTesting
+    /* package */ SecretKey getKeyFromCache() {
+        final String methodTag = TAG + ":getKeyFromCache";
+        if (!sSkipKeyInvalidationCheck &&
+                (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !this.getKeyFile().exists())) {
+            Logger.warn(methodTag, "Key is invalid, removing from cache");
+            clearKeyFromCache();
         }
-    };
+        return sKeyCacheMap.get(mFilePath);
+    }
 
     // Exposed for testing only.
-    @NonNull
-    /* package */ CachedData<SecretKey> getKeyCache() {
-        return mKeyCache;
+    @VisibleForTesting
+    /* package */ void clearKeyFromCache() {
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
@@ -135,9 +154,9 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * @param filePath          Path to the file for storing the wrapped key.
      * @param context           Android's {@link Context}
      */
-    public AndroidWrappedKeyLoader(@NonNull final String alias,
-                                   @NonNull final String filePath,
-                                   @NonNull final Context context) {
+    public AndroidWrappedKeyProvider(@NonNull final String alias,
+                                     @NonNull final String filePath,
+                                     @NonNull final Context context) {
         mAlias = alias;
         mFilePath = filePath;
         mContext = context;
@@ -162,27 +181,31 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
-        SecretKey key = mKeyCache.getData();
+        final String methodTag = TAG + ":getKey";
 
-        if (key == null) {
-            key = readSecretKeyFromStorage();
+        SecretKey key = this.getKeyFromCache();
+        if (key != null) {
+            return key;
         }
+
+        Logger.info(methodTag, "Key not in cache or cache is empty, loading key from storage");
+        key = readSecretKeyFromStorage();
 
         // If key doesn't exist, generate a new one.
         if (key == null) {
+            Logger.info(methodTag, "Key does not exist in storage, generating a new key");
             key = generateRandomKey();
         }
 
-        mKeyCache.setData(key);
+        sKeyCacheMap.put(mFilePath, key);
         return key;
     }
 
-    @Override
     @NonNull
     protected SecretKey generateRandomKey() throws ClientException {
         final String methodTag = TAG + ":generateRandomKey";
 
-        final SecretKey key = super.generateRandomKey();
+        final SecretKey key = AES256SecretKeyGenerator.INSTANCE.generateRandomKey();
         saveSecretKeyToStorage(key);
 
         Logger.info(methodTag, "New key is generated with thumbprint: " +
@@ -213,11 +236,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
                 // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
                 FileUtil.deleteFile(getKeyFile());
-                mKeyCache.clear();
+                sKeyCacheMap.remove(mFilePath);
                 return null;
             }
 
-            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, getKeySpecAlgorithm(), keyPair, WRAP_ALGORITHM);
+            final SecretKey key = AndroidKeyStoreUtil.unwrap(wrappedSecretKey, AES_ALGORITHM, keyPair, WRAP_ALGORITHM);
 
             Logger.info(methodTag, "Key is loaded with thumbprint: " +
                     KeyUtil.getKeyThumbPrint(key));
@@ -259,7 +282,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         if (keyPair == null) {
             Logger.info(methodTag, "No existing keypair. Generating a new one.");
             final Span span = OTelUtility.createSpanFromParent(SpanName.KeyPairGeneration.name(), SpanExtension.current().getSpanContext());
-            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
                 keyPair = generateNewKeyPair();
                 span.setStatus(StatusCode.OK);
             } catch (final ClientException e) {
@@ -329,7 +352,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Generate a new key pair wrapping key based on legacy logic. Call this for API < 23 or as fallback
      * until new key gen specs are stable.
      * @return key pair generated with legacy spec
-     * @throws ClientException
+     * @throws ClientException if there is an error generating the key pair.
      */
     @NonNull
     private KeyPair generateKeyPairWithLegacySpec() throws ClientException{
@@ -417,7 +440,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     public void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(getKeyFile());
-        mKeyCache.clear();
+        sKeyCacheMap.remove(mFilePath);
     }
 
     /**
@@ -463,5 +486,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return new File(
                 mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
                 mFilePath);
+    }
+
+    @NonNull
+    @Override
+    public String getCipherTransformation() {
+        return CIPHER_TRANSFORMATION;
     }
 }

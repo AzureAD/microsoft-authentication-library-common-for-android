@@ -40,7 +40,7 @@ public class KeyUtilTest {
 
     @Test
     public void testThumbprintShouldBeSame() {
-        final MockAES256KeyLoader firstKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, "KEY_1");
+        final MockAES256KeyProvider firstKeyLoader = new MockAES256KeyProvider(PREDEFINED_KEY, "KEY_1");
         final SecretKey firstKey = firstKeyLoader.getKey();
 
         final String firstThumbPrint = KeyUtil.getKeyThumbPrint(firstKey);
@@ -54,10 +54,10 @@ public class KeyUtilTest {
 
     @Test
     public void testThumbprintShouldDifferForDifferentKeys() {
-        final MockAES256KeyLoader firstKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, "KEY_1");
+        final MockAES256KeyProvider firstKeyLoader = new MockAES256KeyProvider(PREDEFINED_KEY, "KEY_1");
         final SecretKey firstKey = firstKeyLoader.getKey();
 
-        final MockAES256KeyLoader secondKeyLoader = new MockAES256KeyLoader(ANDROID_WRAPPED_KEY, "KEY_2");
+        final MockAES256KeyProvider secondKeyLoader = new MockAES256KeyProvider(ANDROID_WRAPPED_KEY, "KEY_2");
         final SecretKey secondKey = secondKeyLoader.getKey();
 
         final String firstKeyThumbPrint = KeyUtil.getKeyThumbPrint(firstKey);
@@ -69,10 +69,10 @@ public class KeyUtilTest {
 
     @Test
     public void testThumbprintShouldDifferSlightlyDifferentKeys() {
-        final MockAES256KeyLoader firstKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, "KEY_1");
+        final MockAES256KeyProvider firstKeyLoader = new MockAES256KeyProvider(PREDEFINED_KEY, "KEY_1");
         final SecretKey firstKey = firstKeyLoader.getKey();
 
-        final MockAES256KeyLoader secondKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY_SLIGHTLY_MODIFIED, "KEY_2");
+        final MockAES256KeyProvider secondKeyLoader = new MockAES256KeyProvider(PREDEFINED_KEY_SLIGHTLY_MODIFIED, "KEY_2");
         final SecretKey secondKey = secondKeyLoader.getKey();
 
         final String firstKeyThumbPrint = KeyUtil.getKeyThumbPrint(firstKey);
@@ -85,10 +85,10 @@ public class KeyUtilTest {
 
     @Test
     public void testThumbprintForSameRawKeyButDifferentKeyObjectShouldBeSame() {
-        final MockAES256KeyLoader keyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, "KEY_1");
+        final MockAES256KeyProvider keyLoader = new MockAES256KeyProvider(PREDEFINED_KEY, "KEY_1");
         final SecretKey key = keyLoader.getKey();
 
-        final MockAES256KeyLoader anotherKeyLoader = new MockAES256KeyLoader(PREDEFINED_KEY, "KEY_1");
+        final MockAES256KeyProvider anotherKeyLoader = new MockAES256KeyProvider(PREDEFINED_KEY, "KEY_1");
         final SecretKey anotherKey = anotherKeyLoader.getKey();
 
         final String thumbPrint = KeyUtil.getKeyThumbPrint(key);

@@ -20,44 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto.key;
+package com.microsoft.identity.common.java.crypto;
+
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import org.jetbrains.annotations.NotNull;
+
+import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
-    private static final String TAG = AES256KeyLoader.class.getSimpleName();
-
-    /**
-     * Key size
-     */
-    private static final int KEY_SIZE = 256;
-
-    /**
-     * Key spec algorithm.
-     */
-    public static final String AES_ALGORITHM = "AES";
-
-    /**
-     * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
-     * Java AES/CBC/PKCS5Padding is default(!) algorithm name, thus PKCS5 here
-     * probably doing PKCS7. We decide to go with Java default string.
-     */
-    private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+public class MockAES256KeyProviderWithGetKeyError implements ISecretKeyProvider {
+    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
+    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_ERROR = "MOCK_ERROR";
 
     @Override
-    @NonNull
-    public String getKeySpecAlgorithm() {
-        return AES_ALGORITHM;
+    public @NonNull String getAlias() {
+        return MOCK_ERROR;
     }
 
     @Override
-    @NonNull
-    public String getCipherAlgorithm(){
-        return CIPHER_ALGORITHM;
+    public @NonNull SecretKey getKey() throws ClientException {
+        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
     }
 
     @Override
-    protected int getKeySize() {
-        return KEY_SIZE;
+    public @NonNull String getKeyTypeIdentifier() {
+        return MOCK_KEY_IDENTIFIER;
+    }
+
+    @NotNull
+    @Override
+    public String getCipherTransformation() {
+        return "AES/CBC/PKCS5Padding";
     }
 }

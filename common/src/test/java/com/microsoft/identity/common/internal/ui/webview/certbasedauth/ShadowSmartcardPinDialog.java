@@ -20,45 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.crypto;
+package com.microsoft.identity.common.internal.ui.webview.certbasedauth;
 
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.exception.ClientException;
+import android.view.WindowManager;
 
-import javax.crypto.SecretKey;
+import org.robolectric.annotation.Implementation;
+import org.robolectric.annotation.Implements;
 
-import lombok.NonNull;
-
-public class MockAES256KeyLoader extends AES256KeyLoader {
-    public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
-    public static String MOCK_ALIAS = "MOCK_ALIAS";
-
-    private final SecretKey mKey;
-    private final String mKeyIdentifier;
-
-    public MockAES256KeyLoader() throws ClientException {
-        mKey = generateRandomKey();
-        mKeyIdentifier = DEFAULT_MOCK_KEY_IDENTIFIER;
+/**
+ * Shadow implementation of {@link SmartcardPinDialog} for use in unit tests.
+ */
+@Implements(SmartcardPinDialog.class)
+public class ShadowSmartcardPinDialog extends ShadowExceptionSmartcardDialog {
+    /**
+     * Shadow implementation for createDialog().
+     * This is intentionally left empty to avoid actual UI operations during tests.
+     */
+    @Implementation
+    protected void createDialog() {
+        // Intentionally empty implementation for testing
     }
 
-    public MockAES256KeyLoader(@NonNull final byte[] secretKey,
-                               @NonNull final String keyIdentifier){
-        mKey = generateKeyFromRawBytes(secretKey);
-        mKeyIdentifier = keyIdentifier;
-    }
-
-    @Override
-    public @NonNull String getAlias() {
-        return MOCK_ALIAS;
-    }
-
-    @Override
-    public @NonNull SecretKey getKey() {
-        return mKey;
-    }
-
-    @Override
-    public @NonNull String getKeyTypeIdentifier() {
-        return mKeyIdentifier;
+    @Implementation
+    public void show() {
+        throw new WindowManager.BadTokenException("Thrown from show. Better handle this gracefully!");
     }
 }

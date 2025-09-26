@@ -80,6 +80,23 @@ sealed interface JITChallengeApiResult: ApiResult {
         }
     }
 
+    data class BlockedVerificationContact(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), JITChallengeApiResult {
+        override fun toUnsanitizedString() = "BlockedVerificationContact(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "BlockedVerificationContact(correlationId=$correlationId)"
+    }
+
     data class InvalidVerificationContact(
         override val correlationId: String,
         override val error: String,

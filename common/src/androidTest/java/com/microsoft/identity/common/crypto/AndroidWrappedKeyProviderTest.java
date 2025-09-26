@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.crypto;
 
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+
 import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
 
@@ -29,7 +31,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.FileUtil;
 
@@ -48,14 +49,14 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import javax.security.auth.x500.X500Principal;
 
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
-
-public class AndroidWrappedKeyLoaderTest {
+public class AndroidWrappedKeyProviderTest {
 
     final Context context = ApplicationProvider.getApplicationContext();
     final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
     final String MOCK_KEY_FILE_PATH = "MOCK_KEY_FILE_PATH";
     final int TEST_LOOP = 100;
+
+    final String AES_ALGORITHM = "AES";
 
     @Before
     public void setUp() throws Exception {
@@ -110,23 +111,23 @@ public class AndroidWrappedKeyLoaderTest {
 
     @Test
     public void testGenerateKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey secretKey = keyLoader.generateRandomKey();
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final SecretKey secretKey = keyProvider.generateRandomKey();
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
     }
 
     @Test
     public void testReadKeyDirectly() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
-        final SecretKey secretKey = keyLoader.getKey();
-        final SecretKey storedSecretKey = keyLoader.readSecretKeyFromStorage();
+        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
+        final SecretKey secretKey = keyProvider.getKey();
+        final SecretKey storedSecretKey = keyProvider.readSecretKeyFromStorage();
 
         // They're not the same object!
         Assert.assertNotSame(secretKey, storedSecretKey);
 
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, storedSecretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, storedSecretKey.getAlgorithm());
 
         Assert.assertNotNull(secretKey.getEncoded());
         Assert.assertNotNull(storedSecretKey.getEncoded());
@@ -138,14 +139,14 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadKey() throws ClientException {
         // Nothing exists. This load key function should generate a key if the key hasn't exist.
         Assert.assertNull(AndroidKeyStoreUtil.readKey(MOCK_KEY_ALIAS));
-        Assert.assertNull(FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyLoader.KEY_FILE_SIZE));
+        Assert.assertNull(FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE));
 
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey secretKey = keyLoader.getKey();
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final SecretKey secretKey = keyProvider.getKey();
 
-        final SecretKey key = keyLoader.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNotNull(key);
-        Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
+        Assert.assertEquals(AES_ALGORITHM, secretKey.getAlgorithm());
         Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
         Assert.assertEquals(secretKey.getFormat(), key.getFormat());
     }
@@ -153,10 +154,10 @@ public class AndroidWrappedKeyLoaderTest {
     @Test
     public void testLoadKeyFromCorruptedFile_TruncatedExisingKey() throws ClientException {
         // Create a new Keystore-wrapped key.
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyLoader.generateRandomKey();
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        keyProvider.generateRandomKey();
 
-        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyLoader.KEY_FILE_SIZE);
+        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
 
         // Overwrite the key file with corrupted data.
@@ -164,7 +165,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         // It should fail to read, with an exception, and everything should be wiped.
         try{
-            keyLoader.readSecretKeyFromStorage();
+            keyProvider.readSecretKeyFromStorage();
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(INVALID_KEY, e.getErrorCode());
@@ -174,16 +175,16 @@ public class AndroidWrappedKeyLoaderTest {
         Assert.assertFalse(getKeyFile().exists());
 
         // the next read should be unblocked.
-        Assert.assertNull(keyLoader.readSecretKeyFromStorage());
+        Assert.assertNull(keyProvider.readSecretKeyFromStorage());
     }
 
     @Test
     public void testLoadKeyFromCorruptedFile_InjectGarbage() throws ClientException {
         // Create a new Keystore-wrapped key.
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        keyLoader.generateRandomKey();
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        keyProvider.generateRandomKey();
 
-        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyLoader.KEY_FILE_SIZE);
+        final byte[] wrappedKey = FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyProvider.KEY_FILE_SIZE);
         Assert.assertNotNull(wrappedKey);
 
         // Overwrite the key file with corrupted data.
@@ -191,7 +192,7 @@ public class AndroidWrappedKeyLoaderTest {
 
         // It should fail to read, with an exception, and everything should be wiped.
         try{
-            keyLoader.readSecretKeyFromStorage();
+            keyProvider.readSecretKeyFromStorage();
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(INVALID_KEY, e.getErrorCode());
@@ -201,18 +202,18 @@ public class AndroidWrappedKeyLoaderTest {
         Assert.assertFalse(getKeyFile().exists());
 
         // the next read should be unblocked.
-        Assert.assertNull(keyLoader.readSecretKeyFromStorage());
+        Assert.assertNull(keyProvider.readSecretKeyFromStorage());
     }
 
     // 1s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
     @Ignore
     public void testPerf_WithCachedKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
 
         long timeStartLoop = System.nanoTime();
         for (int i = 0; i < TEST_LOOP; i++) {
-            keyLoader.getKey();
+            keyProvider.getKey();
         }
         long timeFinishLoop = System.nanoTime();
 
@@ -221,14 +222,14 @@ public class AndroidWrappedKeyLoaderTest {
 
     // 23s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
-    @Ignore
+    @Ignore("Performance test, ignore in normal test run")
     public void testPerf_NoCachedKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
 
         long timeStartLoopNotCached = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            keyLoader.getKeyCache().clear();
-            keyLoader.getKey();
+            keyProvider.clearKeyFromCache();
+            keyProvider.getKey();
         }
         long timeFinishLoopNotCached = System.nanoTime();
 
@@ -240,31 +241,31 @@ public class AndroidWrappedKeyLoaderTest {
      */
     @Test
     public void testLoadDeletedKeyStoreKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
+        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
 
         // Cached key also be wiped.
-        final SecretKey key = keyLoader.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNull(key);
     }
 
     @Test
     public void testLoadDeletedKeyFile() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
+        final AndroidWrappedKeyProvider keyProvider = initkeyProviderWithKeyEntry();
 
         FileUtil.deleteFile(getKeyFile());
 
         // Cached key also be wiped.
-        final SecretKey key = keyLoader.getKeyCache().getData();
+        final SecretKey key = keyProvider.getKeyFromCache();
         Assert.assertNull(key);
     }
 
-    private AndroidWrappedKeyLoader initKeyLoaderWithKeyEntry() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
-        final SecretKey key = keyLoader.getKey();
+    private AndroidWrappedKeyProvider initkeyProviderWithKeyEntry() throws ClientException {
+        final AndroidWrappedKeyProvider keyProvider = new AndroidWrappedKeyProvider(MOCK_KEY_ALIAS, MOCK_KEY_FILE_PATH, context);
+        final SecretKey key = keyProvider.getKey();
         Assert.assertNotNull(key);
-        Assert.assertNotNull(keyLoader.getKeyCache().getData());
-        return keyLoader;
+        Assert.assertNotNull(keyProvider.getKeyFromCache());
+        return keyProvider;
     }
 }

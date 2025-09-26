@@ -215,6 +215,25 @@ public class Device {
     }
 
     /**
+     * Get the Android Release OS of this device
+     *
+     * @return a String representing the Android Release OS information
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getAndroidReleaseOs() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getAndroidReleaseOs();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
      * Gets the manufacturer of the current device.
      *
      * @return The name of the device manufacturer.

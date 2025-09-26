@@ -22,28 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
 import org.json.JSONException;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -55,9 +57,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import lombok.NonNull;
 
 /**
  * Implements the IdentityProvider base class...
@@ -131,6 +136,18 @@ public class AzureActiveDirectory
      */
     public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
         return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
+    }
+
+
+    /**
+     * Checks if the passed in authority URL belongs to public cloud (cloud for login.microsoftonline.com).
+     */
+    public static synchronized boolean isPublicAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) throws ClientException {
+        try {
+            return Objects.equals(getAzureActiveDirectoryCloud(authorityUrl), getAzureActiveDirectoryCloud(new URL(getDefaultCloudUrl())));
+        } catch (final MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     /**
@@ -230,6 +247,17 @@ public class AzureActiveDirectory
         }
     }
 
+    /**
+     * Ensures that cloud discovery has been completed. If not, it will perform cloud discovery.
+     */
+    public static synchronized void ensureCloudDiscoveryComplete() throws ClientException {
+        final String methodTag = TAG + ":ensureCloudDiscoveryComplete";
+        if (!sIsInitialized) {
+            Logger.info(methodTag, "Cloud metadata is not initialized. Performing cloud discovery.");
+            performCloudDiscovery();
+        }
+    }
+
     public static synchronized Set<String> getHosts() {
         if (null != sAadClouds) {
             return sAadClouds.keySet();
@@ -246,6 +274,34 @@ public class AzureActiveDirectory
         return new ArrayList<>();
     }
 
+    /**
+     * Loads the OpenID Provider Configuration metadata for the specified tenant by first constructing
+     * AAD authority URL like https://login.microsoftonline.com/{tenant}/v2.0/.well-known/openid-configuration
+     *
+     * @param tenant The tenant identifier. Could be tenant id (guid) or tenant name (contoso.onmicrosoft.com).
+     * @return The OpenID Provider Configuration for the specified tenant.
+     * @throws ServiceException If there is an error loading the configuration.
+     * @throws ClientException  If there is a client-side error.
+     */
+    public static OpenIdProviderConfiguration loadOpenIdProviderConfigurationMetadataForTenant(
+            @NonNull final String tenant
+    ) throws ServiceException, ClientException {
+        final OpenIdProviderConfigurationClient client =
+                new OpenIdProviderConfigurationClient();
+        try {
+            final String tenantedAuthorityUrl = new CommonURIBuilder(getDefaultCloudUrl())
+                    .setPathSegments(tenant)
+                    .build()
+                    .toString();
+            return client.loadOpenIdProviderConfigurationFromAuthority(tenantedAuthorityUrl);
+        } catch (final URISyntaxException e) {
+            throw new ClientException(
+                    OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
+                    "URISyntaxException while requesting metadata",
+                    e
+            );
+        }
+    }
     /**
      * Deserializes the supplied JSONArray of cloud instances into a native List.
      *

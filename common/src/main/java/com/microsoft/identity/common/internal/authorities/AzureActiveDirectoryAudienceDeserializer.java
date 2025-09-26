@@ -34,9 +34,9 @@ import com.microsoft.identity.common.java.authorities.AnyPersonalAccount;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.logging.Logger;
 
-import net.jcip.annotations.Immutable;
-
 import java.lang.reflect.Type;
+
+import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserializer<AzureActiveDirectoryAudience> {

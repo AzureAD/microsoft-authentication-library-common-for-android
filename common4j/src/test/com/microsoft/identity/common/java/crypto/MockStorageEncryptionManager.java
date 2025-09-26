@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.util.ArrayList;
@@ -33,21 +33,21 @@ import lombok.NonNull;
 
 public class MockStorageEncryptionManager extends StorageEncryptionManager {
 
-    private final AbstractSecretKeyLoader mEncryptKey;
-    private final List<AbstractSecretKeyLoader> mDecryptKey;
+    private final ISecretKeyProvider mEncryptKey;
+    private final List<ISecretKeyProvider> mDecryptKey;
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AbstractSecretKeyLoader key) throws ClientException {
+                                 @Nullable final ISecretKeyProvider key) throws ClientException {
         this(iv,
                 key,
-                new ArrayList<AbstractSecretKeyLoader>() {{
+                new ArrayList<ISecretKeyProvider>() {{
                     add(key);
                 }});
     }
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AbstractSecretKeyLoader encryptKey,
-                                 @Nullable final List<AbstractSecretKeyLoader> decryptKey) throws ClientException {
+                                 @Nullable final ISecretKeyProvider encryptKey,
+                                 @Nullable final List<ISecretKeyProvider> decryptKey) throws ClientException {
         super(new IVGenerator() {
             @Override
             public byte[] generate() {
@@ -59,12 +59,12 @@ public class MockStorageEncryptionManager extends StorageEncryptionManager {
     }
 
     @Override
-    public @NonNull AbstractSecretKeyLoader getKeyLoaderForEncryption() throws ClientException {
+    public @NonNull ISecretKeyProvider getKeyProviderForEncryption() throws ClientException {
         return mEncryptKey;
     }
 
     @Override
-    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
+    public @NonNull List<ISecretKeyProvider> getKeyProviderForDecryption(@NonNull byte[] cipherText) throws ClientException {
         return mDecryptKey;
     }
 }

@@ -33,7 +33,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -129,10 +128,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
+    private static Bundle switchBrowserBundle;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final String methodTag = TAG + ":onCreate";
+        Logger.verbose(methodTag, "WebViewAuthorizationFragment onCreate");
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
@@ -151,47 +153,36 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onResume() {
         super.onResume();
+        Logger.verbose(TAG + ":onResume", "WebViewAuthorizationFragment onResume");
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
-            resumeSwitchBrowser(getExtras());
+            resumeSwitchBrowser();
+        } else {
+            setSwitchBrowserBundle(null);
         }
-    }
-
-    /**
-     * Get the extras from the activity intent.
-     *
-     * @return Bundle with the extras
-     */
-    @NonNull
-    private Bundle getExtras() {
-        final Activity activity = getActivity();
-        if (activity == null) {
-            return Bundle.EMPTY;
-        }
-        final Intent intent = activity.getIntent();
-        if (intent == null) {
-            return Bundle.EMPTY;
-        }
-        final Bundle extras =  intent.getExtras();
-        return extras == null ? Bundle.EMPTY : extras;
     }
 
     /**
      * Resume the switch browser protocol flow.
-     *
-     * @param extras Bundle with the data to resume the switch browser protocol flow.
      */
-    private void resumeSwitchBrowser(@NonNull final Bundle extras) {
+    private void resumeSwitchBrowser() {
         final String methodTag = TAG + ":resumeSwitchBrowser";
         try {
+            if (switchBrowserBundle == null) {
+                throw new ClientException(
+                        ClientException.NULL_OBJECT,
+                        "No switch browser bundle found to resume the flow."
+                );
+            }
             Logger.info(methodTag, "Resuming switch browser flow");
             getSwitchBrowserCoordinator().processSwitchBrowserResume(
                     mAuthorizationRequestUrl,
-                    extras,
+                    switchBrowserBundle,
                     (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
                         launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                         return null;
                     }
             );
+            setSwitchBrowserBundle(null);
         } catch (final ClientException e) {
             Logger.error(methodTag, "Error processing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
@@ -300,11 +291,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
         // Create the Web View to show the page
         mWebView = view.findViewById(R.id.common_auth_webview);
-        WebSettings userAgentSetting = mWebView.getSettings();
-        final String userAgent = userAgentSetting.getUserAgentString();
-        mWebView.getSettings().setUserAgentString(
+        final WebSettings webSettings = mWebView.getSettings();
+        final String userAgent = webSettings.getUserAgentString();
+        webSettings.setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
-        mWebView.getSettings().setJavaScriptEnabled(true);
+        webSettings.setJavaScriptEnabled(true);
+
+        // Security settings to prevent unauthorized access - controlled by flight
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
+            webSettings.setAllowFileAccess(false);
+            webSettings.setAllowContentAccess(false);
+            webSettings.setAllowFileAccessFromFileURLs(false);
+            webSettings.setAllowUniversalAccessFromFileURLs(false);
+            webSettings.setGeolocationEnabled(false);
+        }
+
         mWebView.requestFocus(View.FOCUS_DOWN);
 
         // Set focus to the view for touch event
@@ -465,5 +466,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
         }
         return mSwitchBrowserProtocolCoordinator;
+    }
+
+    /**
+     * Set the switch browser bundle to be used when resuming the flow.
+     * @param bundle The bundle containing the data needed to resume the flow.
+     */
+    public static synchronized void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
+        switchBrowserBundle = bundle;
     }
 }

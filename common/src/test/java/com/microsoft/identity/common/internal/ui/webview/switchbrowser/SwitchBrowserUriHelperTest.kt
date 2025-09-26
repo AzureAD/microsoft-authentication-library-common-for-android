@@ -28,6 +28,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITC
 import com.microsoft.identity.common.java.exception.ClientException
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.unmockkAll
+import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +40,7 @@ class SwitchBrowserUriHelperTest {
 
     companion object {
         private const val CODE = "your-switch-browser-code"
-        private const val ACTION_URI = "login.microsoftonline.com/switchbrowser/process"
+        private const val ACTION_URI = "https://login.microsoftonline.com/switchbrowser/process"
         private const val STATE = "123"
     }
 
@@ -57,10 +59,10 @@ class SwitchBrowserUriHelperTest {
             CODE,
             switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
         )
-        Assert.assertEquals(
-            ACTION_URI,
-            switchBrowserProcessUri.host + switchBrowserProcessUri.path
-        )
+        val actionUri = Uri.parse(ACTION_URI)
+        Assert.assertEquals(actionUri.scheme, switchBrowserProcessUri.scheme)
+        Assert.assertEquals(actionUri.host, switchBrowserProcessUri.host)
+        Assert.assertEquals(actionUri.path, switchBrowserProcessUri.path)
         Assert.assertEquals(
             STATE,
             switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.STATE)
@@ -81,10 +83,10 @@ class SwitchBrowserUriHelperTest {
             CODE,
             switchBrowserProcessUri.getQueryParameter(SWITCH_BROWSER.CODE)
         )
-        Assert.assertEquals(
-            ACTION_URI,
-            switchBrowserProcessUri.host + switchBrowserProcessUri.path
-        )
+        val actionUri = Uri.parse(ACTION_URI)
+        Assert.assertEquals(actionUri.scheme, switchBrowserProcessUri.scheme)
+        Assert.assertEquals(actionUri.host, switchBrowserProcessUri.host)
+        Assert.assertEquals(actionUri.path, switchBrowserProcessUri.path)
     }
 
     @Test
@@ -142,23 +144,24 @@ class SwitchBrowserUriHelperTest {
             ACTION_URI, null
         )
         Assert.assertNotNull(uri)
-        Assert.assertEquals(
-            ACTION_URI,
-            uri.host + uri.path
-        )
+        val actionUri = Uri.parse(ACTION_URI)
+        Assert.assertEquals(actionUri.scheme, uri.scheme)
+        Assert.assertEquals(actionUri.host, uri.host)
+        Assert.assertEquals(actionUri.path, uri.path)
         Assert.assertNull(uri.getQueryParameter(SWITCH_BROWSER.STATE))
     }
 
     @Test
     fun `test buildResumeUri valid params (stateRequired)`() {
+        isStateRequired(true)
         val uri = SwitchBrowserUriHelper.buildResumeUri(
             ACTION_URI, STATE
         )
         Assert.assertNotNull(uri)
-        Assert.assertEquals(
-            ACTION_URI,
-            uri.host + uri.path
-        )
+        val actionUri = Uri.parse(ACTION_URI)
+        Assert.assertEquals(actionUri.scheme, uri.scheme)
+        Assert.assertEquals(actionUri.host, uri.host)
+        Assert.assertEquals(actionUri.path, uri.path)
         Assert.assertEquals(
             STATE,
             uri.getQueryParameter(SWITCH_BROWSER.STATE)
@@ -213,5 +216,11 @@ class SwitchBrowserUriHelperTest {
     private fun isStateRequired(isStateRequired: Boolean) {
         mockkObject(SwitchBrowserUriHelper)
         every { SwitchBrowserUriHelper.STATE_VALIDATION_REQUIRED } returns isStateRequired
+    }
+
+    @After
+    fun tearDown() {
+        // Clean up mocks after each test
+        unmockkAll()
     }
 }

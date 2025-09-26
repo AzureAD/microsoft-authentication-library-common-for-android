@@ -24,7 +24,7 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFADefaultChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.MFAChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.MFAChallengeCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController
 
@@ -33,7 +33,7 @@ import com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthM
  * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 class MFAChallengeCommand(
-    private val parameters: MFADefaultChallengeCommandParameters,
+    private val parameters: MFAChallengeAuthMethodCommandParameters,
     private val controller: NativeAuthMsalController,
     publicApiId: String
 ) : BaseNativeAuthCommand<MFAChallengeCommandResult>(

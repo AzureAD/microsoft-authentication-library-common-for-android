@@ -27,24 +27,31 @@ import static com.microsoft.identity.common.java.exception.ServiceException.OPEN
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.util.CommonURIBuilder;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Objects;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.LongCounter;
 import lombok.NonNull;
 
 /**
@@ -53,65 +60,22 @@ import lombok.NonNull;
 public class OpenIdProviderConfigurationClient {
 
     private static final String TAG = OpenIdProviderConfigurationClient.class.getSimpleName();
-    private static final String HTTPS_SCHEME = "https";
-    private static final String WELL_KNOWN_CONFIG_HOST = "login.microsoftonline.com";
-    private static final String WELL_KNOWN_CONFIG_PATH = "/v2.0/.well-known/openid-configuration";
-    private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
+
+    private static final String V2_0_PATH = "/v2.0";
+    private static final String WELL_KNOWN_CONFIG_PATH = "/.well-known/openid-configuration";
+
     private static final Map<URI, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
-    public interface OpenIdProviderConfigurationCallback
-            extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
-    }
+    /**
+     * Counter to track failure in validating OpenID Provider configuration issuer via metrics.
+     */
+    private static final LongCounter sOpenIdProviderConfigurationIssuerValidationFailedCount = OTelUtility.createLongCounter(
+            "openid_provider_configuration_issuer_validation_failed_count",
+            "Track failure in validating OpenID Provider configuration issuer"
+    );
 
     private static final Gson GSON = new Gson();
-
-    private String sanitize(@NonNull final String issuer) {
-        String sanitizedIssuer = issuer.trim();
-
-        if (issuer.endsWith("/")) { // Remove any trailing slash
-            sanitizedIssuer = issuer.substring(0, sanitizedIssuer.length() - 1);
-        }
-
-        return sanitizedIssuer;
-    }
-
-    public void loadOpenIdProviderConfiguration(
-            @NonNull final OpenIdProviderConfigurationCallback callback, @NonNull final String authority) {
-        sBackgroundExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.onTaskCompleted(loadOpenIdProviderConfigurationFromAuthority(authority));
-                } catch (ServiceException e) {
-                    callback.onError(e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Get OpenID provider configuration.
-     *
-     * @return OpenIdProviderConfiguration
-     */
-    public synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationFromTenant(@NonNull final String tenantIdentifier)
-            throws ServiceException {
-        try {
-            final String tenantedAuthorityUrl = new CommonURIBuilder()
-                    .setScheme(HTTPS_SCHEME)
-                    .setHost(WELL_KNOWN_CONFIG_HOST)
-                    .setPathSegments(tenantIdentifier)
-                    .build().toString();
-            return loadOpenIdProviderConfigurationInternal(tenantedAuthorityUrl, null);
-        } catch (final URISyntaxException e) {
-            throw new ServiceException(
-                    OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD,
-                    "IOException while requesting metadata",
-                    e
-            );
-        }
-    }
 
     /**
      * Get OpenID provider configuration.
@@ -140,40 +104,41 @@ public class OpenIdProviderConfigurationClient {
      */
     private synchronized OpenIdProviderConfiguration loadOpenIdProviderConfigurationInternal(@NonNull final String tenantedAuthorityString, final String extraParams)
             throws ServiceException {
-        final String methodName = ":loadOpenIdProviderConfiguration";
+        final String methodTag = TAG + ":loadOpenIdProviderConfigurationInternal";
 
         try {
-            final String uriString;
+            final String baseConfigUrlStr = getConfigRequestBaseUrl(tenantedAuthorityString);
+            final String configUriStr;
             if (extraParams != null) {
-                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH + extraParams;
+                configUriStr = baseConfigUrlStr + WELL_KNOWN_CONFIG_PATH + extraParams;
             } else {
-                uriString = sanitize(tenantedAuthorityString) + WELL_KNOWN_CONFIG_PATH;
+                configUriStr = baseConfigUrlStr + WELL_KNOWN_CONFIG_PATH;
             }
-            final URI configUrl = new URI(uriString);
+            final URI configUri = new URI(configUriStr);
 
             // Check first for a cached copy...
-            final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUrl);
+            final OpenIdProviderConfiguration cacheResult = sConfigCache.get(configUri);
 
             // If we found a result, return it...
             if (null != cacheResult) {
                 Logger.info(
-                        TAG + methodName,
+                        methodTag,
                         "Using cached metadata result."
                 );
                 return cacheResult;
             }
 
             Logger.verbose(
-                    TAG + methodName,
+                    methodTag,
                     "Config URL is valid."
             );
 
             Logger.verbosePII(
-                    TAG + methodName,
-                    "Using request URL: " + configUrl
+                    methodTag,
+                    "Using request URL: " + configUri
             );
 
-            final HttpResponse providerConfigResponse = httpClient.get(configUrl.toURL(),
+            final HttpResponse providerConfigResponse = httpClient.get(configUri.toURL(),
                     new HashMap<String, String>());
 
             final int statusCode = providerConfigResponse.getStatusCode();
@@ -192,8 +157,14 @@ public class OpenIdProviderConfigurationClient {
                     providerConfigResponse.getBody()
             );
 
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_OPENID_ISSUER_VALIDATION_REPORTING)) {
+                final Attributes attrs = validateIssuer(parsedConfig, baseConfigUrlStr);
+                if (attrs != null) {
+                    sOpenIdProviderConfigurationIssuerValidationFailedCount.add(1, attrs);
+                }
+            }
             // Cache our config in memory for later
-            cacheConfiguration(configUrl, parsedConfig);
+            cacheConfiguration(configUri, parsedConfig);
 
             return parsedConfig;
         } catch (final ClientException | MalformedURLException | URISyntaxException e) {
@@ -214,4 +185,79 @@ public class OpenIdProviderConfigurationClient {
         return GSON.fromJson(body, OpenIdProviderConfiguration.class);
     }
 
+    /**
+     * Performs the issuer validation and returns telemetry attributes describing the failure/skip.
+     * Returns null if validation succeeds.
+     *
+     * @param config OpenID Provider configuration.
+     * @param requestAuthorityStr The authority URL string used to request the configuration document.
+     * @return Attributes representing a validation failure/skip; null if validation succeeds.
+     */
+    @Nullable
+    Attributes validateIssuer(
+            @NonNull final OpenIdProviderConfiguration config,
+            @NonNull final String requestAuthorityStr
+    ) {
+        final String methodTag = TAG + ":validateIssuer";
+
+        final AttributesBuilder attributesBuilder = Attributes.builder();
+        if (StringUtil.isNullOrEmpty(config.getIssuer())) {
+            Logger.warn(methodTag, "Issuer is missing in the metadata.");
+            attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_missing");
+            return attributesBuilder.build();
+        }
+
+        // 1. exact match
+        final String issuer = config.getIssuer();
+        if (requestAuthorityStr.equals(issuer)) {
+            return null; // success, no telemetry
+        }
+
+        attributesBuilder.put(AttributeName.openid_config_request_authority.name(), requestAuthorityStr);
+        attributesBuilder.put(AttributeName.openid_issuer.name(), issuer);
+        final URL issuerUrl;
+        try {
+            issuerUrl = new URL(issuer);
+        } catch (final MalformedURLException e) {
+            Logger.warn(methodTag, "Issuer URL is malformed. " + e.getMessage());
+            attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_malformed");
+            return attributesBuilder.build();
+        }
+
+        // 2. Known Microsoft Cloud issuer validation
+        try {
+            AzureActiveDirectory.ensureCloudDiscoveryComplete();
+            final URL requestAuthorityUrl = new URL(requestAuthorityStr);
+            final AzureActiveDirectoryCloud requestCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(requestAuthorityUrl);
+            if (requestCloud != null && requestCloud.isValidated()) {
+                final AzureActiveDirectoryCloud issuerCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(issuerUrl);
+                // Valid if clouds match OR (issuer URL is valid AAD cloud AND request targets public AAD cloud)
+                if (issuerCloud != null && issuerCloud.isValidated() &&
+                        (Objects.equals(requestCloud, issuerCloud) || AzureActiveDirectory.isPublicAzureActiveDirectoryCloud(requestAuthorityUrl))) {
+                    return null; // success
+                }
+                attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_aad_host_mismatch");
+                return attributesBuilder.build();
+            }
+        } catch (final MalformedURLException e) {
+            Logger.error(methodTag, "Request URL is malformed.", e);
+        } catch (final ClientException e) {
+            Logger.error(methodTag, "Failed to complete AAD cloud discovery.", e);
+        }
+
+        // For other authorities (e.g. B2C, CIAM), we skip issuer validation
+        // since we don't have a clear format of known valid issuers
+        attributesBuilder.put(AttributeName.openid_issuer_invalid_reason.name(), "issuer_validation_skipped"); // not necessarily invalid
+        return attributesBuilder.build();
+    }
+
+    private String getConfigRequestBaseUrl(@NonNull final String issuerUrl) {
+        String sanitizedIssuer = issuerUrl.trim();
+
+        if (issuerUrl.endsWith("/")) { // Remove any trailing slash
+            sanitizedIssuer = issuerUrl.substring(0, sanitizedIssuer.length() - 1);
+        }
+
+        return sanitizedIssuer + V2_0_PATH;
+    }
 }
