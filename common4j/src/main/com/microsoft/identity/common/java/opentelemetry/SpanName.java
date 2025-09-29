@@ -69,5 +69,7 @@ public enum SpanName {
     ProcessWebCpRedirects,
 
     ProvisionResourceAccount,
-    ProcessWebsiteRequest
+    ProcessWebsiteRequest,
+    ProcessWebCpEnrollmentRedirect,
+    ProcessWebCpAuthorizeUrlRedirect
 }
