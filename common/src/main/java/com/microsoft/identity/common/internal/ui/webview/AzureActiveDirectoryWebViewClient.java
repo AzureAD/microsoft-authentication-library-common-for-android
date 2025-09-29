@@ -583,9 +583,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     protected void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
         view.stopLoading();
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebsiteRequest.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebsiteRequest.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
         span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
