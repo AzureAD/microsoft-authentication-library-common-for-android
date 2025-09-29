@@ -146,6 +146,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         } else {
             Logger.warn(methodTag, "CustomTabsService is NOT supported")
             browserIntent = Intent(Intent.ACTION_VIEW)
+            browserIntent.setPackage(browserPackageName)
         }
         browserIntent.setData(processUri.toUri())
         startActivity(browserIntent)
