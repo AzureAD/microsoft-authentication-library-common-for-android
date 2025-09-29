@@ -414,16 +414,6 @@ public enum AttributeName {
     current_broker_package_name,
 
     /**
-     * Records if the request is a webcp authorize request.
-     */
-    is_webcp_authorize_request,
-
-    /**
-     * Records if the request is a webcp enrollment request.
-     */
-    is_webcp_enrollment_request,
-
-    /**
      * Records if the webcp is enabled in webview.
      */
     is_webcp_in_webview_enabled,
