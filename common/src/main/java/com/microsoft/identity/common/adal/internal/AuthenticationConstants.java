@@ -1243,16 +1243,6 @@ public final class AuthenticationConstants {
         public static final String AAD_INTUNE_MDM_URL_HOST_SUFFIX = ".microsoft.com";
 
         /**
-         * Suffix for legacy china cloud
-         */
-        public static final String AAD_LEGACY_CHINA_URL_HOST_SUFFIX = ".chinacloudapi.cn";
-
-        /**
-         * suffic for legacy entra url
-         */
-        public static final String AAD_LEGACY_ENTRA_URL_HOST_SUFFIX = ".windows.net";
-
-        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";

@@ -77,10 +77,8 @@ class AuthUxJavaScriptInterface {
             // We only want to allow URIs that have the AAD or MSA uri hosts
             return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_LEGACY_ENTRA_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_LEGACY_CHINA_URL_HOST_SUFFIX)
+                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX)
         }
     }
 
