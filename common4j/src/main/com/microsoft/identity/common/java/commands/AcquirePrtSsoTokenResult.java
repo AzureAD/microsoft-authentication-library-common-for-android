@@ -92,7 +92,7 @@ public class AcquirePrtSsoTokenResult {
     /**
      * The time when the token was acquired, in milliseconds since epoch.
      */
-    @SerializedName("AcquisitionTimeMillis")
+    @SerializedName("acquisitionTimeMillis")
     private final @Nullable Long mAcquisitionTimeMillis;
 
 }
