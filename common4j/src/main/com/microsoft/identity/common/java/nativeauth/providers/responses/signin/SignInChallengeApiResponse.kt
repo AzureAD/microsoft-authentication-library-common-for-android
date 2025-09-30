@@ -26,6 +26,8 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.util.isBlockedChallengeTarget
+import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
@@ -75,13 +77,24 @@ class SignInChallengeApiResponse(
 
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
-                SignInChallengeApiResult.UnknownError(
-                    error = error.orEmpty(),
-                    subError = subError.orEmpty(),
-                    errorDescription = errorDescription.orEmpty(),
-                    errorCodes = errorCodes.orEmpty(),
-                    correlationId = correlationId
-                )
+                return when {
+                    error.isInvalidRequest() && errorCodes?.first().isBlockedChallengeTarget() -> {
+                        SignInChallengeApiResult.BlockedAuthMethod(
+                            error = error.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    } else -> {
+                        SignInChallengeApiResult.UnknownError(
+                            error = error.orEmpty(),
+                            subError = subError.orEmpty(),
+                            errorDescription = errorDescription.orEmpty(),
+                            errorCodes = errorCodes.orEmpty(),
+                            correlationId = correlationId
+                        )
+                    }
+                }
             }
             // Handle success and redirect
             HttpURLConnection.HTTP_OK -> {
