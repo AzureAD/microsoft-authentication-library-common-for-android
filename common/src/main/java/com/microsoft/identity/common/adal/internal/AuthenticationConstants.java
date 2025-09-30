@@ -1253,10 +1253,6 @@ public final class AuthenticationConstants {
         public static final String AAD_LEGACY_ENTRA_URL_HOST_SUFFIX = ".windows.net";
 
         /**
-         * host for the MSA url
-         */
-        public static final String MSA_URL_HOST = "login.live.com";
-        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";

@@ -134,7 +134,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
-    private boolean mIsWebCpInWebViewFeatureEnabled = false;
+    private boolean mInWebCpFlow = false;
 
     private final String mUtid;
 
