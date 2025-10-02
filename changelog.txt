@@ -1,5 +1,6 @@
-vNext
+Version 22.1.1
 ----------
+- [PATCH] Don't set browser pkg name in CustomTabIntent (#2777)
 
 Version 22.1.0
 ----------
