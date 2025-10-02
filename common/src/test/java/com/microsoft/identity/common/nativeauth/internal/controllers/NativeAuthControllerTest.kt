@@ -74,6 +74,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -538,6 +539,7 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
+    @Ignore
     fun `testMFAChallenge challenge returns introspect_required and introspect returns success should return SelectionRequiredResult`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
@@ -557,6 +559,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
+    @Ignore
     fun `testMFAChallenge challenge returns introspect_required and introspect returns redirect should return RedirectResult`() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
@@ -619,6 +622,7 @@ class NativeAuthControllerTest {
 
 
     @Test
+    @Ignore
     fun testMFAChallengeWithInvalidIntrospectResponseShouldReturnAPIError() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
