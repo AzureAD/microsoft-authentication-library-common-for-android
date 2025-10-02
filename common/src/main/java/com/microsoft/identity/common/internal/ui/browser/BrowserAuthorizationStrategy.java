@@ -99,6 +99,7 @@ public abstract class BrowserAuthorizationStrategy<
             if (!mCustomTabManager.bind(context, mBrowser.getPackageName())) {
                 //create browser auth intent
                 authIntent = new Intent(Intent.ACTION_VIEW);
+                authIntent.setPackage(mBrowser.getPackageName());
             } else {
                 authIntent = mCustomTabManager.getCustomTabsIntent().intent;
             }
@@ -109,9 +110,9 @@ public abstract class BrowserAuthorizationStrategy<
             );
             //create browser auth intent
             authIntent = new Intent(Intent.ACTION_VIEW);
+            authIntent.setPackage(mBrowser.getPackageName());
         }
 
-        authIntent.setPackage(mBrowser.getPackageName());
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
 
         authIntent.setData(Uri.parse(requestUrl.toString()));
