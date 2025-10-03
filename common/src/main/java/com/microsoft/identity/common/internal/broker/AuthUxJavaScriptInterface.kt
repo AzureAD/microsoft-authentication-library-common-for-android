@@ -32,8 +32,8 @@ import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
-import java.net.MalformedURLException
-import java.net.URL
+import java.net.URI
+import java.net.URISyntaxException
 
 /**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
@@ -53,32 +53,32 @@ class AuthUxJavaScriptInterface {
         }
 
         /**
-         * Helper method to determine if url is a valid Url for the JS Interface
-         * @param url url being loaded
-         * @return true if url is a valid, safe url, false otherwise
+         * Helper method to determine if uri is a valid Uri for the JS Interface
+         * @param uriString uri being loaded
+         * @return true if uri is a valid, safe uri, false otherwise
          */
-        fun isValidUrlForInterface(urlString: String?): Boolean {
-            // If url is null, return false
-            if (urlString.isNullOrEmpty()) {
+        fun isValidUriForInterface(uriString: String?): Boolean {
+            // If uri is null or empty, return false
+            if (uriString.isNullOrEmpty()) {
                 return false
             }
 
-            val url: URL
+            val uri: URI
             try {
-                url = URL(urlString)
-            } catch (e: MalformedURLException) {
-                // If url is not a valid URL, return false
-                Logger.warn(TAG, "Malformed URL passed.")
+                uri = URI(uriString)
+            } catch (e: URISyntaxException) {
+                Logger.warn(TAG, "URISyntaxException received. uri: $uriString, Message: ${e.message}")
                 return false
-
             }
 
-            val host = url.host
+            val host = uri.host
 
-            // Otherwise, make sure url is a valid url
-            // We only want to allow URLs that have the AAD or MSA url hosts
-            return host.startsWith(AuthenticationConstants.Broker.AAD_URL_HOST_PREFIX) ||
-                    host.startsWith(AuthenticationConstants.Broker.MSA_URL_HOST_PREFIX)
+            // Otherwise, make sure uri is a valid uri
+            // We only want to allow URIs that have the AAD or MSA uri hosts
+            return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
+                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX)
         }
     }
 

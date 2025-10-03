@@ -232,9 +232,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
-    public Bundle getRequestBundleForAllSsoTokens(
-            @NonNull final AcquirePrtSsoTokenCommandParameters parameters,
-            @NonNull final String negotiatedBrokerProtocolVersion) {
+    public @NonNull Bundle getRequestBundleForAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters,
+                                                  @NonNull final String negotiatedBrokerProtocolVersion) {
 
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
