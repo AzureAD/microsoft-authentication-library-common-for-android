@@ -247,6 +247,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (parameters.getCorrelationId() != null) {
             bundle.putString(AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
         }
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, parameters.getRequiredBrokerProtocolVersion());
         return bundle;
     }
 

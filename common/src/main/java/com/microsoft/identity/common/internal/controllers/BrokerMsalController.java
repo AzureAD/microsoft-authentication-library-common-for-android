@@ -1193,7 +1193,7 @@ public class BrokerMsalController extends BaseController {
 
     /**
      * Get SSO tokens from broker by environment from given request authority.
-     * Note: The result is limited to the 3 most recent tokens.
+     * Note: The result is limited to the tokens associated with the 3 most recently acquired PRTs.
      * @param parameters {@link AcquirePrtSsoTokenCommandParameters}
      * @return {@link AcquirePrtSsoTokenBatchResult} containing up to 3 of the most recent relevant SSO tokens.
      * @throws BaseException
