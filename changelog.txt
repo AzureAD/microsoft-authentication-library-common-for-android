@@ -1,5 +1,9 @@
 vNext
 ----------
+- [MINOR] Add correlation_id to AcquireTokenResult (#2779)
+
+vNext
+----------
 - [MAJOR] Add KeyStoreBackedSecretKeyProvider (#2674)
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Add helper method to record elapsed time (#2768)
