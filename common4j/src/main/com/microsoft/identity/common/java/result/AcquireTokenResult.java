@@ -32,6 +32,8 @@ public class AcquireTokenResult {
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
 
+    private String mCorrelationId;
+
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationResult mAuthorizationResult;
 
@@ -66,6 +68,14 @@ public class AcquireTokenResult {
 
     public Boolean getSucceeded() {
         return mSucceeded;
+    }
+
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.mCorrelationId = correlationId;
     }
 
 }

@@ -253,6 +253,7 @@ public abstract class BaseController {
 
             // Set the AuthenticationResult on the final result object
             acquireTokenResult.setLocalAuthenticationResult(authenticationResult);
+            acquireTokenResult.setCorrelationId(parameters.getCorrelationId());
         }
 
         return acquireTokenResult;
