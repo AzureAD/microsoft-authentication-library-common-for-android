@@ -711,8 +711,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // Enabling webcp in webview feature for brokered flows only for now.
                 Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
-                if (mShouldHandleWebCpInWebView)
+                if (mShouldHandleWebCpInWebView) {
                     mInWebCpFlow = true;
+                }
                 return mShouldHandleWebCpInWebView;
             }
 
