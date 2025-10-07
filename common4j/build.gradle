@@ -29,6 +29,9 @@ plugins {
 
     // Add kotlin support
     id 'org.jetbrains.kotlin.jvm'
+
+    // Test retries
+    id 'org.gradle.test-retry' version '1.5.6'
 }
 
 buildSystem {
