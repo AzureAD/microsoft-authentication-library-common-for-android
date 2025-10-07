@@ -7,7 +7,7 @@ import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 data class AuthenticationMethodApiResult(
     @Expose @SerializedName("id") val id: String,
     @Expose @SerializedName("challenge_type") val challengeType: String,
-    @SerializedName("login_hint") val loginHint: String,
+    @SerializedName("login_hint") val loginHint: String?,
     @Expose @SerializedName("challenge_channel") val challengeChannel: String,
 ) : ILoggable {
     override fun toUnsanitizedString() = "AuthenticationMethod(id=$id, " +

@@ -98,7 +98,6 @@ class NativeAuthControllerTest {
     private val defaultScopes: List<String> = AuthenticationConstants.DEFAULT_SCOPES.toList()
     private val scopes: List<String> = listOf("scope1", "scope2", "scope3")
     private val invalidGrantError = "invalid_grant"
-    private val credentialRequiredError = "credential_required"
     private val userNotFoundError = "user_not_found"
     private val continuationToken = "1234"
     private val newPassword = "newPassword".toCharArray()
@@ -538,7 +537,7 @@ class NativeAuthControllerTest {
 
     // region sign in MFA
     @Test
-    fun `testsignInWithPasswordReturnMFARequired`() {
+    fun testSignInWithPasswordReturnMFARequired() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInChallenge,
@@ -549,6 +548,20 @@ class NativeAuthControllerTest {
         val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.Redirect)
+    }
+
+    @Test
+    fun testTriggerMFAAuthMethodReturnsBlockedResponse() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createMFAChallengeCommandParameters(correlationId, authMethodId)
+        val result = controller.signInChallenge(parameters)
+        assert(result is MFACommandResult.BlockedAuthMethod)
     }
 
     @Test
@@ -572,7 +585,7 @@ class NativeAuthControllerTest {
     }
 
     @Test
-    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkAuthMethods() {
+    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkEmailAuthMethod() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
             endpointType = MockApiEndpoint.SignInToken,
@@ -589,6 +602,66 @@ class NativeAuthControllerTest {
         val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
         val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
         assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitCodeReturnMFARequiredIntrospectSuccess_checkEmailAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SUCCESS
+        )
+
+        val signInCodeParameters = createSignInSubmitCodeCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitCode(signInCodeParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "email" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitCodeReturnMFARequiredIntrospectSuccess_checkSMSAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SMS_SUCCESS
+        )
+
+        val signInCodeParameters = createSignInSubmitCodeCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitCode(signInCodeParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
+    }
+
+    @Test
+    fun testSubmitPasswordReturnMFARequiredIntrospectSuccess_checkSMSAuthMethod() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.SignInToken,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.MFA_REQUIRED
+        )
+
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.Introspect,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.INTROSPECT_SMS_SUCCESS
+        )
+
+        val signInParameters = createSignInSubmitPasswordCommandParameters(correlationId)
+        val signInResult = controller.signInSubmitPassword(signInParameters) as SignInCommandResult.MFARequired
+        assert(signInResult.authMethods.filter { it.challengeChannel == "sms" }.count() == 1)
     }
 
     @Test
@@ -632,8 +705,7 @@ class NativeAuthControllerTest {
         val result = controller.signInChallenge(parameters)
         assert(result is INativeAuthCommandResult.APIError)
     }
-
-
+    
     @Test
     fun testMFAChallengeExpiredTokenShouldReturnAPIError() {
         val correlationId = UUID.randomUUID().toString()
@@ -1468,6 +1540,25 @@ class NativeAuthControllerTest {
     }
 
     @Test
+    fun testChallengeJITAuthMethodBlockedVerificationContact() {
+        val correlationId = UUID.randomUUID().toString()
+        MockApiUtils.configureMockApi(
+            endpointType = MockApiEndpoint.JITChallenge,
+            correlationId = correlationId,
+            responseType = MockApiResponseType.AUTH_METHOD_BLOCKED
+        )
+
+        val parameters = createJITChallengeAuthMethodCommandParametersCommandParameters(
+            verificationContact = "+353 658894628",
+            authMethodChallengeType = "oob",
+            challengeChannel = "sms",
+            correlationId = correlationId
+        )
+        val result = controller.jitChallengeAuthMethod(parameters)
+        assert(result is JITCommandResult.BlockedVerificationContact)
+    }
+
+    @Test
     fun testChallengeJITAuthMethodSuccessResponse() {
         val correlationId = UUID.randomUUID().toString()
         MockApiUtils.configureMockApi(
@@ -1606,7 +1697,7 @@ class NativeAuthControllerTest {
             .build()
     }
 
-    private fun createSignInSubmitCodeCommandParameters(correlationId: String, isMFAGrantYpe: Boolean = false): SignInSubmitCodeCommandParameters {
+    private fun createSignInSubmitCodeCommandParameters(correlationId: String, isMFAGrantType: Boolean = false): SignInSubmitCodeCommandParameters {
         val authenticationScheme = AuthenticationSchemeFactory.createScheme(
             AndroidPlatformComponentsFactory.createFromContext(context),
             null
@@ -1622,7 +1713,7 @@ class NativeAuthControllerTest {
             .oAuth2TokenCache(createCache())
             .sdkType(SdkType.MSAL)
             .correlationId(correlationId)
-            .isMFAGrantType(isMFAGrantYpe)
+            .isMFAGrantType(isMFAGrantType)
             .requiredBrokerProtocolVersion(BrokerProtocolVersionUtil.MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION)
             .build()
     }
