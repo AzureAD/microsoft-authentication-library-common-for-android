@@ -11,6 +11,7 @@ vNext
 - [MINOR] SDK now handles SMS as strong authentication method #2766
 - [MINOR] Added error handling when webcp redirects have browser protocol #2767
 - [PATCH] Fix for app link redirect from CCT due to forced browser preference (#2775)
+- [PATCH] Don't set browser pkg name in CustomTabIntent (#2780)
 
 Version 22.1.0
 ----------
