@@ -223,7 +223,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        webViewWebcpEnabled = state.getBoolean(WEB_VIEW_WEBCP_ENABLED, true);
+        webViewWebcpEnabled = state.getBoolean(WEB_VIEW_WEBCP_ENABLED, false);
         mUtid = state.getString(UTID);
     }
 
