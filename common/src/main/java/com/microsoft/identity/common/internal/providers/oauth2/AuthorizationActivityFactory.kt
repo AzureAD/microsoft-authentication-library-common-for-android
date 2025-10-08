@@ -112,7 +112,7 @@ object AuthorizationActivityFactory {
             )
             putExtra(
                 AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEBCP_ENABLED,
-                parameters.webViewWebcpEnabled
+                parameters.isWebViewWebcpEnabledInBrokerlessCase
             )
             putExtra(
                 DiagnosticContext.CORRELATION_ID,

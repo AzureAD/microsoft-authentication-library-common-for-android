@@ -118,7 +118,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
-    private boolean webViewWebcpEnabled;
+    private boolean isWebViewWebcpEnabledInBrokerlessCase;
 
     private String mUtid;
 
@@ -204,7 +204,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
-        outState.putBoolean(WEB_VIEW_WEBCP_ENABLED, webViewWebcpEnabled);
+        outState.putBoolean(WEB_VIEW_WEBCP_ENABLED, isWebViewWebcpEnabledInBrokerlessCase);
         outState.putString(UTID, mUtid);
     }
 
@@ -223,7 +223,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
-        webViewWebcpEnabled = state.getBoolean(WEB_VIEW_WEBCP_ENABLED, false);
+        isWebViewWebcpEnabledInBrokerlessCase = state.getBoolean(WEB_VIEW_WEBCP_ENABLED, false);
         mUtid = state.getString(UTID);
     }
 
@@ -264,7 +264,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
                 mUtid,
-                webViewWebcpEnabled
+                isWebViewWebcpEnabledInBrokerlessCase
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
