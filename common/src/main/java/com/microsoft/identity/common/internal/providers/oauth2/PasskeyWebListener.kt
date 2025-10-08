@@ -11,8 +11,10 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -39,8 +41,8 @@ in your bashrc.
  */
 class PasskeyWebListener(
     private val activity: Activity,
-    private val coroutineScope: CoroutineScope,
-    private val credentialManagerHandler: CredentialManagerHandler
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val credentialManagerHandler: CredentialManagerHandler = CredentialManagerHandler(activity)
 ) : WebViewCompat.WebMessageListener {
 
     /** havePendingRequest is true if there is an outstanding WebAuthn request. There is only ever
@@ -68,6 +70,27 @@ class PasskeyWebListener(
         val messageData = message.data ?: return
         onRequest(messageData, sourceOrigin, isMainFrame, JavaScriptReplyChannel(replyProxy))
     }
+
+    /**
+     * Sets up the WebView to listen for messages from the embedded page.
+     * @param webView The WebView to attach the listener to.
+     *
+     */
+    fun hook(webView: WebView) {
+        val methodTag = "$TAG:hook"
+        Logger.info(methodTag, "Setting up WebView message listener")
+        WebView.setWebContentsDebuggingEnabled(true)
+        val rules = setOf("*")
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            Logger.info(methodTag, "WEB_MESSAGE_LISTENER supported on this device/WebView.")
+            // Add listener for all origins — you can restrict to specific origins instead
+            WebViewCompat.addWebMessageListener(webView, INTERFACE_NAME, rules, this)
+        } else {
+            // Fallback if feature not supported
+            Logger.warn(methodTag, "WEB_MESSAGE_LISTENER not supported on this device/WebView.")
+        }
+    }
+
 
     private fun onRequest(
         msg: String,

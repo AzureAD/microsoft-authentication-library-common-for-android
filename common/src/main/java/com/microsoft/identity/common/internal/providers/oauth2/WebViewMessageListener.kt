@@ -17,14 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 
 object WebViewMessageListener {
 
-    @SuppressLint("RequiresFeature")
-    private val DEFAULT_LISTENER =
-        WebMessageListener { view: WebView?, message: WebMessageCompat, sourceOrigin: Uri?, isMainFrame: Boolean, replyProxy: JavaScriptReplyProxy ->
-            // Handle messages coming from JS
-            val data = message.data
-            // Example: log or send back a reply
-            replyProxy.postMessage("Android received: $data")
-        }
+
 
     fun setup(webView: WebView, activity: Activity) {
         val methodTag = "WebViewMessageListener:setup"

@@ -36,6 +36,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -75,12 +76,15 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -362,9 +366,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Logger.info(methodTag, consoleMessage.message() + " -- From line " +
-                        consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
+            public boolean onConsoleMessage(@NonNull final ConsoleMessage consoleMessage) {
+                super.onConsoleMessage(consoleMessage);
+                final String methodTag = TAG + ":onConsoleMessage";
+                final String errorMessage = consoleMessage.message() + " -- From line " +
+                        consoleMessage.lineNumber() + " of " + consoleMessage.sourceId();
+                switch (consoleMessage.messageLevel()) {
+                    case ERROR:
+                        Logger.error(methodTag, errorMessage, null);
+                        break;
+                    case WARNING:
+                        Logger.warn(methodTag, errorMessage);
+                        break;
+                    default:
+                        Logger.info(methodTag, errorMessage);
+                }
                 return true;
             }
 
@@ -420,29 +436,36 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private HashMap<String, String> getRequestHeaders(final Bundle state) {
         try {
+            final Uri authRequestUri = Uri.parse(mAuthorizationRequestUrl);
+            final String webAuthNQueryParameter = authRequestUri.getQueryParameter(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD);
+            final boolean hasWebAuthNQueryParameter = !StringUtil.isNullOrEmpty(webAuthNQueryParameter);
             // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
             @SuppressWarnings(WarningType.unchecked_warning)
-            HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
-            // In cases of WebView as an auth agent, we want to always add the passkey protocol header.
-            // (Not going to add passkey protocol header until full feature is ready.)
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
-                if (requestHeaders == null) {
-                    requestHeaders = new HashMap<>();
-                }
-                requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
-            }
-
+            final HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
+            final HashMap<String, String> headers = requestHeaders != null ? requestHeaders : new HashMap<>();
             // Attach client extras header for ESTS telemetry. Only done for broker requests
             if (isBrokerRequest) {
+                if (hasWebAuthNQueryParameter && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
+                    headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+                }
                 final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
                         .srcSku(state.getString(PRODUCT))
                         .srcSkuVer(state.getString(VERSION))
                         .build();
-                requestHeaders.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
+                headers.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
+            } else {
+                if (hasWebAuthNQueryParameter) {
+                    if (headers.containsKey(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME)){
+                        Logger.warn(TAG + ":getRequestHeaders", "Passkey protocol header already exists in request headers.");
+                    } else {
+                        headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_VALUE);
+                    }
+                }
+
             }
-            return requestHeaders;
+            return headers;
         } catch (Exception e) {
-            return null;
+            return new HashMap<>();
         }
     }
 
