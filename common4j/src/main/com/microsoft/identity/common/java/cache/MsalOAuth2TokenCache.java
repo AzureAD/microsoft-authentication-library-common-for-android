@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -58,6 +59,7 @@ import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.telemetry.events.CacheStartEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,7 +68,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -1092,16 +1093,45 @@ public class MsalOAuth2TokenCache
                                                     @NonNull final String clientId,
                                                     @NonNull final String localAccountId) {
         final String methodName = ":getAccountByLocalAccountId";
-
-        final List<AccountRecord> accounts = getAccounts(environment, clientId);
-
         Logger.verbosePII(
                 TAG + methodName,
                 "LocalAccountId: [" + localAccountId + "]"
         );
 
-        for (final AccountRecord account : accounts) {
-            if (localAccountId.equals(account.getLocalAccountId())) {
+        List<AccountRecord> accountsFilteredByEnvAndLocalAccountId = new ArrayList<>();
+        List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
+        for (AccountRecord accountRecord: accountRecordList) {
+            if (accountRecord.getLocalAccountId().equals(localAccountId)
+                    && accountRecord.getEnvironment().equals(environment)) {
+                accountsFilteredByEnvAndLocalAccountId.add(accountRecord);
+            }
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found " + accountsFilteredByEnvAndLocalAccountId.size() + " accounts for this environment" +
+                        "and localAccountId"
+        );
+
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
+        );
+
+        final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                null, // homeAccountId
+                environment,
+                credentialTypes,
+                clientId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        for (final AccountRecord account : accountsFilteredByEnvAndLocalAccountId) {
+            if (accountHasCredential(account, appCredentials)) {
                 return account;
             }
         }
@@ -1200,6 +1230,58 @@ public class MsalOAuth2TokenCache
                 );
             }
         }
+    }
+
+    private AccountRecord getAccountByLocalAccountId1(@Nullable final String environment,
+                                     @NonNull final String clientId,
+                                     final String localAccountId) {
+        final String methodName = ":getAccounts";
+
+        Logger.verbosePII(
+                TAG + methodName,
+                "Environment: [" + environment + "]"
+                        + "\n"
+                        + "ClientId: [" + clientId + "]"
+        );
+
+        List<AccountRecord> accountsFilteredByEnvAndLocalAccountId = new ArrayList<>();
+        List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
+        for (AccountRecord accountRecord: accountRecordList) {
+            if (accountRecord.getLocalAccountId().equals(localAccountId)
+                 && accountRecord.getEnvironment().equals(environment)) {
+                    accountsFilteredByEnvAndLocalAccountId.add(accountRecord);
+            }
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Found " + accountsFilteredByEnvAndLocalAccountId.size() + " accounts for this environment"
+        );
+
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
+        );
+
+        final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                null, // homeAccountId
+                environment,
+                credentialTypes,
+                clientId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        for (final AccountRecord account : accountsFilteredByEnvAndLocalAccountId) {
+            if (accountHasCredential(account, appCredentials)) {
+                return account;
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -1355,20 +1437,17 @@ public class MsalOAuth2TokenCache
     private boolean accountHasCredential(@NonNull final AccountRecord account,
                                          @NonNull final List<Credential> appCredentials) {
         final String methodName = ":accountHasCredential";
-
         final String accountHomeId = account.getHomeAccountId();
-        final String accountEnvironment = account.getEnvironment();
 
         Logger.verbosePII(
                 TAG + methodName,
                 "HomeAccountId: [" + accountHomeId + "]"
-                        + "\n"
-                        + "Environment: [" + accountEnvironment + "]"
         );
 
+        // Since we already filtered accounts and credentials by environment, there is no need to check
+        // environment again
         for (final Credential credential : appCredentials) {
-            if (accountHomeId.equals(credential.getHomeAccountId())
-                    && accountEnvironment.equals(credential.getEnvironment())) {
+            if (accountHomeId.equals(credential.getHomeAccountId())) {
                 Logger.verbose(
                         TAG + methodName,
                         "Credentials located for account."
