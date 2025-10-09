@@ -118,17 +118,17 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             // once matches is false, it will never be true for this account
             if (mustMatchOnHomeAccountId) {
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnEnvironment) {
                 matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnRealm) {
                 matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             // if it reaches here, it means matches is true
@@ -198,22 +198,22 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
             if (mustMatchOnHomeAccountId) {
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnEnvironment) {
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnCredentialType) {
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnClientId) {
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnApplicationIdentifier) {
@@ -223,7 +223,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     Logger.verbose(TAG, "Query specified applicationIdentifier match, but credential type does not have application identifier");
                 }
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnMamEnrollmentIdentifier) {
@@ -233,19 +233,19 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     Logger.verbose(TAG, "Query specified mamEnrollmentIdentifier match, but credential type does not have MAM enrollment identifier");
                 }
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
                 final IdTokenRecord idToken = (IdTokenRecord) credential;
                 matches = StringUtil.equalsIgnoreCaseTrimBoth(realm, idToken.getRealm());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnTarget) {
@@ -258,7 +258,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     Logger.verbose(TAG, "Query specified target-match, but no target to match.");
                 }
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
@@ -277,13 +277,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     matches = authScheme.equalsIgnoreCase(atType);
                 }
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if(mustMatchOnKid && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                 matches = kid.equalsIgnoreCase(accessToken.getKid());
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (mustMatchOnRequestedClaims || mustMatchExactClaims) {
@@ -295,7 +295,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 } else {
                     Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }
-                if(!matches) continue;
+                if (!matches) continue;
             }
 
             if (matches) {
