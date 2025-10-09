@@ -113,25 +113,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
         for (final AccountRecord account : allAccounts) {
-            boolean matches = true;
+            if (mustMatchOnHomeAccountId && !StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId())) continue;
+            if (mustMatchOnEnvironment && !StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment())) continue;
+            if (mustMatchOnRealm && !StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm())) continue;
 
-            // once matches is false, it will never be true for this account
-            if (mustMatchOnHomeAccountId) {
-                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
-                if (!matches) continue;
-            }
-
-            if (mustMatchOnEnvironment) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
-                if (!matches) continue;
-            }
-
-            if (mustMatchOnRealm) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm());
-                if (!matches) continue;
-            }
-
-            // if it reaches here, it means matches is true
             matchingAccounts.add(account);
         }
 
