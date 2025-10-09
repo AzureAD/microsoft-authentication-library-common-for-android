@@ -1108,7 +1108,7 @@ public class MsalOAuth2TokenCache
         Logger.verbose(
                 TAG + methodName,
                 "Found " + accountsFilteredByEnvAndLocalAccountId.size() + " accounts for this environment" +
-                        "and localAccountId"
+                        " and localAccountId"
         );
 
         final Set<CredentialType> credentialTypes = new HashSet<>(
