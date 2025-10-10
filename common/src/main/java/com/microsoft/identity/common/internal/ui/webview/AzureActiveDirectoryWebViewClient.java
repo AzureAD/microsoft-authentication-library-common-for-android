@@ -52,7 +52,6 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.PasskeyWebListener;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -95,6 +94,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
@@ -139,6 +139,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mInWebCpFlow = false;
 
     private final String mUtid;
+
+    private Consumer<String> mRunOnPageStarted;
+
+    // Method to assign the function
+    public void setRunOnPageStarted(@NonNull final Consumer<String> fun) {
+        this.mRunOnPageStarted = fun;
+    }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -1142,10 +1149,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                               final String url,
                               final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        Logger.info(TAG, "onPageStarted: Inject JS");
-        view.evaluateJavascript(PasskeyWebListener.INJECTED_VAL, null);
-        view.evaluateJavascript("console.log('evaluate works')", null);
-
+        if(mRunOnPageStarted != null) {
+            mRunOnPageStarted.accept(url);
+        }
     }
 
     /**
