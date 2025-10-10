@@ -429,14 +429,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             final Uri authRequestUri = Uri.parse(mAuthorizationRequestUrl);
             final String webAuthNQueryParameter = authRequestUri.getQueryParameter(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD);
             final boolean hasWebAuthNQueryParameter = !StringUtil.isNullOrEmpty(webAuthNQueryParameter);
+            final  boolean isPasskeyRegistrationFlightEnabled =  CommonFlightsManager.INSTANCE
+                    .getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_REGISTRATION);
             // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
             @SuppressWarnings(WarningType.unchecked_warning) final HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
             final HashMap<String, String> headers = requestHeaders != null ? requestHeaders : new HashMap<>();
             // Attach client extras header for ESTS telemetry. Only done for broker requests
             if (isBrokerRequest) {
-                if (hasWebAuthNQueryParameter && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE)) {
+                if (hasWebAuthNQueryParameter && isPasskeyRegistrationFlightEnabled) {
                     headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG);
                 } else {
+                    // If the webauthn query parameter is not present, we should add the header for auth only.
+                    // This to keep the behavior same as before the passkey registration feature was added.
                     headers.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
                 }
                 final ClientExtraSku clientExtraSku = ClientExtraSku.builder()
@@ -446,6 +450,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 headers.put(com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.CLIENT_EXTRA_SKU, clientExtraSku.toString());
             } else {
                 if (hasWebAuthNQueryParameter) {
+                    // Only first party app will be sending the webauthn query parameter and therefore
+                    // they should have declare association in the assetlinks.json file.
+                    // OneAuth and MSAL will control the version of the passkey protocol header on their end.
                     if (headers.containsKey(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME)) {
                         Logger.warn(TAG + ":getRequestHeaders", "Passkey protocol header already exists in request headers.");
                     } else {

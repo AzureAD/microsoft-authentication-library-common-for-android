@@ -61,6 +61,12 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true),
 
     /**
+     * Flight to be able to disable/rollback the passkey feature in broker if necessary.
+     * This will be set to true by default.
+     */
+    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", true),
+
+    /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
      */
     URL_CONNECTION_CONNECT_TIME_OUT("UrlConnectionConnectTimeOut", DEFAULT_CONNECT_TIME_OUT_MS),
