@@ -642,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "18.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "19.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1372,6 +1372,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
 
         /**
+         * String for all SSO tokens result.
+         */
+        public static final String BROKER_GENERATE_ALL_SSO_TOKENS_RESULT = "broker_generate_all_sso_tokens";
+
+        /**
          * String for generate shr result.
          */
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
@@ -1683,6 +1688,8 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
 
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
+            GET_ALL_SSO_TOKENS(GET_ALL_SSO_TOKENS_PATH, null, null),
+
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
@@ -1857,6 +1864,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
+         * Api path for getting all SSO tokens based on environment.
+         */
+        public static final String GET_ALL_SSO_TOKENS_PATH = "/allSsoTokens";
 
         /**
          * ContentProvider path to get the preferred auth method.
