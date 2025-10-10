@@ -114,6 +114,7 @@ class SwitchBrowserRequestHandler(
                 putExtra(SwitchBrowserActivity.BROWSER_PACKAGE_NAME, browser.packageName)
                 putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, browser.isCustomTabsServiceSupported)
                 putExtra(SwitchBrowserActivity.PROCESS_URI, switchBrowserChallenge.processUri.toString())
+                putExtra(SwitchBrowserActivity.REDIRECT_URI, switchBrowserChallenge.redirectUri)
                 setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             activity.startActivity(switchBrowserIntent)

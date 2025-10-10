@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserChallenge is a challenge to switch from WebView to browser.
@@ -31,28 +32,31 @@ import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBro
  */
 data class SwitchBrowserChallenge(
     val processUri: Uri,
-    val authorizationUrl: String
+    val authorizationUrl: String,
+    val redirectUri: String
 ) {
 
     companion object {
         /**
          * Construct a SwitchBrowserChallenge from the redirect URI.
          *
-         * @param redirectUrl The redirect URL containing the switch browser code and action URI.
+         * @param switchBrowserUrl The redirect URL containing the switch browser code and action URI.
          * e.g. {redirectUrl}/switch_browser?code=code&action_uri=action-uri
          *
-         * @return The SwitchBrowserChallenge constructed from the redirect URI.
+         * @return The SwitchBrowserChallenge constructed from the switchBrowserUrl.
          * e.g. SwitchBrowserChallenge(uri = action-uri?code=code)
          * params: redirectUri: Uri
          */
         @JvmStatic
         @Throws(Exception::class)
-        fun constructFromRedirectUrl(redirectUrl: String, authorizationUrl: String): SwitchBrowserChallenge {
-            Uri.parse(redirectUrl).let { redirectUri ->
-                SwitchBrowserUriHelper.buildProcessUri(redirectUri).let { processUri ->
+        fun constructFromRedirectUrl(switchBrowserUrl: String, authorizationUrl: String): SwitchBrowserChallenge {
+            switchBrowserUrl.toUri().let { switchBrowserUri ->
+                SwitchBrowserUriHelper.buildProcessUri(switchBrowserUri).let { processUri ->
+                    val redirectUriString = switchBrowserUrl.substringBefore("/switch_browser")
                     return SwitchBrowserChallenge(
                         processUri = processUri,
-                        authorizationUrl = authorizationUrl
+                        authorizationUrl = authorizationUrl,
+                        redirectUri = redirectUriString
                     )
                 }
             }

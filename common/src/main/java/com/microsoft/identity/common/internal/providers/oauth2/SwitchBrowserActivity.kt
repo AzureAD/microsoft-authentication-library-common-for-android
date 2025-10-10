@@ -22,12 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.R
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
-import com.microsoft.identity.common.logging.Logger
+import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.browser.auth.AuthTabIntent
+import androidx.browser.customtabs.CustomTabsClient
 import androidx.core.net.toUri
+import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
+import com.microsoft.identity.common.logging.Logger
 
 
 /**
@@ -64,6 +71,7 @@ class SwitchBrowserActivity : FragmentActivity() {
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
     private var customTabsManager = CustomTabsManager(this)
+    private lateinit var mLauncher: ActivityResultLauncher<Intent>
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -76,6 +84,9 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         /** Intent extra key for the URI to process in the browser */
         const val PROCESS_URI = "process_uri"
+
+        /** Intent extra key for the redirect URI */
+        const val REDIRECT_URI = "redirect_uri"
 
         /** Intent extra key indicating a resume request from the browser redirect */
         const val RESUME_REQUEST = "resume_request"
@@ -93,6 +104,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onCreate"
         super.onCreate(savedInstanceState)
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
+        mLauncher = AuthTabIntent.registerActivityResultLauncher(this) { handleAuthResult(it) }
         launchBrowser()
     }
 
@@ -114,6 +126,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
         val browserSupportsCustomTabs = extras.getBoolean(BROWSER_SUPPORTS_CUSTOM_TABS, false)
         val processUri = extras.getString(PROCESS_URI)
+        val redirectUri = extras.getString(REDIRECT_URI)
 
         // Validate required parameters
         if (browserPackageName.isNullOrBlank()) {
@@ -134,6 +147,12 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         // Create an intent to launch the browser
         val browserIntent: Intent
+        if (CustomTabsClient.isAuthTabSupported(applicationContext, browserPackageName)) {
+            Logger.info(methodTag, "AuthTab is supported.")
+            launchAuthTab(mLauncher, processUri.toUri(), redirectUri)
+            return
+        }
+
         if (browserSupportsCustomTabs) {
             Logger.info(methodTag, "CustomTabsService is supported.")
             //create customTabsIntent
@@ -164,7 +183,7 @@ class SwitchBrowserActivity : FragmentActivity() {
      *
      * @param intent The intent containing the authentication result from the browser redirect
      */
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         val methodTag = "$TAG:onNewIntent"
         super.onNewIntent(intent)
         // Update the activity's intent with the new intent containing the auth result
@@ -242,5 +261,120 @@ class SwitchBrowserActivity : FragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         customTabsManager.unbind()
+    }
+
+    private fun handleAuthResult(result: AuthTabIntent.AuthResult) {
+        val methodTag = "$TAG:handleAuthResult"
+
+        val message = when (result.resultCode) {
+            AuthTabIntent.RESULT_OK -> "Received auth result."
+            AuthTabIntent.RESULT_CANCELED -> "AuthTab canceled."
+            AuthTabIntent.RESULT_VERIFICATION_FAILED -> "Verification failed."
+            AuthTabIntent.RESULT_VERIFICATION_TIMED_OUT -> "Verification timed out."
+            else -> "Unknown result code: ${result.resultCode}"
+        }
+
+        val fullMessage = buildString {
+            append(message)
+            if (result.resultCode == AuthTabIntent.RESULT_OK && result.resultUri != null) {
+                append(" Uri: ")
+                append(result.resultUri)
+            }
+        }
+
+        Logger.info(methodTag, fullMessage)
+
+        if (result.resultCode == AuthTabIntent.RESULT_OK) {
+            result.resultUri?.let { completeAuth(it) }
+        }
+
+        finishAndRemoveTask()
+    }
+
+    private fun completeAuth(uri: Uri) {
+        val methodTag = "$TAG:completeAuth"
+        val intent = SwitchBrowserProtocolCoordinator.getIntentToResumeWebViewAuth(applicationContext, uri.toString())
+        WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
+        // Clean up: finish this activity and remove it from task stack
+        Logger.info(methodTag, "Finishing activity and removing from task stack")
+        finishAndRemoveTask()
+        return
+    }
+
+
+    /**
+     * Invokes the appropriate AuthTabIntent.launch overload based on redirect URI type.
+     */
+    private fun launchAuthTab(
+        launcher: ActivityResultLauncher<Intent>,
+        processUri: Uri,
+        redirectUriStr: String?
+    ): Boolean {
+        val methodTag = "$TAG:launchAuthTab"
+        val info = parseRedirectForAuthTab(redirectUriStr)
+        if (info == null) {
+            Logger.error(methodTag, "Cannot parse redirect URI: $redirectUriStr", null)
+            return false
+        }
+        val authTabIntent = AuthTabIntent.Builder().build()
+        return when {
+            info.isAppLink && info.host != null && info.path != null -> {
+                Logger.info(methodTag, "AuthTab AppLink host=${info.host} path=${info.path}")
+                authTabIntent.launch(launcher, processUri, info.host, info.path)
+                true
+            }
+            !info.isAppLink && info.scheme != null -> {
+                Logger.info(methodTag, "AuthTab CustomScheme scheme=${info.scheme}")
+                authTabIntent.launch(launcher, processUri, info.scheme)
+                true
+            }
+            else -> {
+                Logger.warn(methodTag, "Incomplete redirect info: $info")
+                false
+            }
+        }
+    }
+
+    // Helper data holder
+    data class RedirectHandlingInfo(
+        val isAppLink: Boolean,
+        val scheme: String?,
+        val host: String?,
+        val path: String?    // For https: MUST include leading slash exactly as in final redirect
+    )
+
+    /**
+     * Parses a redirect URI string and returns info needed for AuthTab launch.
+     * Custom scheme example: myapp://auth/callback  -> scheme = myapp
+     * App Link example: https://example.com/auth/callback?code=123
+     *   -> host = example.com, path = /auth/callback
+     */
+    private fun parseRedirectForAuthTab(redirectUriStr: String?): RedirectHandlingInfo? {
+        if (redirectUriStr.isNullOrBlank()) return null
+        return try {
+            val uri = redirectUriStr.toUri()
+            val schemeLower = uri.scheme?.lowercase()
+            if (schemeLower == "https") {
+                val host = uri.host ?: return null
+                val path = uri.path ?: "/"          // uri.path keeps leading slash and is decoded
+                if (path.isBlank()) return null
+                RedirectHandlingInfo(
+                    isAppLink = true,
+                    scheme = null,
+                    host = host,
+                    path = path                      // e.g. "/androidbroker/…/switch_browser_resume"
+                )
+            } else {
+                RedirectHandlingInfo(
+                    isAppLink = false,
+                    scheme = uri.scheme,
+                    host = null,
+                    path = null
+                )
+            }
+        } catch (ex: Exception) {
+            Logger.warn("$TAG:parseRedirectForAuthTab", "Parse error: ${ex.message}")
+            null
+        }
     }
 }
