@@ -111,8 +111,8 @@ object AuthorizationActivityFactory {
                 parameters.webViewZoomEnabled
             )
             putExtra(
-                AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEBCP_ENABLED,
-                parameters.isWebViewWebcpEnabledInBrokerlessCase
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED,
+                parameters.isWebViewWebCpEnabled
             )
             putExtra(
                 DiagnosticContext.CORRELATION_ID,

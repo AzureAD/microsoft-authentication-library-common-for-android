@@ -41,7 +41,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent
  * @param sourceLibraryVersion       Product version to be of library making the request
  * @param utid                       The tenant unique id, if applicable
  * @param webViewEnableSilentAuthorizationFlowTimeOutMs                 If set to a non-null value, this indicates that the flow is silent and specifies the timeout for the silent authorization flow in milliseconds.
- * @param webViewWebcpEnabled        This parameter controls whether webcp URLs should be handled within the WebView or redirected to external browser
+ * @param isWebViewWebCpEnabled        This parameter controls whether webcp URLs should be handled within the WebView or redirected to external browser
  */
 data class AuthorizationActivityParameters @JvmOverloads constructor(
     val context: Context,
@@ -59,5 +59,5 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
      */
     val utid: String? = null,
     val webViewEnableSilentAuthorizationFlowTimeOutMs: Long? = null,
-    val isWebViewWebcpEnabledInBrokerlessCase: Boolean = false,
+    val isWebViewWebCpEnabled: Boolean = false,
 )
