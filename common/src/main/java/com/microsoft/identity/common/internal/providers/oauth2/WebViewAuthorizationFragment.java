@@ -354,8 +354,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
 
+            /**
+             * Capture console messages and log them using our logger.
+             *
+             * @param consoleMessage The console message from the WebView
+             * @return returns true if we handled the message. False will let the default handler handle it.
+             */
             @Override
             public boolean onConsoleMessage(@NonNull final ConsoleMessage consoleMessage) {
+                // Note: Decide what we are interested in logging and what level.
                 super.onConsoleMessage(consoleMessage);
                 final String methodTag = TAG + ":onConsoleMessage";
                 final String errorMessage = consoleMessage.message() + " -- From line " +
@@ -535,6 +542,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Downgrade to auth only
                 mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
             }
+            //TEMPORARRY CHANGE
+            mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
+
         } else {
             Logger.warn(methodTag, "Passkey protocol header not found or not for both auth and reg." +
                     " Not hooking the PasskeyWebListener.");
