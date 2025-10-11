@@ -24,8 +24,14 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.app.Activity
 import android.os.Build
-import androidx.credentials.*
-import androidx.credentials.exceptions.*
+import androidx.credentials.CreatePublicKeyCredentialRequest
+import androidx.credentials.CreatePublicKeyCredentialResponse
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.exceptions.CreateCredentialException
+import androidx.credentials.exceptions.GetCredentialException
 import com.microsoft.identity.common.logging.Logger
 
 class CredentialManagerHandler(private val activity: Activity) {
