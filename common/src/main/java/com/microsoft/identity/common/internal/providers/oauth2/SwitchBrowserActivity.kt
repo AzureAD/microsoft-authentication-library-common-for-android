@@ -22,11 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.R
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.browser.auth.AuthTabIntent
 import androidx.browser.customtabs.CustomTabsClient
@@ -136,6 +134,12 @@ class SwitchBrowserActivity : FragmentActivity() {
         }
         if (processUri.isNullOrBlank()) {
             Logger.error(methodTag, "No process URI found in extras - Cannot proceed with browser switch", null)
+            finish()
+            return
+        }
+
+        if (redirectUri.isNullOrBlank()) {
+            Logger.error(methodTag, "No redirect URI found in extras - Cannot proceed with browser switch", null)
             finish()
             return
         }
@@ -267,38 +271,27 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:handleAuthResult"
 
         val message = when (result.resultCode) {
-            AuthTabIntent.RESULT_OK -> "Received auth result."
+            AuthTabIntent.RESULT_OK -> "Received auth result from AuthTab."
             AuthTabIntent.RESULT_CANCELED -> "AuthTab canceled."
-            AuthTabIntent.RESULT_VERIFICATION_FAILED -> "Verification failed."
-            AuthTabIntent.RESULT_VERIFICATION_TIMED_OUT -> "Verification timed out."
+            AuthTabIntent.RESULT_VERIFICATION_FAILED -> "App Link Verification failed."
+            AuthTabIntent.RESULT_VERIFICATION_TIMED_OUT -> "App Link Verification timed out."
             else -> "Unknown result code: ${result.resultCode}"
         }
 
-        val fullMessage = buildString {
-            append(message)
-            if (result.resultCode == AuthTabIntent.RESULT_OK && result.resultUri != null) {
-                append(" Uri: ")
-                append(result.resultUri)
-            }
-        }
-
-        Logger.info(methodTag, fullMessage)
+        Logger.info(methodTag, message)
 
         if (result.resultCode == AuthTabIntent.RESULT_OK) {
             result.resultUri?.let { completeAuth(it) }
         }
 
+        // Clean up: finish this activity and remove it from task stack
+        Logger.info(methodTag, "Finishing activity and removing from task stack")
         finishAndRemoveTask()
     }
 
     private fun completeAuth(uri: Uri) {
-        val methodTag = "$TAG:completeAuth"
         val intent = SwitchBrowserProtocolCoordinator.getIntentToResumeWebViewAuth(applicationContext, uri.toString())
         WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
-        // Clean up: finish this activity and remove it from task stack
-        Logger.info(methodTag, "Finishing activity and removing from task stack")
-        finishAndRemoveTask()
-        return
     }
 
 
