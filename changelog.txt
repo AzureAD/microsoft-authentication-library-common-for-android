@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Use tdbr claim to route telemetry traffic to EU region (#2679)
+- [MAJOR] Add KeyStoreBackedSecretKeyProvider (#2674)
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Add helper method to record elapsed time (#2768)
 - [MINOR] Implement TenantUtil (#2761)
@@ -9,6 +10,13 @@ vNext
 - [MINOR] Add client scenario to JwtRequestBody (#2755)
 - [MINOR] Awaiting MFA Delegate now automatically returns the AuthMethods to be used when calling MFA Challenge (#2764)
 - [MINOR] SDK now handles SMS as strong authentication method #2766
+- [MINOR] Added error handling when webcp redirects have browser protocol #2767
+- [PATCH] Fix for app link redirect from CCT due to forced browser preference (#2775)
+- [MINOR] getAllSsoTokens method for Edge (#2774)
+
+Version 22.1.3
+----------
+- [PATCH] Don't set browser pkg name in CustomTabIntent (#2777)
 
 Version 22.1.0
 ----------

@@ -27,6 +27,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
@@ -75,4 +76,7 @@ public interface IBrokerResultAdapter {
      */
     @NonNull
     AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle);
+
+    @NonNull
+    AcquirePrtSsoTokenBatchResult getAcquirePrtSsoTokenBatchResultFromBundle(Bundle resultBundle);
 }

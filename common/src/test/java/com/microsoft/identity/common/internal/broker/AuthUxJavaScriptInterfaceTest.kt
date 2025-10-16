@@ -86,32 +86,38 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test isValidUrlForInterface with valid AAD URL`() {
+    fun `test isValidUrlForInterface with valid AAD Global URL`() {
         val validUrl = "https://login.microsoftonline.com/common/oauth2/authorize"
-        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
     }
 
     @Test
-    fun `test isValidUrlForInterface with valid MSA URL`() {
-        val validUrl = "https://login.live.com/oauth20_authorize.srf"
-        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUrlForInterface(validUrl))
+    fun `test isValidUrlForInterface with valid AAD US URL`() {
+        val validUrl = "https://login.microsoftonline.us/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
+    }
+
+    @Test
+    fun `test isValidUrlForInterface with valid AAD China URL`() {
+        val validUrl = "https://login.microsoftonline.cn/common/oauth2/authorize"
+        Assert.assertTrue(AuthUxJavaScriptInterface.isValidUriForInterface(validUrl))
     }
 
     @Test
     fun `test isValidUrlForInterface with null URL`() {
         val nullUrl: String? = null
-        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(nullUrl))
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(nullUrl))
     }
 
     @Test
     fun `test isValidUrlForInterface with invalid URL`() {
         val invalidUrl = "https://example.com"
-        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(invalidUrl))
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(invalidUrl))
     }
 
     @Test
     fun `test isValidUrlForInterface with empty URL`() {
         val emptyUrl = ""
-        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUrlForInterface(emptyUrl))
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(emptyUrl))
     }
 }

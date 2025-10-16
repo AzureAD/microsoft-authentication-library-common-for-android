@@ -343,6 +343,21 @@ public enum AttributeName {
     key_pair_gen_successful_method,
 
     /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryptionPaddings,
+
+    /**
      * Indicates the exception in generating a keypair.
      */
     keypair_gen_exception,
@@ -406,16 +421,6 @@ public enum AttributeName {
     current_broker_package_name,
 
     /**
-     * Records if the request is a webcp authorize request.
-     */
-    is_webcp_authorize_request,
-
-    /**
-     * Records if the request is a webcp enrollment request.
-     */
-    is_webcp_enrollment_request,
-
-    /**
      * Records if the webcp is enabled in webview.
      */
     is_webcp_in_webview_enabled,
@@ -470,4 +475,24 @@ public enum AttributeName {
      * Indicates the authority used to make the OpenID configuration request.
      */
     openid_config_request_authority,
+
+    /**
+     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     */
+    secret_key_wrapping_transformation,
+
+    /**
+     * Records the operation used to wrap/unwrap the secret key.
+     */
+    secret_key_wrapping_operation,
+
+    /**
+     * Indicates if the request is a redirect to playstore launch from webcp.
+     */
+    is_redirect_to_playstore_launch_from_webcp,
+
+    /**
+     * Records if current flow is in webcp flow.
+     */
+    is_in_web_cp_flow
 }

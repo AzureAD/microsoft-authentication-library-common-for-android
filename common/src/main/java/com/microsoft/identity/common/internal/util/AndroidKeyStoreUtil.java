@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.os.Build;
+import android.security.keystore.KeyInfo;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -46,6 +48,9 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import javax.crypto.Cipher;
@@ -239,7 +244,6 @@ public class AndroidKeyStoreUtil {
                 Logger.verbose(methodTag, "Public key entry doesn't exist.");
                 return null;
             }
-
             return new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -355,7 +359,8 @@ public class AndroidKeyStoreUtil {
      */
     public static synchronized byte[] wrap(@NonNull final SecretKey key,
                               @NonNull final KeyPair keyToWrap,
-                              @NonNull final String wrapAlgorithm)
+                              @NonNull final String wrapAlgorithm,
+                              @Nullable final AlgorithmParameterSpec algorithmParameterSpec)
             throws ClientException {
         final String methodTag = TAG + ":wrap";
 
@@ -364,7 +369,11 @@ public class AndroidKeyStoreUtil {
         try {
             Logger.verbose(methodTag, "Wrap secret key with a KeyPair.");
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
-            wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
+            if (algorithmParameterSpec != null) {
+                wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic(), algorithmParameterSpec);
+            } else {
+                wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
+            }
             return wrapCipher.wrap(key);
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
@@ -408,17 +417,22 @@ public class AndroidKeyStoreUtil {
      * @param wrapAlgorithm        the algorithm used to wrap the key.
      * @return the unwrapped key.
      */
-    public static synchronized SecretKey unwrap(@NonNull final byte[] wrappedKeyBlob,
-                                   @NonNull final String wrappedKeyAlgorithm,
-                                   @NonNull final KeyPair keyPairForUnwrapping,
-                                   @NonNull final String wrapAlgorithm) throws ClientException {
+    public static synchronized SecretKey unwrap(final byte[] wrappedKeyBlob,
+                                                @NonNull final String wrappedKeyAlgorithm,
+                                                @NonNull final KeyPair keyPairForUnwrapping,
+                                                @NonNull final String wrapAlgorithm,
+                                                @Nullable final AlgorithmParameterSpec algorithmParameterSpec) throws ClientException {
         final String methodTag = TAG + ":unwrap";
         final Throwable exception;
         final String errCode;
         try {
             //TODO: Once the new KeyProvider is fully implemented, we can remove this suppression.
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm); // CodeQL [SM05136] Used on AndroidWrappedKeyLoader, will be removed once the new KeyProvider is fully implemented.
-            wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
+            if (algorithmParameterSpec != null) {
+                wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate(), algorithmParameterSpec);
+            } else {
+                wrapCipher.init(Cipher.UNWRAP_MODE, keyPairForUnwrapping.getPrivate());
+            }
             return (SecretKey) wrapCipher.unwrap(wrappedKeyBlob, wrappedKeyAlgorithm, Cipher.SECRET_KEY);
         } catch (final IllegalArgumentException e) {
             // There is issue with Android KeyStore when lock screen type is changed which could
@@ -529,5 +543,35 @@ public class AndroidKeyStoreUtil {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns encryption paddings supported by a KeyStore key pair.
+     * <p>
+     * Extracts supported padding schemes from the key's metadata on API 23+.
+     * Strips "Padding" suffix from padding names for consistent formatting.
+     *
+     * @param keyPair The key pair to query for supported encryption paddings
+     * @return List of supported padding names (e.g., "PKCS1", "OAEP"),
+     *         or empty list on API < 23 or if retrieval fails
+     */
+    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair) {
+        final String methodTag = TAG + ":getKeyPairEncryptionPaddings";
+        try {
+            final PrivateKey privateKey = keyPair.getPrivate();
+            final KeyFactory keyFactory = KeyFactory.getInstance(privateKey.getAlgorithm(), ANDROID_KEY_STORE_TYPE);
+            final KeyInfo keyInfo = keyFactory.getKeySpec(privateKey, KeyInfo.class);
+            final List<String> encryptionPaddings = new ArrayList<>();
+            // keyInfo.getEncryptionPaddings() returns a list of encryption paddings supported by the key.
+            // We remove the "Padding" suffix from each padding name to match the expected format.
+            for (final String padding : keyInfo.getEncryptionPaddings()) {
+                encryptionPaddings.add(padding.replace("Padding", ""));
+            }
+            Logger.info(methodTag, "Supported encryption paddings: " + encryptionPaddings);
+            return encryptionPaddings;
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Failed to retrieve key padding information" + ": " + e.getMessage());
+        }
+        return Collections.emptyList();
     }
 }
