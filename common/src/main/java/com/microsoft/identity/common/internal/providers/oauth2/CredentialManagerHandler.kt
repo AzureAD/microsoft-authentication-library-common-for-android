@@ -51,7 +51,6 @@ class CredentialManagerHandler(private val activity: Activity) {
     suspend fun createPasskey(request: String): CreatePublicKeyCredentialResponse {
         val methodTag = "$TAG:createPasskey"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Logger.info(methodTag, "Creating passkey with request: $request")
             val createRequest = CreatePublicKeyCredentialRequest(request)
             try {
                 return (mCredMan.createCredential(activity, createRequest) as CreatePublicKeyCredentialResponse).also {
@@ -76,7 +75,6 @@ class CredentialManagerHandler(private val activity: Activity) {
      */
     suspend fun getPasskey(request: String): GetCredentialResponse {
         val methodTag = "$TAG:getPasskey"
-        Logger.info(methodTag, "Getting passkey with request: $request")
         val getRequest = GetCredentialRequest(listOf(GetPublicKeyCredentialOption(request)))
         try {
             return mCredMan.getCredential(activity, getRequest).also {
