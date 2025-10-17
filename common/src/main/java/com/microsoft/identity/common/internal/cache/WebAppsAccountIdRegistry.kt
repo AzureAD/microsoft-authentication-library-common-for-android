@@ -162,8 +162,11 @@ class WebAppsAccountIdRegistry private constructor(
     }
 
     @VisibleForTesting
-    fun getAll(): Map<String, Set<String>> =
-        synchronized(lock) { load().mapValues { it.value.toSet() } }
+    fun getAll(): Map<String, Set<String>> {
+        synchronized(lock) {
+            return load().mapValues { it.value.toSet() }
+        }
+    }
 
     companion object {
         private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
