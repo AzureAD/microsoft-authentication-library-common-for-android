@@ -40,7 +40,7 @@ public class Logger {
     private static final Logger INSTANCE = new Logger();
 
     // Disable to Logcat logging by default.
-    private static boolean sAllowLogcat = true;
+    private static boolean sAllowLogcat = false;
 
     /**
      * Enum class for LogLevel that the sdk recognizes.

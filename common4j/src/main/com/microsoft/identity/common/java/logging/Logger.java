@@ -472,7 +472,9 @@ public class Logger {
                             @Nullable final String objectToLog,
                             final Throwable throwable,
                             final boolean containsPII) {
-
+        if ((sLogLevel == LogLevel.NO_LOG) || logLevel.compareTo(sLogLevel) > 0 || (!sAllowPii && containsPII)) {
+            return;
+        }
 
         final Date now = new Date();
         final String diagnosticMetadata = getDiagnosticContextMetadata(correlationId);

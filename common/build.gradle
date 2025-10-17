@@ -49,9 +49,6 @@ boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryE
 boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
 boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
 
-// Set the archives name at project level
-base.archivesName = "common"
-
 android {
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
@@ -61,6 +58,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode getAppVersionCode()
         versionName getAppVersionName()
+        project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //Languages Common supports.
@@ -147,18 +145,7 @@ android {
 
     libraryVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${base.archivesName.get()}-${version}.aar"
-        }
-    }
-    // 👇 Register your custom variants as publishable
-    publishing {
-        singleVariant("distRelease") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-        singleVariant("distDebug") {
-            withSourcesJar()
-            withJavadocJar()
+            outputFileName = "${archivesBaseName}-${version}.aar"
         }
     }
 }
@@ -203,8 +190,6 @@ dependencies {
     implementation "com.google.android.gms:play-services-fido:$rootProject.ext.LegacyFidoApiVersion"
     implementation "com.google.android.libraries.identity.googleid:googleid:$rootProject.ext.GoogleIdVersion"
     implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
-    implementation "androidx.webkit:webkit:1.14.0"
-
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {
@@ -321,83 +306,70 @@ tasks.register('pmd', Pmd) {
         html.required = true
     }
 }
-
 // For publishing to the remote maven repo.
 afterEvaluate {
+
     publishing {
         publications {
-            // --- distRelease Publication ---
-            create("distRelease", MavenPublication) {
-                from(components["distRelease"])
-
-                groupId = "com.microsoft.identity"
-                artifactId = "common"
+            distRelease(MavenPublication) {
+                from components.distRelease
+                groupId 'com.microsoft.identity'
+                artifactId 'common'
+                //Edit the 'version' here for VSTS RC build
                 version = project.version
 
                 pom {
-                    name.set("common")
-                    description.set("""
-                        This library contains code shared between the Active Directory
-                        Authentication Library (ADAL) for Android and the Microsoft
-                        Authentication Library (MSAL) for Android. This library
-                        includes only internal classes and is NOT part of the
-                        public API.
-                    """.stripIndent())
-                    url.set("https://github.com/AzureAD/microsoft-authentication-library-common-for-android")
-
+                    name = 'common'
+                    description = 'This library contains code shared between the Active Directory ' +
+                            'Authentication Library (ADAL) for Android and the Microsoft ' +
+                            'Authentication Library (MSAL) for Android. This library ' +
+                            'includes only internal classes and is NOT part of the ' +
+                            'public API'
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
                     developers {
                         developer {
-                            id.set("microsoft")
-                            name.set("Microsoft")
+                            id = 'microsoft'
+                            name = 'Microsoft'
                         }
                     }
-
                     licenses {
                         license {
-                            name.set("MIT License")
+                            name = 'MIT License'
                         }
                     }
-
-                    inceptionYear.set("2017")
-
+                    inceptionYear = '2017'
                     scm {
-                        url.set("https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master")
+                        url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
                     }
-
-                    properties.set([
-                        "branch": "master",
-                        "version": version
-                    ])
+                    properties = [
+                            branch : 'master',
+                            version: project.version
+                    ]
                 }
             }
+            distDebug(MavenPublication) {
+                from components.distDebug
+                groupId 'com.microsoft.identity'
+                artifactId 'common-debug'
+                //Edit the 'version' here for VSTS RC build
 
-            // --- distDebug Publication ---
-            create("distDebug", MavenPublication) {
-                from(components["distDebug"])
-
-                groupId = "com.microsoft.identity"
-                artifactId = "common-debug"
                 version = project.version
             }
         }
 
+        // Repositories to which Gradle can publish artifacts
         repositories {
             maven {
-                name = "vsts-maven-adal-android"
-                url = uri("https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1")
-
+                name "vsts-maven-adal-android"
+                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
-                    username = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME")
-                            ?: project.findProperty("vstsUsername")
-                    password = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN")
-                            ?: project.findProperty("vstsMavenAccessToken")
+                    username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+                    password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
                 }
             }
         }
     }
 }
-
-
 
 tasks.configureEach { task ->
     if (task.name.contains("assemble")) {
@@ -458,3 +430,4 @@ tasks.register("dependenciesSizeCheck") {
         }
     }
 }
+
