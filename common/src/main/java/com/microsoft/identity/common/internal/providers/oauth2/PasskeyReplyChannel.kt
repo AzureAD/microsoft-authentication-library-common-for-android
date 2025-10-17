@@ -22,20 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.annotation.SuppressLint
+import androidx.credentials.exceptions.CreateCredentialCancellationException
+import androidx.credentials.exceptions.CreateCredentialInterruptedException
+import androidx.credentials.exceptions.CreateCredentialProviderConfigurationException
+import androidx.credentials.exceptions.CreateCredentialUnknownException
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialInterruptedException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.GetCredentialUnknownException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import com.microsoft.identity.common.logging.Logger
-import org.json.JSONArray
 import org.json.JSONObject
 
+
 /**
- * A communication channel to post replies back to JavaScript code running in a WebView via a
- * [JavaScriptReplyProxy].
+ * Communication channel for sending WebAuthn responses back to JavaScript via [JavaScriptReplyProxy].
  *
- * This class provides methods to send success and error messages back to the JavaScript context.
- * Messages are formatted as JSON arrays containing a status, data (or error message), and request type.
+ * Formats messages as JSON containing status, data, and request type for WebAuthn credential operations.
  *
- * @param replyProxy The [JavaScriptReplyProxy] used to send messages back to JavaScript.
- * @param requestType An optional string indicating the type of request being handled. Defaults to "unknown".
+ * @property replyProxy Proxy for sending messages to JavaScript.
+ * @property requestType Type of WebAuthn request (e.g., "create", "get"). Defaults to "unknown".
  */
 class PasskeyReplyChannel(
     private val replyProxy: JavaScriptReplyProxy,
@@ -43,55 +51,168 @@ class PasskeyReplyChannel(
 ) {
     companion object {
         const val TAG = "PasskeyReplyChannel"
+
+        // JSON message structure keys
+        const val STATUS_KEY = "status"
+        const val DATA_KEY = "data"
+        const val TYPE_KEY = "type"
+
+        // DOMException error details keys
+        const val DOM_EXCEPTION_MESSAGE_KEY = "domExceptionMessage"
+        const val DOM_EXCEPTION_NAME_KEY = "domExceptionName"
+
+        // Message status values
         const val SUCCESS_STATUS = "success"
         const val ERROR_STATUS = "error"
+
+        // DOMException names per W3C WebAuthn specification
+        const val DOM_EXCEPTION_NOT_ALLOWED_ERROR = "NotAllowedError"
+        const val DOM_EXCEPTION_ABORT_ERROR = "AbortError"
+        const val DOM_EXCEPTION_NOT_SUPPORTED_ERROR = "NotSupportedError"
+        const val DOM_EXCEPTION_UNKNOWN_ERROR = "UnknownError"
+
     }
 
-
+    /**
+     * Sealed class representing messages sent to JavaScript.
+     */
     sealed class ReplyMessage {
         abstract val type: String
-        class Success(val json: String, override val type: String) : ReplyMessage()
-        class Error(val errorMessage: String, override val type: String) : ReplyMessage()
+        abstract val status: String
+        abstract val data: JSONObject
 
-        override fun toString(): String {
-            val (status, data, typeValue) = when (this) {
-                is Success -> {
-                    val parsedData = runCatching { JSONObject(json) }.getOrElse { json }
-                    Triple(SUCCESS_STATUS, parsedData, type)
+        /**
+         * Success message containing credential data.
+         *
+         * @property json JSON string with credential response data.
+         * @property type Request type that succeeded.
+         */
+        class Success(val json: String, override val type: String) : ReplyMessage() {
+            override val status = SUCCESS_STATUS
+            override val data: JSONObject = runCatching { JSONObject(json) }.getOrElse { JSONObject() }
+        }
+
+        /**
+         * Error message with DOMException details.
+         *
+         * @property domExceptionMessage Error description.
+         * @property domExceptionName DOMException name per W3C spec.
+         * @property type Request type that failed.
+         */
+        class Error(
+            private val domExceptionMessage: String,
+            private val domExceptionName: String = DOM_EXCEPTION_NOT_ALLOWED_ERROR,
+            override val type: String) : ReplyMessage(){
+            override val status = ERROR_STATUS
+            override val data: JSONObject
+                get() {
+                    return JSONObject().apply {
+                        put(DOM_EXCEPTION_MESSAGE_KEY, domExceptionMessage)
+                        put(DOM_EXCEPTION_NAME_KEY, domExceptionName)
+                    }
                 }
-                is Error -> Triple(ERROR_STATUS, errorMessage, type)
-            }
-            return JSONArray(listOf(status, data, typeValue)).toString()
+        }
+
+        /** Serializes the message to JSON string. */
+        override fun toString(): String {
+            return JSONObject().apply {
+                put(STATUS_KEY, status)
+                put(DATA_KEY, data)
+                put(TYPE_KEY, type)
+            }.toString()
         }
     }
 
-
-
+    /**
+     * Posts a success message with credential data.
+     *
+     * @param json JSON string containing the credential response.
+     */
     fun postSuccess(json: String) {
         val methodTag = "$TAG:postSuccess"
-        val message = ReplyMessage.Success(json, requestType)
-        send(message)
+        send(ReplyMessage.Success(json, requestType))
         Logger.info(methodTag, "RequestType: $requestType, was successful.")
     }
 
+    /**
+     * Posts an error message with a custom error description.
+     *
+     * @param errorMessage Error description to send.
+     */
     fun postError(errorMessage: String) {
-        val methodTag = "$TAG:postError"
-        val message = ReplyMessage.Error(errorMessage, requestType)
-        send(message)
-        Logger.error(methodTag, "RequestType: $requestType, failed with error: $errorMessage", null)
-
+        postErrorInternal(
+            ReplyMessage.Error(domExceptionMessage = errorMessage, type = requestType)
+        )
     }
 
+    /**
+     * Posts an error message based on a thrown exception.
+     *
+     * Maps credential exceptions to appropriate DOMException types.
+     *
+     * @param throwable Exception to convert and send.
+     */
     fun postError(throwable: Throwable) {
-        val methodTag = "$TAG:postError"
-        val  errorMessage = throwable.message ?: "Unknown error"
-        val message = ReplyMessage.Error(errorMessage , requestType)
-        send(message)
-        Logger.error(methodTag, "RequestType: $requestType, failed with error: $errorMessage", throwable)
+        postErrorInternal(throwableToErrorMessage(throwable))
     }
 
+    /**
+     * Internal method to send error messages and log them.
+     */
+    private fun postErrorInternal(errorMessage: ReplyMessage.Error) {
+        val methodTag = "$TAG:postError"
+        send(errorMessage)
+        Logger.error(methodTag, "RequestType: $requestType, failed with error: $errorMessage", null)
+    }
 
-    //@SuppressLint("RequiresFeature", "OldTargetApi")
+    /**
+     * Maps credential exceptions to DOMException error messages.
+     *
+     * Conversion table:
+     * - Cancellation/No credential → NotAllowedError
+     * - Interruption → AbortError
+     * - Configuration → NotSupportedError
+     * - Unknown → UnknownError
+     *
+     * @param throwable Exception to map.
+     * @return Error message with appropriate DOMException details.
+     */
+    private fun throwableToErrorMessage(throwable: Throwable): ReplyMessage.Error {
+        val errorMessage = throwable.message ?: "Unknown error (empty message)"
+
+        val exceptionName = when (throwable) {
+            // Cancellation exceptions - User cancelled
+            is CreateCredentialCancellationException,
+            is GetCredentialCancellationException,
+            is NoCredentialException -> DOM_EXCEPTION_NOT_ALLOWED_ERROR
+
+            // Interruption exceptions - Operation aborted
+            is CreateCredentialInterruptedException,
+            is GetCredentialInterruptedException -> DOM_EXCEPTION_ABORT_ERROR
+
+            // Provider configuration exceptions - Not supported
+            is CreateCredentialProviderConfigurationException,
+            is GetCredentialProviderConfigurationException -> DOM_EXCEPTION_NOT_SUPPORTED_ERROR
+
+            // Unknown exceptions
+            is CreateCredentialUnknownException,
+            is GetCredentialUnknownException -> DOM_EXCEPTION_UNKNOWN_ERROR
+
+            // Default case for other exceptions
+            else -> DOM_EXCEPTION_NOT_ALLOWED_ERROR
+        }
+
+        return ReplyMessage.Error(
+            domExceptionMessage = errorMessage,
+            domExceptionName = exceptionName,
+            type = requestType
+        )
+    }
+
+    /**
+     * Sends a message to JavaScript via the reply proxy.
+     */
+    @SuppressLint("RequiresFeature", "Only called when feature is available")
     private fun send(message: ReplyMessage) {
         val methodTag = "$TAG:send"
         try {

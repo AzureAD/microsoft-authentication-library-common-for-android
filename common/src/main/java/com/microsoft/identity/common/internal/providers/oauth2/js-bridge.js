@@ -75,13 +75,12 @@ var __webauthn_hooks__;
     function onReply(msg) {
         console.log(msg.data);
         var reply = JSON.parse(msg.data);
-        var type = reply[2];
-        if(type === "get") {
+        if(reply.type === "get") {
             onReplyGet(reply);
-        } else if (type === "create") {
+        } else if (reply.type === "create") {
             onReplyCreate(reply);
         } else {
-            console.log("Incorrect response format for reply");
+            console.log("Incorrect response format for reply: " + reply.type);
         }
     }
 
@@ -92,14 +91,14 @@ var __webauthn_hooks__;
                     " and reject: " + pendingRejectCreate);
             return;
         }
-        if (reply[0] != 'success') {
+        if (reply.status != 'success') {
             var reject = pendingRejectGet;
             pendingResolveGet = null;
             pendingRejectGet = null;
-            reject(new DOMException(reply[1], "NotAllowedError"));
+            reject(new DOMException(reply.data.domExceptionMessage, reply.data.domExceptionName));
             return;
         }
-        var cred = credentialManagerDecode(reply[1]);
+        var cred = credentialManagerDecode(reply.data);
         var resolve = pendingResolveGet;
         pendingResolveGet = null;
         pendingRejectGet = null;
@@ -131,14 +130,14 @@ var __webauthn_hooks__;
             return;
         }
 
-        if (reply[0] != 'success') {
+        if (reply.status != 'success') {
             var reject = pendingRejectCreate;
             pendingResolveCreate = null;
             pendingRejectCreate = null;
-            reject(new DOMException(reply[1], "NotAllowedError"));
+            reject(new DOMException(reply.data.domExceptionMessage, reply.data.domExceptionName));
             return;
         }
-        var cred = credentialManagerDecode(reply[1]);
+        var cred = credentialManagerDecode(reply.data);
         var resolve = pendingResolveCreate;
         pendingResolveCreate = null;
         pendingRejectCreate = null;
