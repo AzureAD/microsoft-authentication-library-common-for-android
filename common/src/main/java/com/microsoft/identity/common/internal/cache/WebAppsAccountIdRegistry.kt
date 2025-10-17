@@ -37,9 +37,24 @@ import com.microsoft.identity.common.logging.Logger
 class WebAppsAccountIdRegistry private constructor(
     private val storage: IMultiTypeNameValueStorage
 ){
-    private val TAG = WebAppsAccountIdRegistry::class.java.simpleName
-    private val MAP_JSON_KEY = "MapJsonKey"
     private val lock = Any()
+
+    companion object {
+        private val TAG = WebAppsAccountIdRegistry::class.java.simpleName
+        private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
+        private const val MAP_JSON_KEY = "MapJsonKey"
+
+        /**
+         * Factory method to create an instance of [WebAppsAccountIdRegistry].
+         *
+         * @param supplier The storage supplier.
+         * @return A new instance of [WebAppsAccountIdRegistry].
+         */
+        fun create(supplier: IStorageSupplier): WebAppsAccountIdRegistry {
+            val store = supplier.getEncryptedFileStore(WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY)
+            return WebAppsAccountIdRegistry(store)
+        }
+    }
 
     @Volatile
     private var cache: MutableMap<String, MutableSet<String>>? = null
@@ -165,21 +180,6 @@ class WebAppsAccountIdRegistry private constructor(
     fun getAll(): Map<String, Set<String>> {
         synchronized(lock) {
             return load().mapValues { it.value.toSet() }
-        }
-    }
-
-    companion object {
-        private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
-
-        /**
-         * Factory method to create an instance of [WebAppsAccountIdRegistry].
-         *
-         * @param supplier The storage supplier.
-         * @return A new instance of [WebAppsAccountIdRegistry].
-         */
-        fun create(supplier: IStorageSupplier): WebAppsAccountIdRegistry {
-            val store = supplier.getEncryptedFileStore(WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY)
-            return WebAppsAccountIdRegistry(store)
         }
     }
 }
