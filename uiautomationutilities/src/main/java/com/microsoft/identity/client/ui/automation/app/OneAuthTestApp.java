@@ -83,13 +83,13 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            CommonUtils.grantPackagePermission();
-        } else {
-            // On later apis the permission prompt is different, we handle the button by text
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            // On later apis there is an extra permission prompt, we handle the button by text
             UiAutomatorUtils.handleButtonClickForObjectWithText("Allow access to manage all files");
             UiAutomatorUtils.pressBack();
         }
+
+        CommonUtils.grantPackagePermission();
 
         // Because switching the App Configuration will decide whether to truly enable the Broker,
         // it's essential to turn on the Broker beforehand.
