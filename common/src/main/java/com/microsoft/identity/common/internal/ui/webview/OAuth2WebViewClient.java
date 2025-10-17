@@ -31,6 +31,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -216,6 +217,28 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         // Once web view is fully loaded,set to visible
         view.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * We received an ANR bug report from LTW, where webview crashing would cause the calling application to crash as well,
+     * because Broker was not handling the crash and packaging it into an exception
+     *
+     * Overriding this method allows us to do that and send an error gracefully to the callback object when the render process is gone.
+     * @param view webview in question
+     * @param detail minor details about the render process being lost
+     * @return whether or not we handled the crash
+     */
+    @Override
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        // Handle render process crash
+        // TODO: is there an errorCode that makes more sense in this spot? We aren't actually getting anything back from webView, we have to come up with it ourselves
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            sendErrorToCallback(view, 0, "WebView render process gone, crahsd? : " + detail.didCrash());
+        } else {
+            sendErrorToCallback(view, 0, "WebView render process gone.");
+        }
+
+        return true; // Indicate we handled the crash
     }
 
     @Override
