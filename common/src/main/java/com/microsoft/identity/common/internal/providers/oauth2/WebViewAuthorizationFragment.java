@@ -542,9 +542,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Downgrade to auth only
                 mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
             }
-            //TEMPORARRY CHANGE
-            mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
-
         } else {
             Logger.warn(methodTag, "Passkey protocol header not found or not for both auth and reg." +
                     " Not hooking the PasskeyWebListener.");
