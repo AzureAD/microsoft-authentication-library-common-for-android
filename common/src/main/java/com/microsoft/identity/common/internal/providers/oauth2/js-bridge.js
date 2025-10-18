@@ -1,6 +1,26 @@
-// This is the JS that is injected into the web.
-// Modifying this will modify the communication between the phone app and the
-// web app.
+// filepath: c:\repos\android-complete\common\common\src\main\java\com\microsoft\identity\common\internal\providers\oauth2\js-bridge.js
+//
+// WebAuthn JavaScript Bridge for Android Credential Manager
+//
+// This JavaScript code is injected into WebViews to intercept WebAuthn API calls
+// (navigator.credentials.create/get) and bridge them to the Android Credential Manager.
+// It handles the communication protocol between the web page and the native Android code.
+//
+// ⚠️ IMPORTANT: MINIFICATION REQUIRED ⚠️
+// Any modifications to this file MUST be minified and the minified output MUST be
+// updated in PasskeyWebListener.kt in the constant WEB_AUTHN_INTERFACE_JS_MINIFIED.
+//
+// Steps to update:
+// 1. Make changes to this file (js-bridge.js)
+// 2. Minify the code using a JavaScript minifier (e.g., https://www.toptal.com/developers/javascript-minifier, https://minify-js.com/)
+// 3. Update the WEB_AUTHN_INTERFACE_JS_MINIFIED constant in PasskeyWebListener.kt
+// 4. Test thoroughly to ensure the minified version works correctly
+//
+// Failure to update the minified version will result in the changes NOT being
+// reflected in the actual WebView injection.
+//
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 var __webauthn_interface__;
 var __webauthn_hooks__;
 (function (__webauthn_hooks__) {
