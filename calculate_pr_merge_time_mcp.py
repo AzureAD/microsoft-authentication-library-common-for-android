@@ -118,8 +118,7 @@ class PRMergeTimeCalculator:
                 pr_details.append({
                     "number": pr["number"],
                     "title": pr["title"],
-                    "merge_time_hours": merge_time,
-                    "author": pr.get("user", {}).get("login", "unknown")
+                    "merge_time_hours": merge_time
                 })
         
         if not merge_times:
