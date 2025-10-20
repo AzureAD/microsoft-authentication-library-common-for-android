@@ -170,7 +170,7 @@ class PRMergeTimeCalculator:
         print("\n" + "=" * 80)
         
         # Show sample PRs
-        print("\nSample of Analyzed Pull Requests:")
+        print("\nFastest Merged Pull Requests:")
         print("-" * 80)
         for pr in sorted(stats['pr_details'], key=lambda x: x['merge_time_hours'])[:10]:
             print(f"  PR #{pr['number']}: {self.format_duration(pr['merge_time_hours'])}")
