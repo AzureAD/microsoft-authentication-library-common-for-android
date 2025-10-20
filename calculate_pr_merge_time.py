@@ -180,7 +180,7 @@ class PRMergeTimeCalculator:
         
         for pr in merged_prs:
             merge_time = self.calculate_merge_time(pr)
-            if merge_time is not None:
+            if merge_time is not None and merge_time >= 0:
                 merge_times.append(merge_time)
                 pr_details.append({
                     "number": pr["number"],
