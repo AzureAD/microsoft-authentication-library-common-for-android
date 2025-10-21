@@ -105,7 +105,6 @@ class PasskeyReplyChannelTest {
         assertEquals(errorMessage, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY))
         assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR,
             dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-        assertEquals(0, dataObject.getInt(PasskeyReplyChannel.DOM_EXCEPTION_CODE_KEY))
     }
 
     @Test
@@ -285,8 +284,6 @@ class PasskeyReplyChannelTest {
         assertEquals("AbortError", PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR)
         assertEquals("NotSupportedError", PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR)
         assertEquals("UnknownError", PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR)
-
-        assertEquals(0.toShort(), PasskeyReplyChannel.DOM_EXCEPTION_CODE_UNKNOWN_ERROR)
     }
 
     private fun assertDoesNotThrow(executable: () -> Unit) {

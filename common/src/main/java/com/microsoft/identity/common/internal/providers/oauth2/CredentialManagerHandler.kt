@@ -30,8 +30,6 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPublicKeyCredentialOption
-import androidx.credentials.exceptions.CreateCredentialException
-import androidx.credentials.exceptions.GetCredentialException
 import com.microsoft.identity.common.logging.Logger
 
 class CredentialManagerHandler(private val activity: Activity) {
@@ -52,14 +50,8 @@ class CredentialManagerHandler(private val activity: Activity) {
         val methodTag = "$TAG:createPasskey"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val createRequest = CreatePublicKeyCredentialRequest(request)
-            try {
-                return (mCredMan.createCredential(activity, createRequest) as CreatePublicKeyCredentialResponse).also {
-                    Logger.info(methodTag, "Passkey created successfully.")
-                }
-            } catch (e: CreateCredentialException) {
-                // For error handling use guidance from https://developer.android.com/training/sign-in/passkeys
-                Logger.error(TAG, "Error creating credential: ErrMessage: ${e.errorMessage}, ErrType: ${e.type}", e)
-                throw e
+            return (mCredMan.createCredential(activity, createRequest) as CreatePublicKeyCredentialResponse).also {
+                Logger.info(methodTag, "Passkey created successfully.")
             }
         } else {
             Logger.warn(methodTag, "Passkey creation is not supported on Android versions below 9 (Pie). Current version: ${Build.VERSION.SDK_INT}")
@@ -76,14 +68,8 @@ class CredentialManagerHandler(private val activity: Activity) {
     suspend fun getPasskey(request: String): GetCredentialResponse {
         val methodTag = "$TAG:getPasskey"
         val getRequest = GetCredentialRequest(listOf(GetPublicKeyCredentialOption(request)))
-        try {
             return mCredMan.getCredential(activity, getRequest).also {
                 Logger.info(methodTag, "Passkey retrieved successfully.")
             }
-        } catch (e: GetCredentialException) {
-            // For error handling use guidance from https://developer.android.com/training/sign-in/passkeys
-            Logger.error(TAG, "Error retrieving credential: ${e.message}", e)
-            throw e
-        }
     }
 }
