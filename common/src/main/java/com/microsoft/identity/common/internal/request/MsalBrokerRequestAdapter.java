@@ -232,6 +232,24 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return requestBundle;
     }
 
+    public @NonNull Bundle getRequestBundleForAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters,
+                                                  @NonNull final String negotiatedBrokerProtocolVersion) {
+
+        final Bundle bundle = new Bundle();
+        bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        if (parameters.getRequestAuthority() != null) {
+            bundle.putString(AuthenticationConstants.Broker.REQUEST_AUTHORITY, parameters.getRequestAuthority());
+        }
+        if (parameters.getSsoUrl() != null) {
+            bundle.putString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY, parameters.getSsoUrl());
+        }
+        if (parameters.getCorrelationId() != null) {
+            bundle.putString(AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
+        }
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, parameters.getRequiredBrokerProtocolVersion());
+        return bundle;
+    }
+
     /**
      * Method to construct a request bundle for broker hello request.
      *
