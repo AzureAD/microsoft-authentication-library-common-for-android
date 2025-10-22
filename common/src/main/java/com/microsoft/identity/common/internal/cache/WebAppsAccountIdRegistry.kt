@@ -27,6 +27,9 @@ import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * A registry that maps account IDs to sets of web app client IDs.
@@ -37,12 +40,13 @@ import com.microsoft.identity.common.logging.Logger
 class WebAppsAccountIdRegistry private constructor(
     private val storage: IMultiTypeNameValueStorage
 ){
-    private val lock = Any()
-
     companion object {
         private val TAG = WebAppsAccountIdRegistry::class.java.simpleName
         private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
         private const val MAP_JSON_KEY = "MapJsonKey"
+        private val rwLock = ReentrantReadWriteLock()
+        @Volatile
+        private var cache: MutableMap<String, MutableSet<String>>? = null
 
         /**
          * Factory method to create an instance of [WebAppsAccountIdRegistry].
@@ -55,9 +59,6 @@ class WebAppsAccountIdRegistry private constructor(
             return WebAppsAccountIdRegistry(store)
         }
     }
-
-    @Volatile
-    private var cache: MutableMap<String, MutableSet<String>>? = null
 
     // So we can more easily serialize/deserialize the entire map.
     private data class Container(
@@ -105,7 +106,7 @@ class WebAppsAccountIdRegistry private constructor(
      * @param clientId The client ID to add.
      */
     fun addClient(accountId: String, clientId: String) {
-        synchronized(lock) {
+        rwLock.write {
             val map = load()
             val set = map.getOrPut(accountId) { mutableSetOf() }
             if (set.add(clientId)) save(map)
@@ -120,7 +121,7 @@ class WebAppsAccountIdRegistry private constructor(
      * @param clientId The client ID to remove.
      */
     fun removeClient(accountId: String, clientId: String) {
-        synchronized(lock) {
+        rwLock.write {
             val map = load()
             val set = map[accountId] ?: return
             if (set.remove(clientId)) {
@@ -136,9 +137,9 @@ class WebAppsAccountIdRegistry private constructor(
      * @return A set of client IDs associated with the account ID, or an empty set if none exist.
      */
     fun getClients(accountId: String): Set<String> {
-        synchronized(lock) {
+        return rwLock.read {
             val map = load()
-            return map[accountId]?.toSet() ?: emptySet()
+            map[accountId]?.toSet() ?: emptySet()
         }
     }
 
@@ -149,9 +150,9 @@ class WebAppsAccountIdRegistry private constructor(
      * @return True if the client ID is associated with the account ID, false otherwise.
      */
     fun contains(accountId: String, clientId: String): Boolean {
-        synchronized(lock) {
+        return rwLock.read {
             val map = load()
-            return map[accountId]?.contains(clientId) == true
+            map[accountId]?.contains(clientId) == true
         }
     }
 
@@ -159,7 +160,7 @@ class WebAppsAccountIdRegistry private constructor(
      * Remove the given account ID and all its associated client IDs from the registry.
      */
     fun removeAccount(accountId: String) {
-        synchronized(lock) {
+        rwLock.write {
             val map = load()
             if (map.remove(accountId) != null) save(map)
         }
@@ -170,7 +171,7 @@ class WebAppsAccountIdRegistry private constructor(
      * This is useful for testing or if the underlying storage may have changed externally.
      */
     fun refresh() {
-        synchronized(lock) {
+        rwLock.write {
             cache = null
             load()
         }
@@ -178,7 +179,7 @@ class WebAppsAccountIdRegistry private constructor(
 
     @VisibleForTesting
     fun getAll(): Map<String, Set<String>> {
-        synchronized(lock) {
+        rwLock.read {
             return load().mapValues { it.value.toSet() }
         }
     }
