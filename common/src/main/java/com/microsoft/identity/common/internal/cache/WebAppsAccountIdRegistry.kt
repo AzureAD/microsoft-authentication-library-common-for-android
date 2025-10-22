@@ -22,12 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache
 
-import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.logging.Logger
-import com.squareup.moshi.Json
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
