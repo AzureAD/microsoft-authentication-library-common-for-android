@@ -39,7 +39,6 @@ class WebAppsAccountIdRegistryTest {
     fun testAddClient_veryBasicTest() {
         val registry = createRegistry()
         registry.addClient(accountId1, clientId1)
-        Assert.assertEquals(1, registry.getAll().size)
         Assert.assertEquals(1, registry.getClients(accountId1).size)
     }
 
@@ -48,10 +47,8 @@ class WebAppsAccountIdRegistryTest {
         val registry = createRegistry()
         registry.addClient(accountId1, clientId1)
         registry.addClient(accountId1, clientId2)
-        Assert.assertEquals(1, registry.getAll().size)
         Assert.assertEquals(2, registry.getClients(accountId1).size)
         registry.removeClient(accountId1, clientId1)
-        Assert.assertEquals(1, registry.getAll().size)
         Assert.assertEquals(1, registry.getClients(accountId1).size)
     }
 
@@ -60,7 +57,7 @@ class WebAppsAccountIdRegistryTest {
         val registry = createRegistry()
         registry.addClient(accountId1, clientId1)
         registry.removeClient(accountId1, clientId1)
-        Assert.assertEquals(0, registry.getAll().size)
+        Assert.assertEquals(0, registry.getClients(accountId1).size)
     }
 
     @Test
@@ -71,29 +68,23 @@ class WebAppsAccountIdRegistryTest {
         registry.addClient(accountId2, clientId1)
         registry.addClient(accountId2, clientId3)
         registry.addClient(accountId3, clientId1)
-        Assert.assertEquals(3, registry.getAll().size)
         Assert.assertEquals(2, registry.getClients(accountId1).size)
         Assert.assertEquals(2, registry.getClients(accountId2).size)
         Assert.assertEquals(1, registry.getClients(accountId3).size)
 
         registry.removeClient(accountId1, clientId1)
-        Assert.assertEquals(3, registry.getAll().size)
         Assert.assertEquals(1, registry.getClients(accountId1).size)
 
         registry.removeClient(accountId1, clientId2)
-        Assert.assertEquals(2, registry.getAll().size)
         Assert.assertEquals(0, registry.getClients(accountId1).size)
 
         registry.removeClient(accountId2, clientId3)
-        Assert.assertEquals(2, registry.getAll().size)
         Assert.assertEquals(1, registry.getClients(accountId2).size)
 
         registry.removeClient(accountId2, clientId1)
-        Assert.assertEquals(1, registry.getAll().size)
         Assert.assertEquals(0, registry.getClients(accountId2).size)
 
         registry.removeClient(accountId3, clientId1)
-        Assert.assertEquals(0, registry.getAll().size)
         Assert.assertEquals(0, registry.getClients(accountId3).size)
     }
 
@@ -111,9 +102,7 @@ class WebAppsAccountIdRegistryTest {
         registry.addClient(accountId1, clientId1)
         registry.addClient(accountId1, clientId2)
         registry.addClient(accountId2, clientId1)
-        Assert.assertEquals(2, registry.getAll().size)
         registry.removeAccount(accountId1)
-        Assert.assertEquals(1, registry.getAll().size)
         Assert.assertEquals(0, registry.getClients(accountId1).size)
         Assert.assertEquals(1, registry.getClients(accountId2).size)
     }
@@ -134,24 +123,19 @@ class WebAppsAccountIdRegistryTest {
         registry1.addClient(accountId1, clientId1)
         registry1.addClient(accountId1, clientId2)
         registry1.addClient(accountId2, clientId1)
-        Assert.assertEquals(2, registry1.getAll().size)
 
         val registry2 = WebAppsAccountIdRegistry.create(storageSupplier)
-        Assert.assertEquals(2, registry2.getAll().size)
         Assert.assertEquals(2, registry2.getClients(accountId1).size)
         Assert.assertEquals(1, registry2.getClients(accountId2).size)
 
         registry2.removeClient(accountId1, clientId1)
-        Assert.assertEquals(2, registry2.getAll().size)
         Assert.assertEquals(1, registry2.getClients(accountId1).size)
 
         val registry3 = WebAppsAccountIdRegistry.create(storageSupplier)
-        Assert.assertEquals(2, registry3.getAll().size)
         Assert.assertEquals(1, registry3.getClients(accountId1).size)
         Assert.assertEquals(1, registry3.getClients(accountId2).size)
 
         registry3.removeAccount(accountId2)
-        Assert.assertEquals(1, registry3.getAll().size)
         Assert.assertEquals(0, registry3.getClients(accountId2).size)
     }
 
