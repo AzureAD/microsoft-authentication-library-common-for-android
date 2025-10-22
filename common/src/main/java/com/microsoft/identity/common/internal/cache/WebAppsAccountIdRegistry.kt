@@ -45,8 +45,6 @@ class WebAppsAccountIdRegistry private constructor(
         private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
         private const val MAP_JSON_KEY = "MapJsonKey"
         private val rwLock = ReentrantReadWriteLock()
-        @Volatile
-        private var cache: MutableMap<String, MutableSet<String>>? = null
 
         /**
          * Factory method to create an instance of [WebAppsAccountIdRegistry].
@@ -66,13 +64,12 @@ class WebAppsAccountIdRegistry private constructor(
     )
 
     /**
-     * Load the registry from storage, or return the cached version if already loaded.
+     * Load the registry from storage.
      *
      * @return The current mapping of account IDs to sets of client IDs.
      */
     private fun load(): MutableMap<String, MutableSet<String>> {
         val methodTag = "$TAG:load"
-        cache?.let { return it }
         val raw = storage.getString(MAP_JSON_KEY)
         val map = if (!raw.isNullOrBlank()) {
             try {
@@ -85,7 +82,6 @@ class WebAppsAccountIdRegistry private constructor(
             Logger.info(methodTag, "No existing registry, creating a new one.")
             mutableMapOf()
         }
-        cache = map
         return map
     }
 
@@ -163,17 +159,6 @@ class WebAppsAccountIdRegistry private constructor(
         rwLock.write {
             val map = load()
             if (map.remove(accountId) != null) save(map)
-        }
-    }
-
-    /**
-     * Clear the in-memory cache and reload the registry from storage.
-     * This is useful for testing or if the underlying storage may have changed externally.
-     */
-    fun refresh() {
-        rwLock.write {
-            cache = null
-            load()
         }
     }
 
