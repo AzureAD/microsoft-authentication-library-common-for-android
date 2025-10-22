@@ -31,7 +31,7 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 
 /**
- * A registry that maps account IDs to sets of web app client IDs.
+ * A registry that maps home account IDs to sets of web app client IDs.
  *
  * This is used to track which web applications are associated with which accounts,
  * enabling coordinated sign-out and management of web app sessions.
@@ -85,48 +85,48 @@ class WebAppsAccountIdRegistry private constructor(
     /**
      * Load the account entry from storage.
      *
-     * @param accountId The account ID to load.
+     * @param homeAccountId The home account ID to load.
      * @return A set of client IDs associated with the given account ID. Or an empty set if none exist.
      */
-    private fun loadAccount(accountId: String): MutableSet<String>{
-        return deserializeSet(storage.getString(accountId))
+    private fun loadClientIdsForAccount(homeAccountId: String): MutableSet<String>{
+        return deserializeSet(storage.getString(homeAccountId))
     }
 
     /**
      * Save the account entry to storage.
      *
-     * @param accountId The account ID.
+     * @param homeAccountId The home account ID.
      * @param set The set of client IDs to associate with the account ID.
      */
-    private fun saveAccount(accountId: String, set: Set<String>) {
-        storage.putString(accountId, serializeSet(set))
+    private fun saveAccount(homeAccountId: String, set: Set<String>) {
+        storage.putString(homeAccountId, serializeSet(set))
     }
 
 
     /**
      * Remove the account entry from storage.
      *
-     * @param accountId The account ID to remove.
+     * @param homeAccountId The account ID to remove.
      */
-    private fun removeAccountStorage(accountId: String) {
+    private fun removeAccountStorage(homeAccountId: String) {
         try {
-            storage.remove(accountId)
+            storage.remove(homeAccountId)
         } catch (e: Exception) {
-            storage.putString(accountId, null)
+            storage.putString(homeAccountId, null)
         }
     }
 
     /**
      * Add a client ID to the set associated with the given account ID.
      *
-     * @param accountId The account ID.
+     * @param homeAccountId The account ID.
      * @param clientId The client ID to add.
      */
-    fun addClient(accountId: String, clientId: String) {
+    fun addClient(homeAccountId: String, clientId: String) {
         rwLock.write {
-            val set = loadAccount(accountId)
+            val set = loadClientIdsForAccount(homeAccountId)
             if (set.add(clientId)) {
-                saveAccount(accountId, set)
+                saveAccount(homeAccountId, set)
             }
         }
     }
@@ -134,54 +134,54 @@ class WebAppsAccountIdRegistry private constructor(
      * Remove a client ID from the set associated with the given account ID.
      * If the set becomes empty after removal, the account ID is also removed from the registry.
      *
-     * @param accountId The account ID.
+     * @param homeAccountId The account ID.
      * @param clientId The client ID to remove.
      */
-    fun removeClient(accountId: String, clientId: String) {
+    fun removeClient(homeAccountId: String, clientId: String) {
         rwLock.write {
-            val set = loadAccount(accountId)
+            val set = loadClientIdsForAccount(homeAccountId)
             if (!set.remove(clientId)) return
             if (set.isEmpty()) {
-                removeAccountStorage(accountId)
+                removeAccountStorage(homeAccountId)
             } else {
-                saveAccount(accountId, set)
+                saveAccount(homeAccountId, set)
             }
         }
     }
 
     /** Get the set of client IDs associated with the given account ID.
      *
-     * @param accountId The account ID.
+     * @param homeAccountId The account ID.
      * @return A set of client IDs associated with the account ID, or an empty set if none exist.
      */
-    fun getClients(accountId: String): Set<String> {
+    fun getClients(homeAccountId: String): Set<String> {
         return rwLock.read {
-            loadAccount(accountId).toSet()
+            loadClientIdsForAccount(homeAccountId).toSet()
         }
     }
 
     /** Check if the registry contains the given client ID for the specified account ID.
      *
-     * @param accountId The account ID.
+     * @param homeAccountId The account ID.
      * @param clientId The client ID to check for.
      * @return True if the client ID is associated with the account ID, false otherwise.
      */
-    fun contains(accountId: String, clientId: String): Boolean {
+    fun contains(homeAccountId: String, clientId: String): Boolean {
         return rwLock.read {
-            loadAccount(accountId).contains(clientId)
+            loadClientIdsForAccount(homeAccountId).contains(clientId)
         }
     }
 
     /**
      * Remove the given account ID and all its associated client IDs from the registry.
      *
-     * @param accountId The account ID to remove.
+     * @param homeAccountId The account ID to remove.
      */
-    fun removeAccount(accountId: String) {
+    fun removeAccount(homeAccountId: String) {
         rwLock.write {
-            val set = loadAccount(accountId)
+            val set = loadClientIdsForAccount(homeAccountId)
             if (set.isEmpty()) return
-            removeAccountStorage(accountId)
+            removeAccountStorage(homeAccountId)
         }
     }
 }
