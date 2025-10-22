@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.logging.Logger
+import com.squareup.moshi.Json
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -43,7 +44,6 @@ class WebAppsAccountIdRegistry private constructor(
     companion object {
         private val TAG = WebAppsAccountIdRegistry::class.java.simpleName
         private const val WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY = "WebAppsAccountIdRegistryStorageKey"
-        private const val MAP_JSON_KEY = "MapJsonKey"
         private val rwLock = ReentrantReadWriteLock()
 
         /**
@@ -58,41 +58,64 @@ class WebAppsAccountIdRegistry private constructor(
         }
     }
 
-    // So we can more easily serialize/deserialize the entire map.
-    private data class Container(
-        val accounts: MutableMap<String, MutableSet<String>> = mutableMapOf()
-    )
-
     /**
-     * Load the registry from storage.
+     * Deserialize a JSON string into a set of client IDs.
      *
-     * @return The current mapping of account IDs to sets of client IDs.
+     * @param raw The JSON string to deserialize.
+     * @return A mutable set of client IDs.
      */
-    private fun load(): MutableMap<String, MutableSet<String>> {
-        val methodTag = "$TAG:load"
-        val raw = storage.getString(MAP_JSON_KEY)
-        val map = if (!raw.isNullOrBlank()) {
-            try {
-                ObjectMapper.deserializeJsonStringToObject(raw, Container::class.java).accounts
-            } catch (e: Exception) {
-                Logger.warn(methodTag, "Failed to deserialize existing registry: ${e.message}.")
-                mutableMapOf()
-            }
-        } else {
-            Logger.info(methodTag, "No existing registry, creating a new one.")
-            mutableMapOf()
+    private fun deserializeSet(raw: String?): MutableSet<String> {
+        if (raw.isNullOrBlank()) return mutableSetOf()
+        return try {
+            ObjectMapper.deserializeJsonStringToObject(raw, Array<String>::class.java).toMutableSet()
+        } catch (e: Exception) {
+            Logger.warn(TAG, "Failed to deserialize set: ${e.message}")
+            mutableSetOf()
         }
-        return map
     }
 
     /**
-     * Save the current registry state to storage.
+     * Serialize the set of client IDs to a JSON string.
      *
-     * @param current The mapping of account IDs to sets of client IDs to save.
+     * @param set The set of client IDs to serialize.
+     * @return The JSON string representation of the set.
      */
-    private fun save(current: Map<String, MutableSet<String>>) {
-        val json = ObjectMapper.serializeObjectToJsonString(Container(current.toMutableMap()))
-        storage.putString(MAP_JSON_KEY, json)
+    private fun serializeSet(set: Set<String>): String {
+        return ObjectMapper.serializeObjectToJsonString(set)
+    }
+
+    /**
+     * Load the account entry from storage.
+     *
+     * @param accountId The account ID to load.
+     * @return A set of client IDs associated with the given account ID. Or an empty set if none exist.
+     */
+    private fun loadAccount(accountId: String): MutableSet<String>{
+        return deserializeSet(storage.getString(accountId))
+    }
+
+    /**
+     * Save the account entry to storage.
+     *
+     * @param accountId The account ID.
+     * @param set The set of client IDs to associate with the account ID.
+     */
+    private fun saveAccount(accountId: String, set: Set<String>) {
+        storage.putString(accountId, serializeSet(set))
+    }
+
+
+    /**
+     * Remove the account entry from storage.
+     *
+     * @param accountId The account ID to remove.
+     */
+    private fun removeAccountStorage(accountId: String) {
+        try {
+            storage.remove(accountId)
+        } catch (e: Exception) {
+            storage.putString(accountId, null)
+        }
     }
 
     /**
@@ -103,12 +126,12 @@ class WebAppsAccountIdRegistry private constructor(
      */
     fun addClient(accountId: String, clientId: String) {
         rwLock.write {
-            val map = load()
-            val set = map.getOrPut(accountId) { mutableSetOf() }
-            if (set.add(clientId)) save(map)
+            val set = loadAccount(accountId)
+            if (set.add(clientId)) {
+                saveAccount(accountId, set)
+            }
         }
     }
-
     /**
      * Remove a client ID from the set associated with the given account ID.
      * If the set becomes empty after removal, the account ID is also removed from the registry.
@@ -118,11 +141,12 @@ class WebAppsAccountIdRegistry private constructor(
      */
     fun removeClient(accountId: String, clientId: String) {
         rwLock.write {
-            val map = load()
-            val set = map[accountId] ?: return
-            if (set.remove(clientId)) {
-                if (set.isEmpty()) map.remove(accountId)
-                save(map)
+            val set = loadAccount(accountId)
+            if (!set.remove(clientId)) return
+            if (set.isEmpty()) {
+                removeAccountStorage(accountId)
+            } else {
+                saveAccount(accountId, set)
             }
         }
     }
@@ -134,8 +158,7 @@ class WebAppsAccountIdRegistry private constructor(
      */
     fun getClients(accountId: String): Set<String> {
         return rwLock.read {
-            val map = load()
-            map[accountId]?.toSet() ?: emptySet()
+            loadAccount(accountId).toSet()
         }
     }
 
@@ -147,25 +170,20 @@ class WebAppsAccountIdRegistry private constructor(
      */
     fun contains(accountId: String, clientId: String): Boolean {
         return rwLock.read {
-            val map = load()
-            map[accountId]?.contains(clientId) == true
+            loadAccount(accountId).contains(clientId)
         }
     }
 
     /**
      * Remove the given account ID and all its associated client IDs from the registry.
+     *
+     * @param accountId The account ID to remove.
      */
     fun removeAccount(accountId: String) {
         rwLock.write {
-            val map = load()
-            if (map.remove(accountId) != null) save(map)
-        }
-    }
-
-    @VisibleForTesting
-    fun getAll(): Map<String, Set<String>> {
-        rwLock.read {
-            return load().mapValues { it.value.toSet() }
+            val set = loadAccount(accountId)
+            if (set.isEmpty()) return
+            removeAccountStorage(accountId)
         }
     }
 }
