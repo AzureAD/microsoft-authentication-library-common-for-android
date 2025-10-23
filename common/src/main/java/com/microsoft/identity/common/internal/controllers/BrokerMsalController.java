@@ -1368,17 +1368,17 @@ public class BrokerMsalController extends BaseController {
     /**
      * Get supported web app contracts from broker.
      *
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
      * @throws BaseException
      */
-    public String getSupportedWebAppContracts() throws BaseException {
-        final String requiredProtocolVersionForWebApps = "19.0";
+    public String getSupportedWebAppContracts(@NonNull final String minBrokerProtocolVersion) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
 
                     @Override
                     public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, requiredProtocolVersionForWebApps);
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
                     }
 
                     @NonNull
@@ -1387,7 +1387,7 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(
                                 BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_GET_SUPPORTED_WEB_APPS_CONTRACTS,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForGetSupportedWebAppContracts(negotiatedBrokerProtocolVersion)
+                                mRequestAdapter.getRequestBundleForGetSupportedWebAppContracts(negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
                         );
                     }
 
@@ -1398,7 +1398,7 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
-                        verifyBrokerVersionIsSupported(resultBundle, requiredProtocolVersionForWebApps);
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
                         return mResultAdapter.getSupportedWebAppsContractFromBundle(resultBundle);
                     }
 
@@ -1425,17 +1425,18 @@ public class BrokerMsalController extends BaseController {
      * Execute web app request in broker.
      *
      * @param request request string
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
      * @throws BaseException
      */
-    public String executeWebAppRequest(@NonNull final String request) throws BaseException {
-        final String requiredProtocolVersionForWebApps = "19.0";
+    public String executeWebAppRequest(@NonNull final String request,
+                                       @NonNull final String minBrokerProtocolVersion) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
 
                     @Override
                     public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, requiredProtocolVersionForWebApps);
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
                     }
 
                     @NonNull
@@ -1444,7 +1445,7 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(
                                 BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(request, negotiatedBrokerProtocolVersion)
+                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(request,negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
                         );
                     }
 
@@ -1454,7 +1455,7 @@ public class BrokerMsalController extends BaseController {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
-                        verifyBrokerVersionIsSupported(resultBundle, requiredProtocolVersionForWebApps);
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
                         return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                     }
 

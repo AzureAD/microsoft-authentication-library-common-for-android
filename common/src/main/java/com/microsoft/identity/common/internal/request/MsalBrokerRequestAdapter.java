@@ -586,10 +586,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      *
      * @return request Bundle
      */
-    public @NonNull Bundle getRequestBundleForGetSupportedWebAppContracts(@NonNull final String negotiatedBrokerProtocolVersion) {
+    public @NonNull Bundle getRequestBundleForGetSupportedWebAppContracts(@NonNull final String negotiatedBrokerProtocolVersion,
+                                                                          @NonNull final String requiredBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, "19.0");
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, requiredBrokerProtocolVersion);
         return requestBundle;
     }
 
@@ -597,14 +598,17 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Method to construct a request bundle for broker executeWebAppRequest request.
      *
      * @param request                      input request
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @param requiredBrokerProtocolVersion protocol version required by the client.
      * @return request Bundle
      */
     public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
-                                                          @NonNull final String negotiatedBrokerProtocolVersion) {
+                                                          @NonNull final String negotiatedBrokerProtocolVersion,
+                                                          @NonNull final String requiredBrokerProtocolVersion) {
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         bundle.putString(BROKER_WEB_APPS_REQUEST, request);
-        addRequiredBrokerProtocolVersionToRequestBundle(bundle,"19.0");
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
         return bundle;
     }
 
