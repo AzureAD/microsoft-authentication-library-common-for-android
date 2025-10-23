@@ -233,7 +233,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         // Handle render process crash
         // TODO: is there an errorCode that makes more sense in this spot? We aren't actually getting anything back from webView, we have to come up with it ourselves
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            sendErrorToCallback(view, 0, "WebView render process gone, crahsd? : " + detail.didCrash());
+            sendErrorToCallback(view, 0, "WebView render process gone, crashed? : " + detail.didCrash());
         } else {
             sendErrorToCallback(view, 0, "WebView render process gone.");
         }
