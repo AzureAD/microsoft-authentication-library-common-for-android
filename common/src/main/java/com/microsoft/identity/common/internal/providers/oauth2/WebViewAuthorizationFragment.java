@@ -541,19 +541,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return;
         }
 
-        if (requestHeaders.containsKey(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME)) {
-            Logger.verbose(methodTag, "Passkey protocol header already exists in request headers  "
-                    + requestHeaders.get(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME));
-            return;
+        if (isBrokerRequest){
+            final boolean isPasskeyRegistrationFlightEnabled =  CommonFlightsManager.INSTANCE
+                    .getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_REGISTRATION);
+            final String passkeyProtocolHeaderValue = isPasskeyRegistrationFlightEnabled
+                    ? FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG
+                    : FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY;
+            Logger.verbose(methodTag, "Injecting Passkey protocol header for broker request: "
+                    + passkeyProtocolHeaderValue);
+            requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, passkeyProtocolHeaderValue);
+        } else {
+            if (requestHeaders.containsKey(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME)) {
+                Logger.verbose(methodTag, "Passkey protocol header already exists in request headers  "
+                        + requestHeaders.get(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME));
+                return;
+            }
         }
-
-        final  boolean isPasskeyRegistrationFlightEnabled =  CommonFlightsManager.INSTANCE
-                .getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_REGISTRATION);
-        if (isBrokerRequest && isPasskeyRegistrationFlightEnabled){
-            Logger.verbose(methodTag, "Injecting Passkey protocol header for both auth and reg.");
-            requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG);
-        }
-
         Logger.verbose(methodTag, "Injecting Passkey protocol header for auth only.");
         requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
     }

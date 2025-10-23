@@ -32,6 +32,7 @@ import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
+import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -249,7 +250,37 @@ class PasskeyWebListener(
          """
 
         /** Allowed origins that can use the WebAuthn interface. */
-        private val ALLOWED_ORIGIN_RULES = setOf("https://login.microsoft.com", "https://account.live.com")
+        private val ALLOWED_ORIGIN_RULES_PRODUCTION = setOf(
+            "https://login.microsoft.com",
+            "https://account.live.com",
+            "https://mysignins.microsoft.com",
+            "https://mysignins.azure.us",
+            "https://mysignins.microsoft.scloud",
+            "https://mysignins.eaglex.ic.gov",
+            "https://login.microsoftonline.us",
+            "https://login.microsoftonline.microsoft.scloud",
+            "https://login.microsoftonline.eaglex.ic.gov"
+        )
+
+        /** Allowed origins for pre-production/testing environments. */
+        private val ALLOWED_ORIGIN_PRE_PRODUCTION = setOf(
+            "https://account.live-int.com",
+            "https://login.windows-ppe.net",
+            "https://mysignins-ppe.microsoft.com"
+        )
+
+        /**
+         * Gets the set of allowed origin rules based on build configuration.
+         *
+         * @return Set of allowed origin rules.
+         */
+        private fun getAllowedOriginRules(): Set<String> {
+            val mutableSet = ALLOWED_ORIGIN_RULES_PRODUCTION.toMutableSet()
+            if (BuildConfig.DEBUG) {
+               mutableSet.addAll(ALLOWED_ORIGIN_PRE_PRODUCTION)
+            }
+            return mutableSet.toSet()
+        }
 
         /**
          * Attaches the passkey listener to a WebView.
@@ -289,7 +320,7 @@ class PasskeyWebListener(
                 WebViewCompat.addWebMessageListener(
                     webView,
                     INTERFACE_NAME,
-                    ALLOWED_ORIGIN_RULES,
+                    getAllowedOriginRules(),
                     PasskeyWebListener(
                         coroutineScope = CoroutineScope(Dispatchers.Default),
                         credentialManagerHandler = CredentialManagerHandler(activity)
@@ -302,7 +333,7 @@ class PasskeyWebListener(
                 webClient.addOnPageStartedScript(
                     TAG,
                     WEB_AUTHN_INTERFACE_JS_MINIFIED,
-                    ALLOWED_ORIGIN_RULES
+                    getAllowedOriginRules()
                 )
                 true
             } else {
