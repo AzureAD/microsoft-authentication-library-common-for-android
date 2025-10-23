@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Add new span name for DELEGATION_CERT_INSTALL's telemetry (#2790s)
+- [MINOR] Add new span name for DELEGATION_CERT_INSTALL's telemetry (#2790)
 - [MAJOR] Add KeyStoreBackedSecretKeyProvider (#2674)
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Add helper method to record elapsed time (#2768)
