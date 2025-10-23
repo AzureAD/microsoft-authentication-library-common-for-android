@@ -50,11 +50,17 @@ class CredentialManagerHandler(private val activity: Activity) {
         val methodTag = "$TAG:createPasskey"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val createRequest = CreatePublicKeyCredentialRequest(request)
-            return (mCredMan.createCredential(activity, createRequest) as CreatePublicKeyCredentialResponse).also {
+            return (mCredMan.createCredential(
+                activity,
+                createRequest
+            ) as CreatePublicKeyCredentialResponse).also {
                 Logger.info(methodTag, "Passkey created successfully.")
             }
         } else {
-            Logger.warn(methodTag, "Passkey creation is not supported on Android versions below 9 (Pie). Current version: ${Build.VERSION.SDK_INT}")
+            Logger.warn(
+                methodTag,
+                "Passkey creation is not supported on Android versions below 9 (Pie). Current version: ${Build.VERSION.SDK_INT}"
+            )
             throw UnsupportedOperationException("Passkey creation requires Android 9 or higher.")
         }
     }
@@ -68,8 +74,8 @@ class CredentialManagerHandler(private val activity: Activity) {
     suspend fun getPasskey(request: String): GetCredentialResponse {
         val methodTag = "$TAG:getPasskey"
         val getRequest = GetCredentialRequest(listOf(GetPublicKeyCredentialOption(request)))
-            return mCredMan.getCredential(activity, getRequest).also {
-                Logger.info(methodTag, "Passkey retrieved successfully.")
-            }
+        return mCredMan.getCredential(activity, getRequest).also {
+            Logger.info(methodTag, "Passkey retrieved successfully.")
+        }
     }
 }
