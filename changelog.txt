@@ -12,6 +12,7 @@ vNext
 - [MINOR] Added error handling when webcp redirects have browser protocol #2767
 - [PATCH] Fix for app link redirect from CCT due to forced browser preference (#2775)
 - [MINOR] getAllSsoTokens method for Edge (#2774)
+- [MINOR] WebApps AccountId Registry (#2787)
 
 Version 22.1.3
 ----------
