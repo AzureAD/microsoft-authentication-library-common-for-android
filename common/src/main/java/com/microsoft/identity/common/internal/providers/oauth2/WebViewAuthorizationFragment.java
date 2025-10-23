@@ -541,10 +541,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return;
         }
 
-        if (isBrokerRequest){
-            final boolean isPasskeyRegistrationFlightEnabled =  CommonFlightsManager.INSTANCE
-                    .getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_REGISTRATION);
-            final String passkeyProtocolHeaderValue = isPasskeyRegistrationFlightEnabled
+        if (isBrokerRequest) {
+            final String passkeyProtocolHeaderValue = CommonFlightsManager.INSTANCE
+                    .getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_REGISTRATION)
                     ? FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG
                     : FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY;
             Logger.verbose(methodTag, "Injecting Passkey protocol header for broker request: "

@@ -89,7 +89,8 @@ class PasskeyReplyChannel(
          */
         class Success(val json: String, override val type: String) : ReplyMessage() {
             override val status = SUCCESS_STATUS
-            override val data: JSONObject = runCatching { JSONObject(json) }.getOrElse { JSONObject() }
+            override val data: JSONObject =
+                runCatching { JSONObject(json) }.getOrElse { JSONObject() }
         }
 
         /**
@@ -102,7 +103,8 @@ class PasskeyReplyChannel(
         class Error(
             private val domExceptionMessage: String,
             private val domExceptionName: String = DOM_EXCEPTION_NOT_ALLOWED_ERROR,
-            override val type: String) : ReplyMessage(){
+            override val type: String
+        ) : ReplyMessage() {
             override val status = ERROR_STATUS
             override val data: JSONObject
                 get() {
@@ -217,7 +219,7 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:send"
         try {
             replyProxy.postMessage(message.toString())
-        }catch (t: Throwable) {
+        } catch (t: Throwable) {
             Logger.error(methodTag, "Reply message failed", t)
         }
     }

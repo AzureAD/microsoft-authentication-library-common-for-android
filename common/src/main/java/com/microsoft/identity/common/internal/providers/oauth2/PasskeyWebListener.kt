@@ -97,9 +97,13 @@ class PasskeyWebListener(
         webAuthnMessage: WebAuthnMessage,
         sourceOrigin: Uri,
         isMainFrame: Boolean,
-        javaScriptReplyProxy: JavaScriptReplyProxy) {
+        javaScriptReplyProxy: JavaScriptReplyProxy
+    ) {
         val methodTag = "$TAG:onRequest"
-        Logger.info(methodTag, "Received WebAuthn request of type: ${webAuthnMessage.type} from origin: $sourceOrigin")
+        Logger.info(
+            methodTag,
+            "Received WebAuthn request of type: ${webAuthnMessage.type} from origin: $sourceOrigin"
+        )
         val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthnMessage.type)
 
         // Only allow one request at a time.
@@ -119,13 +123,23 @@ class PasskeyWebListener(
         when (webAuthnMessage.type) {
             CREATE_UNIQUE_KEY ->
                 this.coroutineScope.launch {
-                    handleCreateFlow(credentialManagerHandler, webAuthnMessage.request, passkeyReplyChannel)
+                    handleCreateFlow(
+                        credentialManagerHandler,
+                        webAuthnMessage.request,
+                        passkeyReplyChannel
+                    )
                     havePendingRequest.set(false)
                 }
+
             GET_UNIQUE_KEY -> this.coroutineScope.launch {
-                handleGetFlow(credentialManagerHandler, webAuthnMessage.request, passkeyReplyChannel)
+                handleGetFlow(
+                    credentialManagerHandler,
+                    webAuthnMessage.request,
+                    passkeyReplyChannel
+                )
                 havePendingRequest.set(false)
             }
+
             else -> {
                 passkeyReplyChannel.postError("Unknown request type: ${webAuthnMessage.type}")
                 havePendingRequest.set(false)
@@ -143,7 +157,8 @@ class PasskeyWebListener(
     private suspend fun handleGetFlow(
         credentialManagerHandler: CredentialManagerHandler,
         message: String,
-        reply: PasskeyReplyChannel) {
+        reply: PasskeyReplyChannel
+    ) {
         try {
             val getCredentialResponse = credentialManagerHandler.getPasskey(message)
             reply.postSuccess(
@@ -164,7 +179,8 @@ class PasskeyWebListener(
     private suspend fun handleCreateFlow(
         credentialManagerHandler: CredentialManagerHandler,
         message: String,
-        reply: PasskeyReplyChannel) {
+        reply: PasskeyReplyChannel
+    ) {
         try {
             val createCredentialResponse = credentialManagerHandler.createPasskey(message)
             reply.postSuccess(createCredentialResponse.registrationResponseJson)
@@ -182,7 +198,10 @@ class PasskeyWebListener(
      * @param javaScriptReplyProxy Proxy for error responses.
      * @return Parsed [WebAuthnMessage] or null if invalid.
      */
-    private fun parseMessage(messageData: String?, javaScriptReplyProxy: JavaScriptReplyProxy): WebAuthnMessage? {
+    private fun parseMessage(
+        messageData: String?,
+        javaScriptReplyProxy: JavaScriptReplyProxy
+    ): WebAuthnMessage? {
 
         val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
         if (messageData.isNullOrBlank()) {
@@ -195,7 +214,7 @@ class PasskeyWebListener(
             val type = json.optString(TYPE_KEY).takeIf { it.isNotBlank() }
             val request = json.optString(REQUEST_KEY).takeIf { it.isNotBlank() }
 
-            if (type == null ) {
+            if (type == null) {
                 passkeyReplyChannel.postError("Missing required key: type")
                 null
             } else if (request == null) {
@@ -277,7 +296,7 @@ class PasskeyWebListener(
         private fun getAllowedOriginRules(): Set<String> {
             val mutableSet = ALLOWED_ORIGIN_RULES_PRODUCTION.toMutableSet()
             if (BuildConfig.DEBUG) {
-               mutableSet.addAll(ALLOWED_ORIGIN_PRE_PRODUCTION)
+                mutableSet.addAll(ALLOWED_ORIGIN_PRE_PRODUCTION)
             }
             return mutableSet.toSet()
         }
