@@ -78,6 +78,18 @@ class FidoConstants {
         const val PASSKEY_PROTOCOL_VERSION_1_1 = "1.1"
 
         /**
+         * Set of supported passkey protocol versions.
+         *
+         * This defines the protocol versions that are recognized and compatible
+         * with the current implementation.
+         */
+        val supportedPasskeyProtocolVersions = setOf(
+            PASSKEY_PROTOCOL_VERSION_1_0,
+            PASSKEY_PROTOCOL_VERSION_1_1
+        )
+
+
+        /**
          * Constant to put in PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED if we support passkeys.
          */
         const val PASSKEY_PROTOCOL_KEY_TYPES_PASSKEY_OPTION = "passkey"
