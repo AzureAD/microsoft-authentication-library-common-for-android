@@ -535,9 +535,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":injectPasskeyProtocolHeader";
         final Uri authRequestUri = Uri.parse(mAuthorizationRequestUrl);
         final String webAuthNQueryParameter = authRequestUri.getQueryParameter(FidoConstants.WEBAUTHN_QUERY_PARAMETER_FIELD);
-        final boolean hasWebAuthNQueryParameter = !StringUtil.isNullOrEmpty(webAuthNQueryParameter);
 
-        if (!hasWebAuthNQueryParameter) {
+        if (StringUtil.isNullOrEmpty(webAuthNQueryParameter)) {
             return;
         }
 

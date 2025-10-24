@@ -35,6 +35,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import com.microsoft.identity.common.logging.Logger
 import org.json.JSONObject
+import kotlin.jvm.Throws
 
 
 /**
@@ -214,6 +215,7 @@ class PasskeyReplyChannel(
     /**
      * Sends a message to JavaScript via the reply proxy.
      */
+    @Throws (Throwable::class)
     @SuppressLint("RequiresFeature", "Only called when feature is available")
     private fun send(message: ReplyMessage) {
         val methodTag = "$TAG:send"
@@ -221,6 +223,7 @@ class PasskeyReplyChannel(
             replyProxy.postMessage(message.toString())
         } catch (t: Throwable) {
             Logger.error(methodTag, "Reply message failed", t)
+            throw t
         }
     }
 }

@@ -227,16 +227,18 @@ class PasskeyReplyChannelTest {
     }
 
     @Test
-    fun `send handles postMessage exceptions gracefully`() {
+    fun `send throws exception when postMessage fails`() {
         // Given
         val testJson = """{"key": "value"}"""
-        every { mockReplyProxy.postMessage(any<String>()) } throws RuntimeException("PostMessage failed")
+        val expectedException = RuntimeException("PostMessage failed")
+        every { mockReplyProxy.postMessage(any<String>()) } throws expectedException
 
-        // When/Then - Should not throw
-        assertDoesNotThrow {
+        // When/Then - Should throw the exception
+        val thrownException = assertThrows(RuntimeException::class.java) {
             passkeyReplyChannel.postSuccess(testJson)
         }
 
+        assertEquals("PostMessage failed", thrownException.message)
         verify { mockReplyProxy.postMessage(any<String>()) }
     }
 
@@ -286,11 +288,4 @@ class PasskeyReplyChannelTest {
         assertEquals("UnknownError", PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR)
     }
 
-    private fun assertDoesNotThrow(executable: () -> Unit) {
-        try {
-            executable()
-        } catch (e: Exception) {
-            fail("Expected no exception, but got: ${e.message}")
-        }
-    }
 }

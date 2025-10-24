@@ -190,7 +190,7 @@ class PasskeyWebListenerTest {
         val responseObject = JSONObject(messageSlot.captured)
         assertEquals(PasskeyReplyChannel.ERROR_STATUS, responseObject.getString(PasskeyReplyChannel.STATUS_KEY))
         val dataObject = responseObject.getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertTrue(dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY).contains("empty"))
+        assertTrue(dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY).contains("Message data is null or blank"))
     }
 
     @Test

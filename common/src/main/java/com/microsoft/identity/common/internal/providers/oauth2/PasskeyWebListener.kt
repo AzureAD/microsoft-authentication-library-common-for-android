@@ -34,6 +34,7 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ import org.json.JSONObject
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * WebView message listener for handling WebAuthn/Passkey authentication flows.
+ * WebView message listener for handling WebAuthN/Passkey authentication flows.
  *
  * Intercepts postMessage() calls from JavaScript to handle credential creation and retrieval
  * using the Android Credential Manager API. Only accepts requests from allowed origins.
@@ -55,11 +56,11 @@ class PasskeyWebListener(
     private val credentialManagerHandler: CredentialManagerHandler,
 ) : WebViewCompat.WebMessageListener {
 
-    /** Tracks if a WebAuthn request is currently pending. Only one request is allowed at a time. */
+    /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
     private val havePendingRequest = AtomicBoolean(false)
 
     /**
-     * Handles postMessage() calls from the web page for WebAuthn requests.
+     * Handles postMessage() calls from the web page for WebAuthN requests.
      *
      * @param view The WebView that received the message.
      * @param message The message received from the web page.
@@ -75,9 +76,9 @@ class PasskeyWebListener(
         isMainFrame: Boolean,
         replyProxy: JavaScriptReplyProxy,
     ) {
-        parseMessage(message.data, replyProxy)?.let { webAuthnMessage ->
+        parseMessage(message.data, replyProxy)?.let { webAuthNMessage ->
             onRequest(
-                webAuthnMessage = webAuthnMessage,
+                webAuthNMessage = webAuthNMessage,
                 sourceOrigin = sourceOrigin,
                 isMainFrame = isMainFrame,
                 javaScriptReplyProxy = replyProxy
@@ -86,15 +87,15 @@ class PasskeyWebListener(
     }
 
     /**
-     * Processes an incoming WebAuthn request.
+     * Processes an incoming WebAuthN request.
      *
-     * @param webAuthnMessage Parsed WebAuthn message.
+     * @param webAuthNMessage Parsed WebAuthN message.
      * @param sourceOrigin Origin of the request.
      * @param isMainFrame True if request is from the main frame.
      * @param javaScriptReplyProxy Proxy for sending responses.
      */
     private fun onRequest(
-        webAuthnMessage: WebAuthnMessage,
+        webAuthNMessage: WebAuthNMessage,
         sourceOrigin: Uri,
         isMainFrame: Boolean,
         javaScriptReplyProxy: JavaScriptReplyProxy
@@ -102,9 +103,9 @@ class PasskeyWebListener(
         val methodTag = "$TAG:onRequest"
         Logger.info(
             methodTag,
-            "Received WebAuthn request of type: ${webAuthnMessage.type} from origin: $sourceOrigin"
+            "Received WebAuthN request of type: ${webAuthNMessage.type} from origin: $sourceOrigin"
         )
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthnMessage.type)
+        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthNMessage.type)
 
         // Only allow one request at a time.
         if (havePendingRequest.get()) {
@@ -120,12 +121,12 @@ class PasskeyWebListener(
             return
         }
 
-        when (webAuthnMessage.type) {
+        when (webAuthNMessage.type) {
             CREATE_UNIQUE_KEY ->
                 this.coroutineScope.launch {
                     handleCreateFlow(
                         credentialManagerHandler,
-                        webAuthnMessage.request,
+                        webAuthNMessage.request,
                         passkeyReplyChannel
                     )
                     havePendingRequest.set(false)
@@ -134,21 +135,21 @@ class PasskeyWebListener(
             GET_UNIQUE_KEY -> this.coroutineScope.launch {
                 handleGetFlow(
                     credentialManagerHandler,
-                    webAuthnMessage.request,
+                    webAuthNMessage.request,
                     passkeyReplyChannel
                 )
                 havePendingRequest.set(false)
             }
 
             else -> {
-                passkeyReplyChannel.postError("Unknown request type: ${webAuthnMessage.type}")
+                passkeyReplyChannel.postError("Unknown request type: ${webAuthNMessage.type}")
                 havePendingRequest.set(false)
             }
         }
     }
 
     /**
-     * Handles the WebAuthn get flow to retrieve an existing passkey.
+     * Handles the WebAuthN get flow to retrieve an existing passkey.
      *
      * @param credentialManagerHandler Handler for credential operations.
      * @param message JSON string with the get request parameters.
@@ -159,18 +160,18 @@ class PasskeyWebListener(
         message: String,
         reply: PasskeyReplyChannel
     ) {
-        try {
-            val getCredentialResponse = credentialManagerHandler.getPasskey(message)
-            reply.postSuccess(
-                (getCredentialResponse.credential as PublicKeyCredential).authenticationResponseJson
-            )
-        } catch (t: Throwable) {
-            reply.postError(t)
-        }
+        runCatching { credentialManagerHandler.getPasskey(message) }
+            .onSuccess { credentialResponse ->
+                reply.postSuccess(
+                    (credentialResponse.credential as PublicKeyCredential).authenticationResponseJson
+                )            }
+            .onFailure { throwable ->
+                reply.postError(throwable)
+            }
     }
 
     /**
-     * Handles the WebAuthn create flow to register a new passkey.
+     * Handles the WebAuthN create flow to register a new passkey.
      *
      * @param credentialManagerHandler Handler for credential operations.
      * @param message JSON string with the create request parameters.
@@ -181,63 +182,59 @@ class PasskeyWebListener(
         message: String,
         reply: PasskeyReplyChannel
     ) {
-        try {
-            val createCredentialResponse = credentialManagerHandler.createPasskey(message)
-            reply.postSuccess(createCredentialResponse.registrationResponseJson)
-        } catch (t: Throwable) {
-            reply.postError(t)
-        }
+        runCatching { credentialManagerHandler.createPasskey(message) }
+            .onSuccess { createCredentialResponse ->
+                reply.postSuccess(createCredentialResponse.registrationResponseJson)
+            }
+            .onFailure { throwable ->
+                reply.postError(throwable)
+            }
     }
 
     /**
-     * Parses a JSON message into a [WebAuthnMessage].
+     * Parses a JSON message into a [WebAuthNMessage].
      *
      * Expected format: `{"type": "create|get", "request": "<JSON payload>"}`
      *
      * @param messageData JSON string to parse.
      * @param javaScriptReplyProxy Proxy for error responses.
-     * @return Parsed [WebAuthnMessage] or null if invalid.
+     * @return Parsed [WebAuthNMessage] or null if invalid.
      */
     private fun parseMessage(
         messageData: String?,
         javaScriptReplyProxy: JavaScriptReplyProxy
-    ): WebAuthnMessage? {
-
+    ): WebAuthNMessage? {
         val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
-        if (messageData.isNullOrBlank()) {
-            passkeyReplyChannel.postError("Received empty message data")
-            return null
-        }
-
         return runCatching {
+            if (messageData.isNullOrBlank()) {
+                throw ClientException(ClientException.MISSING_PARAMETER, "Message data is null or blank")
+            }
             val json = JSONObject(messageData)
             val type = json.optString(TYPE_KEY).takeIf { it.isNotBlank() }
             val request = json.optString(REQUEST_KEY).takeIf { it.isNotBlank() }
 
             if (type == null) {
-                passkeyReplyChannel.postError("Missing required key: type")
-                null
+                throw ClientException(ClientException.MISSING_PARAMETER, "Missing required key: type")
             } else if (request == null) {
-                passkeyReplyChannel.postError("Missing required key: request")
-                null
+                throw ClientException(ClientException.MISSING_PARAMETER, "Missing required key: request")
             } else {
-                WebAuthnMessage(type, request)
+                WebAuthNMessage(type, request)
             }
         }.onFailure { throwable ->
             passkeyReplyChannel.postError(throwable)
         }.getOrNull()
     }
 
-    /** Internal representation of a WebAuthn message with type and request payload. */
-    private data class WebAuthnMessage(val type: String, val request: String)
+    /** Internal representation of a WebAuthN message with type and request payload. */
+    private data class WebAuthNMessage(val type: String, val request: String)
 
     companion object {
         const val TAG = "PasskeyWebListener"
 
-        /** WebAuthn request type for creating a new credential. */
+        /** WebAuthN request type for creating a new credential. */
         const val CREATE_UNIQUE_KEY = "create"
 
-        /** WebAuthn request type for retrieving an existing credential. */
+        /** WebAuthN request type for retrieving an existing credential. */
         const val GET_UNIQUE_KEY = "get"
 
         /** JSON key for the request type field. */
@@ -247,10 +244,10 @@ class PasskeyWebListener(
         const val REQUEST_KEY = "request"
 
         /** Name of the JavaScript message port interface. */
-        private const val INTERFACE_NAME = "__webauthn_interface__"
+        private const val INTERFACE_NAME = "__WebAuthN_interface__"
 
         /**
-         * Minified JavaScript code that intercepts WebAuthn API calls.
+         * Minified JavaScript code that intercepts WebAuthN API calls.
          *
          * ⚠️ IMPORTANT: This is the MINIFIED version of js-bridge.js
          *
@@ -265,10 +262,10 @@ class PasskeyWebListener(
          * DO NOT modify this constant directly - always update the source file first!
          */
         private const val WEB_AUTHN_INTERFACE_JS_MINIFIED = """
-            var __webauthn_interface__,__webauthn_hooks__;!function(e){__webauthn_interface__.addEventListener("message",function e(n){console.log(n.data);var t=JSON.parse(n.data);"get"===t.type?s(t):"create"===t.type?u(t):console.log("Incorrect response format for reply: "+t.type)});var n=null,t=null,r=null,a=null;function s(e){if(null===n||null===r){console.log("Reply failure: Resolve: "+t+" and reject: "+a);return}if("success"!=e.status){var s=r;n=null,r=null,s(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName));return}var o=i(e.data),l=n;n=null,r=null,l(o)}function o(e){var n=e.length%4;return Uint8Array.from(atob(e.replace(/-/g,"+").replace(/_/g,"/").padEnd(e.length+(0===n?0:4-n),"=")),function(e){return e.charCodeAt(0)}).buffer}function l(e){return btoa(Array.from(new Uint8Array(e),function(e){return String.fromCharCode(e)}).join("")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+${'$'}/,"")}function u(e){if(null===t||null===a){console.log("Reply failure: Resolve: "+t+" and reject: "+a);return}if("success"!=e.status){var n=a;t=null,a=null,n(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName));return}var r=i(e.data),s=t;t=null,a=null,s(r)}function i(e){return e.rawId=o(e.rawId),e.response.clientDataJSON=o(e.response.clientDataJSON),e.response.hasOwnProperty("attestationObject")&&(e.response.attestationObject=o(e.response.attestationObject)),e.response.hasOwnProperty("authenticatorData")&&(e.response.authenticatorData=o(e.response.authenticatorData)),e.response.hasOwnProperty("signature")&&(e.response.signature=o(e.response.signature)),e.response.hasOwnProperty("userHandle")&&(e.response.userHandle=o(e.response.userHandle)),e.getClientExtensionResults=function e(){return{}},e.response.getTransports=function n(){return e.response.hasOwnProperty("transports")?e.response.transports:[]},e}e.create=function n(r){if(!("publicKey"in r))return e.originalCreateFunction(r);var s=new Promise(function(e,n){t=e,a=n}),o=r.publicKey;if(o.hasOwnProperty("challenge")){var u=l(o.challenge);o.challenge=u}if(o.hasOwnProperty("user")&&o.user.hasOwnProperty("id")){var i=l(o.user.id);o.user.id=i}if(o.hasOwnProperty("excludeCredentials")&&Array.isArray(o.excludeCredentials)&&o.excludeCredentials.length>0)for(var c=0;c<o.excludeCredentials.length;c++){var p=o.excludeCredentials[c];p&&p.hasOwnProperty("id")&&(p.id=l(p.id))}var d=JSON.stringify({type:"create",request:o});return __webauthn_interface__.postMessage(d),s},e.get=function t(a){if(!("publicKey"in a))return e.originalGetFunction(a);var s=new Promise(function(e,t){n=e,r=t}),o=a.publicKey;if(o.hasOwnProperty("challenge")){var u=l(o.challenge);o.challenge=u}var i=JSON.stringify({type:"get",request:o});return __webauthn_interface__.postMessage(i),s},e.onReplyGet=s,e.CM_base64url_decode=o,e.CM_base64url_encode=l,e.onReplyCreate=u}(__webauthn_hooks__||(__webauthn_hooks__={})),__webauthn_hooks__.originalGetFunction=navigator.credentials.get,__webauthn_hooks__.originalCreateFunction=navigator.credentials.create,navigator.credentials.get=__webauthn_hooks__.get,navigator.credentials.create=__webauthn_hooks__.create,window.PublicKeyCredential=function(){},window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable=function(){return Promise.resolve(!1)};
+            var __WebAuthN_interface__,__WebAuthN_hooks__;!function(e){__WebAuthN_interface__.addEventListener("message",function e(n){console.log(n.data);var t=JSON.parse(n.data);"get"===t.type?s(t):"create"===t.type?u(t):console.log("Incorrect response format for reply: "+t.type)});var n=null,t=null,r=null,a=null;function s(e){if(null===n||null===r){console.log("Reply failure: Resolve: "+t+" and reject: "+a);return}if("success"!=e.status){var s=r;n=null,r=null,s(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName));return}var o=i(e.data),l=n;n=null,r=null,l(o)}function o(e){var n=e.length%4;return Uint8Array.from(atob(e.replace(/-/g,"+").replace(/_/g,"/").padEnd(e.length+(0===n?0:4-n),"=")),function(e){return e.charCodeAt(0)}).buffer}function l(e){return btoa(Array.from(new Uint8Array(e),function(e){return String.fromCharCode(e)}).join("")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+${'$'}/,"")}function u(e){if(null===t||null===a){console.log("Reply failure: Resolve: "+t+" and reject: "+a);return}if("success"!=e.status){var n=a;t=null,a=null,n(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName));return}var r=i(e.data),s=t;t=null,a=null,s(r)}function i(e){return e.rawId=o(e.rawId),e.response.clientDataJSON=o(e.response.clientDataJSON),e.response.hasOwnProperty("attestationObject")&&(e.response.attestationObject=o(e.response.attestationObject)),e.response.hasOwnProperty("authenticatorData")&&(e.response.authenticatorData=o(e.response.authenticatorData)),e.response.hasOwnProperty("signature")&&(e.response.signature=o(e.response.signature)),e.response.hasOwnProperty("userHandle")&&(e.response.userHandle=o(e.response.userHandle)),e.getClientExtensionResults=function e(){return{}},e.response.getTransports=function n(){return e.response.hasOwnProperty("transports")?e.response.transports:[]},e}e.create=function n(r){if(!("publicKey"in r))return e.originalCreateFunction(r);var s=new Promise(function(e,n){t=e,a=n}),o=r.publicKey;if(o.hasOwnProperty("challenge")){var u=l(o.challenge);o.challenge=u}if(o.hasOwnProperty("user")&&o.user.hasOwnProperty("id")){var i=l(o.user.id);o.user.id=i}if(o.hasOwnProperty("excludeCredentials")&&Array.isArray(o.excludeCredentials)&&o.excludeCredentials.length>0)for(var c=0;c<o.excludeCredentials.length;c++){var p=o.excludeCredentials[c];p&&p.hasOwnProperty("id")&&(p.id=l(p.id))}var d=JSON.stringify({type:"create",request:o});return __WebAuthN_interface__.postMessage(d),s},e.get=function t(a){if(!("publicKey"in a))return e.originalGetFunction(a);var s=new Promise(function(e,t){n=e,r=t}),o=a.publicKey;if(o.hasOwnProperty("challenge")){var u=l(o.challenge);o.challenge=u}var i=JSON.stringify({type:"get",request:o});return __WebAuthN_interface__.postMessage(i),s},e.onReplyGet=s,e.CM_base64url_decode=o,e.CM_base64url_encode=l,e.onReplyCreate=u}(__WebAuthN_hooks__||(__WebAuthN_hooks__={})),__WebAuthN_hooks__.originalGetFunction=navigator.credentials.get,__WebAuthN_hooks__.originalCreateFunction=navigator.credentials.create,navigator.credentials.get=__WebAuthN_hooks__.get,navigator.credentials.create=__WebAuthN_hooks__.create,window.PublicKeyCredential=function(){},window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable=function(){return Promise.resolve(!1)};
          """
 
-        /** Allowed origins that can use the WebAuthn interface. */
+        /** Allowed origins that can use the WebAuthN interface. */
         private val ALLOWED_ORIGIN_RULES_PRODUCTION = setOf(
             "https://login.microsoft.com",
             "https://account.live.com",
@@ -335,7 +332,7 @@ class PasskeyWebListener(
             return if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
                 Logger.verbose(methodTag, "WEB_MESSAGE_LISTENER is supported on this WebView.")
 
-                // Attach the WebMessageListener that handles WebAuthn/Passkey communication.
+                // Attach the WebMessageListener that handles WebAuthN/Passkey communication.
                 WebViewCompat.addWebMessageListener(
                     webView,
                     INTERFACE_NAME,
