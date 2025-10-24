@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
@@ -117,6 +118,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean webViewZoomEnabled;
 
+    private boolean isWebViewWebcpEnabledInBrokerlessCase;
+
     private String mUtid;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
@@ -201,6 +204,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        outState.putBoolean(WEB_VIEW_WEB_CP_ENABLED, isWebViewWebcpEnabledInBrokerlessCase);
         outState.putString(UTID, mUtid);
     }
 
@@ -219,6 +223,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
+        isWebViewWebcpEnabledInBrokerlessCase = state.getBoolean(WEB_VIEW_WEB_CP_ENABLED, false);
         mUtid = state.getString(UTID);
     }
 
@@ -258,7 +263,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 },
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
-                mUtid
+                mUtid,
+                isWebViewWebcpEnabledInBrokerlessCase
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
