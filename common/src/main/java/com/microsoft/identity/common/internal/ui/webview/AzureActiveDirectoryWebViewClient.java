@@ -135,6 +135,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
+    // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
+    private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
+
 
     private final String mUtid;
 
@@ -143,12 +147,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             @Nullable final String utid) {
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
         mUtid = utid;
+        mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
     }
 
     /**
@@ -704,9 +710,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                // Enabling webcp in webview feature for brokered flows only for now.
-                Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
-                return false;
+                mInWebCpFlow = mIsWebViewWebCpEnabledInBrokerlessCase;
+                Logger.info(methodTag, "Not running on AuthService, WebCP in WebView feature enabled? "+ mIsWebViewWebCpEnabledInBrokerlessCase);
+                return mInWebCpFlow;
             }
 
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
