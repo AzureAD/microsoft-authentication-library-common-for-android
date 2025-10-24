@@ -1096,20 +1096,14 @@ public class MsalOAuth2TokenCache
                 "LocalAccountId: [" + localAccountId + "]"
         );
 
-        List<AccountRecord> accountsFilteredByEnvAndLocalAccountId = new ArrayList<>();
-        List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
-        for (AccountRecord accountRecord: accountRecordList) {
-            if (accountRecord.getLocalAccountId().equals(localAccountId)
-                    && accountRecord.getEnvironment().equals(environment)) {
-                accountsFilteredByEnvAndLocalAccountId.add(accountRecord);
-            }
+        final List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
+        if (accountRecordList.isEmpty()) {
+            Logger.warn(
+                    TAG + methodName,
+                    "No accounts found in the cache."
+            );
+            return null;
         }
-
-        Logger.verbose(
-                TAG + methodName,
-                "Found " + accountsFilteredByEnvAndLocalAccountId.size() + " accounts for this environment" +
-                        " and localAccountId"
-        );
 
         final Set<CredentialType> credentialTypes = new HashSet<>(
                 Arrays.asList(IdToken, V1IdToken, RefreshToken)
@@ -1128,9 +1122,11 @@ public class MsalOAuth2TokenCache
                 null
         );
 
-        for (final AccountRecord account : accountsFilteredByEnvAndLocalAccountId) {
-            if (accountHasCredential(account, appCredentials)) {
-                return account;
+        for (final AccountRecord accountRecord: accountRecordList) {
+            if (accountRecord.getLocalAccountId().equals(localAccountId)
+                    && accountRecord.getEnvironment().equals(environment)
+                        && accountHasCredential(accountRecord, appCredentials)) {
+                return accountRecord;
             }
         }
 
@@ -1256,6 +1252,10 @@ public class MsalOAuth2TokenCache
                 TAG + methodName,
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
+
+        if (accountsForEnvironment.isEmpty()) {
+            return Collections.unmodifiableList(accountsForThisApp);
+        }
 
         final Set<CredentialType> credentialTypes = new HashSet<>(
                 Arrays.asList(IdToken, V1IdToken, RefreshToken)
