@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Add new span name for DELEGATION_CERT_INSTALL's telemetry (#2790)
+- [MINOR] Add OTel Benchmarker (#2786)
 - [MAJOR] Add KeyStoreBackedSecretKeyProvider (#2674)
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Add helper method to record elapsed time (#2768)
@@ -14,6 +15,7 @@ vNext
 - [PATCH] Fix for app link redirect from CCT due to forced browser preference (#2775)
 - [MINOR] getAllSsoTokens method for Edge (#2774)
 - [MINOR] WebApps AccountId Registry (#2787)
+- [MINOR] Take flight value for whether to show webcp flow in weview or not in brokerless scenarios. (#2784)
 
 Version 22.1.3
 ----------
