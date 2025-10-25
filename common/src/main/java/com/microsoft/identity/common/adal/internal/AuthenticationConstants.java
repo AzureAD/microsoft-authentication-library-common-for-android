@@ -2074,6 +2074,8 @@ public final class AuthenticationConstants {
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
 
+        public static final String WEB_VIEW_WEB_CP_ENABLED = "com.microsoft.identity.web.view.web.cp.enabled";
+
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";
 
         public static final String WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = "com.microsoft.identity.web.view.silent.authorization.flow.timeout";
