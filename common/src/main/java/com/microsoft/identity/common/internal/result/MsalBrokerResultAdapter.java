@@ -1053,7 +1053,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      * @param resultBundle The result bundle from the broker.
      */
     @NonNull
-    public String getSupportedWebAppsContractFromBundle(Bundle resultBundle) throws ClientException {
+    public String getSupportedWebAppsContractFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
         final String result = resultBundle.getString(BROKER_WEBAPPS_GET_CONTRACTS_RESULT);
         if (result == null) {
             throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEBAPPS_GET_CONTRACTS_RESULT);
