@@ -89,6 +89,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -113,6 +114,14 @@ public class CommandDispatcher {
     //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the approximate number of threads that are actively
+     * executing tasks in the silent request thread pool.
+     */
+    public static int getSilentRequestActiveCount(){
+        return ((ThreadPoolExecutor)sSilentExecutor).getActiveCount();
+    }
 
     /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
