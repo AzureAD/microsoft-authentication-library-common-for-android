@@ -5,6 +5,7 @@ vNext
 - [MINOR] Add OTel Benchmarker (#2786)
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Take flight value for whether to show webcp flow in weview or not in brokerless scenarios. (#2784)
+- [MINOR] Add domainHint support to authorization request (#2792)
 
 Version 23.0.2
 ----------
