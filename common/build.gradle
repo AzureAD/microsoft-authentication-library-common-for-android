@@ -391,10 +391,10 @@ tasks.configureEach { task ->
         task.dependsOn 'bundleDistReleaseAar'
     }
     if (task.name == "generateMetadataFileForDistDebugPublication") {
-        task.mustRunAfter 'bundleDistReleaseAar'
+        task.mustRunAfter 'bundleDistDebugAar'
     }
     if (task.name == "generateMetadataFileForDistReleasePublication") {
-        task.dependsOn 'bundleDistDebugAar'
+        task.dependsOn 'bundleDistReleaseAar'
     }
 }
 
@@ -430,4 +430,3 @@ tasks.register("dependenciesSizeCheck") {
         }
     }
 }
-
