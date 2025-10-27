@@ -210,11 +210,12 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                     tokenRecordRealm = accessToken.getRealm();
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(realm, tokenRecordRealm)) continue;
                 } else if (credential instanceof IdTokenRecord) {
                     final IdTokenRecord idToken = (IdTokenRecord) credential;
                     tokenRecordRealm = idToken.getRealm();
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(realm, tokenRecordRealm)) continue;
                 }
-                if(!StringUtil.equalsIgnoreCaseTrimBoth(realm, tokenRecordRealm)) continue;
             }
 
             if (mustMatchOnTarget) {
