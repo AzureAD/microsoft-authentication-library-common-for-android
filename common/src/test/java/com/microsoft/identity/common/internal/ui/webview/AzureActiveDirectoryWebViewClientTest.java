@@ -412,6 +412,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Verify
         Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
         Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
