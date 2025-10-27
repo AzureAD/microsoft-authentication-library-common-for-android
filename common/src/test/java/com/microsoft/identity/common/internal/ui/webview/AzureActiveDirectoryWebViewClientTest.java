@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.shadows.ShadowProcessUtil;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -157,6 +158,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         if (!AzureActiveDirectory.isInitialized()) {
             AzureActiveDirectory.performCloudDiscovery();
         }
+    }
+
+    @After
+    public void cleanUp(){
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -412,7 +418,6 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Verify
         Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
         Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
@@ -490,6 +495,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
         when(mockError.getUrl()).thenReturn("https://example.com");
+        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(false);
+        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
         final AzureActiveDirectoryWebViewClient mockWebViewClient = new AzureActiveDirectoryWebViewClient(
                 mActivity,
                 mockCallback,
