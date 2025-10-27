@@ -1373,8 +1373,9 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Evaluates the supplied list of Credentials. Returns true if the provided Account
-     * 'owns' any one of these tokens.
+     * Evaluates the supplied list of Credentials. Returns true if the provided Account's
+     * homeAccountId matches with any of the credentials' homeAccountId.
+     * This does not filter on environment, as that is expected to be pre-filtered.
      *
      * @param account        The Account whose credential ownership should be evaluated.
      * @param appCredentials The Credentials to evaluate.
