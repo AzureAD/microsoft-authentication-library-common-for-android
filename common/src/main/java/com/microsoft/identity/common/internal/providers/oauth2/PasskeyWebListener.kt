@@ -35,7 +35,12 @@ import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,7 +59,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
     private val credentialManagerHandler: CredentialManagerHandler,
+    spanContext: SpanContext? = null
 ) : WebViewCompat.WebMessageListener {
+
+    val span: Span by lazy {
+        OTelUtility.createSpanFromParent(SpanName.PasskeyWebListener.name, spanContext)
+    }
 
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
     private val havePendingRequest = AtomicBoolean(false)
@@ -76,6 +86,7 @@ class PasskeyWebListener(
         isMainFrame: Boolean,
         replyProxy: JavaScriptReplyProxy,
     ) {
+        SpanExtension.makeCurrentSpan(span)
         parseMessage(message.data, replyProxy)?.let { webAuthNMessage ->
             onRequest(
                 webAuthNMessage = webAuthNMessage,
@@ -164,7 +175,8 @@ class PasskeyWebListener(
             .onSuccess { credentialResponse ->
                 reply.postSuccess(
                     (credentialResponse.credential as PublicKeyCredential).authenticationResponseJson
-                )            }
+                )
+            }
             .onFailure { throwable ->
                 reply.postError(throwable)
             }
@@ -207,16 +219,25 @@ class PasskeyWebListener(
         val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
         return runCatching {
             if (messageData.isNullOrBlank()) {
-                throw ClientException(ClientException.MISSING_PARAMETER, "Message data is null or blank")
+                throw ClientException(
+                    ClientException.MISSING_PARAMETER,
+                    "Message data is null or blank"
+                )
             }
             val json = JSONObject(messageData)
             val type = json.optString(TYPE_KEY).takeIf { it.isNotBlank() }
             val request = json.optString(REQUEST_KEY).takeIf { it.isNotBlank() }
 
             if (type == null) {
-                throw ClientException(ClientException.MISSING_PARAMETER, "Missing required key: type")
+                throw ClientException(
+                    ClientException.MISSING_PARAMETER,
+                    "Missing required key: type"
+                )
             } else if (request == null) {
-                throw ClientException(ClientException.MISSING_PARAMETER, "Missing required key: request")
+                throw ClientException(
+                    ClientException.MISSING_PARAMETER,
+                    "Missing required key: request"
+                )
             } else {
                 WebAuthNMessage(type, request)
             }
@@ -339,7 +360,8 @@ class PasskeyWebListener(
                     getAllowedOriginRules(),
                     PasskeyWebListener(
                         coroutineScope = CoroutineScope(Dispatchers.Default),
-                        credentialManagerHandler = CredentialManagerHandler(activity)
+                        credentialManagerHandler = CredentialManagerHandler(activity),
+                        spanContext = webClient.spanContext
                     )
                 )
 

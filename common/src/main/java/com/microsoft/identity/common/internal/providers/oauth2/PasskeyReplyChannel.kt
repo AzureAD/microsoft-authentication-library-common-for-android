@@ -33,7 +33,10 @@ import androidx.credentials.exceptions.GetCredentialProviderConfigurationExcepti
 import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.StatusCode
 import org.json.JSONObject
 import kotlin.jvm.Throws
 
@@ -78,8 +81,12 @@ class PasskeyReplyChannel(
      * Sealed class representing messages sent to JavaScript.
      */
     sealed class ReplyMessage {
+        // Message type (e.g., "create", "get").
         abstract val type: String
+        // Message status ("success" or "error").
         abstract val status: String
+        // Message data as a JSON object.
+        // Either credential data for success or {domExceptionMessage, domExceptionName} for error.
         abstract val data: JSONObject
 
         /**
@@ -102,8 +109,8 @@ class PasskeyReplyChannel(
          * @property type Request type that failed.
          */
         class Error(
-            private val domExceptionMessage: String,
-            private val domExceptionName: String = DOM_EXCEPTION_NOT_ALLOWED_ERROR,
+            val domExceptionMessage: String,
+            val domExceptionName: String = DOM_EXCEPTION_NOT_ALLOWED_ERROR,
             override val type: String
         ) : ReplyMessage() {
             override val status = ERROR_STATUS
@@ -134,6 +141,11 @@ class PasskeyReplyChannel(
     fun postSuccess(json: String) {
         val methodTag = "$TAG:postSuccess"
         send(ReplyMessage.Success(json, requestType))
+        SpanExtension.current().apply {
+            setStatus(StatusCode.OK)
+            setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            end()
+        }
         Logger.info(methodTag, "RequestType: $requestType, was successful.")
     }
 
@@ -146,6 +158,12 @@ class PasskeyReplyChannel(
         postErrorInternal(
             ReplyMessage.Error(domExceptionMessage = errorMessage, type = requestType)
         )
+        SpanExtension.current().apply {
+            setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            setStatus(StatusCode.ERROR)
+            setAttribute(AttributeName.error_message.name, errorMessage)
+            end()
+        }
     }
 
     /**
@@ -157,6 +175,12 @@ class PasskeyReplyChannel(
      */
     fun postError(throwable: Throwable) {
         postErrorInternal(throwableToErrorMessage(throwable))
+        SpanExtension.current().apply {
+            setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            setStatus(StatusCode.ERROR)
+            recordException(throwable)
+            end()
+        }
     }
 
     /**
@@ -221,9 +245,15 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:send"
         try {
             replyProxy.postMessage(message.toString())
-        } catch (t: Throwable) {
-            Logger.error(methodTag, "Reply message failed", t)
-            throw t
+        } catch (throwable: Throwable) {
+            SpanExtension.current().apply {
+                setStatus(StatusCode.ERROR)
+                setAttribute(AttributeName.passkey_operation_type.name, requestType)
+                recordException(throwable)
+                end()
+            }
+            Logger.error(methodTag, "Reply message failed", throwable)
+            throw throwable
         }
     }
 }
