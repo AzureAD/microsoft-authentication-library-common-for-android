@@ -66,6 +66,15 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                             private val isPackageInstalled: (BrokerData) -> Boolean,
                             private val isValidBroker: (BrokerData) -> Boolean) : IBrokerDiscoveryClient {
 
+    interface IBrokerDiscoveryClientTelemetryCallback {
+        fun onReadFromCache()
+        fun onShouldUseAccountManager()
+        fun onFinishCheckingIfPackageIsInstalled(timeSpent: Long)
+        fun onFinishCheckingIfSupportedByTargetedBroker(timeSpent: Long)
+        fun onFinishQueryingResultFromBroker(timeSpent: Long)
+        fun onFinishCheckingIfValidBroker(timeSpent: Long)
+    }
+
     companion object {
         val TAG = BrokerDiscoveryClient::class.simpleName
 
@@ -98,6 +107,8 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR = "UNEXPECTED_ERROR"
 
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
+
+        public val sTelemetryCallback: IBrokerDiscoveryClientTelemetryCallback? = null
 
         /**
          * Per-process Thread-safe, coroutine-safe Mutex of this class.
@@ -284,10 +295,16 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         classLevelLock.withLock {
             if (!shouldSkipCache) {
                 if (cache.shouldUseAccountManager()) {
+                    sTelemetryCallback?.onShouldUseAccountManager()
                     return getActiveBrokerFromAccountManager()
                 }
                 cache.getCachedActiveBroker()?.let {
-                    if (!isPackageInstalled(it)) {
+                    sTelemetryCallback?.onReadFromCache()
+
+                    val startTime1 = System.nanoTime()
+                    val isPackageInstalled= isPackageInstalled(it)
+                    sTelemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - startTime1)
+                    if (!isPackageInstalled) {
                         Logger.info(
                             methodTag,
                             "There is a cached broker: $it, but the app is no longer installed."
@@ -296,7 +313,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    if (!isValidBroker(it)) {
+                    val startTime2 = System.nanoTime()
+                    val isValidBroker= isValidBroker(it)
+                    sTelemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - startTime2)
+                    if (!isValidBroker) {
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not have a matching signature hash."
@@ -305,7 +325,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
+                    val startTime3 = System.nanoTime()
+                    val isSupportedByTargetedBroker =
+                        ipcStrategy.isSupportedByTargetedBroker(it.packageName)
+                    sTelemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(System.nanoTime() - startTime3)
+                    if(!isSupportedByTargetedBroker){
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
@@ -319,12 +343,14 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 }
             }
 
+            val startTime4 = System.nanoTime()
             val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
                 isPackageInstalled = isPackageInstalled,
                 isValidBroker = isValidBroker
             )
+            sTelemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - startTime4)
 
             if (brokerData != null) {
                 cache.setCachedActiveBroker(brokerData)
