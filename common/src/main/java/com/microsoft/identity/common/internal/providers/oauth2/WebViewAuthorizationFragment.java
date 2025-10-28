@@ -552,10 +552,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             if (requestHeaders.containsKey(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME)) {
                 Logger.verbose(methodTag, "Passkey protocol header already exists in request headers  "
                         + requestHeaders.get(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME));
-                return;
+            } else {
+                Logger.verbose(methodTag, "Injecting Passkey protocol header for auth only.");
+                requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
             }
         }
-        Logger.verbose(methodTag, "Injecting Passkey protocol header for auth only.");
-        requestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
+
     }
 }
