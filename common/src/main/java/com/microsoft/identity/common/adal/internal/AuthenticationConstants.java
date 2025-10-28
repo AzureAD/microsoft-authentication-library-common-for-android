@@ -1377,6 +1377,26 @@ public final class AuthenticationConstants {
         public static final String BROKER_GENERATE_ALL_SSO_TOKENS_RESULT = "broker_generate_all_sso_tokens";
 
         /**
+         * String for broker webapps get contracts result.
+         */
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "contracts";
+
+        /**
+         * String for broker webapps error result.
+         */
+        public static final String BROKER_WEB_APPS_ERROR = "error";
+
+        /**
+         * String for broker webapps request.
+         */
+        public static final String BROKER_WEB_APPS_REQUEST = "request";
+
+        /**
+         * String for broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_RESPONSE = "response";
+
+        /**
          * String for generate shr result.
          */
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
