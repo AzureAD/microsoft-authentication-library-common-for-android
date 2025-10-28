@@ -164,4 +164,13 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_JIT_CHALLENGE_AUTH_METHOD = "255";
     public static final String NATIVE_AUTH_JIT_SUBMIT_CHALLENGE = "256";
     //endregion
+
+    // region WebApps APIs
+
+    // WebAppsGetTokenSubOperation
+    //==============================================================================================
+
+    public static final String WEBAPPS_GET_TOKEN_INTERACTIVE = "310";
+
+    //endregion
 }
