@@ -1,12 +1,15 @@
 vNext
 ----------
+- [MINOR] Refactor getAccountByLocalAccountId (#2781)
+- [MINOR] Add OTel Benchmarker (#2786)
+- [MINOR] WebApps AccountId Registry (#2787)
+- [MINOR] Take flight value for whether to show webcp flow in weview or not in brokerless scenarios. (#2784)
 - [MINOR] getAllSsoTokens method for Edge (#2774)
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Expose WebApps APIs (#2793)
 
 Version 23.0.2
 ----------
-- [MINOR] Add OTel Benchmarker (#2786)
 - [MAJOR] Add KeyStoreBackedSecretKeyProvider (#2674)
 - [MINOR] Add Open Id configuration issuer validation reporting in OpenIdProviderConfigurationClient (#2751)
 - [MINOR] Add helper method to record elapsed time (#2768)
@@ -18,7 +21,6 @@ Version 23.0.2
 - [MINOR] SDK now handles SMS as strong authentication method #2766
 - [MINOR] Added error handling when webcp redirects have browser protocol #2767
 - [PATCH] Fix for app link redirect from CCT due to forced browser preference (#2775)
-- [MINOR] Take flight value for whether to show webcp flow in weview or not in brokerless scenarios. (#2784)
 
 Version 22.1.3
 ----------
