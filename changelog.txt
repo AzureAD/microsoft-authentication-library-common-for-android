@@ -1,6 +1,6 @@
 vNext
 ----------
-
+- [MINOR] Add new span name for DELEGATION_CERT_INSTALL's telemetry (#2790)
 - [MINOR] Refactor getAccountByLocalAccountId (#2781)
 - [MINOR] Add OTel Benchmarker (#2786)
 - [MINOR] WebApps AccountId Registry (#2787)
