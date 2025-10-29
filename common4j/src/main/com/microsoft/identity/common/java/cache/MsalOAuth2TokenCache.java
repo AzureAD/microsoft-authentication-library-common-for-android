@@ -66,7 +66,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -1092,17 +1091,41 @@ public class MsalOAuth2TokenCache
                                                     @NonNull final String clientId,
                                                     @NonNull final String localAccountId) {
         final String methodName = ":getAccountByLocalAccountId";
-
-        final List<AccountRecord> accounts = getAccounts(environment, clientId);
-
         Logger.verbosePII(
                 TAG + methodName,
                 "LocalAccountId: [" + localAccountId + "]"
         );
 
-        for (final AccountRecord account : accounts) {
-            if (localAccountId.equals(account.getLocalAccountId())) {
-                return account;
+        final List<AccountRecord> accountRecordList = mAccountCredentialCache.getAccounts();
+        if (accountRecordList.isEmpty()) {
+            Logger.warn(
+                    TAG + methodName,
+                    "No accounts found in the cache."
+            );
+            return null;
+        }
+
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
+        );
+
+        final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                null, // homeAccountId
+                environment,
+                credentialTypes,
+                clientId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        for (final AccountRecord accountRecord: accountRecordList) {
+            if (accountRecord.getLocalAccountId().equals(localAccountId)
+                        && accountHasCredential(accountRecord, appCredentials)) {
+                return accountRecord;
             }
         }
 
@@ -1228,6 +1251,10 @@ public class MsalOAuth2TokenCache
                 TAG + methodName,
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
+
+        if (accountsForEnvironment.isEmpty()) {
+            return Collections.unmodifiableList(accountsForThisApp);
+        }
 
         final Set<CredentialType> credentialTypes = new HashSet<>(
                 Arrays.asList(IdToken, V1IdToken, RefreshToken)

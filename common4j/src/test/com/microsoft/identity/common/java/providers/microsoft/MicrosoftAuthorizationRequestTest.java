@@ -60,6 +60,7 @@ public class MicrosoftAuthorizationRequestTest {
     public static final boolean MOCK_MULTIPLE_CLOUD_AWARE = true;
     public static final UUID MOCK_CORRELATION_ID = UUID.randomUUID();
     public static final String MOCK_LOGIN_HINT = "MOCK_LOGIN_HINT";
+    public static final String MOCK_DOMAIN_HINT = "MOCK_DOMAIN_HINT";
 
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
@@ -74,6 +75,7 @@ public class MicrosoftAuthorizationRequestTest {
                 .setMultipleCloudAware(MOCK_MULTIPLE_CLOUD_AWARE)
                 .setCorrelationId(MOCK_CORRELATION_ID)
                 .setLoginHint(MOCK_LOGIN_HINT)
+                .setDomainHint(MOCK_DOMAIN_HINT)
                 .setPkceChallenge(MOCK_PKCE_CHALLENGE)
                 .setState(MOCK_STATE)
                 .build();
@@ -81,6 +83,7 @@ public class MicrosoftAuthorizationRequestTest {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
             Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
                             "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&domain_hint=" + MOCK_DOMAIN_HINT +
                             "&client-request-id=" + MOCK_CORRELATION_ID +
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
@@ -100,6 +103,7 @@ public class MicrosoftAuthorizationRequestTest {
         } else {
             Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
                             "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&domain_hint=" + MOCK_DOMAIN_HINT +
                             "&client-request-id=" + MOCK_CORRELATION_ID +
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
@@ -129,6 +133,7 @@ public class MicrosoftAuthorizationRequestTest {
                 .setMultipleCloudAware(MOCK_MULTIPLE_CLOUD_AWARE)
                 .setCorrelationId(MOCK_CORRELATION_ID)
                 .setLoginHint(MOCK_LOGIN_HINT)
+                .setDomainHint(MOCK_DOMAIN_HINT)
                 .setPkceChallenge(MOCK_PKCE_CHALLENGE)
                 .setState(MOCK_STATE)
                 .build();
@@ -136,6 +141,7 @@ public class MicrosoftAuthorizationRequestTest {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
             Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
                             "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&domain_hint=" + MOCK_DOMAIN_HINT +
                             "&client-request-id=" + MOCK_CORRELATION_ID +
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
@@ -155,6 +161,7 @@ public class MicrosoftAuthorizationRequestTest {
         } else {
             Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT +
                             "?login_hint=" + MOCK_LOGIN_HINT +
+                            "&domain_hint=" + MOCK_DOMAIN_HINT +
                             "&client-request-id=" + MOCK_CORRELATION_ID +
                             "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                             "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +

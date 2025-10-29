@@ -76,6 +76,14 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private final String mLoginHint;
 
     /**
+     * Provides a hint about the tenant or domain that the user should use to sign in.
+     */
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName("domain_hint")
+    private final String mDomainHint;
+
+    /**
      * Correlation ID.
      */
     @Expose()
@@ -168,6 +176,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         super(builder);
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
+        mDomainHint = builder.mDomainHint;
         mCorrelationId = builder.mCorrelationId;
 
         final PkceChallenge challenge = builder.mPkceChallenge == null ?
@@ -217,6 +226,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private Boolean mMultipleCloudAware;
         private UUID mCorrelationId;
         private String mLoginHint;
+        private String mDomainHint;
         private PkceChallenge mPkceChallenge;
         private PreferredAuthMethod mPreferredAuthMethod;
 
@@ -251,6 +261,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setLoginHint(String loginHint) {
             mLoginHint = loginHint;
+            return self();
+        }
+
+        public B setDomainHint(String domainHint) {
+            mDomainHint = domainHint;
             return self();
         }
 

@@ -1366,6 +1366,119 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
+     * Get supported web app contracts from broker.
+     *
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @throws BaseException
+     */
+    public String getSupportedWebAppContracts(@NonNull final String minBrokerProtocolVersion) throws BaseException {
+        return getBrokerOperationExecutor().execute(null,
+                new BrokerOperation<String>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_GET_SUPPORTED_WEB_APPS_CONTRACTS,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForGetSupportedWebAppContracts(negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(
+                            @Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getSupportedWebAppsContractFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":getSupportedWebAppContracts";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final String result) {
+                    }
+                });
+    }
+
+    /**
+     * Execute web app request in broker.
+     *
+     * @param request request string
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @throws BaseException
+     */
+    public String executeWebAppRequest(@NonNull final String request,
+                                       @NonNull final String minBrokerProtocolVersion) throws BaseException {
+        return getBrokerOperationExecutor().execute(null,
+                new BrokerOperation<String>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(request,negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":executeWebAppRequest";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final String result) {
+                    }
+                });
+    }
+
+    /**
      * Checks if the account returns is a MSA Account and sets single on state in cache
      */
     private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
