@@ -78,7 +78,7 @@ Common provides cross-repository primitives:
 ### 1.7 IPC Schema Compatibility
 - Key constants stable; additive changes maintain backward read of old keys.
 - Protocol/schema/version fields preserved semantically.
-- Removal/rename of existing keys without fallback = Severity: High –.
+- Removal/rename of existing keys without fallback = Severity: High.
 
 ### 1.8 Cryptography Details
 - Approved: SHA-256/512, AES-GCM with random IV, RSA OAEP or ECDSA P-256 (where present).
