@@ -162,9 +162,13 @@ class PasskeyWebListener(
     ) {
         runCatching { credentialManagerHandler.getPasskey(message) }
             .onSuccess { credentialResponse ->
-                reply.postSuccess(
-                    (credentialResponse.credential as PublicKeyCredential).authenticationResponseJson
-                )            }
+                val publicKeyCredential = credentialResponse.credential as? PublicKeyCredential
+                if (publicKeyCredential != null) {
+                    reply.postSuccess(publicKeyCredential.authenticationResponseJson)
+                } else {
+                    reply.postError("Unexpected credential type: ${credentialResponse.credential.javaClass.name}")
+                }
+           }
             .onFailure { throwable ->
                 reply.postError(throwable)
             }

@@ -369,13 +369,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         consoleMessage.lineNumber() + " of " + consoleMessage.sourceId();
                 switch (consoleMessage.messageLevel()) {
                     case ERROR:
-                        Logger.error(methodTag, errorMessage, null);
+                        Logger.errorPII(methodTag, errorMessage, null);
                         break;
                     case WARNING:
-                        Logger.warn(methodTag, errorMessage);
+                        Logger.warnPII(methodTag, errorMessage);
                         break;
                     default:
-                        Logger.info(methodTag, errorMessage);
+                        Logger.infoPII(methodTag, errorMessage);
                 }
                 return true;
             }
