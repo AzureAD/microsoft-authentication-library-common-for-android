@@ -232,7 +232,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
         // Handle render process crash
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            sendErrorToCallback(view, -1, "WebView render process gone, crahsd? : " + detail.didCrash());
+            sendErrorToCallback(view, -1, "WebView render process gone, crashed? : " + detail.didCrash());
         } else {
             sendErrorToCallback(view, -1, "WebView render process gone.");
         }
