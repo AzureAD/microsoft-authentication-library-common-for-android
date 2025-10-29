@@ -229,13 +229,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * @return whether or not we handled the crash
      */
     @Override
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
         // Handle render process crash
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            sendErrorToCallback(view, -1, "WebView render process gone, crashed? : " + detail.didCrash());
-        } else {
-            sendErrorToCallback(view, -1, "WebView render process gone.");
-        }
+        // TODO: This should probably have a more specific error code, but we'll need to ask OneAuth to add new handling for it.
+        sendErrorToCallback(view, ERROR_UNKNOWN, "WebView render process gone, crashed? : " + detail.didCrash());
 
         return true; // Indicate we handled the crash
     }
