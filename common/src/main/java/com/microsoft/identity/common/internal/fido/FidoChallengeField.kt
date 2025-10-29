@@ -115,7 +115,10 @@ data class FidoChallengeField<K>(private val field: FidoRequestField,
             if (FidoConstants.supportedPasskeyProtocolVersions.contains(version)) {
                 return version
             }
-            throw ClientException(ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR, "Provided protocol version is not currently supported.")
+            throw ClientException(
+                ClientException.PASSKEY_PROTOCOL_REQUEST_PARSING_ERROR,
+                "Passkey protocol version '$version' is not supported. Supported versions: ${FidoConstants.supportedPasskeyProtocolVersions.joinToString()}"
+            )
         }
 
         /**
