@@ -220,10 +220,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     /**
-     * We received an ANR bug report from LTW, where webview crashing would cause the calling application to crash as well,
-     * because Broker was not handling the crash and packaging it into an exception
+     * Handles WebView render process crashes or terminations. Previously, a WebView render process crash could cause
+     * the calling application to crash as well, because the Broker was not handling the crash and packaging it into an exception.
      *
-     * Overriding this method allows us to do that and send an error gracefully to the callback object when the render process is gone.
+     * Overriding this method allows us to gracefully handle WebView render process crashes by sending an error to the callback object
+     * when the render process is gone, preventing the application from crashing.
      * @param view webview in question
      * @param detail minor details about the render process being lost
      * @return whether or not we handled the crash
