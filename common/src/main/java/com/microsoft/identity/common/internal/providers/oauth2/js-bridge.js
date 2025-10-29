@@ -61,7 +61,7 @@ var __webauthn_hooks__;
                 }
             }
         }
-        var jsonObj = {"type":"create", "request":temppk}
+        var jsonObj = {"type":"create", "request":temppk};
 
         var json = JSON.stringify(jsonObj);
         __webauthn_interface__.postMessage(json);
