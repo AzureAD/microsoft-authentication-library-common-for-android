@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_CAN_SHOW_UI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;
@@ -600,14 +601,17 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param request                      input request
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @param requiredBrokerProtocolVersion protocol version required by the client.
+     * @param canShowUI                  whether the broker can show UI or not.
      * @return request Bundle
      */
     public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
                                                           @NonNull final String negotiatedBrokerProtocolVersion,
-                                                          @NonNull final String requiredBrokerProtocolVersion) {
+                                                          @NonNull final String requiredBrokerProtocolVersion,
+                                                          @NonNull final Boolean canShowUI) {
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         bundle.putString(BROKER_WEB_APPS_REQUEST, request);
+        bundle.putString(BROKER_WEB_APPS_CAN_SHOW_UI, canShowUI.toString());
         addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
         return bundle;
     }

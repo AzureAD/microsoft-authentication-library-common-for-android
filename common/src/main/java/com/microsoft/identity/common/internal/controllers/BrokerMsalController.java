@@ -84,6 +84,7 @@ import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -112,6 +113,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -1426,10 +1428,12 @@ public class BrokerMsalController extends BaseController {
      *
      * @param request request string
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @param canShowUI whether the broker can show UI for this request.
      * @throws BaseException
      */
     public String executeWebAppRequest(@NonNull final String request,
-                                       @NonNull final String minBrokerProtocolVersion) throws BaseException {
+                                       @NonNull final String minBrokerProtocolVersion,
+                                       @NonNull final Boolean canShowUI) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -1445,7 +1449,12 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(
                                 BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(request,negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
+                                        request,
+                                        negotiatedBrokerProtocolVersion,
+                                        minBrokerProtocolVersion,
+                                        canShowUI
+                                )
                         );
                     }
 
@@ -1456,6 +1465,19 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
                         verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST)) {
+                            try {
+                                final String paramsRaw = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+                                // TODO: need to create parameters
+                                final BrokerInteractiveTokenCommandParameters params =
+                                final AcquireTokenResult result = acquireToken(params);
+                                // TODO: need to make this serializable to put in bundle
+                                final String resultResponse = ObjectMapper.serializeObjectToJsonString(result);
+                                return executeWebAppRequest(resultResponse, minBrokerProtocolVersion, canShowUI);
+                            } catch (final Throwable t) {
+
+                            }
+                        }
                         return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                     }
 

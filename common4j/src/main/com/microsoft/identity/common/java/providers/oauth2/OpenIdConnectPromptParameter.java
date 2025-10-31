@@ -101,7 +101,6 @@ public enum OpenIdConnectPromptParameter {
             default:
                 return UNSET;
         }
-        return UNSET;
     }
 
 
