@@ -394,6 +394,14 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 getAccessScreen.waitForExists(TimeUnit.MINUTES.toMillis(2))
         );
 
+        // Adding small sleep before continuing, as Teams can trigger MAM PIN flow twice
+        // With delay we'd only interact with 2nd instance of the flow.
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         // get access screen - continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
