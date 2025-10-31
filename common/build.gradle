@@ -146,6 +146,7 @@ android {
     libraryVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "${archivesBaseName}-${version}.aar"
+            println("Building variant: ${variant.name} for ${project.name}")
         }
     }
 }
