@@ -28,8 +28,12 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
@@ -49,6 +53,9 @@ import lombok.NonNull;
 public class SharedPreferencesAccountCredentialCache extends AbstractAccountCredentialCache {
 
     private static final String TAG = SharedPreferencesAccountCredentialCache.class.getSimpleName();
+    // Lists to maintain accounts and credentials
+    private final List<AccountRecord> mAccountList = new ArrayList<>();
+    private final List<Credential> mCredentialList = new ArrayList<>();
 
     /**
      * The name of the SharedPreferences file on disk.
@@ -96,6 +103,26 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
         mCacheValueDelegate = accountCacheValueDelegate;
+    }
+
+    /**
+     * Returns the list of all AccountRecords.
+     */
+    public List<AccountRecord> getAllAccountRecords() {
+        if (mAccountList.isEmpty()) {
+            fetchAndPopulateAllAccountsAndCredentials();
+        }
+        return mAccountList;
+    }
+
+    /**
+     * Returns the list of all Credentials.
+     */
+    public List<Credential> getAllCredentials() {
+        if (mCredentialList.isEmpty()) {
+            fetchAndPopulateAllAccountsAndCredentials();
+        }
+        return mCredentialList;
     }
 
     @Override
@@ -203,6 +230,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @NonNull
     private Map<String, AccountRecord> getAccountsWithKeys() {
         Logger.verbose(TAG, "Loading Accounts + keys...");
+        SpanExtension.current().setAttribute(AttributeName.num_account_credential_cache_records.name(), mSharedPreferencesFileManager.keySet().size());
         final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
@@ -237,10 +265,17 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public List<AccountRecord> getAccounts() {
         final String methodTag = TAG + ":getAccounts";
         Logger.verbose(methodTag, "Loading Accounts...(no arg)");
-        final Map<String, AccountRecord> allAccounts = getAccountsWithKeys();
-        final List<AccountRecord> accounts = new ArrayList<>(allAccounts.values());
-        Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
-        return accounts;
+        if (CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH)) {
+               return getAllAccountRecords();
+        } else {
+            final Map<String, AccountRecord> allAccounts = getAccountsWithKeys();
+            final List<AccountRecord> accounts = new ArrayList<>(allAccounts.values());
+            Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
+            return accounts;
+        }
+
     }
 
     @Override
@@ -298,11 +333,54 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         return credentials;
     }
 
+    /**
+     * Loads all Account and Credential objects from SharedPreferences.
+     * Iterates over all entries, determines if each is an Account or Credential,
+     * deserializes to the appropriate object, and adds to the corresponding list.
+     *
+     * @return void. Populates mAccountList and mCredentialList with all found records.
+     */
+    private void fetchAndPopulateAllAccountsAndCredentials() {
+        List<AccountRecord> accounts = new ArrayList<>();
+        List<Credential> credentials = new ArrayList<>();
+        SpanExtension.current().setAttribute(AttributeName.refactored_account_credential_cache_path_triggered.name(),
+                true);
+
+        Map<String, String> cacheKeysWithValues = mSharedPreferencesFileManager.getAll();
+        for (Map.Entry<String, ?> cacheValue : cacheKeysWithValues.entrySet()) {
+            String cacheKey = cacheValue.getKey();
+            String cacheValueStr = cacheValue.getValue().toString();
+
+            if (isAccount(cacheKey)) {
+                AccountRecord account = mCacheValueDelegate.fromCacheValue(cacheValueStr, AccountRecord.class);
+                if (account != null) {
+                    accounts.add(account);
+                } else {
+                    Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
+                }
+            } else { // since it's not an account, it must be a credential
+                Credential credential = mCacheValueDelegate.fromCacheValue(cacheValueStr, credentialClassForType(cacheKey));
+                if (credential != null) {
+                    credentials.add(credential);
+                } else {
+                    Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
+                }
+            }
+        }
+        mAccountList.addAll(accounts);
+        mCredentialList.addAll(credentials);
+    }
+
     @Override
     @NonNull
     public List<Credential> getCredentials() {
         final String methodTag = TAG + ":getCredentials";
         Logger.verbose(methodTag, "Loading Credentials...");
+        if (CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH)) {
+            return getAllCredentials();
+        }
         final Map<String, Credential> allCredentials = getCredentialsWithKeys();
         final List<Credential> creds = new ArrayList<>(allCredentials.values());
         return creds;

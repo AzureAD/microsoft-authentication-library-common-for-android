@@ -151,6 +151,11 @@ public enum AttributeName {
     num_concurrent_silent_requests,
 
     /**
+     * The number of account and credential records in the cache.
+     */
+    num_account_credential_cache_records,
+
+    /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */
     elapsed_time_cache_save,
@@ -487,5 +492,10 @@ public enum AttributeName {
     /**
      * Records if current flow is in webcp flow.
      */
-    is_in_web_cp_flow
+    is_in_web_cp_flow,
+
+    /**
+     * Indicates if the refactored account credential cache path was triggered.
+     */
+    refactored_account_credential_cache_path_triggered
 }

@@ -175,13 +175,18 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to skip ests telemetry.
      */
-    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false),
+    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", true),
 
     /**
      * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
      * config endpoint and only reports the failure result.
      */
-    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
+    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true),
+
+    /**
+     * Flight to enable refactored getAccountByLocalAccountId path.
+     */
+    ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH("EnableRefactoredGetAccountByLocalAccountIdPath", true);
 
     private String key;
     private Object defaultValue;
