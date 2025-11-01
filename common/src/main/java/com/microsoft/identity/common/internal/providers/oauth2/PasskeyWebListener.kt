@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.app.Activity
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.webkit.WebView
@@ -330,9 +331,6 @@ class PasskeyWebListener(
                 return false
             }
 
-            // Uncomment for debugging: view console.log messages from injected JS
-            // WebView.setWebContentsDebuggingEnabled(true)
-
             return if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
                 Logger.verbose(methodTag, "WEB_MESSAGE_LISTENER is supported on this WebView.")
 
@@ -350,16 +348,36 @@ class PasskeyWebListener(
                 Logger.info(methodTag, "PasskeyWebListener successfully hooked into WebView.")
 
                 // Injects the JavaScript interface early in the page load lifecycle.
+                val scriptToInject = if (BuildConfig.DEBUG) {
+                    WebView.setWebContentsDebuggingEnabled(true)
+                    loadJsBridgeScript(activity)
+                } else {
+                    WEB_AUTHN_INTERFACE_JS_MINIFIED
+                }
                 webClient.addOnPageStartedScript(
                     TAG,
-                    WEB_AUTHN_INTERFACE_JS_MINIFIED,
+                    scriptToInject,
                     getAllowedOriginRules()
                 )
+
                 true
             } else {
                 Logger.warn(methodTag, "WEB_MESSAGE_LISTENER not supported on this device/WebView.")
                 false
             }
         }
+
+        /**
+         * Loads the full js-bridge.js script from assets for debugging.
+         */
+        private fun loadJsBridgeScript(context: Context): String {
+            return try {
+                context.assets.open("js-bridge.js").bufferedReader().use { it.readText() }
+            } catch (e: Exception) {
+                Logger.warn(TAG, "Failed to load js-bridge.js from assets, falling back to minified version: ${e.message}")
+                WEB_AUTHN_INTERFACE_JS_MINIFIED
+            }
+        }
+
     }
 }
