@@ -139,7 +139,7 @@ var __webauthn_hooks__;
         { return String.fromCharCode(b); }).join(''))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
-            .replace(/=+${'$'}/, '');
+            .replace(/=+$/, '');
     }
     __webauthn_hooks__.CM_base64url_encode = CM_base64url_encode;
     // Resolves what is expected for create, called when the embedder is ready
