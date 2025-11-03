@@ -127,7 +127,8 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
 
-        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
+        // TODO: we need to bypass just for webapps
+        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri) || isValidRedirectURIForWebApps(redirectUri)) {
             Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
             return true;
         }
@@ -323,5 +324,10 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
                 || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
                 || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
+    }
+
+    private boolean isValidRedirectURIForWebApps(String redirectUri) {
+        // The only allow-listed redirect URIs on ESTS for web apps
+        return true;
     }
 }

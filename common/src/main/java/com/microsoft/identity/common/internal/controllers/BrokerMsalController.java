@@ -60,11 +60,16 @@ import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
+import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsInteractiveRequest;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsTokenErrorResponse;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsTokenResponse;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -77,6 +82,7 @@ import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -108,9 +114,11 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -123,8 +131,12 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -1429,11 +1441,13 @@ public class BrokerMsalController extends BaseController {
      * @param request request string
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
      * @param canShowUI whether the broker can show UI for this request.
+     * @param additionalParams additional required parameters for web app request.
      * @throws BaseException
      */
     public String executeWebAppRequest(@NonNull final String request,
                                        @NonNull final String minBrokerProtocolVersion,
-                                       @NonNull final Boolean canShowUI) throws BaseException {
+                                       @NonNull final Boolean canShowUI,
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalParams) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -1453,7 +1467,8 @@ public class BrokerMsalController extends BaseController {
                                         request,
                                         negotiatedBrokerProtocolVersion,
                                         minBrokerProtocolVersion,
-                                        canShowUI
+                                        canShowUI,
+
                                 )
                         );
                     }
@@ -1467,15 +1482,63 @@ public class BrokerMsalController extends BaseController {
                         verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
                         if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST)) {
                             try {
-                                final String paramsRaw = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+                                final String brokerRequestRaw = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+                                final WebAppsInteractiveRequest brokerRequest = ObjectMapper.deserializeJsonStringToObject(
+                                        brokerRequestRaw,
+                                        WebAppsInteractiveRequest.class
+                                );
                                 // TODO: need to create parameters
-                                final BrokerInteractiveTokenCommandParameters params =
-                                final AcquireTokenResult result = acquireToken(params);
-                                // TODO: need to make this serializable to put in bundle
-                                final String resultResponse = ObjectMapper.serializeObjectToJsonString(result);
-                                return executeWebAppRequest(resultResponse, minBrokerProtocolVersion, canShowUI);
-                            } catch (final Throwable t) {
+                                final Set<String> scopeSet = new HashSet<>(Arrays.asList(brokerRequest.getScope().split(" ")));
+                                final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
+                                        .applicationName(extraArgs.get("applicationName"))
+                                        .applicationVersion(extraArgs.get("applicationVersion"))
+                                        .sdkVersion("sdkVersion")
+                                        .sdkType(SdkType.MSAL_CPP)
+                                        .platformComponents(mComponents)
+                                        .clientId(brokerRequest.getClientId())
+                                        .redirectUri(brokerRequest.getRedirect())
+                                        .authority(Authority.getAuthorityFromAuthorityUrl(brokerRequest.getAuthority()))
+                                        .scopes(scopeSet)
+                                        .loginHint(brokerRequest.getUserName()) // login hint
+                                        .claimsRequestJson(brokerRequest.getClaims())
+                                        .correlationId(brokerRequest.getCorrelationId())
+                                        .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
+                                        .prompt(OpenIdConnectPromptParameter.fromString(brokerRequest.getPrompt()))
+                                        // If you need extra options parsed, deserialize brokerRequest.getExtraOptions() JSON here.
+                                        .build();
 
+                                final ILocalAuthenticationResult interactiveResult = acquireToken(params).getLocalAuthenticationResult();
+
+                                // Serialize interactive result (phase 2 payload)
+                                final WebAppsTokenResponse response = new WebAppsTokenResponse(
+                                        interactiveResult.getAccountRecord().getUsername(),
+                                        interactiveResult.getUniqueId(),
+                                        interactiveResult.getAccessTokenRecord().getExpiresOn(),
+                                        interactiveResult.getIdToken(),
+                                        interactiveResult.getAccessToken(),
+                                        null
+                                );
+                                final String interactiveResultJson =
+                                        ObjectMapper.serializeObjectToJsonString(response);
+                                // Second phase: send token/result back to broker (no UI needed now)
+                                extraArgs.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT, interactiveResultJson);
+                                return executeWebAppRequest(
+                                        request,
+                                        minBrokerProtocolVersion,
+                                        false,
+                                         extraArgs
+                                );
+                            } catch (final Throwable t) {
+                                final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(t);
+                                final String errorResultJson =
+                                        ObjectMapper.serializeObjectToJsonString(errorResponse);
+                                extraArgs.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT, errorResultJson);
+                                return executeWebAppRequest(
+                                        request,
+                                        minBrokerProtocolVersion,
+                                        false,
+                                        extraArgs
+                                );
                             }
                         }
                         return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);

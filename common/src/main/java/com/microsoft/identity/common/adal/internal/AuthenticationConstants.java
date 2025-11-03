@@ -1401,13 +1401,17 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_WEB_APPS_CAN_SHOW_UI = "can_show_ui";
 
+        public static final String BROKER_WEB_APPS_EXTRA_ARGS = "extra_args";
+
         public static final String BROKER_WEB_APPS_INTERACTIVE_REQUEST = "interactive_request";
 
         /**
-         * String for broker webapps result after an interactive request;
+         * String for broker webapps successful result after an interactive request;
          * when this field is present, the getToken suboperation will repackage the result and return it to the caller.
          */
-        public static final String BROKER_WEB_APPS_INTERACTIVE_RESULT = "interactive_result";
+        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
+
+        public static final String BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT = "interactive_error_result";
 
         /**
          * String for generate shr result.
