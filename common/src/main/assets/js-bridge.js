@@ -201,5 +201,5 @@ navigator.credentials.create = __webauthn_hooks__.create;
 window.PublicKeyCredential = (function () { });
 window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable =
     function () {
-        return Promise.resolve(false);
+        return Promise.resolve(true);
     };
