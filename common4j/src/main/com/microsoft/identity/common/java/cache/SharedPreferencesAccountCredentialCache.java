@@ -38,6 +38,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,21 +109,21 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     /**
      * Returns the list of all AccountRecords.
      */
-    public List<AccountRecord> getAllAccountRecords() {
+    private List<AccountRecord> getAllAccountRecords() {
         if (mAccountList.isEmpty()) {
             fetchAndPopulateAllAccountsAndCredentials();
         }
-        return mAccountList;
+        return Collections.unmodifiableList(mAccountList);
     }
 
     /**
      * Returns the list of all Credentials.
      */
-    public List<Credential> getAllCredentials() {
+    private List<Credential> getAllCredentials() {
         if (mCredentialList.isEmpty()) {
             fetchAndPopulateAllAccountsAndCredentials();
         }
-        return mCredentialList;
+        return Collections.unmodifiableList(mCredentialList);
     }
 
     @Override

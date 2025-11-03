@@ -186,7 +186,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable refactored getAccountByLocalAccountId path.
      */
-    ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH("EnableRefactoredGetAccountByLocalAccountIdPath", true);
+    ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH("EnableRefactoredGetAccountByLocalAccountIdPath", false);
 
     private String key;
     private Object defaultValue;

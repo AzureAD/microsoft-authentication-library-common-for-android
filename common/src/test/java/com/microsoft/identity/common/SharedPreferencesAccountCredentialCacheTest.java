@@ -40,6 +40,8 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
@@ -47,6 +49,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -69,7 +72,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
     static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
     static final String ENVIRONMENT = "login.microsoftonline.com";
     static final String CLIENT_ID = "0287f963-2d72-4363-9e3a-5705c5b0f031";
-    static final String APPLICATION_IDENTIFIER_SHA1 = "some.package/AbCdEfGhIjKlMnOpQrStUvWxYz/=";
     static final String APPLICATION_IDENTIFIER_SHA512 = "some.package/AbCdEfGhIjKlMnOpQrStUvWxYz/+0123456789AbCdEfGhIjKlMnOpQrStUvWxYz/+0123456789AbCdEfGhIj==";
     static final String MAM_ENROLLMENT_IDENTIFIER = "UNSET";
     static final String TARGET = "user.read user.write https://graph.windows.net";
@@ -430,6 +432,51 @@ public class SharedPreferencesAccountCredentialCacheTest {
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        // Verify getAccountsFilteredBy() returns one matching element
+        final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertTrue(accounts.size() == 1);
+        assertEquals(account, accounts.get(0));
+    }
+
+    @Test
+    public void getAccountsWithFlight() {
+        // Save an Account into the cache
+        final AccountRecord account = new AccountRecord();
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account.setUsername(USERNAME);
+        account.setAuthorityType(AUTHORITY_TYPE);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+
+        // Save a RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH))
+                .thenReturn(true);
 
         // Verify getAccountsFilteredBy() returns one matching element
         final List<AccountRecord> accounts = mSharedPreferencesAccountCredentialCache.getAccounts();

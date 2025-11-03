@@ -151,7 +151,7 @@ public enum AttributeName {
     num_concurrent_silent_requests,
 
     /**
-     * The number of account and credential records in the cache.
+     * The number of account and credential records in the SharedPreferences.
      */
     num_account_credential_cache_records,
 
