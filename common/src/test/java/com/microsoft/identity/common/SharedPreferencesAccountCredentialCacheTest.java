@@ -734,6 +734,52 @@ public class SharedPreferencesAccountCredentialCacheTest {
     }
 
     @Test
+    public void getCredentialsWithFlight() {
+        // Save an Account into the cache
+        final AccountRecord account = new AccountRecord();
+        account.setHomeAccountId(HOME_ACCOUNT_ID);
+        account.setEnvironment(ENVIRONMENT);
+        account.setRealm(REALM);
+        account.setLocalAccountId(LOCAL_ACCOUNT_ID);
+        account.setUsername(USERNAME);
+        account.setAuthorityType(AUTHORITY_TYPE);
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+        // Save an AccessToken into the cache
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm("Foo");
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken.setTarget(TARGET);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+
+        // Save a RefreshToken into the cache
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setSecret(SECRET);
+        refreshToken.setTarget(TARGET);
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_REFACTORED_GET_ACCOUNT_BY_LOCAL_ACCOUNT_ID_PATH))
+                .thenReturn(true);
+
+        // Verify getCredentials() returns two matching elements
+        final List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertTrue(credentials.size() == 2);
+    }
+
+    @Test
     public void getCredentialsNoEnvironment() {
         final RefreshTokenRecord refreshToken1 = new RefreshTokenRecord();
         refreshToken1.setCredentialType(CredentialType.RefreshToken.name());

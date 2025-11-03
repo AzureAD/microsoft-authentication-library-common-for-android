@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -57,6 +58,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     // Lists to maintain accounts and credentials
     private final List<AccountRecord> mAccountList = new ArrayList<>();
     private final List<Credential> mCredentialList = new ArrayList<>();
+    ReentrantReadWriteLock mLock = new ReentrantReadWriteLock();
 
     /**
      * The name of the SharedPreferences file on disk.
@@ -110,20 +112,30 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * Returns the list of all AccountRecords.
      */
     private List<AccountRecord> getAllAccountRecords() {
-        if (mAccountList.isEmpty()) {
-            fetchAndPopulateAllAccountsAndCredentials();
+        mLock.readLock().lock();
+        try {
+            if (mAccountList.isEmpty()) {
+                fetchAndPopulateAllAccountsAndCredentials();
+            }
+            return Collections.unmodifiableList(mAccountList);
+        } finally {
+            mLock.readLock().unlock();
         }
-        return Collections.unmodifiableList(mAccountList);
     }
 
     /**
      * Returns the list of all Credentials.
      */
     private List<Credential> getAllCredentials() {
-        if (mCredentialList.isEmpty()) {
-            fetchAndPopulateAllAccountsAndCredentials();
+        mLock.readLock().lock();
+        try {
+            if (mCredentialList.isEmpty()) {
+                fetchAndPopulateAllAccountsAndCredentials();
+            }
+            return Collections.unmodifiableList(mCredentialList);
+        } finally {
+            mLock.readLock().unlock();
         }
-        return Collections.unmodifiableList(mCredentialList);
     }
 
     @Override
@@ -132,7 +144,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Account type: [" + accountToSave.getClass().getSimpleName() + "]");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
-
         // Perform any necessary field merging on the Account to save...
         final AccountRecord existingAccount = getAccount(cacheKey);
 
@@ -141,7 +152,18 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
-        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
+        mLock.writeLock().lock();
+        try {
+            clearAccountAndCredentialsList();
+            mSharedPreferencesFileManager.put(cacheKey, cacheValue);
+        } finally {
+            mLock.writeLock().unlock();
+        }
+    }
+
+    private  void clearAccountAndCredentialsList() {
+        mAccountList.clear();
+        mCredentialList.clear();
     }
 
     @Override
@@ -149,7 +171,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Saving credential...");
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
-
         // Perform any necessary field merging on the Credential to save...
         final Credential existingCredential = getCredential(cacheKey);
 
@@ -158,17 +179,30 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
-        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
+        mLock.writeLock().lock();
+        try {
+            clearAccountAndCredentialsList();
+            mSharedPreferencesFileManager.put(cacheKey, cacheValue);
+
+        } finally {
+            mLock.writeLock().unlock();
+        }
     }
 
     @Override
     public AccountRecord getAccount(@NonNull final String cacheKey) {
         Logger.verbose(TAG, "Loading Account by key...");
-        AccountRecord account = mCacheValueDelegate.fromCacheValue(
-                mSharedPreferencesFileManager.get(cacheKey),
-                AccountRecord.class
-        );
-
+        AccountRecord account;
+        mLock.readLock().lock();
+        try {
+             account = mCacheValueDelegate.fromCacheValue(
+                    mSharedPreferencesFileManager.get(cacheKey),
+                    AccountRecord.class
+            );
+        }
+        finally {
+            mLock.readLock().unlock();
+        }
         if (null == account) {
             // We could not deserialize the target AccountRecord...
             // Maybe it was encrypted for another application?
@@ -178,7 +212,12 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             );
         } else if (EMPTY_ACCOUNT.equals(account)) {
             Logger.warn(TAG, "The returned Account was uninitialized. Removing...");
-            mSharedPreferencesFileManager.remove(cacheKey);
+            mLock.writeLock().lock();
+            try {
+                mSharedPreferencesFileManager.remove(cacheKey);
+            } finally {
+                mLock.writeLock().unlock();
+            }
             account = null;
         }
 
@@ -202,10 +241,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Credential credential = null;
 
         if (null != clazz) {
-            credential = mCacheValueDelegate.fromCacheValue(
-                    mSharedPreferencesFileManager.get(cacheKey),
-                    clazz
-            );
+            mLock.readLock().lock();
+            try {
+                credential = mCacheValueDelegate.fromCacheValue(
+                        mSharedPreferencesFileManager.get(cacheKey),
+                        clazz
+                );
+            } finally {
+                mLock.readLock().unlock();
+            }
         }
 
         if (null == credential) {
@@ -221,7 +265,12 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             // The returned credential came back uninitialized...
             // Remove the entry and return null...
             Logger.warn(TAG, "The returned Credential was uninitialized. Removing...");
-            mSharedPreferencesFileManager.remove(cacheKey);
+            mLock.writeLock().lock();
+            try {
+                mSharedPreferencesFileManager.remove(cacheKey);
+            } finally {
+                mLock.writeLock().unlock();
+            }
             credential = null;
         }
 
@@ -232,12 +281,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private Map<String, AccountRecord> getAccountsWithKeys() {
         Logger.verbose(TAG, "Loading Accounts + keys...");
         SpanExtension.current().setAttribute(AttributeName.num_account_credential_cache_records.name(), mSharedPreferencesFileManager.keySet().size());
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return isAccount(value);
-            }
-        });
+        final Iterator<Map.Entry<String, String>> cacheValues;
+        mLock.readLock().lock();
+        try {
+            cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(SharedPreferencesAccountCredentialCache::isAccount);
+        } finally {
+            mLock.readLock().unlock();
+        }
+
         final Map<String, AccountRecord> accounts = new HashMap<>();
         if (cacheValues != null) {
             while (cacheValues.hasNext()) {
@@ -307,12 +358,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final String methodTag = TAG + ":getCredentialsWithKeys";
         Logger.verbose(methodTag, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
-            @Override
-            public boolean test(String value) {
-                return isCredential(value);
-            }
-        });
+        final Iterator<Map.Entry<String, String>> cacheValues;
+        mLock.readLock().lock();
+        try {
+            cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(SharedPreferencesAccountCredentialCache::isCredential);
+        } finally {
+            mLock.readLock().unlock();
+        }
 
         while (cacheValues.hasNext()) {
             Map.Entry<String, ?> cacheValue = cacheValues.next();
@@ -346,8 +398,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         List<Credential> credentials = new ArrayList<>();
         SpanExtension.current().setAttribute(AttributeName.refactored_account_credential_cache_path_triggered.name(),
                 true);
-
-        Map<String, String> cacheKeysWithValues = mSharedPreferencesFileManager.getAll();
+        Map<String, String> cacheKeysWithValues;
+        mLock.readLock().lock();
+        try {
+             cacheKeysWithValues = mSharedPreferencesFileManager.getAll();
+        } finally {
+            mLock.readLock().unlock();
+        }
         for (Map.Entry<String, ?> cacheValue : cacheKeysWithValues.entrySet()) {
             String cacheKey = cacheValue.getKey();
             String cacheValueStr = cacheValue.getValue().toString();
@@ -368,8 +425,15 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 }
             }
         }
-        mAccountList.addAll(accounts);
-        mCredentialList.addAll(credentials);
+        mLock.writeLock().lock();
+        try {
+            clearAccountAndCredentialsList(); // clear the existing lists to avoid creating duplicates
+            mAccountList.addAll(accounts);
+            mCredentialList.addAll(credentials);
+        } finally {
+            mLock.writeLock().unlock();
+        }
+
     }
 
     @Override
@@ -402,27 +466,32 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
 
-        final List<Credential> allCredentials = getCredentials();
+        mLock.readLock().lock();
+        try {
+            final List<Credential> allCredentials = getCredentials();
 
-        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
-                allCredentials,
-                homeAccountId,
-                environment,
-                credentialType,
-                clientId,
-                applicationIdentifier,
-                mamEnrollmentIdentifier,
-                realm,
-                target,
-                authScheme,
-                null,
-                null,
-                false
-        );
+            final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                    allCredentials,
+                    homeAccountId,
+                    environment,
+                    credentialType,
+                    clientId,
+                    applicationIdentifier,
+                    mamEnrollmentIdentifier,
+                    realm,
+                    target,
+                    authScheme,
+                    null,
+                    null,
+                    false
+            );
 
-        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+            Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
-        return matchingCredentials;
+            return matchingCredentials;
+        } finally {
+            mLock.readLock().unlock();
+        }
     }
 
     @Override
@@ -662,8 +731,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         boolean accountRemoved = false;
         if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
         {
-            mSharedPreferencesFileManager.remove(cacheKey);
-            accountRemoved = true;
+            mLock.writeLock().lock();
+            try {
+                clearAccountAndCredentialsList();
+                mSharedPreferencesFileManager.remove(cacheKey);
+                accountRemoved = true;
+            } finally {
+                mLock.writeLock().unlock();
+            }
         }
 
         Logger.info(methodTag, "Account was removed? [" + accountRemoved + "]");
@@ -680,13 +755,21 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
         }
 
+
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
         boolean credentialRemoved = false;
         if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
         {
-            mSharedPreferencesFileManager.remove(cacheKey);
-            credentialRemoved = true;
+            mLock.writeLock().lock();
+            try {
+                clearAccountAndCredentialsList();
+                mSharedPreferencesFileManager.remove(cacheKey);
+                credentialRemoved = true;
+            } finally {
+                mLock.writeLock().unlock();
+            }
+
         }
 
         Logger.info(methodTag, "Credential was removed? [" + credentialRemoved + "]");
@@ -698,7 +781,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     public void clearAll() {
         final String methodTag = TAG + ":clearAll";
         Logger.info(methodTag, "Clearing all SharedPreferences entries...");
-        mSharedPreferencesFileManager.clear();
+        mLock.writeLock().lock();
+        try {
+            mSharedPreferencesFileManager.clear();
+            clearAccountAndCredentialsList();
+        } finally {
+            mLock.writeLock().unlock();
+        }
         Logger.info(methodTag, "SharedPreferences cleared.");
     }
 
