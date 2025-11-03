@@ -169,8 +169,6 @@ public final class PublicApiId {
 
     // WebAppsGetTokenSubOperation
     //==============================================================================================
-
-    public static final String WEBAPPS_GET_TOKEN_INTERACTIVE = "310";
     public static final String WEBAPPS_GET_TOKEN_SILENT = "311";
 
     //endregion
