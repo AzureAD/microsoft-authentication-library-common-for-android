@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc
 
+/**
+ * Error response for WebApps token requests.
+ */
 data class WebAppsTokenErrorResponse(
     val throwable: Throwable? = null
 )

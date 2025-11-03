@@ -29,7 +29,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_CAN_SHOW_UI;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXTRA_ARGS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
@@ -52,6 +52,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -600,23 +601,25 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Method to construct a request bundle for broker executeWebAppRequest request.
      *
-     * @param request                      input request
+     * @param request input request
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @param requiredBrokerProtocolVersion protocol version required by the client.
-     * @param canShowUI                  whether the broker can show UI or not.
-     * @param extraArgs                  extra arguments to be sent to broker.
+     * @param additionalRequiredParams extra required arguments to be sent to broker.
+     * @param additionalArgs additional args as needed.
      * @return request Bundle
      */
     public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
                                                           @NonNull final String negotiatedBrokerProtocolVersion,
                                                           @NonNull final String requiredBrokerProtocolVersion,
-                                                          @NonNull final Boolean canShowUI,
-                                                          @NonNull final Map<String, String> extraArgs) {
+                                                          @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
+                                                          @Nullable final Map<String, String> additionalArgs) {
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         bundle.putString(BROKER_WEB_APPS_REQUEST, request);
-        bundle.putBoolean(BROKER_WEB_APPS_CAN_SHOW_UI, canShowUI);
-        bundle.putString(BROKER_WEB_APPS_EXTRA_ARGS, ObjectMapper.serializeObjectToJsonString(extraArgs));
+        bundle.putString(BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS, ObjectMapper.serializeObjectToJsonString(additionalRequiredParams));
+        if (additionalArgs != null) {
+            bundle.putString(BROKER_WEB_APPS_EXTRA_ARGS, ObjectMapper.serializeObjectToJsonString(additionalArgs));
+        }
         addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
         return bundle;
     }

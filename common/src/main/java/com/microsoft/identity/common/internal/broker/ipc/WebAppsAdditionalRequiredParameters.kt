@@ -25,7 +25,14 @@ package com.microsoft.identity.common.internal.broker.ipc
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.request.SdkType
 
+/**
+ * Additional required parameters for WebApps operations.
+ */
 data class WebAppsAdditionalRequiredParameters(
+    // A parameter from Edge which indicates whether the calling application can show UI.
+    @SerializedName(FIELD_CAN_SHOW_UI)
+    val canShowUi: Boolean = false,
+
     @SerializedName(FIELD_CALLING_APPLICATION_NAME)
     val callingApplicationName: String,
 
@@ -39,6 +46,7 @@ data class WebAppsAdditionalRequiredParameters(
     val sdkVersion: String
 ) {
     companion object {
+        const val FIELD_CAN_SHOW_UI = "canShowUi"
         const val FIELD_CALLING_APPLICATION_NAME = "callingApplicationName"
         const val FIELD_CALLING_APPLICATION_VERSION = "callingApplicationVersion"
         const val FIELD_SDK_TYPE = "sdkType"

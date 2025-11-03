@@ -22,18 +22,53 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * Payload returned to caller to trigger interactive auth.
  */
 data class WebAppsInteractiveRequest(
+    @SerializedName(FIELD_HOME_ACCOUNT_ID)
     val homeAccountId: String?,
-    val clientId: String?,
+
+    @SerializedName(FIELD_CLIENT_ID)
+    val clientId: String,
+
+    @SerializedName(FIELD_AUTHORITY)
     val authority: String,
-    val scope: String?,              // Space-delimited scopes
-    val redirect: String?,
+
+    @SerializedName(FIELD_SCOPE)
+    val scope: String,
+
+    @SerializedName(FIELD_REDIRECT)
+    val redirect: String,
+
+    @SerializedName(FIELD_CORRELATION_ID)
     val correlationId: String,
-    val prompt: String?,             // String form of OpenIdConnectPromptParameter
-    val userName: String?,           // Login hint
-    val claims: String?,             // Raw claims JSON
-    val extraOptions: String?        // JSON string of extra parameters (key/value)
-)
+
+    @SerializedName(FIELD_PROMPT)
+    val prompt: String?,
+
+    @SerializedName(FIELD_USER_NAME)
+    val userName: String?,
+
+    @SerializedName(FIELD_CLAIMS)
+    val claims: String?,
+
+    // JSON string of extra parameters (key/value)
+    @SerializedName(FIELD_EXTRA_OPTIONS)
+    val extraOptions: String?
+) {
+    companion object {
+        const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
+        const val FIELD_CLIENT_ID = "clientId"
+        const val FIELD_AUTHORITY = "authority"
+        const val FIELD_SCOPE = "scope"
+        const val FIELD_REDIRECT = "redirect"
+        const val FIELD_CORRELATION_ID = "correlationId"
+        const val FIELD_PROMPT = "prompt"
+        const val FIELD_USER_NAME = "userName"
+        const val FIELD_CLAIMS = "claims"
+        const val FIELD_EXTRA_OPTIONS = "extraOptions"
+    }
+}

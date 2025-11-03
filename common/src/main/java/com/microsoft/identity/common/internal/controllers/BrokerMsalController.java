@@ -60,7 +60,6 @@ import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
-import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
@@ -130,9 +129,8 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1440,14 +1438,14 @@ public class BrokerMsalController extends BaseController {
      *
      * @param request request string
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
-     * @param canShowUI whether the broker can show UI for this request.
-     * @param additionalParams additional required parameters for web app request.
+     * @param additionalRequiredParams additional required parameters for web app request.
+     * @param additionalArgs additional arguments as needed.
      * @throws BaseException
      */
     public String executeWebAppRequest(@NonNull final String request,
                                        @NonNull final String minBrokerProtocolVersion,
-                                       @NonNull final Boolean canShowUI,
-                                       @NonNull final WebAppsAdditionalRequiredParameters additionalParams) throws BaseException {
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
+                                       @Nullable final Map<String, String> additionalArgs) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -1460,16 +1458,12 @@ public class BrokerMsalController extends BaseController {
                     @NonNull
                     @Override
                     public BrokerOperationBundle getBundle() throws ClientException {
-                        return new BrokerOperationBundle(
-                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
-                                mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
-                                        request,
-                                        negotiatedBrokerProtocolVersion,
-                                        minBrokerProtocolVersion,
-                                        canShowUI,
-
-                                )
+                        return buildWebAppsBrokerBundle(
+                                request,
+                                negotiatedBrokerProtocolVersion,
+                                minBrokerProtocolVersion,
+                                additionalRequiredParams,
+                                additionalArgs
                         );
                     }
 
@@ -1480,67 +1474,20 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
                         verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+
+                        // Phase 1: Broker indicates interactive is required.
                         if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST)) {
-                            try {
-                                final String brokerRequestRaw = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
-                                final WebAppsInteractiveRequest brokerRequest = ObjectMapper.deserializeJsonStringToObject(
-                                        brokerRequestRaw,
-                                        WebAppsInteractiveRequest.class
-                                );
-                                // TODO: need to create parameters
-                                final Set<String> scopeSet = new HashSet<>(Arrays.asList(brokerRequest.getScope().split(" ")));
-                                final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
-                                        .applicationName(extraArgs.get("applicationName"))
-                                        .applicationVersion(extraArgs.get("applicationVersion"))
-                                        .sdkVersion("sdkVersion")
-                                        .sdkType(SdkType.MSAL_CPP)
-                                        .platformComponents(mComponents)
-                                        .clientId(brokerRequest.getClientId())
-                                        .redirectUri(brokerRequest.getRedirect())
-                                        .authority(Authority.getAuthorityFromAuthorityUrl(brokerRequest.getAuthority()))
-                                        .scopes(scopeSet)
-                                        .loginHint(brokerRequest.getUserName()) // login hint
-                                        .claimsRequestJson(brokerRequest.getClaims())
-                                        .correlationId(brokerRequest.getCorrelationId())
-                                        .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
-                                        .prompt(OpenIdConnectPromptParameter.fromString(brokerRequest.getPrompt()))
-                                        // If you need extra options parsed, deserialize brokerRequest.getExtraOptions() JSON here.
-                                        .build();
-
-                                final ILocalAuthenticationResult interactiveResult = acquireToken(params).getLocalAuthenticationResult();
-
-                                // Serialize interactive result (phase 2 payload)
-                                final WebAppsTokenResponse response = new WebAppsTokenResponse(
-                                        interactiveResult.getAccountRecord().getUsername(),
-                                        interactiveResult.getUniqueId(),
-                                        interactiveResult.getAccessTokenRecord().getExpiresOn(),
-                                        interactiveResult.getIdToken(),
-                                        interactiveResult.getAccessToken(),
-                                        null
-                                );
-                                final String interactiveResultJson =
-                                        ObjectMapper.serializeObjectToJsonString(response);
-                                // Second phase: send token/result back to broker (no UI needed now)
-                                extraArgs.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT, interactiveResultJson);
-                                return executeWebAppRequest(
-                                        request,
-                                        minBrokerProtocolVersion,
-                                        false,
-                                         extraArgs
-                                );
-                            } catch (final Throwable t) {
-                                final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(t);
-                                final String errorResultJson =
-                                        ObjectMapper.serializeObjectToJsonString(errorResponse);
-                                extraArgs.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT, errorResultJson);
-                                return executeWebAppRequest(
-                                        request,
-                                        minBrokerProtocolVersion,
-                                        false,
-                                        extraArgs
-                                );
-                            }
+                            return handleInteractivePhase(
+                                    request,
+                                    resultBundle,
+                                    negotiatedBrokerProtocolVersion,
+                                    minBrokerProtocolVersion,
+                                    additionalRequiredParams,
+                                    additionalArgs
+                            );
                         }
+
+                        // Otherwise, return the result directly.
                         return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                     }
 
@@ -1681,5 +1628,197 @@ public class BrokerMsalController extends BaseController {
             Logger.info(methodTag, "ResultBundle does not contain BrokerResult. " +
                     "So, this is not likely a broker version supported issue. Continuing.");
         }
+    }
+
+    /**
+     * Build broker operation bundle for web apps request.
+     *
+     * @param request                       request string
+     * @param negotiatedBrokerProtocolVersion negotiated broker protocol version
+     * @param minBrokerProtocolVersion      minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams      additional required parameters for web app request.
+     * @param additionalArgs                additional arguments as needed.
+     * @return BrokerOperationBundle
+     */
+    private BrokerOperationBundle buildWebAppsBrokerBundle(@NonNull final String request,
+                                                           @NonNull final String negotiatedBrokerProtocolVersion,
+                                                           @NonNull final String minBrokerProtocolVersion,
+                                                           @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
+                                                           @Nullable final Map<String, String> additionalArgs) {
+        return new BrokerOperationBundle(
+                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
+                mActiveBrokerPackageName,
+                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
+                        request,
+                        negotiatedBrokerProtocolVersion,
+                        minBrokerProtocolVersion,
+                        additionalRequiredParams,
+                        additionalArgs
+                )
+        );
+    }
+
+    /**
+     * Handle interactive phase of web app request.
+     *
+     * @param request                       request string
+     * @param phaseOneResultBundle          result bundle from phase one
+     * @param negotiatedBrokerProtocolVersion negotiated broker protocol version
+     * @param minBrokerProtocolVersion      minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams      additional required parameters for web app request.
+     * @param additionalArgs                additional arguments as needed.
+     * @return result string from broker
+     * @throws BaseException
+     */
+    private String handleInteractivePhase(@NonNull final String request,
+                                          @NonNull final Bundle phaseOneResultBundle,
+                                          @NonNull final String negotiatedBrokerProtocolVersion,
+                                          @NonNull final String minBrokerProtocolVersion,
+                                          @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
+                                          @Nullable final Map<String, String> additionalArgs) throws BaseException {
+        final String rawInteractiveRequest = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+        if (StringUtil.isNullOrEmpty(rawInteractiveRequest)) {
+            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive request payload missing.");
+        }
+
+        Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
+        try {
+            final WebAppsInteractiveRequest interactiveRequest = ObjectMapper.deserializeJsonStringToObject(
+                    rawInteractiveRequest,
+                    WebAppsInteractiveRequest.class
+            );
+
+            final InteractiveTokenCommandParameters interactiveParams =
+                    buildInteractiveTokenParametersForWebApps(interactiveRequest, additionalRequiredParams, minBrokerProtocolVersion);
+
+            final ILocalAuthenticationResult interactiveResult =
+                    acquireToken(interactiveParams).getLocalAuthenticationResult();
+
+            final WebAppsTokenResponse response = new WebAppsTokenResponse(
+                    interactiveResult.getAccountRecord().getUsername(),
+                    interactiveResult.getUniqueId(),
+                    interactiveResult.getAccessTokenRecord().getExpiresOn(),
+                    interactiveResult.getIdToken(),
+                    interactiveResult.getAccessToken(),
+                    null
+            );
+
+            mergedExtraArgs.put(
+                    AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
+                    ObjectMapper.serializeObjectToJsonString(response)
+            );
+        } catch (final Exception ex) {
+            final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(ex);
+            mergedExtraArgs.put(
+                    AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT,
+                    ObjectMapper.serializeObjectToJsonString(errorResponse)
+            );
+        }
+
+        // Phase 2: Send result back to broker
+        return performSecondPhaseWebAppRequest(
+                request,
+                negotiatedBrokerProtocolVersion,
+                minBrokerProtocolVersion,
+                additionalRequiredParams,
+                mergedExtraArgs
+        );
+    }
+
+    /**
+     * Perform second phase web app request to broker, which involves sending interactive result back to broker.
+     * We separate this out from the executeWebAppRequest method to help avoid recursion (and keep things cleaner).
+     *
+     * @param request                       request string
+     * @param negotiatedBrokerProtocolVersion negotiated broker protocol version
+     * @param minBrokerProtocolVersion      minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams      additional required parameters for web app request.
+     * @param extraArgs                     extra arguments as needed.
+     * @return result string from broker
+     * @throws BaseException
+     */
+    private String performSecondPhaseWebAppRequest(@NonNull final String request,
+                                                   @NonNull final String negotiatedBrokerProtocolVersion,
+                                                   @NonNull final String minBrokerProtocolVersion,
+                                                   @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
+                                                   @NonNull final Map<String, String> extraArgs) throws BaseException {
+        return getBrokerOperationExecutor().execute(
+                null,
+                new BrokerOperation<String>() {
+                    @Override
+                    public void performPrerequisites(@NonNull IIpcStrategy strategy) {
+                        // Already negotiated in phase 1
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() {
+                        return buildWebAppsBrokerBundle(
+                                request,
+                                negotiatedBrokerProtocolVersion,
+                                minBrokerProtocolVersion,
+                                additionalRequiredParams,
+                                extraArgs
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(@Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":performSecondPhaseWebAppRequest";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull ApiEndEvent event, @NonNull String result) {
+                    }
+                }
+        );
+    }
+
+    /**
+     * Build interactive token command parameters from web apps interactive request.
+     *
+     * @param webAppsRequest               web apps interactive request
+     * @param requiredParams               additional required parameters for web app request.
+     * @param minBrokerProtocolVersion     minimum broker protocol version the caller requires.
+     * @return InteractiveTokenCommandParameters
+     * @throws BaseException
+     */
+    private InteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
+                                                                                        @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
+                                                                                        @NonNull final String minBrokerProtocolVersion) throws BaseException {
+        final Set<String> scopeSet = new HashSet<>(Arrays.asList(webAppsRequest.getScope().split(" ")));
+        return InteractiveTokenCommandParameters.builder()
+                .applicationName(requiredParams.getCallingApplicationName())
+                .applicationVersion(requiredParams.getCallingApplicationVersion())
+                .sdkType(requiredParams.getSdkType())
+                .sdkVersion(requiredParams.getSdkVersion())
+                .platformComponents(mComponents)
+                .clientId(webAppsRequest.getClientId())
+                .redirectUri(webAppsRequest.getRedirect())
+                .authority(Authority.getAuthorityFromAuthorityUrl(webAppsRequest.getAuthority()))
+                .scopes(scopeSet)
+                .loginHint(webAppsRequest.getUserName())
+                .claimsRequestJson(webAppsRequest.getClaims())
+                .correlationId(webAppsRequest.getCorrelationId())
+                .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
+                .prompt(OpenIdConnectPromptParameter.fromString(webAppsRequest.getPrompt()))
+                .build();
     }
 }

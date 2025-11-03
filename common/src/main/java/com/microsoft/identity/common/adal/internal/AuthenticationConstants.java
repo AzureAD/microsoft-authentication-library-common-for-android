@@ -1397,12 +1397,19 @@ public final class AuthenticationConstants {
         public static final String BROKER_WEB_APPS_RESPONSE = "response";
 
         /**
-         * String for broker webapps can show ui.
+         * String for broker webapps additional required params.
          */
-        public static final String BROKER_WEB_APPS_CAN_SHOW_UI = "can_show_ui";
+        public static final String BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS = "additional_required_params";
 
+        /**
+         * String for broker webapps extra args.
+         */
         public static final String BROKER_WEB_APPS_EXTRA_ARGS = "extra_args";
 
+        /**
+         * String for broker webapps interactive request;
+         * when this field is present, the executeRequest operation will launch an interactive request.
+         */
         public static final String BROKER_WEB_APPS_INTERACTIVE_REQUEST = "interactive_request";
 
         /**
@@ -1411,6 +1418,10 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
 
+        /**
+         * String for broker webapps error result after an interactive request;
+         * when this field is present, the getToken suboperation will repackage the result and return it to the caller.
+         */
         public static final String BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT = "interactive_error_result";
 
         /**

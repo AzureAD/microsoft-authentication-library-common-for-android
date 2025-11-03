@@ -22,11 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker.ipc
 
+import com.google.gson.annotations.SerializedName
+
+/**
+ * Successful response for WebApps token requests.
+ */
 data class WebAppsTokenResponse(
+    @SerializedName(FIELD_USER_NAME)
     val userName: String,
+
+    @SerializedName(FIELD_HOME_ACCOUNT_ID)
     val homeAccountId: String,
+
+    @SerializedName(FIELD_EXPIRES_IN)
     val expiresIn: String,
+
+    @SerializedName(FIELD_ID_TOKEN)
     val idToken: String,
+
+    @SerializedName(FIELD_ACCESS_TOKEN)
     val accessToken: String,
+
+    @SerializedName(FIELD_PROPERTIES)
     val properties: Map<String, String>? = null
-)
+) {
+    companion object {
+        const val FIELD_USER_NAME = "userName"
+        const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
+        const val FIELD_EXPIRES_IN = "expiresIn"
+        const val FIELD_ID_TOKEN = "idToken"
+        const val FIELD_ACCESS_TOKEN = "accessToken"
+        const val FIELD_PROPERTIES = "properties"
+    }
+}
