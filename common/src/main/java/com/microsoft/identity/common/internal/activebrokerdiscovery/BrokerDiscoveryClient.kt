@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
+import IBrokerDiscoveryClientTelemetryCallback
 import android.content.Context
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
@@ -66,15 +67,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                             private val isPackageInstalled: (BrokerData) -> Boolean,
                             private val isValidBroker: (BrokerData) -> Boolean) : IBrokerDiscoveryClient {
 
-    interface IBrokerDiscoveryClientTelemetryCallback {
-        fun onReadFromCache()
-        fun onShouldUseAccountManager()
-        fun onFinishCheckingIfPackageIsInstalled(timeSpent: Long)
-        fun onFinishCheckingIfSupportedByTargetedBroker(timeSpent: Long)
-        fun onFinishQueryingResultFromBroker(timeSpent: Long)
-        fun onFinishCheckingIfValidBroker(timeSpent: Long)
-    }
-
     companion object {
         val TAG = BrokerDiscoveryClient::class.simpleName
 
@@ -107,8 +99,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         const val FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR = "UNEXPECTED_ERROR"
 
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
-
-        public val sTelemetryCallback: IBrokerDiscoveryClientTelemetryCallback? = null
 
         /**
          * Per-process Thread-safe, coroutine-safe Mutex of this class.
@@ -286,24 +276,35 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
         return runBlocking {
-            return@runBlocking getActiveBrokerAsync(shouldSkipCache)
+            return@runBlocking getActiveBrokerAsync(shouldSkipCache, null)
         }
     }
 
-    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean): BrokerData?{
+    override fun getActiveBroker(
+        shouldSkipCache: Boolean,
+        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
+    ): BrokerData? {
+        return runBlocking {
+            return@runBlocking getActiveBrokerAsync(shouldSkipCache, telemetryCallback)
+        }
+    }
+
+    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean,
+                                             telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
         classLevelLock.withLock {
             if (!shouldSkipCache) {
                 if (cache.shouldUseAccountManager()) {
-                    sTelemetryCallback?.onShouldUseAccountManager()
+                    telemetryCallback?.onUseAccountManager()
                     return getActiveBrokerFromAccountManager()
                 }
+                val timeStartReadingFromCache = System.nanoTime()
                 cache.getCachedActiveBroker()?.let {
-                    sTelemetryCallback?.onReadFromCache()
+                    telemetryCallback?.onReadFromCache(System.nanoTime() - timeStartReadingFromCache)
 
-                    val startTime1 = System.nanoTime()
+                    val timeStartIsPackageInstalled = System.nanoTime()
                     val isPackageInstalled= isPackageInstalled(it)
-                    sTelemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - startTime1)
+                    telemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - timeStartIsPackageInstalled)
                     if (!isPackageInstalled) {
                         Logger.info(
                             methodTag,
@@ -313,9 +314,9 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    val startTime2 = System.nanoTime()
+                    val timeStartIsValidBroker = System.nanoTime()
                     val isValidBroker= isValidBroker(it)
-                    sTelemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - startTime2)
+                    telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
                     if (!isValidBroker) {
                         Logger.info(
                             methodTag,
@@ -325,10 +326,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    val startTime3 = System.nanoTime()
+                    val timeStartIsSupportedByTargetedBroker = System.nanoTime()
                     val isSupportedByTargetedBroker =
                         ipcStrategy.isSupportedByTargetedBroker(it.packageName)
-                    sTelemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(System.nanoTime() - startTime3)
+                    telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(System.nanoTime() - timeStartIsSupportedByTargetedBroker)
                     if(!isSupportedByTargetedBroker){
                         Logger.info(
                             methodTag,
@@ -343,14 +344,14 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 }
             }
 
-            val startTime4 = System.nanoTime()
+            val timeStartQueryFromBroker = System.nanoTime()
             val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
                 isPackageInstalled = isPackageInstalled,
                 isValidBroker = isValidBroker
             )
-            sTelemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - startTime4)
+            telemetryCallback?.onFinishQueryingResultFromBroker(System.nanoTime() - timeStartQueryFromBroker)
 
             if (brokerData != null) {
                 cache.setCachedActiveBroker(brokerData)
@@ -369,6 +370,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 )
             )
 
+            telemetryCallback?.onUseAccountManager()
             val accountManagerResult = getActiveBrokerFromAccountManager()
             Logger.info(
                 methodTag, "Tried getting active broker from account manager, " +

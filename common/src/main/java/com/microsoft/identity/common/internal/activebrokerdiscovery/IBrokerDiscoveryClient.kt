@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
+import IBrokerDiscoveryClientTelemetryCallback
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.exception.ClientException
 
@@ -36,6 +37,20 @@ interface IBrokerDiscoveryClient {
      * @return BrokerData package name and signature hash of the targeted app.
      * **/
     fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
+
+
+    /**
+     * Performs a discovery to figure out which broker app the SDK (MSAL/OneAuth)
+     * has to send its request to.
+     *
+     * @param shouldSkipCache       If true, this will skip cached value (if any)
+     *                              and always query the broker for the result.
+     * @param telemetryCallback     callback with telemetry data.
+     * @return BrokerData package name and signature hash of the targeted app.
+     * **/
+    fun getActiveBroker(shouldSkipCache: Boolean = false,
+                        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback) : BrokerData?
+
 
     /**
      * Force a broker app to figure out which broker app the SDK (MSAL/OneAuth)
