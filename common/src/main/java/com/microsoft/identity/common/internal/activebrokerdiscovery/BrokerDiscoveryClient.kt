@@ -291,7 +291,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
     private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean,
                                              telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
+
+        val timeStartAcquiringLock = System.nanoTime()
         classLevelLock.withLock {
+            telemetryCallback?.onLockAcquired(System.nanoTime() - timeStartAcquiringLock)
             if (!shouldSkipCache) {
                 if (cache.shouldUseAccountManager()) {
                     telemetryCallback?.onUseAccountManager()

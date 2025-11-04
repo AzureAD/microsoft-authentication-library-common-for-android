@@ -24,6 +24,13 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 interface IBrokerDiscoveryClientTelemetryCallback {
     /**
+     * Time spent acquiring the lock/mutex for broker discovery.
+     *
+     * @param timeSpentInNanoSeconds Time spent acquiring the lock/mutex (in nanoseconds).
+     **/
+    fun onLockAcquired(timeSpentInNanoSeconds: Long)
+
+    /**
      * If triggered, the broker discovery client is using Account Manager
      * (e.g. one of the installed broker is too old and doesn't support this new mechanism).
      **/
