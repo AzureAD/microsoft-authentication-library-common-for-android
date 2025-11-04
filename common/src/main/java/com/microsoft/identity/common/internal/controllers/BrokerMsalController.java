@@ -1664,16 +1664,26 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Handle interactive phase of web app request.
+     * Handles the second leg of a two-phase web app authentication flow when the broker indicates
+     * that interactive authentication is required.
+     * <p>
+     * This method parses the interactive request payload from the phase one result bundle,
+     * performs token acquisition using the provided parameters, and serializes the result
+     * (either success or error) into the {@code extraArgs} map. The updated map is then sent
+     * back to the broker as part of the second phase request.
+     * <p>
+     * Both success and error cases are handled by serializing the appropriate response objects
+     * ({@link WebAppsTokenResponse} or {@link WebAppsTokenErrorResponse}) into the extraArgs map
+     * under the appropriate keys, so the broker can process the outcome.
      *
-     * @param request                       request string
-     * @param phaseOneResultBundle          result bundle from phase one
-     * @param negotiatedBrokerProtocolVersion negotiated broker protocol version
-     * @param minBrokerProtocolVersion      minimum broker protocol version the caller requires.
-     * @param additionalRequiredParams      additional required parameters for web app request.
-     * @param additionalArgs                additional arguments as needed.
-     * @return result string from broker
-     * @throws BaseException
+     * @param request                       The original web app request string.
+     * @param phaseOneResultBundle          The result bundle returned from the first phase, containing the interactive request payload.
+     * @param negotiatedBrokerProtocolVersion The negotiated broker protocol version.
+     * @param minBrokerProtocolVersion      The minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams      Additional required parameters for the web app request.
+     * @param additionalArgs                Additional arguments as needed; will be updated with the result.
+     * @return The result string from the broker after the second phase completes.
+     * @throws BaseException If the interactive request payload is missing or token acquisition fails.
      */
     private String handleInteractivePhase(@NonNull final String request,
                                           @NonNull final Bundle phaseOneResultBundle,
@@ -1696,8 +1706,11 @@ public class BrokerMsalController extends BaseController {
             final BrokerInteractiveTokenCommandParameters interactiveParams =
                     buildInteractiveTokenParametersForWebApps(interactiveRequest, additionalRequiredParams, minBrokerProtocolVersion);
 
-            final ILocalAuthenticationResult interactiveResult =
-                    acquireToken(interactiveParams).getLocalAuthenticationResult();
+            final AcquireTokenResult rawResult = acquireToken(interactiveParams);
+            if (rawResult == null) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
+            }
+            final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
 
             final WebAppsTokenResponse response = new WebAppsTokenResponse(
                     interactiveResult.getAccountRecord().getUsername(),
@@ -1808,7 +1821,13 @@ public class BrokerMsalController extends BaseController {
     private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
                                                                                         @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
                                                                                         @NonNull final String minBrokerProtocolVersion) throws BaseException {
-        final Set<String> scopeSet = new HashSet<>(Arrays.asList(webAppsRequest.getScope().split(" ")));
+        final Set<String> scopeSet;
+        final String rawScope = webAppsRequest.getScope();
+        if (rawScope == null || rawScope.trim().isEmpty()) {
+            scopeSet = Collections.emptySet();
+        } else {
+            scopeSet = new HashSet<>(Arrays.asList(rawScope.trim().split("\\s+")));
+        }
         final Authority authority = Authority.getAuthorityFromAuthorityUrl(webAppsRequest.getAuthority());
         if (authority instanceof AzureActiveDirectoryAuthority) {
             ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(webAppsRequest.getInstanceAware());

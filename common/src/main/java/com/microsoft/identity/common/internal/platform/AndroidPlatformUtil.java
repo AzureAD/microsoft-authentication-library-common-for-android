@@ -163,7 +163,7 @@ public class AndroidPlatformUtil implements IPlatformUtil {
 
     @Override
     public boolean isValidCallingAppForWebApps(@NonNull int callingUid) throws ClientException {
-        // If we're calling from non broker, this is not being called from the right place.
+        // This operation is not supported in non-broker contexts.
         return false;
     }
     @Override
