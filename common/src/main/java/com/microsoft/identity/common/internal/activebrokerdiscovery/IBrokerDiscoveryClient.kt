@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
-import IBrokerDiscoveryClientTelemetryCallback
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.exception.ClientException
 

@@ -20,6 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 interface IBrokerDiscoveryClientTelemetryCallback {
     /**
@@ -31,28 +32,28 @@ interface IBrokerDiscoveryClientTelemetryCallback {
     /**
      * Triggered when BrokerDiscoveryClient finishes reading from its cache.
      *
-     * @return timeSpentInNanoSeconds Time spent reading the cache (in nanoseconds).
+     * @param timeSpentInNanoSeconds Time spent reading the cache (in nanoseconds).
      **/
     fun onReadFromCache(timeSpentInNanoSeconds: Long)
 
     /**
      * Triggered when BrokerDiscoveryClient finishes validating if the cached broker package is installed.
      *
-     * @return timeSpentInNanoSeconds Time spent to validate if the package is installed (in nanoseconds).
+     * @param timeSpentInNanoSeconds Time spent to validate if the package is installed (in nanoseconds).
      **/
     fun onFinishCheckingIfPackageIsInstalled(timeSpentInNanoSeconds: Long)
 
     /**
      * Triggered when BrokerDiscoveryClient finishes validating if the cached broker package supports the given IPC strategy.
      *
-     * @return timeSpentInNanoSeconds Time spent to validate if the package supports the IPC strategy (in nanoseconds).
+     * @param timeSpentInNanoSeconds Time spent to validate if the package supports the IPC strategy (in nanoseconds).
      **/
     fun onFinishCheckingIfSupportedByTargetedBroker(timeSpentInNanoSeconds: Long)
 
     /**
      * Triggered when BrokerDiscoveryClient finishes validating if the cached broker package is a valid broker.
      *
-     * @return timeSpentInNanoSeconds Time spent to validate if the package is a valid broker (in nanoseconds).
+     * @param timeSpentInNanoSeconds Time spent to validate if the package is a valid broker (in nanoseconds).
      **/
     fun onFinishCheckingIfValidBroker(timeSpentInNanoSeconds: Long)
 
@@ -66,7 +67,7 @@ interface IBrokerDiscoveryClientTelemetryCallback {
      * 2. Broker has already done broker discovery before (e.g. by other MSAL/OneAuth app). Only this MSAL/OneAuth app is freshly installed.
      * When the request reaches the broker, the broker would just return the cached value, which will be faster.
      *
-     * @return timeSpentInNanoSeconds Time spent to query the active broker (in nanoseconds).
+     * @param timeSpentInNanoSeconds Time spent to query the active broker (in nanoseconds).
      **/
     fun onFinishQueryingResultFromBroker(timeSpentInNanoSeconds: Long)
 }

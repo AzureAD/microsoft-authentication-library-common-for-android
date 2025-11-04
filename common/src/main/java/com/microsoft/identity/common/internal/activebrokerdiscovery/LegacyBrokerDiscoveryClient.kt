@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
-import IBrokerDiscoveryClientTelemetryCallback
 import android.content.Context
 import com.microsoft.identity.common.internal.broker.BrokerData
 
@@ -40,7 +39,7 @@ class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient 
         shouldSkipCache: Boolean,
         telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
     ): BrokerData? {
-        // LegacyBrokerDiscoveryClient does not support telemetry callback.
+        telemetryCallback.onUseAccountManager()
         return AccountManagerBrokerDiscoveryUtil(context)
             .getActiveBrokerFromAccountManager()
     }

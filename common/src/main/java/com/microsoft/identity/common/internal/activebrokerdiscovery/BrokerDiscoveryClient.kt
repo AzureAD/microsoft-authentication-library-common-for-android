@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
-import IBrokerDiscoveryClientTelemetryCallback
 import android.content.Context
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
@@ -303,7 +302,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     telemetryCallback?.onReadFromCache(System.nanoTime() - timeStartReadingFromCache)
 
                     val timeStartIsPackageInstalled = System.nanoTime()
-                    val isPackageInstalled= isPackageInstalled(it)
+                    val isPackageInstalled = isPackageInstalled(it)
                     telemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - timeStartIsPackageInstalled)
                     if (!isPackageInstalled) {
                         Logger.info(
@@ -315,7 +314,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     }
 
                     val timeStartIsValidBroker = System.nanoTime()
-                    val isValidBroker= isValidBroker(it)
+                    val isValidBroker = isValidBroker(it)
                     telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
                     if (!isValidBroker) {
                         Logger.info(
