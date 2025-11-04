@@ -69,6 +69,8 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final String loginHint;
 
+    private final String domainHint;
+
     private final List<Map.Entry<String, String>> extraOptions;
 
     public Set<String> getScopes() {

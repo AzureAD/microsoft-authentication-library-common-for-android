@@ -73,4 +73,6 @@ public enum SpanName {
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     PasskeyWebListener,
+    PersistToStorageAsync,
+    InstallCertOnWpj
 }

@@ -31,6 +31,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -216,6 +217,26 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         // Once web view is fully loaded,set to visible
         view.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Handles WebView render process crashes or terminations. Previously, a WebView render process crash could cause
+     * the calling application to crash as well, because the Broker was not handling the crash and packaging it into an exception.
+     *
+     * Overriding this method allows us to gracefully handle WebView render process crashes by sending an error to the callback object
+     * when the render process is gone, preventing the application from crashing.
+     * @param view webview in question
+     * @param detail minor details about the render process being lost
+     * @return whether or not we handled the crash
+     */
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        // Handle render process crash
+        // TODO: This should probably have a more specific error code, but we'll need to ask OneAuth to add new handling for it.
+        sendErrorToCallback(view, ERROR_UNKNOWN, "WebView render process gone, crashed? : " + detail.didCrash());
+
+        return true; // Indicate we handled the crash
     }
 
     @Override

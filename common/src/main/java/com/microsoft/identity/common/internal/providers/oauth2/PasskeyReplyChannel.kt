@@ -239,7 +239,6 @@ class PasskeyReplyChannel(
     /**
      * Sends a message to JavaScript via the reply proxy.
      */
-    @Throws (Throwable::class)
     @SuppressLint("RequiresFeature", "Only called when feature is available")
     private fun send(message: ReplyMessage) {
         val methodTag = "$TAG:send"

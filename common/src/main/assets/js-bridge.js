@@ -61,7 +61,7 @@ var __webauthn_hooks__;
                 }
             }
         }
-        var jsonObj = {"type":"create", "request":temppk}
+        var jsonObj = {"type":"create", "request":temppk};
 
         var json = JSON.stringify(jsonObj);
         __webauthn_interface__.postMessage(json);
@@ -139,7 +139,7 @@ var __webauthn_hooks__;
         { return String.fromCharCode(b); }).join(''))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
-            .replace(/=+${'$'}/, '');
+            .replace(/=+$/, '');
     }
     __webauthn_hooks__.CM_base64url_encode = CM_base64url_encode;
     // Resolves what is expected for create, called when the embedder is ready
@@ -201,5 +201,5 @@ navigator.credentials.create = __webauthn_hooks__.create;
 window.PublicKeyCredential = (function () { });
 window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable =
     function () {
-        return Promise.resolve(false);
+        return Promise.resolve(true);
     };
