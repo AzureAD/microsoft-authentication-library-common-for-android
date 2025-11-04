@@ -71,7 +71,7 @@ public interface IPlatformUtil {
      * Validates that the calling uid belongs to an acceptable app for web apps.
      *
      * @param callingUid the calling uid to validate
-     * @throws IllegalArgumentException if the calling uid is not valid
+     * @throws ClientException if the calling uid is not valid
      */
     boolean isValidCallingAppForWebApps(@NonNull int callingUid) throws ClientException;
 

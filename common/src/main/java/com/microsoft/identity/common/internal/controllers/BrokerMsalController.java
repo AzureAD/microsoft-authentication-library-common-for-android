@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXTRA_ARGS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
@@ -1649,18 +1651,29 @@ public class BrokerMsalController extends BaseController {
                                                            @NonNull final String negotiatedBrokerProtocolVersion,
                                                            @NonNull final String minBrokerProtocolVersion,
                                                            @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
-                                                           @Nullable final Map<String, String> additionalArgs) {
-        return new BrokerOperationBundle(
-                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
-                mActiveBrokerPackageName,
-                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
-                        request,
-                        negotiatedBrokerProtocolVersion,
-                        minBrokerProtocolVersion,
-                        additionalRequiredParams,
-                        additionalArgs
-                )
-        );
+                                                           @Nullable final Map<String, String> additionalArgs) throws ClientException {
+        try {
+            final String additionalParamsString =  ObjectMapper.serializeObjectToJsonString(additionalRequiredParams);
+            final String additionalArgsString = additionalArgs != null ?
+                    ObjectMapper.serializeObjectToJsonString(additionalArgs) : null;
+            return new BrokerOperationBundle(
+                    BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
+                    mActiveBrokerPackageName,
+                    mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
+                            request,
+                            negotiatedBrokerProtocolVersion,
+                            minBrokerProtocolVersion,
+                            additionalParamsString,
+                            additionalArgsString
+                    )
+            );
+        } catch (final Throwable t) {
+            throw new ClientException(
+                    ErrorStrings.UNKNOWN_ERROR,
+                    "Failed to build web apps broker bundle.",
+                    t
+            );
+        }
     }
 
     /**
@@ -1770,7 +1783,7 @@ public class BrokerMsalController extends BaseController {
 
                     @NonNull
                     @Override
-                    public BrokerOperationBundle getBundle() {
+                    public BrokerOperationBundle getBundle() throws ClientException {
                         return buildWebAppsBrokerBundle(
                                 request,
                                 negotiatedBrokerProtocolVersion,

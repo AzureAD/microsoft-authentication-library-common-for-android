@@ -78,10 +78,10 @@ public enum OpenIdConnectPromptParameter {
     }
 
     /**
-     * Utility method to map string to OpenIdConnectPromptParameter
+     * Utility method to map a string to an OpenIdConnectPromptParameter enum value.
      *
-     * @param promptParameterString
-     * @return
+     * @param promptParameterString the string representation of the prompt parameter (case-insensitive)
+     * @return the corresponding OpenIdConnectPromptParameter enum value, or UNSET if the input is null, empty, or unrecognized
      */
     public static OpenIdConnectPromptParameter fromString(@Nullable final String promptParameterString) {
         if (promptParameterString == null || promptParameterString.isEmpty()) {

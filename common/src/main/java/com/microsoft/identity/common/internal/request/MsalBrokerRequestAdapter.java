@@ -85,7 +85,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -620,14 +619,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
                                                           @NonNull final String negotiatedBrokerProtocolVersion,
                                                           @NonNull final String requiredBrokerProtocolVersion,
-                                                          @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
-                                                          @Nullable final Map<String, String> additionalArgs) {
+                                                          @NonNull final String additionalRequiredParams,
+                                                          @Nullable final String additionalArgs) {
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         bundle.putString(BROKER_WEB_APPS_REQUEST, request);
-        bundle.putString(BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS, ObjectMapper.serializeObjectToJsonString(additionalRequiredParams));
+        bundle.putString(BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS, additionalRequiredParams);
         if (additionalArgs != null) {
-            bundle.putString(BROKER_WEB_APPS_EXTRA_ARGS, ObjectMapper.serializeObjectToJsonString(additionalArgs));
+            bundle.putString(BROKER_WEB_APPS_EXTRA_ARGS, additionalArgs);
         }
         addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
         return bundle;
