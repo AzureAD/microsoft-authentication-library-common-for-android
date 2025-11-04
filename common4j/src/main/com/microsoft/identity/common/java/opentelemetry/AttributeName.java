@@ -487,5 +487,10 @@ public enum AttributeName {
     /**
      * Records if current flow is in webcp flow.
      */
-    is_in_web_cp_flow
+    is_in_web_cp_flow,
+
+    /**
+     * Indicates whether or not in memory cache is used for accounts and credentials.
+     */
+    in_memory_cache_used_for_accounts_and_credentials
 }
