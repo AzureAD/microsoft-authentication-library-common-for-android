@@ -2169,5 +2169,24 @@ public final class AuthenticationConstants {
         @Deprecated
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
+
+    public static final class PoPConstants {
+        /**
+         * Indicates caller requests a PoP token instead of bearer.
+         */
+        public static final String SIGN_POP_TOKEN = "signPopToken";
+
+        /**
+         * Resource request components used to build the PoP SHR.
+         */
+        public static final String RESOURCE_REQUEST_URI = "resourceRequestUri";
+        public static final String RESOURCE_REQUEST_METHOD = "resourceRequestMethod";
+
+        /**
+         * Optional PoP supplemental values.
+         */
+        public static final String SHR_NONCE = "shrNonce";
+        public static final String SHR_CLAIMS = "shrClaims";
+    }
 }
 
