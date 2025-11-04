@@ -84,6 +84,7 @@ public class BrokerRequest implements Serializable {
         final static String SIGN_IN_WITH_GOOGLE_CREDENTIAL = "sign_in_with_google_credential";
 
         final static String TENANT_ID = "tenant_id";
+        final static String REQUEST_TYPE = "request_type";
     }
 
     /**
@@ -281,4 +282,8 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.TENANT_ID)
     private String mTenantId;
+
+    @Nullable
+    @SerializedName(SerializedNames.REQUEST_TYPE)
+    private String mRequestType;
 }

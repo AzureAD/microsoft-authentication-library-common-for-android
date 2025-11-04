@@ -52,12 +52,17 @@ data class WebAppsInteractiveRequest(
     @SerializedName(FIELD_USER_NAME)
     val userName: String?,
 
+    @SerializedName(FIELD_NONCE)
+    val nonce: String?,
+
+    @SerializedName(FIELD_INSTANCE_AWARE)
+    val instanceAware: Boolean? = false,
+
     @SerializedName(FIELD_CLAIMS)
     val claims: String?,
 
-    // JSON string of extra parameters (key/value)
     @SerializedName(FIELD_EXTRA_OPTIONS)
-    val extraOptions: String?
+    val extraOptions: Map<String, String>?
 ) {
     companion object {
         const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
@@ -68,6 +73,8 @@ data class WebAppsInteractiveRequest(
         const val FIELD_CORRELATION_ID = "correlationId"
         const val FIELD_PROMPT = "prompt"
         const val FIELD_USER_NAME = "userName"
+        const val FIELD_NONCE = "nonce"
+        const val FIELD_INSTANCE_AWARE = "instance_aware"
         const val FIELD_CLAIMS = "claims"
         const val FIELD_EXTRA_OPTIONS = "extraOptions"
     }

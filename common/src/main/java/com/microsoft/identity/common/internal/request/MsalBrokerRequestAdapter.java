@@ -59,6 +59,8 @@ import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.authscheme.INameable;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -142,6 +144,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             brokerRequestBuilder.signInWithGoogleCredential(androidInteractiveTokenCommandParameters.getSignInWithGoogleCredential());
         }
 
+        if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
+            brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
+        }
+
         return brokerRequestBuilder.build();
     }
 
@@ -182,7 +188,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -209,10 +215,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
                         .build()
-                )
-                .build();
+                );
 
-        return brokerRequest;
+        if (parameters instanceof BrokerSilentTokenCommandParameters) {
+            brokerRequestBuilder.requestType(((BrokerSilentTokenCommandParameters) parameters).getRequestType().name());
+        }
+
+        return brokerRequestBuilder.build();
     }
 
     public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,

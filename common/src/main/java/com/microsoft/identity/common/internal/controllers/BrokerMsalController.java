@@ -27,6 +27,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PRT_NONCE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.GET_AAD_DEVICE_ID;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_DCF;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
@@ -83,6 +84,7 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -114,6 +116,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
@@ -129,7 +132,9 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1688,7 +1693,7 @@ public class BrokerMsalController extends BaseController {
                     WebAppsInteractiveRequest.class
             );
 
-            final InteractiveTokenCommandParameters interactiveParams =
+            final BrokerInteractiveTokenCommandParameters interactiveParams =
                     buildInteractiveTokenParametersForWebApps(interactiveRequest, additionalRequiredParams, minBrokerProtocolVersion);
 
             final ILocalAuthenticationResult interactiveResult =
@@ -1797,14 +1802,25 @@ public class BrokerMsalController extends BaseController {
      * @param webAppsRequest               web apps interactive request
      * @param requiredParams               additional required parameters for web app request.
      * @param minBrokerProtocolVersion     minimum broker protocol version the caller requires.
-     * @return InteractiveTokenCommandParameters
+     * @return BrokerInteractiveTokenCommandParameters
      * @throws BaseException
      */
-    private InteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
+    private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
                                                                                         @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
                                                                                         @NonNull final String minBrokerProtocolVersion) throws BaseException {
         final Set<String> scopeSet = new HashSet<>(Arrays.asList(webAppsRequest.getScope().split(" ")));
-        return InteractiveTokenCommandParameters.builder()
+        final Authority authority = Authority.getAuthorityFromAuthorityUrl(webAppsRequest.getAuthority());
+        if (authority instanceof AzureActiveDirectoryAuthority) {
+            ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(webAppsRequest.getInstanceAware());
+        }
+        final Map<String, String> extraOptions = webAppsRequest.getExtraOptions() != null ?
+                webAppsRequest.getExtraOptions() :
+                Collections.emptyMap();
+        final Map<String, String> queryStringParams = (webAppsRequest.getNonce() != null && !webAppsRequest.getNonce().isEmpty()) ?
+                Collections.singletonMap(PRT_NONCE, webAppsRequest.getNonce()) :
+                Collections.emptyMap();
+
+        return BrokerInteractiveTokenCommandParameters.builder()
                 .applicationName(requiredParams.getCallingApplicationName())
                 .applicationVersion(requiredParams.getCallingApplicationVersion())
                 .sdkType(requiredParams.getSdkType())
@@ -1812,13 +1828,16 @@ public class BrokerMsalController extends BaseController {
                 .platformComponents(mComponents)
                 .clientId(webAppsRequest.getClientId())
                 .redirectUri(webAppsRequest.getRedirect())
-                .authority(Authority.getAuthorityFromAuthorityUrl(webAppsRequest.getAuthority()))
+                .authority(authority)
                 .scopes(scopeSet)
                 .loginHint(webAppsRequest.getUserName())
                 .claimsRequestJson(webAppsRequest.getClaims())
                 .correlationId(webAppsRequest.getCorrelationId())
                 .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
                 .prompt(OpenIdConnectPromptParameter.fromString(webAppsRequest.getPrompt()))
+                .extraOptions(new ArrayList<>(extraOptions.entrySet()))
+                .extraQueryStringParameters(new ArrayList<>(queryStringParams.entrySet()))
+                .requestType(BrokerRequestType.WEB_APPS)
                 .build();
     }
 }
