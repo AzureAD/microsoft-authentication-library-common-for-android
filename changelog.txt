@@ -9,6 +9,7 @@ vNext
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Expose WebApps APIs (#2793)
 - [MINOR] Add domainHint support to authorization request (#2792)
+- [MINOR] Add support for WebApps getToken API (#2803)
 
 Version 23.0.2
 ----------
