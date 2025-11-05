@@ -33,6 +33,9 @@ data class WebAppsAdditionalRequiredParameters(
     @SerializedName(FIELD_CAN_SHOW_UI)
     val canShowUi: Boolean = false,
 
+    @SerializedName(FIELD_CALLING_PACKAGE_NAME)
+    val callingPackageName: String,
+
     @SerializedName(FIELD_CALLING_APPLICATION_NAME)
     val callingApplicationName: String,
 
@@ -47,6 +50,7 @@ data class WebAppsAdditionalRequiredParameters(
 ) {
     companion object {
         const val FIELD_CAN_SHOW_UI = "canShowUi"
+        const val FIELD_CALLING_PACKAGE_NAME = "callingPackageName"
         const val FIELD_CALLING_APPLICATION_NAME = "callingApplicationName"
         const val FIELD_CALLING_APPLICATION_VERSION = "callingApplicationVersion"
         const val FIELD_SDK_TYPE = "sdkType"

@@ -43,6 +43,9 @@ data class WebAppsInteractiveRequest(
     @SerializedName(FIELD_REDIRECT)
     val redirect: String,
 
+    @SerializedName(FIELD_CALLER_UID)
+    val callerUid: Int,
+
     @SerializedName(FIELD_CORRELATION_ID)
     val correlationId: String,
 
@@ -70,6 +73,7 @@ data class WebAppsInteractiveRequest(
         const val FIELD_AUTHORITY = "authority"
         const val FIELD_SCOPE = "scope"
         const val FIELD_REDIRECT = "redirect"
+        const val FIELD_CALLER_UID = "callerUid"
         const val FIELD_CORRELATION_ID = "correlationId"
         const val FIELD_PROMPT = "prompt"
         const val FIELD_USER_NAME = "userName"

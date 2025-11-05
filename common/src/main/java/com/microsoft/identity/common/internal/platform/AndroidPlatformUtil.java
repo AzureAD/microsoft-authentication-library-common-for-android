@@ -50,6 +50,7 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -162,9 +163,9 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
-    public boolean isValidCallingAppForWebApps(@NonNull int callingUid) throws ClientException {
+    public void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException {
         // This operation is not supported in non-broker contexts.
-        return false;
+        throw new UnsupportedOperationException("WebApp APIs are not functional in non-broker scenarios.");
     }
     @Override
     @Nullable

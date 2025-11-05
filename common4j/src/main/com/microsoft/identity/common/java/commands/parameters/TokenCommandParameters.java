@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -81,7 +82,7 @@ public class TokenCommandParameters extends CommandParameters {
         return mamEnrollmentId;
     }
 
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         final String methodName = ":validate";
 
         Logger.verbose(

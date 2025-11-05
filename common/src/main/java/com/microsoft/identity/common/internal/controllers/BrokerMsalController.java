@@ -133,7 +133,6 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1727,11 +1726,24 @@ public class BrokerMsalController extends BaseController {
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
             }
             final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
+            // Some parameters can be null, so double checking.
+            final String username = interactiveResult.getAccountRecord().getUsername();
+            if (StringUtil.isNullOrEmpty(username)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null username.");
+            }
+            final String expiresOn = interactiveResult.getAccessTokenRecord().getExpiresOn();
+            if (StringUtil.isNullOrEmpty(expiresOn)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null ExpiresOn.");
+            }
+            final String idToken = interactiveResult.getIdToken();
+            if (StringUtil.isNullOrEmpty(idToken)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null IdToken.");
+            }
             final WebAppsTokenResponse response = new WebAppsTokenResponse(
-                    interactiveResult.getAccountRecord() != null ? interactiveResult.getAccountRecord().getUsername() : null,
+                    username,
                     interactiveResult.getUniqueId(),
-                    interactiveResult.getAccessTokenRecord() != null ? interactiveResult.getAccessTokenRecord().getExpiresOn() : null,
-                    interactiveResult.getIdToken(),
+                    expiresOn,
+                    idToken,
                     interactiveResult.getAccessToken(),
                     null
             );
@@ -1838,18 +1850,10 @@ public class BrokerMsalController extends BaseController {
      * @return BrokerInteractiveTokenCommandParameters
      * @throws BaseException
      */
+    @NonNull
     private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
                                                                                               @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
                                                                                               @NonNull final String minBrokerProtocolVersion) throws BaseException {
-
-        if (requiredParams.getCallingApplicationName() == null ||
-                requiredParams.getCallingApplicationVersion() == null ||
-                requiredParams.getSdkType() == null ||
-                requiredParams.getSdkVersion() == null) {
-            throw new ClientException(ClientException.MISSING_PARAMETER,
-                    "Additional required parameters contain null fields.");
-        }
-
         final String authorityUrl = webAppsRequest.getAuthority();
         if (StringUtil.isNullOrEmpty(authorityUrl)) {
             throw new ClientException(ClientException.MISSING_PARAMETER, "Authority is null or empty.");
@@ -1878,18 +1882,22 @@ public class BrokerMsalController extends BaseController {
 
         final Authority authority = Authority.getAuthorityFromAuthorityUrl(authorityUrl);
         if (authority == null) {
-            throw new ClientException(ClientException.MISSING_PARAMETER, "Failed to parse authority.");
+            throw new ClientException(ClientException.MISSING_PARAMETER,
+                    "Unable to create Authority from url");
         }
         if (authority instanceof AzureActiveDirectoryAuthority) {
             ((AzureActiveDirectoryAuthority) authority)
                     .setMultipleCloudsSupported(Boolean.TRUE.equals(webAppsRequest.getInstanceAware()));
         }
 
-        final List<Map.Entry<String, String>> queryParams = new ArrayList<>();
-        final Map<String, String> extraQueryParamsMap = webAppsRequest.getExtraParameters() != null
-                ? webAppsRequest.getExtraParameters()
+        Map<String, String> tempMap = webAppsRequest.getExtraParameters();
+        final Map<String, String> extraQueryParamsMap = tempMap != null
+                ? tempMap
                 : Collections.emptyMap();
-        queryParams.addAll(extraQueryParamsMap.entrySet());
+        final List<Map.Entry<String, String>> queryParams = new ArrayList<>(extraQueryParamsMap.size() + 1);
+        for (Map.Entry<String, String> e : extraQueryParamsMap.entrySet()) {
+            queryParams.add(new java.util.AbstractMap.SimpleEntry<>(e.getKey(), e.getValue()));
+        }
 
         if (!StringUtil.isNullOrEmpty(webAppsRequest.getNonce())) {
             queryParams.add(new java.util.AbstractMap.SimpleEntry<>(PRT_NONCE, webAppsRequest.getNonce()));
@@ -1900,7 +1908,9 @@ public class BrokerMsalController extends BaseController {
 
         return BrokerInteractiveTokenCommandParameters.builder()
                 .applicationName(requiredParams.getCallingApplicationName())
+                .callerPackageName(requiredParams.getCallingPackageName())
                 .applicationVersion(requiredParams.getCallingApplicationVersion())
+                .callerUid(webAppsRequest.getCallerUid())
                 .sdkType(requiredParams.getSdkType())
                 .sdkVersion(requiredParams.getSdkVersion())
                 .platformComponents(mComponents)

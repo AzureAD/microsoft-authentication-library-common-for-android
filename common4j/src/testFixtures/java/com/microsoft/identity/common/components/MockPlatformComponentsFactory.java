@@ -152,7 +152,7 @@ public class MockPlatformComponentsFactory {
         }
 
         @Override
-        public boolean isValidCallingAppForWebApps(@NonNull int callingUid) {
+        public void isValidCallingAppForWebApps(int callingUid) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }
         @Nullable

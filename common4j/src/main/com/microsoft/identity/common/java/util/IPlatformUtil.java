@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -72,8 +73,9 @@ public interface IPlatformUtil {
      *
      * @param callingUid the calling uid to validate
      * @throws ClientException if the calling uid is not valid
+     * @throws UnsupportedOperationException if the instance does not support this operation
      */
-    boolean isValidCallingAppForWebApps(@NonNull int callingUid) throws ClientException;
+    void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException;
 
     /**
      * Retrieve the Intune MAM enrollment id for the given user and package from

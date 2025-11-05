@@ -26,7 +26,9 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
+import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
@@ -80,7 +82,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final boolean isAccountTransferRequest;
 
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         super.validate();
         if (getAuthority() == null) {
             throw new ArgumentException(
@@ -118,7 +120,13 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+            final IPlatformUtil platformUtil = getPlatformComponents().getPlatformUtil();
+            if (getRequestType() == BrokerRequestType.WEB_APPS) {
+                // For web apps, we have a different redirect URI from our standard Android one.
+                platformUtil.isValidCallingAppForWebApps(getCallerUid());
+                return;
+            }
+            if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +
