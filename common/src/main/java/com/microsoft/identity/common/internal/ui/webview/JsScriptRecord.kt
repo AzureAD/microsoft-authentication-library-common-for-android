@@ -38,6 +38,14 @@ class JsScriptRecord(
     private val allowedUrls: Set<String>?
 ) {
 
+    companion object {
+        val SOVEREIGN_CLOUD_URL_WITH_EXTRA_VALIDATION = setOf(
+            "https://login.microsoftonline.us",
+            "https://login.microsoftonline.microsoft.scloud",
+            "https://login.microsoftonline.eaglex.ic.gov"
+        )
+    }
+
     /**
      * Checks whether this script is allowed to execute for the given [url].
      *
@@ -53,6 +61,14 @@ class JsScriptRecord(
         if (allowedUrls == null) return true
 
         // Check if the URL starts with any allowed prefix
-        return allowedUrls.any { prefix -> url.startsWith(prefix) }
+        return allowedUrls.any { prefix ->
+            if (SOVEREIGN_CLOUD_URL_WITH_EXTRA_VALIDATION.contains(prefix) && url.startsWith(prefix)) {
+                // For sovereign cloud URLs, require 'fido' in the path
+                val path = url.removePrefix(prefix)
+                path.contains("fido", ignoreCase = true)
+            } else {
+                url.startsWith(prefix)
+            }
+        }
     }
 }
