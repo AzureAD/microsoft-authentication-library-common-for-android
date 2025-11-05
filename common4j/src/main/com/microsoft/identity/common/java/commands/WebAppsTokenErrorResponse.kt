@@ -20,38 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.broker.ipc
+package com.microsoft.identity.common.java.commands
 
 import com.google.gson.annotations.SerializedName
 
 /**
- * Successful response for WebApps token requests.
+ * Error response for WebApps token requests.
  */
-data class WebAppsTokenResponse(
-    @SerializedName(FIELD_USER_NAME)
-    val userName: String,
+data class WebAppsTokenErrorResponse(
+    // Fully qualified class name
+    @SerializedName(FIELD_TYPE)
+    val type: String,
 
-    @SerializedName(FIELD_HOME_ACCOUNT_ID)
-    val homeAccountId: String,
+    @SerializedName(FIELD_MESSAGE)
+    val message: String?,
 
-    @SerializedName(FIELD_EXPIRES_IN)
-    val expiresIn: String,
+    // Present for ClientException
+    @SerializedName(FIELD_CLIENT_ERROR_CODE)
+    val clientErrorCode: String?,
 
-    @SerializedName(FIELD_ID_TOKEN)
-    val idToken: String,
-
-    @SerializedName(FIELD_ACCESS_TOKEN)
-    val accessToken: String,
-
-    @SerializedName(FIELD_PROPERTIES)
-    val properties: Map<String, String>? = null
+    // Present for ServiceException
+    @SerializedName(FIELD_HTTP_STATUS_CODE)
+    val httpStatusCode: Int?
 ) {
     companion object {
-        const val FIELD_USER_NAME = "userName"
-        const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
-        const val FIELD_EXPIRES_IN = "expiresIn"
-        const val FIELD_ID_TOKEN = "idToken"
-        const val FIELD_ACCESS_TOKEN = "accessToken"
-        const val FIELD_PROPERTIES = "properties"
+        const val FIELD_TYPE = "type"
+        const val FIELD_MESSAGE = "message"
+        const val FIELD_CLIENT_ERROR_CODE = "clientErrorCode"
+        const val FIELD_HTTP_STATUS_CODE = "httpStatusCode"
     }
 }

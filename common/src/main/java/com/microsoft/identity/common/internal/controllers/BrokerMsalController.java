@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXTRA_ARGS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
@@ -69,9 +67,9 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
-import com.microsoft.identity.common.internal.broker.ipc.WebAppsInteractiveRequest;
-import com.microsoft.identity.common.internal.broker.ipc.WebAppsTokenErrorResponse;
-import com.microsoft.identity.common.internal.broker.ipc.WebAppsTokenResponse;
+import com.microsoft.identity.common.java.commands.WebAppsInteractiveRequest;
+import com.microsoft.identity.common.java.commands.WebAppsTokenErrorResponse;
+import com.microsoft.identity.common.java.commands.WebAppsTokenResponse;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -1739,7 +1737,12 @@ public class BrokerMsalController extends BaseController {
                     ObjectMapper.serializeObjectToJsonString(response)
             );
         } catch (final Exception ex) {
-            final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(ex);
+            final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(
+                    ex.getClass().getName(),
+                    ex.getMessage(),
+                    ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
+                    ex instanceof ServiceException ? ((ServiceException) ex).getHttpStatusCode() : null
+            );
             mergedExtraArgs.put(
                     AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT,
                     ObjectMapper.serializeObjectToJsonString(errorResponse)
