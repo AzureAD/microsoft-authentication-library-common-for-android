@@ -2187,6 +2187,10 @@ public final class AuthenticationConstants {
          */
         public static final String SHR_NONCE = "shrNonce";
         public static final String SHR_CLAIMS = "shrClaims";
+        /**
+         * Key identifier for the PoP key used to sign the token.
+         */
+        public static final String KEY_ID = "keyId";
     }
 }
 

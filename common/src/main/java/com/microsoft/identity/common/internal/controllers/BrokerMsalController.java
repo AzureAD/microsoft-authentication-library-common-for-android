@@ -1702,6 +1702,7 @@ public class BrokerMsalController extends BaseController {
                                           @NonNull final String minBrokerProtocolVersion,
                                           @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
                                           @Nullable final Map<String, String> additionalArgs) throws BaseException {
+
         final String rawInteractiveRequest = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
         if (StringUtil.isNullOrEmpty(rawInteractiveRequest)) {
             throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive request payload missing.");
@@ -1714,19 +1715,22 @@ public class BrokerMsalController extends BaseController {
                     WebAppsInteractiveRequest.class
             );
 
+            if (interactiveRequest == null) {
+                throw new ClientException(ErrorStrings.INVALID_REQUEST, "Deserialized interactive request is null.");
+            }
+
             final BrokerInteractiveTokenCommandParameters interactiveParams =
                     buildInteractiveTokenParametersForWebApps(interactiveRequest, additionalRequiredParams, minBrokerProtocolVersion);
 
             final AcquireTokenResult rawResult = acquireToken(interactiveParams);
-            if (rawResult == null) {
+            if (rawResult == null || rawResult.getLocalAuthenticationResult() == null) {
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
             }
             final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
-
             final WebAppsTokenResponse response = new WebAppsTokenResponse(
-                    interactiveResult.getAccountRecord().getUsername(),
+                    interactiveResult.getAccountRecord() != null ? interactiveResult.getAccountRecord().getUsername() : null,
                     interactiveResult.getUniqueId(),
-                    interactiveResult.getAccessTokenRecord().getExpiresOn(),
+                    interactiveResult.getAccessTokenRecord() != null ? interactiveResult.getAccessTokenRecord().getExpiresOn() : null,
                     interactiveResult.getIdToken(),
                     interactiveResult.getAccessToken(),
                     null
@@ -1835,25 +1839,64 @@ public class BrokerMsalController extends BaseController {
      * @throws BaseException
      */
     private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
-                                                                                        @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
-                                                                                        @NonNull final String minBrokerProtocolVersion) throws BaseException {
+                                                                                              @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
+                                                                                              @NonNull final String minBrokerProtocolVersion) throws BaseException {
+
+        if (requiredParams.getCallingApplicationName() == null ||
+                requiredParams.getCallingApplicationVersion() == null ||
+                requiredParams.getSdkType() == null ||
+                requiredParams.getSdkVersion() == null) {
+            throw new ClientException(ClientException.MISSING_PARAMETER,
+                    "Additional required parameters contain null fields.");
+        }
+
+        final String authorityUrl = webAppsRequest.getAuthority();
+        if (StringUtil.isNullOrEmpty(authorityUrl)) {
+            throw new ClientException(ClientException.MISSING_PARAMETER, "Authority is null or empty.");
+        }
+        final String clientId = webAppsRequest.getClientId();
+        if (StringUtil.isNullOrEmpty(clientId)) {
+            throw new ClientException(ClientException.MISSING_PARAMETER, "ClientId is null or empty.");
+        }
+        final String redirect = webAppsRequest.getRedirect();
+        if (StringUtil.isNullOrEmpty(redirect)) {
+            throw new ClientException(ClientException.MISSING_PARAMETER, "Redirect URI is null or empty.");
+        }
+
         final Set<String> scopeSet;
         final String rawScope = webAppsRequest.getScope();
-        if (rawScope == null || rawScope.trim().isEmpty()) {
+        if (StringUtil.isNullOrEmpty(rawScope)) {
             scopeSet = Collections.emptySet();
         } else {
-            scopeSet = new HashSet<>(Arrays.asList(rawScope.trim().split("\\s+")));
+            scopeSet = new HashSet<>();
+            for (String s : rawScope.trim().split("\\s+")) {
+                if (!s.isEmpty()) {
+                    scopeSet.add(s);
+                }
+            }
         }
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(webAppsRequest.getAuthority());
+
+        final Authority authority = Authority.getAuthorityFromAuthorityUrl(authorityUrl);
+        if (authority == null) {
+            throw new ClientException(ClientException.MISSING_PARAMETER, "Failed to parse authority.");
+        }
         if (authority instanceof AzureActiveDirectoryAuthority) {
-            ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(webAppsRequest.getInstanceAware());
+            ((AzureActiveDirectoryAuthority) authority)
+                    .setMultipleCloudsSupported(Boolean.TRUE.equals(webAppsRequest.getInstanceAware()));
         }
-        final Map<String, String> extraOptions = webAppsRequest.getExtraOptions() != null ?
-                webAppsRequest.getExtraOptions() :
-                Collections.emptyMap();
-        final Map<String, String> queryStringParams = (webAppsRequest.getNonce() != null && !webAppsRequest.getNonce().isEmpty()) ?
-                Collections.singletonMap(PRT_NONCE, webAppsRequest.getNonce()) :
-                Collections.emptyMap();
+
+        final List<Map.Entry<String, String>> queryParams = new ArrayList<>();
+        final Map<String, String> extraQueryParamsMap = webAppsRequest.getExtraParameters() != null
+                ? webAppsRequest.getExtraParameters()
+                : Collections.emptyMap();
+        queryParams.addAll(extraQueryParamsMap.entrySet());
+
+        if (!StringUtil.isNullOrEmpty(webAppsRequest.getNonce())) {
+            queryParams.add(new java.util.AbstractMap.SimpleEntry<>(PRT_NONCE, webAppsRequest.getNonce()));
+        }
+
+        final OpenIdConnectPromptParameter prompt =
+                OpenIdConnectPromptParameter.fromString(webAppsRequest.getPrompt());
 
         return BrokerInteractiveTokenCommandParameters.builder()
                 .applicationName(requiredParams.getCallingApplicationName())
@@ -1861,17 +1904,16 @@ public class BrokerMsalController extends BaseController {
                 .sdkType(requiredParams.getSdkType())
                 .sdkVersion(requiredParams.getSdkVersion())
                 .platformComponents(mComponents)
-                .clientId(webAppsRequest.getClientId())
-                .redirectUri(webAppsRequest.getRedirect())
+                .clientId(clientId)
+                .redirectUri(redirect)
                 .authority(authority)
                 .scopes(scopeSet)
                 .loginHint(webAppsRequest.getUserName())
                 .claimsRequestJson(webAppsRequest.getClaims())
                 .correlationId(webAppsRequest.getCorrelationId())
                 .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
-                .prompt(OpenIdConnectPromptParameter.fromString(webAppsRequest.getPrompt()))
-                .extraOptions(new ArrayList<>(extraOptions.entrySet()))
-                .extraQueryStringParameters(new ArrayList<>(queryStringParams.entrySet()))
+                .prompt(prompt)
+                .extraQueryStringParameters(queryParams)
                 .requestType(BrokerRequestType.WEB_APPS)
                 .build();
     }
