@@ -44,7 +44,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ConsoleMessage;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -359,33 +358,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
-
-            /**
-             * Capture console messages and log them using our logger.
-             *
-             * @param consoleMessage The console message from the WebView
-             * @return returns true if we handled the message. False will let the default handler handle it.
-             */
-            @Override
-            public boolean onConsoleMessage(@NonNull final ConsoleMessage consoleMessage) {
-                // Note: Decide what we are interested in logging and what level.
-                super.onConsoleMessage(consoleMessage);
-                final String methodTag = TAG + ":onConsoleMessage";
-                final String errorMessage = consoleMessage.message() + " -- From line " +
-                        consoleMessage.lineNumber() + " of " + consoleMessage.sourceId();
-                switch (consoleMessage.messageLevel()) {
-                    case ERROR:
-                        Logger.errorPII(methodTag, errorMessage, null);
-                        break;
-                    case WARNING:
-                        Logger.warnPII(methodTag, errorMessage);
-                        break;
-                    default:
-                        Logger.infoPII(methodTag, errorMessage);
-                }
-                return true;
-            }
-
         });
         setupPasskeyWebListener(mWebView, webViewClient);
     }

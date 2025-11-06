@@ -32,6 +32,11 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.GetPublicKeyCredentialOption
 import com.microsoft.identity.common.logging.Logger
 
+/**
+ * Handler class to encapsulate Credential Manager APIs for passkey operations.
+ *
+ * @property activity The activity context used for credential operations.
+ */
 class CredentialManagerHandler(private val activity: Activity) {
 
     companion object {

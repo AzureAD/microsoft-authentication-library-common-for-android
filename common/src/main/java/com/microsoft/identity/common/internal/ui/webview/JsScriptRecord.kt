@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview
 
+import androidx.core.net.toUri
+
 /**
  * Record representing a JavaScript script to be injected into a WebView, along with metadata
  * about the script.
@@ -38,12 +40,21 @@ class JsScriptRecord(
     private val allowedUrls: Set<String>?
 ) {
 
+    companion object {
+        val SOVEREIGN_CLOUD_URL_WITH_EXTRA_VALIDATION = setOf(
+            "https://login.microsoftonline.us",
+            "https://login.microsoftonline.microsoft.scloud",
+            "https://login.microsoftonline.eaglex.ic.gov"
+        )
+    }
+
     /**
      * Checks whether this script is allowed to execute for the given [url].
      *
      * A script is considered allowed if:
      * - [allowedUrls] is `null`, meaning no restrictions.
-     * - The provided [url] starts with any of the prefixes in [allowedUrls].
+     * - The provided [url] matches the scheme, host, and port of an allowed URL prefix.
+     *   Path validation is applied for sovereign cloud URLs.
      *
      * @param url The URL to check against the allowed list.
      * @return `true` if the script can execute for this URL, `false` otherwise.
@@ -52,7 +63,26 @@ class JsScriptRecord(
         // No restrictions — allowed for any URL
         if (allowedUrls == null) return true
 
-        // Check if the URL starts with any allowed prefix
-        return allowedUrls.any { prefix -> url.startsWith(prefix) }
+        val uri = url.toUri()
+
+        // Check if the URL matches any allowed prefix
+        return allowedUrls.any { allowedUrl ->
+            val allowedUri = allowedUrl.toUri()
+
+            // Match scheme, host, and port to prevent subdomain spoofing
+            val schemeMatches = uri.scheme == allowedUri.scheme
+            val hostMatches = uri.host == allowedUri.host
+
+            if (schemeMatches && hostMatches) {
+                // For sovereign cloud URLs, require 'fido' in the path
+                if (SOVEREIGN_CLOUD_URL_WITH_EXTRA_VALIDATION.contains(allowedUrl)) {
+                    uri.path?.contains("fido", ignoreCase = true) == true
+                } else {
+                    true
+                }
+            } else {
+                false
+            }
+        }
     }
 }
