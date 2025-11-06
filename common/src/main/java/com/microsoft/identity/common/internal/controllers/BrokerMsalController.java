@@ -1478,7 +1478,6 @@ public class BrokerMsalController extends BaseController {
                                 );
                             }
 
-                            // If it's a GetToken requestm we want to
                             if (method.equals(WebAppsSupportedContracts.GET_TOKEN)) {
                                 // If get token, we should check to see if we should just start interactive right away.
                                 final WebAppsGetTokenSubOperationEnvelope envelope =
@@ -1750,12 +1749,12 @@ public class BrokerMsalController extends BaseController {
         Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
 
         try {
-            final String rawInteractiveRequest = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
-            if (StringUtil.isNullOrEmpty(rawInteractiveRequest)) {
+            final String rawResult = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+            if (StringUtil.isNullOrEmpty(rawResult)) {
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive request payload missing.");
             }
             final WebAppsGetTokenSubOperationEnvelope envelope =
-                    ObjectMapper.deserializeJsonStringToObject(rawInteractiveRequest, WebAppsGetTokenSubOperationEnvelope.class);
+                    ObjectMapper.deserializeJsonStringToObject(request, WebAppsGetTokenSubOperationEnvelope.class);
             mergedExtraArgs.putAll(
                     performInteractiveAndSerialize(envelope, additionalRequiredParams, minBrokerProtocolVersion)
             );
@@ -1858,8 +1857,8 @@ public class BrokerMsalController extends BaseController {
      */
     private boolean shouldForceInteractive(final @NonNull WebAppsGetTokenSubOperationRequest req,
                                            final boolean canShowUI) throws ClientException {
-        // MSAL JS requests will always be silent.
-        if (!req.isSecurityTokenService()) {
+        // MSAL JS requests will always be silent first.
+        if (!req.isSecurityTokenService() || !StringUtil.isNullOrEmpty(req.getHomeAccountId())) {
             return false;
         }
         final OpenIdConnectPromptParameter prompt = OpenIdConnectPromptParameter.fromString(req.getPrompt());
@@ -1890,10 +1889,11 @@ public class BrokerMsalController extends BaseController {
 
         final Map<String, String> out = new HashMap<>();
         try {
-            // Validate sender authority (throws if invalid)
-            AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
-
             final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
+            if (getTokenRequest.isSecurityTokenService()) {
+                // Validate sender authority (throws if invalid)
+                AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
+            }
             final BrokerInteractiveTokenCommandParameters interactiveParams =
                     buildInteractiveTokenParametersForWebApps(getTokenRequest, requiredParams, minBrokerProtocolVersion);
 
@@ -1929,7 +1929,7 @@ public class BrokerMsalController extends BaseController {
             out.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
                     ObjectMapper.serializeObjectToJsonString(successPayload));
         } catch (final Exception ex) {
-            final WebAppsErrorResponsePayload errorPayload= new WebAppsErrorResponsePayload(
+            final WebAppsErrorResponsePayload errorPayload = new WebAppsErrorResponsePayload(
                     ex.getClass().getName(),
                     ex.getMessage(),
                     ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
