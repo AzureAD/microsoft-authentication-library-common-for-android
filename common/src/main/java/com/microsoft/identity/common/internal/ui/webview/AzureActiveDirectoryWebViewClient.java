@@ -1064,7 +1064,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processCrossCloudRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCrossCloudRedirect";
 
-        final Span span =  OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
+        final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1255,6 +1255,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *
      * @return the {@link SpanContext} if available; may be null if the associated activity is not an {@link AuthorizationActivity}.
      */
+    @Nullable
     public SpanContext getSpanContext() {
         return mSpanContext;
     }

@@ -154,8 +154,8 @@ class PasskeyReplyChannel(
                 val successMessage = ReplyMessage.Success(json, requestType).toString()
                 replyProxy.postMessage(successMessage)
                 Logger.info(methodTag, "RequestType: $requestType was successful.")
-                span.setStatus(StatusCode.OK)
                 span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+                span.setStatus(StatusCode.OK)
             }
         } catch (throwable: Throwable) {
             span.setStatus(StatusCode.ERROR)
@@ -190,19 +190,18 @@ class PasskeyReplyChannel(
             SpanExtension.makeCurrentSpan(span).use {
                 val errorMessage = throwableToErrorMessage(throwable)
                 replyProxy.postMessage(errorMessage.toString())
-                Logger.error(methodTag, "RequestType: $requestType failed with error: $errorMessage", null)
                 span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
                 span.setAttribute(AttributeName.passkey_dom_exception_name.name, errorMessage.domExceptionName)
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(throwable)
+                Logger.error(methodTag, "RequestType: $requestType failed with error: $errorMessage", null)
             }
-        } catch (throwable: Throwable) {
-            // Handle exception safely, no scope needed
-            span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+        } catch (unexpectedException: Throwable) {
             span.setStatus(StatusCode.ERROR)
-            span.recordException(throwable)
-            Logger.error(methodTag, "Reply message failed", throwable)
-            throw throwable
+            span.recordException(unexpectedException)
+            span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            Logger.error(methodTag, "Reply message failed", unexpectedException)
+            throw unexpectedException
         } finally {
             span.end() // Always end the span
         }

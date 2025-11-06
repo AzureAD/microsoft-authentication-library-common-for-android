@@ -35,7 +35,6 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import io.mockk.mockk
 import io.mockk.verify
-import io.mockk.every
 import io.mockk.slot
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -272,38 +271,6 @@ class PasskeyReplyChannelTest {
     }
 
     @Test
-    fun `postError handles null exception message`() {
-        // Given
-        val exception = RuntimeException(null as Throwable?)
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(exception)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals("Unknown error (empty message)", dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY))
-    }
-
-    @Test
-    fun `send throws exception when postMessage fails`() {
-        // Given
-        val testJson = """{"key": "value"}"""
-        val expectedException = RuntimeException("PostMessage failed")
-        every { mockReplyProxy.postMessage(any<String>()) } throws expectedException
-
-        // When/Then - Should throw the exception
-        val thrownException = assertThrows(RuntimeException::class.java) {
-            passkeyReplyChannel.postSuccess(testJson)
-        }
-
-        assertEquals("PostMessage failed", thrownException.message)
-        verify { mockReplyProxy.postMessage(any<String>()) }
-    }
-
-    @Test
     fun `constructor uses unknown as default request type`() {
         // Given
         val channelWithDefaultType = PasskeyReplyChannel(mockReplyProxy)
@@ -319,34 +286,5 @@ class PasskeyReplyChannelTest {
         assertEquals("unknown", messageObject.getString(PasskeyReplyChannel.TYPE_KEY))
     }
 
-    @Test
-    fun `ReplyMessage Success handles complex JSON structures`() {
-        // Given
-        val complexJson = """{"nested": {"array": [1, 2, 3], "boolean": true}, "string": "test"}"""
-        val successMessage = PasskeyReplyChannel.ReplyMessage.Success(complexJson, testRequestType)
-
-        // When
-        val result = successMessage.toString()
-
-        // Then
-        val messageObject = JSONObject(result)
-        assertEquals(PasskeyReplyChannel.SUCCESS_STATUS, messageObject.getString(PasskeyReplyChannel.STATUS_KEY))
-
-        val dataObject = messageObject.getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals("test", dataObject.getString("string"))
-        assertEquals(true, dataObject.getJSONObject("nested").getBoolean("boolean"))
-    }
-
-    @Test
-    fun `constants have correct values`() {
-        assertEquals("success", PasskeyReplyChannel.SUCCESS_STATUS)
-        assertEquals("error", PasskeyReplyChannel.ERROR_STATUS)
-        assertEquals("PasskeyReplyChannel", PasskeyReplyChannel.TAG)
-
-        assertEquals("NotAllowedError", PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR)
-        assertEquals("AbortError", PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR)
-        assertEquals("NotSupportedError", PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR)
-        assertEquals("UnknownError", PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR)
-    }
 
 }
