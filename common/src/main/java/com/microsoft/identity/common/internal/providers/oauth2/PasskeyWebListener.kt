@@ -59,8 +59,6 @@ class PasskeyWebListener(
     private val spanContext: SpanContext? = null
 ) : WebViewCompat.WebMessageListener {
 
-
-
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
     private val havePendingRequest = AtomicBoolean(false)
 
