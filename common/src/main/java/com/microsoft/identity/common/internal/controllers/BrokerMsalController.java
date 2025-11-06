@@ -1747,13 +1747,13 @@ public class BrokerMsalController extends BaseController {
                                           @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
                                           @Nullable final Map<String, String> additionalArgs) throws BaseException {
 
-        final String rawInteractiveRequest = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
-        if (StringUtil.isNullOrEmpty(rawInteractiveRequest)) {
-            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive request payload missing.");
-        }
-
         Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
+
         try {
+            final String rawInteractiveRequest = phaseOneResultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST);
+            if (StringUtil.isNullOrEmpty(rawInteractiveRequest)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive request payload missing.");
+            }
             final WebAppsGetTokenSubOperationEnvelope envelope =
                     ObjectMapper.deserializeJsonStringToObject(rawInteractiveRequest, WebAppsGetTokenSubOperationEnvelope.class);
             mergedExtraArgs.putAll(
@@ -1764,7 +1764,7 @@ public class BrokerMsalController extends BaseController {
                     ex.getClass().getName(),
                     ex.getMessage(),
                     ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
-                    ex instanceof ServiceException ? ((ServiceException) ex).getHttpStatusCode() : null
+                    null
             );
             mergedExtraArgs.put(
                     AuthenticationConstants.Broker.BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT,
