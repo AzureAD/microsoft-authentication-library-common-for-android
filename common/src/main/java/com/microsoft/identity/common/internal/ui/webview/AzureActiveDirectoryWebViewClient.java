@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -87,11 +88,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
@@ -141,6 +144,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
 
     private final String mUtid;
+
+    private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -255,7 +260,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
+            } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
@@ -1140,6 +1145,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         });
     }
 
+    @Override
+    public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        // Evaluate JavaScript for each script if URL matches allowed origins
+        for (final JsScriptRecord scriptRecord : mOnPageStartedScripts) {
+            if (scriptRecord.isAllowedForUrl(url)) {
+                Logger.info(TAG, "Executing onPageStarted script: " + scriptRecord.getId());
+                view.evaluateJavascript(scriptRecord.getScript(), null);
+            }
+        }
+    }
+
     /**
      * Cleanup to be done when host activity is being destroyed.
      */
@@ -1217,5 +1234,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         }
         return span;
+    }
+
+    /**
+     * Add a JavaScript to be executed in onPageStarted.
+     * If allowedUrls is null, the script will be executed for all URLs.
+     * If allowedUrls is non-null, the script will be executed only for URLs that start with any of the allowed origins.
+     * @param script JavaScript code to be executed.
+     * @param allowedUrls Set of allowed URL origins.
+     */
+    public void addOnPageStartedScript(
+            @NonNull final String scriptId,
+            @NonNull final String script,
+            @Nullable final Set<String> allowedUrls) {
+        this.mOnPageStartedScripts.add(
+                new JsScriptRecord(scriptId, script, allowedUrls)
+        );
     }
 }

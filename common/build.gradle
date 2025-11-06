@@ -151,6 +151,7 @@ android {
 }
 
 dependencies {
+    implementation "androidx.webkit:webkit:$rootProject.ext.webkitVersion"
     testImplementation project(path: ':testutils')
 
     localApi(project(":common4j")) {
@@ -409,7 +410,7 @@ tasks.withType(GenerateMavenPom).all {
     }
 }
 
-def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "15"
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "16"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
 tasks.register("dependenciesSizeCheck") {
     doLast() {
