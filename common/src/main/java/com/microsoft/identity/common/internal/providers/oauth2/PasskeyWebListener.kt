@@ -36,11 +36,7 @@ import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.opentelemetry.OTelUtility
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension
-import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,12 +56,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
     private val credentialManagerHandler: CredentialManagerHandler,
-    spanContext: SpanContext? = null
+    private val spanContext: SpanContext? = null
 ) : WebViewCompat.WebMessageListener {
 
-    val span: Span by lazy {
-        OTelUtility.createSpanFromParent(SpanName.PasskeyWebListener.name, spanContext)
-    }
+
 
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
     private val havePendingRequest = AtomicBoolean(false)
@@ -87,7 +81,6 @@ class PasskeyWebListener(
         isMainFrame: Boolean,
         replyProxy: JavaScriptReplyProxy,
     ) {
-        SpanExtension.makeCurrentSpan(span)
         parseMessage(message.data, replyProxy)?.let { webAuthNMessage ->
             onRequest(
                 webAuthNMessage = webAuthNMessage,
@@ -117,18 +110,32 @@ class PasskeyWebListener(
             methodTag,
             "Received WebAuthN request of type: ${webAuthNMessage.type} from origin: $sourceOrigin"
         )
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthNMessage.type)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            requestType = webAuthNMessage.type,
+            spanContext = spanContext
+        )
 
         // Only allow one request at a time.
         if (havePendingRequest.get()) {
-            passkeyReplyChannel.postError("Request already in progress")
+            passkeyReplyChannel.postError(
+                ClientException(
+                    ClientException.REQUEST_IN_PROGRESS,
+                    "A WebAuthN request is already in progress."
+                )
+            )
             return
         }
         havePendingRequest.set(true)
 
         // Only allow requests from the main frame.
         if (!isMainFrame) {
-            passkeyReplyChannel.postError("Requests from iframes are not supported")
+            passkeyReplyChannel.postError(
+                ClientException(
+                    ClientException.UNSUPPORTED_OPERATION,
+                    "WebAuthN requests from iframes are not supported."
+                )
+            )
             havePendingRequest.set(false)
             return
         }
@@ -154,7 +161,12 @@ class PasskeyWebListener(
             }
 
             else -> {
-                passkeyReplyChannel.postError("Unknown request type: ${webAuthNMessage.type}")
+                passkeyReplyChannel.postError(
+                    ClientException(
+                        ClientException.UNSUPPORTED_OPERATION,
+                        "Unsupported WebAuthN request type: ${webAuthNMessage.type}"
+                    )
+                )
                 havePendingRequest.set(false)
             }
         }
@@ -178,7 +190,12 @@ class PasskeyWebListener(
                 if (publicKeyCredential != null) {
                     reply.postSuccess(publicKeyCredential.authenticationResponseJson)
                 } else {
-                    reply.postError("Unexpected credential type: ${credentialResponse.credential.javaClass.name}")
+                    reply.postError(
+                        ClientException(
+                            ClientException.UNSUPPORTED_OPERATION,
+                            "Retrieved credential is not a PublicKeyCredential."
+                        )
+                    )
                 }
            }
             .onFailure { throwable ->
@@ -220,7 +237,10 @@ class PasskeyWebListener(
         messageData: String?,
         javaScriptReplyProxy: JavaScriptReplyProxy
     ): WebAuthNMessage? {
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            spanContext = spanContext
+        )
         return runCatching {
             if (messageData.isNullOrBlank()) {
                 throw ClientException(

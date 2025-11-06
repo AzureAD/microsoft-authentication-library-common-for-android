@@ -492,5 +492,10 @@ public enum AttributeName {
     /**
      * Passkey operation type (e.g., registration, authentication).
      */
-    passkey_operation_type
+    passkey_operation_type,
+
+    /**
+     * Passkey DOM exception name (if any).
+     */
+    passkey_dom_exception_name,
 }

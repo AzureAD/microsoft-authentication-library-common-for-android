@@ -34,11 +34,13 @@ import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
 import org.json.JSONObject
-import kotlin.jvm.Throws
 
 
 /**
@@ -51,7 +53,8 @@ import kotlin.jvm.Throws
  */
 class PasskeyReplyChannel(
     private val replyProxy: JavaScriptReplyProxy,
-    private val requestType: String = "unknown"
+    private val requestType: String = "unknown",
+    private val spanContext: SpanContext? = null
 ) {
     companion object {
         const val TAG = "PasskeyReplyChannel"
@@ -138,33 +141,35 @@ class PasskeyReplyChannel(
      *
      * @param json JSON string containing the credential response.
      */
+    @SuppressLint("RequiresFeature", "Only called when feature is available")
     fun postSuccess(json: String) {
         val methodTag = "$TAG:postSuccess"
-        send(ReplyMessage.Success(json, requestType))
-        SpanExtension.current().apply {
-            setStatus(StatusCode.OK)
-            setAttribute(AttributeName.passkey_operation_type.name, requestType)
-            end()
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.PasskeyWebListener.name,
+            spanContext
+        )
+
+        try {
+            SpanExtension.makeCurrentSpan(span).use {
+                val successMessage = ReplyMessage.Success(json, requestType).toString()
+                replyProxy.postMessage(successMessage)
+                Logger.info(methodTag, "RequestType: $requestType was successful.")
+                span.setStatus(StatusCode.OK)
+                span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            }
+        } catch (throwable: Throwable) {
+            span.setStatus(StatusCode.ERROR)
+            span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            span.recordException(throwable)
+            Logger.error(methodTag, "Reply message failed", throwable)
+            throw throwable
+        } finally {
+            span.end()
         }
-        Logger.info(methodTag, "RequestType: $requestType, was successful.")
     }
 
-    /**
-     * Posts an error message with a custom error description.
-     *
-     * @param errorMessage Error description to send.
-     */
-    fun postError(errorMessage: String) {
-        postErrorInternal(
-            ReplyMessage.Error(domExceptionMessage = errorMessage, type = requestType)
-        )
-        SpanExtension.current().apply {
-            setAttribute(AttributeName.passkey_operation_type.name, requestType)
-            setStatus(StatusCode.ERROR)
-            setAttribute(AttributeName.error_message.name, errorMessage)
-            end()
-        }
-    }
+
+
 
     /**
      * Posts an error message based on a thrown exception.
@@ -173,23 +178,34 @@ class PasskeyReplyChannel(
      *
      * @param throwable Exception to convert and send.
      */
+    @SuppressLint("RequiresFeature", "Only called when feature is available")
     fun postError(throwable: Throwable) {
-        postErrorInternal(throwableToErrorMessage(throwable))
-        SpanExtension.current().apply {
-            setAttribute(AttributeName.passkey_operation_type.name, requestType)
-            setStatus(StatusCode.ERROR)
-            recordException(throwable)
-            end()
-        }
-    }
-
-    /**
-     * Internal method to send error messages and log them.
-     */
-    private fun postErrorInternal(errorMessage: ReplyMessage.Error) {
         val methodTag = "$TAG:postError"
-        send(errorMessage)
-        Logger.error(methodTag, "RequestType: $requestType, failed with error: $errorMessage", null)
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.PasskeyWebListener.name,
+            spanContext
+        )
+
+        try {
+            SpanExtension.makeCurrentSpan(span).use {
+                val errorMessage = throwableToErrorMessage(throwable)
+                replyProxy.postMessage(errorMessage.toString())
+                Logger.error(methodTag, "RequestType: $requestType failed with error: $errorMessage", null)
+                span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+                span.setAttribute(AttributeName.passkey_dom_exception_name.name, errorMessage.domExceptionName)
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(throwable)
+            }
+        } catch (throwable: Throwable) {
+            // Handle exception safely, no scope needed
+            span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(throwable)
+            Logger.error(methodTag, "Reply message failed", throwable)
+            throw throwable
+        } finally {
+            span.end() // Always end the span
+        }
     }
 
     /**
@@ -234,25 +250,5 @@ class PasskeyReplyChannel(
             domExceptionName = exceptionName,
             type = requestType
         )
-    }
-
-    /**
-     * Sends a message to JavaScript via the reply proxy.
-     */
-    @SuppressLint("RequiresFeature", "Only called when feature is available")
-    private fun send(message: ReplyMessage) {
-        val methodTag = "$TAG:send"
-        try {
-            replyProxy.postMessage(message.toString())
-        } catch (throwable: Throwable) {
-            SpanExtension.current().apply {
-                setStatus(StatusCode.ERROR)
-                setAttribute(AttributeName.passkey_operation_type.name, requestType)
-                recordException(throwable)
-                end()
-            }
-            Logger.error(methodTag, "Reply message failed", throwable)
-            throw throwable
-        }
     }
 }
