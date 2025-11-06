@@ -1249,6 +1249,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         );
     }
 
+    /**
+     * Returns the span context associated with this WebView client.
+     * The span context is used for creating child spans to maintain telemetry hierarchy.
+     *
+     * @return the {@link SpanContext} if available; may be null if the associated activity is not an {@link AuthorizationActivity}.
+     */
     public SpanContext getSpanContext() {
         return mSpanContext;
     }
