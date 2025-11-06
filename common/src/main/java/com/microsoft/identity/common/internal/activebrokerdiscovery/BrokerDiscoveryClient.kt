@@ -275,19 +275,39 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
         return runBlocking {
-            return@runBlocking getActiveBrokerAsync(shouldSkipCache)
+            return@runBlocking getActiveBrokerAsync(shouldSkipCache, null)
         }
     }
 
-    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean): BrokerData?{
+    override fun getActiveBroker(
+        shouldSkipCache: Boolean,
+        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
+    ): BrokerData? {
+        return runBlocking {
+            return@runBlocking getActiveBrokerAsync(shouldSkipCache, telemetryCallback)
+        }
+    }
+
+    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean,
+                                             telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
+
+        val timeStartAcquiringLock = System.nanoTime()
         classLevelLock.withLock {
+            telemetryCallback?.onLockAcquired(System.nanoTime() - timeStartAcquiringLock)
             if (!shouldSkipCache) {
                 if (cache.shouldUseAccountManager()) {
+                    telemetryCallback?.onUseAccountManager()
                     return getActiveBrokerFromAccountManager()
                 }
+                val timeStartReadingFromCache = System.nanoTime()
                 cache.getCachedActiveBroker()?.let {
-                    if (!isPackageInstalled(it)) {
+                    telemetryCallback?.onReadFromCache(System.nanoTime() - timeStartReadingFromCache)
+
+                    val timeStartIsPackageInstalled = System.nanoTime()
+                    val isPackageInstalled = isPackageInstalled(it)
+                    telemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - timeStartIsPackageInstalled)
+                    if (!isPackageInstalled) {
                         Logger.info(
                             methodTag,
                             "There is a cached broker: $it, but the app is no longer installed."
@@ -296,7 +316,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    if (!isValidBroker(it)) {
+                    val timeStartIsValidBroker = System.nanoTime()
+                    val isValidBroker = isValidBroker(it)
+                    telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
+                    if (!isValidBroker) {
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not have a matching signature hash."
@@ -305,7 +328,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         return@let
                     }
 
-                    if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
+                    val timeStartIsSupportedByTargetedBroker = System.nanoTime()
+                    val isSupportedByTargetedBroker =
+                        ipcStrategy.isSupportedByTargetedBroker(it.packageName)
+                    telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(System.nanoTime() - timeStartIsSupportedByTargetedBroker)
+                    if(!isSupportedByTargetedBroker){
                         Logger.info(
                             methodTag,
                             "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
@@ -319,12 +346,14 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 }
             }
 
+            val timeStartQueryFromBroker = System.nanoTime()
             val brokerData = queryFromBroker(
                 brokerCandidates = brokerCandidates,
                 ipcStrategy = ipcStrategy,
                 isPackageInstalled = isPackageInstalled,
                 isValidBroker = isValidBroker
             )
+            telemetryCallback?.onFinishQueryingResultFromBroker(System.nanoTime() - timeStartQueryFromBroker)
 
             if (brokerData != null) {
                 cache.setCachedActiveBroker(brokerData)
@@ -343,6 +372,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 )
             )
 
+            telemetryCallback?.onUseAccountManager()
             val accountManagerResult = getActiveBrokerFromAccountManager()
             Logger.info(
                 methodTag, "Tried getting active broker from account manager, " +

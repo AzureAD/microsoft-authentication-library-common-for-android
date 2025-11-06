@@ -147,8 +147,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
 
-    private final SpanContext mSpanContext;
-
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -1248,16 +1246,4 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 new JsScriptRecord(scriptId, script, allowedUrls)
         );
     }
-
-    /**
-     * Returns the span context associated with this WebView client.
-     * The span context is used for creating child spans to maintain telemetry hierarchy.
-     *
-     * @return the {@link SpanContext} if available; may be null if the associated activity is not an {@link AuthorizationActivity}.
-     */
-    @Nullable
-    public SpanContext getSpanContext() {
-        return mSpanContext;
-    }
-
 }

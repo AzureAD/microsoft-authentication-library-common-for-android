@@ -65,7 +65,7 @@ class JsScriptRecord(
 
         val uri = url.toUri()
 
-        // Check if the URL matches any allowed prefix
+        // Check against each allowed URL
         return allowedUrls.any { allowedUrl ->
             val allowedUri = allowedUrl.toUri()
 

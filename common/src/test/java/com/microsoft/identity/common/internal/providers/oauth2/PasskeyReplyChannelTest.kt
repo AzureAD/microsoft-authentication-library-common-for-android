@@ -27,14 +27,11 @@ import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.CreateCredentialInterruptedException
 import androidx.credentials.exceptions.CreateCredentialProviderConfigurationException
 import androidx.credentials.exceptions.CreateCredentialUnknownException
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialInterruptedException
-import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
-import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.every
 import io.mockk.slot
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -97,7 +94,7 @@ class PasskeyReplyChannelTest {
         val messageSlot = slot<String>()
 
         // When
-        passkeyReplyChannel.postError(RuntimeException(errorMessage))
+        passkeyReplyChannel.postError(errorMessage)
 
         // Then
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
@@ -111,7 +108,7 @@ class PasskeyReplyChannelTest {
     }
 
     @Test
-    fun `postError with CreateCredentialCancellationException returns NotAllowedError`() {
+    fun `postError with cancellation exception returns NotAllowedError`() {
         // Given
         val exception = CreateCredentialCancellationException("User cancelled")
         val messageSlot = slot<String>()
@@ -123,27 +120,12 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
     }
 
     @Test
-    fun `postError with GetCredentialCancellationException returns NotAllowedError`() {
-        // Given
-        val exception = GetCredentialCancellationException("User cancelled")
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(exception)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-    }
-
-    @Test
-    fun `postError with CreateCredentialInterruptedException returns AbortError`() {
+    fun `postError with interruption exception returns AbortError`() {
         // Given
         val exception = CreateCredentialInterruptedException("Interrupted")
         val messageSlot = slot<String>()
@@ -155,27 +137,12 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
     }
 
     @Test
-    fun `postError with GetCredentialInterruptedException returns AbortError`() {
-        // Given
-        val exception = GetCredentialInterruptedException("Interrupted")
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(exception)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-    }
-
-    @Test
-    fun `postError with CreateCredentialProviderConfigurationException returns NotSupportedError`() {
+    fun `postError with configuration exception returns NotSupportedError`() {
         // Given
         val exception = CreateCredentialProviderConfigurationException("Config missing")
         val messageSlot = slot<String>()
@@ -187,27 +154,12 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
     }
 
     @Test
-    fun `postError with GetCredentialProviderConfigurationException returns NotSupportedError`() {
-        // Given
-        val exception = GetCredentialProviderConfigurationException("Config missing")
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(exception)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-    }
-
-    @Test
-    fun `postError with CreateCredentialUnknownException returns UnknownError`() {
+    fun `postError with unknown exception returns UnknownError`() {
         // Given
         val exception = CreateCredentialUnknownException("Unknown error")
         val messageSlot = slot<String>()
@@ -219,23 +171,8 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-    }
-
-    @Test
-    fun `postError with GetCredentialUnknownException returns UnknownError`() {
-        // Given
-        val exception = GetCredentialUnknownException("Unknown error")
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(exception)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
     }
 
     @Test
@@ -251,7 +188,8 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
     }
 
     @Test
@@ -267,7 +205,41 @@ class PasskeyReplyChannelTest {
         verify { mockReplyProxy.postMessage(capture(messageSlot)) }
 
         val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR,
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
+    }
+
+    @Test
+    fun `postError handles null exception message`() {
+        // Given
+        val exception = RuntimeException(null as String?)
+        val messageSlot = slot<String>()
+
+        // When
+        passkeyReplyChannel.postError(exception)
+
+        // Then
+        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
+
+        val dataObject = JSONObject(messageSlot.captured).getJSONObject(PasskeyReplyChannel.DATA_KEY)
+        assertEquals("Unknown error (empty message)",
+            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY))
+    }
+
+    @Test
+    fun `send throws exception when postMessage fails`() {
+        // Given
+        val testJson = """{"key": "value"}"""
+        val expectedException = RuntimeException("PostMessage failed")
+        every { mockReplyProxy.postMessage(any<String>()) } throws expectedException
+
+        // When/Then - Should throw the exception
+        val thrownException = assertThrows(RuntimeException::class.java) {
+            passkeyReplyChannel.postSuccess(testJson)
+        }
+
+        assertEquals("PostMessage failed", thrownException.message)
+        verify { mockReplyProxy.postMessage(any<String>()) }
     }
 
     @Test
@@ -286,5 +258,34 @@ class PasskeyReplyChannelTest {
         assertEquals("unknown", messageObject.getString(PasskeyReplyChannel.TYPE_KEY))
     }
 
+    @Test
+    fun `ReplyMessage Success handles complex JSON structures`() {
+        // Given
+        val complexJson = """{"nested": {"array": [1, 2, 3], "boolean": true}, "string": "test"}"""
+        val successMessage = PasskeyReplyChannel.ReplyMessage.Success(complexJson, testRequestType)
+
+        // When
+        val result = successMessage.toString()
+
+        // Then
+        val messageObject = JSONObject(result)
+        assertEquals(PasskeyReplyChannel.SUCCESS_STATUS, messageObject.getString(PasskeyReplyChannel.STATUS_KEY))
+
+        val dataObject = messageObject.getJSONObject(PasskeyReplyChannel.DATA_KEY)
+        assertEquals("test", dataObject.getString("string"))
+        assertEquals(true, dataObject.getJSONObject("nested").getBoolean("boolean"))
+    }
+
+    @Test
+    fun `constants have correct values`() {
+        assertEquals("success", PasskeyReplyChannel.SUCCESS_STATUS)
+        assertEquals("error", PasskeyReplyChannel.ERROR_STATUS)
+        assertEquals("PasskeyReplyChannel", PasskeyReplyChannel.TAG)
+
+        assertEquals("NotAllowedError", PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR)
+        assertEquals("AbortError", PasskeyReplyChannel.DOM_EXCEPTION_ABORT_ERROR)
+        assertEquals("NotSupportedError", PasskeyReplyChannel.DOM_EXCEPTION_NOT_SUPPORTED_ERROR)
+        assertEquals("UnknownError", PasskeyReplyChannel.DOM_EXCEPTION_UNKNOWN_ERROR)
+    }
 
 }
