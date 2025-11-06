@@ -1211,7 +1211,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return Created {@link Span}
      */
     private Span createSpanWithAttributesFromParent(@NonNull final String spanName) {
-        final Span span =  OTelUtility.createSpanFromParent(spanName, mSpanContext);
+        final Span span = OTelUtility.createSpanFromParent(spanName, mSpanContext);
         if (mUtid != null) {
             span.setAttribute(AttributeName.tenant_id.name(), mUtid);
         }
