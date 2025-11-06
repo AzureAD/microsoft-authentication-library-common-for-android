@@ -141,8 +141,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
-
-
+    private final SpanContext mSpanContext;
     private final String mUtid;
 
     private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
