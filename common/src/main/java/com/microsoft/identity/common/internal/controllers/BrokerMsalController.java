@@ -67,9 +67,11 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
-import com.microsoft.identity.common.java.commands.WebAppsInteractiveRequest;
-import com.microsoft.identity.common.java.commands.WebAppsTokenErrorResponse;
-import com.microsoft.identity.common.java.commands.WebAppsTokenResponse;
+import com.microsoft.identity.common.java.commands.WebAppsGetTokenSubOperationEnvelope;
+import com.microsoft.identity.common.java.commands.WebAppsGetTokenSubOperationRequest;
+import com.microsoft.identity.common.java.commands.WebAppsErrorResponsePayload;
+import com.microsoft.identity.common.java.commands.WebAppsSupportedContracts;
+import com.microsoft.identity.common.java.commands.WebAppsTokenResponsePayload;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -111,6 +113,7 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -132,6 +135,8 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -139,6 +144,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -1462,12 +1468,51 @@ public class BrokerMsalController extends BaseController {
                     @NonNull
                     @Override
                     public BrokerOperationBundle getBundle() throws ClientException {
+                        Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
+                        try {
+                            final String method = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
+                            if (StringUtil.isNullOrEmpty(method)) {
+                                throw new ClientException(
+                                        ErrorStrings.INVALID_REQUEST,
+                                        "Web app request method is null or empty."
+                                );
+                            }
+
+                            // If it's a GetToken requestm we want to
+                            if (method.equals(WebAppsSupportedContracts.GET_TOKEN)) {
+                                // If get token, we should check to see if we should just start interactive right away.
+                                final WebAppsGetTokenSubOperationEnvelope envelope =
+                                        ObjectMapper.deserializeJsonStringToObject(
+                                            request,
+                                            WebAppsGetTokenSubOperationEnvelope.class
+                                        );
+                                final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
+                                // If need to do interactive right away, do it now.
+                                // Otherwise, just let the broker handle the silent token acquisition.
+                                if (shouldForceInteractive(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
+                                    mergedExtraArgs.putAll(
+                                            performInteractiveAndSerialize(envelope, additionalRequiredParams, minBrokerProtocolVersion)
+                                    );
+                                }
+                            }
+                        } catch (final Exception ex) {
+                            final WebAppsErrorResponsePayload errorResponse = new WebAppsErrorResponsePayload(
+                                    ex.getClass().getName(),
+                                    ex.getMessage(),
+                                    ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
+                                    ex instanceof ServiceException ? ((ServiceException) ex).getHttpStatusCode() : null
+                            );
+                            mergedExtraArgs.put(
+                                    AuthenticationConstants.Broker.BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT,
+                                    ObjectMapper.serializeObjectToJsonString(errorResponse)
+                            );
+                        }
                         return buildWebAppsBrokerBundle(
                                 request,
                                 negotiatedBrokerProtocolVersion,
                                 minBrokerProtocolVersion,
                                 additionalRequiredParams,
-                                additionalArgs
+                                mergedExtraArgs
                         );
                     }
 
@@ -1479,7 +1524,7 @@ public class BrokerMsalController extends BaseController {
                         }
                         verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
 
-                        // Phase 1: Broker indicates interactive is required.
+                        // Phase 1: Broker indicates that silent didn't work, so interactive is required.
                         if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_REQUEST)) {
                             return handleInteractivePhase(
                                     request,
@@ -1683,7 +1728,7 @@ public class BrokerMsalController extends BaseController {
      * back to the broker as part of the second phase request.
      * <p>
      * Both success and error cases are handled by serializing the appropriate response objects
-     * ({@link WebAppsTokenResponse} or {@link WebAppsTokenErrorResponse}) into the extraArgs map
+     * ({@link WebAppsTokenResponsePayload} or {@link WebAppsErrorResponsePayload}) into the extraArgs map
      * under the appropriate keys, so the broker can process the outcome.
      *
      * @param request                       The original web app request string.
@@ -1709,58 +1754,20 @@ public class BrokerMsalController extends BaseController {
 
         Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
         try {
-            final WebAppsInteractiveRequest interactiveRequest = ObjectMapper.deserializeJsonStringToObject(
-                    rawInteractiveRequest,
-                    WebAppsInteractiveRequest.class
-            );
-
-            if (interactiveRequest == null) {
-                throw new ClientException(ErrorStrings.INVALID_REQUEST, "Deserialized interactive request is null.");
-            }
-
-            final BrokerInteractiveTokenCommandParameters interactiveParams =
-                    buildInteractiveTokenParametersForWebApps(interactiveRequest, additionalRequiredParams, minBrokerProtocolVersion);
-
-            final AcquireTokenResult rawResult = acquireToken(interactiveParams);
-            if (rawResult == null || rawResult.getLocalAuthenticationResult() == null) {
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
-            }
-            final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
-            // Some parameters can be null, so double checking.
-            final String username = interactiveResult.getAccountRecord().getUsername();
-            if (StringUtil.isNullOrEmpty(username)) {
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null username.");
-            }
-            final String expiresOn = interactiveResult.getAccessTokenRecord().getExpiresOn();
-            if (StringUtil.isNullOrEmpty(expiresOn)) {
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null ExpiresOn.");
-            }
-            final String idToken = interactiveResult.getIdToken();
-            if (StringUtil.isNullOrEmpty(idToken)) {
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null IdToken.");
-            }
-            final WebAppsTokenResponse response = new WebAppsTokenResponse(
-                    username,
-                    interactiveResult.getUniqueId(),
-                    expiresOn,
-                    idToken,
-                    interactiveResult.getAccessToken(),
-                    null
-            );
-
-            mergedExtraArgs.put(
-                    AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
-                    ObjectMapper.serializeObjectToJsonString(response)
+            final WebAppsGetTokenSubOperationEnvelope envelope =
+                    ObjectMapper.deserializeJsonStringToObject(rawInteractiveRequest, WebAppsGetTokenSubOperationEnvelope.class);
+            mergedExtraArgs.putAll(
+                    performInteractiveAndSerialize(envelope, additionalRequiredParams, minBrokerProtocolVersion)
             );
         } catch (final Exception ex) {
-            final WebAppsTokenErrorResponse errorResponse = new WebAppsTokenErrorResponse(
+            final WebAppsErrorResponsePayload errorResponse = new WebAppsErrorResponsePayload(
                     ex.getClass().getName(),
                     ex.getMessage(),
                     ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
                     ex instanceof ServiceException ? ((ServiceException) ex).getHttpStatusCode() : null
             );
             mergedExtraArgs.put(
-                    AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT,
+                    AuthenticationConstants.Broker.BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT,
                     ObjectMapper.serializeObjectToJsonString(errorResponse)
             );
         }
@@ -1842,6 +1849,99 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
+     * Determines if we should force interactive token acquisition.
+     *
+     * @param req The get token sub-operation request.
+     * @param canShowUI A boolean indicating if UI interaction is allowed.
+     * @return True if interactive token acquisition should be forced, false otherwise.
+     * @throws ClientException if prompt is not none and UI is not allowed.
+     */
+    private boolean shouldForceInteractive(final @NonNull WebAppsGetTokenSubOperationRequest req,
+                                           final boolean canShowUI) throws ClientException {
+        // MSAL JS requests will always be silent.
+        if (!req.isSecurityTokenService()) {
+            return false;
+        }
+        final OpenIdConnectPromptParameter prompt = OpenIdConnectPromptParameter.fromString(req.getPrompt());
+        // We need to return a specific Edge error status code if prompt is not none and UI is not allowed.
+        if (prompt != OpenIdConnectPromptParameter.NONE && !canShowUI) {
+            throw new ClientException(
+                    ErrorStrings.UI_NOT_ALLOWED,
+                    "Interactive token acquisition is required but UI interaction is not allowed."
+            );
+        }
+        return true;
+    }
+
+    /**
+     * Performs interactive token acquisition for WebApps and serializes either a success or error payload
+     * into a map keyed by BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT or BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT.
+     * Sender authority is validated before acquisition.
+     *
+     * @param envelope The envelope containing the WebApps get token sub-operation request.
+     * @param requiredParams Additional required parameters for the web app request.
+     * @param minBrokerProtocolVersion Minimum broker protocol version the caller requires.
+     * @return A map containing either the success or error serialized payload.
+     */
+    @NonNull
+    private Map<String, String> performInteractiveAndSerialize(@NonNull final WebAppsGetTokenSubOperationEnvelope envelope,
+                                                               @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
+                                                               @NonNull final String minBrokerProtocolVersion) {
+
+        final Map<String, String> out = new HashMap<>();
+        try {
+            // Validate sender authority (throws if invalid)
+            AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
+
+            final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
+            final BrokerInteractiveTokenCommandParameters interactiveParams =
+                    buildInteractiveTokenParametersForWebApps(getTokenRequest, requiredParams, minBrokerProtocolVersion);
+
+            final AcquireTokenResult rawResult = acquireToken(interactiveParams);
+            if (rawResult == null || rawResult.getLocalAuthenticationResult() == null) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
+            }
+
+            final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
+            // Some parameters can be null, so double checking.
+            final String username = interactiveResult.getAccountRecord().getUsername();
+            if (StringUtil.isNullOrEmpty(username)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null username.");
+            }
+            final String expiresOn = interactiveResult.getAccessTokenRecord().getExpiresOn();
+            if (StringUtil.isNullOrEmpty(expiresOn)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null ExpiresOn.");
+            }
+            final String idToken = interactiveResult.getIdToken();
+            if (StringUtil.isNullOrEmpty(idToken)) {
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null IdToken.");
+            }
+
+            final WebAppsTokenResponsePayload successPayload = new WebAppsTokenResponsePayload(
+                    username,
+                    interactiveResult.getUniqueId(),
+                    expiresOn,
+                    idToken,
+                    interactiveResult.getAccessToken(),
+                    null
+            );
+
+            out.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
+                    ObjectMapper.serializeObjectToJsonString(successPayload));
+        } catch (final Exception ex) {
+            final WebAppsErrorResponsePayload errorPayload= new WebAppsErrorResponsePayload(
+                    ex.getClass().getName(),
+                    ex.getMessage(),
+                    ex instanceof ClientException ? ((ClientException) ex).getErrorCode() : null,
+                    ex instanceof ServiceException ? ((ServiceException) ex).getHttpStatusCode() : null
+            );
+            out.put(AuthenticationConstants.Broker.BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT,
+                    ObjectMapper.serializeObjectToJsonString(errorPayload));
+        }
+        return out;
+    }
+
+    /**
      * Build interactive token command parameters from web apps interactive request.
      *
      * @param webAppsRequest               web apps interactive request
@@ -1851,10 +1951,13 @@ public class BrokerMsalController extends BaseController {
      * @throws BaseException
      */
     @NonNull
-    private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsInteractiveRequest webAppsRequest,
+    private BrokerInteractiveTokenCommandParameters buildInteractiveTokenParametersForWebApps(@NonNull final WebAppsGetTokenSubOperationRequest webAppsRequest,
                                                                                               @NonNull final WebAppsAdditionalRequiredParameters requiredParams,
                                                                                               @NonNull final String minBrokerProtocolVersion) throws BaseException {
-        final String authorityUrl = webAppsRequest.getAuthority();
+        final String authorityUrl = webAppsRequest.getAuthority() != null
+                ? webAppsRequest.getAuthority()
+                : WebAppsGetTokenSubOperationRequest.DEFAULT_AUTHORITY;
+
         if (StringUtil.isNullOrEmpty(authorityUrl)) {
             throw new ClientException(ClientException.MISSING_PARAMETER, "Authority is null or empty.");
         }
@@ -1862,13 +1965,17 @@ public class BrokerMsalController extends BaseController {
         if (StringUtil.isNullOrEmpty(clientId)) {
             throw new ClientException(ClientException.MISSING_PARAMETER, "ClientId is null or empty.");
         }
-        final String redirect = webAppsRequest.getRedirect();
+        final String redirect = webAppsRequest.getRedirectUri();
         if (StringUtil.isNullOrEmpty(redirect)) {
             throw new ClientException(ClientException.MISSING_PARAMETER, "Redirect URI is null or empty.");
         }
 
+        final String correlationId = webAppsRequest.getCorrelationId() != null
+                ? webAppsRequest.getCorrelationId()
+                : UUID.randomUUID().toString();
+
         final Set<String> scopeSet;
-        final String rawScope = webAppsRequest.getScope();
+        final String rawScope = webAppsRequest.getScopes();
         if (StringUtil.isNullOrEmpty(rawScope)) {
             scopeSet = Collections.emptySet();
         } else {
@@ -1887,7 +1994,7 @@ public class BrokerMsalController extends BaseController {
         }
         if (authority instanceof AzureActiveDirectoryAuthority) {
             ((AzureActiveDirectoryAuthority) authority)
-                    .setMultipleCloudsSupported(Boolean.TRUE.equals(webAppsRequest.getInstanceAware()));
+                    .setMultipleCloudsSupported(webAppsRequest.getInstanceAware());
         }
 
         Map<String, String> tempMap = webAppsRequest.getExtraParameters();
@@ -1910,7 +2017,6 @@ public class BrokerMsalController extends BaseController {
                 .applicationName(requiredParams.getCallingApplicationName())
                 .callerPackageName(requiredParams.getCallingPackageName())
                 .applicationVersion(requiredParams.getCallingApplicationVersion())
-                .callerUid(webAppsRequest.getCallerUid())
                 .sdkType(requiredParams.getSdkType())
                 .sdkVersion(requiredParams.getSdkVersion())
                 .platformComponents(mComponents)
@@ -1918,9 +2024,9 @@ public class BrokerMsalController extends BaseController {
                 .redirectUri(redirect)
                 .authority(authority)
                 .scopes(scopeSet)
-                .loginHint(webAppsRequest.getUserName())
+                .loginHint(webAppsRequest.getLoginHint())
                 .claimsRequestJson(webAppsRequest.getClaims())
-                .correlationId(webAppsRequest.getCorrelationId())
+                .correlationId(correlationId)
                 .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
                 .prompt(prompt)
                 .extraQueryStringParameters(queryParams)

@@ -1419,10 +1419,10 @@ public final class AuthenticationConstants {
         public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
 
         /**
-         * String for broker webapps error result after an interactive request;
-         * when this field is present, the getToken suboperation will repackage the result and return it to the caller.
+         * String for broker webapps error result either after an interactive request or due to some early validation;
+         * when this field is present, the execute operation will repackage the result and return it to the caller.
          */
-        public static final String BROKER_WEB_APPS_INTERACTIVE_ERROR_RESULT = "interactive_error_result";
+        public static final String BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT = "validation_or_interactive_error_result";
 
         /**
          * String for generate shr result.

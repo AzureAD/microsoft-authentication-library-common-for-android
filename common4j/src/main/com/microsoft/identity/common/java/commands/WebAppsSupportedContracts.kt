@@ -22,31 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands
 
-import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 /**
- * Error response for WebApps token requests.
+ * Supported contracts for Web Apps Sub Operations
  */
-data class WebAppsTokenErrorResponse(
-    // Fully qualified class name
-    @SerializedName(FIELD_TYPE)
-    val type: String,
-
-    @SerializedName(FIELD_MESSAGE)
-    val message: String?,
-
-    // Present for ClientException
-    @SerializedName(FIELD_CLIENT_ERROR_CODE)
-    val clientErrorCode: String?,
-
-    // Present for ServiceException
-    @SerializedName(FIELD_HTTP_STATUS_CODE)
-    val httpStatusCode: Int?
-) {
+data class WebAppsSupportedContracts(
+    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
+) : Serializable {
     companion object {
-        const val FIELD_TYPE = "type"
-        const val FIELD_MESSAGE = "message"
-        const val FIELD_CLIENT_ERROR_CODE = "clientErrorCode"
-        const val FIELD_HTTP_STATUS_CODE = "httpStatusCode"
+        const val GET_TOKEN = "GetToken"
+        const val SIGN_OUT = "SignOut"
+        const val GET_COOKIES = "GetCookies"
+    }
+
+    override fun toString(): String {
+        return contracts.joinToString(
+            separator = ", ",
+            prefix = "[",
+            postfix = "]")
     }
 }

@@ -25,33 +25,22 @@ package com.microsoft.identity.common.java.commands
 import com.google.gson.annotations.SerializedName
 
 /**
- * Successful response for WebApps token requests.
+ * Envelope for WebAppsGetTokenSubOperation requests.
  */
-data class WebAppsTokenResponse(
-    @SerializedName(FIELD_USER_NAME)
-    val userName: String,
+data class WebAppsGetTokenSubOperationEnvelope(
 
-    @SerializedName(FIELD_HOME_ACCOUNT_ID)
-    val homeAccountId: String,
+    @SerializedName(FIELD_METHOD)
+    val method: String,
 
-    @SerializedName(FIELD_EXPIRES_IN)
-    val expiresIn: String,
+    @SerializedName(FIELD_REQUEST)
+    val request: WebAppsGetTokenSubOperationRequest,
 
-    @SerializedName(FIELD_ID_TOKEN)
-    val idToken: String,
-
-    @SerializedName(FIELD_ACCESS_TOKEN)
-    val accessToken: String,
-
-    @SerializedName(FIELD_PROPERTIES)
-    val properties: Map<String, String>? = null
+    @SerializedName(FIELD_SENDER)
+    val sender: String
 ) {
     companion object {
-        const val FIELD_USER_NAME = "userName"
-        const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
-        const val FIELD_EXPIRES_IN = "expiresIn"
-        const val FIELD_ID_TOKEN = "idToken"
-        const val FIELD_ACCESS_TOKEN = "accessToken"
-        const val FIELD_PROPERTIES = "properties"
+        const val FIELD_METHOD = "method"
+        const val FIELD_REQUEST = "request"
+        const val FIELD_SENDER = "sender"
     }
 }
