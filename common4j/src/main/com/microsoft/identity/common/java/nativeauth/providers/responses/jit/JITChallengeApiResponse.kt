@@ -26,11 +26,12 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.util.isBlockedChallengeTarget
+import com.microsoft.identity.common.java.nativeauth.util.isAccessDenied
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidChallengeTarget
 import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPreverified
+import com.microsoft.identity.common.java.nativeauth.util.isProviderBlocked
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.net.HttpURLConnection
 
@@ -51,6 +52,7 @@ class JITChallengeApiResponse(
     @SerializedName("error_description") override val errorDescription: String?,
     @SerializedName("error_uri") val errorUri: String?,
     @SerializedName("error_codes") val errorCodes: List<Int>?,
+    @SerializedName("suberror") val subError: String?,
     @Expose @SerializedName("challenge_type") override val challengeType: String?,
     @SerializedName("redirect_reason") override val redirectReason: String?,
 ) : INativeAuthApiResponse(statusCode, correlationId, continuationToken, challengeType, redirectReason, error, errorDescription) {
@@ -79,7 +81,7 @@ class JITChallengeApiResponse(
                             correlationId = correlationId
                         )
                     }
-                    error.isInvalidRequest() && errorCodes?.first().isBlockedChallengeTarget() -> {
+                    error.isAccessDenied() && subError.isProviderBlocked() -> {
                         JITChallengeApiResult.BlockedVerificationContact(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),

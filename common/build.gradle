@@ -264,6 +264,14 @@ android.libraryVariants.all { variant ->
     }
 }
 
+android.libraryVariants.all { variant ->
+    tasks.named("assemble${variant.name.capitalize()}").configure {
+        doFirst {
+            println("Assembling variant: ${variant.name} for ${project.name}")
+        }
+    }
+}
+
 
 tasks.register('sourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs

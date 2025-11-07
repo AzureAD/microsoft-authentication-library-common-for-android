@@ -50,6 +50,10 @@ internal fun String?.isInvalidRequest(): Boolean {
     return this.contentEquals(other = "invalid_request", ignoreCase = true)
 }
 
+internal fun String?.isAccessDenied(): Boolean {
+    return this.contentEquals(other = "access_denied", ignoreCase = true)
+}
+
 internal fun String?.isPasswordTooWeak(): Boolean {
     return this.contentEquals(other = "password_too_weak", ignoreCase = true)
 }
@@ -117,8 +121,8 @@ internal fun Int?.isInvalidChallengeTarget(): Boolean {
     return this == 901001
 }
 
-internal fun Int?.isBlockedChallengeTarget(): Boolean {
-    return this == 550024
+fun String?.isProviderBlocked(): Boolean {
+    return this.contentEquals(other = "provider_blocked_by_rep", ignoreCase = true)
 }
 
 fun String?.isMFARequired(): Boolean {

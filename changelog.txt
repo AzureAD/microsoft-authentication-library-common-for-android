@@ -12,6 +12,7 @@ vNext
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Expose WebApps APIs (#2793)
 - [MINOR] Add domainHint support to authorization request (#2792)
+- [PATCH] Fix auth method blocked error handling (#2804)
 
 Version 23.0.2
 ----------
