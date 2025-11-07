@@ -26,10 +26,10 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
-import com.microsoft.identity.common.java.nativeauth.util.isBlockedChallengeTarget
-import com.microsoft.identity.common.java.nativeauth.util.isInvalidRequest
+import com.microsoft.identity.common.java.nativeauth.util.isAccessDenied
 import com.microsoft.identity.common.java.nativeauth.util.isOOB
 import com.microsoft.identity.common.java.nativeauth.util.isPassword
+import com.microsoft.identity.common.java.nativeauth.util.isProviderBlocked
 import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import java.net.HttpURLConnection
 
@@ -78,7 +78,7 @@ class SignInChallengeApiResponse(
             // Handle 400 errors
             HttpURLConnection.HTTP_BAD_REQUEST -> {
                 return when {
-                    error.isInvalidRequest() && errorCodes?.first().isBlockedChallengeTarget() -> {
+                    error.isAccessDenied() && subError.isProviderBlocked() -> {
                         SignInChallengeApiResult.BlockedAuthMethod(
                             error = error.orEmpty(),
                             errorDescription = errorDescription.orEmpty(),

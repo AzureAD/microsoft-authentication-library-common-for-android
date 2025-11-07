@@ -730,6 +730,7 @@ class NativeAuthResponseHandler {
                 codeLength = null,
                 interval = null,
                 errorCodes = null,
+                subError = null,
                 correlationId = correlationId
             )
         } else {

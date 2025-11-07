@@ -68,9 +68,26 @@ class FidoConstants {
         const val PASSKEY_PROTOCOL_HEADER_NAME = "x-ms-PassKeyAuth"
 
         /**
-         * Version of the passkey protocol that we want to use.
+         * version number of the passkey protocol for authentication only.
          */
-        const val PASSKEY_PROTOCOL_VERSION = "1.0"
+        const val PASSKEY_PROTOCOL_VERSION_1_0 = "1.0"
+
+        /**
+         * Version number of the passkey protocol for authentication and registration.
+         */
+        const val PASSKEY_PROTOCOL_VERSION_1_1 = "1.1"
+
+        /**
+         * Set of supported passkey protocol versions.
+         *
+         * This defines the protocol versions that are recognized and compatible
+         * with the current implementation.
+         */
+        val supportedPasskeyProtocolVersions = setOf(
+            PASSKEY_PROTOCOL_VERSION_1_0,
+            PASSKEY_PROTOCOL_VERSION_1_1
+        )
+
 
         /**
          * Constant to put in PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED if we support passkeys.
@@ -101,9 +118,14 @@ class FidoConstants {
         const val PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED = PASSKEY_PROTOCOL_KEY_TYPES_PASSKEY_OPTION
 
         /**
-         * Corresponding value to the passkey protocol header.
+         * Corresponding value to the passkey protocol header for authentication only.
          */
-        const val PASSKEY_PROTOCOL_HEADER_VALUE = "$PASSKEY_PROTOCOL_VERSION/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
+        const val PASSKEY_PROTOCOL_HEADER_AUTH_ONLY = "$PASSKEY_PROTOCOL_VERSION_1_0/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
+
+        /**
+         * Corresponding value to the passkey protocol header for authentication and registration.
+         */
+        const val PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG = "$PASSKEY_PROTOCOL_VERSION_1_1/$PASSKEY_PROTOCOL_KEY_TYPES_SUPPORTED"
 
         /**
          * Error messages sent to ESTS via the protocol should have a prefix attached.

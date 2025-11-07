@@ -1452,13 +1452,11 @@ public class BrokerMsalController extends BaseController {
      * @param request request string
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
      * @param additionalRequiredParams additional required parameters for web app request.
-     * @param additionalArgs additional arguments as needed.
      * @throws BaseException
      */
     public String executeWebAppRequest(@NonNull final String request,
                                        @NonNull final String minBrokerProtocolVersion,
-                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams,
-                                       @Nullable final Map<String, String> additionalArgs) throws BaseException {
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -1471,7 +1469,7 @@ public class BrokerMsalController extends BaseController {
                     @NonNull
                     @Override
                     public BrokerOperationBundle getBundle() throws ClientException {
-                        Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
+                        Map<String, String> mergedExtraArgs = new HashMap<>();
                         try {
                             // Take a peek at the type of request.
                             final String method = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
