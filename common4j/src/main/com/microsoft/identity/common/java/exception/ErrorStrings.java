@@ -476,6 +476,11 @@ public final class ErrorStrings {
     public static final String ALL_WEBAPP_SIGN_OUTS_FAILED = "all_webapp_sign_outs_failed";
 
     /**
+     * The requested feature flight is disabled.
+     */
+    public static final String FLIGHT_DISABLED = "flight_disabled";
+
+    /**
      * A generic error code used when no other error code is applicable.
      */
     public static final String UNEXPECTED_ERROR = "unexpected_error";
