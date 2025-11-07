@@ -304,7 +304,7 @@ class PasskeyWebListenerTest {
         val responseObject = JSONObject(messageSlot.captured)
         assertEquals(PasskeyReplyChannel.ERROR_STATUS, responseObject.getString(PasskeyReplyChannel.STATUS_KEY))
         val dataObject = responseObject.getJSONObject(PasskeyReplyChannel.DATA_KEY)
-        assertTrue(dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY).contains("Unknown request type"))
+        assertTrue(dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY).contains("Unsupported WebAuthN request type: unknown_type"))
     }
 
     // ========== Frame Origin Tests ==========
