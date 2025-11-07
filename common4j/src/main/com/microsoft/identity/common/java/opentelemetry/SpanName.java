@@ -73,5 +73,7 @@ public enum SpanName {
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     PersistToStorageAsync,
-    InstallCertOnWpj
+    InstallCertOnWpj,
+
+    EcsFlightsFetchConfigsInitial
 }
