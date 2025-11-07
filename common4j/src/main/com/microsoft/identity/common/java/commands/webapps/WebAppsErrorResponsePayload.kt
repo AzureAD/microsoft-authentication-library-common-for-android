@@ -20,26 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands
+package com.microsoft.identity.common.java.commands.webapps
 
-import java.io.Serializable
+import com.google.gson.annotations.SerializedName
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Error response for WebApps token requests.
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
+data class WebAppsErrorResponsePayload(
+    // Fully qualified class name
+    @SerializedName(FIELD_TYPE)
+    val type: String,
 
-    override fun toString(): String {
-        return contracts.joinToString(
-            separator = ", ",
-            prefix = "[",
-            postfix = "]")
+    @SerializedName(FIELD_MESSAGE)
+    val message: String?,
+
+    // Present for ClientException
+    @SerializedName(FIELD_CLIENT_ERROR_CODE)
+    val clientErrorCode: String?,
+
+    // Present for ServiceException
+    @SerializedName(FIELD_HTTP_STATUS_CODE)
+    val httpStatusCode: Int?
+) {
+    companion object {
+        const val FIELD_TYPE = "type"
+        const val FIELD_MESSAGE = "message"
+        const val FIELD_CLIENT_ERROR_CODE = "clientErrorCode"
+        const val FIELD_HTTP_STATUS_CODE = "httpStatusCode"
     }
 }

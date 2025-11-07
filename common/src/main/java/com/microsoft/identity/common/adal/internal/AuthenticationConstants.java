@@ -1414,9 +1414,10 @@ public final class AuthenticationConstants {
 
         /**
          * String for broker webapps successful result after an interactive request;
-         * when this field is present, the getToken suboperation will repackage the result and return it to the caller.
          */
         public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
+
+        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED = "interactive_success_result_compressed";
 
         /**
          * String for broker webapps error result either after an interactive request or due to some early validation;

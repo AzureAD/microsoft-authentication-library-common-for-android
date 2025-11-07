@@ -67,11 +67,11 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
-import com.microsoft.identity.common.java.commands.WebAppsGetTokenSubOperationEnvelope;
-import com.microsoft.identity.common.java.commands.WebAppsGetTokenSubOperationRequest;
-import com.microsoft.identity.common.java.commands.WebAppsErrorResponsePayload;
-import com.microsoft.identity.common.java.commands.WebAppsSupportedContracts;
-import com.microsoft.identity.common.java.commands.WebAppsTokenResponsePayload;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationEnvelope;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsErrorResponsePayload;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsSupportedContracts;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsTokenResponsePayload;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -372,14 +372,46 @@ public class BrokerMsalController extends BaseController {
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireToken";
+        final AcquireTokenResult result;
+        try {
+            final Bundle resultBundle = acquireTokenInternal(parameters);
+            final String negotiatedBrokerProtocolVersion = resultBundle.getString(NEGOTIATED_BP_VERSION_KEY);
+            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
+            // MSAL needs to save this account locally for future token calls.
+            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
+            // If the request is from MSALCPP , OAuth2TokenCache will be null.
+            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+            }
 
+            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+        } catch (final BaseException | ExecutionException e) {
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(e)
+                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+            );
+            throw e;
+        }
+
+        Telemetry.emit(
+                new ApiEndEvent()
+                        .putResult(result)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+        );
+
+        return result;
+    }
+
+    private Bundle acquireTokenInternal(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, InterruptedException, ExecutionException {
+        final String methodTag = TAG + ":acquireTokenInternal";
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
-
-        //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
+        //Create BrokerResultFuture to block on response from the broker...
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
         mBrokerResultFuture = new ResultFuture<>();
@@ -439,39 +471,10 @@ public class BrokerMsalController extends BaseController {
             // Start the BrokerActivity using our existing Activity
             activity.startActivity(brokerActivityIntent);
         }
-
-        final AcquireTokenResult result;
-        try {
-            //Wait to be notified of the result being returned... we could add a timeout here if we want to
-            final Bundle resultBundle = mBrokerResultFuture.get();
-
-            final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-            // MSAL needs to save this account locally for future token calls.
-            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-            // If the request is from MSALCPP , OAuth2TokenCache will be null.
-            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-            }
-
-            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-        } catch (final BaseException | ExecutionException e) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(e)
-                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-            );
-            throw e;
-        }
-
-        Telemetry.emit(
-                new ApiEndEvent()
-                        .putResult(result)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-        );
-
-        return result;
+        //Wait to be notified of the result being returned... we could add a timeout here if we want to
+        final Bundle resultBundle = mBrokerResultFuture.get();
+        resultBundle.putString(NEGOTIATED_BP_VERSION_KEY, interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY));
+        return resultBundle;
     }
 
     @Override
@@ -1470,6 +1473,7 @@ public class BrokerMsalController extends BaseController {
                     public BrokerOperationBundle getBundle() throws ClientException {
                         Map<String, String> mergedExtraArgs = additionalArgs != null ? new HashMap<>(additionalArgs) : new HashMap<>();
                         try {
+                            // Take a peek at the type of request.
                             final String method = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
                             if (StringUtil.isNullOrEmpty(method)) {
                                 throw new ClientException(
@@ -1487,11 +1491,18 @@ public class BrokerMsalController extends BaseController {
                                         );
                                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
                                 // If need to do interactive right away, do it now.
-                                // Otherwise, just let the broker handle the silent token acquisition.
+                                // Otherwise, just let the broker handle the silent token acquisition first.
                                 if (shouldForceInteractive(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
-                                    mergedExtraArgs.putAll(
-                                            performInteractiveAndSerialize(envelope, additionalRequiredParams, minBrokerProtocolVersion)
-                                    );
+                                    // Create params from the request
+                                    if (getTokenRequest.isSecurityTokenService()) {
+                                        // Validate sender authority (throws if invalid)
+                                        AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
+                                    }
+                                    final BrokerInteractiveTokenCommandParameters interactiveParams =
+                                            buildInteractiveTokenParametersForWebApps(getTokenRequest, additionalRequiredParams, minBrokerProtocolVersion);
+
+
+
                                 }
                             }
                         } catch (final Exception ex) {
@@ -1897,12 +1908,14 @@ public class BrokerMsalController extends BaseController {
             final BrokerInteractiveTokenCommandParameters interactiveParams =
                     buildInteractiveTokenParametersForWebApps(getTokenRequest, requiredParams, minBrokerProtocolVersion);
 
-            final AcquireTokenResult rawResult = acquireToken(interactiveParams);
-            if (rawResult == null || rawResult.getLocalAuthenticationResult() == null) {
+            final Bundle resultBundle = acquireTokenInternal(interactiveParams);
+            if (resultBundle == null) {
                 throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Interactive token acquisition returned null result.");
             }
 
-            final ILocalAuthenticationResult interactiveResult = rawResult.getLocalAuthenticationResult();
+
+
+            final ILocalAuthenticationResult interactiveResult = resultBundle.getLocalAuthenticationResult();
             // Some parameters can be null, so double checking.
             final String username = interactiveResult.getAccountRecord().getUsername();
             if (StringUtil.isNullOrEmpty(username)) {

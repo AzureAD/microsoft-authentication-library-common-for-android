@@ -20,38 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands
+package com.microsoft.identity.common.java.commands.webapps
 
 import com.google.gson.annotations.SerializedName
 
 /**
- * Successful response for WebApps token requests.
+ * Extra error details for WebApp operations
  */
-data class WebAppsTokenResponsePayload(
-    @SerializedName(FIELD_USER_NAME)
-    val userName: String,
+data class WebAppErrorDetails(
+    @SerializedName(FIELD_ERROR)
+    val error: Int? = 0,
 
-    @SerializedName(FIELD_HOME_ACCOUNT_ID)
-    val homeAccountId: String,
+    @SerializedName(FIELD_PROTOCOL_ERROR)
+    val protocolError: String? = null,
 
-    @SerializedName(FIELD_EXPIRES_IN)
-    val expiresIn: String,
-
-    @SerializedName(FIELD_ID_TOKEN)
-    val idToken: String,
-
-    @SerializedName(FIELD_ACCESS_TOKEN)
-    val accessToken: String,
+    @SerializedName(FIELD_STATUS)
+    val status: String,
 
     @SerializedName(FIELD_PROPERTIES)
-    val properties: Map<String, String>? = null
+    val properties: MatsProperties? = null
 ) {
     companion object {
-        const val FIELD_USER_NAME = "userName"
-        const val FIELD_HOME_ACCOUNT_ID = "homeAccountId"
-        const val FIELD_EXPIRES_IN = "expiresIn"
-        const val FIELD_ID_TOKEN = "idToken"
-        const val FIELD_ACCESS_TOKEN = "accessToken"
+        const val FIELD_ERROR = "error"
+        const val FIELD_PROTOCOL_ERROR = "protocol_error"
+        const val FIELD_STATUS = "status"
         const val FIELD_PROPERTIES = "properties"
     }
 }

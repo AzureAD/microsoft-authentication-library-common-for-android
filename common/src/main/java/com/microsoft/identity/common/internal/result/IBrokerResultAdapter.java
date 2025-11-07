@@ -44,6 +44,16 @@ public interface IBrokerResultAdapter {
                                                    @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
+     * Returns a success bundle with properties from result for web apps.
+     *
+     * @param authenticationResult
+     * @param negotiatedBrokerProtocolVersion
+     * @return {@link Bundle}
+     */
+    @NonNull Bundle bundleFromAuthenticationResultForWebApps(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                    @Nullable final String negotiatedBrokerProtocolVersion) throws BaseException;
+
+    /**
      * Returns an error bundle with properties from Exception.
      *
      * @param exception
@@ -51,6 +61,15 @@ public interface IBrokerResultAdapter {
      */
     @NonNull Bundle bundleFromBaseException(@NonNull BaseException exception,
                                             @Nullable final String negotiatedBrokerProtocolVersion);
+
+    /**
+     * Returns an error bundle with properties from Exception for web apps.
+     *
+     * @param exception
+     * @param negotiatedBrokerProtocolVersion
+     * @return {@link Bundle}
+     */
+    @NonNull public Bundle bundleFromBaseExceptionForWebApps(@NonNull final BaseException exception);
 
     /**
      * Returns authentication result from Broker result bundle
