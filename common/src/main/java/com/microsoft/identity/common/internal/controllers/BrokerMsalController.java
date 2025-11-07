@@ -65,6 +65,7 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -1426,10 +1427,12 @@ public class BrokerMsalController extends BaseController {
      *
      * @param request request string
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams additional required parameters for web app request.
      * @throws BaseException
      */
     public String executeWebAppRequest(@NonNull final String request,
-                                       @NonNull final String minBrokerProtocolVersion) throws BaseException {
+                                       @NonNull final String minBrokerProtocolVersion,
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
         return getBrokerOperationExecutor().execute(null,
                 new BrokerOperation<String>() {
                     private String negotiatedBrokerProtocolVersion;
