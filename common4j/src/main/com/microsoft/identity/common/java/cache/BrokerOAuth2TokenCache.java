@@ -242,6 +242,31 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
+     * Saves account data to the cache, including AccountRecord, IdTokenRecord, AccessTokenRecord,
+     * and optionally RefreshTokenRecord and familyId.
+     *
+     * @param accountRecord      The AccountRecord to store. Must not be null.
+     * @param idTokenRecord      The IdTokenRecord to store. Must not be null.
+     * @param accessTokenRecord  The AccessTokenRecord to store. Must not be null.
+     * @param refreshTokenRecord The RefreshTokenRecord to store, or null if not applicable.
+     * @param familyId           The family_id or null, if not applicable.
+     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
+     */
+    public synchronized void saveAccountData(final @NonNull AccountRecord accountRecord,
+                                        final @NonNull IdTokenRecord idTokenRecord,
+                                        final @NonNull AccessTokenRecord accessTokenRecord,
+                                        final @Nullable RefreshTokenRecord refreshTokenRecord,
+                                        final @Nullable String familyId) throws ClientException {
+         save(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                refreshTokenRecord,
+                familyId
+        );
+    }
+
+    /**
      * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
      * @param accountRecord      The {@link AccountRecord} to store.
