@@ -58,8 +58,10 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     }
 
     @Override
-    public void setupApiClientWithAccessToken(final String accessToken) {
+    public void setupApiClientWithAccessToken(final String accessToken, final String keyVaultAccessToken) {
         Configuration.getDefaultApiClient().setAccessToken(accessToken);
+        Configuration.getLabUserFetchApiClient().setAccessToken(accessToken);
+        Configuration.getKeyVaultApiClient().setAccessToken(keyVaultAccessToken);
     }
 
     @Override
