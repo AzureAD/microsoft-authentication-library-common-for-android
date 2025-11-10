@@ -355,7 +355,7 @@ public class BrokerOAuth2TokenCache
      * @note This method is synchronized and thread-safe.
      */
     @SuppressWarnings("unchecked")
-    public List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
+    public synchronized List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
 
