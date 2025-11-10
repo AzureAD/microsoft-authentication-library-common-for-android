@@ -44,7 +44,7 @@ public class PolicyHelper {
 
     private static final String TAG = PolicyHelper.class.getName();
     private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
-    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
+    private static final LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     /**
      * Enable CA/Special Policies for any Locked User.
