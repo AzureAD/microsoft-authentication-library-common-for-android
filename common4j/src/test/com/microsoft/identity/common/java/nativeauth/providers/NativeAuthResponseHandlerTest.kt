@@ -3793,6 +3793,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3820,6 +3821,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3844,6 +3846,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3872,6 +3875,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3902,6 +3906,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3931,6 +3936,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = challengeTargetLabel,
             codeLength = codeLength,
             interval = interval,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()

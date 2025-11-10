@@ -1,6 +1,9 @@
 vNext
 ----------
 - [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
+- [MINOR] Add OpenTelemetry support for passkey operations (#2795)
+- [MINOR] Add passkey registration support for WebView (#2769)
+- [MINOR] Add callback for OneAuth for measuring Broker Discovery Client Perf (#2796)
 - [MINOR] Add new span name for DELEGATION_CERT_INSTALL's telemetry (#2790)
 - [MINOR] Refactor getAccountByLocalAccountId (#2781)
 - [MINOR] Add OTel Benchmarker (#2786)
@@ -10,6 +13,7 @@ vNext
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Expose WebApps APIs (#2793)
 - [MINOR] Add domainHint support to authorization request (#2792)
+- [PATCH] Fix auth method blocked error handling (#2804)
 
 Version 23.0.2
 ----------
