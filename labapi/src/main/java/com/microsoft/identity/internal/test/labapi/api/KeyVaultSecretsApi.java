@@ -102,11 +102,10 @@ public class KeyVaultSecretsApi {
      *
      * @param secretName    The name of the secret. (required)
      * @param secretVersion The version of the secret. (required)
-     * @param apiVersion    Client API version. (required)
      * @return SecretBundle
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public SecretBundle getKeyVaultSecret(String secretName, String secretVersion, String apiVersion) throws ApiException {
+    public SecretBundle getKeyVaultSecret(String secretName, String secretVersion) throws ApiException {
         // create path and map variables
         String pathToSecretInKeyVault = secretName + "/" + secretVersion + "/";
         ApiResponse<SecretBundle> resp = getSecretWithHttpInfo(pathToSecretInKeyVault);
