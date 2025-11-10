@@ -40,6 +40,12 @@ public class SignInSubmitCodeCommandParameters extends BaseSignInTokenCommandPar
     private static final String TAG = SignInSubmitCodeCommandParameters.class.getSimpleName();
 
     /**
+     * Identifies if MFA grant type is required.
+     */
+    @NonNull
+    public final Boolean isMFAGrantType;
+
+    /**
      * The one-time password used for authentication.
      */
     @NonNull

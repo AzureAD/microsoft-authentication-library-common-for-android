@@ -642,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "18.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "19.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1223,14 +1223,24 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
-         * Prefix for AAD urls
+         * Suffix for global AAD urls
          */
-        public static final String AAD_URL_HOST_PREFIX = "login.microsoftonline.";
+        public static final String AAD_GLOBAL_URL_HOST_SUFFIX = ".microsoftonline.com";
 
         /**
-         * Prefix for MSA urls
+         * Suffix for China AAD urls
          */
-        public static final String MSA_URL_HOST_PREFIX = "login.live.";
+        public static final String AAD_CHINA_URL_HOST_SUFFIX = ".microsoftonline.cn";
+
+        /**
+         * Suffix for US AAD urls
+         */
+        public static final String AAD_US_URL_HOST_SUFFIX = ".microsoftonline.us";
+
+        /**
+         * Suffix for Intune MDM urls
+         */
+        public static final String AAD_INTUNE_MDM_URL_HOST_SUFFIX = ".microsoft.com";
 
         /**
          * Encoded delimiter for redirect.
@@ -1281,6 +1291,11 @@ public final class AuthenticationConstants {
          * A query param indicating that this is an intune device CA link.
          */
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
+
+        /**
+         * The scheme for HTTPS URLs.
+         */
+        public static final String HTTPS_SCHEME = "https";
 
         /**
          * Activity name to launch company portal.
@@ -1355,6 +1370,31 @@ public final class AuthenticationConstants {
          * String for generate shr result.
          */
         public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
+
+        /**
+         * String for all SSO tokens result.
+         */
+        public static final String BROKER_GENERATE_ALL_SSO_TOKENS_RESULT = "broker_generate_all_sso_tokens";
+
+        /**
+         * String for broker webapps get contracts result.
+         */
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "contracts";
+
+        /**
+         * String for broker webapps error result.
+         */
+        public static final String BROKER_WEB_APPS_ERROR = "error";
+
+        /**
+         * String for broker webapps request.
+         */
+        public static final String BROKER_WEB_APPS_REQUEST = "request";
+
+        /**
+         * String for broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_RESPONSE = "response";
 
         /**
          * String for generate shr result.
@@ -1668,6 +1708,8 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
 
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
+            GET_ALL_SSO_TOKENS(GET_ALL_SSO_TOKENS_PATH, null, null),
+
             UNKNOWN(null, null, null),
             DEVICE_REGISTRATION_PROTOCOLS(DEVICE_REGISTRATION_PROTOCOLS_PATH, null, null),
             BROKER_UPLOAD_LOGS(BROKER_API_UPLOAD_LOGS, BROKER_VERSION_4, null),
@@ -1842,6 +1884,11 @@ public final class AuthenticationConstants {
          * Broker api path constant for adding flight information.
          */
         public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
+         * Api path for getting all SSO tokens based on environment.
+         */
+        public static final String GET_ALL_SSO_TOKENS_PATH = "/allSsoTokens";
 
         /**
          * ContentProvider path to get the preferred auth method.
@@ -2027,7 +2074,11 @@ public final class AuthenticationConstants {
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
 
+        public static final String WEB_VIEW_WEB_CP_ENABLED = "com.microsoft.identity.web.view.web.cp.enabled";
+
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";
+
+        public static final String WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = "com.microsoft.identity.web.view.silent.authorization.flow.timeout";
     }
 
     public static final class AuthorizationIntentAction {

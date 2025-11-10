@@ -306,6 +306,16 @@ public enum AttributeName {
     keystore_exception_stack_trace,
 
     /**
+     * Indicates the exception message from a Android KeyStore operation exception.
+     */
+    keystore_exception_message,
+
+    /**
+     * Indicates the error code from a Android KeyStore operation exception.
+     */
+    keystore_numeric_error_code,
+
+    /**
      * Indicates the new nonce found in the eSTS request.
      */
     is_sso_nonce_found_in_ests_request,
@@ -324,6 +334,21 @@ public enum AttributeName {
      * Indicates the successful method used to generate a keypair.
      */
     key_pair_gen_successful_method,
+
+    /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryptionPaddings,
 
     /**
      * Indicates the exception in generating a keypair.
@@ -389,16 +414,6 @@ public enum AttributeName {
     current_broker_package_name,
 
     /**
-     * Records if the request is a webcp authorize request.
-     */
-    is_webcp_authorize_request,
-
-    /**
-     * Records if the request is a webcp enrollment request.
-     */
-    is_webcp_enrollment_request,
-
-    /**
      * Records if the webcp is enabled in webview.
      */
     is_webcp_in_webview_enabled,
@@ -427,5 +442,60 @@ public enum AttributeName {
     /**
      * Record whether or not the request stored a number match entry.
      */
-    stored_number_match_entry
+    stored_number_match_entry,
+
+    /**
+     * Records the time (in milliseconds) spent on flight check for webcp.
+     */
+    web_cp_flight_get_time,
+
+    /**
+     * Indicates if ests telemetry was skipped.
+     */
+    skipped_ests_telemetry,
+
+    /**
+     * Indicates the OpenID issuer returned in the discovery document.
+     */
+    openid_issuer,
+
+    /**
+     * Indicates the reason for an invalid OpenID issuer.
+     */
+    openid_issuer_invalid_reason,
+
+    /**
+     * Indicates the authority used to make the OpenID configuration request.
+     */
+    openid_config_request_authority,
+
+    /**
+     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     */
+    secret_key_wrapping_transformation,
+
+    /**
+     * Records the operation used to wrap/unwrap the secret key.
+     */
+    secret_key_wrapping_operation,
+
+    /**
+     * Indicates if the request is a redirect to playstore launch from webcp.
+     */
+    is_redirect_to_playstore_launch_from_webcp,
+
+    /**
+     * Records if current flow is in webcp flow.
+     */
+    is_in_web_cp_flow,
+
+    /**
+     * Passkey operation type (e.g., registration, authentication).
+     */
+    passkey_operation_type,
+
+    /**
+     * Passkey DOM exception name (if any).
+     */
+    passkey_dom_exception_name,
 }

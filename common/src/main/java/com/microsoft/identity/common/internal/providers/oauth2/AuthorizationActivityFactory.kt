@@ -65,17 +65,18 @@ object AuthorizationActivityFactory {
         val libraryConfig = LibraryConfiguration.getInstance()
         if (ProcessUtil.isBrokerProcess(parameters.context)) {
             intent = Intent(parameters.context, BrokerAuthorizationActivity::class.java)
-            if (parameters.requestUrl.contains(AuthenticationConstants.SWITCH_BROWSER.CLIENT_SUPPORTS_FLOW)) {
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                // In the case of a SwitchBrowser protocol, we need to transition from the browser to the WebView.
-                // These flags ensure that we have a new task stack that allows for this transition.
-            }
         } else if (libraryConfig.isAuthorizationInCurrentTask && parameters.authorizationAgent != AuthorizationAgent.WEBVIEW) {
             // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
             // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
             // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
             // Fragment to the activity.
             intent = Intent(parameters.context, CurrentTaskAuthorizationActivity::class.java)
+        } else if (parameters.webViewEnableSilentAuthorizationFlowTimeOutMs != null){
+            intent = Intent(parameters.context, SilentAuthorizationActivity::class.java)
+            intent.putExtra(
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT,
+                parameters.webViewEnableSilentAuthorizationFlowTimeOutMs
+            )
         } else {
             intent = Intent(parameters.context, AuthorizationActivity::class.java)
         }
@@ -108,6 +109,10 @@ object AuthorizationActivityFactory {
             putExtra(
                 AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED,
                 parameters.webViewZoomEnabled
+            )
+            putExtra(
+                AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED,
+                parameters.isWebViewWebCpEnabled
             )
             putExtra(
                 DiagnosticContext.CORRELATION_ID,
@@ -159,7 +164,11 @@ object AuthorizationActivityFactory {
 
         fragment =
             if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-                WebViewAuthorizationFragment()
+                if (intent.hasExtra(AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT)) {
+                    SilentWebViewAuthorizationFragment()
+                } else {
+                    WebViewAuthorizationFragment()
+                }
             } else {
                 if (libraryConfig.isAuthorizationInCurrentTask) {
                     CurrentTaskBrowserAuthorizationFragment()

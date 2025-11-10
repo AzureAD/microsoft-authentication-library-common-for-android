@@ -31,6 +31,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -42,6 +43,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
@@ -50,7 +52,6 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -77,6 +78,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
+
+    protected boolean mAuthUxJavaScriptInterfaceAdded = false;
 
     /**
      * @return context
@@ -216,12 +219,46 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         view.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Handles WebView render process crashes or terminations. Previously, a WebView render process crash could cause
+     * the calling application to crash as well, because the Broker was not handling the crash and packaging it into an exception.
+     *
+     * Overriding this method allows us to gracefully handle WebView render process crashes by sending an error to the callback object
+     * when the render process is gone, preventing the application from crashing.
+     * @param view webview in question
+     * @param detail minor details about the render process being lost
+     * @return whether or not we handled the crash
+     */
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+        // Handle render process crash
+        // TODO: This should probably have a more specific error code, but we'll need to ask OneAuth to add new handling for it.
+        sendErrorToCallback(view, ERROR_UNKNOWN, "WebView render process gone, crashed? : " + detail.didCrash());
+
+        return true; // Indicate we handled the crash
+    }
+
     @Override
     public void onPageStarted(final WebView view,
                               final String url,
                               final Bitmap favicon) {
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
+
+        // Re-evaluate adding AuthUx JavaScript Interface
+        if (shouldExposeJavaScriptInterface(url)) {
+            // If broker request, and a valid url, expose JavaScript API
+            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
+            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = true;
+        } else if (mAuthUxJavaScriptInterfaceAdded) {
+            // Remove AuthUx JavaScript Interface
+            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
+            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            mAuthUxJavaScriptInterfaceAdded = false;
+        }
+
         Logger.info(methodTag,"WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
@@ -247,5 +284,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
             Logger.infoPII(methodTag,"Scheme:" + uri.getScheme() + " Host: " + uri.getHost()
                     + " Path: " + uri.getPath());
         }
+    }
+
+    protected boolean shouldExposeJavaScriptInterface(final String url) {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 }

@@ -41,26 +41,6 @@ sealed interface SignInChallengeApiResult: ApiResult {
         override fun toString(): String = toUnsanitizedString()
     }
 
-    data class IntrospectRequired(
-        override val correlationId: String,
-        override val error: String,
-        override val subError: String,
-        override val errorDescription: String,
-        override val errorCodes: List<Int>,
-    ) : ApiErrorResult(
-        error = error,
-        subError = subError,
-        errorDescription = errorDescription,
-        errorCodes = errorCodes,
-        correlationId = correlationId
-    ), SignInChallengeApiResult {
-        override fun toUnsanitizedString(): String {
-            return "IntrospectRequired(correlationId=$correlationId)"
-        }
-
-        override fun toString(): String = toUnsanitizedString()
-    }
-
     data class OOBRequired(
         override val correlationId: String,
         val continuationToken: String,
@@ -74,6 +54,23 @@ sealed interface SignInChallengeApiResult: ApiResult {
 
         override fun toString(): String = "OOBRequired(correlationId=$correlationId, " +
                 "challengeChannel=$challengeChannel, codeLength=$codeLength)"
+    }
+
+    data class BlockedAuthMethod(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), SignInChallengeApiResult {
+        override fun toUnsanitizedString() = "BlockedAuthMethod(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String = "BlockedAuthMethod(correlationId=$correlationId)"
     }
 
     data class PasswordRequired(

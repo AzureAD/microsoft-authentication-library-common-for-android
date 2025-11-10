@@ -55,10 +55,9 @@ public enum CommonFlight implements IFlightConfig {
     ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS),
 
     /**
-     * Flight to be able to disable/rollback the passkey feature in broker if necessary.
-     * This will be set to true by default.
+     * Flight to enable passkey registration feature.
      */
-    ENABLE_PASSKEY_FEATURE("EnablePasskeyFeature", true),
+    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", false),
 
     /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
@@ -122,9 +121,24 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+
+    /**
+     * Flight to enable the new KEK algorithm for encryption/decryption of keys.
+     */
+    ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", true),
+
+    /**
+     * Flight to control the WrappedSecretKey serializer version
+     */
+    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
+
+    /**
      * Flight to enable handling the UI in edge to edge mode
      */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", false),
+    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
 
     /**
      * Flight to enable the Web CP in WebView.
@@ -135,17 +149,38 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
-    
-    /**
-     * Flight to enable the Web CP for a tenant list.
-     */
-    TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW("TenantListToEnableWebCpInWebView", ""),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
-    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", false);
+    SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR("ShouldPreserveWebViewFlowOnSslError", true),
+
+    /**
+     * Flight to enable adding username field in broker request for UiRequiredException from broker.
+     */
+    ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT("AddUsernameInUiRequiredExceptionBrokerResult", true),
+
+    /**
+     * Flight to control the timeout to wait for tenant based flight in WebCP.
+     */
+    WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS("WebCpWaitTimeoutForFlights", 3000),
+
+    /**
+     * Flight to enable WebView security settings to prevent unauthorized access.
+     */
+    ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false),
+
+    /**
+     * Flight to skip ests telemetry.
+     */
+    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false),
+
+    /**
+     * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
+     * config endpoint and only reports the failure result.
+     */
+    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
 
     private String key;
     private Object defaultValue;

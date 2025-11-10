@@ -22,9 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
-import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.AuthenticationMethodApiResult
-import com.microsoft.identity.common.java.nativeauth.util.toUnsanitizedString
-
 sealed interface GetAuthMethodsCommandResult: INativeAuthCommandResult
 sealed interface MFAChallengeCommandResult: INativeAuthCommandResult
 sealed interface MFASubmitChallengeCommandResult: INativeAuthCommandResult
@@ -46,13 +43,14 @@ interface MFACommandResult {
         override fun toString(): String = "VerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
     }
 
-    data class SelectionRequired(
+    data class BlockedAuthMethod(
         override val correlationId: String,
-        val continuationToken: String,
-        val authMethods: List<AuthenticationMethodApiResult>
-    ) : GetAuthMethodsCommandResult, MFAChallengeCommandResult {
-        override fun toUnsanitizedString(): String = "SelectionRequired(correlationId=$correlationId, authMethods=${authMethods.toUnsanitizedString()})"
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>
+    ) : MFAChallengeCommandResult {
+        override fun toUnsanitizedString(): String = "BlockedAuthMethod(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
 
-        override fun toString(): String = "SelectionRequired(correlationId=$correlationId, authMethods=${authMethods})"
+        override fun toString(): String = "BlockedAuthMethod(correlationId=$correlationId)"
     }
 }

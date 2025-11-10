@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
@@ -230,6 +231,24 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, parameters.getRequiredBrokerProtocolVersion());
         requestBundle.putString(ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
         return requestBundle;
+    }
+
+    public @NonNull Bundle getRequestBundleForAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters,
+                                                  @NonNull final String negotiatedBrokerProtocolVersion) {
+
+        final Bundle bundle = new Bundle();
+        bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        if (parameters.getRequestAuthority() != null) {
+            bundle.putString(AuthenticationConstants.Broker.REQUEST_AUTHORITY, parameters.getRequestAuthority());
+        }
+        if (parameters.getSsoUrl() != null) {
+            bundle.putString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY, parameters.getSsoUrl());
+        }
+        if (parameters.getCorrelationId() != null) {
+            bundle.putString(AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID, parameters.getCorrelationId());
+        }
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, parameters.getRequiredBrokerProtocolVersion());
+        return bundle;
     }
 
     /**
@@ -560,6 +579,37 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 negotiatedBrokerProtocolVersion,
                 parameters.getRequiredBrokerProtocolVersion()
         );
+    }
+
+    /**
+     * Method to construct a request bundle for broker getSupportedWebAppContracts request.
+     *
+     * @return request Bundle
+     */
+    public @NonNull Bundle getRequestBundleForGetSupportedWebAppContracts(@NonNull final String negotiatedBrokerProtocolVersion,
+                                                                          @NonNull final String requiredBrokerProtocolVersion) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, requiredBrokerProtocolVersion);
+        return requestBundle;
+    }
+
+    /**
+     * Method to construct a request bundle for broker executeWebAppRequest request.
+     *
+     * @param request                      input request
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @param requiredBrokerProtocolVersion protocol version required by the client.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
+                                                          @NonNull final String negotiatedBrokerProtocolVersion,
+                                                          @NonNull final String requiredBrokerProtocolVersion) {
+        final Bundle bundle = new Bundle();
+        bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        bundle.putString(BROKER_WEB_APPS_REQUEST, request);
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
+        return bundle;
     }
 
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {

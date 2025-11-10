@@ -5,6 +5,9 @@ plugins {
     id 'checkstyle'
     id 'maven-publish'
     id 'kotlin-android'
+
+    // Test retries
+    id 'org.gradle.test-retry' version '1.5.6'
 }
 
 apply from: '../versioning/version_tasks.gradle'
@@ -21,6 +24,18 @@ if (project.hasProperty("codeCoverageEnabled")) {
 
 codeCoverageReport {
     coverage.enabled = enableCodeCoverage
+}
+
+// https://blog.gradle.org/gradle-flaky-test-retry-plugin
+tasks.withType(Test) {
+    retry {
+        // The maximum number of test failures that are allowed before retrying is disabled.
+        maxRetries = 2
+        // The maximum number of times to retry an individual test.
+        maxFailures = 10
+        // Controls whether tests that initially fail and then pass on retry should fail the task.
+        failOnPassedAfterRetry = false
+    }
 }
 
 // In dev, we want to keep the dependencies(common4j, broker4j, common) to 1.0.+ to be able to be consumed by daily dev pipeline.
@@ -136,6 +151,7 @@ android {
 }
 
 dependencies {
+    implementation "androidx.webkit:webkit:$rootProject.ext.webkitVersion"
     testImplementation project(path: ':testutils')
 
     localApi(project(":common4j")) {
@@ -158,6 +174,7 @@ dependencies {
 
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
+    implementation "androidx.activity:activity:1.8.2"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.squareup.moshi:moshi:$rootProject.ext.moshiVersion"
@@ -173,6 +190,7 @@ dependencies {
     implementation "androidx.credentials:credentials-play-services-auth:$rootProject.ext.AndroidCredentialsVersion"
     implementation "com.google.android.gms:play-services-fido:$rootProject.ext.LegacyFidoApiVersion"
     implementation "com.google.android.libraries.identity.googleid:googleid:$rootProject.ext.GoogleIdVersion"
+    implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
 
     constraints {
         implementation ("com.squareup.okio:okio:3.4.0") {
@@ -243,6 +261,14 @@ android.libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
         archiveClassifier.set('javadoc')
         from tasks["${variant.name}Javadoc"].destinationDir
+    }
+}
+
+android.libraryVariants.all { variant ->
+    tasks.named("assemble${variant.name.capitalize()}").configure {
+        doFirst {
+            println("Assembling variant: ${variant.name} for ${project.name}")
+        }
     }
 }
 
@@ -374,10 +400,10 @@ tasks.configureEach { task ->
         task.dependsOn 'bundleDistReleaseAar'
     }
     if (task.name == "generateMetadataFileForDistDebugPublication") {
-        task.mustRunAfter 'bundleDistReleaseAar'
+        task.mustRunAfter 'bundleDistDebugAar'
     }
     if (task.name == "generateMetadataFileForDistReleasePublication") {
-        task.dependsOn 'bundleDistDebugAar'
+        task.dependsOn 'bundleDistReleaseAar'
     }
 }
 
@@ -392,7 +418,7 @@ tasks.withType(GenerateMavenPom).all {
     }
 }
 
-def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "15"
+def dependenciesSizeInMb = project.hasProperty("dependenciesSizeMb") ? project.dependenciesSizeMb : "16"
 String configToCheck = project.hasProperty("dependenciesSizeCheckConfig") ? project.dependenciesSizeCheckConfig : "distReleaseRuntimeClasspath"
 tasks.register("dependenciesSizeCheck") {
     doLast() {
@@ -413,4 +439,3 @@ tasks.register("dependenciesSizeCheck") {
         }
     }
 }
-

@@ -76,6 +76,14 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     private final String mLoginHint;
 
     /**
+     * Provides a hint about the tenant or domain that the user should use to sign in.
+     */
+    @Getter
+    @Accessors(prefix = "m")
+    @SerializedName("domain_hint")
+    private final String mDomainHint;
+
+    /**
      * Correlation ID.
      */
     @Expose()
@@ -122,6 +130,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
     @Expose()
     @Getter
     @Accessors(prefix = "m")
+    @SerializedName("x-client-ReleaseOS")
+    private final String mDiagnosticReleaseOS;
+
+    @Expose()
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName("x-client-CPU")
     private final String mDiagnosticCPU;
 
@@ -162,6 +176,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         super(builder);
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
+        mDomainHint = builder.mDomainHint;
         mCorrelationId = builder.mCorrelationId;
 
         final PkceChallenge challenge = builder.mPkceChallenge == null ?
@@ -186,9 +201,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         // If the flight is enabled, set the fields
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS)) {
             mDiagnosticMN = Device.getManufacturer();
+            mDiagnosticReleaseOS = Device.getAndroidReleaseOs();
             mWorkProfileAvailable = Device.isInPersonalProfileButClouddpcWorkProfileAvailable();
         } else {
             mDiagnosticMN = null;
+            mDiagnosticReleaseOS = null;
             mWorkProfileAvailable = null;
         }
     }
@@ -209,6 +226,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private Boolean mMultipleCloudAware;
         private UUID mCorrelationId;
         private String mLoginHint;
+        private String mDomainHint;
         private PkceChallenge mPkceChallenge;
         private PreferredAuthMethod mPreferredAuthMethod;
 
@@ -243,6 +261,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setLoginHint(String loginHint) {
             mLoginHint = loginHint;
+            return self();
+        }
+
+        public B setDomainHint(String domainHint) {
+            mDomainHint = domainHint;
             return self();
         }
 

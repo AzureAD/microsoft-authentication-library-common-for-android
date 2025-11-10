@@ -10,7 +10,12 @@
         <!-- Because Android detects plugged in YubiKeys as keyboard config changes, configChanges must have `keyboardHidden` and `keyboard` -->
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard" />
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"/>
+
+        <activity
+            android:name="com.microsoft.identity.common.internal.providers.oauth2.SilentAuthorizationActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"
+            android:theme="@style/TransparentActivityTheme"/>
 
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.CurrentTaskAuthorizationActivity"

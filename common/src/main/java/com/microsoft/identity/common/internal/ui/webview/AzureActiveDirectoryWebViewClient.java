@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -66,6 +67,7 @@ import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
@@ -86,12 +88,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
@@ -101,6 +108,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -129,22 +137,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
+    private boolean mInWebCpFlow = false;
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
-    private boolean mIsWebCpInWebViewFeatureEnabled = false;
+    // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
+    private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
+    private final SpanContext mSpanContext;
+    private final String mUtid;
 
-    private String mUtid;
+    private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             @Nullable final String utid) {
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
         mUtid = utid;
+        mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
     }
 
     /**
@@ -159,12 +174,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
-    }
-
-    private boolean shouldExposeJavaScriptInterface(final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUrlForInterface(url)
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 
     @Override
@@ -244,19 +253,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
-        // Re-evaluate adding AuthUx JavaScript Interface
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
-        } else if (mAuthUxJavaScriptInterfaceAdded) {
-            // Remove AuthUx JavaScript Interface
-            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
-            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = false;
-        }
-
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
@@ -264,7 +260,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
+            } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
@@ -338,11 +334,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
-            } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpEnrollmentUrl(url)) {
+            } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
                 processWebCpEnrollmentUrl(view, url);
-            } else if (mIsWebCpInWebViewFeatureEnabled && isWebCpAuthorizeUrl(url)) {
+            } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
+            }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
+                // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
+                Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
+                processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
@@ -570,36 +570,107 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
         view.stopLoading();
-
-        if (isDeviceCaRequest(url)) {
-            Logger.info(methodTag, "This is a device CA request.");
-
-            if (shouldLaunchCompanyPortal()) {
-                // If CP is installed, redirect to CP.
-                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-                //       CP is currently working on this.
-                //       Until that comes, we'll only handle this in ipphone.
-                try {
-                    launchCompanyPortal();
-                    return;
-                } catch (final Exception ex) {
-                    Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
-                }
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
+        span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            if (isDeviceCaRequest(url)) {
+                processDeviceCaRequest(view, url);
+                span.setStatus(StatusCode.OK);
+                return;
             }
 
-            loadDeviceCaUrl(url, view);
-        } else {
-            Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
-            openLinkInBrowser(url);
-            returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
+            if (isRedirectToPlaystoreToInstallCp(url) && mInWebCpFlow) {
+                handlePlaystoreLaunchUrlFromWebCp(url);
+                span.setStatus(StatusCode.OK);
+                return;
+            }
+
+            // Default case: redirect to browser
+            handleBrowserRedirect(methodTag, url);
+            span.setStatus(StatusCode.OK);
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "Failed to open link in browser.", throwable);
+            span.recordException(throwable);
+            span.setStatus(StatusCode.ERROR);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, "No browser found to open the link.");
+        } finally {
+            span.end();
         }
+    }
+
+    /**
+     * Handles the default browser redirect case for website requests.
+     * @param methodTag The method tag for logging
+     * @param url The URL to open in browser
+     */
+    private void handleBrowserRedirect(@NonNull final String methodTag, @NonNull final String url) {
+        Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
+        openLinkInBrowser(url);
+        final RawAuthorizationResult.ResultCode resultCode = mInWebCpFlow
+                ? RawAuthorizationResult.ResultCode.MDM_FLOW
+                : RawAuthorizationResult.ResultCode.CANCELLED;
+
+        Logger.info(methodTag, "Returning result code: " + resultCode);
+        returnResult(resultCode);
+    }
+
+    // Handles Playstore launch URLs originating from WebCP, specifically for installing the Company Portal app.
+    private void handlePlaystoreLaunchUrlFromWebCp(@NonNull final String url) {
+        final String methodTag = TAG + ":handlePlaystoreLaunchUrlFromWebCp";
+        Logger.info(methodTag, "Handling playstore launch URL from WebCP.");
+        SpanExtension.current().setAttribute(AttributeName.is_redirect_to_playstore_launch_from_webcp.name(), true);
+        openLinkInBrowser(url);
+        returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+    }
+
+    /**
+     * Checks if it is a redirect to Playstore to install Company Portal app.
+     * @param url The URL to check.
+     * @return true if it is a redirect to Playstore to install Company Portal app.
+     */
+    private boolean isRedirectToPlaystoreToInstallCp(@NonNull final String url) {
+       if (url.contains(PLAY_STORE_INSTALL_APP_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+           Logger.info(TAG, "Redirect to Playstore to install Company Portal app.");
+           return true;
+       }
+       return false;
+    }
+
+    /**
+     * Processed device CA requests detected in the web flow.
+     * @param view The {@link WebView} instance in which the request originated.
+     * @param url  The URL representing the device CA request.
+     */
+    private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processDeviceCaRequest";
+        Logger.info(methodTag, "This is a device CA request.");
+
+        if (shouldLaunchCompanyPortal()) {
+            // If CP is installed, redirect to CP.
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            try {
+                launchCompanyPortal();
+                return;
+            } catch (final Exception ex) {
+                Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+            }
+        }
+
+        loadDeviceCaUrl(url, view);
     }
 
     private boolean isDeviceCaRequest(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    }
+
+    private boolean isHttpsScheme(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
     // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
@@ -614,9 +685,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting
     protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
@@ -646,29 +715,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                // Enabling webcp in webview feature for brokered flows only for now.
-                return false;
+                mInWebCpFlow = mIsWebViewWebCpEnabledInBrokerlessCase;
+                Logger.info(methodTag, "Not running on AuthService, WebCP in WebView feature enabled? "+ mIsWebViewWebCpEnabledInBrokerlessCase);
+                return mInWebCpFlow;
             }
 
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)) {
-                // Directly enabled via flight rollout.
-                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
-                mIsWebCpInWebViewFeatureEnabled = true;
-                return true;
-            }
-
-            // Else, check if the home tenant is in the list of tenants that have this feature enabled.
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
             if (StringUtil.isNullOrEmpty(homeTenantId)) {
                 Logger.info(methodTag, "Home tenantId is empty");
                 return false;
             }
 
-            final String tenantIdList = CommonFlightsManager.INSTANCE.getFlightsProvider().getStringValue(CommonFlight.TENANT_LIST_TO_ENABLE_WEB_CP_IN_WEBVIEW);
-            final boolean isFlightEnabledForCurrentTenant = !StringUtil.isNullOrEmpty(tenantIdList) && tenantIdList.contains(homeTenantId);
-            Logger.info(methodTag, "TenantId list is empty? " + StringUtil.isNullOrEmpty(tenantIdList) + ", Is current tenantId in list? " + isFlightEnabledForCurrentTenant);
-            mIsWebCpInWebViewFeatureEnabled = isFlightEnabledForCurrentTenant;
-            return isFlightEnabledForCurrentTenant;
+            final long webCpGetFlightStartTime = System.currentTimeMillis();
+            final int waitForFlightsTimeOut = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.WEB_CP_WAIT_TIMEOUT_FOR_FLIGHTS);
+            final boolean isWebCpFlightEnabled = CommonFlightsManager.INSTANCE.getFlightsProviderForTenant(homeTenantId, waitForFlightsTimeOut).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+            SpanExtension.current().setAttribute(AttributeName.web_cp_flight_get_time.name(), (System.currentTimeMillis() - webCpGetFlightStartTime));
+            SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), homeTenantId);
+            if (isWebCpFlightEnabled) {
+                // Directly enabled via flight rollout.
+                Logger.info(methodTag, "WebCP in WebView feature is enabled.");
+                mInWebCpFlow = true;
+                return true;
+            }
+
+            return false;
         } catch (final Throwable throwable) {
             // Catching any unexpected exceptions to avoid breaking the flow. We will anyway remove this block once the feature is fully rolled out.
             Logger.error(methodTag, "Failed to check if WebCP in WebView feature is enabled.", throwable);
@@ -688,11 +758,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCpEnrollmentUrl";
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpEnrollmentRedirect.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            span.setAttribute(AttributeName.is_webcp_enrollment_request.name(), true);
             view.stopLoading();
             Logger.info(methodTag, "Loading WebCP enrollment url in browser.");
             // This is a WebCP enrollment URL, so we need to open it in the browser (it does not work in WebView as google enrollment is enforced to be done in browser).
@@ -737,12 +804,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         view.stopLoading();
         if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME))
-                && !(url.startsWith(PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
+                && !(url.startsWith(PLAY_STORE_INSTALL_PREFIX + AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
             Logger.info(methodTag, "The URI is either trying to open an unknown application or contains unknown query parameters");
             return false;
         }
-        final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
-                COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
 
         try {
@@ -761,21 +827,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean processPlayStoreURLForBrokerApps(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processPlayStoreURL";
 
-        final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
-                COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_APP_PREFIX + appPackageName));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
             view.stopLoading();
-            if (appPackageName.equalsIgnoreCase(COMPANY_PORTAL_APP_PACKAGE_NAME) && (mIsWebCpInWebViewFeatureEnabled)) {
-                // If the flight for webcp is enabled, we will return the result code to the activity to indicate that the MDM flow has started.
-                // Note that this is only for CP app as we are not aware of any other flows (other than webcp) reaching this code path.
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            }
-
             return true;
         } catch (final ActivityNotFoundException e) {
             //if GooglePlay is not present on the device.
@@ -821,7 +879,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Sent Intent to launch Amazon app");
     }
 
-    private void openLinkInBrowser(final String url) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected void openLinkInBrowser(final String url) {
         final String methodTag = TAG + ":openLinkInBrowser";
         Logger.info(methodTag, "Try to open url link in browser");
         final String link = url
@@ -892,7 +951,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processInvalidRedirectUri";
 
         Logger.error(methodTag, "The RedirectUri is not as expected.", null);
-        Logger.errorPII(methodTag,String.format("Received %s and expected %s", url, mRedirectUrl), null);
+        Logger.errorPII(methodTag, String.format("Received %s and expected %s", url, mRedirectUrl), null);
         returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
                 String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
                         mRedirectUrl));
@@ -963,9 +1022,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 AttributeName.is_sso_nonce_found_in_ests_request.name(), nonceQueryParam != null
         );
         if (nonceQueryParam != null) {
-            final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-            final Span span = spanContext != null ?
-                    OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessNonceFromEstsRedirect.name());
+            final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), mSpanContext);
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                 final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span);
                 nonceRedirect.processChallenge(new URL(url));
@@ -993,10 +1050,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processWebCpAuthorize(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCPAuthorize";
         Logger.info(methodTag, "Processing WebCP authorize request.");
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessWebCpRedirects.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessWebCpRedirects.name());
-        span.setAttribute(AttributeName.is_webcp_authorize_request.name(), true);
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpAuthorizeUrlRedirect.name());
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1007,9 +1061,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processCrossCloudRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCrossCloudRedirect";
 
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
+        final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1089,6 +1141,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         });
     }
 
+    @Override
+    public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        // Evaluate JavaScript for each script if URL matches allowed origins
+        for (final JsScriptRecord scriptRecord : mOnPageStartedScripts) {
+            if (scriptRecord.isAllowedForUrl(url)) {
+                Logger.info(TAG, "Executing onPageStarted script: " + scriptRecord.getId());
+                view.evaluateJavascript(scriptRecord.getScript(), null);
+            }
+        }
+    }
+
     /**
      * Cleanup to be done when host activity is being destroyed.
      */
@@ -1120,4 +1184,65 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         ((AbstractSmartcardCertBasedAuthChallengeHandler<?>)mCertBasedAuthChallengeHandler).promptSmartcardRemovalForResult(callback);
     }
 
+    /**
+     * Extracts the broker app package name from the given URL.
+     * Supports all known broker apps. Returns the first match found.
+     * If no known broker app is found, logs a warning and returns an empty string.
+     *
+     * @param url The URL to inspect.
+     * @return The broker app package name, or empty string if not found.
+     */
+    private String getBrokerAppPackageNameFromUrl(@NonNull final String url) {
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (url.contains(brokerData.getPackageName())) {
+                return brokerData.getPackageName();
+            }
+        }
+        Logger.warn(TAG + ":getBrokerAppPackageNameFromUrl", "No known broker app package name found in URL: " + url);
+        return "";
+    }
+
+    /**
+     * Create a span with parent span context if available.
+     * @param spanName Name of the span to be created.
+     * @return Created {@link Span}
+     */
+    private Span createSpanWithAttributesFromParent(@NonNull final String spanName) {
+        final Span span = OTelUtility.createSpanFromParent(spanName, mSpanContext);
+        if (mUtid != null) {
+            span.setAttribute(AttributeName.tenant_id.name(), mUtid);
+        }
+        // Populate some of the parent span's attributes to current span.
+        final Context oTelContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getOtelContext() : null;
+        if (oTelContext != null) {
+            final Baggage baggage = BaggageExtension.fromContext(oTelContext);
+            final List<AttributeName> parentAttributeNames = Arrays.asList(
+                    AttributeName.correlation_id,
+                    AttributeName.calling_package_name
+            );
+            for (AttributeName attributeName : parentAttributeNames) {
+                final String value = baggage.getEntryValue(attributeName.name());
+                if (value != null) {
+                    span.setAttribute(attributeName.name(), value);
+                }
+            }
+        }
+        return span;
+    }
+
+    /**
+     * Add a JavaScript to be executed in onPageStarted.
+     * If allowedUrls is null, the script will be executed for all URLs.
+     * If allowedUrls is non-null, the script will be executed only for URLs that start with any of the allowed origins.
+     * @param script JavaScript code to be executed.
+     * @param allowedUrls Set of allowed URL origins.
+     */
+    public void addOnPageStartedScript(
+            @NonNull final String scriptId,
+            @NonNull final String script,
+            @Nullable final Set<String> allowedUrls) {
+        this.mOnPageStartedScripts.add(
+                new JsScriptRecord(scriptId, script, allowedUrls)
+        );
+    }
 }

@@ -26,10 +26,14 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_ALL_SSO_TOKENS_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEBAPPS_GET_CONTRACTS_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_RESPONSE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -56,6 +60,7 @@ import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
@@ -113,7 +118,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public static final Gson GSON = new Gson();
 
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
-
+    private static final String WEBAPPS_ENTRY_IS_NULL_ERROR = "WebApps entry in the bundle is null";
     interface IBooleanCallback {
         boolean getResult();
     }
@@ -338,6 +343,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             }
         }
 
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ADD_USERNAME_IN_UI_REQUIRED_EXCEPTION_BROKER_RESULT)
+                && exception instanceof UiRequiredException
+        ) {
+            builder.userName(exception.getUsername());
+        }
+
         if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
             // Record MAM flow in telemetry
             SpanExtension.current().setAttribute(AttributeName.is_mam_flow.name(), true);
@@ -406,6 +417,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle) {
         return GSON.fromJson(resultBundle.getString(BROKER_GENERATE_SSO_TOKEN_RESULT), AcquirePrtSsoTokenResult.class);
+    }
+
+    @NonNull
+    @Override
+    public AcquirePrtSsoTokenBatchResult getAcquirePrtSsoTokenBatchResultFromBundle(Bundle resultBundle) {
+        return GSON.fromJson(resultBundle.getString(BROKER_GENERATE_ALL_SSO_TOKENS_RESULT), AcquirePrtSsoTokenBatchResult.class);
     }
 
     @NonNull
@@ -691,6 +708,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode)) {
             exception.setSubErrorCode(brokerResult.getSubErrorCode());
+        }
+        if (!StringUtil.isNullOrEmpty(brokerResult.getUserName())) {
+            exception.setUsername(brokerResult.getUserName());
         }
         return exception;
     }
@@ -1026,5 +1046,39 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             throw this.getBaseExceptionFromBundle(resultBundle);
         }
         return aadDeviceIdRecord;
+    }
+
+    /**
+     * Gets the supported web apps contract string from the result bundle.
+     * @param resultBundle The result bundle from the broker.
+     */
+    @NonNull
+    public String getSupportedWebAppsContractFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+        final String result = resultBundle.getString(BROKER_WEBAPPS_GET_CONTRACTS_RESULT);
+        if (result == null) {
+            throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEBAPPS_GET_CONTRACTS_RESULT);
+        }
+        return result;
+    }
+
+    /**
+     * Gets the execute web app request result string from the result bundle.
+     * @param resultBundle The result bundle from the broker.
+     */
+    @NonNull
+    public String getExecuteWebAppRequestResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+        // Expect either success payload or error fields reused from BrokerResult
+        if (resultBundle.containsKey(BROKER_WEB_APPS_ERROR)) {
+            final String result = resultBundle.getString(BROKER_WEB_APPS_ERROR);
+            if (result == null) {
+                throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEB_APPS_ERROR);
+            }
+            return result;
+        }
+        final String result = resultBundle.getString(BROKER_WEB_APPS_RESPONSE);
+        if (result == null) {
+            throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEB_APPS_RESPONSE);
+        }
+        return result;
     }
 }

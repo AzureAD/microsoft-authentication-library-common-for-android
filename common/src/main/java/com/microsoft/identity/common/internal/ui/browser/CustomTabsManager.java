@@ -132,8 +132,8 @@ public class CustomTabsManager {
 
         // Create the Intent used to launch the Url
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(createSession(null));
+        builder.setSendToExternalDefaultHandlerEnabled(true);
         mCustomTabsIntent = builder.setShowTitle(true).build();
-        mCustomTabsIntent.intent.setPackage(browserPackage);
         return true;
     }
 

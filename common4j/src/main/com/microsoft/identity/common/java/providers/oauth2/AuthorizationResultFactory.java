@@ -144,6 +144,14 @@ public abstract class AuthorizationResultFactory
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
                 return result;
             }
+            case TIMED_OUT: {
+                Logger.info(methodTag, null, "The authorization request was intentionally cancelled.");
+                return createAuthorizationResultWithErrorResponse(
+                        AuthorizationStatus.TIMED_OUT,
+                        MicrosoftAuthorizationErrorResponse.TIMED_OUT,
+                        MicrosoftAuthorizationErrorResponse.TIMED_OUT_DESCRIPTION
+                );
+            }
         }
 
         return createAuthorizationResultWithErrorResponse(

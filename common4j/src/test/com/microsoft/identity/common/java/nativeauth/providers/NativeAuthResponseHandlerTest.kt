@@ -2755,31 +2755,6 @@ class NativeAuthResponseHandlerTest {
     }
 
     @Test
-    fun testSignInChallengeApiResponseIntrospectRequired() {
-        val response = SignInChallengeApiResponse(
-            statusCode = errorStatusCode,
-            challengeType = null,
-            redirectReason = null,
-            continuationToken = null,
-            error = invalidRequestError,
-            subError = introspectRequiredSubError,
-            errorCodes = null,
-            errorDescription = null,
-            errorUri = null,
-            bindingMethod = null,
-            challengeTargetLabel = null,
-            challengeChannel = null,
-            codeLength = null,
-            interval = null,
-            correlationId = correlationId
-        )
-
-        val apiResult = response.toResult()
-        assertTrue(apiResult is SignInChallengeApiResult.IntrospectRequired)
-        assertEquals(correlationId, (apiResult as SignInChallengeApiResult.IntrospectRequired).correlationId)
-    }
-
-    @Test
     fun testSignInChallengeApiResponseChallengeTypeOobSuccess() {
         val response = SignInChallengeApiResponse(
             statusCode = successStatusCode,
@@ -3818,6 +3793,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3845,6 +3821,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3869,6 +3846,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3897,6 +3875,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3927,6 +3906,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = null,
             codeLength = null,
             interval = null,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()
@@ -3956,6 +3936,7 @@ class NativeAuthResponseHandlerTest {
             challengeTarget = challengeTargetLabel,
             codeLength = codeLength,
             interval = interval,
+            subError = null,
             correlationId = correlationId
         )
         val apiResult = jitChallengeApiResponse.toResult()

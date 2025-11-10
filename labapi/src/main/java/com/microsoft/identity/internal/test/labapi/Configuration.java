@@ -12,8 +12,13 @@
 
 package com.microsoft.identity.internal.test.labapi;
 
+import static com.microsoft.identity.internal.test.labapi.ApiClient.LAB_BASE_PATH;
+import static com.microsoft.identity.internal.test.labapi.ApiClient.USER_FETCH_BASE_PATH;
+
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")public class Configuration {
-    private static ApiClient defaultApiClient = new ApiClient();
+    private static ApiClient defaultApiClient = new ApiClient(LAB_BASE_PATH);
+    private static ApiClient labUserFetchApiClient = new ApiClient(USER_FETCH_BASE_PATH);
+    private static ApiClient keyVaultApiClient = new ApiClient();
 
     /**
      * Get the default API client, which would be used when creating API
@@ -25,6 +30,13 @@ package com.microsoft.identity.internal.test.labapi;
         return defaultApiClient;
     }
 
+    public static ApiClient getKeyVaultApiClient() {
+        return keyVaultApiClient;
+    }
+
+    public static ApiClient getLabUserFetchApiClient() {
+        return labUserFetchApiClient;
+    }
     /**
      * Set the default API client, which would be used when creating API
      * instances without providing an API client.

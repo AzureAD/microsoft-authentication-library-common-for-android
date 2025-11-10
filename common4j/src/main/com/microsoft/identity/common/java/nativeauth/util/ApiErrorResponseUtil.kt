@@ -26,10 +26,6 @@ internal fun String?.isRedirect(): Boolean {
     return this.contentEquals(other = "redirect", ignoreCase = true)
 }
 
-internal fun String?.isIntrospectRequired(): Boolean {
-    return this.contentEquals(other = "introspect_required", ignoreCase = true)
-}
-
 internal fun String?.isOOB(): Boolean {
     return this.contentEquals(other = "oob", ignoreCase = true)
 }
@@ -52,6 +48,10 @@ internal fun String?.isInvalidGrant(): Boolean {
 
 internal fun String?.isInvalidRequest(): Boolean {
     return this.contentEquals(other = "invalid_request", ignoreCase = true)
+}
+
+internal fun String?.isAccessDenied(): Boolean {
+    return this.contentEquals(other = "access_denied", ignoreCase = true)
 }
 
 internal fun String?.isPasswordTooWeak(): Boolean {
@@ -119,6 +119,10 @@ internal fun Int?.isInvalidAuthenticationType(): Boolean {
 
 internal fun Int?.isInvalidChallengeTarget(): Boolean {
     return this == 901001
+}
+
+fun String?.isProviderBlocked(): Boolean {
+    return this.contentEquals(other = "provider_blocked_by_rep", ignoreCase = true)
 }
 
 fun String?.isMFARequired(): Boolean {

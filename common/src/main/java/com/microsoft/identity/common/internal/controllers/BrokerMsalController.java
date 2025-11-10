@@ -65,6 +65,7 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -81,6 +82,7 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudien
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
@@ -119,6 +121,8 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -1189,6 +1193,66 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
+     * Get SSO tokens from broker by environment from given request authority.
+     * Note: The result is limited to the tokens associated with the 3 most recently acquired PRTs.
+     * @param parameters {@link AcquirePrtSsoTokenCommandParameters}
+     * @return {@link AcquirePrtSsoTokenBatchResult} containing up to 3 of the most recent relevant SSO tokens.
+     * @throws BaseException
+     */
+    public AcquirePrtSsoTokenBatchResult getAllSsoTokens(@NonNull final AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
+        return getBrokerOperationExecutor().execute(parameters,
+                new BrokerOperation<AcquirePrtSsoTokenBatchResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.MSAL_ALL_SSO_TOKENS,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForAllSsoTokens(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                )
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public AcquirePrtSsoTokenBatchResult extractResultBundle(
+                            @Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+                        return mResultAdapter.getAcquirePrtSsoTokenBatchResultFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":getAllSsoTokens";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final AcquirePrtSsoTokenBatchResult result) {
+                    }
+                });
+    }
+
+    /**
      * Sign in a resource account in broker based on given parameters. Should called by OneAuth/MSAL
      * to provision resource account in broker.
      * @param parameters a {@link ResourceAccountCommandParameters}
@@ -1300,6 +1364,121 @@ public class BrokerMsalController extends BaseController {
                                                @NonNull final AadDeviceIdRecord result) {
             }
         });
+    }
+
+    /**
+     * Get supported web app contracts from broker.
+     *
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @throws BaseException
+     */
+    public String getSupportedWebAppContracts(@NonNull final String minBrokerProtocolVersion) throws BaseException {
+        return getBrokerOperationExecutor().execute(null,
+                new BrokerOperation<String>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_GET_SUPPORTED_WEB_APPS_CONTRACTS,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForGetSupportedWebAppContracts(negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(
+                            @Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getSupportedWebAppsContractFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":getSupportedWebAppContracts";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final String result) {
+                    }
+                });
+    }
+
+    /**
+     * Execute web app request in broker.
+     *
+     * @param request request string
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams additional required parameters for web app request.
+     * @throws BaseException
+     */
+    public String executeWebAppRequest(@NonNull final String request,
+                                       @NonNull final String minBrokerProtocolVersion,
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
+        return getBrokerOperationExecutor().execute(null,
+                new BrokerOperation<String>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForExecuteWebAppRequest(request,negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":executeWebAppRequest";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final String result) {
+                    }
+                });
     }
 
     /**

@@ -11,4 +11,5 @@
     <color name="dialogProgress">#616161</color>
     <color name="certIssuerTitle">#212121</color>
     <color name="dialogErrorText">#D92C2C</color>
+    <color name="com_microsoft_identity_common_white">#FFFFFF</color>
 </resources>
