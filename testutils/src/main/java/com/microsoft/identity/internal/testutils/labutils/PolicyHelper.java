@@ -83,7 +83,7 @@ public class PolicyHelper {
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy is disabled or not for the upn.
      */
-    public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) throws LabApiException {
         instance.setupApiClientWithAccessToken();
 
         try {
@@ -98,8 +98,6 @@ public class PolicyHelper {
         } catch (final ApiException e) {
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
             throw new AssertionError(e);
-        } catch (LabApiException e) {
-            throw new RuntimeException(e);
         }
     }
 }

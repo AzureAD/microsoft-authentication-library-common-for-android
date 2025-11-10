@@ -28,6 +28,8 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.testutils.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 /**
  * Utilities to interact with Lab {@link DeleteDeviceApi}.
@@ -61,9 +63,7 @@ public class LabDeviceHelper {
             final String expectedResult = "Device removed Successfully.";
             return expectedResult.equalsIgnoreCase(customSuccessResponse.getMessage());
         } catch (final ApiException e) {
-            throw new LabApiException(e);
-        } catch (com.microsoft.identity.labapi.utilities.exception.LabApiException e) {
-            throw new RuntimeException(e);
+            throw new LabApiException(LabError.FAILED_TO_DELETE_DEVICE);
         }
     }
 }
