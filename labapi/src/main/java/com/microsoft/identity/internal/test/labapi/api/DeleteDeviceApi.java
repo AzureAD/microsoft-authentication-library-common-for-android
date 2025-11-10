@@ -37,13 +37,16 @@ import java.util.Map;
 
 public class DeleteDeviceApi {
     private ApiClient apiClient;
+    private final String mAzureFunctionCode;
+    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "DeleteDevice";
 
-    public DeleteDeviceApi() {
-        this(Configuration.getDefaultApiClient());
+    public DeleteDeviceApi(final String azureFunctionCode) {
+        this(Configuration.getDefaultApiClient(), azureFunctionCode);
     }
 
-    public DeleteDeviceApi(ApiClient apiClient) {
+    public DeleteDeviceApi(ApiClient apiClient, final String azureFunctionCode) {
         this.apiClient = apiClient;
+        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -75,6 +78,8 @@ public class DeleteDeviceApi {
             localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (deviceid != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

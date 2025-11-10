@@ -35,6 +35,8 @@ import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.internal.testutils.BuildConfig;
+import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
@@ -49,6 +51,7 @@ public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
     private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
@@ -252,17 +255,23 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
 
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
-
         TempUser tempUser;
 
         try {
+            final String createTempUserFunctionCode = mLabClient.getKeyVaultSecret(
+                    CreateTempUserApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserFunctionCode);
+
+            createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
+
+
+
             tempUser = createTempUserApi.apiCreateTempUserPost(userType);
             final String password = LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
             LabConfig labConfig = new LabConfig(tempUser, password);
             LabConfig.setCurrentLabConfig(labConfig);
-        } catch (ApiException e) {
+        } catch (ApiException | LabApiException e) {
             throw new RuntimeException("Error retrieving lab user", e);
         }
 
@@ -271,12 +280,15 @@ public class LabUserHelper {
 
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
-
         try {
+            final String createTempUserFunctionCode = mLabClient.getKeyVaultSecret(
+                    CreateTempUserApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserFunctionCode);
+
+            createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
             return createTempUserApi.apiCreateTempUserPost(userType);
-        } catch (ApiException e) {
+        } catch (ApiException | LabApiException e) {
             throw new RuntimeException("Error retrieving lab user", e);
         }
     }
@@ -332,13 +344,15 @@ public class LabUserHelper {
 
     public static void resetPassword(final String upn) {
         instance.setupApiClientWithAccessToken();
-
-        ResetApi resetApi = new ResetApi();
         try {
+            final String resetApiFunctionCode = mLabClient.getKeyVaultSecret(
+                    ResetApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            ResetApi resetApi = new ResetApi(resetApiFunctionCode);
+
             resetApi.apiResetPut(upn, "Password");
-        } catch (ApiException e) {
+        } catch (ApiException | LabApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
         }
     }
-
 }
