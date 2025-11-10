@@ -42,8 +42,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -165,11 +163,7 @@ public class MsalOAuth2TokenCache
                         String.class
                 );
         final IAccountCredentialCache accountCredentialCache;
-        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
-        if (useInMemoryCache ||  isFlightEnabled) {
-            SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), isFlightEnabled);
+        if (useInMemoryCache) {
             accountCredentialCache = new SharedPreferencesAccountCredentialCacheWithMemoryCache(
                     cacheKeyValueDelegate,
                     sharedPreferencesFileManager
