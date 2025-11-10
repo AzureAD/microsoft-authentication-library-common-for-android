@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import static com.microsoft.identity.labapi.utilities.constants.LabConstants.DEFAULT_LAB_CLIENT_ID;
+import static com.microsoft.identity.labapi.utilities.constants.LabConstants.KEYVAULT_SCOPE;
+
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.testutils.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
@@ -36,11 +39,12 @@ abstract class ConfidentialClientHelper {
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
 
     String mAccessToken;
+    String mKeyVaultAccessToken;
 
     abstract TokenRequest createTokenRequest()
             throws LabApiException;
 
-    abstract void setupApiClientWithAccessToken(String accessToken);
+    abstract void setupApiClientWithAccessToken(String accessToken, String keyVaultAccessToken);
 
     String getAccessToken()
             throws LabApiException {
@@ -51,14 +55,27 @@ abstract class ConfidentialClientHelper {
         return mAccessToken;
     }
 
+    String getAccessTokenForAccessingKeyVault() throws LabApiException {
+        if (mKeyVaultAccessToken == null) {
+            mKeyVaultAccessToken = requestAccessTokenForKeyVault();
+        }
+
+        return mKeyVaultAccessToken;
+    }
+
     private String requestAccessTokenForAutomation()
             throws LabApiException {
         return (new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET)).getAccessToken();
     }
 
+    private String requestAccessTokenForKeyVault()
+            throws LabApiException {
+        return (new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET, KEYVAULT_SCOPE, DEFAULT_LAB_CLIENT_ID)).getAccessToken();
+    }
+
     void setupApiClientWithAccessToken() {
         try {
-            setupApiClientWithAccessToken(this.getAccessToken());
+            setupApiClientWithAccessToken(this.getAccessToken(), this.getAccessTokenForAccessingKeyVault());
         } catch (final Exception e) {
             throw new RuntimeException("Unable to get access token for automation:" + e.getMessage(), e);
         }

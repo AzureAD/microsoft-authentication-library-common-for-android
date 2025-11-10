@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
+import static com.microsoft.identity.labapi.utilities.constants.LabConstants.DEFAULT_LAB_CLIENT_ID;
+import static com.microsoft.identity.labapi.utilities.constants.LabConstants.KEYVAULT_SCOPE;
+
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
@@ -29,13 +32,14 @@ import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
+import com.microsoft.identity.internal.test.labapi.api.KeyVaultSecretsApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.internal.test.labapi.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
@@ -57,6 +61,9 @@ import lombok.NonNull;
 public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
+    private final LabApiAuthenticationClient mLabApiAuthenticationClientForKeyVault = new LabApiAuthenticationClient(
+            BuildConfig.LAB_CLIENT_SECRET, KEYVAULT_SCOPE, DEFAULT_LAB_CLIENT_ID
+    );
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.SECONDS.toMillis(65);
     private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
 
@@ -145,7 +152,7 @@ public class LabClient implements ILabClient {
     }
 
     private List<ConfigInfo> fetchConfigsFromLab(@NonNull final String upn) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
+        Configuration.getLabUserFetchApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
         try {
@@ -157,7 +164,7 @@ public class LabClient implements ILabClient {
     }
 
     public List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
+        Configuration.getLabUserFetchApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
         try {
@@ -222,7 +229,10 @@ public class LabClient implements ILabClient {
                 mLabApiAuthenticationClient.getAccessToken()
         );
 
-        final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        final String createTempUserFunctionCode = getKeyVaultSecret(
+                CreateTempUserApi.AZURE_FUNCTION_CODE_SECRET_NAME
+        );
+        final CreateTempUserApi createTempUserApi = new CreateTempUserApi(createTempUserFunctionCode);
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
         final TempUser tempUser;
 
@@ -279,7 +289,7 @@ public class LabClient implements ILabClient {
 
         // Adding a second attempt here, api sometimes fails to get the lab secret.
         try {
-            return getSecret(labName);
+            return getKeyVaultSecret(labName);
         } catch (final LabApiException e){
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
@@ -291,7 +301,7 @@ public class LabClient implements ILabClient {
                 }
 
                 // Try to get the secret again
-                return getSecret(labName);
+                return getKeyVaultSecret(labName);
             } else {
                 throw e;
             }
@@ -299,15 +309,15 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public String getSecret(@NonNull final String secretName) throws LabApiException {
-        Configuration.getDefaultApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
+    public String getKeyVaultSecret(@NonNull final String secretName) throws LabApiException {
+        Configuration.getKeyVaultApiClient().setAccessToken(
+                mLabApiAuthenticationClientForKeyVault.getAccessToken()
         );
-        final LabSecretApi labSecretApi = new LabSecretApi();
+        final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi();
 
         try {
-            final SecretResponse secretResponse = labSecretApi.apiLabSecretGet(secretName);
-            return secretResponse.getValue();
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(secretName);
+            return secretBundle.getValue();
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
         }
@@ -320,7 +330,10 @@ public class LabClient implements ILabClient {
                 mLabApiAuthenticationClient.getAccessToken()
         );
 
-        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
+        final String deleteDeviceFunctionCode = getKeyVaultSecret(
+                DeleteDeviceApi.AZURE_FUNCTION_CODE_SECRET_NAME
+        );
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi(deleteDeviceFunctionCode);
 
         try {
             final CustomSuccessResponse successResponse = deleteDeviceApi.apiDeleteDeviceDelete(
@@ -400,10 +413,9 @@ public class LabClient implements ILabClient {
     private String getPassword(final String credentialVaultKeyName) throws LabApiException {
         final String secretName = getLabSecretName(credentialVaultKeyName);
 
-        // Adding a second attempt here, api sometimes fails to get the lab secret.
         try {
-            return getSecret(secretName);
-        } catch (final LabApiException e){
+            return getKeyVaultSecret(secretName);
+        } catch (final LabApiException e) {
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
                 // Wait for a bit
@@ -414,7 +426,7 @@ public class LabClient implements ILabClient {
                 }
 
                 // Try to get the secret again
-                return getSecret(secretName);
+                return getKeyVaultSecret(secretName);
             } else {
                 throw e;
             }
@@ -423,7 +435,10 @@ public class LabClient implements ILabClient {
 
     @Override
     public boolean resetPassword(@NonNull final String upn) throws LabApiException {
-        final ResetApi resetApi = new ResetApi();
+        final String resetApiFunctionCode = getKeyVaultSecret(
+                ResetApi.AZURE_FUNCTION_CODE_SECRET_NAME
+        );
+        final ResetApi resetApi = new ResetApi(resetApiFunctionCode);
         try {
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, ResetOperation.PASSWORD.toString());
             if (resetResponse == null) {
@@ -494,7 +509,13 @@ public class LabClient implements ILabClient {
      * @return boolean value indicating policy enabled or not.
      */
     public boolean enablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
+        Configuration.getDefaultApiClient().setAccessToken(
+                mLabApiAuthenticationClient.getAccessToken()
+        );
+        final String enablePolicyFunctionCode = getKeyVaultSecret(
+                EnablePolicyApi.AZURE_FUNCTION_CODE_SECRET_NAME
+        );
+        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi(enablePolicyFunctionCode);
         try {
             final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Enabled for user : " + upn).toLowerCase();
@@ -516,7 +537,10 @@ public class LabClient implements ILabClient {
      * @return boolean value indicating policy is disabled or not for the upn.
      */
     public boolean disablePolicy(@NonNull final String upn, @NonNull final ProtectionPolicy policy) throws LabApiException {
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
+        final String disablePolicyFunctionCode = getKeyVaultSecret(
+                DisablePolicyApi.AZURE_FUNCTION_CODE_SECRET_NAME
+        );
+        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi(disablePolicyFunctionCode);
         try {
             final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy.toString());
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();

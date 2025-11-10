@@ -25,11 +25,10 @@ package com.microsoft.identity.internal.testutils.labutils;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
+import com.microsoft.identity.internal.test.labapi.api.KeyVaultSecretsApi;
 import com.microsoft.identity.internal.test.labapi.api.LabApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
-
+import com.microsoft.identity.internal.test.labapi.model.SecretBundle;
 /**
  * Query the Lab Api to get lab specific info such as lab tenant, secret etc.
  */
@@ -65,7 +64,7 @@ public class LabHelper {
      */
     public static String getPasswordForLab(final String credentialVaultKeyName) {
         final String secretName = getLabSecretName(credentialVaultKeyName);
-        return getSecret(secretName);
+        return getKeyVaultSecret(secretName);
     }
 
     /**
@@ -74,18 +73,15 @@ public class LabHelper {
      * @param secretName the secret to pull
      * @return a String representing secret value
      */
-    public static String getSecret(@NonNull final String secretName) {
+    public static String getKeyVaultSecret(@NonNull final String secretName) {
         instance.setupApiClientWithAccessToken();
-        LabSecretApi labSecretApi = new LabSecretApi();
-        SecretResponse secretResponse;
-
+        final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi();
         try {
-            secretResponse = labSecretApi.apiLabSecretGet(secretName);
-        } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(secretName);
+            return secretBundle.getValue();
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving secret from lab.", ex);
         }
-
-        return secretResponse.getValue();
     }
 
     private static String getLabSecretName(final String credentialVaultKeyName) {

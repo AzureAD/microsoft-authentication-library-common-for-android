@@ -37,13 +37,16 @@ import java.util.Map;
 
 public class ResetApi {
     private ApiClient apiClient;
+    private final String mAzureFunctionCode;
+    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "ResetApi";
 
-    public ResetApi() {
-        this(Configuration.getDefaultApiClient());
+    public ResetApi(final String azureFunctionCode) {
+        this(Configuration.getDefaultApiClient(), azureFunctionCode);
     }
 
-    public ResetApi(ApiClient apiClient) {
+    public ResetApi(ApiClient apiClient, final String azureFunctionCode) {
         this.apiClient = apiClient;
+        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -75,6 +78,8 @@ public class ResetApi {
             localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (operation != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("operation", operation));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

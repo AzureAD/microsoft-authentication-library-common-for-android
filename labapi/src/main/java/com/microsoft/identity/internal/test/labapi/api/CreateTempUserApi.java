@@ -37,13 +37,16 @@ import java.util.Map;
 
 public class CreateTempUserApi {
     private ApiClient apiClient;
+    private final String mAzureFunctionCode;
+    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "CreateTempUser";
 
-    public CreateTempUserApi() {
-        this(Configuration.getDefaultApiClient());
+    public CreateTempUserApi(final String azureFunctionCode) {
+        this(Configuration.getDefaultApiClient(), azureFunctionCode);
     }
 
-    public CreateTempUserApi(ApiClient apiClient) {
+    public CreateTempUserApi(final ApiClient apiClient, final String azureFunctionCode) {
         this.apiClient = apiClient;
+        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -72,6 +75,8 @@ public class CreateTempUserApi {
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
