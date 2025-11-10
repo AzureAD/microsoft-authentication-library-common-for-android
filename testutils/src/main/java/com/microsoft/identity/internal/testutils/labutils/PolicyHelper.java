@@ -54,7 +54,7 @@ public class PolicyHelper {
      * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy enabled or not.
      */
-    public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) throws LabApiException {
         instance.setupApiClientWithAccessToken();
 
         try {
@@ -70,8 +70,6 @@ public class PolicyHelper {
         } catch (final ApiException e) {
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
             throw new AssertionError(e);
-        } catch (LabApiException e) {
-            throw new RuntimeException(e);
         }
     }
 

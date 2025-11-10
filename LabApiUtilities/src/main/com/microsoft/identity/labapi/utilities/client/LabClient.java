@@ -410,7 +410,7 @@ public class LabClient implements ILabClient {
         return getPassword(tempUser.getCredentialVaultKeyName());
     }
 
-    public String getPassword(final String credentialVaultKeyName) throws LabApiException {
+    private String getPassword(final String credentialVaultKeyName) throws LabApiException {
         final String secretName = getLabSecretName(credentialVaultKeyName);
 
         try {
