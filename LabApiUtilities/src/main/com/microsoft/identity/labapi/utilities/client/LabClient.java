@@ -316,7 +316,7 @@ public class LabClient implements ILabClient {
         final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi();
 
         try {
-            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(secretName, "", "");
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(secretName, "");
             return secretBundle.getValue();
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
