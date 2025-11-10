@@ -342,6 +342,18 @@ public class BrokerOAuth2TokenCache
         }
     }
 
+    /**
+     * Loads aggregated account data for the specified authentication scheme and cache record.
+     * This method retrieves cache records from the appropriate token cache (FOCI or app-specific)
+     * based on the client ID and environment from the provided cache record.
+     *
+     * @param authScheme  The authentication scheme to use for loading tokens.
+     * @param cacheRecord The cache record containing the access token with client ID, environment,
+     *                    and other metadata needed to locate the appropriate cache.
+     * @return A list of cache records with aggregated account data, or null if the cache is not found.
+     * @throws NullPointerException if either {@code authScheme} or {@code cacheRecord} is null.
+     * @note This method is synchronized and thread-safe.
+     */
     @SuppressWarnings("unchecked")
     public List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
