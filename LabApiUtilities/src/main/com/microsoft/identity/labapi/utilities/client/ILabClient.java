@@ -89,14 +89,13 @@ public interface ILabClient {
     String getPasswordForGuestUser(final LabGuestAccount guestUser) throws LabApiException;
 
     /**
-     * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
-     * accounts but may also be used for any other secret that the Lab has stored in their KeyVault.
+     * Get a secret from the MSIDLABS KeyVault
      *
      * @param secretName the name (identifier) of the secret that should be loaded
      * @return a String containing the value of the secret
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
-    String getSecret(String secretName) throws LabApiException;
+    String getKeyVaultSecret(String secretName) throws LabApiException;
 
     /**
      * Reset the password for the username given, then reset it back to the original password.

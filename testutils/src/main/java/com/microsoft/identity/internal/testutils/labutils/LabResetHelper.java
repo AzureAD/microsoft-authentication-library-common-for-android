@@ -25,11 +25,12 @@ package com.microsoft.identity.internal.testutils.labutils;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.internal.testutils.BuildConfig;
+import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 /**
  * Utilities to interact with Lab {@link ResetApi}.
@@ -37,6 +38,7 @@ import com.microsoft.identity.labapi.utilities.client.LabClient;
 public class LabResetHelper {
 
     public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
+    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     /**
      * Reset the password for the supplied account.
@@ -47,9 +49,11 @@ public class LabResetHelper {
     public static boolean resetPassword(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
 
-        final ResetApi resetApi = new ResetApi();
-
         try {
+            final String resetApiFunctionCode = mLabClient.getKeyVaultSecret(
+                    ResetApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final ResetApi resetApi = new ResetApi(resetApiFunctionCode);
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
 
             if (resetResponse == null) {
@@ -60,6 +64,8 @@ public class LabResetHelper {
             return resetResponse.toString().toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
+        } catch (LabApiException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -72,9 +78,11 @@ public class LabResetHelper {
     public static boolean resetMfa(@NonNull final String upn) {
         INSTANCE.setupApiClientWithAccessToken();
 
-        final ResetApi resetApi = new ResetApi();
-
         try {
+            final String resetApiFunctionCode = mLabClient.getKeyVaultSecret(
+                    ResetApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final ResetApi resetApi = new ResetApi(resetApiFunctionCode);
             final CustomSuccessResponse resetResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
 
             if (resetResponse == null) {
@@ -86,6 +94,8 @@ public class LabResetHelper {
             );
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
+        } catch (LabApiException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -51,9 +51,9 @@ import com.microsoft.identity.internal.test.labapi.auth.OAuth;
 
 public class ApiClient {
 
+    public static final String LAB_BASE_PATH = "https://labusermanagerapi.azurewebsites.net";
+    public static final String USER_FETCH_BASE_PATH = "https://msidlab.com";
     private final String AUTH_TYPE = "Access Token";
-
-    private static final String DEFAULT_BASE_PATH = "https://msidlab.com";
     private String basePath;
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
@@ -78,7 +78,7 @@ public class ApiClient {
      * No-parameter constructor will use default Base Path.
      */
     public ApiClient() {
-        this(DEFAULT_BASE_PATH);
+        this("");
     }
 
     /*
