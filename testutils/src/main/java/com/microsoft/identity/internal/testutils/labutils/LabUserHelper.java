@@ -48,7 +48,7 @@ public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
     private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
-    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
+    private static final LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 

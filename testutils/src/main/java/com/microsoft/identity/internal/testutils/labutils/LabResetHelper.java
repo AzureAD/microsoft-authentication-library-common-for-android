@@ -38,7 +38,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 public class LabResetHelper {
 
     public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
-    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
+    private static final LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     /**
      * Reset the password for the supplied account.
@@ -46,7 +46,7 @@ public class LabResetHelper {
      * @param upn the upn of the user for which to reset password
      * @return a boolean indicating if password reset was successful
      */
-    public static boolean resetPassword(@NonNull final String upn) {
+    public static boolean resetPassword(@NonNull final String upn) throws LabApiException {
         INSTANCE.setupApiClientWithAccessToken();
 
         try {
@@ -64,8 +64,6 @@ public class LabResetHelper {
             return resetResponse.toString().toLowerCase().contains(expectedResult);
         } catch (ApiException e) {
             throw new RuntimeException(e.getMessage());
-        } catch (LabApiException e) {
-            throw new RuntimeException(e);
         }
     }
 

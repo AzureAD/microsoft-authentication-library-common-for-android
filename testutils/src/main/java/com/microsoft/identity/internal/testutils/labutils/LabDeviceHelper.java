@@ -37,7 +37,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabError;
 public class LabDeviceHelper {
 
     public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
-    private static LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
+    private static final LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     /**
      * Deletes the provided device from the directory.
