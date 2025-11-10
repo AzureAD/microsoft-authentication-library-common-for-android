@@ -27,10 +27,11 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
+import com.microsoft.identity.internal.testutils.BuildConfig;
+import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
 
@@ -43,6 +44,7 @@ public class PolicyHelper {
 
     private static final String TAG = PolicyHelper.class.getName();
     private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    private static final LabClient mLabClient = new LabClient(new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET));
 
     /**
      * Enable CA/Special Policies for any Locked User.
@@ -52,11 +54,15 @@ public class PolicyHelper {
      * @param policy Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy enabled or not.
      */
-    public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) throws LabApiException {
         instance.setupApiClientWithAccessToken();
 
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
+            final String enablePolicyFunctionCode = mLabClient.getKeyVaultSecret(
+                    EnablePolicyApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final EnablePolicyApi enablePolicyApi = new EnablePolicyApi(enablePolicyFunctionCode);
+
             final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(enablePolicyResult);
@@ -75,11 +81,14 @@ public class PolicyHelper {
      * @param policy Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. (optional)
      * @return boolean value indicating policy is disabled or not for the upn.
      */
-    public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
+    public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) throws LabApiException {
         instance.setupApiClientWithAccessToken();
 
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
+            final String disablePolicyFunctionCode = mLabClient.getKeyVaultSecret(
+                    DisablePolicyApi.AZURE_FUNCTION_CODE_SECRET_NAME
+            );
+            final DisablePolicyApi disablePolicyApi = new DisablePolicyApi(disablePolicyFunctionCode);
             final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(disablePolicyResponse);
