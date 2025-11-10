@@ -35,6 +35,15 @@ class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient 
             .getActiveBrokerFromAccountManager()
     }
 
+    override fun getActiveBroker(
+        shouldSkipCache: Boolean,
+        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
+    ): BrokerData? {
+        telemetryCallback.onUseAccountManager()
+        return AccountManagerBrokerDiscoveryUtil(context)
+            .getActiveBrokerFromAccountManager()
+    }
+
     override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
         throw UnsupportedOperationException("LegacyBrokerDiscoveryClient does not support forceBrokerRediscovery.")
     }
