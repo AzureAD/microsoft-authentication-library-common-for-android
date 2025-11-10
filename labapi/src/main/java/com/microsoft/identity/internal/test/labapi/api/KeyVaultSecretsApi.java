@@ -99,6 +99,19 @@ public class KeyVaultSecretsApi {
     /**
      * Get a specified secret from a given key vault.
      * The GET operation is applicable to any secret stored in Azure Key Vault. This operation requires the secrets/get permission.
+     * This will pull the latest version of the secret.
+     *
+     * @param secretName    The name of the secret. (required)
+     * @return SecretBundle
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     */
+    public SecretBundle getKeyVaultSecret(String secretName) throws ApiException {
+        return getKeyVaultSecret(secretName, "");
+    }
+
+    /**
+     * Get a specified secret from a given key vault.
+     * The GET operation is applicable to any secret stored in Azure Key Vault. This operation requires the secrets/get permission.
      *
      * @param secretName    The name of the secret. (required)
      * @param secretVersion The version of the secret. (required)
