@@ -31,7 +31,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXTRA_ARGS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_REQUEST;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXECUTE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
@@ -52,7 +52,6 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
@@ -145,6 +144,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
+            brokerRequestBuilder.webAppsState(((BrokerInteractiveTokenCommandParameters) parameters).getWebAppsState());
         }
 
         return brokerRequestBuilder.build();
@@ -613,21 +613,16 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
      * @param requiredBrokerProtocolVersion protocol version required by the client.
      * @param additionalRequiredParams extra required arguments to be sent to broker.
-     * @param additionalArgs additional args as needed.
      * @return request Bundle
      */
     public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
                                                           @NonNull final String negotiatedBrokerProtocolVersion,
                                                           @NonNull final String requiredBrokerProtocolVersion,
-                                                          @NonNull final String additionalRequiredParams,
-                                                          @Nullable final String additionalArgs) {
+                                                          @NonNull final String additionalRequiredParams) {
         final Bundle bundle = new Bundle();
         bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
-        bundle.putString(BROKER_WEB_APPS_REQUEST, request);
+        bundle.putString(BROKER_WEB_APPS_EXECUTE_REQUEST, request);
         bundle.putString(BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS, additionalRequiredParams);
-        if (additionalArgs != null) {
-            bundle.putString(BROKER_WEB_APPS_EXTRA_ARGS, additionalArgs);
-        }
         addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
         return bundle;
     }

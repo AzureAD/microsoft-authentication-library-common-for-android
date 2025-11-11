@@ -85,6 +85,7 @@ public class BrokerRequest implements Serializable {
 
         final static String TENANT_ID = "tenant_id";
         final static String REQUEST_TYPE = "request_type";
+        final static String WEB_APPS_STATE = "web_apps_state";
     }
 
     /**
@@ -286,4 +287,11 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.REQUEST_TYPE)
     private String mRequestType;
+
+    /**
+     * State for web apps requests. Make sure not to log this.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.WEB_APPS_STATE)
+    private String mWebAppsState;
 }

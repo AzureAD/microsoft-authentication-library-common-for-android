@@ -27,7 +27,9 @@ import com.microsoft.identity.common.java.commands.webapps.WebAppError
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.java.base64.Base64Util
 import com.microsoft.identity.common.java.commands.webapps.WebAppsErrorResponsePayload
+import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.logging.Logger
 import java.net.URI
@@ -42,6 +44,24 @@ class WebAppsUtil {
         const val DEFAULT_AUTHORITY = "https://login.microsoftonline.com/common"
 
         /**
+         * Validates that the redirect URI origin matches the sender origin for MSAL JS requests.
+         *
+         * @param redirectUri The redirect URI from the request.
+         * @param senderUri The sender URI to compare against the redirect URI.
+         * @throws ClientException if the redirect URI origin does not match the sender origin.
+         */
+        @JvmStatic
+        fun validateMsalJsRedirectOrigin(redirectUri: String,
+                                         senderUri: String) {
+            if (!hasSameSchemeAndHost(senderUri, redirectUri)) {
+                throw ClientException(
+                    ErrorStrings.INVALID_REQUEST,
+                    "The redirect URI origin does not match the sender origin."
+                )
+            }
+        }
+
+        /**
          * Create a [Bundle] containing a successful response object.
          *
          * @param responseObject The response object to include in the bundle.
@@ -51,7 +71,7 @@ class WebAppsUtil {
         fun getResponseBundle(responseObject: Any): Bundle {
             return Bundle().apply {
                 putString(
-                    AuthenticationConstants.Broker.BROKER_WEB_APPS_RESPONSE,
+                    AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT,
                     ObjectMapper.serializeObjectToJsonString(responseObject)
                 )
             }
@@ -66,18 +86,23 @@ class WebAppsUtil {
          * @return A [Bundle] containing the error response.
          */
         @JvmStatic
-        fun createErrorResponse(t: Throwable, description: String?): Bundle {
+        fun createErrorResponseBundle(t: Throwable, description: String?): Bundle {
+            return Bundle().apply {
+                putString(
+                    AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR_RESULT,
+                    createErrorResponseString(t, description)
+                )
+            }
+        }
+
+        @JvmStatic
+        fun createErrorResponseString(t: Throwable, description: String?): String {
             val errorDescription = if (!description.isNullOrBlank()) {
                 "$description: ${t.javaClass.simpleName}: ${t.message}"
             } else {
                 "Error occurred during operation: ${t.javaClass.simpleName}: ${t.message}"
             }
-            return Bundle().apply {
-                putString(
-                    AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR,
-                    ObjectMapper.serializeObjectToJsonString(WebAppError(t, errorDescription))
-                )
-            }
+            return ObjectMapper.serializeObjectToJsonString(WebAppError(t, errorDescription))
         }
 
         /**
@@ -103,17 +128,27 @@ class WebAppsUtil {
         }
 
         /**
-         * Utility method to require a non-null value, throwing a ClientException if null.
+         * Utility method to require a non-null and non-empty value, throwing a ClientException if null or empty.
          *
-         * @param value The value to check for nullity.
-         * @param name The name of the parameter, used in the exception message.
-         * @return The non-null value.
-         * @throws ClientException if the value is null.
+         * @param value The value to check.
+         * @param name The name of the parameter (for error message).
+         * @return The non-null, non-empty value.
+         * @throws ClientException if the value is null or empty.
          */
         @JvmStatic
         @Throws(ClientException::class)
-        fun <T> requireNotNullClient(value: T?, name: String): T =
-            value ?: throw ClientException(ClientException.MISSING_PARAMETER, "$name is null.")
+        fun <T> requireNotNullOrEmpty(value: T?, name: String): T {
+            if (value == null) {
+                throw ClientException(ClientException.MISSING_PARAMETER, "$name is null.")
+            }
+            if (value is CharSequence && value.isEmpty()) {
+                throw ClientException(ClientException.MISSING_PARAMETER, "$name is empty.")
+            }
+            if (value is Collection<*> && value.isEmpty()) {
+                throw ClientException(ClientException.MISSING_PARAMETER, "$name is empty.")
+            }
+            return value
+        }
 
         /**
          * Computes the remaining seconds until the target epoch time.

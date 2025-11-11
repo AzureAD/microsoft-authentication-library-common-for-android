@@ -81,6 +81,9 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     // Parameter representing if this broker request is an Account Transfer request
     private final boolean isAccountTransferRequest;
 
+    // Optional field to persist state for WebApps interactive token requests.
+    private final String webAppsState;
+
     @Override
     public void validate() throws ArgumentException, ClientException {
         super.validate();

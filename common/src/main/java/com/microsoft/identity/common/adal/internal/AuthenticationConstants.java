@@ -1379,7 +1379,7 @@ public final class AuthenticationConstants {
         /**
          * String for broker webapps get contracts result.
          */
-        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "contracts";
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "web_apps_contracts";
 
         /**
          * String for broker webapps error result.
@@ -1389,12 +1389,12 @@ public final class AuthenticationConstants {
         /**
          * String for broker webapps request.
          */
-        public static final String BROKER_WEB_APPS_REQUEST = "request";
+        public static final String BROKER_WEB_APPS_EXECUTE_REQUEST = "web_apps_execute_request";
 
         /**
          * String for broker webapps response.
          */
-        public static final String BROKER_WEB_APPS_RESPONSE = "response";
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
 
         /**
          * String for broker webapps additional required params.
@@ -1417,13 +1417,12 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
 
-        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED = "interactive_success_result_compressed";
+        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED = "web_apps_interactive_success_result_compressed";
 
         /**
-         * String for broker webapps error result either after an interactive request or due to some early validation;
-         * when this field is present, the execute operation will repackage the result and return it to the caller.
+         * String for broker webapps error result.
          */
-        public static final String BROKER_WEB_APPS_VALIDATION_OR_INTERACTIVE_ERROR_RESULT = "validation_or_interactive_error_result";
+        public static final String BROKER_WEB_APPS_ERROR_RESULT = "web_apps_error_result";
 
         /**
          * String for generate shr result.
