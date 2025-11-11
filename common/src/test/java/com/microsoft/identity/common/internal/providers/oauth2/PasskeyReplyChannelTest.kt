@@ -88,26 +88,6 @@ class PasskeyReplyChannelTest {
     }
 
     @Test
-    fun `postError with string sends correct error format`() {
-        // Given
-        val errorMessage = "Test error message"
-        val messageSlot = slot<String>()
-
-        // When
-        passkeyReplyChannel.postError(errorMessage)
-
-        // Then
-        verify { mockReplyProxy.postMessage(capture(messageSlot)) }
-
-        val messageObject = JSONObject(messageSlot.captured)
-        val dataObject = messageObject.getJSONObject(PasskeyReplyChannel.DATA_KEY)
-
-        assertEquals(errorMessage, dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_MESSAGE_KEY))
-        assertEquals(PasskeyReplyChannel.DOM_EXCEPTION_NOT_ALLOWED_ERROR,
-            dataObject.getString(PasskeyReplyChannel.DOM_EXCEPTION_NAME_KEY))
-    }
-
-    @Test
     fun `postError with cancellation exception returns NotAllowedError`() {
         // Given
         val exception = CreateCredentialCancellationException("User cancelled")

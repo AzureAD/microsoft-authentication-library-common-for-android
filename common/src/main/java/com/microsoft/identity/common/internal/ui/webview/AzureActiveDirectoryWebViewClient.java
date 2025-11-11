@@ -141,8 +141,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
-
-
+    private final SpanContext mSpanContext;
     private final String mUtid;
 
     private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
@@ -159,6 +158,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
         mUtid = utid;
+        mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
     }
 
@@ -1022,9 +1022,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 AttributeName.is_sso_nonce_found_in_ests_request.name(), nonceQueryParam != null
         );
         if (nonceQueryParam != null) {
-            final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-            final Span span = spanContext != null ?
-                    OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessNonceFromEstsRedirect.name());
+            final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), mSpanContext);
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                 final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span);
                 nonceRedirect.processChallenge(new URL(url));
@@ -1063,9 +1061,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processCrossCloudRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCrossCloudRedirect";
 
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
+        final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1212,9 +1208,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return Created {@link Span}
      */
     private Span createSpanWithAttributesFromParent(@NonNull final String spanName) {
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(spanName, spanContext) : OTelUtility.createSpan(spanName);
+        final Span span = OTelUtility.createSpanFromParent(spanName, mSpanContext);
         if (mUtid != null) {
             span.setAttribute(AttributeName.tenant_id.name(), mUtid);
         }

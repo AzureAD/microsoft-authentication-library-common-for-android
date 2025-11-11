@@ -134,6 +134,16 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ENCODING = "unsupported_encoding";
 
     /**
+     * The operation is not supported.
+     */
+    public static final String UNSUPPORTED_OPERATION = "unsupported_operation";
+
+    /**
+     * The request is already in progress.
+     */
+    public static final String REQUEST_IN_PROGRESS = "request_in_progress";
+
+    /**
      * The designated crypto alg is not supported.
      */
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";

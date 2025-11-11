@@ -487,5 +487,15 @@ public enum AttributeName {
     /**
      * Records if current flow is in webcp flow.
      */
-    is_in_web_cp_flow
+    is_in_web_cp_flow,
+
+    /**
+     * Passkey operation type (e.g., registration, authentication).
+     */
+    passkey_operation_type,
+
+    /**
+     * Passkey DOM exception name (if any).
+     */
+    passkey_dom_exception_name,
 }
