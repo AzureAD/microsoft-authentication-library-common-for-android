@@ -41,7 +41,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     }
 
-    public static synchronized ConfidentialClientHelper getInstance() {
+    public static synchronized LabAuthenticationHelper getInstance() {
         if (sLabAuthHelper == null) {
             sLabAuthHelper = new LabAuthenticationHelper();
         }
@@ -49,7 +49,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
         return sLabAuthHelper;
     }
 
-    public static synchronized ConfidentialClientHelper getInstance(String labAppSecret) {
+    public static synchronized LabAuthenticationHelper getInstance(String labAppSecret) {
         if (sLabAuthHelper == null || !ObjectUtils.equals(sLabAuthHelper.mLabAppSecret, labAppSecret)) {
             sLabAuthHelper = new LabAuthenticationHelper(labAppSecret);
         }
@@ -58,8 +58,10 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     }
 
     @Override
-    public void setupApiClientWithAccessToken(final String accessToken) {
+    public void setupApiClientWithAccessToken(final String accessToken, final String keyVaultAccessToken) {
         Configuration.getDefaultApiClient().setAccessToken(accessToken);
+        Configuration.getLabUserFetchApiClient().setAccessToken(accessToken);
+        Configuration.getKeyVaultApiClient().setAccessToken(keyVaultAccessToken);
     }
 
     @Override

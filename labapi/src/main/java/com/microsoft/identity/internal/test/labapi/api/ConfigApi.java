@@ -39,7 +39,7 @@ public class ConfigApi {
     private ApiClient apiClient;
 
     public ConfigApi() {
-        this(Configuration.getDefaultApiClient());
+        this(Configuration.getLabUserFetchApiClient());
     }
 
     public ConfigApi(ApiClient apiClient) {
