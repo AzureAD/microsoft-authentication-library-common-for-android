@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 23.1.0-RC1
+Version 23.1.0
 ----------
 - [MINOR] Add OpenTelemetry support for passkey operations (#2795)
 - [MINOR] Add passkey registration support for WebView (#2769)
