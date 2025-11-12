@@ -26,8 +26,6 @@ import android.os.Bundle
 import com.microsoft.identity.common.java.commands.webapps.WebAppError
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.java.base64.Base64Util
-import com.microsoft.identity.common.java.commands.webapps.WebAppsErrorResponsePayload
-import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -103,28 +101,6 @@ class WebAppsUtil {
                 "Error occurred during operation: ${t.javaClass.simpleName}: ${t.message}"
             }
             return ObjectMapper.serializeObjectToJsonString(WebAppError(t, errorDescription))
-        }
-
-        /**
-         * Create a [Bundle] containing an error response from a serialized [WebAppsErrorResponsePayload] and optional description.
-         *
-         * @param response The serialized WebAppsErrorResponsePayload to create the error response from.
-         * @param description An optional description to include in the error response.
-         * @return A [Bundle] containing the error response.
-         */
-        @JvmStatic
-        fun createErrorResponseFromSerialized(response: WebAppsErrorResponsePayload, description: String?): Bundle {
-            val errorDescription = if (!description.isNullOrBlank()) {
-                "$description: ${response.type.substringAfterLast('.')}: ${response.message}"
-            } else {
-                "Error occurred during operation: ${response.type.substringAfterLast('.')}: ${response.message}"
-            }
-            return Bundle().apply {
-                putString(
-                    AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR,
-                    ObjectMapper.serializeObjectToJsonString(WebAppError(response, errorDescription))
-                )
-            }
         }
 
         /**

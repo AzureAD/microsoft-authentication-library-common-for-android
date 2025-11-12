@@ -59,80 +59,60 @@ enum class WebAppBrokerErrorCode {
     THROTTLED;
 
     companion object {
-        // Simple names of relevant exception types
-        val USER_CANCEL_EXCEPTION_NAME = UserCancelException::class.java.simpleName
-        val UI_REQUIRED_EXCEPTION_NAME = UiRequiredException::class.java.simpleName
-        val IO_EXCEPTION_NAME = IOException::class.java.simpleName
-        val JSON_PARSE_EXCEPTION_NAME = JsonParseException::class.java.simpleName
-        val JSON_SYNTAX_EXCEPTION_NAME = JsonSyntaxException::class.java.simpleName
-        val ILLEGAL_STATE_EXCEPTION_NAME = IllegalStateException::class.java.simpleName
-        val NULL_POINTER_EXCEPTION_NAME = NullPointerException::class.java.simpleName
-        val CLIENT_EXCEPTION_NAME = ClientException::class.java.simpleName
-        val SERVICE_EXCEPTION_NAME = ServiceException::class.java.simpleName
-        val UNSUPPORTED_OPERATION_EXCEPTION_NAME = UnsupportedBrokerException::class.java.simpleName
 
         /**
-         * Create a [WebAppBrokerErrorCode] from a [Throwable].
+         * Map a Throwable to a WebAppBrokerErrorCode.
          *
-         * @param t The Throwable to classify.
+         * @param t The Throwable to map.
          * @return The corresponding WebAppBrokerErrorCode.
          */
         fun fromThrowable(t: Throwable): WebAppBrokerErrorCode {
-            val simple = t::class.java.simpleName
-            val clientCode = (t as? ClientException)?.errorCode
-            val httpCode = (t as? ServiceException)?.httpStatusCode
-            return classify(simple, clientCode, httpCode)
+            when (t) {
+                is UserCancelException -> return USER_CANCEL
+                is UiRequiredException -> return USER_INTERACTION_REQUIRED
+                is IOException -> return NO_NETWORK
+                is JsonParseException,
+                is JsonSyntaxException,
+                is IllegalStateException,
+                is UnsupportedBrokerException,
+                is NullPointerException -> return PERSISTENT_ERROR
+            }
+
+            // ClientException specific mapping
+            if (t is ClientException) {
+                val code = t.errorCode?.lowercase()
+                return mapClientErrorCode(code)
+            }
+
+            // ServiceException mapping (HTTP based)
+            if (t is ServiceException) {
+                val http = t.httpStatusCode
+                if (http == 429) return THROTTLED
+                return PERSISTENT_ERROR
+            }
+
+            return UNEXPECTED
         }
 
         /**
-         * Create a [WebAppBrokerErrorCode] from a [WebAppsErrorResponsePayload].
+         * Map ClientException error codes to WebAppBrokerErrorCode.
          *
-         * @param errorResponse The WebAppsErrorResponsePayload to classify.
+         * @param code The ClientException error code.
          * @return The corresponding WebAppBrokerErrorCode.
          */
-        fun fromSerialized(errorResponse : WebAppsErrorResponsePayload): WebAppBrokerErrorCode {
-            val simple = errorResponse.type.substringAfterLast('.')
-            return classify(simple, errorResponse.clientErrorCode, errorResponse.httpStatusCode)
-        }
-
-        /**
-         * Classify the error based on simple type name, client error code, and HTTP status code.
-         *
-         * @param simpleType The simple name of the exception type.
-         * @param clientErrorCode The client error code, if available.
-         * @param httpStatusCode The HTTP status code, if available.
-         * @return The corresponding WebAppBrokerErrorCode.
-         */
-        private fun classify(simpleType: String,
-                             clientErrorCode: String?,
-                             httpStatusCode: Int?): WebAppBrokerErrorCode {
-            return when {
-                simpleType == USER_CANCEL_EXCEPTION_NAME -> USER_CANCEL
-                simpleType == UI_REQUIRED_EXCEPTION_NAME -> USER_INTERACTION_REQUIRED
-                simpleType == IO_EXCEPTION_NAME -> NO_NETWORK
-                simpleType == JSON_PARSE_EXCEPTION_NAME ||
-                        simpleType == JSON_SYNTAX_EXCEPTION_NAME ||
-                        simpleType == ILLEGAL_STATE_EXCEPTION_NAME ||
-                        simpleType == UNSUPPORTED_OPERATION_EXCEPTION_NAME ||
-                        simpleType == NULL_POINTER_EXCEPTION_NAME -> PERSISTENT_ERROR
-                clientErrorCode != null -> {
-                    when (clientErrorCode.lowercase()) {
-                        ClientException.DEVICE_NETWORK_NOT_AVAILABLE,
-                        ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION -> NO_NETWORK
-                        ClientException.MALFORMED_URL,
-                        ClientException.MISSING_PARAMETER,
-                        ErrorStrings.INVALID_REQUEST -> PERSISTENT_ERROR
-                        ErrorStrings.SOCKET_TIMEOUT,
-                        ErrorStrings.IO_ERROR -> TRANSIENT_ERROR
-                        ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
-                        ErrorStrings.FLIGHT_DISABLED -> DISABLED
-                        ClientException.ACCOUNT_NOT_FOUND -> ACCOUNT_UNAVAILABLE
-                        ErrorStrings.UI_NOT_ALLOWED -> UI_NOT_ALLOWED
-                        else -> UNEXPECTED
-                    }
-                }
-                httpStatusCode == 429 -> THROTTLED
-                simpleType == SERVICE_EXCEPTION_NAME -> PERSISTENT_ERROR
+        private fun mapClientErrorCode(code: String?): WebAppBrokerErrorCode {
+            return when (code) {
+                ClientException.DEVICE_NETWORK_NOT_AVAILABLE,
+                ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION -> NO_NETWORK
+                ClientException.MALFORMED_URL,
+                ClientException.MISSING_PARAMETER,
+                ErrorStrings.INVALID_REQUEST -> PERSISTENT_ERROR
+                ErrorStrings.SOCKET_TIMEOUT,
+                ErrorStrings.IO_ERROR -> TRANSIENT_ERROR
+                ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_CODE,
+                ErrorStrings.FLIGHT_DISABLED -> DISABLED
+                ClientException.ACCOUNT_NOT_FOUND -> ACCOUNT_UNAVAILABLE
+                ErrorStrings.UI_NOT_ALLOWED -> UI_NOT_ALLOWED
                 else -> UNEXPECTED
             }
         }

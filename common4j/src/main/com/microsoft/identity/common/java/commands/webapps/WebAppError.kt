@@ -61,36 +61,6 @@ data class WebAppError(
     )
 
     /**
-     * Secondary constructor that creates a WebAppError from a WebAppsErrorResponsePayload serializable object.
-     *
-     * @param response The WebAppsErrorResponsePayload object containing error details.
-     * @param description A description of the error.
-     */
-    constructor(response: WebAppsErrorResponsePayload, description: String) : this(
-        errorCode = BROKER_ERROR_CODE,
-        description = description,
-        extra = WebAppErrorDetails(
-            error = 0,
-            status = WebAppBrokerErrorCode.fromSerialized(response).name
-        )
-    )
-
-    /**
-     * Secondary constructor that creates a WebAppError from a status error code string.
-     *
-     * @param statusErrorCode The status error code as a string.
-     * @param description A description of the error.
-     */
-    constructor(statusErrorCode: String, description: String) : this(
-        errorCode = BROKER_ERROR_CODE,
-        description = description,
-        extra = WebAppErrorDetails(
-            error = 0,
-            status = statusErrorCode
-        )
-    )
-
-    /**
      * Secondary constructor that creates a WebAppError from a Throwable and MatsProperties.
      * We try to determine the corresponding error status code from the throwable.
      *

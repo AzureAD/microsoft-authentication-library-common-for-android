@@ -30,7 +30,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXTRA_ARGS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXECUTE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;

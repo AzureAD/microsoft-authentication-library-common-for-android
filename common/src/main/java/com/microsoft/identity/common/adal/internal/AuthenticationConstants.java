@@ -1382,19 +1382,9 @@ public final class AuthenticationConstants {
         public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "web_apps_contracts";
 
         /**
-         * String for broker webapps error result.
-         */
-        public static final String BROKER_WEB_APPS_ERROR = "error";
-
-        /**
          * String for broker webapps request.
          */
         public static final String BROKER_WEB_APPS_EXECUTE_REQUEST = "web_apps_execute_request";
-
-        /**
-         * String for broker webapps response.
-         */
-        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
 
         /**
          * String for broker webapps additional required params.
@@ -1402,22 +1392,14 @@ public final class AuthenticationConstants {
         public static final String BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS = "additional_required_params";
 
         /**
-         * String for broker webapps extra args.
+         * String for broker webapps response.
          */
-        public static final String BROKER_WEB_APPS_EXTRA_ARGS = "extra_args";
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
 
         /**
-         * String for broker webapps interactive request;
-         * when this field is present, the executeRequest operation will launch an interactive request.
+         * String for compressed broker webapps response.
          */
-        public static final String BROKER_WEB_APPS_INTERACTIVE_REQUEST = "interactive_request";
-
-        /**
-         * String for broker webapps successful result after an interactive request;
-         */
-        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT = "interactive_success_result";
-
-        public static final String BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED = "web_apps_interactive_success_result_compressed";
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED = "web_app_successful_result_compressed";
 
         /**
          * String for broker webapps error result.

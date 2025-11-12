@@ -33,9 +33,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEBAPPS_GET_CONTRACTS_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -201,13 +200,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         + getTokenJsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
                 resultBundle.putByteArray(
-                        BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT_COMPRESSED,
+                        BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED,
                         compressedBytes
                 );
             } catch (IOException e) {
                 Logger.error(methodTag, "Failed to compress GetToken  Result, sending as jsonString ", e);
                 resultBundle.putString(
-                        BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
+                        BROKER_WEB_APPS_SUCCESSFUL_RESULT,
                         getTokenJsonString
                 );
             }
@@ -216,7 +215,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     " lower than compression changes, sending as string"
             );
             resultBundle.putString(
-                    BROKER_WEB_APPS_INTERACTIVE_SUCCESS_RESULT,
+                    BROKER_WEB_APPS_SUCCESSFUL_RESULT,
                     getTokenJsonString
             );
         }
@@ -1151,9 +1150,23 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     @NonNull
     public String getExecuteWebAppRequestResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
+        final String methodTag = TAG + ":getExecuteWebAppRequestResultFromBundle";
         final String errorMessage = "For interactive request, WebApps entry in bundle null for ";
-        // Expect either success payload or error fields reused from BrokerResult
-        if (resultBundle.containsKey(BROKER_WEB_APPS_SUCCESSFUL_RESULT)) {
+        // Expect success payload or error fields reused from BrokerResult
+        if (resultBundle.containsKey(BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED)) {
+            byte[] compressedBytes = resultBundle.getByteArray(BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED);
+            if (compressedBytes != null) {
+                try {
+                    return GzipUtil.decompressBytesToString(compressedBytes);
+                } catch (final IOException e) {
+                    // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
+                    Logger.error(methodTag, "Failed to decompress broker result :", e);
+                    throw new ClientException(INVALID_BROKER_BUNDLE, "Failed to decompress broker result", e);
+                }
+            } else {
+                throw new ClientException(INVALID_BROKER_BUNDLE, errorMessage + BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED);
+            }
+        } else if (resultBundle.containsKey(BROKER_WEB_APPS_SUCCESSFUL_RESULT)) {
             final String result = resultBundle.getString(BROKER_WEB_APPS_SUCCESSFUL_RESULT);
             if (result == null) {
                 throw new ClientException(INVALID_BROKER_BUNDLE, errorMessage + BROKER_WEB_APPS_SUCCESSFUL_RESULT);

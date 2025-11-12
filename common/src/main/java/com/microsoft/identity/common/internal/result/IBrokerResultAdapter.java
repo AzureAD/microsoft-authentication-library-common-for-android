@@ -70,7 +70,7 @@ public interface IBrokerResultAdapter {
      * @param exception
      * @return {@link Bundle}
      */
-    @NonNull public Bundle bundleFromBaseExceptionForWebApps(@NonNull final BaseException exception);
+    @NonNull Bundle bundleFromBaseExceptionForWebApps(@NonNull final BaseException exception);
 
     /**
      * Returns authentication result from Broker result bundle

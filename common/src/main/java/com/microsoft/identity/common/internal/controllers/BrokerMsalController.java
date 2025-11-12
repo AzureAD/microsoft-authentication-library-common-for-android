@@ -70,16 +70,11 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
-import com.microsoft.identity.common.internal.cache.WebAppsAccountIdRegistry;
 import com.microsoft.identity.common.internal.util.WebAppsUtil;
 import com.microsoft.identity.common.java.commands.webapps.WebAppBrokerErrorCode;
-import com.microsoft.identity.common.java.commands.webapps.WebAppError;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationEnvelope;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest;
-import com.microsoft.identity.common.java.commands.webapps.WebAppsErrorResponsePayload;
-import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationResponse;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsSupportedContracts;
-import com.microsoft.identity.common.java.commands.webapps.WebAppsTokenResponsePayload;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -131,7 +126,6 @@ import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -1551,7 +1545,7 @@ public class BrokerMsalController extends BaseController {
                                         final Bundle interactiveGetTokenBundle = acquireTokenInternal(interactiveParams);
                                         return mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
                                     } catch (final Throwable t) {
-                                        return ObjectMapper.serializeObjectToJsonString(WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request fallback"));
+                                        return WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request fallback");
                                     }
                                 }
 
@@ -1578,7 +1572,7 @@ public class BrokerMsalController extends BaseController {
                         }
                     });
         } catch (final Exception ex) {
-            return ObjectMapper.serializeObjectToJsonString(WebAppsUtil.createErrorResponseString(ex, "Error occurred during validation or interactive"));
+            return WebAppsUtil.createErrorResponseString(ex, "Error occurred during validation or interactive");
         }
     }
 
