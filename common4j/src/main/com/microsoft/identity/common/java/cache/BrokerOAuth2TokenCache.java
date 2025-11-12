@@ -347,7 +347,7 @@ public class BrokerOAuth2TokenCache
     }
 
     @SuppressWarnings("unchecked")
-    public List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
+    private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
 
