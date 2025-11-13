@@ -35,13 +35,16 @@ import java.util.Map;
 
 public class EnablePolicyApi {
     private ApiClient apiClient;
+    private final String mAzureFunctionCode;
+    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "EnablePolicy";
 
-    public EnablePolicyApi() {
-        this(Configuration.getDefaultApiClient());
+    public EnablePolicyApi(final String azureFunctionCode) {
+        this(Configuration.getDefaultApiClient(), azureFunctionCode);
     }
 
-    public EnablePolicyApi(ApiClient apiClient) {
+    public EnablePolicyApi(ApiClient apiClient, final String azureFunctionCode) {
         this.apiClient = apiClient;
+        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -73,6 +76,8 @@ public class EnablePolicyApi {
             localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (policy != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("policy", policy));
+
+        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 

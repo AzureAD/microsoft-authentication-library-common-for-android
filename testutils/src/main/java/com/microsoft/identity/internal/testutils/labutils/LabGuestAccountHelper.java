@@ -41,6 +41,6 @@ public class LabGuestAccountHelper {
 
     public static String getPasswordForGuestUser(final LabGuest guestUser) {
         final String labName = guestUser.getHomeDomain().split("\\.")[0];
-        return LabHelper.getSecret(labName);
+        return LabHelper.getKeyVaultSecret(labName);
     }
 }
