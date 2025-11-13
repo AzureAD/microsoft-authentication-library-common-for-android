@@ -79,5 +79,5 @@ public enum SpanName {
     /**
      * Span name for fetching initial ECS flight configurations.
      */
-    EcsFlightsFetchConfigsInitial
+    EcsFlightsFetchConfigs
 }
