@@ -3,6 +3,7 @@ vNext
 
 Version 23.1.0
 ----------
+- [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 - [MINOR] Add OpenTelemetry support for passkey operations (#2795)
 - [MINOR] Add passkey registration support for WebView (#2769)
 - [MINOR] Add callback for OneAuth for measuring Broker Discovery Client Perf (#2796)

@@ -24,8 +24,12 @@ package com.microsoft.identity.common.java.cache;
 
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
@@ -1638,11 +1642,23 @@ public class BrokerOAuth2TokenCache
                                                                     @NonNull final INameValueStorage<String> spfm,
                                                                     boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final IAccountCredentialCache accountCredentialCache =
-                new SharedPreferencesAccountCredentialCache(
-                        cacheKeyValueDelegate,
-                        spfm
-                );
+        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
+        final IAccountCredentialCache accountCredentialCache;
+        if (isFlightEnabled) {
+            accountCredentialCache = new SharedPreferencesAccountCredentialCacheWithMemoryCache(
+                    cacheKeyValueDelegate,
+                    spfm
+            );
+            SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), true);
+        } else {
+            accountCredentialCache = new SharedPreferencesAccountCredentialCache(
+                    cacheKeyValueDelegate,
+                    spfm
+            );
+            SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), false);
+        }
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
