@@ -1669,8 +1669,25 @@ public class BrokerOAuth2TokenCache
 
     /**
      * Determines which cache implementation to use based on flighting.
-     * @param spfm
-     * @return
+     * <p>
+     * When the flight {@code USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS} is enabled,
+     * returns a shared, cached instance of {@link SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * for the given storage, improving performance by reusing the in-memory cache layer across cache instances.
+     * When disabled, returns a new {@link SharedPreferencesAccountCredentialCache} instance.
+     * <p>
+     * Critical behavior: When flight is enabled, the same {@code SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * instance is returned for the same {@code spfm} reference, meaning the cache is shared across multiple
+     * {@code BrokerOAuth2TokenCache} instances.
+     * <p>
+     * Thread-safety: This method is thread-safe via {@code ConcurrentHashMap.computeIfAbsent}.
+     * <p>
+     * Lifecycle: Returned cached instances are never removed from the static map.
+     *
+     * @param spfm The shared preferences file manager / storage instance, used as the key
+     *             for caching when the flight is enabled. The same storage reference will
+     *             return the same cached instance.
+     * @return A cached shared in-memory cache instance (flight enabled) or a new
+     *         non-cached instance (flight disabled).
      */
     private static IAccountCredentialCache getCacheToBeUsed(@NonNull final INameValueStorage<String> spfm) {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
