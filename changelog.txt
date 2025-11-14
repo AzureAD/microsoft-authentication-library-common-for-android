@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
 - [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 - [MINOR] Add OpenTelemetry support for passkey operations (#2795)
 - [MINOR] Add passkey registration support for WebView (#2769)
