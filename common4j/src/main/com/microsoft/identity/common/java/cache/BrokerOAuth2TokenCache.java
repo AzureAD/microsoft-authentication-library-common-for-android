@@ -1339,6 +1339,7 @@ public class BrokerOAuth2TokenCache
 
         this.mFociCache.clearAll();
         this.mApplicationMetadataCache.clear();
+        inMemoryCacheMapByStorage.clear();
     }
 
     /**
@@ -1675,18 +1676,17 @@ public class BrokerOAuth2TokenCache
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
-        final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), isFlightEnabled);
         if (isFlightEnabled) {
             return inMemoryCacheMapByStorage.computeIfAbsent(spfm, s ->
                     new SharedPreferencesAccountCredentialCacheWithMemoryCache(
-                            cacheKeyValueDelegate,
+                            new CacheKeyValueDelegate(),
                             spfm
                     )
             );
         } else {
             return new SharedPreferencesAccountCredentialCache(
-                    cacheKeyValueDelegate,
+                    new CacheKeyValueDelegate(),
                     spfm
             );
         }
