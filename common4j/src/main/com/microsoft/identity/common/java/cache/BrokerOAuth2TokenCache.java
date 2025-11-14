@@ -1614,14 +1614,10 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(components, uid);
         }
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache
-                                .getBrokerUidSequesteredFilename(uid),
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache
+                .getBrokerUidSequesteredFilename(uid);
 
-        return getTokenCache(components, sharedPreferencesFileManager, false);
+        return getTokenCache(components, storeName, false);
     }
 
     private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final IPlatformComponents components) {
@@ -1631,20 +1627,16 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
-        return getTokenCache(components, sharedPreferencesFileManager, true);
+        return getTokenCache(components, storeName,true);
     }
 
     @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final IPlatformComponents components,
-                                                                    @NonNull final INameValueStorage<String> spfm,
+                                                                    String storeName,
                                                                     boolean isFoci) {
-        final IAccountCredentialCache accountCredentialCache = getCacheToBeUsed(spfm);
+        final IAccountCredentialCache accountCredentialCache = getCacheToBeUsed(components, storeName);
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
@@ -1664,7 +1656,7 @@ public class BrokerOAuth2TokenCache
                 );
     }
 
-    private static final Map<INameValueStorage<String>, SharedPreferencesAccountCredentialCacheWithMemoryCache>
+    private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
             inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
 
     /**
@@ -1683,28 +1675,33 @@ public class BrokerOAuth2TokenCache
      * <p>
      * Lifecycle: Returned cached instances are never removed from the static map.
      *
-     * @param spfm The shared preferences file manager / storage instance, used as the key
-     *             for caching when the flight is enabled. The same storage reference will
-     *             return the same cached instance.
      * @return A cached shared in-memory cache instance (flight enabled) or a new
      *         non-cached instance (flight disabled).
      */
-    private static IAccountCredentialCache getCacheToBeUsed(@NonNull final INameValueStorage<String> spfm) {
+    private static IAccountCredentialCache getCacheToBeUsed(@NonNull final IPlatformComponents components,
+                                                            final String storeName) {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
         SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), isFlightEnabled);
         if (isFlightEnabled) {
-            return inMemoryCacheMapByStorage.computeIfAbsent(spfm, s ->
+            return inMemoryCacheMapByStorage.computeIfAbsent(storeName, s ->
                     new SharedPreferencesAccountCredentialCacheWithMemoryCache(
                             new CacheKeyValueDelegate(),
-                            spfm
-                    )
+                            components.getStorageSupplier().getEncryptedNameValueStore(
+                                    storeName,
+                                    String.class
+                    ))
             );
         } else {
+            final INameValueStorage<String> sharedPreferencesFileManager =
+                    components.getStorageSupplier().getEncryptedNameValueStore(
+                            storeName,
+                            String.class
+                    );
             return new SharedPreferencesAccountCredentialCache(
                     new CacheKeyValueDelegate(),
-                    spfm
+                    sharedPreferencesFileManager
             );
         }
     }
