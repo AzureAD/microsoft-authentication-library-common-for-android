@@ -106,6 +106,20 @@ public class BrokerOAuth2TokenCache
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
+    /**
+     * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
+     * storage (SharedPreferences) name.
+     * <p>
+     * Populated lazily via computeIfAbsent in getCacheToBeUsed(...). Allows multiple
+     * BrokerOAuth2TokenCache instances to reuse the same in-memory layer for the same underlying
+     * encrypted name-value store, reducing disk I/O and serialization overhead.
+     * <p>
+     * Thread-safety: ConcurrentHashMap ensures safe concurrent access and publication.
+     * Lifecycle: Entries are never removed for the lifetime of the process.
+     */
+    private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
+            inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
+
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
@@ -1656,8 +1670,6 @@ public class BrokerOAuth2TokenCache
                 );
     }
 
-    private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
-            inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
 
     /**
      * Determines which cache implementation to use based on flighting.
@@ -1678,8 +1690,8 @@ public class BrokerOAuth2TokenCache
      * @return A cached shared in-memory cache instance (flight enabled) or a new
      *         non-cached instance (flight disabled).
      */
-    private static IAccountCredentialCache getCacheToBeUsed(@NonNull final IPlatformComponents components,
-                                                            final String storeName) {
+    public static IAccountCredentialCache getCacheToBeUsed(@NonNull final IPlatformComponents components,
+                                                           final String storeName) {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
