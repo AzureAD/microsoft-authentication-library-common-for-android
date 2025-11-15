@@ -243,7 +243,7 @@ public class BrokerOAuth2TokenCacheTest {
         }
 
         mApplicationMetadataCache.clear();
-        updateUseInMemoryCacheFlight(false);
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private void initOtherCaches(final IPlatformComponents components) {
