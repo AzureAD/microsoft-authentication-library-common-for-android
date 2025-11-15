@@ -52,7 +52,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -104,6 +106,20 @@ public class BrokerOAuth2TokenCache
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
+    /**
+     * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
+     * storage (SharedPreferences) name.
+     * <p>
+     * Populated lazily via computeIfAbsent in getCacheToBeUsed(...). Allows multiple
+     * BrokerOAuth2TokenCache instances to reuse the same in-memory layer for the same underlying
+     * encrypted name-value store, reducing disk I/O and serialization overhead.
+     * <p>
+     * Thread-safety: ConcurrentHashMap ensures safe concurrent access and publication.
+     * Lifecycle: Entries are never removed for the lifetime of the process.
+     */
+    private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
+            inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
+
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
@@ -1337,6 +1353,7 @@ public class BrokerOAuth2TokenCache
 
         this.mFociCache.clearAll();
         this.mApplicationMetadataCache.clear();
+        inMemoryCacheMapByStorage.clear();
     }
 
     /**
@@ -1611,14 +1628,10 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(components, uid);
         }
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache
-                                .getBrokerUidSequesteredFilename(uid),
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache
+                .getBrokerUidSequesteredFilename(uid);
 
-        return getTokenCache(components, sharedPreferencesFileManager, false);
+        return getTokenCache(components, storeName, false);
     }
 
     private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final IPlatformComponents components) {
@@ -1628,37 +1641,16 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
-        return getTokenCache(components, sharedPreferencesFileManager, true);
+        return getTokenCache(components, storeName,true);
     }
 
     @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final IPlatformComponents components,
-                                                                    @NonNull final INameValueStorage<String> spfm,
+                                                                    String storeName,
                                                                     boolean isFoci) {
-        final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
-        final IAccountCredentialCache accountCredentialCache;
-        if (isFlightEnabled) {
-            accountCredentialCache = new SharedPreferencesAccountCredentialCacheWithMemoryCache(
-                    cacheKeyValueDelegate,
-                    spfm
-            );
-            SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), true);
-        } else {
-            accountCredentialCache = new SharedPreferencesAccountCredentialCache(
-                    cacheKeyValueDelegate,
-                    spfm
-            );
-            SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), false);
-        }
+        final IAccountCredentialCache accountCredentialCache = getCacheToBeUsed(components, storeName);
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
@@ -1676,6 +1668,54 @@ public class BrokerOAuth2TokenCache
                                 accountCredentialAdapter
                         )
                 );
+    }
+
+
+    /**
+     * Determines which cache implementation to use based on flighting.
+     * <p>
+     * When the flight {@code USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS} is enabled,
+     * returns a shared, cached instance of {@link SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * for the given storage, improving performance by reusing the in-memory cache layer across cache instances.
+     * When disabled, returns a new {@link SharedPreferencesAccountCredentialCache} instance.
+     * <p>
+     * Critical behavior: When flight is enabled, the same {@code SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * instance is returned for the same {@code spfm} reference, meaning the cache is shared across multiple
+     * {@code BrokerOAuth2TokenCache} instances.
+     * <p>
+     * Thread-safety: This method is thread-safe via {@code ConcurrentHashMap.computeIfAbsent}.
+     * <p>
+     * Lifecycle: Returned cached instances are never removed from the static map.
+     *
+     * @return A cached shared in-memory cache instance (flight enabled) or a new
+     *         non-cached instance (flight disabled).
+     */
+    public static IAccountCredentialCache getCacheToBeUsed(@NonNull final IPlatformComponents components,
+                                                           final String storeName) {
+        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
+        SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), isFlightEnabled);
+        if (isFlightEnabled) {
+            return inMemoryCacheMapByStorage.computeIfAbsent(storeName, s ->
+                    new SharedPreferencesAccountCredentialCacheWithMemoryCache(
+                            new CacheKeyValueDelegate(),
+                            components.getStorageSupplier().getEncryptedNameValueStore(
+                                    storeName,
+                                    String.class
+                    ))
+            );
+        } else {
+            final INameValueStorage<String> sharedPreferencesFileManager =
+                    components.getStorageSupplier().getEncryptedNameValueStore(
+                            storeName,
+                            String.class
+                    );
+            return new SharedPreferencesAccountCredentialCache(
+                    new CacheKeyValueDelegate(),
+                    sharedPreferencesFileManager
+            );
+        }
     }
 
     @Nullable
@@ -1735,54 +1775,5 @@ public class BrokerOAuth2TokenCache
         Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
 
         return getTokenCacheForClient(metadata);
-    }
-
-    /**
-     * Sets the SSO state for the supplied Account, relative to the provided uid.
-     *
-     * @param uidStr       The uid of the app whose SSO token is being inserted.
-     * @param account      The account for which the supplied token is being inserted.
-     * @param refreshToken The token to insert.
-     */
-    public void setSingleSignOnState(@NonNull final String uidStr,
-                                     @NonNull final GenericAccount account,
-                                     @NonNull final GenericRefreshToken refreshToken) {
-        final String methodName = ":setSingleSignOnState";
-
-        final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
-
-        MsalOAuth2TokenCache targetCache;
-
-        final int uid = Integer.parseInt(uidStr);
-
-        if (isFrt) {
-            Logger.verbose(TAG + methodName, "Saving tokens to foci cache.");
-
-            targetCache = mFociCache;
-        } else {
-            // If there is an existing cache for this client id, use it. Otherwise, create a new
-            // one based on the supplied uid.
-            targetCache = initializeProcessUidCache(getComponents(), uid);
-        }
-        try {
-            targetCacheSetSingleSignOnState(account, refreshToken, targetCache);
-            updateApplicationMetadataCache(
-                    refreshToken.getClientId(),
-                    refreshToken.getEnvironment(),
-                    refreshToken.getFamilyId(),
-                    uid
-            );
-        } catch (ClientException e) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Failed to save account/refresh token. Skipping."
-            );
-        }
-    }
-
-    // Suppressing unchecked warning as the generic type was not provided for targetCache
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private void targetCacheSetSingleSignOnState(@NonNull GenericAccount account, @NonNull GenericRefreshToken refreshToken, MsalOAuth2TokenCache targetCache) throws ClientException {
-        targetCache.setSingleSignOnState(account, refreshToken);
     }
 }
