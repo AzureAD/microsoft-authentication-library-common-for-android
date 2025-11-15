@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
@@ -48,7 +47,6 @@ import static com.microsoft.identity.common.internal.controllers.BrokerOperation
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
 
 import android.app.Activity;
 import android.content.Context;
@@ -406,7 +404,8 @@ public class BrokerMsalController extends BaseController {
         return result;
     }
 
-    private Bundle acquireTokenInternal(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, InterruptedException, ExecutionException {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected Bundle acquireTokenInternal(final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException, InterruptedException, ExecutionException {
         final String methodTag = TAG + ":acquireTokenInternal";
         Telemetry.emit(
                 new ApiStartEvent()
@@ -1461,10 +1460,7 @@ public class BrokerMsalController extends BaseController {
                                        @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
         try {
             // Take a peek at the type of request.
-            final String subMethod = WebAppsUtil.requireNotNullOrEmpty(
-                    new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD),
-                    "WebApps request method"
-            );
+            final String subMethod = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
             if (subMethod.equals(WebAppsSupportedContracts.GET_TOKEN)) {
                 // If get token, we should check to see if we should just start interactive right away.
                 final WebAppsGetTokenSubOperationEnvelope envelope =
@@ -1476,7 +1472,7 @@ public class BrokerMsalController extends BaseController {
                 // If need to do interactive right away, do it now.
                 // Otherwise, just let the broker handle the silent token acquisition first.
                 if (shouldForceInteractive(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
-                    AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
+                    AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender(envelope.getSender());
                     final BrokerInteractiveTokenCommandParameters interactiveParams =
                             buildInteractiveTokenParametersForWebApps(getTokenRequest, additionalRequiredParams, minBrokerProtocolVersion);
                     final Bundle resultBundle = acquireTokenInternal(interactiveParams);
@@ -1532,7 +1528,7 @@ public class BrokerMsalController extends BaseController {
                                     // Create params from the request
                                     if (getTokenRequest.isSecurityTokenService()) {
                                         // Validate sender authority (throws if invalid)
-                                        AzureActiveDirectory.buildAndValidateAuthority(envelope.getSender());
+                                        AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender(envelope.getSender());
                                     } else {
                                         WebAppsUtil.validateMsalJsRedirectOrigin(
                                                 getTokenRequest.getRedirectUri(),

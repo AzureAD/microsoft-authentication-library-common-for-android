@@ -321,8 +321,8 @@ public class AzureActiveDirectory
      * @return The normalized authority URL string.
      * @throws ClientException If the URL is malformed or the host is not recognized/validated.
      */
-    public static String buildAndValidateAuthority(final String senderUrl) throws ClientException {
-        final String methodTag = TAG + ":buildAndValidateAuthority";
+    public static String buildAndValidateAuthorityFromWebAppSender(final String senderUrl) throws ClientException {
+        final String methodTag = TAG + ":buildAndValidateAuthorityFromWebAppSender";
         try {
             final URI uri = new URI(senderUrl);
             final String scheme = uri.getScheme();

@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.exception.ServiceException
 import com.microsoft.identity.common.java.exception.UiRequiredException
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException
 import com.microsoft.identity.common.java.exception.UserCancelException
+import org.json.JSONException
 import java.io.IOException
 
 /**
@@ -73,6 +74,7 @@ enum class WebAppBrokerErrorCode {
                 is IOException -> return NO_NETWORK
                 is JsonParseException,
                 is JsonSyntaxException,
+                is JSONException,
                 is IllegalStateException,
                 is UnsupportedBrokerException,
                 is NullPointerException -> return PERSISTENT_ERROR

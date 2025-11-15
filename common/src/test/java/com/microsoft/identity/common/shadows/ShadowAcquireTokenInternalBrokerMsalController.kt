@@ -1,0 +1,69 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+package com.microsoft.identity.common.shadows
+
+import android.os.Bundle
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY
+import com.microsoft.identity.common.internal.controllers.BrokerMsalController
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters
+import com.microsoft.identity.common.java.exception.BaseException
+import org.robolectric.annotation.Implementation
+import org.robolectric.annotation.Implements
+import java.util.concurrent.ExecutionException
+
+@Implements(BrokerMsalController::class)
+class ShadowAcquireTokenInternalBrokerMsalController {
+    companion object {
+        @JvmStatic
+        private var nextResult: Bundle? = null
+
+        /**
+         * Queue a Bundle to be returned by the next acquireTokenInternal call.
+         * After being consumed it is cleared.
+         */
+        @JvmStatic
+        fun enqueueResult(bundle: Bundle) {
+            nextResult = bundle
+        }
+    }
+
+    /**
+     * Shadow of BrokerMsalController.acquireTokenInternal.
+     * Skips IPC/UI and returns a queued or synthesized success Bundle.
+     */
+    @Implementation
+    @Throws(BaseException::class, InterruptedException::class, ExecutionException::class)
+    protected fun acquireTokenInternal(parameters: InteractiveTokenCommandParameters): Bundle {
+        val result = (nextResult ?: Bundle()).apply {
+            if (!containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+                putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true)
+            }
+            if (!containsKey(NEGOTIATED_BP_VERSION_KEY)) {
+                putString(NEGOTIATED_BP_VERSION_KEY, parameters.requiredBrokerProtocolVersion)
+            }
+        }
+        nextResult = null
+        return result
+    }
+}
