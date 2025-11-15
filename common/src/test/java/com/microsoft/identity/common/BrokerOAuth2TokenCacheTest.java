@@ -243,6 +243,7 @@ public class BrokerOAuth2TokenCacheTest {
         }
 
         mApplicationMetadataCache.clear();
+        updateUseInMemoryCacheFlight(false);
     }
 
     private void initOtherCaches(final IPlatformComponents components) {
@@ -1250,9 +1251,9 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
-    public void testSingleCacheInstancePerStoreName_FlightEnabled() throws Exception {
+    public void testSingleCacheInstancePerStoreName_FlightEnabled() {
         // Enable the flight
-        setFlight();
+        updateUseInMemoryCacheFlight(true);
 
         final String storeName = "test_store_name";
         final IPlatformComponents components1 = mPlatformComponents;
@@ -1271,9 +1272,9 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
-    public void testDifferentCacheInstancesPerStoreName_FlightEnabled() throws Exception {
+    public void testDifferentCacheInstancesPerStoreName_FlightEnabled() {
         // Enable the flight
-        setFlight();
+        updateUseInMemoryCacheFlight(true);
 
         final String storeName1 = "test_store_name_1";
         final String storeName2 = "test_store_name_2";
@@ -1294,9 +1295,9 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
-    public void testCacheInstanceReusedAcrossMultipleBrokerTokenCaches_FlightEnabled() throws Exception {
+    public void testCacheInstanceReusedAcrossMultipleBrokerTokenCaches_FlightEnabled() {
         // Enable the flight
-        setFlight();
+        updateUseInMemoryCacheFlight(true);
 
         final String storeName = getBrokerUidSequesteredFilename(TEST_APP_UID);
 
@@ -1321,7 +1322,7 @@ public class BrokerOAuth2TokenCacheTest {
     @Test
     public void testFociCacheInstanceReused_FlightEnabled() {
         // Enable the flight
-        setFlight();
+        updateUseInMemoryCacheFlight(true);
 
         final String fociStoreName = BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
@@ -1335,10 +1336,10 @@ public class BrokerOAuth2TokenCacheTest {
         assertSame(fociCache1, fociCache2);
     }
 
-    private void setFlight() {
+    private void updateUseInMemoryCacheFlight(boolean enabled) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
-                .thenReturn(true);
+                .thenReturn(enabled);
 
         // Create anonymous IFlightsManager
         IFlightsManager anonymousFlightsManager = new IFlightsManager() {
