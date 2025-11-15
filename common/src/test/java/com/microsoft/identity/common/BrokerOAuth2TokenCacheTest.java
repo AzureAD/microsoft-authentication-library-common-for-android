@@ -42,16 +42,17 @@ import static com.microsoft.identity.common.java.cache.SharedPreferencesAccountC
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
@@ -66,10 +67,15 @@ import com.microsoft.identity.common.java.cache.NameValueStorageBrokerApplicatio
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -79,14 +85,15 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowSharedPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -236,6 +243,7 @@ public class BrokerOAuth2TokenCacheTest {
         }
 
         mApplicationMetadataCache.clear();
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private void initOtherCaches(final IPlatformComponents components) {
@@ -1240,5 +1248,121 @@ public class BrokerOAuth2TokenCacheTest {
         for( final String clientId :clientIds) {
             assertEquals(false, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
         }
+    }
+
+    @Test
+    public void testSingleCacheInstancePerStoreName_FlightEnabled() {
+        // Enable the flight
+        updateUseInMemoryCacheFlight(true);
+
+        final String storeName = "test_store_name";
+        final IPlatformComponents components1 = mPlatformComponents;
+        final IPlatformComponents components2 = mPlatformComponents;
+
+        // Call getCacheToBeUsed twice with the same storeName
+        final IAccountCredentialCache cache1 = BrokerOAuth2TokenCache.getCacheToBeUsed(components1, storeName);
+        final IAccountCredentialCache cache2 = BrokerOAuth2TokenCache.getCacheToBeUsed(components2, storeName);
+
+        // Verify both references point to the same instance
+        assertNotNull(cache1);
+        assertNotNull(cache2);
+        assertSame("Expected same cache instance for same storeName", cache1, cache2);
+        assertTrue("Cache should be of type SharedPreferencesAccountCredentialCacheWithMemoryCache",
+                cache1 instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache);
+    }
+
+    @Test
+    public void testDifferentCacheInstancesPerStoreName_FlightEnabled() {
+        // Enable the flight
+        updateUseInMemoryCacheFlight(true);
+
+        final String storeName1 = "test_store_name_1";
+        final String storeName2 = "test_store_name_2";
+        final IPlatformComponents components = mPlatformComponents;
+
+        // Call getCacheToBeUsed with different storeNames
+        final IAccountCredentialCache cache1 = BrokerOAuth2TokenCache.getCacheToBeUsed(components, storeName1);
+        final IAccountCredentialCache cache2 = BrokerOAuth2TokenCache.getCacheToBeUsed(components, storeName2);
+
+        // Verify both are valid but different instances
+        assertNotNull(cache1);
+        assertNotNull(cache2);
+        assertNotSame("Expected different cache instances for different storeNames", cache1, cache2);
+        assertTrue("Cache should be of type SharedPreferencesAccountCredentialCacheWithMemoryCache",
+                cache1 instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache);
+        assertTrue("Cache should be of type SharedPreferencesAccountCredentialCacheWithMemoryCache",
+                cache2 instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache);
+    }
+
+    @Test
+    public void testCacheInstanceReusedAcrossMultipleBrokerTokenCaches_FlightEnabled() {
+        // Enable the flight
+        updateUseInMemoryCacheFlight(true);
+
+        final String storeName = getBrokerUidSequesteredFilename(TEST_APP_UID);
+
+        // Create multiple BrokerOAuth2TokenCache instances
+        final BrokerOAuth2TokenCache tokenCache1 = new BrokerOAuth2TokenCache
+                (mPlatformComponents,
+                        TEST_APP_UID,
+                        new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents));
+        final BrokerOAuth2TokenCache tokenCache2 = new BrokerOAuth2TokenCache(mPlatformComponents, TEST_APP_UID,
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents));
+
+        // Get the underlying account credential caches
+        final IAccountCredentialCache cache1 = tokenCache1.getCacheToBeUsed(mPlatformComponents, storeName);
+        final IAccountCredentialCache cache2 = tokenCache2.getCacheToBeUsed(mPlatformComponents, storeName);
+
+        // Verify same instance is reused
+        assertNotNull(cache1);
+        assertNotNull(cache2);
+        assertSame(cache1, cache2);
+    }
+
+    @Test
+    public void testFociCacheInstanceReused_FlightEnabled() {
+        // Enable the flight
+        updateUseInMemoryCacheFlight(true);
+
+        final String fociStoreName = BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
+
+        // Call getCacheToBeUsed multiple times for FOCI cache
+        final IAccountCredentialCache fociCache1 = BrokerOAuth2TokenCache.getCacheToBeUsed(mPlatformComponents, fociStoreName);
+        final IAccountCredentialCache fociCache2 = BrokerOAuth2TokenCache.getCacheToBeUsed(mPlatformComponents, fociStoreName);
+
+        // Verify same FOCI cache instance is reused
+        assertNotNull(fociCache1);
+        assertNotNull(fociCache2);
+        assertSame(fociCache1, fociCache2);
+    }
+
+    private void updateUseInMemoryCacheFlight(boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
+                .thenReturn(enabled);
+
+        // Create anonymous IFlightsManager
+        IFlightsManager anonymousFlightsManager = new IFlightsManager() {
+            @Override
+            public @NotNull IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId, long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+                return mockFlightsProvider;
+            }
+            @NonNull
+            @Override
+            public IFlightsProvider getFlightsProvider() {
+                return mockFlightsProvider;
+            }
+        };
+
+        // Initialize CommonFlightsManager with the anonymous implementation
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(anonymousFlightsManager);
     }
 }
