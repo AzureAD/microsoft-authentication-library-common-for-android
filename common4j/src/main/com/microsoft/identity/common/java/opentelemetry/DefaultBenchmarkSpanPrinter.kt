@@ -255,63 +255,73 @@ class DefaultBenchmarkSpanPrinter(
     /**
      * Calculate statistical metrics (average, percentiles) for all status entries across the batch of spans.
      *
-     * For each unique status name found across all spans, this method:
+     * For each status occurrence found across all spans (including duplicates), this method:
      * 1. Collects timing values (time since previous status, time since start) from all spans
      * 2. Calculates configured statistical metrics (e.g., Avg, P50, P75, P90)
      * 3. Returns the results sorted by the first configured metric's time since start value
      *
+     * Note: If the same status name appears multiple times, each occurrence is tracked separately
+     * with an enumeration (e.g., "status [1]", "status [2]").
+     *
      * @param spans     List of spans to analyze (all spans should have the same span name)
      *
-     * @return List of statistical data for each unique status, sorted by the first configured metric's time since start
+     * @return List of statistical data for each status occurrence, sorted by the first configured metric's time since start
      */
     private fun calculateStatistics(spans: List<IBenchmarkSpan>): List<StatisticalStatusData> {
         if (spans.isEmpty()) return emptyList()
 
-        // Collect all unique status names across all spans
-        val allStatusNames = mutableSetOf<String>()
+        // Build a map of status position -> (display name, list of timing data)
+        // We need to track each occurrence separately across all spans
+        data class StatusOccurrence(val statusName: String, val occurrenceIndex: Int)
+        val statusOccurrencesMap = mutableMapOf<StatusOccurrence, MutableList<Pair<Long, Long>>>() // Pair<timeSincePrevious, timeSinceStart>
+
         for (span in spans) {
-            for ((statusName, _) in span.getStatuses()) {
-                allStatusNames.add(statusName)
+            val statuses = span.getStatuses()
+            val startTime = span.getStartTimeInNanoSeconds()
+
+            // Track how many times we've seen each status name in this span
+            val statusCounts = mutableMapOf<String, Int>()
+
+            statuses.forEachIndexed { statusIndex, (statusName, timestamp) ->
+                // Determine which occurrence this is (1st, 2nd, 3rd, etc.)
+                val occurrenceIndex = statusCounts.getOrDefault(statusName, 0) + 1
+                statusCounts[statusName] = occurrenceIndex
+
+                val timeSinceStartMs = TimeUnit.NANOSECONDS.toMillis(timestamp - startTime)
+
+                val previousTime = if (statusIndex > 0) {
+                    statuses[statusIndex - 1].second
+                } else {
+                    startTime
+                }
+                val timeSincePreviousMs = TimeUnit.NANOSECONDS.toMillis(timestamp - previousTime)
+
+                val occurrence = StatusOccurrence(statusName, occurrenceIndex)
+                statusOccurrencesMap.getOrPut(occurrence) { mutableListOf() }
+                    .add(Pair(timeSincePreviousMs, timeSinceStartMs))
             }
         }
 
         val result = mutableListOf<StatisticalStatusData>()
 
-        for (statusName in allStatusNames) {
-            val timeSincePreviousValues = mutableListOf<Long>()
-            val timeSinceStartValues = mutableListOf<Long>()
+        for ((occurrence, timingPairs) in statusOccurrencesMap) {
+            val timeSincePreviousValues = timingPairs.map { it.first }
+            val timeSinceStartValues = timingPairs.map { it.second }
 
-            for (span in spans) {
-                val statuses = span.getStatuses()
-                val startTime = span.getStartTimeInNanoSeconds()
-
-                // Find this status in the span
-                val statusIndex = statuses.indexOfFirst { it.first == statusName }
-                if (statusIndex >= 0) {
-                    val entry = statuses[statusIndex]
-                    val timeSinceStartMs = TimeUnit.NANOSECONDS.toMillis(entry.second - startTime)
-
-                    val previousTime = if (statusIndex > 0) {
-                        statuses[statusIndex - 1].second
-                    } else {
-                        startTime
-                    }
-                    val timeSincePreviousMs = TimeUnit.NANOSECONDS.toMillis(entry.second - previousTime)
-
-                    timeSincePreviousValues.add(timeSincePreviousMs)
-                    timeSinceStartValues.add(timeSinceStartMs)
-                }
+            // Create display name with occurrence number if there are multiple occurrences
+            val displayName = if (statusOccurrencesMap.keys.count { it.statusName == occurrence.statusName } > 1) {
+                "${occurrence.statusName} [${occurrence.occurrenceIndex}]"
+            } else {
+                occurrence.statusName
             }
 
-            if (timeSincePreviousValues.isNotEmpty()) {
-                result.add(
-                    StatisticalStatusData(
-                        statusName = statusName,
-                        timeSinceStartStats = calculateMetrics(timeSinceStartValues),
-                        timeSincePreviousStats = calculateMetrics(timeSincePreviousValues)
-                    )
+            result.add(
+                StatisticalStatusData(
+                    statusName = displayName,
+                    timeSinceStartStats = calculateMetrics(timeSinceStartValues),
+                    timeSincePreviousStats = calculateMetrics(timeSincePreviousValues)
                 )
-            }
+            )
         }
 
         // Sort by the first configured metric's Time Since Start value, or by status name if no metrics
