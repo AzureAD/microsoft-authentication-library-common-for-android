@@ -29,15 +29,25 @@ import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.logging.Logger;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Wrapper class for PowerManager.
  */
 
 public class PowerManagerWrapper {
 
+    private static final String TAG = PowerManagerWrapper.class.getSimpleName();
+
     private static PowerManagerWrapper sInstance;
 
     private static final String UNKNOWN_STATUS = "Unknown";
+
+    // In-memory cache for battery optimization status for each apps.
+    private final Map<String, String> batteryOptOutCache = new ConcurrentHashMap<>();
     /**
      * Set instance of PowerManagerWrapper.
      *
@@ -107,10 +117,6 @@ public class PowerManagerWrapper {
     @NonNull
     public String getPowerOptimizationSettings(@NonNull final Context context){
         try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return UNKNOWN_STATUS;
-            }
-
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
             if (powerManager.isIgnoringBatteryOptimizations(context.getPackageName())){
                 return "OptOut";
@@ -130,8 +136,43 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
      * @return true if the given application package name is on the device's power allow list.
      */
-    @RequiresApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(connectionContext.getPackageName());
+    }
+
+    /**
+     * Checks if the app with the given package name is opted out from battery optimization.
+     * Caches the result in memory using computeIfAbsent for thread safety.
+     * Returns a string indicating the result or exception type.
+     *
+     * @param packageName The package name to check.
+     * @param context The context to use for PowerManager.
+     * @return "OptedOut" if the app is opted out, "NotOptedOut" if not, or exception type string.
+     */
+    public String isAppOptedOutFromBatteryOptimization(@NonNull final String packageName, @NonNull final Context context) {
+        final String methodTag = TAG + ":isAppOptedOutFromBatteryOptimization";
+
+        return batteryOptOutCache.computeIfAbsent(packageName, key -> {
+            try {
+                final PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                if (powerManager.isIgnoringBatteryOptimizations(key)) {
+                    return "OptOut";
+                } else {
+                    return "NotOptOut";
+                }
+            } catch (NullPointerException e) {
+                Logger.error(methodTag, "NullPointerException when checking battery optimization status for package: " + packageName, e);
+                return "NullPointerException";
+            } catch (SecurityException e) {
+                Logger.error(methodTag, "SecurityException when checking battery optimization status for package: " + packageName, e);
+                return "SecurityException";
+            } catch (IllegalArgumentException e) {
+                Logger.error(methodTag, "IllegalArgumentException when checking battery optimization status for package: " + packageName, e);
+                return "IllegalArgumentException";
+            } catch (Exception e) {
+                Logger.error(methodTag, "Unknown Exception when checking battery optimization status for package: " + packageName, e);
+                return "UnknownException";
+            }
+        });
     }
 }
