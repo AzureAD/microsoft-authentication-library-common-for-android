@@ -1450,7 +1450,7 @@ public class BrokerMsalController extends BaseController {
     /**
      * Execute web app request in broker.
      *
-     * @param request request string
+     * @param request request string.
      * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
      * @param additionalRequiredParams additional required parameters for web app request.
      * @throws BaseException
@@ -1829,7 +1829,6 @@ public class BrokerMsalController extends BaseController {
                 .authority(authority)
                 .scopes(scopeSet)
                 .loginHint(webAppsRequest.getLoginHint())
-                .claimsRequestJson(webAppsRequest.getClaims())
                 .correlationId(correlationId)
                 .requiredBrokerProtocolVersion(minBrokerProtocolVersion)
                 .prompt(prompt)

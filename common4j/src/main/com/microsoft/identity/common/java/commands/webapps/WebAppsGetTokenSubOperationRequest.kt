@@ -56,10 +56,6 @@ data class WebAppsGetTokenSubOperationRequest(
     @SerializedName(FIELD_PROMPT)
     val prompt: String? = null,
 
-    // Optional; claims request in JSON format.
-    @SerializedName(FIELD_CLAIMS)
-    val claims: String? = null,
-
     // If not provided, we assume this is false.
     @SerializedName(FIELD_IS_SECURITY_TOKEN_SERVICE)
     val isSecurityTokenService: Boolean = false,
@@ -93,7 +89,6 @@ data class WebAppsGetTokenSubOperationRequest(
         const val FIELD_REDIRECT_URI = "redirectUri"
         const val FIELD_CORRELATION_ID = "correlationId"
         const val FIELD_PROMPT = "prompt"
-        const val FIELD_CLAIMS = "claims"
         const val FIELD_IS_SECURITY_TOKEN_SERVICE = "isSts"
         const val FIELD_NONCE = "nonce"
         const val FIELD_STATE = "state"

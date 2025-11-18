@@ -290,7 +290,6 @@ public class BrokerMsalControllerTest {
                 "https://redirect",
                 "corr-id",
                 "login", // Setting to login
-                null,
                 false,
                 null,
                 null,
@@ -329,7 +328,6 @@ public class BrokerMsalControllerTest {
                 "https://redirect",
                 "corr-id",
                 "login", // Setting to login
-                null,
                 true,
                 null,
                 null,
@@ -420,7 +418,6 @@ public class BrokerMsalControllerTest {
                 "https://demoapp.com/",
                 "corr-id",
                 "login",                               // prompt forces interactive
-                null,
                 isSts,                                  // isSecurityTokenService
                 null,
                 null,
@@ -446,7 +443,6 @@ public class BrokerMsalControllerTest {
                 "https://demoapp.com/",  // redirectUri (required)
                 "corr-id",           // correlationId (optional)
                 "none",              // prompt ("none" for silent)
-                null,                // claims
                 isSts,               // isSecurityTokenService
                 null,                // nonce
                 null,                // state
@@ -474,7 +470,6 @@ public class BrokerMsalControllerTest {
                 "https://demoapp.com/",  // redirectUri (required)
                 "corr-id",           // correlationId (optional)
                 "select_account",    // prompt
-                null,                // claims
                 isSts,               // isSecurityTokenService
                 null,                // nonce
                 null,                // state
