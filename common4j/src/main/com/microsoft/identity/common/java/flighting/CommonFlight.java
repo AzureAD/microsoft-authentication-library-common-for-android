@@ -185,7 +185,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to disable Web Apps API.
      */
-    DISABLE_WEB_APPS_API("DisableWebAppsApi", false);
+    DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
+
+    /**
+     * Flight to control whether or not to use in memory cache for accounts and credentials.
+     */
+    USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false);
 
     private String key;
     private Object defaultValue;
