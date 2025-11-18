@@ -304,12 +304,17 @@ class DefaultBenchmarkSpanPrinter(
 
         val result = mutableListOf<StatisticalStatusData>()
 
+        // Precompute the number of occurrences for each status name
+        val occurrenceCountsByName = statusOccurrencesMap.keys
+            .groupBy { it.statusName }
+            .mapValues { it.value.size }
+
         for ((occurrence, timingPairs) in statusOccurrencesMap) {
             val timeSincePreviousValues = timingPairs.map { it.first }
             val timeSinceStartValues = timingPairs.map { it.second }
 
             // Create display name with occurrence number if there are multiple occurrences
-            val displayName = if (statusOccurrencesMap.keys.count { it.statusName == occurrence.statusName } > 1) {
+            val displayName = if ((occurrenceCountsByName[occurrence.statusName] ?: 1) > 1) {
                 "${occurrence.statusName} [${occurrence.occurrenceIndex}]"
             } else {
                 occurrence.statusName
