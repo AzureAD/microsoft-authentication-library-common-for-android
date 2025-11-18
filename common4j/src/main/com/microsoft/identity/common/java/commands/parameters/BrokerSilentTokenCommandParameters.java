@@ -27,6 +27,8 @@ import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -116,7 +118,8 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             );
         }
         final IPlatformUtil platformUtil = getPlatformComponents().getPlatformUtil();
-        if (getRequestType() == BrokerRequestType.WEB_APPS) {
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_WEB_APPS_API)
+                && getRequestType() == BrokerRequestType.WEB_APPS) {
             // For web apps, we have a different redirect URI from our standard Android one.
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;

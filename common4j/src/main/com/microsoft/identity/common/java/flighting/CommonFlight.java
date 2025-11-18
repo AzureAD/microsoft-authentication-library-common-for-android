@@ -180,7 +180,12 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
      * config endpoint and only reports the failure result.
      */
-    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
+    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true),
+
+    /**
+     * Flight to disable Web Apps API.
+     */
+    DISABLE_WEB_APPS_API("DisableWebAppsApi", false);
 
     private String key;
     private Object defaultValue;

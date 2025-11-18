@@ -1471,7 +1471,7 @@ public class BrokerMsalController extends BaseController {
                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
                 // If need to do interactive right away, do it now.
                 // Otherwise, just let the broker handle the silent token acquisition first.
-                if (shouldForceInteractive(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
+                if (shouldForceInteractiveRequestForWebApp(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
                     AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender(envelope.getSender());
                     final BrokerInteractiveTokenCommandParameters interactiveParams =
                             buildInteractiveTokenParametersForWebApps(getTokenRequest, additionalRequiredParams, minBrokerProtocolVersion);
@@ -1524,7 +1524,7 @@ public class BrokerMsalController extends BaseController {
                                                 WebAppsGetTokenSubOperationEnvelope.class
                                         );
                                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
-                                if (canFallbackToInteractive(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
+                                if (canFallbackToInteractiveRequestForWebApp(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
                                     // Create params from the request
                                     if (getTokenRequest.isSecurityTokenService()) {
                                         // Validate sender authority (throws if invalid)
@@ -1700,8 +1700,8 @@ public class BrokerMsalController extends BaseController {
      * @return True if interactive token acquisition should be forced, false otherwise.
      * @throws ClientException if prompt is not none and UI is not allowed.
      */
-    private boolean shouldForceInteractive(final @NonNull WebAppsGetTokenSubOperationRequest req,
-                                           final boolean canShowUI) throws ClientException {
+    private boolean shouldForceInteractiveRequestForWebApp(final @NonNull WebAppsGetTokenSubOperationRequest req,
+                                                           final boolean canShowUI) throws ClientException {
         // MSAL JS requests will always be silent first.
         if (!req.isSecurityTokenService() || !StringUtil.isNullOrEmpty(req.getHomeAccountId())) {
             return false;
@@ -1729,8 +1729,8 @@ public class BrokerMsalController extends BaseController {
      * @return True if we can fallback to interactive token acquisition, false otherwise.
      * @throws ClientException if prompt is none or if UI is not allowed when prompt is not none.
      */
-    private boolean canFallbackToInteractive(@NonNull final WebAppsGetTokenSubOperationRequest req,
-                                             final boolean canShowUI) throws ClientException {
+    private boolean canFallbackToInteractiveRequestForWebApp(@NonNull final WebAppsGetTokenSubOperationRequest req,
+                                                             final boolean canShowUI) throws ClientException {
         final OpenIdConnectPromptParameter prompt = OpenIdConnectPromptParameter.fromString(req.getPrompt());
         if (prompt == OpenIdConnectPromptParameter.NONE) {
             return false;
