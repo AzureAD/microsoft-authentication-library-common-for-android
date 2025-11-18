@@ -276,7 +276,7 @@ public class BrokerMsalControllerTest {
                 addParams
         );
 
-        Assert.assertTrue(result.contains("Error occurred during validation or interactive"));
+        Assert.assertTrue(result.contains("Error occurred during request parsing"));
     }
 
     @Test
