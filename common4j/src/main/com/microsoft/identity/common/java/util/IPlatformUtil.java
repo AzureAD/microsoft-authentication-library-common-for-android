@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 

@@ -135,6 +135,7 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -371,7 +372,6 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        final String methodTag = TAG + ":acquireToken";
         final AcquireTokenResult result;
         try {
             final Bundle resultBundle = acquireTokenInternal(parameters);
@@ -1461,13 +1461,13 @@ public class BrokerMsalController extends BaseController {
         try {
             // Take a peek at the type of request.
             final String subMethod = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
+            WebAppsGetTokenSubOperationEnvelope envelope;
             if (subMethod.equals(WebAppsSupportedContracts.GET_TOKEN)) {
                 // If get token, we should check to see if we should just start interactive right away.
-                final WebAppsGetTokenSubOperationEnvelope envelope =
-                        ObjectMapper.deserializeJsonStringToObject(
+                envelope = ObjectMapper.deserializeJsonStringToObject(
                                 request,
                                 WebAppsGetTokenSubOperationEnvelope.class
-                        );
+                );
                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
                 // If need to do interactive right away, do it now.
                 // Otherwise, just let the broker handle the silent token acquisition first.
@@ -1478,6 +1478,8 @@ public class BrokerMsalController extends BaseController {
                     final Bundle resultBundle = acquireTokenInternal(interactiveParams);
                     return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                 }
+            } else {
+                envelope = null;
             }
 
             // Silent GetToken, GetCookies, or SignOut.
@@ -1493,7 +1495,6 @@ public class BrokerMsalController extends BaseController {
                         @NonNull
                         @Override
                         public BrokerOperationBundle getBundle() throws ClientException {
-                            Map<String, String> mergedExtraArgs = new HashMap<>();
                             final String additionalParamsString =  ObjectMapper.serializeObjectToJsonString(additionalRequiredParams);
                             return new BrokerOperationBundle(
                                     BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
@@ -1517,12 +1518,7 @@ public class BrokerMsalController extends BaseController {
 
                             final String result = mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                             if (resultBundle.containsKey(BROKER_WEB_APPS_ERROR_RESULT)
-                                    && subMethod.equals(WebAppsSupportedContracts.GET_TOKEN)) {
-                                final WebAppsGetTokenSubOperationEnvelope envelope =
-                                        ObjectMapper.deserializeJsonStringToObject(
-                                                request,
-                                                WebAppsGetTokenSubOperationEnvelope.class
-                                        );
+                                    && envelope != null) {
                                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
                                 if (canFallbackToInteractiveRequestForWebApp(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
                                     // Create params from the request
@@ -1567,7 +1563,10 @@ public class BrokerMsalController extends BaseController {
                                                            @NonNull final String result) {
                         }
                     });
-        } catch (final Exception ex) {
+        } catch (final JSONException jsonException) {
+            return WebAppsUtil.createErrorResponseString(jsonException, "Error occurred during request parsing");
+        }
+        catch (final Exception ex) {
             return WebAppsUtil.createErrorResponseString(ex, "Error occurred during validation or interactive");
         }
     }
@@ -1707,8 +1706,7 @@ public class BrokerMsalController extends BaseController {
             return false;
         }
         final OpenIdConnectPromptParameter prompt = OpenIdConnectPromptParameter.fromString(req.getPrompt());
-        final boolean webAppOkWithInteraction = prompt != OpenIdConnectPromptParameter.NONE;
-        if (!webAppOkWithInteraction) {
+        if (prompt == OpenIdConnectPromptParameter.NONE) {
             return false;
         }
         //we need to return a specific Edge error status code if prompt is not none and UI is not allowed by Edge.
@@ -1738,7 +1736,7 @@ public class BrokerMsalController extends BaseController {
         // In the case where prompt is something other than none AND UI is not allowed, we need to throw a specific exception.
         if (!canShowUI) {
             throw new ClientException(
-                    WebAppBrokerErrorCode.UI_NOT_ALLOWED.name(),
+                    ErrorStrings.UI_NOT_ALLOWED,
                     "Interactive token acquisition is required but UI interaction is not allowed."
             );
         }
