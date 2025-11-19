@@ -68,7 +68,7 @@ public class DeleteDeviceApi {
         if (upn != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("upn", upn));
         if (deviceid != null)
-            localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
+            localVarQueryParams.addAll(apiClient.parameterToPair("deviceId", deviceid));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -117,8 +117,8 @@ public class DeleteDeviceApi {
      * @return CustomSuccessResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public CustomSuccessResponse apiDeleteDeviceDelete(String upn, String deviceid) throws ApiException {
-        ApiResponse<CustomSuccessResponse> resp = apiDeleteDeviceDeleteWithHttpInfo(upn, deviceid);
+    public String apiDeleteDeviceDelete(String upn, String deviceid) throws ApiException {
+        ApiResponse<String> resp = apiDeleteDeviceDeleteWithHttpInfo(upn, deviceid);
         return resp.getData();
     }
 
@@ -130,9 +130,9 @@ public class DeleteDeviceApi {
      * @return ApiResponse&lt;CustomSuccessResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<CustomSuccessResponse> apiDeleteDeviceDeleteWithHttpInfo(String upn, String deviceid) throws ApiException {
+    public ApiResponse<String> apiDeleteDeviceDeleteWithHttpInfo(String upn, String deviceid) throws ApiException {
         com.squareup.okhttp.Call call = apiDeleteDeviceDeleteValidateBeforeCall(upn, deviceid, null, null);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = TypeToken.get(String.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
