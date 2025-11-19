@@ -214,7 +214,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
     /**
      * In-memory cache for the active broker data.
      * There are 3 possible states:
-     * 1. null: the cache is empty (needs to read from storage or query from broker first).
+     * 1. null: the cache hasn't been initialized (needs to read from storage or query from broker first).
      * 2. CachedBrokerData with null brokerData: no active broker found.
      * 3. CachedBrokerData with non-null brokerData: found an active broker.
      **/
