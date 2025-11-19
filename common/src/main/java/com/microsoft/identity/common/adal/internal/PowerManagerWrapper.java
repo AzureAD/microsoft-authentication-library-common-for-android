@@ -155,6 +155,11 @@ public class PowerManagerWrapper {
         return batteryOptOutCache.computeIfAbsent(packageName, key -> {
             try {
                 final PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                if (powerManager == null) {
+                    Logger.error(methodTag, "PowerManager is null for package: " + packageName, null);
+                    return "CannotRetrievePowerManager";
+                }
+
                 if (powerManager.isIgnoringBatteryOptimizations(key)) {
                     return "OptOut";
                 } else {
