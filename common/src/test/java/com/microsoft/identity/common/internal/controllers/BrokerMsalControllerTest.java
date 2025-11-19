@@ -219,6 +219,40 @@ public class BrokerMsalControllerTest {
     }
 
     @Test
+    public void testExecuteWebAppRequest_SignOut_Success() throws Exception {
+        final BrokerMsalController controller = createController(buildStrategyForSilentSuccess());
+        final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
+
+        // Minimal envelope for sign out; BrokerMsalController needs to just pass the request through.
+        final String requestJson = "{\"method\":\"SignOut\"}";
+
+        final String result = controller.executeWebAppRequest(
+                requestJson,
+                NEGOTIATED_VERSION,
+                addParams
+        );
+
+        Assert.assertEquals(EXPECTED_RESULT, result);
+    }
+
+    @Test
+    public void testExecuteWebAppRequest_GetCookies_Success() throws Exception {
+        final BrokerMsalController controller = createController(buildStrategyForSilentSuccess());
+        final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
+
+        // Minimal envelope for get cookies; BrokerMsalController needs to just pass the request through.
+        final String requestJson = "{\"method\":\"GetCookies\"}";
+
+        final String result = controller.executeWebAppRequest(
+                requestJson,
+                NEGOTIATED_VERSION,
+                addParams
+        );
+
+        Assert.assertEquals(EXPECTED_RESULT, result);
+    }
+
+    @Test
     public void testExecuteWebAppRequest_SilentSuccess_MSALJS() throws Exception {
         final BrokerMsalController controller = createController(buildStrategyForSilentSuccess());
         final String requestJson = buildStrictlySilentGetTokenRequestJson(false);
@@ -264,7 +298,7 @@ public class BrokerMsalControllerTest {
     }
 
     @Test
-    public void testExecuteWebAppRequest_SilentError_FromController() throws Exception {
+    public void testExecuteWebAppRequest_SilentError_FromController_Parsing() throws Exception {
         final BrokerMsalController controller = createController(buildStrategyForSilentErrorFromBroker());
         final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
         final String malformedRequestJson = new JSONObject()
