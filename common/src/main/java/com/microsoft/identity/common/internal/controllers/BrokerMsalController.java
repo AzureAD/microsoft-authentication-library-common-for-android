@@ -1563,6 +1563,9 @@ public class BrokerMsalController extends BaseController {
                                                            @NonNull final String result) {
                         }
                     });
+        } catch (final UnsupportedBrokerException ex) {
+            // We want to throw this exception to keep it in line with the other APIs.
+            throw ex;
         } catch (final JSONException jsonException) {
             return WebAppsUtil.createErrorResponseString(jsonException, "Error occurred during request parsing");
         }
