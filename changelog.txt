@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
 - [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 
