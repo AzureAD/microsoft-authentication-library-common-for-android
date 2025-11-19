@@ -46,15 +46,17 @@ public class LabDeviceHelper {
         INSTANCE.setupApiClientWithAccessToken();
         try {
             final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
+            final String successResponse;
+            successResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
 
-            if (customSuccessResponse == null) {
+            if (successResponse == null) {
                 return false;
             }
 
-            final String expectedResult = "Device removed Successfully.";
-            return expectedResult.equalsIgnoreCase(customSuccessResponse.getMessage());
+            final String expectedResult = String.format(
+                    "Device : %s, successfully deleted from AAD.", deviceId
+            );
+            return expectedResult.equalsIgnoreCase(successResponse);
         } catch (final ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_DELETE_DEVICE);
         }
