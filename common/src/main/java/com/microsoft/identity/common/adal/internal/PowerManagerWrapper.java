@@ -147,7 +147,7 @@ public class PowerManagerWrapper {
      *
      * @param packageName The package name to check.
      * @param context The context to use for PowerManager.
-     * @return "OptedOut" if the app is opted out, "NotOptedOut" if not, or exception type string.
+     * @return "OptOut" if the app is opted out, "NotOptOut" if not, or exception type string.
      */
     public String isAppOptedOutFromBatteryOptimization(@NonNull final String packageName, @NonNull final Context context) {
         final String methodTag = TAG + ":isAppOptedOutFromBatteryOptimization";
