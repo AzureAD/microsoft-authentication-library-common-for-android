@@ -20,15 +20,9 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
 import com.microsoft.identity.internal.test.labapi.ProgressResponseBody;
-
 import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-
-
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,16 +31,13 @@ import java.util.Map;
 
 public class DeleteDeviceApi {
     private ApiClient apiClient;
-    private final String mAzureFunctionCode;
-    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "DeleteDevice";
 
-    public DeleteDeviceApi(final String azureFunctionCode) {
-        this(Configuration.getDefaultApiClient(), azureFunctionCode);
+    public DeleteDeviceApi() {
+        this(Configuration.getDefaultApiClient());
     }
 
-    public DeleteDeviceApi(ApiClient apiClient, final String azureFunctionCode) {
+    public DeleteDeviceApi(ApiClient apiClient) {
         this.apiClient = apiClient;
-        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -79,8 +70,6 @@ public class DeleteDeviceApi {
         if (deviceid != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("deviceid", deviceid));
 
-        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
-
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
         Map<String, Object> localVarFormParams = new HashMap<String, Object>();
@@ -110,7 +99,7 @@ public class DeleteDeviceApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
 
     @SuppressWarnings("rawtypes")

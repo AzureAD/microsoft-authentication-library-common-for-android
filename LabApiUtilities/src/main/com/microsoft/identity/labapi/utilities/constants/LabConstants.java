@@ -163,8 +163,8 @@ public class LabConstants {
     }
 
     static final class ResetOperation {
-        public static final String MFA = "MFA";
-        public static final String PASSWORD = "Password";
+        public static final String MFA = "mfa";
+        public static final String PASSWORD = "password";
     }
 
     static final class HasAltId {
