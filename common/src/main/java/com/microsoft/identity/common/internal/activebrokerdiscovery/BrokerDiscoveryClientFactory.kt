@@ -38,12 +38,7 @@ import kotlinx.coroutines.sync.withLock
 class BrokerDiscoveryClientFactory {
 
     companion object {
-
-        private val TAG = BrokerDiscoveryClientFactory::class.simpleName
-
-        @Volatile
-        private var IS_NEW_DISCOVERY_ENABLED = false
-
+        
         @Volatile
         private var clientSdkInstance: IBrokerDiscoveryClient? = null
 
@@ -56,25 +51,11 @@ class BrokerDiscoveryClientFactory {
         private val lock = Mutex()
 
         /**
-         * If set to true, the new Broker discovery mechanism will be enabled.
-         * This is currently turned off by default - until we're ready to ship the feature.
+         * Do nothing, since this is always enabled now.
+         * Keep it for now to prevent breaking OneAuth.
          **/
         @JvmStatic
         fun setNewBrokerDiscoveryEnabled(isEnabled: Boolean){
-            // If the flag changes, wipe the existing singleton.
-            if (isEnabled != IS_NEW_DISCOVERY_ENABLED) {
-                clientSdkInstance = null
-                brokerSdkInstance = null
-                IS_NEW_DISCOVERY_ENABLED = isEnabled
-            }
-        }
-
-        /**
-         * Returns true if the new Broker discovery mechanism is enabled.
-         **/
-        @JvmStatic
-        fun isNewBrokerDiscoveryEnabled(): Boolean {
-            return BuildConfig.newBrokerDiscoveryEnabledFlag || IS_NEW_DISCOVERY_ENABLED;
         }
 
         /**
@@ -87,7 +68,7 @@ class BrokerDiscoveryClientFactory {
                 runBlocking {
                     lock.withLock {
                         if (clientSdkInstance == null) {
-                            clientSdkInstance = getInstance(context,
+                            clientSdkInstance = BrokerDiscoveryClient(context,
                                 platformComponents,
                                 ClientActiveBrokerCache.getClientSdkCache(platformComponents.storageSupplier))
                         }
@@ -108,7 +89,7 @@ class BrokerDiscoveryClientFactory {
                 runBlocking {
                     lock.withLock {
                         if (brokerSdkInstance == null) {
-                            brokerSdkInstance = getInstance(context,
+                            brokerSdkInstance = BrokerDiscoveryClient(context,
                                 platformComponents,
                                 ClientActiveBrokerCache.getBrokerSdkCache(platformComponents.storageSupplier))
                         }
@@ -116,24 +97,6 @@ class BrokerDiscoveryClientFactory {
                 }
             }
             return brokerSdkInstance!!
-        }
-
-        /**
-         * Initializes a new [IBrokerDiscoveryClient] object.
-         * to be used by OneAuth/MSAL.
-         **/
-        @JvmStatic
-        private fun getInstance(context: Context,
-                                platformComponents: IPlatformComponents,
-                                cache: IClientActiveBrokerCache) : IBrokerDiscoveryClient{
-            val methodTag = "$TAG:getInstance"
-            return if (isNewBrokerDiscoveryEnabled()) {
-                Logger.info(methodTag, "Broker Discovery is enabled. Use the new logic on the SDK side")
-                BrokerDiscoveryClient(context, platformComponents, cache)
-            } else {
-                Logger.info(methodTag, "Broker Discovery is disabled. Use AccountManager on the SDK side.")
-                LegacyBrokerDiscoveryClient(context)
-            }
         }
     }
 }
