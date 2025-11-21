@@ -171,7 +171,6 @@ public class LabClientTest {
     }
 
     @Test
-    @Ignore
     public void canResetPassword() {
         try {
             final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
@@ -183,7 +182,6 @@ public class LabClientTest {
     }
 
     @Test
-    @Ignore
     public void canEnablePolicy() {
         try {
             final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
@@ -195,7 +193,6 @@ public class LabClientTest {
     }
 
     @Test
-    @Ignore
     public void canDisablePolicy() {
         try {
             final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.MAM_CA);
