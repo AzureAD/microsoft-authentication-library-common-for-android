@@ -110,6 +110,38 @@ public class PowerManagerWrapper {
     }
 
     /**
+     * Gets the Device Doze Mode Status.
+     *
+     * @param context The context to use for PowerManager.
+     * @return a {@link DeviceDozeModeStatus}
+     */
+    @NonNull
+    public DeviceDozeModeStatus getDeviceDozeModeStatus(@NonNull final Context context){
+        final String methodTag = TAG + ":getDeviceIdleMode";
+
+        try {
+            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
+            if (powerManager == null) {
+                Logger.error(methodTag, "PowerManager is null", null);
+                return DeviceDozeModeStatus.CannotRetrievePowerManager;
+            }
+            if (powerManager.isDeviceIdleMode()) {
+                return DeviceDozeModeStatus.Idle;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    powerManager.isDeviceLightIdleMode()) {
+                return DeviceDozeModeStatus.LightIdle;
+            }
+
+            return DeviceDozeModeStatus.NotInDozeMode;
+        } catch (Exception e){
+            Logger.error(methodTag, "Unknown Exception when checking doze mode status", e);
+            return DeviceDozeModeStatus.UnknownError;
+        }
+    }
+
+    /**
      * Gets a string representing Power Optimization settings of the calling app
      * Will return an empty string if the app isn't opting out.
      * (Possible Values: "OptOut", "Unknown" , "")
@@ -156,28 +188,18 @@ public class PowerManagerWrapper {
             try {
                 final PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
                 if (powerManager == null) {
-                    Logger.error(methodTag, "PowerManager is null for package: " + packageName, null);
+                    Logger.error(methodTag, "PowerManager is null", null);
                     return BatteryOptimizationStatus.CannotRetrievePowerManager;
                 }
 
                 if (powerManager.isIgnoringBatteryOptimizations(key)) {
                     return BatteryOptimizationStatus.OptOut;
-                } else
-                {
+                } else {
                     return BatteryOptimizationStatus.NotOptOut;
                 }
-            } catch (NullPointerException e) {
-                Logger.error(methodTag, "NullPointerException when checking battery optimization status for package: " + packageName, e);
-                return BatteryOptimizationStatus.NullPointerException;
-            } catch (SecurityException e) {
-                Logger.error(methodTag, "SecurityException when checking battery optimization status for package: " + packageName, e);
-                return BatteryOptimizationStatus.SecurityException;
-            } catch (IllegalArgumentException e) {
-                Logger.error(methodTag, "IllegalArgumentException when checking battery optimization status for package: " + packageName, e);
-                return BatteryOptimizationStatus.IllegalArgumentException;
             } catch (Exception e) {
                 Logger.error(methodTag, "Unknown Exception when checking battery optimization status for package: " + packageName, e);
-                return BatteryOptimizationStatus.UnknownException;
+                return BatteryOptimizationStatus.UnknownError;
             }
         });
     }
