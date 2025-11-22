@@ -20,15 +20,9 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
 import com.microsoft.identity.internal.test.labapi.ProgressResponseBody;
-
 import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-
-
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,16 +31,13 @@ import java.util.Map;
 
 public class CreateTempUserApi {
     private ApiClient apiClient;
-    private final String mAzureFunctionCode;
-    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "CreateTempUser";
 
-    public CreateTempUserApi(final String azureFunctionCode) {
-        this(Configuration.getDefaultApiClient(), azureFunctionCode);
+    public CreateTempUserApi() {
+        this(Configuration.getDefaultApiClient());
     }
 
-    public CreateTempUserApi(final ApiClient apiClient, final String azureFunctionCode) {
+    public CreateTempUserApi(final ApiClient apiClient) {
         this.apiClient = apiClient;
-        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -75,8 +66,6 @@ public class CreateTempUserApi {
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
         if (usertype != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("usertype", usertype));
-
-        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
