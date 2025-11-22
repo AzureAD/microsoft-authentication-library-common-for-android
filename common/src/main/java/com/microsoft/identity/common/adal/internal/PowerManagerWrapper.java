@@ -47,7 +47,7 @@ public class PowerManagerWrapper {
     private static final String UNKNOWN_STATUS = "Unknown";
 
     // In-memory cache for battery optimization status for each apps.
-    private final Map<String, String> batteryOptOutCache = new ConcurrentHashMap<>();
+    private final Map<String, BatteryOptimizationStatus> batteryOptOutCache = new ConcurrentHashMap<>();
     /**
      * Set instance of PowerManagerWrapper.
      *
@@ -147,9 +147,9 @@ public class PowerManagerWrapper {
      *
      * @param packageName The package name to check.
      * @param context The context to use for PowerManager.
-     * @return "OptOut" if the app is opted out, "NotOptOut" if not, or exception type string.
+     * @return a {@link BatteryOptimizationStatus}
      */
-    public String isAppOptedOutFromBatteryOptimization(@NonNull final String packageName, @NonNull final Context context) {
+    public BatteryOptimizationStatus isAppOptedOutFromBatteryOptimization(@NonNull final String packageName, @NonNull final Context context) {
         final String methodTag = TAG + ":isAppOptedOutFromBatteryOptimization";
 
         return batteryOptOutCache.computeIfAbsent(packageName, key -> {
@@ -157,26 +157,27 @@ public class PowerManagerWrapper {
                 final PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
                 if (powerManager == null) {
                     Logger.error(methodTag, "PowerManager is null for package: " + packageName, null);
-                    return "CannotRetrievePowerManager";
+                    return BatteryOptimizationStatus.CannotRetrievePowerManager;
                 }
 
                 if (powerManager.isIgnoringBatteryOptimizations(key)) {
-                    return "OptOut";
-                } else {
-                    return "NotOptOut";
+                    return BatteryOptimizationStatus.OptOut;
+                } else
+                {
+                    return BatteryOptimizationStatus.NotOptOut;
                 }
             } catch (NullPointerException e) {
                 Logger.error(methodTag, "NullPointerException when checking battery optimization status for package: " + packageName, e);
-                return "NullPointerException";
+                return BatteryOptimizationStatus.NullPointerException;
             } catch (SecurityException e) {
                 Logger.error(methodTag, "SecurityException when checking battery optimization status for package: " + packageName, e);
-                return "SecurityException";
+                return BatteryOptimizationStatus.SecurityException;
             } catch (IllegalArgumentException e) {
                 Logger.error(methodTag, "IllegalArgumentException when checking battery optimization status for package: " + packageName, e);
-                return "IllegalArgumentException";
+                return BatteryOptimizationStatus.IllegalArgumentException;
             } catch (Exception e) {
                 Logger.error(methodTag, "Unknown Exception when checking battery optimization status for package: " + packageName, e);
-                return "UnknownException";
+                return BatteryOptimizationStatus.UnknownException;
             }
         });
     }
