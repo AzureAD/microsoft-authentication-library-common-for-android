@@ -111,6 +111,8 @@ public class PowerManagerWrapper {
 
     /**
      * Gets the Device Doze Mode Status.
+     * 
+     * This is exposed to OneAuth.
      *
      * @param context The context to use for PowerManager.
      * @return a {@link DeviceDozeModeStatus}
@@ -176,6 +178,8 @@ public class PowerManagerWrapper {
      * Checks if the app with the given package name is opted out from battery optimization.
      * Caches the result in memory using computeIfAbsent for thread safety.
      * Returns a string indicating the result or exception type.
+     *
+     * This is exposed to OneAuth.
      *
      * @param packageName The package name to check.
      * @param context The context to use for PowerManager.
