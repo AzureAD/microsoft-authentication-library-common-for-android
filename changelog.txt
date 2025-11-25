@@ -1,8 +1,7 @@
-vNext
-----------
-
 Version 23.1.1-RC1
 ----------
+- [PATCH] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache (#2813)
+- [PATCH] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 
 Version 23.1.0
 ----------
