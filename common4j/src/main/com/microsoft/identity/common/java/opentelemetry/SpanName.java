@@ -75,9 +75,9 @@ public enum SpanName {
     PasskeyWebListener,
     PersistToStorageAsync,
     InstallCertOnWpj,
-
     /**
      * Span name for fetching initial ECS flight configurations.
      */
-    EcsFlightsFetchConfigs
+    EcsFlightsFetchConfigs,
+    DevicePopMintSignedAccessToken
 }

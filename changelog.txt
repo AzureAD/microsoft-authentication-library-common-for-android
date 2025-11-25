@@ -4,6 +4,7 @@ vNext
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
 - [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
+- [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
 
 Version 23.1.0
 ----------
