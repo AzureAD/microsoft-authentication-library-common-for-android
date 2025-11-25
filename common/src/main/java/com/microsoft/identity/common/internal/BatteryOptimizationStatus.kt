@@ -20,12 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal
+package com.microsoft.identity.common.internal
 
-enum class DeviceDozeModeStatus {
-    NotInDozeMode,
-    Idle,
-    LightIdle,
+/**
+ * Enum representing the battery optimization status of the application.
+ */
+enum class BatteryOptimizationStatus {
+    /** The application has opted out of battery optimization. */
+    OptOut,
+
+    /** The application has not opted out of battery optimization. */
+    NotOptOut,
+
+    /** Unable to retrieve the PowerManager service to determine battery optimization status. */
     CannotRetrievePowerManager,
+
+    /** An unknown error occurred while checking battery optimization status. */
     UnknownError
 }

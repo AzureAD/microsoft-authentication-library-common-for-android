@@ -29,6 +29,8 @@ import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.internal.BatteryOptimizationStatus;
+import com.microsoft.identity.common.internal.DeviceDozeModeStatus;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Map;
@@ -119,7 +121,7 @@ public class PowerManagerWrapper {
      */
     @NonNull
     public DeviceDozeModeStatus getDeviceDozeModeStatus(@NonNull final Context context){
-        final String methodTag = TAG + ":getDeviceIdleMode";
+        final String methodTag = TAG + ":getDeviceDozeModeStatus";
 
         try {
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));

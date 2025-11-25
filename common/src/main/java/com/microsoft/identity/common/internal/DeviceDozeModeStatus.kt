@@ -20,14 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal
+package com.microsoft.identity.common.internal
 
 /**
- * Enum representing the battery optimization status of the application.
+ * Represents the current doze mode status of an Android device.
+ * Doze mode is a battery-saving feature that restricts app behavior when the device is idle.
  */
-enum class BatteryOptimizationStatus {
-    OptOut,
-    NotOptOut,
+enum class DeviceDozeModeStatus {
+    /** The device is not in doze mode and operating normally. */
+    NotInDozeMode,
+
+    /** The device is in idle state. */
+    Idle,
+
+    /** The device is in light idle state. */
+    LightIdle,
+
+    /** Unable to retrieve the PowerManager service to determine doze mode status. */
     CannotRetrievePowerManager,
+
+    /** An unknown error occurred while checking doze mode status. */
     UnknownError
 }
