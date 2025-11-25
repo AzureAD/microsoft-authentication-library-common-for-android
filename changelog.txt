@@ -1,6 +1,9 @@
 vNext
 ----------
 
+Version 23.1.1-RC1
+----------
+
 Version 23.1.0
 ----------
 - [MINOR] Add OpenTelemetry support for passkey operations (#2795)
