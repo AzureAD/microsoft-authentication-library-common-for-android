@@ -61,9 +61,6 @@ import lombok.NonNull;
 public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
-    private final LabApiAuthenticationClient mLabApiAuthenticationClientForKeyVault = new LabApiAuthenticationClient(
-            BuildConfig.LAB_CLIENT_SECRET, KEYVAULT_SCOPE, DEFAULT_LAB_CLIENT_ID
-    );
     private final long PASSWORD_RESET_WAIT_DURATION = TimeUnit.SECONDS.toMillis(65);
     private final long LAB_API_RETRY_WAIT = TimeUnit.SECONDS.toMillis(5);
 
@@ -308,7 +305,7 @@ public class LabClient implements ILabClient {
     @Override
     public String getKeyVaultSecret(@NonNull final String secretName) throws LabApiException {
         Configuration.getKeyVaultApiClient().setAccessToken(
-                mLabApiAuthenticationClientForKeyVault.getAccessToken()
+                mLabApiAuthenticationClient.getAccessTokenForCustomScope(KEYVAULT_SCOPE)
         );
         final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi();
 
