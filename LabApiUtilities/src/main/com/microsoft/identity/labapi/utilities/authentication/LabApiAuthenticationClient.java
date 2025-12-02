@@ -51,26 +51,20 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static int ATTEMPT_RETRY_WAIT = 3;
     private final String mLabCredential;
     private final String mLabCertPassword;
-    private final String mScope;
+    private final String defaultScope = LabConstants.DEFAULT_LAB_SCOPE;
     private final String mClientId;
 
-
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
-        this(labSecret, null, null, null);
+        this(labSecret, null, null);
     }
 
     public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
-        this(labSecret, labCertPassword, null, null);
+        this(labSecret, labCertPassword, null);
     }
 
-    public LabApiAuthenticationClient(@NonNull final String labSecret, @NonNull final String scope, @NonNull final String clientId) {
-        this(labSecret, null, scope, clientId);
-    }
-
-    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String scope, final String clientId) {
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String clientId) {
         mLabCredential = labSecret;
         mLabCertPassword = labCertPassword;
-        mScope = scope != null ? scope : LabConstants.DEFAULT_LAB_SCOPE;
         mClientId = clientId != null ? clientId : LabConstants.DEFAULT_LAB_CLIENT_ID;
     }
 
@@ -126,10 +120,13 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     }
 
     private String getAccessTokenInternal(final String customScope) throws LabApiException {
-        String authScope = mScope;
+        final String authScope;
         if (customScope != null) {
             authScope = customScope;
+        } else {
+            authScope = defaultScope;
         }
+
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .clientId(mClientId)

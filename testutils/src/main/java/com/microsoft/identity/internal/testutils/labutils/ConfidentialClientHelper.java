@@ -70,7 +70,7 @@ abstract class ConfidentialClientHelper {
 
     private String requestAccessTokenForKeyVault()
             throws LabApiException {
-        return (new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET, KEYVAULT_SCOPE, DEFAULT_LAB_CLIENT_ID)).getAccessToken();
+        return (new LabApiAuthenticationClient(BuildConfig.LAB_CLIENT_SECRET)).getAccessTokenForCustomScope(KEYVAULT_SCOPE);
     }
 
     void setupApiClientWithAccessToken() {
