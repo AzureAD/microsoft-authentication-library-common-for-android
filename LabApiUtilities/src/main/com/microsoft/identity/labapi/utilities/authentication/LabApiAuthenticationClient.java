@@ -76,23 +76,28 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     @Override
     public String getAccessToken() throws LabApiException {
-        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES);
+        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES, null);
+    }
+
+    public String getAccessTokenForCustomScope(final String scope) throws LabApiException {
+        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES, scope);
     }
 
     /**
      * Attempt to acquire an access token. Accepts a parameter to denote number of retries
      * @param retries how many times to attempt acquire access token before returning a failure.
+     * @param customScope the custom scope for which the access token is requested. If null, use the default scope.
      * @return an access token for Lab API
      * @throws LabApiException exception given back by Lab API
      */
-    public String getAccessToken(final int retries) throws LabApiException {
+    public String getAccessToken(final int retries, final String customScope) throws LabApiException {
 
         // Do this in a loop, if we get an exception or null result, try again
         for (int i = 1; i <= retries; i++) {
             System.out.printf(Locale.ENGLISH, "getAccessToken attempt #%d%n", i);
 
             try {
-                final String result = getAccessTokenInternal();
+                final String result = getAccessTokenInternal(customScope);
                 if (result != null) {
                     return result;
                 }
@@ -120,12 +125,16 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         return null;
     }
 
-    private String getAccessTokenInternal() throws LabApiException {
+    private String getAccessTokenInternal(final String customScope) throws LabApiException {
+        String authScope = mScope;
+        if (customScope != null) {
+            authScope = customScope;
+        }
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .clientId(mClientId)
                 .authority(AUTHORITY)
-                .scope(mScope)
+                .scope(authScope)
                 .build();
 
         final IAuthenticationResult authenticationResult;
