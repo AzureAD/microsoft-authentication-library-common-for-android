@@ -29,15 +29,27 @@ import android.os.PowerManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.internal.BatteryOptimizationStatus;
+import com.microsoft.identity.common.internal.DeviceDozeModeStatus;
+import com.microsoft.identity.common.logging.Logger;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Wrapper class for PowerManager.
  */
 
 public class PowerManagerWrapper {
 
+    private static final String TAG = PowerManagerWrapper.class.getSimpleName();
+
     private static PowerManagerWrapper sInstance;
 
     private static final String UNKNOWN_STATUS = "Unknown";
+
+    // In-memory cache for battery optimization status for each apps.
+    private final Map<String, BatteryOptimizationStatus> batteryOptOutCache = new ConcurrentHashMap<>();
     /**
      * Set instance of PowerManagerWrapper.
      *
@@ -100,6 +112,40 @@ public class PowerManagerWrapper {
     }
 
     /**
+     * Gets the Device Doze Mode Status.
+     * 
+     * This is exposed to OneAuth.
+     *
+     * @param context The context to use for PowerManager.
+     * @return a {@link DeviceDozeModeStatus}
+     */
+    @NonNull
+    public DeviceDozeModeStatus getDeviceDozeModeStatus(@NonNull final Context context){
+        final String methodTag = TAG + ":getDeviceDozeModeStatus";
+
+        try {
+            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
+            if (powerManager == null) {
+                Logger.error(methodTag, "PowerManager is null", null);
+                return DeviceDozeModeStatus.CannotRetrievePowerManager;
+            }
+            if (powerManager.isDeviceIdleMode()) {
+                return DeviceDozeModeStatus.Idle;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    powerManager.isDeviceLightIdleMode()) {
+                return DeviceDozeModeStatus.LightIdle;
+            }
+
+            return DeviceDozeModeStatus.NotInDozeMode;
+        } catch (Exception e){
+            Logger.error(methodTag, "Unknown Exception when checking doze mode status", e);
+            return DeviceDozeModeStatus.UnknownError;
+        }
+    }
+
+    /**
      * Gets a string representing Power Optimization settings of the calling app
      * Will return an empty string if the app isn't opting out.
      * (Possible Values: "OptOut", "Unknown" , "")
@@ -107,10 +153,6 @@ public class PowerManagerWrapper {
     @NonNull
     public String getPowerOptimizationSettings(@NonNull final Context context){
         try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return UNKNOWN_STATUS;
-            }
-
             final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
             if (powerManager.isIgnoringBatteryOptimizations(context.getPackageName())){
                 return "OptOut";
@@ -130,8 +172,41 @@ public class PowerManagerWrapper {
      * @param connectionContext Context used to query if app is ignoring battery optimizations.
      * @return true if the given application package name is on the device's power allow list.
      */
-    @RequiresApi(Build.VERSION_CODES.M)
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
         return ((PowerManager) connectionContext.getSystemService(Context.POWER_SERVICE)).isIgnoringBatteryOptimizations(connectionContext.getPackageName());
+    }
+
+    /**
+     * Checks if the app with the given package name is opted out from battery optimization.
+     * Caches the result in memory using computeIfAbsent for thread safety.
+     * Returns a string indicating the result or exception type.
+     *
+     * This is exposed to OneAuth.
+     *
+     * @param packageName The package name to check.
+     * @param context The context to use for PowerManager.
+     * @return a {@link BatteryOptimizationStatus}
+     */
+    public BatteryOptimizationStatus isAppOptedOutFromBatteryOptimization(@NonNull final String packageName, @NonNull final Context context) {
+        final String methodTag = TAG + ":isAppOptedOutFromBatteryOptimization";
+
+        return batteryOptOutCache.computeIfAbsent(packageName, key -> {
+            try {
+                final PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                if (powerManager == null) {
+                    Logger.error(methodTag, "PowerManager is null", null);
+                    return BatteryOptimizationStatus.CannotRetrievePowerManager;
+                }
+
+                if (powerManager.isIgnoringBatteryOptimizations(key)) {
+                    return BatteryOptimizationStatus.OptOut;
+                } else {
+                    return BatteryOptimizationStatus.NotOptOut;
+                }
+            } catch (Exception e) {
+                Logger.error(methodTag, "Unknown Exception when checking battery optimization status for package: " + packageName, e);
+                return BatteryOptimizationStatus.UnknownError;
+            }
+        });
     }
 }

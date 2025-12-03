@@ -5,6 +5,15 @@ Version 23.1.1
 
 Version 23.1.0
 ----------
+- [MINOR] Determine whether broker app opts out from battery optimization (#2819)
+- [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
+- [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
+- [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
+- [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
+- [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
+
+Version 23.1.0
+----------
 - [MINOR] Add OpenTelemetry support for passkey operations (#2795)
 - [MINOR] Add passkey registration support for WebView (#2769)
 - [MINOR] Add callback for OneAuth for measuring Broker Discovery Client Perf (#2796)

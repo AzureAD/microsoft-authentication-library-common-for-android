@@ -65,4 +65,15 @@ interface IBrokerDiscoveryClient {
      * **/
     @kotlin.jvm.Throws(ClientException::class)
     fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData
+
+    /**
+     * This method will return the cached [BrokerData] in the memory (if any).
+     * If the cached value is invalid, it will then proceed with the regular [getActiveBroker] flow.
+     *
+     * The cached value in memory will remain the same during the app process lifetime.
+     *
+     * @param telemetryCallback     callback with telemetry data.
+     * @return BrokerData package name and signature hash of the targeted app.
+     * */
+    fun getActiveBrokerWithInMemoryCache(telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?
 }
