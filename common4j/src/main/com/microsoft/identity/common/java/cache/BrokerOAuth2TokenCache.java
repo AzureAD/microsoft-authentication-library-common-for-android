@@ -368,7 +368,7 @@ public class BrokerOAuth2TokenCache
     private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
-        final long saveStartTime = System.currentTimeMillis();
+        final long loadStartTime = System.currentTimeMillis();
 
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
@@ -398,7 +398,7 @@ public class BrokerOAuth2TokenCache
                 authScheme
         );
         OTelUtility.recordElapsedTime(AttributeName.elapsed_time_load_aggregated_account_data.name(),
-                saveStartTime);
+                loadStartTime);
         return cacheRecordList;
     }
 
