@@ -1,16 +1,14 @@
-Version 23.1.1
-----------
-- [PATCH] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache (#2813)
-- [PATCH] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
-
-Version 23.1.0
+vNext
 ----------
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
-- [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
-- [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
+
+Version 23.1.1
+----------
+- [PATCH] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache (#2813)
+- [PATCH] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 
 Version 23.1.0
 ----------
