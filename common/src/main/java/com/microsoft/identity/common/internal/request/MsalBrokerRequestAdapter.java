@@ -60,6 +60,7 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GetAadDeviceIdCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.IHasExtraTokenBodyParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
@@ -95,6 +96,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+        final String extraTokenBodyParameters = parameters.getExtraTokenBodyParameters() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraTokenBodyParameters()) : null;
 
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -106,6 +109,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
+                .extraTokenBodyParameter(extraTokenBodyParameters)
                 .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
@@ -178,7 +182,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -205,10 +209,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
                         .build()
-                )
-                .build();
-
-        return brokerRequest;
+                );
+        if (parameters instanceof IHasExtraTokenBodyParameters) {
+            final String extraTokenBodyParameters = ((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters() != null ?
+                    QueryParamsAdapter._toJson(((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters()) : null;
+            brokerRequestBuilder.extraTokenBodyParameter(extraTokenBodyParameters);
+        }
+        return brokerRequestBuilder.build();
     }
 
     public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,
