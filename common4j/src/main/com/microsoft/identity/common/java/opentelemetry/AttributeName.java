@@ -502,5 +502,15 @@ public enum AttributeName {
     /**
      * Passkey DOM exception name (if any).
      */
-    passkey_dom_exception_name
+    passkey_dom_exception_name,
+
+    /**
+     *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
+     */
+    elapsed_time_save_aggregated_account_data,
+
+    /**
+     *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
+     */
+    elapsed_time_load_aggregated_account_data
 }
