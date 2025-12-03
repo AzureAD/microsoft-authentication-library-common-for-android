@@ -81,6 +81,8 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -211,8 +213,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .build()
                 );
         if (parameters instanceof IHasExtraTokenBodyParameters) {
-            final String extraTokenBodyParameters = ((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters() != null ?
-                    QueryParamsAdapter._toJson(((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters()) : null;
+            final List<Map.Entry<String, String>> extraTokenBodyParams = ((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters();
+            final String extraTokenBodyParameters = extraTokenBodyParams != null ?
+                    QueryParamsAdapter._toJson(extraTokenBodyParams) : null;
             brokerRequestBuilder.extraTokenBodyParameter(extraTokenBodyParameters);
         }
         return brokerRequestBuilder.build();

@@ -34,9 +34,7 @@ public interface IHasExtraTokenBodyParameters {
     /**
      * Get the {@link List} of pairs of String, String parameters.
      *
-     * @return a list of pairs of String, String parameters - this may be null.  There are no guarantees
-     * made with regards to the mutability of this structure, but it <strong>should not</strong> be
-     * mutated by the caller, and attempts to do so <strong>may</strong>may throw
+     * @return a list of pairs of String, String parameters - this may be null.
      * {@link UnsupportedOperationException} or result in undefined behavior.
      */
     List<Map.Entry<String, String>> getExtraTokenBodyParameters();

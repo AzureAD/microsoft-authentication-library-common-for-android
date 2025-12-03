@@ -47,17 +47,24 @@ import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoToken
 import com.microsoft.identity.common.java.commands.parameters.GetAadDeviceIdCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.QueryParamsAdapter;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.SneakyThrows;
@@ -173,12 +180,12 @@ public class MsalBrokerRequestAdapterTests {
     }
 
     @Test
-    public void test_BrokerRequestFromAcquireTokenParameters() {
+    public void test_BrokerRequestFromAcquireTokenParameters() throws ClientException{
         test_BrokerRequestFromAcquireTokenParametersInternal(false);
     }
 
     @Test
-    public void test_BrokerRequestFromAcquireTokenParameters_SuppressBrokerPicker() {
+    public void test_BrokerRequestFromAcquireTokenParameters_SuppressBrokerPicker() throws ClientException{
         test_BrokerRequestFromAcquireTokenParametersInternal(true);
     }
 
@@ -282,11 +289,14 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(mockRedirectUri, brokerRequest.getRedirect());
     }
 
-    private void test_BrokerRequestFromAcquireTokenParametersInternal(final boolean suppressBrokerAccountPicker) {
+    private void test_BrokerRequestFromAcquireTokenParametersInternal(final boolean suppressBrokerAccountPicker) throws ClientException {
         final Set<String> scopes = new HashSet<>();
         scopes.add("user.read");
 
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
+
+        final List<Map.Entry<String, String>> extraTokenBodyParams = new ArrayList<>();
+        extraTokenBodyParams.add(new AbstractMap.SimpleEntry<>("key1", "value1"));
 
         final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
@@ -309,6 +319,7 @@ public class MsalBrokerRequestAdapterTests {
                 .preferredBrowser(new BrowserDescriptor("chrome", "signature", null, null))
                 .claimsRequestJson("claims_request")
                 .brokerBrowserSupportEnabled(true)
+                .extraTokenBodyParameters(extraTokenBodyParams)
                 .build();
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.brokerRequestFromAcquireTokenParameters(params);
@@ -328,6 +339,7 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
         assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
         assertNull(brokerRequest.getSignInWithGoogleCredential());
+        assertEquals(params.getExtraTokenBodyParameters(), QueryParamsAdapter._fromJson(brokerRequest.getExtraTokenBodyParameter()));
     }
 
     /**

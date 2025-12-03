@@ -95,6 +95,11 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
     }
 
+    @Override
+    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
+        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
+    }
+
     public List<String> getExtraScopesToConsent() {
         return this.extraScopesToConsent == null ? null : new ArrayList<>(this.extraScopesToConsent);
     }

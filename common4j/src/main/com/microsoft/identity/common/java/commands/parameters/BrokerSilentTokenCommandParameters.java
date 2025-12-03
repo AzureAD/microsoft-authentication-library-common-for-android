@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +81,11 @@ public class BrokerSilentTokenCommandParameters
      */
     public boolean isRequestForResourceAccount() {
         return false;
+    }
+
+    @Override
+    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
+        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
     }
 
     @Override
