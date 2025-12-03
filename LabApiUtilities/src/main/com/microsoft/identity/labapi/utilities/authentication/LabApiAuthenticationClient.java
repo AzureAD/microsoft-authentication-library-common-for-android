@@ -51,48 +51,47 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static int ATTEMPT_RETRY_WAIT = 3;
     private final String mLabCredential;
     private final String mLabCertPassword;
-    private final String mScope;
+    private final String defaultScope = LabConstants.DEFAULT_LAB_SCOPE;
     private final String mClientId;
 
-
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
-        this(labSecret, null, null, null);
+        this(labSecret, null, null);
     }
 
     public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword) {
-        this(labSecret, labCertPassword, null, null);
+        this(labSecret, labCertPassword, null);
     }
 
-    public LabApiAuthenticationClient(@NonNull final String labSecret, @NonNull final String scope, @NonNull final String clientId) {
-        this(labSecret, null, scope, clientId);
-    }
-
-    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String scope, final String clientId) {
+    public LabApiAuthenticationClient(@NonNull final String labSecret, final String labCertPassword, final String clientId) {
         mLabCredential = labSecret;
         mLabCertPassword = labCertPassword;
-        mScope = scope != null ? scope : LabConstants.DEFAULT_LAB_SCOPE;
         mClientId = clientId != null ? clientId : LabConstants.DEFAULT_LAB_CLIENT_ID;
     }
 
     @Override
     public String getAccessToken() throws LabApiException {
-        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES);
+        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES, null);
+    }
+
+    public String getAccessTokenForCustomScope(final String scope) throws LabApiException {
+        return getAccessToken(DEFAULT_ACCESS_TOKEN_RETRIES, scope);
     }
 
     /**
      * Attempt to acquire an access token. Accepts a parameter to denote number of retries
      * @param retries how many times to attempt acquire access token before returning a failure.
+     * @param customScope the custom scope for which the access token is requested. If null, use the default scope.
      * @return an access token for Lab API
      * @throws LabApiException exception given back by Lab API
      */
-    public String getAccessToken(final int retries) throws LabApiException {
+    public String getAccessToken(final int retries, final String customScope) throws LabApiException {
 
         // Do this in a loop, if we get an exception or null result, try again
         for (int i = 1; i <= retries; i++) {
             System.out.printf(Locale.ENGLISH, "getAccessToken attempt #%d%n", i);
 
             try {
-                final String result = getAccessTokenInternal();
+                final String result = getAccessTokenInternal(customScope);
                 if (result != null) {
                     return result;
                 }
@@ -120,12 +119,19 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         return null;
     }
 
-    private String getAccessTokenInternal() throws LabApiException {
+    private String getAccessTokenInternal(final String customScope) throws LabApiException {
+        final String authScope;
+        if (customScope != null) {
+            authScope = customScope;
+        } else {
+            authScope = defaultScope;
+        }
+
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .clientId(mClientId)
                 .authority(AUTHORITY)
-                .scope(mScope)
+                .scope(authScope)
                 .build();
 
         final IAuthenticationResult authenticationResult;

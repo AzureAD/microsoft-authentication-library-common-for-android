@@ -36,16 +36,13 @@ import java.util.Map;
 
 public class DisablePolicyApi {
     private ApiClient apiClient;
-    private final String mAzureFunctionCode;
-    public static final String AZURE_FUNCTION_CODE_SECRET_NAME = "DisablePolicy";
 
-    public DisablePolicyApi(final String azureFunctionCode) {
-        this(Configuration.getDefaultApiClient(), azureFunctionCode);
+    public DisablePolicyApi() {
+        this(Configuration.getDefaultApiClient());
     }
 
-    public DisablePolicyApi(ApiClient apiClient, final String azureFunctionCode) {
+    public DisablePolicyApi(ApiClient apiClient) {
         this.apiClient = apiClient;
-        mAzureFunctionCode = azureFunctionCode;
     }
 
     public ApiClient getApiClient() {
@@ -78,8 +75,6 @@ public class DisablePolicyApi {
         if (policy != null)
             localVarQueryParams.addAll(apiClient.parameterToPair("policy", policy));
 
-        localVarQueryParams.addAll(apiClient.parameterToPair("code", mAzureFunctionCode));
-
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
         Map<String, Object> localVarFormParams = new HashMap<String, Object>();
@@ -109,7 +104,7 @@ public class DisablePolicyApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
 
     @SuppressWarnings("rawtypes")
