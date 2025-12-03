@@ -69,7 +69,6 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.util.WebAppsUtil;
-import com.microsoft.identity.common.java.commands.webapps.WebAppBrokerErrorCode;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationEnvelope;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsSupportedContracts;
@@ -140,7 +139,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1461,7 +1459,7 @@ public class BrokerMsalController extends BaseController {
         try {
             // Take a peek at the type of request.
             final String subMethod = new JSONObject(request).getString(WebAppsGetTokenSubOperationEnvelope.FIELD_METHOD);
-            WebAppsGetTokenSubOperationEnvelope envelope;
+            final WebAppsGetTokenSubOperationEnvelope envelope;
             if (subMethod.equals(WebAppsSupportedContracts.GET_TOKEN)) {
                 // If get token, we should check to see if we should just start interactive right away.
                 envelope = ObjectMapper.deserializeJsonStringToObject(
@@ -1806,15 +1804,7 @@ public class BrokerMsalController extends BaseController {
         final Map<String, String> extraQueryParamsMap = tempMap != null
                 ? tempMap
                 : Collections.emptyMap();
-        final List<Map.Entry<String, String>> queryParams = new ArrayList<>(extraQueryParamsMap.size() + 1);
-        for (Map.Entry<String, String> e : extraQueryParamsMap.entrySet()) {
-            queryParams.add(new java.util.AbstractMap.SimpleEntry<>(e.getKey(), e.getValue()));
-        }
-
-        if (!StringUtil.isNullOrEmpty(webAppsRequest.getNonce())) {
-            queryParams.add(new java.util.AbstractMap.SimpleEntry<>(PRT_NONCE, webAppsRequest.getNonce()));
-        }
-
+        final List<Map.Entry<String, String>> queryParams = new ArrayList<>(extraQueryParamsMap.entrySet());
         final OpenIdConnectPromptParameter prompt =
                 OpenIdConnectPromptParameter.fromString(webAppsRequest.getPrompt());
 
