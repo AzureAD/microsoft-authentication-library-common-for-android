@@ -154,8 +154,16 @@ publishing {
 
     repositories {
         maven {
-            name "vsts-maven-adal-android"
+            name "vsts-maven-new-android"
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
+            credentials {
+                username project.ext.vstsUsername
+                password project.ext.vstsPassword
+            }
+        }
+        maven {
+            name "vsts-maven-legacy-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
             credentials {
                 username project.ext.vstsUsername
                 password project.ext.vstsPassword
@@ -262,10 +270,10 @@ dependencies {
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "org.json:json:$rootProject.ext.jsonVersion"
-    implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
+    implementation "com.github.stephenc.jcip-jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
 
-    testImplementation "cz.msebera.android:httpclient:4.5.8"
+    testImplementation "cz.msebera.android:httpclient:4.5.+"
 
     testCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
