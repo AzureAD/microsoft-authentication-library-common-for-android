@@ -36,6 +36,14 @@ publishing {
             }
         }
         maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username project.ext.vstsUsername
+                password project.ext.vstsPassword
+            }
+        }
+        maven {
             name "vsts-maven-android"
             url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
             credentials {
