@@ -6,7 +6,9 @@ buildscript {
     apply from: rootProject.file("gradle/versions.gradle")
     
     repositories {
-        google()
+        // If you don't have access to the package feed uncomment these repositories
+        //  google()
+        //  mavenCentral()
         maven {
             name "vsts-maven-adal-android"
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
@@ -32,7 +34,9 @@ allprojects {
     Order of repositories is important.
      */
     repositories {
-        google()
+        // If you don't have access to the package feed uncomment these repositories
+        //  google()
+        //  mavenCentral()
         mavenLocal()
         maven {
             name "vsts-maven-adal-android"
