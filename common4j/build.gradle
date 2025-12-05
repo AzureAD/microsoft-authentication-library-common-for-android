@@ -273,7 +273,7 @@ dependencies {
     implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
 
-    testImplementation "cz.msebera.android:httpclient:4.5.+"
+    testImplementation "cz.msebera.android:httpclient:4.5.8"
 
     testCompileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
