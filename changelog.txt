@@ -6,7 +6,7 @@ vNext
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
 
 Version 23.1.1
-----------
+-----------
 - [PATCH] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache (#2813)
 - [PATCH] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 
