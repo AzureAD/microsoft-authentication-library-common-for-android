@@ -33,7 +33,6 @@ jobs:
   # Extracts the AB ID from the pull_request body using regex and store the result using outputs 
       - name: Get AB ID from comment
         id: get
-        shell: bash
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
