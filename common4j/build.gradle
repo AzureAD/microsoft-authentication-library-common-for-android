@@ -64,8 +64,8 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 repositories {
+    google()
     // If you don't have access to the package feed uncomment these repositories
-    //  google()
     //  mavenCentral()
     maven {
         name "vsts-maven-adal-android"
