@@ -26,9 +26,6 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-project.ext.vstsUsername System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
-
 // https://blog.gradle.org/gradle-flaky-test-retry-plugin
 tasks.withType(Test) {
     retry {
@@ -375,16 +372,16 @@ afterEvaluate {
                 name "vsts-maven-new-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
                 credentials {
-                    username project.ext.vstsUsername
-                    password project.ext.vstsPassword
+                    username project.vstsUsername
+                    password project.vstsPassword
                 }
             }
             maven {
                 name "vsts-maven-legacy-adal-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
-                    username project.ext.vstsUsername
-                    password project.ext.vstsPassword
+                    username project.vstsUsername
+                    password project.vstsPassword
                 }
             }
         }
