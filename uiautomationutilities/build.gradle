@@ -174,15 +174,7 @@ project.afterEvaluate{
 
         repositories {
             maven {
-                name "vsts-maven-new-android"
-                url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
-                credentials {
-                    username project.ext.vstsUsername
-                    password project.ext.vstsPassword
-                }
-            }
-            maven {
-                name "vsts-maven-legacy-adal-android"
+                name "vsts-maven-adal-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
                     username project.ext.vstsUsername
