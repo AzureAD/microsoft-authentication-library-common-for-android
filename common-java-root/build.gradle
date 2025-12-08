@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+project.ext.vstsMavenAccessToken = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 buildscript {
     apply from: rootProject.file("../gradle/versions.gradle")
@@ -31,7 +31,7 @@ allprojects {
             url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
             credentials {
                 username project.vstsUsername
-                password project.vstsPassword
+                password project.vstsMavenAccessToken
             }
         }
         //Required for google published packages not published to maven central

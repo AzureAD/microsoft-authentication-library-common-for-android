@@ -61,7 +61,7 @@ tasks.withType(Test) {
 }
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+project.ext.vstsMavenAccessToken = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 repositories {
     google()
@@ -72,7 +72,7 @@ repositories {
         url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
         credentials {
             username project.ext.vstsUsername
-            password project.ext.vstsPassword
+            password project.ext.vstsMavenAccessToken
         }
     }
 }
@@ -161,7 +161,7 @@ publishing {
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
             credentials {
                 username project.ext.vstsUsername
-                password project.ext.vstsPassword
+                password project.ext.vstsMavenAccessToken
             }
         }
     }
