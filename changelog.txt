@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Remove MavenCentral repository from build.gradle files (#2830)
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
