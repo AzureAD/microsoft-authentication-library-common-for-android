@@ -35,8 +35,8 @@ allprojects {
      */
     repositories {
         // If you don't have access to the package feed uncomment these repositories
-        //  google()
-        //  mavenCentral()
+        // mavenCentral()
+        google()
         mavenLocal()
         maven {
             name "vsts-maven-adal-android"
