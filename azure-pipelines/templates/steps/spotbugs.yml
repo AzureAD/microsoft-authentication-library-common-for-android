@@ -13,6 +13,10 @@ parameters:
 - name: javaVersion
   default: "1.17"
 steps:
+- bash: |
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+  displayName: 'Set VSTS Fields in Environment'
 - task: Gradle@3
   displayName: 'Run Spotbugs'
   inputs:
