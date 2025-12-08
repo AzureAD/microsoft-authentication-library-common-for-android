@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
@@ -278,6 +279,7 @@ public class BrokerOAuth2TokenCache
                              @Nullable RefreshTokenRecord refreshTokenRecord,
                              @Nullable String familyId) throws ClientException {
         final String methodName = ":save (5 args)";
+        final long saveStartTime = System.currentTimeMillis();
 
         final ICacheRecord result;
 
@@ -319,7 +321,7 @@ public class BrokerOAuth2TokenCache
                 familyId,
                 mUid
         );
-
+        OTelUtility.recordElapsedTime(AttributeName.elapsed_time_save_aggregated_account_data.name(), saveStartTime);
         return result;
     }
 
@@ -366,6 +368,7 @@ public class BrokerOAuth2TokenCache
     private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
+        final long loadStartTime = System.currentTimeMillis();
 
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
@@ -386,7 +389,7 @@ public class BrokerOAuth2TokenCache
             return null;
         }
 
-        return cache.loadWithAggregatedAccountData(
+        List<ICacheRecord> cacheRecordList =  cache.loadWithAggregatedAccountData(
                 clientId,
                 applicationIdentifier,
                 mamEnrollmentIdentifier,
@@ -394,6 +397,9 @@ public class BrokerOAuth2TokenCache
                 cacheRecord.getAccount(),
                 authScheme
         );
+        OTelUtility.recordElapsedTime(AttributeName.elapsed_time_load_aggregated_account_data.name(),
+                loadStartTime);
+        return cacheRecordList;
     }
 
     @Override

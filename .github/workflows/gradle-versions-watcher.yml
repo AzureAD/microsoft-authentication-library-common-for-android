@@ -1,0 +1,32 @@
+name: Notify on versions.gradle changes
+
+on:
+  push:
+    paths:
+      - 'gradle/versions.gradle'
+    branches:
+      - dev
+      - 'release/**'
+  pull_request:
+    paths:
+      - 'gradle/versions.gradle'
+    branches:
+      - dev
+      - 'release/**'
+
+permissions:
+  pull-requests: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log changes
+        run: |
+          echo "Changes detected in the 'gradle/versions.gradle' file."
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: "⚠️ **Warning:** Changes detected in the 'versions.gradle' file! ⚠️\n\nPlease refer to [this document](https://dev.azure.com/IdentityDivision/IdentityWiki/_wiki/wikis/IdentityWiki.wiki/82085/Adding-or-Updating-Gradle-Dependencies) for more details."
