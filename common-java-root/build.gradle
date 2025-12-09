@@ -41,8 +41,8 @@ allprojects {
             name "vsts-maven-adal-android"
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
             credentials {
-                username project.ext.vstsUsername
-                password project.ext.vstsMavenAccessToken
+                username project.vstsUsername
+                password project.vstsMavenAccessToken
             }
         }
         //Required for google published packages not published to maven central
