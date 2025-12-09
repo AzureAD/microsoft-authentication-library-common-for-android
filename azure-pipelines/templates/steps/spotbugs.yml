@@ -12,15 +12,11 @@ parameters:
   default: $(Build.SourcesDirectory)
 - name: javaVersion
   default: "1.17"
-- name: vstsUsernameVariable
-  default: ENV_VSTS_MVN_CRED_USERNAME
-- name: vstsAccessTokenVariable
-  default: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 
 steps:
 - bash: |
-    echo "##vso[task.setvariable variable=${{ parameters.vstsUsernameVariable }}]VSTS"
-    echo "##vso[task.setvariable variable=${{ parameters.vstsAccessTokenVariable }}]$(System.AccessToken)"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
   displayName: 'Set VSTS Fields in Environment'
 - task: Gradle@3
   displayName: 'Run Spotbugs'

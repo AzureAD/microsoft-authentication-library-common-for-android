@@ -5,11 +5,10 @@ parameters:
   default: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 
 steps:
-- task: CmdLine@1
-  displayName: Set MVN Access Token in Environment
-  inputs:
-    filename: echo
-    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
+- bash: |
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+  displayName: 'Set VSTS Fields in Environment'
 - task: AzureKeyVault@2
   displayName: 'Azure Key Vault: Download Cert for Automation'
   inputs:
