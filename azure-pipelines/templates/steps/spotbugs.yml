@@ -12,7 +12,6 @@ parameters:
   default: $(Build.SourcesDirectory)
 - name: javaVersion
   default: "1.17"
-
 steps:
 - bash: |
     echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"

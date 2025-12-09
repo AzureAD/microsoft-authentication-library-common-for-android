@@ -28,12 +28,12 @@ resources:
   - repository: msal
     type: github
     name: AzureAD/microsoft-authentication-library-for-android
-    ref: fadi/mavenCentral
+    ref: dev
     endpoint: ANDROID_GITHUB
   - repository: broker
     type: github
     name: AzureAD/ad-accounts-for-android
-    ref: fadi/mavenCentral
+    ref: dev
     endpoint: ANDROID_GITHUB
 
 stages:
