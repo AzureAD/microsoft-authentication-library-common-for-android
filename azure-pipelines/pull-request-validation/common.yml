@@ -32,7 +32,7 @@ jobs:
     displayName: Set Office MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)'
   - task: CodeQL3000Init@0
   - task: Gradle@3
     name: Gradle3   
@@ -82,7 +82,7 @@ jobs:
     displayName: Set Office MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)'
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)'
   - task: Gradle@3
     displayName: Lint
     inputs:

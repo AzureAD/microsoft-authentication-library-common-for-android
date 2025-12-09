@@ -1,6 +1,5 @@
 # File: azure-pipelines\pull-request-validation\build-consumers.yml
 # Description: Test new common in ADAL / MSAL / Broker (assembleLocal and testLocalDebugUnitTest)
-# Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'commonBranchName' common branch to be used when running the pipeline manually
 # Variable: 'skipConsumerValidationLabel' PR label used to skip the checks in this pipeline
@@ -117,8 +116,8 @@ stages:
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
     - bash: |
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROID_MSAL_USERNAME]VSTS"
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROID_MSAL_ACCESSTOKEN]$(System.AccessToken)"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
       displayName: 'Set VSTS Fields in Environment'
     - task: Gradle@3
       displayName: Assemble msal
@@ -154,8 +153,8 @@ stages:
       submodules: recursive
       persistCredentials: True
     - bash: |
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME]VSTS"
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
       displayName: 'Set VSTS Fields in Environment'
     - template: ../templates/steps/automation-cert.yml
     - task: CmdLine@2
@@ -199,8 +198,8 @@ stages:
         submodules: recursive
         persistCredentials: True
       - bash: |
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME]VSTS"
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(System.AccessToken)"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
         displayName: 'Set VSTS Fields in Environment'
       - task: AzureKeyVault@2
         displayName: 'Get Key vault LabAuth'

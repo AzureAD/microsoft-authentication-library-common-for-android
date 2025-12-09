@@ -13,9 +13,9 @@ parameters:
 - name: javaVersion
   default: "1.17"
 - name: vstsUsernameVariable
-  default: ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME
+  default: ENV_VSTS_MVN_CRED_USERNAME
 - name: vstsAccessTokenVariable
-  default: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
+  default: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 
 steps:
 - bash: |

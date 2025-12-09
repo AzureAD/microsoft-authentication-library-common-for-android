@@ -2,7 +2,7 @@
 
 parameters:
 - name: envVstsMvnAt
-  default: ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN
+  default: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 
 steps:
 - task: CmdLine@1

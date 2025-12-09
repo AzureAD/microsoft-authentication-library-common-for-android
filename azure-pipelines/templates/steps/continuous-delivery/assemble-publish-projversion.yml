@@ -10,7 +10,7 @@
 parameters:
 - name: project
 - name: envVstsMvnAt
-  default: 'ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN'
+  default: 'ENV_VSTS_MVN_CRED_ACCESSTOKEN'
 - name: variant
   default: ''
 - name: buildArguments
@@ -26,12 +26,12 @@ steps:
   submodules: recursive
   persistCredentials: True
 - bash: |
-    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME]VSTS"
-    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(System.AccessToken)"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
   displayName: 'Set VSTS Fields in Environment'
 - template: ../automation-cert.yml
   parameters:
-    envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
+    envVstsMvnAt: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:
