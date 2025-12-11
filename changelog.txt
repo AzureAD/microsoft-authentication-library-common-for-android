@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 0.0.0015-RC1
+Version 0.0.0015
 ----------
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
