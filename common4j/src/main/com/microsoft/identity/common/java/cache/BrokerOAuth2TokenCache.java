@@ -1649,7 +1649,7 @@ public class BrokerOAuth2TokenCache
 
         final String storeName = SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
-        return getTokenCache(components, storeName,true);
+        return getTokenCache(components, storeName, true);
     }
 
     @SuppressWarnings(UNCHECKED)
