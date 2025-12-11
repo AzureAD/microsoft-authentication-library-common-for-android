@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.0.0015-RC1
+----------
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
