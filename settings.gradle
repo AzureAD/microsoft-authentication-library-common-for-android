@@ -1,7 +1,8 @@
 pluginManagement {
     repositories {
+        // If you don't have access to the package feed uncomment these repositories
+        //  mavenCentral()
         google()
-        mavenCentral()
         gradlePluginPortal()
     }
 }
