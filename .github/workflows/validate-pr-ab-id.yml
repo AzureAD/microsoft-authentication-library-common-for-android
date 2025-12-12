@@ -33,9 +33,16 @@ jobs:
   # Extracts the AB ID from the pull_request body using regex and store the result using outputs 
       - name: Get AB ID from comment
         id: get
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          result=$(echo "${{ github.event.pull_request.body }}" | grep -oP '(?<=#)\d+')
-          echo "id=${result}" >> "$GITHUB_OUTPUT"
+          # Sanitize PR body by removing backticks to prevent command substitution
+          clean=$(printf "%s" "$PR_BODY" | tr -d '`')
+      
+          # Extract AB ID (AB#1234567) - takes first match if multiple exist
+          result=$(printf "%s" "$clean" | grep -oP '(?<=AB#)\d+' | head -n 1)
+      
+          echo "id=$result" >> "$GITHUB_OUTPUT"
 
   # Get Pull request ID
   get_pr_id:

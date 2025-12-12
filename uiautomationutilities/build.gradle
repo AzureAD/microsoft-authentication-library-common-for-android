@@ -5,8 +5,8 @@ plugins {
 
 apply from: '../versioning/version_tasks.gradle'
 
-project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsMavenAccessToken = System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 def minimumTestAttempts = 3
 
@@ -178,7 +178,7 @@ project.afterEvaluate{
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
                     username project.ext.vstsUsername
-                    password project.ext.vstsPassword
+                    password project.ext.vstsMavenAccessToken
                 }
             }
             maven {
@@ -186,7 +186,7 @@ project.afterEvaluate{
                 url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
                 credentials {
                     username project.vstsUsername
-                    password project.vstsPassword
+                    password project.vstsMavenAccessToken
                 }
             }
         }

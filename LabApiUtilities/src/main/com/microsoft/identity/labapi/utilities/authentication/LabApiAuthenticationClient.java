@@ -51,7 +51,6 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
     private final static int ATTEMPT_RETRY_WAIT = 3;
     private final String mLabCredential;
     private final String mLabCertPassword;
-    private final String defaultScope = LabConstants.DEFAULT_LAB_SCOPE;
     private final String mClientId;
 
     public LabApiAuthenticationClient(@NonNull final String labSecret) {
@@ -124,7 +123,7 @@ public class LabApiAuthenticationClient implements IAccessTokenSupplier {
         if (customScope != null) {
             authScope = customScope;
         } else {
-            authScope = defaultScope;
+            authScope = LabConstants.DEFAULT_LAB_SCOPE;
         }
 
         final IConfidentialAuthClient confidentialAuthClient = new Msal4jAuthClient();

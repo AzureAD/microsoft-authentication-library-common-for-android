@@ -1,11 +1,15 @@
 vNext
 ----------
+- [MINOR] Remove MavenCentral repository from build.gradle files (#2830)
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
-- [MINOR] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache
-- [MINOR] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
+
+Version 23.1.1
+-----------
+- [PATCH] Share SharedPreferencesInMemoryCache across instances of BrokerOAuth2TokenCache (#2813)
+- [PATCH] Use SharedPreferencesInMemoryCache implementation in Broker (#2802)
 
 Version 23.1.0
 ----------
@@ -576,6 +580,7 @@ Version 6.0.0
 - [PATCH] Added Base64 encode for the AuthorizationRequest state parameter (#1750)
 - [PATCH] Fix missing authority_url when creating the authority audience (#1753)
 - [PATCH] Add filter for broker telemetry event fields. (#1793)
+- [MINOR] Bug fix : Selecting text in login page is causing the input field to be hidden (#2826)
 
 Version 5.0.1
 ----------
