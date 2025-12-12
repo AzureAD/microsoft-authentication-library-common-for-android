@@ -193,78 +193,6 @@ public class BrokerOAuth2TokenCache
     /**
      * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
-     * @param accountRecord     The {@link AccountRecord} to store.
-     * @param idTokenRecord     The {@link IdTokenRecord} to store.
-     * @param accessTokenRecord The {@link AccessTokenRecord} to store.
-     * @param familyId          The family_id or null, if not applicable.
-     * @return The {@link ICacheRecord} result of this save action.
-     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
-     */
-    @Deprecated
-    public ICacheRecord save(final @NonNull AccountRecord accountRecord,
-                             final @NonNull IdTokenRecord idTokenRecord,
-                             final @NonNull AccessTokenRecord accessTokenRecord,
-                             final @Nullable String familyId) throws ClientException {
-        final String methodName = ":save (4 args)";
-
-        final ICacheRecord result;
-
-        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
-
-        Logger.info(
-                TAG + methodName,
-                "Saving to FOCI cache? ["
-                        + isFoci
-                        + "]"
-        );
-
-        if (isFoci) {
-            // Save to the foci cache....
-            result = mFociCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
-        } else {
-            // Save to the processUid cache... or create a new one
-            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
-                    idTokenRecord.getClientId(),
-                    idTokenRecord.getEnvironment(),
-                    mUid
-            );
-
-            if (null == targetCache) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
-
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
-            }
-
-            result = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
-        }
-
-        updateApplicationMetadataCache(
-                result.getAccessToken().getClientId(),
-                result.getAccessToken().getEnvironment(),
-                familyId,
-                mUid
-        );
-
-        return result;
-    }
-
-    /**
-     * Broker-only API to persist WPJ's Accounts and their associated credentials.
-     *
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.
      * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
@@ -325,32 +253,25 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
-    @Deprecated
-    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
-            @NonNull final AccountRecord accountRecord,
-            @NonNull final IdTokenRecord idTokenRecord,
-            @NonNull final AccessTokenRecord accessTokenRecord,
-            @Nullable final String familyId,
-            @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
-        synchronized (this) {
-            final ICacheRecord cacheRecord = save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    familyId
-            );
-
-            return loadAggregatedAccountData(authScheme, cacheRecord);
-        }
-    }
-
-    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             final @NonNull AccountRecord accountRecord,
             final @NonNull IdTokenRecord idTokenRecord,
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
+        if (isFlightEnabled) {
+            return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord,
+                    familyId,
+                    authScheme);
+        }
+
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
                     accountRecord,
@@ -1781,5 +1702,104 @@ public class BrokerOAuth2TokenCache
         Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
 
         return getTokenCacheForClient(metadata);
+    }
+
+    /**
+     * Optimized version of save and load aggregated account data that resolves the target cache
+     * only once, improving performance by avoiding redundant cache lookups.
+     * <p>
+     * This method saves the provided account and credential records to the appropriate cache
+     * (FOCI or process UID cache based on familyId), then loads and returns aggregated account
+     * data including any guest tenant credentials.
+     * <p>
+     * <b>Optimization:</b> Unlike the original synchronized implementation which called
+     * {@code getTokenCacheForClient} twice (once during save, once during load), this method
+     * determines the target cache once and reuses it for both operations, reducing overhead.
+     * <p>
+     * This method does NOT use synchronization. Thread safety is provided
+     * by the underlying cache implementations (MsalOAuth2TokenCache and MicrosoftFamilyOAuth2TokenCache).
+     * <p>
+     * The caller should inspect the result carefully. See {@link #loadWithAggregatedAccountData}
+     * for details on interpreting the returned ICacheRecord list.
+     *
+     * @param accountRecord        The AccountRecord to save. Must not be null.
+     * @param idTokenRecord        The IdTokenRecord to save. Must not be null.
+     * @param accessTokenRecord    The AccessTokenRecord to save. Must not be null.
+     * @param refreshTokenRecord   The RefreshTokenRecord to save. May be null.
+     * @param familyId             The family ID for FOCI apps. If non-null and non-empty, saves to
+     *                             FOCI cache; otherwise saves to process UID cache.
+     * @param authScheme           The authentication scheme to use when loading credentials.
+     *                             Must not be null.
+     * @return A List of ICacheRecords containing the saved account and all associated credentials
+     *         across tenants (home + guest). May include multiple records if guest tenant tokens exist.
+     * @throws ClientException If an error occurs during save or load operations.
+     */
+    private List<ICacheRecord> saveAndLoadAggregatedAccountDataOptimized(
+            AccountRecord accountRecord,
+            IdTokenRecord idTokenRecord,
+            AccessTokenRecord accessTokenRecord,
+            RefreshTokenRecord refreshTokenRecord,
+            String familyId,
+            final @NonNull AbstractAuthenticationScheme authScheme
+    ) throws ClientException{
+        final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord," +
+                "refreshTokenRecord, familyId, authScheme)";
+
+        final ICacheRecord cacheRecord;
+        final long saveAndLoadStartTime = System.currentTimeMillis();
+
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        final MsalOAuth2TokenCache targetCache;
+
+        if (isFoci) {
+            // Save to the foci cache....
+            targetCache = mFociCache;
+            Logger.info(TAG + methodName, "Saving data to FOCI cache");
+        } else {
+            // Save to the processUid cache... or create a new one
+            targetCache = initializeProcessUidCache(
+                    getComponents(),
+                    mUid
+            );
+            Logger.info(TAG + methodName, "Saving data to Process Uid cache");
+        }
+
+        cacheRecord = targetCache.save(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                refreshTokenRecord
+        );
+        Logger.info(TAG + methodName, "Account data saved to cache");
+
+        AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
+        if (cachedAccessTokenRecord == null) {
+            throw new ClientException("Access token is null in cache record");
+        }
+        final String clientId = cachedAccessTokenRecord.getClientId();
+        final String environment = cachedAccessTokenRecord.getEnvironment();
+        final String target = cachedAccessTokenRecord.getTarget();
+        final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
+        final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
+
+        updateApplicationMetadataCache(
+                clientId,
+                environment,
+                familyId,
+                mUid
+        );
+
+        Logger.info(TAG + methodName, "Starting to load aggregated account data..");
+        List<ICacheRecord> listICacheRecord = targetCache.loadWithAggregatedAccountData(
+                clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
+                target,
+                cacheRecord.getAccount(),
+                authScheme
+        );
+        OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+                saveAndLoadStartTime);
+        return listICacheRecord;
     }
 }

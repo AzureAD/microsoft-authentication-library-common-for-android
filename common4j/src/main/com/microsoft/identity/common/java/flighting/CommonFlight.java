@@ -188,6 +188,11 @@ public enum CommonFlight implements IFlightConfig {
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
 
     /**
+     * Flight to control whether or not to use in memory cache for accounts and credentials.
+     */
+    CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD("UseRefactoredSaveAndLoadAggregatedAccountMethod", false),
+
+    /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
      */
     DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false);

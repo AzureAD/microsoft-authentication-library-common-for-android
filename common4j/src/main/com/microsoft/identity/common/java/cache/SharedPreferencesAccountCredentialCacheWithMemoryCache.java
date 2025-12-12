@@ -31,6 +31,8 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
@@ -79,6 +81,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     private void load() {
         final String methodTag = TAG + ":load";
+        final long loadStartTime = System.currentTimeMillis();
 
         synchronized (mCacheLock) {
             try {
@@ -90,6 +93,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.error(methodTag, "Failed to load initial accounts or credentials from SharedPreferences", t);
             } finally {
                 mLoaded = true;
+                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_in_memory_cache_load_accounts_and_credentials.name(),
+                        loadStartTime);
                 mCacheLock.notifyAll();
             }
         }
