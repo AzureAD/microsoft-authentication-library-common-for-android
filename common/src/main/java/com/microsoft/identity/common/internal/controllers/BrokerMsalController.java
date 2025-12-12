@@ -69,6 +69,9 @@ import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
 import com.microsoft.identity.common.internal.util.WebAppsUtil;
+import com.microsoft.identity.common.java.commands.webapps.WebAppBrokerErrorCode;
+import com.microsoft.identity.common.java.commands.webapps.WebAppError;
+import com.microsoft.identity.common.java.commands.webapps.WebAppErrorDetails;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationEnvelope;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsSupportedContracts;
@@ -1517,8 +1520,17 @@ public class BrokerMsalController extends BaseController {
                             final String result = mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                             if (resultBundle.containsKey(BROKER_WEB_APPS_ERROR_RESULT)
                                     && envelope != null) {
+                                final String errorResultString = resultBundle.getString(BROKER_WEB_APPS_ERROR_RESULT);
+                                final WebAppError errorResult = ObjectMapper.deserializeJsonStringToObject(
+                                        errorResultString,
+                                        WebAppError.class
+                                );
                                 final WebAppsGetTokenSubOperationRequest getTokenRequest = envelope.getRequest();
-                                if (canFallbackToInteractiveRequestForWebApp(getTokenRequest, additionalRequiredParams.getCanShowUi())) {
+                                if (canFallbackToInteractiveRequestForWebApp(
+                                        errorResult.getExtra(),
+                                        getTokenRequest,
+                                        additionalRequiredParams.getCanShowUi())
+                                ) {
                                     // Create params from the request
                                     if (getTokenRequest.isSecurityTokenService()) {
                                         // Validate sender authority (throws if invalid)
@@ -1723,18 +1735,21 @@ public class BrokerMsalController extends BaseController {
     /**
      * Determines if we can fallback to interactive token acquisition.
      *
+     * @param errorResultDetails The web app error details from silent token acquisition.
      * @param req The get token sub-operation request.
      * @param canShowUI A boolean indicating if UI interaction is allowed.
      * @return True if we can fallback to interactive token acquisition, false otherwise.
      * @throws ClientException if prompt is none or if UI is not allowed when prompt is not none.
      */
-    private boolean canFallbackToInteractiveRequestForWebApp(@NonNull final WebAppsGetTokenSubOperationRequest req,
+    private boolean canFallbackToInteractiveRequestForWebApp(@NonNull final WebAppErrorDetails errorResultDetails,
+                                                             @NonNull final WebAppsGetTokenSubOperationRequest req,
                                                              final boolean canShowUI) throws ClientException {
         final OpenIdConnectPromptParameter prompt = OpenIdConnectPromptParameter.fromString(req.getPrompt());
-        if (prompt == OpenIdConnectPromptParameter.NONE) {
+        if (prompt == OpenIdConnectPromptParameter.NONE
+                || !errorResultDetails.getStatus().equals(WebAppBrokerErrorCode.USER_INTERACTION_REQUIRED.name())) {
             return false;
         }
-        // In the case where prompt is something other than none AND UI is not allowed, we need to throw a specific exception.
+        // In the case where prompt is something other than none AND USER_INTERACTION_REQUIRED is the error status, BUT UI is not allowed by Edge, we need to throw a specific exception.
         if (!canShowUI) {
             throw new ClientException(
                     ErrorStrings.UI_NOT_ALLOWED,
