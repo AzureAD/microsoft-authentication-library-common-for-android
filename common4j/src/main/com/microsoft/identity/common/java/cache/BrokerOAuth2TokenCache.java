@@ -1790,7 +1790,7 @@ public class BrokerOAuth2TokenCache
         );
 
         Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-        List<ICacheRecord> listICacheRecord = targetCache.loadWithAggregatedAccountData(
+        List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
                 clientId,
                 applicationIdentifier,
                 mamEnrollmentIdentifier,
@@ -1800,6 +1800,6 @@ public class BrokerOAuth2TokenCache
         );
         OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
                 saveAndLoadStartTime);
-        return listICacheRecord;
+        return cacheRecordList;
     }
 }

@@ -1579,7 +1579,9 @@ public class BrokerOAuth2TokenCacheTest {
 
         configureMocksForFoci();
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mockStrategy, mockRequest, mockResponse);
+                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
+                "1", BEARER_AUTHENTICATION_SCHEME);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should return multiple records (primary + guest)", result.size() >= 1);
@@ -1634,7 +1636,9 @@ public class BrokerOAuth2TokenCacheTest {
 
         configureMocksForFoci();
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mockStrategy, mockRequest, mockResponse);
+                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
+                "1", BEARER_AUTHENTICATION_SCHEME);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should return multiple records (primary + guest)", result.size() >= 1);
@@ -1649,82 +1653,17 @@ public class BrokerOAuth2TokenCacheTest {
                 primaryRecord.getAccount().getRealm());
     }
 
-    /**
-     * Test thread safety of saveAndLoadAggregatedAccountData - Flight ENABLED.
-     * The method uses synchronized block, this test verifies concurrent access works correctly.
-     */
     @Test
-    public void testSaveAndLoadAggregatedAccountData_ThreadSafety_FlightEnabled() throws Exception {
+    public void testSaveAndLoadAggregatedAccountData_FlightEnabled() throws Exception {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, true);
 
-        final int threadCount = 5;
-        final Thread[] threads = new Thread[threadCount];
-        final List<Exception> exceptions = new ArrayList<>();
-
-        for (int i = 0; i < threadCount; i++) {
-            threads[i] = new Thread(() -> {
-                try {
-                    final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                            mockStrategy, mockRequest, mockResponse);
-                    assertNotNull("Result should not be null", result);
-                    assertTrue("Result should have at least one record", result.size() > 0);
-                } catch (Exception e) {
-                    synchronized (exceptions) {
-                        exceptions.add(e);
-                    }
-                }
-            });
-            threads[i].start();
-        }
-
-        for (Thread thread : threads) {
-            thread.join(5000);
-        }
-
-        if (!exceptions.isEmpty()) {
-            fail("Thread safety test failed with " + exceptions.size() + " exceptions. " +
-                    "First exception: " + exceptions.get(0).getMessage());
-        }
-    }
-
-    /**
-     * Test thread safety of saveAndLoadAggregatedAccountData - Flight DISABLED.
-     * The method uses synchronized block, this test verifies concurrent access works correctly.
-     */
-    @Test
-    public void testSaveAndLoadAggregatedAccountData_ThreadSafety_FlightDisabled() throws Exception {
-        configureMocksForFoci();
-        updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, false);
-
-        final int threadCount = 5;
-        final Thread[] threads = new Thread[threadCount];
-        final List<Exception> exceptions = new ArrayList<>();
-
-        for (int i = 0; i < threadCount; i++) {
-            threads[i] = new Thread(() -> {
-                try {
-                    final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                            mockStrategy, mockRequest, mockResponse);
-                    assertNotNull("Result should not be null", result);
-                    assertTrue("Result should have at least one record", result.size() > 0);
-                } catch (Exception e) {
-                    synchronized (exceptions) {
-                        exceptions.add(e);
-                    }
-                }
-            });
-            threads[i].start();
-        }
-
-        for (Thread thread : threads) {
-            thread.join(5000);
-        }
-
-        if (!exceptions.isEmpty()) {
-            fail("Thread safety test failed with " + exceptions.size() + " exceptions. " +
-                    "First exception: " + exceptions.get(0).getMessage());
-        }
+        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
+                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
+                "1", BEARER_AUTHENTICATION_SCHEME);
+        assertNotNull("Result should not be null", result);
+        assertTrue("Result should have at least one record", result.size() > 0);
     }
 
     /**

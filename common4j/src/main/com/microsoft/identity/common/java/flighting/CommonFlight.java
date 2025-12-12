@@ -188,7 +188,7 @@ public enum CommonFlight implements IFlightConfig {
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
 
     /**
-     * Flight to control whether or not to use in memory cache for accounts and credentials.
+     * Flight to control whether or not to use the optimized saveAndLoadAggregatedAccountData() method.
      */
     CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD("UseRefactoredSaveAndLoadAggregatedAccountMethod", false),
 
