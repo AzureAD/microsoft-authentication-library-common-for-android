@@ -26,6 +26,11 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - task: CmdLine@1
+    displayName: Set MVN Username in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS'
+  - task: CmdLine@1
     displayName: Set MVN AccessToken in Environment
     inputs:
       filename: echo

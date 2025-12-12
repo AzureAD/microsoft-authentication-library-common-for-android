@@ -1,7 +1,5 @@
 # File: azure-pipelines\vsts-releases\common4j.yml
 # Description: Publish common4j to internal feed
-# https://identitydivision.visualstudio.com/Engineering/_packaging?_a=package&feed=AndroidADAL&package=com.microsoft.identity%3Acommon4j&protocolType=maven
-# Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 name: $(date:yyyyMMdd)$(rev:.r)
 
@@ -18,7 +16,7 @@ jobs:
 - template: ../templates/steps/vsts-release/vsts-release-template.yml
   parameters:
     project: common4j
-    envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
+    envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_CRED_ACCESSTOKEN
     assembleTask: assemble
     publishTask: publish
     sbomConfiguration: runtimeClasspath
