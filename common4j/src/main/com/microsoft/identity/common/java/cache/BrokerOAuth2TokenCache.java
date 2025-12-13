@@ -1735,12 +1735,12 @@ public class BrokerOAuth2TokenCache
      * @throws ClientException If an error occurs during save or load operations.
      */
     private List<ICacheRecord> saveAndLoadAggregatedAccountDataOptimized(
-            @NonNull AccountRecord accountRecord,
-            @NonNull IdTokenRecord idTokenRecord,
-            @NonNull AccessTokenRecord accessTokenRecord,
-            @Nullable RefreshTokenRecord refreshTokenRecord,
-            @Nullable String familyId,
-            @NonNull final AbstractAuthenticationScheme authScheme
+            final @NonNull AccountRecord accountRecord,
+            final @NonNull IdTokenRecord idTokenRecord,
+            final @NonNull AccessTokenRecord accessTokenRecord,
+            final @Nullable RefreshTokenRecord refreshTokenRecord,
+            final @Nullable String familyId,
+            final @NonNull AbstractAuthenticationScheme authScheme
     ) throws ClientException{
         final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
                 "refreshTokenRecord, familyId, authScheme)";
