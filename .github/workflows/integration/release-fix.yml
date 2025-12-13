@@ -24,6 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: "Guard: ensure release automation enabled"
+        run: |
+          if [ "${{ secrets.ENABLE_RELEASE_AUTOMATION }}" != "true" ]; then
+            echo "Release automation is disabled for this repository. Set secret ENABLE_RELEASE_AUTOMATION=true to enable.";
+            exit 1;
+          fi
       - name: Compute target release version
         id: compute_version
         run: |
