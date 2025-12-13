@@ -1782,6 +1782,12 @@ public class BrokerOAuth2TokenCache
         final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
         final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
 
+        if (clientId == null) {
+            throw new ClientException("Access token in cache record has null clientId");
+        }
+        if (environment == null) {
+            throw new ClientException("Access token in cache record has null environment");
+        }
         updateApplicationMetadataCache(
                 clientId,
                 environment,
