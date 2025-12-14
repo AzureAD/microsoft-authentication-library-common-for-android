@@ -12,29 +12,27 @@ permissions:
 on:
   create:
 
+concurrency:
+  group: auto-pr-release-integration-${{ github.event.ref }}
+  cancel-in-progress: false
+
 jobs:
   create-pr:
     if: >
       github.event.ref_type == 'branch' &&
-      startsWith(github.event.ref, 'release-integration/')
+      startsWith(github.event.ref, 'release-integration/') &&
+      vars.ENABLE_RELEASE_AUTOMATION == 'true'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: "Guard: ensure release automation enabled"
-        run: |
-          if [ "${{ secrets.ENABLE_RELEASE_AUTOMATION }}" != "true" ]; then
-            echo "Release automation is disabled for this repository. Set secret ENABLE_RELEASE_AUTOMATION=true to enable.";
-            exit 1;
-          fi
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: dev
-          branch: ${{ github.event.ref }}
-          title: "Auto PR: ${{ github.event.ref }} → dev"
-          body: |
-            This is an automated pull request created to integrate release changes into **dev**.
-            Triggered when the branch **${{ github.event.ref }}** was published.
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Create Pull Request
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr create \
+          --base dev \
+          --head "${{ github.event.ref }}" \
+          --title "Auto PR: ${{ github.event.ref }} → dev" \
+          --body "This is an automated pull request created to integrate release changes into **dev**. Triggered when the branch **${{ github.event.ref }}** was published."
