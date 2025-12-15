@@ -1270,36 +1270,7 @@ public class BrokerOAuth2TokenCacheTest {
                 BEARER_AUTHENTICATION_SCHEME
         );
 
-        // Assert
-        assertNotNull("Result should not be null", result);
-        assertTrue("Should return at least one record", result.size() > 0);
-
-        // Verify first record has complete credentials (primary account)
-        final ICacheRecord primaryRecord = result.get(0);
-        assertNotNull("Primary account should exist", primaryRecord.getAccount());
-        assertNotNull("Primary access token should exist", primaryRecord.getAccessToken());
-        assertNotNull("Primary refresh token should exist", primaryRecord.getRefreshToken());
-        assertNotNull("Primary id token should exist", primaryRecord.getIdToken());
-
-        // Verify refresh token has family ID
-        assertEquals("Refresh token should have family ID",
-                "1",
-                primaryRecord.getRefreshToken().getFamilyId());
-
-        // Verify metadata cache was updated
-        final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
-        assertTrue("Metadata cache should have at least one entry", allMetadata.size() > 0);
-
-        boolean foundMetadata = false;
-        for (BrokerApplicationMetadata metadata : allMetadata) {
-            if (CLIENT_ID.equals(metadata.getClientId()) &&
-                    ENVIRONMENT.equals(metadata.getEnvironment())) {
-                foundMetadata = true;
-                assertEquals("Metadata should have family ID", "1", metadata.getFoci());
-                break;
-            }
-        }
-        assertTrue("Should find metadata for the saved client", foundMetadata);
+        verifyFociAppSaveAndLoadAggregatedAccountData(result);
     }
 
     /**
@@ -1327,6 +1298,12 @@ public class BrokerOAuth2TokenCacheTest {
                 BEARER_AUTHENTICATION_SCHEME
         );
 
+        verifyFociAppSaveAndLoadAggregatedAccountData(result);
+    }
+
+    // Helper method with all the assertions
+    private void verifyFociAppSaveAndLoadAggregatedAccountData(
+            List<ICacheRecord> result) {
         // Assert
         assertNotNull("Result should not be null", result);
         assertTrue("Should return at least one record", result.size() > 0);
@@ -1382,35 +1359,7 @@ public class BrokerOAuth2TokenCacheTest {
                 BEARER_AUTHENTICATION_SCHEME
         );
 
-        // Assert
-        assertNotNull("Result should not be null", result);
-        assertTrue("Should return at least one record", result.size() > 0);
-
-        // Verify first record has complete credentials (primary account)
-        final ICacheRecord primaryRecord = result.get(0);
-        assertNotNull("Primary account should exist", primaryRecord.getAccount());
-        assertNotNull("Primary access token should exist", primaryRecord.getAccessToken());
-        assertNotNull("Primary refresh token should exist", primaryRecord.getRefreshToken());
-        assertNotNull("Primary id token should exist", primaryRecord.getIdToken());
-
-        // Verify refresh token does NOT have family ID
-        assertNull("Refresh token should not have family ID for non-FOCI app",
-                primaryRecord.getRefreshToken().getFamilyId());
-
-        // Verify metadata cache was updated
-        final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
-        assertTrue("Metadata cache should have at least one entry", allMetadata.size() > 0);
-
-        boolean foundMetadata = false;
-        for (BrokerApplicationMetadata metadata : allMetadata) {
-            if (CLIENT_ID.equals(metadata.getClientId()) &&
-                    ENVIRONMENT.equals(metadata.getEnvironment())) {
-                foundMetadata = true;
-                assertNull("Metadata should not have family ID for non-FOCI app", metadata.getFoci());
-                break;
-            }
-        }
-        assertTrue("Should find metadata for the saved client", foundMetadata);
+        verifyNonFociAppSaveAndLoadAggregatedAccountData(result);
     }
 
     /**
@@ -1436,7 +1385,10 @@ public class BrokerOAuth2TokenCacheTest {
                 BEARER_AUTHENTICATION_SCHEME
         );
 
-        // Assert
+        verifyNonFociAppSaveAndLoadAggregatedAccountData(result);
+    }
+
+    private void verifyNonFociAppSaveAndLoadAggregatedAccountData(List<ICacheRecord> result) {
         assertNotNull("Result should not be null", result);
         assertTrue("Should return at least one record", result.size() > 0);
 
@@ -1476,31 +1428,7 @@ public class BrokerOAuth2TokenCacheTest {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, true);
 
-        final List<ICacheRecord> result1 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
-        final List<ICacheRecord> result2 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
-        final List<ICacheRecord> result3 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
-
-        assertNotNull("First result should not be null", result1);
-        assertNotNull("Second result should not be null", result2);
-        assertNotNull("Third result should not be null", result3);
-
-        assertTrue("First result should have at least one record", result1.size() > 0);
-        assertTrue("Second result should have at least one record", result2.size() > 0);
-        assertTrue("Third result should have at least one record", result3.size() > 0);
-
-        assertEquals("All results should have the same number of records",
-                result1.size(), result2.size());
-        assertEquals("All results should have the same number of records",
-                result2.size(), result3.size());
+        verifyCacheConsistencyAcrossMultipleSaveAndLoadOperations();
     }
 
     /**
@@ -1512,6 +1440,10 @@ public class BrokerOAuth2TokenCacheTest {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, false);
 
+        verifyCacheConsistencyAcrossMultipleSaveAndLoadOperations();
+    }
+
+    private void verifyCacheConsistencyAcrossMultipleSaveAndLoadOperations() throws ClientException {
         final List<ICacheRecord> result1 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
@@ -1547,53 +1479,7 @@ public class BrokerOAuth2TokenCacheTest {
     public void testSaveAndLoadAggregatedAccountData_WithGuestAccounts_FlightEnabled() throws Exception {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, true);
-        mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
-
-        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle =
-                new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                        MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
-                        LOCAL_ACCOUNT_ID,
-                        USERNAME,
-                        HOME_ACCOUNT_ID,
-                        ENVIRONMENT,
-                        "guest-tenant-id",
-                        TARGET,
-                        CACHED_AT,
-                        EXPIRES_ON,
-                        SECRET,
-                        CLIENT_ID,
-                        APPLICATION_IDENTIFIER_SHA512,
-                        MAM_ENROLLMENT_IDENTIFIER,
-                        SECRET,
-                        MOCK_ID_TOKEN_WITH_CLAIMS,
-                        "1",
-                        SESSION_KEY,
-                        CredentialType.IdToken
-                );
-
-        mFociCredentialCache.saveAccount(guestBundle.mGeneratedAccount);
-        mFociCredentialCache.saveCredential(guestBundle.mGeneratedIdToken);
-
-        configureMocksForFoci();
-        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-                mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
-
-        assertNotNull("Result should not be null", result);
-        assertTrue("Should return multiple records (primary + guest)", result.size() >= 1);
-
-        final ICacheRecord primaryRecord = result.get(0);
-        assertNotNull("Primary account should exist", primaryRecord.getAccount());
-        assertNotNull("Primary access token should exist", primaryRecord.getAccessToken());
-        assertNotNull("Primary refresh token should exist", primaryRecord.getRefreshToken());
-        assertNotNull("Primary id token should exist", primaryRecord.getIdToken());
-        assertEquals("Primary account realm should match",
-                REALM,
-                primaryRecord.getAccount().getRealm());
+        verifySaveAndLoadAggregatedAccountData_WithGuestAccounts();
     }
 
     /**
@@ -1604,6 +1490,10 @@ public class BrokerOAuth2TokenCacheTest {
     public void testSaveAndLoadAggregatedAccountData_WithGuestAccounts_FlightDisabled() throws Exception {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, false);
+        verifySaveAndLoadAggregatedAccountData_WithGuestAccounts();
+    }
+
+    private void verifySaveAndLoadAggregatedAccountData_WithGuestAccounts() throws ClientException {
         mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
@@ -1674,7 +1564,6 @@ public class BrokerOAuth2TokenCacheTest {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, true);
 
-
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
@@ -1683,18 +1572,7 @@ public class BrokerOAuth2TokenCacheTest {
         assertNotNull("Result should not be null", result);
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
-        boolean foundMetadata = false;
-        for (BrokerApplicationMetadata metadata : allMetadata) {
-            if (CLIENT_ID.equals(metadata.getClientId()) &&
-                    ENVIRONMENT.equals(metadata.getEnvironment())) {
-                foundMetadata = true;
-                assertEquals("Metadata should have correct UID",
-                        TEST_APP_UID,
-                        metadata.getUid());
-                break;
-            }
-        }
-        assertTrue("Should find metadata with correct UID", foundMetadata);
+        verifyMetadataHasCorrectUid(allMetadata);
     }
 
     /**
@@ -1705,7 +1583,6 @@ public class BrokerOAuth2TokenCacheTest {
         configureMocksForFoci();
         updateFlightForTest(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD, false);
 
-
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
@@ -1714,6 +1591,13 @@ public class BrokerOAuth2TokenCacheTest {
         assertNotNull("Result should not be null", result);
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
+        verifyMetadataHasCorrectUid(allMetadata);
+    }
+
+    /**
+     * Utility method to verify that metadata cache contains an entry with the correct UID.
+     */
+    private void verifyMetadataHasCorrectUid(List<BrokerApplicationMetadata> allMetadata) {
         boolean foundMetadata = false;
         for (BrokerApplicationMetadata metadata : allMetadata) {
             if (CLIENT_ID.equals(metadata.getClientId()) &&
