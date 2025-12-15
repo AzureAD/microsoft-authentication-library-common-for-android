@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
@@ -78,6 +79,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     private String mUsername;
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
+
+    private BrokerPerformanceMetrics brokerPerformanceMetrics;
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -214,6 +217,15 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     public String getUsername() {
         return mUsername;
+    }
+
+    public void setBrokerPerformanceMetrics(final BrokerPerformanceMetrics brokerPerformanceMetrics) {
+        this.brokerPerformanceMetrics = brokerPerformanceMetrics;
+    }
+
+    @Nullable
+    public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
+        return brokerPerformanceMetrics;
     }
 
     public void setUsername(@Nullable final String username) {

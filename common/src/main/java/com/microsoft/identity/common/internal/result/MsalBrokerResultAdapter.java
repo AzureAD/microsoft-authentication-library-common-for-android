@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_REQUEST_RECEIVED_TIMESTAMP;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_RESPONSE_GENERATION_TIMESTAMP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
@@ -58,6 +60,7 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
@@ -117,6 +120,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
 
+    private static final Long INVALID_TIMESTAMP = -1L;
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
     private static final String WEBAPPS_ENTRY_IS_NULL_ERROR = "WebApps entry in the bundle is null";
     interface IBooleanCallback {
@@ -401,15 +405,53 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         final String exceptionType = brokerResult.getExceptionType();
+        final BrokerPerformanceMetrics metrics = getBrokerPerformanceMetricsFromBundle(resultBundle);
+        final BaseException baseException;
 
         if (!StringUtil.isNullOrEmpty(exceptionType)) {
-            return getBaseExceptionFromExceptionType(exceptionType, brokerResult);
+            baseException = getBaseExceptionFromExceptionType(exceptionType, brokerResult);
         } else {
             // This code is here for legacy purposes where old versions of broker (3.1.8 or below)
             // wouldn't return exception type in the result.
             Logger.info(methodTag, "Exception type is not returned from the broker, " +
                     "using error codes to transform to the right exception");
-            return getBaseExceptionFromErrorCodes(brokerResult);
+            baseException = getBaseExceptionFromErrorCodes(brokerResult);
+        }
+
+        // Attach broker performance metrics if available
+        if (metrics != null) {
+            baseException.setBrokerPerformanceMetrics(metrics);
+        }
+
+        return baseException;
+    }
+
+    /**
+     * Extracts broker performance metrics from the result bundle if available.
+     *
+     * @param resultBundle The result bundle returned from the broker.
+     * @return {@link BrokerPerformanceMetrics} if available, null otherwise.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public BrokerPerformanceMetrics getBrokerPerformanceMetricsFromBundle(@NonNull final Bundle resultBundle) {
+        final long brokerRequestReceivedTimestamp = resultBundle.getLong(
+                BROKER_REQUEST_RECEIVED_TIMESTAMP,
+                INVALID_TIMESTAMP
+        );
+        final long brokerResponseGenerationTimestamp = resultBundle.getLong(
+                BROKER_RESPONSE_GENERATION_TIMESTAMP,
+                INVALID_TIMESTAMP
+        );
+
+        if (brokerRequestReceivedTimestamp != INVALID_TIMESTAMP && brokerResponseGenerationTimestamp != INVALID_TIMESTAMP) {
+            return new BrokerPerformanceMetrics(
+                    brokerRequestReceivedTimestamp,
+                    brokerResponseGenerationTimestamp
+            );
+        } else {
+            Logger.warn(TAG, "Broker performance metrics not found in the result bundle.");
+            return null;
         }
     }
 
@@ -867,7 +909,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             acquireTokenResult.setLocalAuthenticationResult(
                     resultAdapter.authenticationResultFromBundle(resultBundle)
             );
-
+            // Set broker performance metrics if available
+            final BrokerPerformanceMetrics brokerPerformanceMetrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
+            if (brokerPerformanceMetrics != null) {
+                acquireTokenResult.setBrokerPerformanceMetrics(brokerPerformanceMetrics);
+            }
             return acquireTokenResult;
         }
 
