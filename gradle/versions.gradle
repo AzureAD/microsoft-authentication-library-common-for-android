@@ -1,4 +1,4 @@
-// Variables for entire project
+// Variables for entire project.
 // Taken from android-complete.
 ext {
     // SDK

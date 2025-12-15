@@ -490,6 +490,11 @@ public enum AttributeName {
     is_in_web_cp_flow,
 
     /**
+     * Indicates whether or not in memory cache is used for accounts and credentials.
+     */
+    in_memory_cache_used_for_accounts_and_credentials,
+
+    /**
      * Passkey operation type (e.g., registration, authentication).
      */
     passkey_operation_type,
@@ -498,4 +503,14 @@ public enum AttributeName {
      * Passkey DOM exception name (if any).
      */
     passkey_dom_exception_name,
+
+    /**
+     *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
+     */
+    elapsed_time_save_aggregated_account_data,
+
+    /**
+     *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
+     */
+    elapsed_time_load_aggregated_account_data
 }

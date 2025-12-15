@@ -180,7 +180,17 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
      * config endpoint and only reports the failure result.
      */
-    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true);
+    ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true),
+
+    /**
+     * Flight to control whether or not to use in memory cache for accounts and credentials.
+     */
+    USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
+
+    /**
+     * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
+     */
+    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false);
 
     private String key;
     private Object defaultValue;
