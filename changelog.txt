@@ -5,6 +5,7 @@ vNext
 - [MINOR] Cache Active Broker In Memory (BrokerDiscoveryClient) (#2817)
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
+- [MINOR] Adds Authentication Constants to be used for broker latency timestamp in response (#2831)
 
 Version 23.1.1
 -----------
