@@ -8,6 +8,7 @@ vNext
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
 - [MINOR] Adds Authentication Constants to be used for broker latency timestamp in response (#2831)
+- [MINOR] Implemented Common logic to retrieve broker latency duration from result Broker Bundle (#2835)
 
 Version 23.1.1
 -----------
