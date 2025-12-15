@@ -1564,16 +1564,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_APP_LINK_REDIRECT_URL_PATH_PREFIX = "androidbroker";
 
         /**
-         * Timestamp when the broker received the authentication request.
-         */
-        public static final String BROKER_REQUEST_RECEIVED_TIMESTAMP = "broker_request_received_timestamp";
-
-        /**
-         * Timestamp when the broker generated the authentication response.
-         */
-        public static final String BROKER_RESPONSE_GENERATION_TIMESTAMP = "broker_response_generation_timestamp";
-
-        /**
          * Bundle identifiers for x-ms-clitelem info.
          */
         public static final class CliTelemInfo {
