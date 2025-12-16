@@ -28,7 +28,6 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class AcquireTokenResult {
@@ -60,8 +59,8 @@ public class AcquireTokenResult {
         this.mTokenResult = tokenResult;
     }
 
-    public void setBrokerPerformanceMetrics(@Nonnull BrokerPerformanceMetrics mBrokerPerformanceMetrics) {
-        this.mBrokerPerformanceMetrics = mBrokerPerformanceMetrics;
+    public void setBrokerPerformanceMetrics(@Nullable BrokerPerformanceMetrics brokerPerformanceMetrics) {
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
     }
 
     @Nullable
