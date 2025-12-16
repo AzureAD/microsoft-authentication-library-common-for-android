@@ -26,6 +26,10 @@
 -keep class * extends com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme { *; }
 -keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *; }
 
+# Keep WebView JS bridge methods annotated with @JavascriptInterface
+-keepclassmembers class com.microsoft.identity.** {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
 #For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
 -if class androidx.credentials.CredentialManager
