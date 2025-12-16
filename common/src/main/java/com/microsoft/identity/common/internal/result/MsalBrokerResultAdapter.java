@@ -60,7 +60,7 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.kotlin.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
@@ -123,6 +123,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final Long INVALID_TIMESTAMP = -1L;
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
     private static final String WEBAPPS_ENTRY_IS_NULL_ERROR = "WebApps entry in the bundle is null";
+
     interface IBooleanCallback {
         boolean getResult();
     }
@@ -834,6 +835,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Get authorizationResult from resultBundle for Device Code Flow
+     *
      * @param resultBundle The bundle to interpret
      * @return authorizationResult {@link AuthorizationResult}
      * @throws BaseException
@@ -859,6 +861,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Get acquireTokenResult from resultBundle for Device Code Flow
+     *
      * @param resultBundle The bundle to interpret
      * @return acquireTokenResult {@link AcquireTokenResult}
      * @throws BaseException
@@ -910,10 +913,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     resultAdapter.authenticationResultFromBundle(resultBundle)
             );
             // Set broker performance metrics if available
-            final BrokerPerformanceMetrics brokerPerformanceMetrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
-            if (brokerPerformanceMetrics != null) {
-                acquireTokenResult.setBrokerPerformanceMetrics(brokerPerformanceMetrics);
-            }
+            acquireTokenResult.setBrokerPerformanceMetrics(resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle));
             return acquireTokenResult;
         }
 
@@ -975,6 +975,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     /**
      * Get resource account record from the result bundle. If successful, new account
      * record part of ICachedRecord is returned.
+     *
      * @param bundle The result bundle from the broker.
      * @throws BaseException
      */
