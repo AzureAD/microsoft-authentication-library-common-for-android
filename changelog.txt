@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Add JavascriptInterface rules to consumer proguard rules
+- [PATCH] Add JavascriptInterface rules to consumer proguard rules (#2837)
 - [MINOR] Add optimized saveAndLoadAggregatedAccountData method in BrokerOAuth2TokenCache (#2832)
 - [MINOR] Remove MavenCentral repository from build.gradle files (#2830)
 - [MINOR] Determine whether broker app opts out from battery optimization (#2819)
