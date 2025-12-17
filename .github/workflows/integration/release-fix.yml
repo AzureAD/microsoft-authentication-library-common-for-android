@@ -18,18 +18,14 @@ jobs:
   create-pr:
     if: >
       github.event.ref_type == 'branch' &&
-      startsWith(github.event.ref, 'release-fix/')
+      startsWith(github.event.ref, 'release-fix/') &&
+      vars.ENABLE_RELEASE_AUTOMATION == 'true'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: "Guard: ensure release automation enabled"
-        run: |
-          if [ "${{ secrets.ENABLE_RELEASE_AUTOMATION }}" != "true" ]; then
-            echo "Release automation is disabled for this repository. Set secret ENABLE_RELEASE_AUTOMATION=true to enable.";
-            exit 1;
-          fi
       - name: Compute target release version
         id: compute_version
         run: |
@@ -44,12 +40,11 @@ jobs:
           fi
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: ${{ format('release/{0}', steps.compute_version.outputs.version) }}
-          branch: ${{ github.event.ref }}
-          title: ${{ format('Auto PR: {0} → release/{1}', github.event.ref, steps.compute_version.outputs.version) }}
-          body: |
-            This is an automated pull request created to integrate release changes into **release/${{ steps.compute_version.outputs.version }}**.
-            Triggered when the branch **${{ github.event.ref }}** was published.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base "release/${{ steps.compute_version.outputs.version }}" \
+            --head "${{ github.event.ref }}" \
+            --title "Auto PR: ${{ github.event.ref }} → release/${{ steps.compute_version.outputs.version }}" \
+            --body "This is an automated pull request created to integrate release changes into release/${{ steps.compute_version.outputs.version }}. Triggered when the branch ${{ github.event.ref }} was published."
