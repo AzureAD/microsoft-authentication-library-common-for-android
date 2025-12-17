@@ -81,7 +81,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
-    private BrokerPerformanceMetrics brokerPerformanceMetrics;
+    private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -221,12 +221,13 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     public void setBrokerPerformanceMetrics(final BrokerPerformanceMetrics brokerPerformanceMetrics) {
-        this.brokerPerformanceMetrics = brokerPerformanceMetrics;
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics != null ?
+                brokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
     }
 
-    @Nullable
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
-        return brokerPerformanceMetrics;
+        return this.mBrokerPerformanceMetrics != null ?
+                mBrokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
     }
 
     public void setUsername(@Nullable final String username) {

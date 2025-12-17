@@ -75,5 +75,20 @@ class BrokerPerformanceMetrics(
 
     companion object {
         private val TAG = BrokerPerformanceMetrics::class.java.simpleName
+
+
+        /**
+         * A safe default instance used when no real metrics are available.
+         * Ensures non-null contract for Java callers.
+         *
+         * @param brokerRequestReceivedTimestamp Current time as placeholder.
+         * @param brokerResponseGenerationTimestamp Current time as placeholder.
+         */
+        @JvmField
+        var EMPTY = BrokerPerformanceMetrics(
+            brokerRequestReceivedTimestamp =  System.currentTimeMillis(),
+            brokerResponseGenerationTimestamp = System.currentTimeMillis()
+        )
+
     }
 }
