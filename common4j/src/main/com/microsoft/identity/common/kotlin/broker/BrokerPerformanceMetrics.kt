@@ -85,10 +85,12 @@ class BrokerPerformanceMetrics(
          * @param brokerResponseGenerationTimestamp Current time as placeholder.
          */
         @JvmField
-        var EMPTY = BrokerPerformanceMetrics(
-            brokerRequestReceivedTimestamp =  System.currentTimeMillis(),
-            brokerResponseGenerationTimestamp = System.currentTimeMillis()
-        )
-
+        var EMPTY = run {
+            val now = System.currentTimeMillis()
+            BrokerPerformanceMetrics(
+                brokerRequestReceivedTimestamp = now,
+                brokerResponseGenerationTimestamp = now
+            )
+        }
     }
 }

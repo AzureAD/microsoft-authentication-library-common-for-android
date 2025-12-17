@@ -913,7 +913,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     resultAdapter.authenticationResultFromBundle(resultBundle)
             );
             // Set broker performance metrics if available
-            acquireTokenResult.setBrokerPerformanceMetrics(resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle));
+            final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
+            if (metrics != null) {
+                acquireTokenResult.setBrokerPerformanceMetrics(metrics);
+            }
             return acquireTokenResult;
         }
 
