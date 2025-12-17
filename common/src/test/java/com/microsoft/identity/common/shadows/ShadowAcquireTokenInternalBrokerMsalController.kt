@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.shadows
 
+import android.content.Intent
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY
@@ -54,12 +55,12 @@ class ShadowAcquireTokenInternalBrokerMsalController {
      */
     @Implementation
     @Throws(BaseException::class, InterruptedException::class, ExecutionException::class)
-    protected fun acquireTokenInternal(parameters: InteractiveTokenCommandParameters): Bundle {
+    protected fun acquireTokenInternal(parameters: InteractiveTokenCommandParameters?, interactiveRequestIntent: Intent): Bundle {
         val result = (nextResult ?: Bundle()).apply {
             if (!containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
                 putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true)
             }
-            if (!containsKey(NEGOTIATED_BP_VERSION_KEY)) {
+            if (!containsKey(NEGOTIATED_BP_VERSION_KEY) && parameters != null) {
                 putString(NEGOTIATED_BP_VERSION_KEY, parameters.requiredBrokerProtocolVersion)
             }
         }

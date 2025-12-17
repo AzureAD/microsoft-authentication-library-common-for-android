@@ -1402,6 +1402,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED = "web_app_successful_result_compressed";
 
         /**
+         * String for broker webapps interactive intent.
+         */
+        public static final String BROKER_WEB_APPS_INTERACTIVE_INTENT = "web_apps_interactive_intent";
+
+        /**
          * String for broker webapps error result.
          */
         public static final String BROKER_WEB_APPS_ERROR_RESULT = "web_apps_error_result";

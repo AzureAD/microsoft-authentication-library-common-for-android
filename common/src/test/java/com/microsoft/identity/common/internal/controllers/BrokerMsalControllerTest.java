@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import static com.microsoft.identity.common.java.exception.ErrorStrings.UI_NOT_ALLOWED;
-
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -52,7 +50,6 @@ import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.shadows.ShadowAcquireTokenInternalBrokerMsalController;
 
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,7 +57,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Collections;
-import java.util.Locale;
 
 import lombok.SneakyThrows;
 
@@ -298,130 +294,11 @@ public class BrokerMsalControllerTest {
     }
 
     @Test
-    public void testExecuteWebAppRequest_SilentError_FromController_Parsing() throws Exception {
-        final BrokerMsalController controller = createController(buildStrategyForSilentErrorFromBroker());
-        final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
-        final String malformedRequestJson = new JSONObject()
-                .put("request", "malformed_request")
-                .toString();
-        final String result = controller.executeWebAppRequest(
-                malformedRequestJson,
-                "19.0",
-                addParams
-        );
-
-        Assert.assertTrue(result.contains("Error occurred during request parsing"));
-    }
-
-    @Test
-    public void testExecuteWebAppRequest_SilentError_UiNotAllowed() throws Exception {
-        final BrokerMsalController controller = createController(buildStrategyForSilentErrorFromBroker());
-        final WebAppsGetTokenSubOperationRequest request = new WebAppsGetTokenSubOperationRequest(
-                "account-id",
-                "clientId",
-                "https://login.microsoftonline.com/common",
-                "User.Read",
-                "https://redirect",
-                "corr-id",
-                "login", // Setting to login
-                false,
-                null,
-                null,
-                null,
-                false,
-                null
-        );
-
-        WebAppsGetTokenSubOperationEnvelope envelope =
-                new WebAppsGetTokenSubOperationEnvelope(
-                        "GetToken",
-                        request,
-                        "https://login.microsoftonline.com" // sender
-                );
-
-        final String requestJson = ObjectMapper.serializeObjectToJsonString(envelope);
-        final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
-
-        final String result = controller.executeWebAppRequest(
-                requestJson,
-                "19.0",
-                addParams
-        );
-
-        Assert.assertTrue(result.contains(UI_NOT_ALLOWED.toUpperCase(Locale.ROOT)));
-    }
-
-    @Test
-    public void testExecuteWebAppRequest_SilentError_UiNotAllowed_ESTS() throws Exception {
-        final BrokerMsalController controller = createController(buildStrategyForSilentErrorFromBroker());
-        final WebAppsGetTokenSubOperationRequest request = new WebAppsGetTokenSubOperationRequest(
-                "account-id",
-                "clientId",
-                "https://login.microsoftonline.com/common",
-                "User.Read",
-                "https://redirect",
-                "corr-id",
-                "login", // Setting to login
-                true,
-                null,
-                null,
-                null,
-                false,
-                null
-        );
-
-        WebAppsGetTokenSubOperationEnvelope envelope =
-                new WebAppsGetTokenSubOperationEnvelope(
-                        "GetToken",
-                        request,
-                        "https://login.microsoftonline.com" // sender
-                );
-
-        final String requestJson = ObjectMapper.serializeObjectToJsonString(envelope);
-        final WebAppsAdditionalRequiredParameters addParams = buildAdditionalParams(false);
-
-        final String result = controller.executeWebAppRequest(
-                requestJson,
-                "19.0",
-                addParams
-        );
-
-        Assert.assertTrue(result.contains(UI_NOT_ALLOWED.toUpperCase(Locale.ROOT)));
-    }
-
-
-    @Test
     @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowAcquireTokenInternalBrokerMsalController.class})
     public void testExecuteWebAppRequest_ForceInteractive_Success() throws Exception {
 
         final BrokerMsalController controller = createController(buildStrategyForInteractiveSuccessFromBroker());
         final String requestJson = buildInteractiveGetTokenRequestJson(true);
-
-        WebAppsAdditionalRequiredParameters addParams = new WebAppsAdditionalRequiredParameters(
-                true,               // canShowUi
-                "test.app.package",
-                "Mock App",
-                "1.2.3",
-                SdkType.MSAL_CPP,
-                "1.2.3"
-        );
-
-        // Queue interactive result for shadowed acquireTokenInternal.
-        Bundle interactiveBundle = new Bundle();
-        interactiveBundle.putString(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT, EXPECTED_RESULT);
-        ShadowAcquireTokenInternalBrokerMsalController.enqueueResult(interactiveBundle);
-
-        String result = controller.executeWebAppRequest(requestJson, "19.0", addParams);
-
-        Assert.assertEquals(EXPECTED_RESULT, result);
-    }
-
-    @Test
-    @Config(sdk = {Build.VERSION_CODES.N}, shadows = {ShadowAcquireTokenInternalBrokerMsalController.class})
-    public void testExecuteWebAppRequest_SilentFallbackToInteractive_MSALJS() throws Exception {
-
-        final BrokerMsalController controller = createController(buildStrategyForSilentErrorFromBroker());
-        final String requestJson = buildFallbackSilentGetTokenRequestJson(false);
 
         WebAppsAdditionalRequiredParameters addParams = new WebAppsAdditionalRequiredParameters(
                 true,               // canShowUi
@@ -477,33 +354,6 @@ public class BrokerMsalControllerTest {
                 "https://demoapp.com/",  // redirectUri (required)
                 "corr-id",           // correlationId (optional)
                 "none",              // prompt ("none" for silent)
-                isSts,               // isSecurityTokenService
-                null,                // nonce
-                null,                // state
-                null,                // loginHint
-                false,               // instanceAware
-                null                 // extraParameters
-        );
-
-        WebAppsGetTokenSubOperationEnvelope envelope =
-                new WebAppsGetTokenSubOperationEnvelope(
-                        "GetToken",
-                        request,
-                        isSts ? "https://login.microsoftonline.com" : "https://demoapp.com" // sender
-                );
-
-        return ObjectMapper.serializeObjectToJsonString(envelope);
-    }
-
-    private String buildFallbackSilentGetTokenRequestJson(final boolean isSts) throws Exception {
-        WebAppsGetTokenSubOperationRequest request = new WebAppsGetTokenSubOperationRequest(
-                "account-id",                // homeAccountId
-                "clientId",          // clientId (required)
-                "https://login.microsoftonline.com/common", // authority
-                "User.Read",         // scopes
-                "https://demoapp.com/",  // redirectUri (required)
-                "corr-id",           // correlationId (optional)
-                "select_account",    // prompt
                 isSts,               // isSecurityTokenService
                 null,                // nonce
                 null,                // state
@@ -617,6 +467,9 @@ public class BrokerMsalControllerTest {
                     // Minimal placeholder intent
                     Intent interactive = new Intent("com.microsoft.identity.test.INTERACTIVE");
                     out.putParcelable("intent", interactive);
+                } else if (bundle.getOperation() == BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST) {
+                    out.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, NEGOTIATED_VERSION);
+                    out.putParcelable(AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_INTENT, new Intent());
                 }
                 return out;
             }
