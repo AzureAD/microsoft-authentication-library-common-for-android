@@ -915,67 +915,6 @@ public class BrokerOAuth2TokenCacheWithInMemoryCacheTest {
     }
 
     @Test
-    public void testWPJSaveNonFoci_deprecated() throws ClientException {
-        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
-                mDefaultAppUidTestBundle.mGeneratedAccount,
-                mDefaultAppUidTestBundle.mGeneratedIdToken,
-                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-                null
-        );
-
-        assertNotNull(saveResult);
-        assertNotNull(saveResult.getAccount());
-        assertNotNull(saveResult.getIdToken());
-        assertNotNull(saveResult.getAccessToken());
-        assertNull(saveResult.getRefreshToken());
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedAccount,
-                saveResult.getAccount()
-        );
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedIdToken,
-                saveResult.getIdToken()
-        );
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-                saveResult.getAccessToken()
-        );
-
-        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
-                mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
-                mDefaultAppUidTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
-                mDefaultAppUidTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
-                mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
-                mDefaultAppUidTestBundle.mGeneratedAccount,
-                BEARER_AUTHENTICATION_SCHEME
-        );
-
-        assertNotNull(retrievedResult);
-        assertNotNull(retrievedResult.getAccount());
-        assertNotNull(retrievedResult.getIdToken());
-        assertNotNull(retrievedResult.getAccessToken());
-        assertNull(retrievedResult.getRefreshToken());
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedAccount,
-                retrievedResult.getAccount()
-        );
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedIdToken,
-                retrievedResult.getIdToken()
-        );
-
-        assertEquals(
-                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-                retrievedResult.getAccessToken()
-        );
-    }
-
-    @Test
     public void testWPJSaveNonFoci() throws ClientException {
         final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -1044,68 +983,6 @@ public class BrokerOAuth2TokenCacheWithInMemoryCacheTest {
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedRefreshToken,
                 saveResult.getRefreshToken()
-        );
-    }
-
-    @Test
-    public void testWPJSaveFoci_deprecated() throws ClientException {
-        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
-                mDefaultFociTestBundle.mGeneratedAccount,
-                mDefaultFociTestBundle.mGeneratedIdToken,
-                mDefaultFociTestBundle.mGeneratedAccessToken,
-                "1"
-        );
-
-        assertNotNull(saveResult);
-        assertNotNull(saveResult.getAccount());
-        assertNotNull(saveResult.getIdToken());
-        assertNotNull(saveResult.getAccessToken());
-        assertNull(saveResult.getRefreshToken());
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedAccount,
-                saveResult.getAccount()
-        );
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedIdToken,
-                saveResult.getIdToken()
-        );
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedAccessToken,
-                saveResult.getAccessToken()
-        );
-
-
-        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
-                mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
-                mDefaultFociTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
-                mDefaultFociTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
-                mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
-                mDefaultFociTestBundle.mGeneratedAccount,
-                BEARER_AUTHENTICATION_SCHEME
-        );
-
-        assertNotNull(retrievedResult);
-        assertNotNull(retrievedResult.getAccount());
-        assertNotNull(retrievedResult.getIdToken());
-        assertNotNull(retrievedResult.getAccessToken());
-        assertNull(retrievedResult.getRefreshToken());
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedAccount,
-                retrievedResult.getAccount()
-        );
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedIdToken,
-                retrievedResult.getIdToken()
-        );
-
-        assertEquals(
-                mDefaultFociTestBundle.mGeneratedAccessToken,
-                retrievedResult.getAccessToken()
         );
     }
 

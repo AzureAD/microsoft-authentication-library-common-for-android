@@ -171,7 +171,7 @@ public enum AttributeName {
     elapsed_time_cache_load_with_aggregated_account_data,
 
     /**
-     * The time (in milliseconds) spent in executing the saveAndLoadAggregatedAccountData method in OAuth2TokenCache.
+     * The time (in milliseconds) spent in executing the optimized saveAndLoadAggregatedAccountData method in OAuth2TokenCache.
      */
     elapsed_time_cache_save_and_load_aggregated_account_data,
 
