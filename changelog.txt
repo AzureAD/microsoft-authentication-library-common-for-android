@@ -7,6 +7,7 @@ vNext
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
 - [MINOR] Adds Authentication Constants to be used for broker latency timestamp in response (#2831)
+- [MINOR] Add support for WebApps getToken API (#2803)
 
 Version 23.1.1
 -----------
@@ -27,7 +28,6 @@ Version 23.1.0
 - [MINOR] WebApps AccountId Registry (#2787)
 - [MINOR] Expose WebApps APIs (#2793)
 - [MINOR] Add domainHint support to authorization request (#2792)
-- [MINOR] Add support for WebApps getToken API (#2803)
 - [PATCH] Fix auth method blocked error handling (#2804)
 
 Version 23.0.2
