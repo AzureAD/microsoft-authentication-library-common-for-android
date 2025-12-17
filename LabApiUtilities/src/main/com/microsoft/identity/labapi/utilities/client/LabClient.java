@@ -144,6 +144,7 @@ public class LabClient implements ILabClient {
                 .password(password)
                 .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
                 .homeTenantId(configInfo.getUserInfo().getHomeTenantID())
+                .homeObjectId(configInfo.getUserInfo().getHomeObjectId())
                 .configInfo(configInfo)
                 .build();
     }
@@ -252,6 +253,7 @@ public class LabClient implements ILabClient {
                 // all temp users created by Lab Api are currently cloud users
                 .userType(UserType.CLOUD)
                 .homeTenantId(tempUser.getTenantId())
+                .homeObjectId(tempUser.getObjectId())
                 .build();
     }
 
