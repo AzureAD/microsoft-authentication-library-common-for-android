@@ -95,7 +95,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             } finally {
                 mLoaded = true;
                 mCacheLock.notifyAll();
-                OTelUtility.recordElapsedTime(AttributeName.out_of_memory_exception_stacktrace.name(),
+                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_in_memory_cache_load.name(),
                         loadStartTime);
             }
         }
