@@ -299,7 +299,10 @@ class PasskeyWebListener(
             "https://mysignins.eaglex.ic.gov",
             "https://login.microsoftonline.us",
             "https://login.microsoftonline.microsoft.scloud",
-            "https://login.microsoftonline.eaglex.ic.gov"
+            "https://login.microsoftonline.eaglex.ic.gov",
+            "https://login.sovcloud-identity.fr",
+            "https://login.sovcloud-identity.de",
+            "https://login.sovcloud-identity.sg"
         )
 
         /** Allowed origins for pre-production/testing environments. */
