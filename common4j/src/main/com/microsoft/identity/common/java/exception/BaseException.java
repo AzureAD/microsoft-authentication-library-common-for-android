@@ -221,13 +221,11 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     public void setBrokerPerformanceMetrics(final BrokerPerformanceMetrics brokerPerformanceMetrics) {
-        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics != null ?
-                brokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
     }
 
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
-        return this.mBrokerPerformanceMetrics != null ?
-                mBrokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
+        return this.mBrokerPerformanceMetrics;
     }
 
     public void setUsername(@Nullable final String username) {

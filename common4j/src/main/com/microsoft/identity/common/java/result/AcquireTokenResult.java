@@ -58,13 +58,11 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
     }
 
     public void setBrokerPerformanceMetrics(BrokerPerformanceMetrics brokerPerformanceMetrics) {
-        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics != null ?
-                brokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
     }
 
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
-        return this.mBrokerPerformanceMetrics != null ?
-                mBrokerPerformanceMetrics : BrokerPerformanceMetrics.EMPTY;
+        return this.mBrokerPerformanceMetrics;
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
