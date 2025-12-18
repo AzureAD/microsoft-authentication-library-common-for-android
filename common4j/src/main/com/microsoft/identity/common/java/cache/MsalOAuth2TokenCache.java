@@ -195,58 +195,6 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * @param accountRecord     The {@link AccountRecord} to store.
-     * @param idTokenRecord     The {@link IdTokenRecord} to store.
-     * @param accessTokenRecord The {@link AccessTokenRecord} to store.
-     * @return The {@link ICacheRecord} result of this save action.
-     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
-     * @see OAuth2TokenCache#save(AccountRecord, IdTokenRecord)
-     */
-    @Deprecated
-    ICacheRecord save(@NonNull AccountRecord accountRecord,
-                      @NonNull IdTokenRecord idTokenRecord,
-                      @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
-        final String methodName = ":save (3 arg)";
-
-        // Validate the supplied Accounts/Credentials
-        final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
-        final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
-        final boolean isAccessTokenValid = isAccessTokenSchemaCompliant(accessTokenRecord);
-
-        if (!isAccountValid) {
-            throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
-        }
-
-        if (!isIdTokenValid) {
-            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
-        }
-
-        if (!isAccessTokenValid) {
-            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
-        }
-
-        Logger.verbose(
-                TAG + methodName,
-                "Accounts/Credentials are valid.... proceeding"
-        );
-
-        saveAccounts(accountRecord);
-        saveCredentialsInternal(idTokenRecord, accessTokenRecord);
-
-        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.account(accountRecord);
-        result.accessToken(accessTokenRecord);
-
-        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.v1IdToken(idTokenRecord);
-        } else {
-            result.idToken(idTokenRecord);
-        }
-
-        return result.build();
-    }
-
-    /**
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.
      * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
@@ -298,19 +246,6 @@ public class MsalOAuth2TokenCache
         }
 
         return result.build();
-    }
-
-    // TODO Add unit test
-    @NonNull
-    List<ICacheRecord> saveAndLoadAggregatedAccountData(
-            @NonNull AccountRecord accountRecord,
-            @NonNull IdTokenRecord idTokenRecord,
-            @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
-        // Use the just-saved ICacheRecord to locate other cache records belonging to this
-        // principal which may be associated to another tenant
-        return mergeCacheRecordWithOtherTenantCacheRecords(
-                save(accountRecord, idTokenRecord, accessTokenRecord)
-        );
     }
 
     @NonNull
