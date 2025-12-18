@@ -61,6 +61,7 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
         this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
     }
 
+    @Override
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
         return this.mBrokerPerformanceMetrics;
     }

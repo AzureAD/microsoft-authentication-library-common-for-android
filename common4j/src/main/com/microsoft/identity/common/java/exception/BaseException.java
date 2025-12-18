@@ -224,6 +224,7 @@ public class BaseException extends Exception implements IErrorInformation, ITele
         this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
     }
 
+    @Override
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
         return this.mBrokerPerformanceMetrics;
     }
