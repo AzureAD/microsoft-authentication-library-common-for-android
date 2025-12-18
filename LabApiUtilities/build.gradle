@@ -18,6 +18,20 @@ apply from: '../versioning/version_tasks.gradle'
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsMavenAccessToken = System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
+repositories {
+    google()
+    // If you don't have access to the package feed uncomment these repositories
+    //  mavenCentral()
+    maven {
+        name "vsts-maven-adal-android"
+        url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
+        credentials {
+            username project.ext.vstsUsername
+            password project.ext.vstsMavenAccessToken
+        }
+    }
+}
+
 version = getAppVersionName()
 
 def labClientSecret = "" // will be blank unless specified by developer
