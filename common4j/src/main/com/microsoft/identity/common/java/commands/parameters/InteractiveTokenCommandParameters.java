@@ -41,8 +41,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class InteractiveTokenCommandParameters extends TokenCommandParameters
-        implements IHasExtraTokenBodyParameters {
+public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final transient List<BrowserDescriptor> browserSafeList;
 
@@ -71,9 +70,6 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters
 
     private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
-    // Only put in the token request body
-    private final List<Map.Entry<String, String>> extraTokenBodyParameters;
-
     @Expose()
     private final List<String> extraScopesToConsent;
 
@@ -93,11 +89,6 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters
 
     public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
-    }
-
-    @Override
-    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
-        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
     }
 
     public List<String> getExtraScopesToConsent() {

@@ -29,10 +29,6 @@ import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -40,9 +36,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class BrokerSilentTokenCommandParameters
-        extends SilentTokenCommandParameters
-        implements IHasExtraTokenBodyParameters, IBrokerTokenCommandParameters {
+public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
 
     @Expose
     private final int callerUid;
@@ -61,9 +55,6 @@ public class BrokerSilentTokenCommandParameters
     @Expose
     private final String negotiatedBrokerProtocolVersion;
 
-    // Only put in the token request body
-    private final List<Map.Entry<String, String>> extraTokenBodyParameters;
-
     // If this flag is true, we will send the x-ms-PKeyAuth Header to the token endpoint.
     // Note: this flag is transferred to a MicrosoftTokenRequest in BaseController.
     @Expose
@@ -81,11 +72,6 @@ public class BrokerSilentTokenCommandParameters
      */
     public boolean isRequestForResourceAccount() {
         return false;
-    }
-
-    @Override
-    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
-        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
     }
 
     @Override

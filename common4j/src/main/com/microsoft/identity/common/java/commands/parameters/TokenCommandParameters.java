@@ -28,8 +28,8 @@ import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -73,8 +73,15 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final List<Map.Entry<String, String>> extraOptions;
 
+    // Only put in the token request body
+    private final List<Map.Entry<String, String>> extraTokenBodyParameters;
+
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
+    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
+        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
     }
 
     public String getMamEnrollmentId(){

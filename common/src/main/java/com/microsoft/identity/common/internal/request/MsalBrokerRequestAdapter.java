@@ -60,7 +60,6 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GetAadDeviceIdCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraTokenBodyParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.ResourceAccountCommandParameters;
@@ -212,12 +211,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
                         .build()
                 );
-        if (parameters instanceof IHasExtraTokenBodyParameters) {
-            final List<Map.Entry<String, String>> extraTokenBodyParams = ((IHasExtraTokenBodyParameters) parameters).getExtraTokenBodyParameters();
-            final String extraTokenBodyParameters = extraTokenBodyParams != null ?
-                    QueryParamsAdapter._toJson(extraTokenBodyParams) : null;
-            brokerRequestBuilder.extraTokenBodyParameter(extraTokenBodyParameters);
-        }
+        final List<Map.Entry<String, String>> extraTokenBodyParams = parameters.getExtraTokenBodyParameters();
+        final String extraTokenBodyParameters = extraTokenBodyParams != null ?
+                QueryParamsAdapter._toJson(extraTokenBodyParams) : null;
+        brokerRequestBuilder.extraTokenBodyParameter(extraTokenBodyParameters);
         return brokerRequestBuilder.build();
     }
 
