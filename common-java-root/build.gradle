@@ -7,7 +7,7 @@ buildscript {
 
     repositories {
         google()
-        mavenCentral()
+//        mavenCentral()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlinVersion}"
