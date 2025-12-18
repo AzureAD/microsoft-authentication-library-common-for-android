@@ -25,11 +25,8 @@ package com.microsoft.identity.common.java.result;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
-import com.microsoft.identity.common.kotlin.broker.BrokerPerformanceMetrics;
-import com.microsoft.identity.common.kotlin.broker.IBrokerPerformanceMetricsProvider;
-
-import javax.annotation.Nullable;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
 public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
 

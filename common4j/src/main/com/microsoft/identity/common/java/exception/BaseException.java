@@ -26,8 +26,8 @@ import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.kotlin.broker.BrokerPerformanceMetrics;
-import com.microsoft.identity.common.kotlin.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;

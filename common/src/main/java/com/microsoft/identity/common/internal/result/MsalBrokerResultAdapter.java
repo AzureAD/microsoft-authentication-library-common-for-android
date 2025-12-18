@@ -60,7 +60,7 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.kotlin.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
