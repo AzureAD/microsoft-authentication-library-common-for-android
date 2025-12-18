@@ -146,9 +146,16 @@ public enum AttributeName {
     http_status_code,
 
     /**
-     * The size of the silent command executor queue when starting to process an ATS request.
+     * The number of unique cacheable silent requests currently being tracked in the executing command map.
+     * This represents deduplicated commands that are either executing or waiting in the thread pool queue.
      */
     num_concurrent_silent_requests,
+
+    /**
+     * The number of tasks waiting in the silent request thread pool queue to be executed.
+     * This does not include tasks currently being executed by worker threads.
+     */
+    silent_requests_queue_size,
 
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.

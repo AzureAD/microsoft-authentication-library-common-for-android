@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
@@ -76,10 +77,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         super(sharedPreferencesFileManager);
         Logger.verbose(TAG, "Init: " + TAG);
         mCacheValueDelegate = accountCacheValueDelegate;
-        new Thread(() -> load()).start();
+        new Thread(OtelContextExtension.wrap(() -> load())).start();
     }
 
     private void load() {
+        final long loadStartTime = System.currentTimeMillis();
         final String methodTag = TAG + ":load";
 
         synchronized (mCacheLock) {
@@ -93,6 +95,8 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             } finally {
                 mLoaded = true;
                 mCacheLock.notifyAll();
+                OTelUtility.recordElapsedTime(AttributeName.out_of_memory_exception_stacktrace.name(),
+                        loadStartTime);
             }
         }
     }
