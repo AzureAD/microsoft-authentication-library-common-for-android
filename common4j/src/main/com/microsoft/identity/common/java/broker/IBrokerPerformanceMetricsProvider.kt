@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.broker
 
+/**
+ * Holds broker performance metrics derived from timestamps in authentication flows.
+ * Calculates processing and latency durations at construction time.
+ * Mainly used to pass metrics between broker and client.
+ */
 interface IBrokerPerformanceMetricsProvider {
     val brokerPerformanceMetrics: BrokerPerformanceMetrics?
 }
