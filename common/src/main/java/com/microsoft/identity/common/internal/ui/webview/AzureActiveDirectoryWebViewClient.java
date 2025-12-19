@@ -1144,7 +1144,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
-        if (mPasskeyRegistrationScript != null &&  PasskeyOriginRulesManager.isAllowedOrigin(url)) {
+        if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
             Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
             view.evaluateJavascript(mPasskeyRegistrationScript, null);
         }
