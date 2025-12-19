@@ -346,6 +346,11 @@ public class CommandDispatcher {
                     AttributeName.num_concurrent_silent_requests.name(),
                     sExecutingCommandMap.size()
             );
+            int queueSize = ((ThreadPoolExecutor)sSilentExecutor).getQueue().size();
+            SpanExtension.current().setAttribute(
+                    AttributeName.silent_requests_queue_size.name(),
+                    queueSize
+            );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
