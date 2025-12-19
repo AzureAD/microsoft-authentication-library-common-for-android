@@ -1745,69 +1745,66 @@ public class BrokerOAuth2TokenCache
                 "refreshTokenRecord, familyId, authScheme)";
 
         final ICacheRecord cacheRecord;
-        synchronized (this) {
-            final long saveAndLoadStartTime = System.currentTimeMillis();
+        final long saveAndLoadStartTime = System.currentTimeMillis();
 
-            final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
-            final MsalOAuth2TokenCache targetCache;
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        final MsalOAuth2TokenCache targetCache;
 
-            if (isFoci) {
-                // Save to the foci cache....
-                targetCache = mFociCache;
-                Logger.info(TAG + methodName, "Saving data to FOCI cache");
-            } else {
-                // Save to the processUid cache... or create a new one
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
-                Logger.info(TAG + methodName, "Saving data to Process Uid cache");
-            }
-
-            cacheRecord = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord
-            );
-            Logger.info(TAG + methodName, "Account data saved to cache");
-
-            AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
-            if (cachedAccessTokenRecord == null) {
-                throw new ClientException("Access token is null in cache record");
-            }
-            final String clientId = cachedAccessTokenRecord.getClientId();
-            final String environment = cachedAccessTokenRecord.getEnvironment();
-            final String target = cachedAccessTokenRecord.getTarget();
-            final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
-            final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
-
-            if (clientId == null) {
-                throw new ClientException("Access token in cache record has null clientId");
-            }
-            if (environment == null) {
-                throw new ClientException("Access token in cache record has null environment");
-            }
-            updateApplicationMetadataCache(
-                    clientId,
-                    environment,
-                    familyId,
+        if (isFoci) {
+            // Save to the foci cache....
+            targetCache = mFociCache;
+            Logger.info(TAG + methodName, "Saving data to FOCI cache");
+        } else {
+            // Save to the processUid cache... or create a new one
+            targetCache = initializeProcessUidCache(
+                    getComponents(),
                     mUid
             );
-
-            Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-            List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
-                    clientId,
-                    applicationIdentifier,
-                    mamEnrollmentIdentifier,
-                    target,
-                    cacheRecord.getAccount(),
-                    authScheme
-            );
-            OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
-                    saveAndLoadStartTime);
-            return cacheRecordList;
+            Logger.info(TAG + methodName, "Saving data to Process Uid cache");
         }
 
+        cacheRecord = targetCache.save(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                refreshTokenRecord
+        );
+        Logger.info(TAG + methodName, "Account data saved to cache");
+
+        AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
+        if (cachedAccessTokenRecord == null) {
+            throw new ClientException("Access token is null in cache record");
+        }
+        final String clientId = cachedAccessTokenRecord.getClientId();
+        final String environment = cachedAccessTokenRecord.getEnvironment();
+        final String target = cachedAccessTokenRecord.getTarget();
+        final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
+        final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
+
+        if (clientId == null) {
+            throw new ClientException("Access token in cache record has null clientId");
+        }
+        if (environment == null) {
+            throw new ClientException("Access token in cache record has null environment");
+        }
+        updateApplicationMetadataCache(
+                clientId,
+                environment,
+                familyId,
+                mUid
+        );
+
+        Logger.info(TAG + methodName, "Starting to load aggregated account data..");
+        List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
+                clientId,
+                applicationIdentifier,
+                mamEnrollmentIdentifier,
+                target,
+                cacheRecord.getAccount(),
+                authScheme
+        );
+        OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+                saveAndLoadStartTime);
+        return cacheRecordList;
     }
 }
