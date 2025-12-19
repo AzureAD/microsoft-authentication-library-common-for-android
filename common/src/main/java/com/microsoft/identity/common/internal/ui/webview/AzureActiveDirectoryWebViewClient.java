@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -88,13 +89,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
@@ -144,7 +143,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SpanContext mSpanContext;
     private final String mUtid;
 
-    private final List<JsScriptRecord> mOnPageStartedScripts = new ArrayList<>();
+    private String mPasskeyRegistrationScript;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -1144,12 +1143,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        // Evaluate JavaScript for each script if URL matches allowed origins
-        for (final JsScriptRecord scriptRecord : mOnPageStartedScripts) {
-            if (scriptRecord.isAllowedForUrl(url)) {
-                Logger.info(TAG, "Executing onPageStarted script: " + scriptRecord.getId());
-                view.evaluateJavascript(scriptRecord.getScript(), null);
-            }
+        // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
+        if (mPasskeyRegistrationScript != null &&  PasskeyOriginRulesManager.isAllowedOrigin(url)) {
+            Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
+            view.evaluateJavascript(mPasskeyRegistrationScript, null);
         }
     }
 
@@ -1232,17 +1229,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * Add a JavaScript to be executed in onPageStarted.
-     * If allowedUrls is null, the script will be executed for all URLs.
-     * If allowedUrls is non-null, the script will be executed only for URLs that start with any of the allowed origins.
+     * The script will be executed only for URLs that are allowed by {@link PasskeyOriginRulesManager}.
      * @param script JavaScript code to be executed.
-     * @param allowedUrls Set of allowed URL origins.
      */
-    public void addOnPageStartedScript(
-            @NonNull final String scriptId,
-            @NonNull final String script,
-            @Nullable final Set<String> allowedUrls) {
-        this.mOnPageStartedScripts.add(
-                new JsScriptRecord(scriptId, script, allowedUrls)
-        );
+    public void addPasskeyRegistrationJsScript(@NonNull final String script) {
+        this.mPasskeyRegistrationScript = script;
     }
 }

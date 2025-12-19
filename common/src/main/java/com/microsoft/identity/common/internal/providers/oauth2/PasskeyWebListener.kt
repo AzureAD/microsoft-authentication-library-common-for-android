@@ -289,41 +289,8 @@ class PasskeyWebListener(
             var __webauthn_interface__,__webauthn_hooks__;!function(e){__webauthn_interface__.addEventListener("message",(function(e){console.log(e.data);var n=JSON.parse(e.data);"get"===n.type?o(n):"create"===n.type?l(n):console.log("Incorrect response format for reply: "+n.type)}));var n=null,t=null,r=null,a=null;function o(e){if(null!==n&&null!==r){if("success"!=e.status){var o=r;return n=null,r=null,void o(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName))}var s=u(e.data),i=n;n=null,r=null,i(s)}else console.log("Reply failure: Resolve: "+t+" and reject: "+a)}function s(e){var n=e.length%4;return Uint8Array.from(atob(e.replace(/-/g,"+").replace(/_/g,"/").padEnd(e.length+(0===n?0:4-n),"=")),(function(e){return e.charCodeAt(0)})).buffer}function i(e){return btoa(Array.from(new Uint8Array(e),(function(e){return String.fromCharCode(e)})).join("")).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+${'$'}/,"")}function l(e){if(null!==t&&null!==a){if("success"!=e.status){var n=a;return t=null,a=null,void n(new DOMException(e.data.domExceptionMessage,e.data.domExceptionName))}var r=u(e.data),o=t;t=null,a=null,o(r)}else console.log("Reply failure: Resolve: "+t+" and reject: "+a)}function u(e){return e.rawId=s(e.rawId),e.response.clientDataJSON=s(e.response.clientDataJSON),e.response.hasOwnProperty("attestationObject")&&(e.response.attestationObject=s(e.response.attestationObject)),e.response.hasOwnProperty("authenticatorData")&&(e.response.authenticatorData=s(e.response.authenticatorData)),e.response.hasOwnProperty("signature")&&(e.response.signature=s(e.response.signature)),e.response.hasOwnProperty("userHandle")&&(e.response.userHandle=s(e.response.userHandle)),e.getClientExtensionResults=function(){return{}},e.response.getTransports=function(){return e.response.hasOwnProperty("transports")?e.response.transports:[]},e}e.create=function(n){if(!("publicKey"in n))return e.originalCreateFunction(n);var r=new Promise((function(e,n){t=e,a=n})),o=n.publicKey;if(o.hasOwnProperty("challenge")){var s=i(o.challenge);o.challenge=s}if(o.hasOwnProperty("user")&&o.user.hasOwnProperty("id")){var l=i(o.user.id);o.user.id=l}if(o.hasOwnProperty("excludeCredentials")&&Array.isArray(o.excludeCredentials)&&o.excludeCredentials.length>0)for(var u=0;u<o.excludeCredentials.length;u++){var c=o.excludeCredentials[u];c&&c.hasOwnProperty("id")&&(c.id=i(c.id))}var p={type:"create",request:o},_=JSON.stringify(p);return __webauthn_interface__.postMessage(_),r},e.get=function(t){if(!("publicKey"in t))return e.originalGetFunction(t);var a=new Promise((function(e,t){n=e,r=t})),o=t.publicKey;if(o.hasOwnProperty("challenge")){var s=i(o.challenge);o.challenge=s}var l={type:"get",request:o},u=JSON.stringify(l);return __webauthn_interface__.postMessage(u),a},e.onReplyGet=o,e.CM_base64url_decode=s,e.CM_base64url_encode=i,e.onReplyCreate=l}(__webauthn_hooks__||(__webauthn_hooks__={})),__webauthn_hooks__.originalGetFunction=navigator.credentials.get,__webauthn_hooks__.originalCreateFunction=navigator.credentials.create,navigator.credentials.get=__webauthn_hooks__.get,navigator.credentials.create=__webauthn_hooks__.create,window.PublicKeyCredential=function(){},window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable=function(){return Promise.resolve(!0)};
          """
 
-        /** Allowed origins that can use the WebAuthN interface. */
-        private val ALLOWED_ORIGIN_RULES_PRODUCTION = setOf(
-            "https://login.microsoft.com",
-            "https://account.live.com",
-            "https://mysignins.microsoft.com",
-            "https://mysignins.azure.us",
-            "https://mysignins.microsoft.scloud",
-            "https://mysignins.eaglex.ic.gov",
-            "https://login.microsoftonline.us",
-            "https://login.microsoftonline.microsoft.scloud",
-            "https://login.microsoftonline.eaglex.ic.gov",
-            "https://login.sovcloud-identity.fr",
-            "https://login.sovcloud-identity.de",
-            "https://login.sovcloud-identity.sg"
-        )
 
-        /** Allowed origins for pre-production/testing environments. */
-        private val ALLOWED_ORIGIN_PRE_PRODUCTION = setOf(
-            "https://account.live-int.com",
-            "https://login.windows-ppe.net",
-            "https://mysignins-ppe.microsoft.com"
-        )
 
-        /**
-         * Gets the set of allowed origin rules based on build configuration.
-         *
-         * @return Set of allowed origin rules.
-         */
-        private fun getAllowedOriginRules(): Set<String> {
-            val mutableSet = ALLOWED_ORIGIN_RULES_PRODUCTION.toMutableSet()
-            if (BuildConfig.DEBUG) {
-                mutableSet.addAll(ALLOWED_ORIGIN_PRE_PRODUCTION)
-            }
-            return mutableSet.toSet()
-        }
 
         /**
          * Attaches the passkey listener to a WebView.
@@ -360,7 +327,7 @@ class PasskeyWebListener(
                 WebViewCompat.addWebMessageListener(
                     webView,
                     INTERFACE_NAME,
-                    getAllowedOriginRules(),
+                    PasskeyOriginRulesManager.getAllowedOriginRules(),
                     PasskeyWebListener(
                         coroutineScope = CoroutineScope(Dispatchers.Default),
                         credentialManagerHandler = CredentialManagerHandler(activity)
@@ -376,11 +343,7 @@ class PasskeyWebListener(
                 } else {
                     WEB_AUTHN_INTERFACE_JS_MINIFIED
                 }
-                webClient.addOnPageStartedScript(
-                    TAG,
-                    scriptToInject,
-                    getAllowedOriginRules()
-                )
+                webClient.addPasskeyRegistrationJsScript(scriptToInject)
 
                 true
             } else {
