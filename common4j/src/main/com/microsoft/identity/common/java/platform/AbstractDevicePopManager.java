@@ -626,7 +626,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         }
     }
 
-    private String mapCryptoExceptionToErrorCode(Exception e) {
+    private String mapCryptoExceptionToErrorCode(@NonNull final Exception e) {
         if (e instanceof NoSuchAlgorithmException) {
             return NO_SUCH_ALGORITHM;
         } else if (e instanceof NoSuchPaddingException) {
