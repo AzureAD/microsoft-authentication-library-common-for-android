@@ -61,6 +61,7 @@ import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.nimbusds.jose.JOSEException;
@@ -202,7 +203,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     /**
      * Properties embedded in the SignedHttpRequest.
-     * Roughly conforms to: https://tools.ietf.org/html/draft-ietf-oauth-signed-http-request-03
+     * Roughly conforms to: <a href="https://tools.ietf.org/html/draft-ietf-oauth-signed-http-request-03">...</a>
      */
     private static final class SignedHttpRequestJwtClaims {
 
@@ -590,7 +591,8 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
         final String methodTag = TAG + ":encrypt";
-        final Span span = OTelUtility.createSpan(SpanName.DevicePopEncrypt.name());
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopCryptoOperation.name());
+        span.setAttribute(AttributeName.crypto_operation.name(), "encrypt");
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
@@ -654,7 +656,8 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
         final String methodTag = TAG + ":decrypt";
-        final Span span = OTelUtility.createSpan(SpanName.DevicePopDecrypt.name());
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopCryptoOperation.name());
+        span.setAttribute(AttributeName.crypto_operation.name(), "decrypt");
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
