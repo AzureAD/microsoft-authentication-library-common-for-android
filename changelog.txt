@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 0.0.00011-RC1
+Version 0.0.00011
 ----------
 - [PATCH] Add JavascriptInterface rules to consumer proguard rules (#2837)
 - [MINOR] Add optimized saveAndLoadAggregatedAccountData method in BrokerOAuth2TokenCache (#2832)
