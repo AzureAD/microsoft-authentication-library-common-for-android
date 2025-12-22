@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
@@ -626,6 +627,15 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         }
     }
 
+    /**
+     * Maps cryptographic exceptions to corresponding ClientException error code constants.
+     * This helper method is used by both encrypt and decrypt operations to provide consistent
+     * error code mappings for various cryptographic failure scenarios.
+     *
+     * @param e The exception to map to an error code. Must be non-null.
+     * @return The corresponding ClientException error code constant.
+     * Note : Returns {@link ClientException#UNKNOWN_CRYPTO_ERROR} as the default fallback when the exception type doesn't match any known types.
+     */
     private String mapCryptoExceptionToErrorCode(@NonNull final Exception e) {
         if (e instanceof NoSuchAlgorithmException) {
             return NO_SUCH_ALGORITHM;
@@ -644,7 +654,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         } else if (e instanceof InvalidAlgorithmParameterException) {
             return INVALID_ALG_PARAMETER;
         }
-        return INVALID_KEY; // default fallback
+        return UNKNOWN_CRYPTO_ERROR; // default fallback
     }
 
     @Override
