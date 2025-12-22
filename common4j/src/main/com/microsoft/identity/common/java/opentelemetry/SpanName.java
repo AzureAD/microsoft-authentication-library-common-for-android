@@ -79,5 +79,7 @@ public enum SpanName {
      * Span name for fetching initial ECS flight configurations.
      */
     EcsFlightsFetchConfigs,
-    DevicePopMintSignedAccessToken
+    DevicePopMintSignedAccessToken,
+    DevicePopDecrypt,
+    DevicePopEncrypt
 }
