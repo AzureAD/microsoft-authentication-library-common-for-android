@@ -120,7 +120,9 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
         final IPlatformUtil platformUtil = getPlatformComponents().getPlatformUtil();
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_WEB_APPS_API)
                 && getRequestType() == BrokerRequestType.WEB_APPS) {
-            // For web apps, we have a different redirect URI from our standard Android one.
+            // For web apps, the redirect URI will be in the web format instead of our standard Android one.
+            // So comparing the thumbprint of the package with the redirect URI won't work.
+            // Instead, we will check the package thumbprint against our static allowed list of apps for this feature.
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
         }
