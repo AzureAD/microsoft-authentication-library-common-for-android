@@ -80,6 +80,5 @@ public enum SpanName {
      */
     EcsFlightsFetchConfigs,
     DevicePopMintSignedAccessToken,
-    DevicePopDecrypt,
-    DevicePopEncrypt
+    DevicePopCryptoOperation
 }
