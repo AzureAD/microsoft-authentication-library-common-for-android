@@ -632,7 +632,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
      * error code mappings for various cryptographic failure scenarios.
      *
      * @param e The exception to map to an error code. Must be non-null.
-     * @return The corresponding ClientException error code constant. Returns {@link #INVALID_KEY}
+     * @return The corresponding ClientException error code constant. Returns {@link ClientException#INVALID_KEY}
      *         as the default fallback when the exception type doesn't match any known types.
      */
     private String mapCryptoExceptionToErrorCode(@NonNull final Exception e) {
