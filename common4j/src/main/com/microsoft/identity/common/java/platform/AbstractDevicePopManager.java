@@ -589,10 +589,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
-        String errCode;
-        Exception exception;
         final String methodTag = TAG + ":encrypt";
-        try {
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopEncrypt.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
@@ -607,46 +606,43 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                 input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
             }
 
-            return input.doFinal(plaintext);
-        } catch (final InvalidKeyException e) {
-            errCode = INVALID_KEY;
-            exception = e;
-        } catch (final UnrecoverableEntryException e) {
-            errCode = INVALID_PROTECTION_PARAMS;
-            exception = e;
-        } catch (final NoSuchAlgorithmException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final KeyStoreException e) {
-            errCode = KEYSTORE_NOT_INITIALIZED;
-            exception = e;
-        } catch (final NoSuchPaddingException e) {
-            errCode = NO_SUCH_PADDING;
-            exception = e;
-        } catch (final InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
-            exception = e;
-        } catch (final BadPaddingException e) {
-            errCode = BAD_PADDING;
-            exception = e;
-        } catch (final IllegalBlockSizeException e) {
-            errCode = INVALID_BLOCK_SIZE;
-            exception = e;
+            final byte[] result = input.doFinal(plaintext);
+            span.setStatus(StatusCode.OK);
+            return result;
+        } catch (final InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException |
+                       KeyStoreException | NoSuchPaddingException | InvalidAlgorithmParameterException |
+                       BadPaddingException | IllegalBlockSizeException e) {
+            final String errCode = mapCryptoExceptionToErrorCode(e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+
+            final ClientException clientException = new ClientException(errCode, e.getMessage(), e);
+            Logger.error(methodTag, errCode, e);
+            throw clientException;
+        } finally {
+            span.end();
         }
+    }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                methodTag,
-                errCode,
-                exception
-        );
-
-        throw clientException;
+    private String mapCryptoExceptionToErrorCode(Exception e) {
+        if (e instanceof NoSuchAlgorithmException) {
+            return NO_SUCH_ALGORITHM;
+        } else if (e instanceof NoSuchPaddingException) {
+            return NO_SUCH_PADDING;
+        } else if (e instanceof InvalidKeyException) {
+            return INVALID_KEY;
+        } else if (e instanceof UnrecoverableEntryException) {
+            return INVALID_PROTECTION_PARAMS;
+        } else if (e instanceof KeyStoreException) {
+            return KEYSTORE_NOT_INITIALIZED;
+        } else if (e instanceof BadPaddingException) {
+            return BAD_PADDING;
+        } else if (e instanceof IllegalBlockSizeException) {
+            return INVALID_BLOCK_SIZE;
+        } else if (e instanceof InvalidAlgorithmParameterException) {
+            return INVALID_ALG_PARAMETER;
+        }
+        return INVALID_KEY; // default fallback
     }
 
     @Override
@@ -657,10 +653,9 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
-        String errCode;
-        Exception exception;
         final String methodTag = TAG + ":decrypt";
-        try {
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopDecrypt.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
@@ -676,47 +671,24 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             } else {
                 outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
             }
-            return outputCipher.doFinal(ciphertext);
-        } catch (final NoSuchAlgorithmException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final InvalidKeyException e) {
-            errCode = INVALID_KEY;
-            exception = e;
-        } catch (final UnrecoverableEntryException e) {
-            errCode = INVALID_PROTECTION_PARAMS;
-            exception = e;
-        } catch (final NoSuchPaddingException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final KeyStoreException e) {
-            errCode = KEYSTORE_NOT_INITIALIZED;
-            exception = e;
-        } catch (final BadPaddingException e) {
-            errCode = BAD_PADDING;
-            exception = e;
-        } catch (final IllegalBlockSizeException e) {
-            errCode = INVALID_BLOCK_SIZE;
-            exception = e;
-        } catch (final InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
-            exception = e;
+            final byte[] result = outputCipher.doFinal(ciphertext);
+            span.setStatus(StatusCode.OK);
+            return result;
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+                       UnrecoverableEntryException | KeyStoreException | BadPaddingException |
+                       IllegalBlockSizeException | InvalidAlgorithmParameterException e) {
+            final String errCode = mapCryptoExceptionToErrorCode(e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+
+            final ClientException clientException = new ClientException(errCode, e.getMessage(), e);
+            Logger.error(methodTag, errCode, e);
+            throw clientException;
+        } finally {
+            span.end();
         }
-
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                methodTag,
-                errCode,
-                exception
-        );
-
-        throw clientException;
     }
+
 
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
