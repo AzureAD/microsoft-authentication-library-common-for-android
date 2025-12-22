@@ -52,6 +52,9 @@ public class LabAccount implements ILabAccount {
     @NonNull
     private final String mHomeTenantId;
 
+    @NonNull
+    private final String mHomeObjectId;
+
     // nullable
     // dependency for Nullable annotation not currently added to LabApiUtilities
     private final ConfigInfo mConfigInfo;
