@@ -626,6 +626,15 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         }
     }
 
+    /**
+     * Maps cryptographic exceptions to corresponding ClientException error code constants.
+     * This helper method is used by both encrypt and decrypt operations to provide consistent
+     * error code mappings for various cryptographic failure scenarios.
+     *
+     * @param e The exception to map to an error code. Must be non-null.
+     * @return The corresponding ClientException error code constant. Returns {@link #INVALID_KEY}
+     *         as the default fallback when the exception type doesn't match any known types.
+     */
     private String mapCryptoExceptionToErrorCode(@NonNull final Exception e) {
         if (e instanceof NoSuchAlgorithmException) {
             return NO_SUCH_ALGORITHM;
