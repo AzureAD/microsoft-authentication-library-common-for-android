@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +40,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor {
+public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider {
 
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
     // When MSAL converts the result bundle it looks for this value to know about exception type
@@ -78,6 +80,8 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     private String mUsername;
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
+
+    private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -214,6 +218,15 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     public String getUsername() {
         return mUsername;
+    }
+
+    public void setBrokerPerformanceMetrics(final BrokerPerformanceMetrics brokerPerformanceMetrics) {
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
+    }
+
+    @Override
+    public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
+        return this.mBrokerPerformanceMetrics;
     }
 
     public void setUsername(@Nullable final String username) {
