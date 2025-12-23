@@ -10,6 +10,7 @@ vNext
 - [MINOR] Adds Authentication Constants to be used for broker latency timestamp in response (#2831)
 - [MINOR] Implemented Common logic to retrieve broker latency duration from result Broker Bundle (#2835)
 - [MINOR] Add support for WebApps getToken API (#2803)
+- [MINOR] Added telemetry to capture the DRSNonce call (#3302)
 
 Version 23.1.1
 -----------
