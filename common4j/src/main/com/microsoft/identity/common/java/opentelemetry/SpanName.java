@@ -80,5 +80,8 @@ public enum SpanName {
      */
     EcsFlightsFetchConfigs,
     DevicePopMintSignedAccessToken,
+    /**
+     * Span name for DRS (Device Registration Service) nonce request operations.
+     */
     DRSNonceRequest
 }
