@@ -169,8 +169,21 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
+    public @NonNull Bundle bundleFromBaseExceptionForWebApps(@NonNull BaseException exception) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public @NonNull
     ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+        throw new UnsupportedOperationException();
+    }
+
+    @NonNull
+    @Override
+    public Bundle bundleFromAuthenticationResultForWebApps(@NonNull ILocalAuthenticationResult authenticationResult,
+                                                           @Nullable String negotiatedBrokerProtocolVersion,
+                                                           @Nullable String state) throws BaseException {
         throw new UnsupportedOperationException();
     }
 
