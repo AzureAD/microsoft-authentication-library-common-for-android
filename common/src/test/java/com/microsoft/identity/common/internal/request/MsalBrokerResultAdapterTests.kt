@@ -381,4 +381,46 @@ class MsalBrokerResultAdapterTests {
         assertEquals(mockErrorCode, receivedException.errorCode)
         assertEquals(mockErrorMessage, receivedException.message)
     }
+
+    @Test
+    fun testGetBrokerPerformanceMetricsFromBundle_WithValidTimestamps() {
+        val mockRequestReceivedTimestamp = 123456789L
+        val mockResponseGenerationTimestamp = 987654321L
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = android.os.Bundle().apply {
+            putLong(
+                com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_REQUEST_RECEIVED_TIMESTAMP,
+                mockRequestReceivedTimestamp
+            )
+            putLong(
+                com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_RESPONSE_GENERATION_TIMESTAMP,
+                mockResponseGenerationTimestamp
+            )
+        }
+
+        val metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle)
+
+        assertNotNull(metrics)
+
+        // Validate timestamp values
+        assertEquals(mockRequestReceivedTimestamp, metrics!!.brokerRequestReceivedTimestamp)
+        assertEquals(mockResponseGenerationTimestamp, metrics.brokerResponseGenerationTimestamp)
+
+        // Validate calculated broker handling time
+        val expectedBrokerHandlingTime = mockResponseGenerationTimestamp - mockRequestReceivedTimestamp
+        assertEquals(expectedBrokerHandlingTime, metrics.brokerHandlingTime)
+
+        // Validate response latency (should be >= 0)
+        assertNotNull(metrics.responseLatency)
+        assertTrue(metrics.responseLatency >= 0)
+    }
+
+    @Test
+    fun testGetBrokerPerformanceMetricsFromBundle_WithoutTimestamps() {
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = android.os.Bundle() // Empty bundle, no timestamps
+        val metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle)
+        assertNull(metrics)
+    }
 }
