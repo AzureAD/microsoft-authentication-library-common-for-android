@@ -75,10 +75,10 @@ public enum SpanName {
     PasskeyWebListener,
     PersistToStorageAsync,
     InstallCertOnWpj,
-    DRSNonceRequest,
     /**
      * Span name for fetching initial ECS flight configurations.
      */
     EcsFlightsFetchConfigs,
-    DevicePopMintSignedAccessToken
+    DevicePopMintSignedAccessToken,
+    DRSNonceRequest
 }
