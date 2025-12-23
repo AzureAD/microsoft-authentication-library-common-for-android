@@ -314,4 +314,52 @@ public class AzureActiveDirectory
         return new Gson().fromJson(jsonCloudArray, listType);
     }
 
+    /**
+     * Builds and validates the authority from the WebApp sender URL.
+     *
+     * @param senderUrl The WebApp sender URL.
+     * @return The normalized authority URL string.
+     * @throws ClientException If the URL is malformed or the host is not recognized/validated.
+     */
+    public static String buildAndValidateAuthorityFromWebAppSender(final String senderUrl) throws ClientException {
+        final String methodTag = TAG + ":buildAndValidateAuthorityFromWebAppSender";
+        try {
+            final URI uri = new URI(senderUrl);
+            final String scheme = uri.getScheme();
+            if (scheme == null) {
+                throw new ClientException(ClientException.MALFORMED_URL, "Missing scheme in sender url");
+            }
+            final String host = uri.getHost();
+            if (host == null) {
+                throw new ClientException(ClientException.MALFORMED_URL, "Missing host in sender url");
+            }
+
+            final URI normalized = new URI(scheme + "://" + host + "/common");
+
+            ensureCloudDiscoveryComplete();
+            final URL authorityUrl = normalized.toURL();
+
+            if (!hasCloudHost(authorityUrl)) {
+                Logger.warn(methodTag, "Host not found in known AAD clouds: " + host);
+                throw new ClientException(
+                        ClientException.MALFORMED_URL,
+                        "Unrecognized AAD cloud host: " + host
+                );
+            }
+
+            if (!isValidCloudHost(authorityUrl)) {
+                Logger.warn(methodTag, "Host not validated as AAD cloud: " + host);
+                throw new ClientException(
+                        ClientException.MALFORMED_URL,
+                        "AAD cloud host not validated: " + host
+                );
+            }
+
+            return normalized.toString();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, "Invalid sender url syntax", e);
+        } catch (final MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, "Invalid authority URL formed", e);
+        }
+    }
 }

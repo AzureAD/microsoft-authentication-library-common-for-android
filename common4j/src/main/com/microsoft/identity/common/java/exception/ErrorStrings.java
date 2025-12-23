@@ -476,6 +476,11 @@ public final class ErrorStrings {
     public static final String ALL_WEBAPP_SIGN_OUTS_FAILED = "all_webapp_sign_outs_failed";
 
     /**
+     * A specific web app error for Edge.
+     */
+    public static final String UI_NOT_ALLOWED = "ui_not_allowed";
+
+    /**
      * The requested feature flight is disabled.
      */
     public static final String FLIGHT_DISABLED = "flight_disabled";
