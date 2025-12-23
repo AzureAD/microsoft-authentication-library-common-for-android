@@ -26,7 +26,11 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
+import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
@@ -79,8 +83,11 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     // Parameter representing if this broker request is an Account Transfer request
     private final boolean isAccountTransferRequest;
 
+    // Optional field to persist state for WebApps interactive token requests.
+    private final String webAppsState;
+
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         super.validate();
         if (getAuthority() == null) {
             throw new ArgumentException(
@@ -118,7 +125,16 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+            final IPlatformUtil platformUtil = getPlatformComponents().getPlatformUtil();
+            if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_WEB_APPS_API)
+                    && getRequestType() == BrokerRequestType.WEB_APPS) {
+                // For web apps, the redirect URI will be in the web format instead of our standard Android one.
+                // So comparing the thumbprint of the package with the redirect URI won't work.
+                // Instead, we will check the package thumbprint against our static allowed list of apps for this feature.
+                platformUtil.isValidCallingAppForWebApps(getCallerUid());
+                return;
+            }
+            if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         ArgumentException.REDIRECT_URI_ARGUMENT_NAME, "The redirect URI doesn't match the uri" +

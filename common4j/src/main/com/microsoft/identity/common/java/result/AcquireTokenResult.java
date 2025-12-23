@@ -25,9 +25,10 @@ package com.microsoft.identity.common.java.result;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
-public class AcquireTokenResult {
+public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
@@ -36,6 +37,8 @@ public class AcquireTokenResult {
     private AuthorizationResult mAuthorizationResult;
 
     private Boolean mSucceeded = false;
+
+    private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
@@ -52,6 +55,15 @@ public class AcquireTokenResult {
 
     public void setTokenResult(TokenResult tokenResult) {
         this.mTokenResult = tokenResult;
+    }
+
+    public void setBrokerPerformanceMetrics(BrokerPerformanceMetrics brokerPerformanceMetrics) {
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
+    }
+
+    @Override
+    public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
+        return this.mBrokerPerformanceMetrics;
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
