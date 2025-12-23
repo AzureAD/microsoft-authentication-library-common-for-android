@@ -77,6 +77,32 @@ public enum OpenIdConnectPromptParameter {
         return this.name().toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Utility method to map a string to an OpenIdConnectPromptParameter enum value.
+     *
+     * @param promptParameterString the string representation of the prompt parameter (case-insensitive)
+     * @return the corresponding OpenIdConnectPromptParameter enum value, or UNSET if the input is null, empty, or unrecognized
+     */
+    public static OpenIdConnectPromptParameter fromString(@Nullable final String promptParameterString) {
+        if (promptParameterString == null || promptParameterString.isEmpty()) {
+            return UNSET;
+        }
+        switch (promptParameterString.toLowerCase(Locale.ROOT)) {
+            case "none":
+                return NONE;
+            case "select_account":
+                return SELECT_ACCOUNT;
+            case "login":
+                return LOGIN;
+            case "consent":
+                return CONSENT;
+            case "create":
+                return CREATE;
+            default:
+                return UNSET;
+        }
+    }
+
 
     /**
      * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter

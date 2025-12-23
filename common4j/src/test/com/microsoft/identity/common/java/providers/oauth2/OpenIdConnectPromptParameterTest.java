@@ -60,4 +60,56 @@ public class OpenIdConnectPromptParameterTest  {
         final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("FORCE_PROMPT");
         assertEquals(promptParameter, OpenIdConnectPromptParameter.LOGIN);
     }
+
+    @Test
+    public void testFromStringNull() {
+        assertEquals(OpenIdConnectPromptParameter.UNSET,
+                OpenIdConnectPromptParameter.fromString(null));
+    }
+
+    @Test
+    public void testFromStringEmpty() {
+        assertEquals(OpenIdConnectPromptParameter.UNSET,
+                OpenIdConnectPromptParameter.fromString(""));
+    }
+
+    @Test
+    public void testFromStringNoneCaseInsensitive() {
+        assertEquals(OpenIdConnectPromptParameter.NONE,
+                OpenIdConnectPromptParameter.fromString("none"));
+        assertEquals(OpenIdConnectPromptParameter.NONE,
+                OpenIdConnectPromptParameter.fromString("NONE"));
+        assertEquals(OpenIdConnectPromptParameter.NONE,
+                OpenIdConnectPromptParameter.fromString("NoNe"));
+    }
+
+    @Test
+    public void testFromStringSelectAccount() {
+        assertEquals(OpenIdConnectPromptParameter.SELECT_ACCOUNT,
+                OpenIdConnectPromptParameter.fromString("select_account"));
+    }
+
+    @Test
+    public void testFromStringLogin() {
+        assertEquals(OpenIdConnectPromptParameter.LOGIN,
+                OpenIdConnectPromptParameter.fromString("login"));
+    }
+
+    @Test
+    public void testFromStringConsent() {
+        assertEquals(OpenIdConnectPromptParameter.CONSENT,
+                OpenIdConnectPromptParameter.fromString("consent"));
+    }
+
+    @Test
+    public void testFromStringCreate() {
+        assertEquals(OpenIdConnectPromptParameter.CREATE,
+                OpenIdConnectPromptParameter.fromString("create"));
+    }
+
+    @Test
+    public void testFromStringUnrecognized() {
+        assertEquals(OpenIdConnectPromptParameter.UNSET,
+                OpenIdConnectPromptParameter.fromString("foobar"));
+    }
 }

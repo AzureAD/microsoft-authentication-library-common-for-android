@@ -15,6 +15,11 @@ public enum BrokerRequestType {
     /**
      * Request type indicates a token request which is performed during an interrupt flow.
      */
-    RESOLVE_INTERRUPT
+    RESOLVE_INTERRUPT,
+
+    /**
+     * Request type indicates a token request for web apps.
+     */
+    WEB_APPS
 
 }

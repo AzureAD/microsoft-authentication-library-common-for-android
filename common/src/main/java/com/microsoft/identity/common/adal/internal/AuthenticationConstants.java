@@ -1379,22 +1379,37 @@ public final class AuthenticationConstants {
         /**
          * String for broker webapps get contracts result.
          */
-        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "contracts";
-
-        /**
-         * String for broker webapps error result.
-         */
-        public static final String BROKER_WEB_APPS_ERROR = "error";
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "web_apps_contracts";
 
         /**
          * String for broker webapps request.
          */
-        public static final String BROKER_WEB_APPS_REQUEST = "request";
+        public static final String BROKER_WEB_APPS_EXECUTE_REQUEST = "web_apps_execute_request";
+
+        /**
+         * String for broker webapps additional required params.
+         */
+        public static final String BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS = "additional_required_params";
 
         /**
          * String for broker webapps response.
          */
-        public static final String BROKER_WEB_APPS_RESPONSE = "response";
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
+
+        /**
+         * String for compressed broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED = "web_app_successful_result_compressed";
+
+        /**
+         * String for broker webapps interactive intent.
+         */
+        public static final String BROKER_WEB_APPS_INTERACTIVE_INTENT = "web_apps_interactive_intent";
+
+        /**
+         * String for broker webapps error result.
+         */
+        public static final String BROKER_WEB_APPS_ERROR_RESULT = "web_apps_error_result";
 
         /**
          * String for generate shr result.
@@ -2142,4 +2157,3 @@ public final class AuthenticationConstants {
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
 }
-

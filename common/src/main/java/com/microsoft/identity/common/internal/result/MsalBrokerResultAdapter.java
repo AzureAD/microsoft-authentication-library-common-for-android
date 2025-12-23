@@ -34,8 +34,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEBAPPS_GET_CONTRACTS_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_RESPONSE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -59,12 +60,15 @@ import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.internal.util.WebAppsUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsAccountItem;
+import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationResponse;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.dto.AadDeviceIdRecord;
@@ -151,6 +155,75 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
+        return resultBundle;
+    }
+
+    @NonNull
+    @Override
+    public Bundle bundleFromAuthenticationResultForWebApps(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                           @Nullable final String negotiatedBrokerProtocolVersion,
+                                                           @Nullable final String state) throws BaseException {
+        final String methodTag = TAG + ":bundleFromAuthenticationResultForWebApps";
+        final String errorMessagePrefix = "Received a successful interactive result, but: ";
+        Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
+
+        final Bundle resultBundle = new Bundle();
+
+        final String homeAccountId = authenticationResult.getUniqueId();
+
+        final String clientInfo = WebAppsUtil.homeAccountIdToClientInfo(homeAccountId);
+        if (StringUtil.isNullOrEmpty(clientInfo)) {
+            throw new ClientException(
+                    ErrorStrings.UNKNOWN_ERROR,
+                    errorMessagePrefix + "clientInfo could not be derived from homeAccountId."
+            );
+        }
+        // Some parameters can be null, so double checking.
+        final String username = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccountRecord().getUsername(), WebAppsAccountItem.FIELD_USER_NAME);
+        final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
+        final String idToken = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getIdToken(), WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN);
+        final WebAppsAccountItem accountItem = new WebAppsAccountItem(username, homeAccountId, null);
+
+        final WebAppsGetTokenSubOperationResponse getTokenResponse = new WebAppsGetTokenSubOperationResponse(
+                state,
+                WebAppsUtil.computeRemainingSeconds(expiresOn),
+                null, // TODO (AB#3420725): Once design for MATS properties is finalized, populate this field.
+                clientInfo,
+                accountItem,
+                idToken,
+                authenticationResult.getAccessToken(),
+                String.join(" ", authenticationResult.getScope())
+        );
+        final String getTokenJsonString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
+                getTokenResponse,
+                WebAppsGetTokenSubOperationResponse.class
+        );
+        if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
+            try {
+                byte[] compressedBytes = compressString(getTokenJsonString);
+                Logger.info(methodTag, "GetToken Result, raw payload size:"
+                        + getTokenJsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
+                );
+                resultBundle.putByteArray(
+                        BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED,
+                        compressedBytes
+                );
+            } catch (IOException e) {
+                Logger.error(methodTag, "Failed to compress GetToken  Result, sending as jsonString ", e);
+                resultBundle.putString(
+                        BROKER_WEB_APPS_SUCCESSFUL_RESULT,
+                        getTokenJsonString
+                );
+            }
+        } else {
+            Logger.info(methodTag, "Broker protocol version: " + negotiatedBrokerProtocolVersion +
+                    " lower than compression changes, sending as string"
+            );
+            resultBundle.putString(
+                    BROKER_WEB_APPS_SUCCESSFUL_RESULT,
+                    getTokenJsonString
+            );
+        }
         return resultBundle;
     }
 
@@ -368,6 +441,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, false);
 
         return resultBundle;
+    }
+
+    @NonNull
+    @Override
+    public Bundle bundleFromBaseExceptionForWebApps(@NonNull final BaseException exception) {
+        final String methodTag = TAG + ":bundleFromBaseExceptionForWebApps";
+        Logger.info(methodTag, "Constructing webapps result bundle from ClientException");
+        return WebAppsUtil.createErrorResponseBundle(exception, "Error occurred during interactive request");
     }
 
     @NonNull
@@ -1113,22 +1194,42 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Gets the execute web app request result string from the result bundle.
+     *
      * @param resultBundle The result bundle from the broker.
+     * @return The result string from the web app execution.
      */
     @NonNull
     public String getExecuteWebAppRequestResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
-        // Expect either success payload or error fields reused from BrokerResult
-        if (resultBundle.containsKey(BROKER_WEB_APPS_ERROR)) {
-            final String result = resultBundle.getString(BROKER_WEB_APPS_ERROR);
+        final String methodTag = TAG + ":getExecuteWebAppRequestResultFromBundle";
+        final String errorMessage = "For interactive request, WebApps entry in bundle null for ";
+        // Expect success payload or error fields reused from BrokerResult
+        if (resultBundle.containsKey(BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED)) {
+            byte[] compressedBytes = resultBundle.getByteArray(BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED);
+            if (compressedBytes != null) {
+                try {
+                    return GzipUtil.decompressBytesToString(compressedBytes);
+                } catch (final IOException e) {
+                    // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
+                    Logger.error(methodTag, "Failed to decompress broker result :", e);
+                    throw new ClientException(INVALID_BROKER_BUNDLE, "Failed to decompress broker result", e);
+                }
+            } else {
+                throw new ClientException(INVALID_BROKER_BUNDLE, errorMessage + BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED);
+            }
+        } else if (resultBundle.containsKey(BROKER_WEB_APPS_SUCCESSFUL_RESULT)) {
+            final String result = resultBundle.getString(BROKER_WEB_APPS_SUCCESSFUL_RESULT);
             if (result == null) {
-                throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEB_APPS_ERROR);
+                throw new ClientException(INVALID_BROKER_BUNDLE, errorMessage + BROKER_WEB_APPS_SUCCESSFUL_RESULT);
             }
             return result;
+        } else if (resultBundle.containsKey(BROKER_WEB_APPS_ERROR_RESULT)) {
+            final String result = resultBundle.getString(BROKER_WEB_APPS_ERROR_RESULT);
+            if (result == null) {
+                throw new ClientException(INVALID_BROKER_BUNDLE, errorMessage + BROKER_WEB_APPS_ERROR_RESULT);
+            }
+            return result;
+        } else {
+            throw new ClientException(INVALID_BROKER_BUNDLE, "For interactive request, no response or error found in bundle.");
         }
-        final String result = resultBundle.getString(BROKER_WEB_APPS_RESPONSE);
-        if (result == null) {
-            throw new ClientException(INVALID_BROKER_BUNDLE, WEBAPPS_ENTRY_IS_NULL_ERROR + " for " + BROKER_WEB_APPS_RESPONSE);
-        }
-        return result;
     }
 }

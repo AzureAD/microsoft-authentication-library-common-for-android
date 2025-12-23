@@ -45,7 +45,7 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
     private static final Object sLock = new Object();
 
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         super.validate();
 
         if (getAccount() == null) {
