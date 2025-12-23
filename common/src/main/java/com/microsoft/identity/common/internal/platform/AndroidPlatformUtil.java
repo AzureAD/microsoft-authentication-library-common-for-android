@@ -50,6 +50,7 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -161,6 +162,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return isValidBrokerRedirect;
     }
 
+    @Override
+    public void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException {
+        // This operation is not supported in non-broker contexts.
+        throw new UnsupportedOperationException("WebApp APIs are not functional in non-broker scenarios.");
+    }
     @Override
     @Nullable
     public String getEnrollmentId(@NonNull final String userId, @NonNull final String packageName) {
@@ -323,5 +329,9 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
                 || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
                 || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
+    }
+
+    protected Context getContext() {
+        return mContext;
     }
 }

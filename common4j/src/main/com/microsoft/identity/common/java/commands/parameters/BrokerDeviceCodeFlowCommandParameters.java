@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -57,7 +58,7 @@ public class BrokerDeviceCodeFlowCommandParameters extends DeviceCodeFlowCommand
     private final int callerUid;
 
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         super.validate();
         if (getAuthority() == null) {
             throw new ArgumentException(

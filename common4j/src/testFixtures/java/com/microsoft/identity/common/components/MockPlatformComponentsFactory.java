@@ -151,6 +151,10 @@ public class MockPlatformComponentsFactory {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public void isValidCallingAppForWebApps(int callingUid) throws UnsupportedOperationException {
+            throw new UnsupportedOperationException();
+        }
         @Nullable
         @Override
         public String getEnrollmentId(@NonNull String userId, @NonNull String packageName) {
