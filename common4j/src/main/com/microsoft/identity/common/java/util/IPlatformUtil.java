@@ -68,6 +68,15 @@ public interface IPlatformUtil {
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
 
     /**
+     * Validates that the calling uid belongs to an acceptable app for web apps.
+     *
+     * @param callingUid the calling uid to validate
+     * @throws ClientException if the calling uid is not valid
+     * @throws UnsupportedOperationException if the instance does not support this operation
+     */
+    void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException;
+
+    /**
      * Retrieve the Intune MAM enrollment id for the given user and package from
      * the Intune Company Portal, if available.
      *
