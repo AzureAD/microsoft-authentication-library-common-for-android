@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.1.91-RC1
+----------
 - [PATCH] Add JavascriptInterface rules to consumer proguard rules (#2837)
 - [MINOR] Add optimized saveAndLoadAggregatedAccountData method in BrokerOAuth2TokenCache (#2832)
 - [MINOR] Remove MavenCentral repository from build.gradle files (#2830)
