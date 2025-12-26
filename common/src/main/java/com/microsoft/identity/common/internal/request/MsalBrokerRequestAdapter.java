@@ -83,8 +83,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
@@ -100,8 +98,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
-        final String extraTokenBodyParameters = parameters.getExtraTokenBodyParameters() != null ?
-                QueryParamsAdapter._toJson(parameters.getExtraTokenBodyParameters()) : null;
 
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
@@ -113,7 +109,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
-                .extraTokenBodyParameter(extraTokenBodyParameters)
                 .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
@@ -148,7 +143,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
-            brokerRequestBuilder.webAppsState(((BrokerInteractiveTokenCommandParameters) parameters).getWebAppsState());
         }
 
         return brokerRequestBuilder.build();
@@ -190,16 +184,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         Logger.info(methodTag, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
-        final List<Map.Entry<String, String>> extraTokenBodyParams = parameters.getExtraTokenBodyParameters();
-        final String extraTokenBodyParameters = extraTokenBodyParams != null ?
-                QueryParamsAdapter._toJson(extraTokenBodyParams) : null;
 
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
                 .extraOptions(extraOptions)
-                .extraTokenBodyParameter(extraTokenBodyParameters)
                 .clientId(parameters.getClientId())
                 .childRedirectUri(parameters.getChildRedirectUri())
                 .childClientId(parameters.getChildClientId())

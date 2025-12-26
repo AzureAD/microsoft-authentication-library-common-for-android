@@ -339,7 +339,6 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
         assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
         assertNull(brokerRequest.getSignInWithGoogleCredential());
-        assertEquals(params.getExtraTokenBodyParameters(), QueryParamsAdapter._fromJson(brokerRequest.getExtraTokenBodyParameter()));
     }
 
     /**

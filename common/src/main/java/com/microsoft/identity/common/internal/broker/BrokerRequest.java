@@ -144,13 +144,6 @@ public class BrokerRequest implements Serializable {
     private String mExtraQueryStringParameter;
 
     /**
-     * Extra token body parameters for the request.
-     */
-    @Nullable
-    @SerializedName(SerializedNames.EXTRA_TOKEN_BODY_PARAMETER)
-    private String mExtraTokenBodyParameter;
-
-    /**
      * Extra options flags for the request.
      */
     @Nullable
@@ -295,11 +288,4 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.REQUEST_TYPE)
     private String mRequestType;
-
-    /**
-     * State for web apps requests. Make sure not to log this.
-     */
-    @Nullable
-    @SerializedName(SerializedNames.WEB_APPS_STATE)
-    private String mWebAppsState;
 }
