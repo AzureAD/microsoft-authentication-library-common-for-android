@@ -55,18 +55,49 @@ class NumberMatchHelper {
 
             val span = SpanExtension.current()
 
-            // If both parameters are non-null, add a new entry to the hashmap
-            if (sessionId != null && numberMatch != null) {
-                numberMatchMap[sessionId] = numberMatch
+            // Validate that the sessionId and numberMatch are in expected formats
+            val parametersValid = checkSessionIdAndNumberMatchAreValid(sessionId, numberMatch)
+
+            // If both parameters are proper format, add a new entry to the hashmap
+            if (parametersValid) {
+                numberMatchMap[sessionId!!] = numberMatch!!
                 span.setAttribute(AttributeName.stored_number_match_entry.name, true)
             }
-            // If either parameter is null, do nothing
+            // If either parameter is misformatted, do nothing
             else {
-                Logger.warn(methodTag,
-                    "Either session ID or number match is null. Nothing to add for number match."
-                )
                 span.setAttribute(AttributeName.stored_number_match_entry.name, false)
             }
+        }
+
+        private fun checkSessionIdAndNumberMatchAreValid(sessionId: String?, numberMatch: String?) : Boolean {
+            if (sessionId.isNullOrEmpty()) {
+                Logger.warn(TAG, "Session ID is null or empty.")
+                return false
+            }
+
+            // Regex for GUID: 8-4-4-4-12 hex digits, case-insensitive
+            val guidRegex = Regex("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
+            // Regex for 8-character alphanumeric string
+            val alphaNum8Regex = Regex("^[A-Za-z0-9]{8}$")
+
+            if (!guidRegex.matches(sessionId) && !alphaNum8Regex.matches(sessionId)) {
+                Logger.warn(TAG, "Session ID is not a valid GUID or 8-character alphanumeric string. Value: $sessionId")
+                return false
+            }
+
+            if (numberMatch.isNullOrEmpty()) {
+                Logger.warn(TAG, "Number match is null or empty.")
+                return false
+            }
+
+            // Regex for 2-digit number string
+            val twoDigitRegex = Regex("^\\d{2}$")
+            if (!twoDigitRegex.matches(numberMatch)) {
+                Logger.warn(TAG, "Number match is not a valid 2-digit numerical string. Value: $numberMatch")
+                return false
+            }
+
+            return true
         }
 
         /**
