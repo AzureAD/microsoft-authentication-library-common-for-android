@@ -79,5 +79,9 @@ public enum SpanName {
      * Span name for fetching initial ECS flight configurations.
      */
     EcsFlightsFetchConfigs,
-    DevicePopMintSignedAccessToken
+    DevicePopMintSignedAccessToken,
+    /**
+     * Span name for DRS (Device Registration Service) nonce request operations.
+     */
+    DRSNonceRequest
 }
