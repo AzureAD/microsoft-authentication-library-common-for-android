@@ -702,7 +702,6 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
         }
     }
 
-
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
         final String methodTag = TAG + ":getSecureHardwareState";
