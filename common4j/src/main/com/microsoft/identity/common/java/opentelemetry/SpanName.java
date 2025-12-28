@@ -83,5 +83,9 @@ public enum SpanName {
     /**
      * Span name for DRS (Device Registration Service) nonce request operations.
      */
-    DRSNonceRequest
+    DRSNonceRequest,
+    /**
+     * Span name for Device POP crypto operations.
+     */
+    DevicePopCryptoOperation
 }
