@@ -67,10 +67,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     @Expose
     private final BrokerRequestType requestType;
 
-    // Optional field to persist state for WebApps interactive token requests.
-    private final String webAppsState;
-
-    // Optional field to persist nonce for WebApps interactive token requests.
+    // Optional field to persist nonce for WebApps token requests.
     private final String webAppsNonce;
 
     @Expose
