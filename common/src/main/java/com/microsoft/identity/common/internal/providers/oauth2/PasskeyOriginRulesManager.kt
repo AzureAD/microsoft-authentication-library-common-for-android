@@ -92,16 +92,16 @@ object PasskeyOriginRulesManager {
             val uri = URI(url)
 
             // Validate scheme
-            if (uri.scheme != HTTPS_SCHEME) {
+            if (uri.scheme.lowercase() != HTTPS_SCHEME) {
                 return false
             }
 
             // Validate host and build origin
             val host = uri.host ?: return false
-            val origin = "https://$host"
+            val origin = "https://$host".lowercase()
 
             // Check if it's a production origin (any path allowed)
-            if (PRODUCTION_ORIGINS.contains(origin)) {
+            if (PRODUCTION_ORIGINS.contains(origin)){
                 return true
             }
 

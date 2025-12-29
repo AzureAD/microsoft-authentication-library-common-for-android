@@ -171,6 +171,32 @@ class PasskeyOriginRulesManagerTest {
         assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://login.microsoftonline.us/path/fIdO"))
     }
 
+    @Test
+    fun `isAllowedOrigin is case insensitive for schema`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HTTPS://login.microsoft.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("Https://account.live.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://mysignins.microsoft.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://login.microsoftonline.us/fido"))
+    }
+
+    @Test
+    fun `isAllowedOrigin is case insensitive for host`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://LOGIN.MICROSOFT.COM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://Login.Microsoft.Com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://ACCOUNT.LIVE.COM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://Account.Live.Com/"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://MYSIGNINS.MICROSOFT.COM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://MySignins.Microsoft.Com/auth/passkey"))
+    }
+
+    @Test
+    fun `isAllowedOrigin is case insensitive for mixed case schema and host`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://LoGiN.MiCrOsOfT.CoM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://AcCoUnT.LiVe.CoM/page/webauthn"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://MySignins.MiCrOsOfT.CoM/auth/passkey"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://LoGiN.MiCrOsOfToNlInE.Us/FiDo"))
+    }
+
     // ==================== Subdomain Spoofing Prevention Tests ====================
 
     @Test
@@ -277,4 +303,3 @@ class PasskeyOriginRulesManagerTest {
         assertTrue(rules.size >= 12) // At least production + sovereign cloud origins
     }
 }
-
