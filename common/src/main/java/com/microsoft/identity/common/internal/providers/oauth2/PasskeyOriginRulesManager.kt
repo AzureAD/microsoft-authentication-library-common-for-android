@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.logging.Logger
 import java.net.URI
 
@@ -65,6 +66,13 @@ object PasskeyOriginRulesManager {
         "https://login.sovcloud-identity.sg"
     )
 
+    // PPE origins
+    private val ALLOWED_ORIGIN_PPE= setOf(
+        "https://account.live-int.com",
+        "https://login.windows-ppe.net",
+        "https://mysignins-ppe.microsoft.com"
+    )
+
     /**
      * Checks if the provided URL is allowed to access Passkey/WebAuthN APIs.
      *
@@ -104,7 +112,7 @@ object PasskeyOriginRulesManager {
 
             false
         } catch (throwable: Throwable) {
-            Logger.error(TAG, "Error validating origin for URL: $url.", throwable)
+            Logger.error(TAG, "Error validating origin for URL.", throwable)
             false
         }
     }
@@ -143,6 +151,10 @@ object PasskeyOriginRulesManager {
      * @return Set containing all production and sovereign cloud origin URLs
      */
     fun getAllowedOriginRules(): Set<String> {
-        return PRODUCTION_ORIGINS + SOVEREIGN_CLOUD_ORIGINS
+        return if (BuildConfig.DEBUG) {
+            PRODUCTION_ORIGINS + SOVEREIGN_CLOUD_ORIGINS + ALLOWED_ORIGIN_PPE
+        } else {
+            PRODUCTION_ORIGINS + SOVEREIGN_CLOUD_ORIGINS
+        }
     }
 }
