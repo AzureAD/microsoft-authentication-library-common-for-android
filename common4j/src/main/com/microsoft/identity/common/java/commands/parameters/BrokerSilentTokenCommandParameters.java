@@ -26,7 +26,11 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
+import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.EqualsAndHashCode;
@@ -75,7 +79,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     }
 
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         if (callerUid == 0) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
@@ -100,15 +104,6 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mClientId", "Client Id is not set"
             );
         }
-
-        if (!getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
-            );
-        }
-
         if (!(getOAuth2TokenCache() instanceof BrokerOAuth2TokenCache)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
@@ -122,6 +117,21 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mCallerPackageName", "Broker Account is null"
             );
         }
-
+        final IPlatformUtil platformUtil = getPlatformComponents().getPlatformUtil();
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.DISABLE_WEB_APPS_API)
+                && getRequestType() == BrokerRequestType.WEB_APPS) {
+            // For web apps, the redirect URI will be in the web format instead of our standard Android one.
+            // So comparing the thumbprint of the package with the redirect URI won't work.
+            // Instead, we will check the package thumbprint against our static allowed list of apps for this feature.
+            platformUtil.isValidCallingAppForWebApps(getCallerUid());
+            return;
+        }
+        if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+            throw new ArgumentException(
+                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                    "mRedirectUri", "The redirect URI doesn't match the uri" +
+                    " generated with caller package name and signature"
+            );
+        }
     }
 }
