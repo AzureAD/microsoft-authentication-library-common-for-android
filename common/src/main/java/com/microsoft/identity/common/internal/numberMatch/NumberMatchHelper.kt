@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.numberMatch
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Helper to facilitate NumberMatchFlow. Used in conjunction with {@link AuthUxJavaScriptInterface}
@@ -42,7 +43,7 @@ class NumberMatchHelper {
     // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
-        val numberMatchMap: HashMap<String, String> = HashMap()
+        val numberMatchMap: ConcurrentHashMap<String, String> = ConcurrentHashMap()
 
         // Regex for GUID: 8-4-4-4-12 hex digits, case-insensitive
         val guidRegex = Regex("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
