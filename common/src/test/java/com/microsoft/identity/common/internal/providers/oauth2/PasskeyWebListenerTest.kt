@@ -483,7 +483,7 @@ class PasskeyWebListenerTest {
 
         // Then
         assertFalse(result)
-        verify(exactly = 0) { mockWebViewClient.addOnPageStartedScript(any(), any(), any()) }
+        verify(exactly = 0) { mockWebViewClient.addPasskeyRegistrationJsScript(any()) }
     }
 
     @Test
@@ -516,11 +516,7 @@ class PasskeyWebListenerTest {
             )
         }
         verify {
-            mockWebViewClient.addOnPageStartedScript(
-                PasskeyWebListener.TAG,
-                any(),
-                any()
-            )
+            mockWebViewClient.addPasskeyRegistrationJsScript(any())
         }
 
         unmockkStatic(WebViewFeature::class)
@@ -538,7 +534,7 @@ class PasskeyWebListenerTest {
 
         // Then
         assertFalse(result)
-        verify(exactly = 0) { mockWebViewClient.addOnPageStartedScript(any(), any(), any()) }
+        verify(exactly = 0) { mockWebViewClient.addPasskeyRegistrationJsScript(any()) }
 
         unmockkStatic(WebViewFeature::class)
     }
