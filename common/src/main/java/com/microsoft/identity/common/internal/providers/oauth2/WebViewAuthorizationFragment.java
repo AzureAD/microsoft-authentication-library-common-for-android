@@ -490,7 +490,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":setupPasskeyWebListener";
         final String passkeyProtocolHeader = mRequestHeaders.get(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME);
         if (FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG.equals(passkeyProtocolHeader)) {
-            final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+            final SpanContext spanContext = requireActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
             final boolean passkeyWebListenerHooked = PasskeyWebListener.hook(webView, requireActivity(), webViewClient, spanContext);
             if (!passkeyWebListenerHooked) {
                 Logger.warn(methodTag, "PasskeyWebListener hook failed, Downgrading to auth only.");
