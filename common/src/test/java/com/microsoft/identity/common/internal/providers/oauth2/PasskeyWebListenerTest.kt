@@ -479,7 +479,7 @@ class PasskeyWebListenerTest {
     @Config(sdk = [Build.VERSION_CODES.O_MR1]) // API 27 - below minimum
     fun `hook returns false on API below 28`() {
         // When
-        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient)
+        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient, null)
 
         // Then
         assertFalse(result)
@@ -503,7 +503,7 @@ class PasskeyWebListenerTest {
         } just Runs
 
         // When
-        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient)
+        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient, null)
 
         // Then
         assertTrue(result)
@@ -530,7 +530,7 @@ class PasskeyWebListenerTest {
         every { WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) } returns false
 
         // When
-        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient)
+        val result = PasskeyWebListener.hook(webView, activity, mockWebViewClient, null)
 
         // Then
         assertFalse(result)

@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
     private val credentialManagerHandler: CredentialManagerHandler,
-    private val spanContext: SpanContext?
+    private val spanContext: SpanContext? = null
 ) : WebViewCompat.WebMessageListener {
 
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
