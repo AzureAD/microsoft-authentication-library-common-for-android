@@ -88,7 +88,6 @@ Common provides cross-repository primitives:
 - Key rotation atomic: old key decommission only after new key validated.
 
 ### 1.9 Telemetry Enums
-- AttributeName constants carry classification; new requires doc + rationale.
 - Adding attribute: uniqueness, bounded cardinality, doc comment specifying value domain & units.
 - Reuse existing SpanName for similar semantics; avoid duplication.
 
@@ -365,11 +364,6 @@ Don't create spans for:
 - For booleans use primitive boolean, not string "true"/"false".
 - For counts/sizes use numeric attributes, not stringified numbers.
 - For timestamps where a dedicated DateTime attribute is defined (marked `isDateTime`), ensure value units match expected convention (typically epoch millis).
-- For classification:
-  - OrganizationIdentifiableInformation: tenant- / org-level identifiers.
-  - EndUserPseudonymousIdentifiers: hashed or pseudonymous user correlation IDs (never raw secrets).
-  - SystemMetadata: runtime/system context safe for broader aggregation.
-  - EndUserIdentifiableInformation: only if absolutely necessary and privacy-compliant (e.g., hashed user IDs, not raw PII).
 
 ### 6.4 Adding a New Span Name
 Before adding:
@@ -382,7 +376,7 @@ Before adding:
 Checklist:
 1. Does an existing `AttributeName` already cover this semantic? If yes, reuse.
 2. Is the value stable, low/controlled cardinality, and privacy-compliant?
-3. Each attribute added to `AttributeName` MUST also be defined in the `AttributeName` file in the broker repo for cross-repo consistency. (Leave a comment reminding to do so.)
+3. Each attribute added to `AttributeName.java` in Common repo MUST also be defined in the `AttributeName.java` file in the broker repo (AzureAD/ad-accounts-for-android) for cross-repo consistency. (Leave a comment reminding to do so.)
 4. For times/durations: prefer separate numeric metrics (ms) or mark `isDateTime=true` when representing an instant.
 5. Add Javadoc describing purpose and (if applicable) expected value set.
 6. Update any downstream dashboards or processing rules if necessary.
