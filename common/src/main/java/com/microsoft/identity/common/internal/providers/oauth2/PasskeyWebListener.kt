@@ -37,6 +37,7 @@ import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.SpanContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
     private val credentialManagerHandler: CredentialManagerHandler,
+    private val spanContext: SpanContext?
 ) : WebViewCompat.WebMessageListener {
 
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
@@ -106,7 +108,11 @@ class PasskeyWebListener(
             methodTag,
             "Received WebAuthN request of type: ${webAuthNMessage.type} from origin: $sourceOrigin"
         )
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthNMessage.type)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            requestType = webAuthNMessage.type,
+            spanContext = spanContext
+        )
 
         // Only allow one request at a time.
         if (havePendingRequest.get()) {
@@ -228,7 +234,10 @@ class PasskeyWebListener(
         messageData: String?,
         javaScriptReplyProxy: JavaScriptReplyProxy
     ): WebAuthNMessage? {
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            spanContext = spanContext
+        )
         return runCatching {
             if (messageData.isNullOrBlank()) {
                 throw ClientException(ClientException.MISSING_PARAMETER, "Message data is null or blank")
@@ -306,7 +315,8 @@ class PasskeyWebListener(
         fun hook(
             webView: WebView,
             activity: Activity,
-            webClient: AzureActiveDirectoryWebViewClient
+            webClient: AzureActiveDirectoryWebViewClient,
+            spanContext: SpanContext?
         ): Boolean {
             val methodTag = "$TAG:hook"
 
@@ -330,7 +340,8 @@ class PasskeyWebListener(
                     PasskeyOriginRulesManager.getAllowedOriginRules(),
                     PasskeyWebListener(
                         coroutineScope = CoroutineScope(Dispatchers.Default),
-                        credentialManagerHandler = CredentialManagerHandler(activity)
+                        credentialManagerHandler = CredentialManagerHandler(activity),
+                        spanContext = spanContext
                     )
                 )
 
