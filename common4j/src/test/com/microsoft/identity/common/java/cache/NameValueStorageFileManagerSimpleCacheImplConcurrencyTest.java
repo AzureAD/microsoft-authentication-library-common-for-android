@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -109,12 +110,12 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             TestData testData = (TestData) o;
-            return value == testData.value && id.equals(testData.id);
+            return value == testData.value && Objects.equals(id, testData.id);
         }
 
         @Override
         public int hashCode() {
-            return 31 * id.hashCode() + value;
+            return Objects.hash(id, value);
         }
 
         @Override
