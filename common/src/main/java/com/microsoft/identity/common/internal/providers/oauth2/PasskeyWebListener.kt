@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * @property coroutineScope Scope for launching credential operations.
  * @property credentialManagerHandler Handles passkey creation and retrieval.
+ * @property spanContext Optional OpenTelemetry span context for tracing.
  */
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
@@ -309,6 +310,7 @@ class PasskeyWebListener(
          * @param webView WebView to attach to.
          * @param activity Activity context for credential operations.
          * @param webClient WebViewClient to inject JavaScript into.
+         * @param spanContext Optional OpenTelemetry span context for tracing.
          * @return True if successfully hooked, false otherwise.
          */
         @JvmStatic
