@@ -32,8 +32,10 @@ import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -60,7 +62,9 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     private final boolean mForceReinsertionOfDuplicates;
     private final Gson mGson = new Gson();
 
-    private static ReentrantReadWriteLock metadataCacheLock = new ReentrantReadWriteLock();
+    // Lock per storage name to prevent corruption when multiple instances access the same storage file
+    private static final Map<String, ReentrantReadWriteLock> STORAGE_LOCKS = new ConcurrentHashMap<>();
+    private static ReentrantReadWriteLock metadataCacheLock;
 
     /**
      * Constructs a new NameValueStorageFileManagerSimpleCacheImpl. Convenience class for persisting
@@ -96,6 +100,8 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
         mStorage = components.getStorageSupplier().getUnencryptedNameValueStore(name, String.class);
         mKeySingleEntry = singleKey;
         mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
+        // Get or create a lock for this specific storage file
+        metadataCacheLock = STORAGE_LOCKS.computeIfAbsent(name, k -> new ReentrantReadWriteLock());
     }
 
     private interface NamedRunnable<V> extends Callable<V> {
