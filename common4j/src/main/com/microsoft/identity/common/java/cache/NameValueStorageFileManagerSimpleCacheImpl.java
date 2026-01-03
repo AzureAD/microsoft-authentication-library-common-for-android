@@ -140,7 +140,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
                 @Override
                 public Boolean call() {
-                    final Set<T> allMetadata = new HashSet<>(getAll());
+                    final Set<T> allMetadata = new HashSet<>(getAllInternal());
 
                     if (mForceReinsertionOfDuplicates) {
                         // This is a bit of workaround for Set's default behavior
@@ -173,7 +173,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
                 @Override
                 public Boolean call() {
-                    final Set<T> allMetadata = new HashSet<>(getAll());
+                    final Set<T> allMetadata = new HashSet<>(getAllInternal());
                     allMetadata.remove(t);
                     final String json = mGson.toJson(allMetadata);
                     mStorage.put(mKeySingleEntry, json);
@@ -190,29 +190,39 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     public List<T> getAll() {
         metadataCacheLock.readLock().lock();
         try {
-            return execWithTiming(new NamedRunnable<List<T>>() {
-                @Override
-                public String getName() {
-                    return "getAll";
-                }
-
-                @Override
-                public List<T> call() {
-                    String jsonList = mStorage.get(mKeySingleEntry);
-
-                    if (StringUtil.isNullOrEmpty(jsonList)) {
-                        jsonList = EMTPY_ARRAY;
-                    }
-
-                    final List<T> result = mGson.fromJson(jsonList, getListTypeToken());
-
-                    return result;
-                }
-            });
+            return getAllInternal();
         } finally {
             metadataCacheLock.readLock().unlock();
         }
+    }
 
+    /**
+     * Internal helper method to retrieve all items from storage without acquiring a lock.
+     * This method should only be called when a lock (read or write) is already held by the caller.
+     * For external access, use {@link #getAll()} which properly acquires a read lock.
+     *
+     * @return List of all items in the cache
+     */
+    private List<T> getAllInternal() {
+        return execWithTiming(new NamedRunnable<List<T>>() {
+            @Override
+            public String getName() {
+                return "getAll";
+            }
+
+            @Override
+            public List<T> call() {
+                String jsonList = mStorage.get(mKeySingleEntry);
+
+                if (StringUtil.isNullOrEmpty(jsonList)) {
+                    jsonList = EMTPY_ARRAY;
+                }
+
+                final List<T> result = mGson.fromJson(jsonList, getListTypeToken());
+
+                return result;
+            }
+        });
     }
 
     @Override
