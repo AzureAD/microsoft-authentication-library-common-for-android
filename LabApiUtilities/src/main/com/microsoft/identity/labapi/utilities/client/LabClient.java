@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
-import static com.microsoft.identity.labapi.utilities.constants.LabConstants.DEFAULT_LAB_CLIENT_ID;
 import static com.microsoft.identity.labapi.utilities.constants.LabConstants.KEYVAULT_SCOPE;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
@@ -39,7 +38,6 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 import com.microsoft.identity.internal.test.labapi.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
-import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
@@ -71,6 +69,8 @@ public class LabClient implements ILabClient {
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(35);
 
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
+
+    private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
@@ -285,7 +285,7 @@ public class LabClient implements ILabClient {
 
         // Adding a second attempt here, api sometimes fails to get the lab secret.
         try {
-            return getKeyVaultSecret(labName);
+            return getPasswordSecretFromLabsKeyVault(labName);
         } catch (final LabApiException e){
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
@@ -297,7 +297,7 @@ public class LabClient implements ILabClient {
                 }
 
                 // Try to get the secret again
-                return getKeyVaultSecret(labName);
+                return getPasswordSecretFromLabsKeyVault(labName);
             } else {
                 throw e;
             }
@@ -305,7 +305,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public String getKeyVaultSecret(@NonNull final String secretName) throws LabApiException {
+    public String getPasswordSecretFromLabsKeyVault(@NonNull final String secretName) throws LabApiException {
         Configuration.getKeyVaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessTokenForCustomScope(KEYVAULT_SCOPE)
         );
@@ -313,6 +313,22 @@ public class LabClient implements ILabClient {
 
         try {
             final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(secretName);
+            return secretBundle.getValue();
+        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
+            throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
+        }
+    }
+
+    @Override
+    public String getAccountUpnJsonStringFromMobileBuildKeyVault() throws LabApiException {
+
+        Configuration.getKeyVaultApiClient().setAccessToken(
+                mLabApiAuthenticationClient.getAccessTokenForCustomScope(KEYVAULT_SCOPE)
+        );
+        final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi(KeyVaultSecretsApi.MOBILE_BUILD_VAULT_URL);
+
+        try {
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(ACCOUNT_UPN_JSON_STRING_SECRET_NAME);
             return secretBundle.getValue();
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
@@ -406,7 +422,7 @@ public class LabClient implements ILabClient {
         final String secretName = getLabSecretName(credentialVaultKeyName);
 
         try {
-            return getKeyVaultSecret(secretName);
+            return getPasswordSecretFromLabsKeyVault(secretName);
         } catch (final LabApiException e) {
             if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
 
@@ -418,7 +434,7 @@ public class LabClient implements ILabClient {
                 }
 
                 // Try to get the secret again
-                return getKeyVaultSecret(secretName);
+                return getPasswordSecretFromLabsKeyVault(secretName);
             } else {
                 throw e;
             }

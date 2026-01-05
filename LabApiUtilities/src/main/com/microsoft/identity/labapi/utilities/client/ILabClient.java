@@ -95,7 +95,15 @@ public interface ILabClient {
      * @return a String containing the value of the secret
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
-    String getKeyVaultSecret(String secretName) throws LabApiException;
+    String getPasswordSecretFromLabsKeyVault(String secretName) throws LabApiException;
+
+    /**
+     * Get the account UPN JSON string from the Mobile Build Key Vault.
+     *
+     * @return a String containing the account UPN JSON string
+     * @throws LabApiException if an error occurs while trying to load the UPN JSON string
+     */
+    String getAccountUpnJsonStringFromMobileBuildKeyVault() throws LabApiException;
 
     /**
      * Reset the password for the username given, then reset it back to the original password.

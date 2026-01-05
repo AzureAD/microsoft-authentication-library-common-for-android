@@ -173,6 +173,25 @@ public class LabClientTest {
         }
     }
 
+    @Test
+    public void canFetchPasswordFromKeyVault() {
+        try {
+            final String password = mLabClient.getPasswordSecretFromLabsKeyVault("ID4SLAB2");
+            Assert.assertTrue(password != null && !password.isEmpty());
+        } catch (final LabApiException e){
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canFetchAccountUpnJsonString() {
+        try {
+            final String accountUpnJsonString = mLabClient.getAccountUpnJsonStringFromMobileBuildKeyVault();
+            Assert.assertTrue(accountUpnJsonString != null && !accountUpnJsonString.isEmpty());
+        } catch (final LabApiException e){
+            throw new AssertionError(e);
+        }
+    }
 
     // Helper to assert common properties of a lab account
     private void assertLabAccount(final ILabAccount labAccount,
