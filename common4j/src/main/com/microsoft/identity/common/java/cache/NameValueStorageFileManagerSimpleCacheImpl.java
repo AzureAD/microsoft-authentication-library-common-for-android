@@ -64,7 +64,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     // Lock per storage name to prevent corruption when multiple instances access the same storage file
     private static final Map<String, ReentrantReadWriteLock> STORAGE_LOCKS = new ConcurrentHashMap<>();
-    private static ReentrantReadWriteLock metadataCacheLock;
+    private final ReentrantReadWriteLock metadataCacheLock;
 
     /**
      * Constructs a new NameValueStorageFileManagerSimpleCacheImpl. Convenience class for persisting
