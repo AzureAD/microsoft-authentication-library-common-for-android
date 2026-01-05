@@ -67,6 +67,9 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     @Expose
     private final BrokerRequestType requestType;
 
+    // Optional field to persist nonce for WebApps token requests.
+    private final String webAppsNonce;
+
     @Expose
     private final String homeTenantId;
 
