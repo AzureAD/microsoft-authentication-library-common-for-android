@@ -287,11 +287,4 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.REQUEST_TYPE)
     private String mRequestType;
-
-    /**
-     * State for web apps requests. Make sure not to log this.
-     */
-    @Nullable
-    @SerializedName(SerializedNames.WEB_APPS_STATE)
-    private String mWebAppsState;
 }
