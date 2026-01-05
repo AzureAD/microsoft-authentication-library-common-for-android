@@ -87,5 +87,9 @@ public enum SpanName {
     /**
      * Span name for Device POP crypto operations.
      */
-    DevicePopCryptoOperation
+    DevicePopCryptoOperation,
+    /**
+     * Span name for web apps API execute requests.
+     */
+    ExecuteWebAppsRequest
 }
