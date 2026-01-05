@@ -29,6 +29,7 @@ import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
+import com.nimbusds.jose.shaded.gson.JsonObject;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -186,8 +187,14 @@ public class LabClientTest {
     @Test
     public void canFetchAccountUpnJsonString() {
         try {
-            final String accountUpnJsonString = mLabClient.getAccountUpnJsonStringFromMobileBuildKeyVault();
-            Assert.assertTrue(accountUpnJsonString != null && !accountUpnJsonString.isEmpty());
+            final JsonObject accountUpnMap = mLabClient.getAccountUpnJsonFromMobileBuildKeyVault();
+            Assert.assertTrue(accountUpnMap != null && !accountUpnMap.isEmpty());
+
+            final JsonObject basicAccount = accountUpnMap.getAsJsonObject("BASIC");
+            Assert.assertNotNull(basicAccount);
+            Assert.assertNotNull(basicAccount.get(LabClient.JSON_UPN_KEY));
+            Assert.assertNotNull(basicAccount.get(LabClient.JSON_ID_KEY));
+            Assert.assertNotNull(basicAccount.get(LabClient.JSON_KEY_VAULT_ENTRY_KEY));
         } catch (final LabApiException e){
             throw new AssertionError(e);
         }
