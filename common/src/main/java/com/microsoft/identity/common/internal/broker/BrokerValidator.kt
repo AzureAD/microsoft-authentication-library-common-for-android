@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.broker
 
 import android.content.Context
 import com.microsoft.identity.common.internal.util.PackageUtils
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.logging.Logger
 import java.security.cert.X509Certificate
 
@@ -89,10 +91,14 @@ open class BrokerValidator: IBrokerValidator {
                 setOf(expectedSigningCertificateThumbprint).iterator()
             )
 
-            // Perform the certificate chain validation. If there is only one cert returned,
-            // no need to perform certificate chain validation.
-            if (signingCertificates.size > 1) {
-                PackageUtils.verifyCertificateChain(signingCertificates)
+            if (CommonFlightsManager.getFlightsProvider()
+                    .isFlightEnabled(CommonFlight.RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS)
+            ) {
+                // Perform the certificate chain validation. If there is only one cert returned,
+                // no need to perform certificate chain validation.
+                if (signingCertificates.size > 1) {
+                    PackageUtils.verifyCertificateChain(signingCertificates)
+                }
             }
         }
     }

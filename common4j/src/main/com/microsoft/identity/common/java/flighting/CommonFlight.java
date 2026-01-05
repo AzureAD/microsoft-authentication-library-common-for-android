@@ -200,7 +200,13 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
      */
-    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false);
+    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false),
+
+    /**
+     * Flight to re-enable validating signing certificate chain for broker validation
+     * We want to disable the check by default but have the ability to bring it back just in case.
+     */
+    RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false);
 
     private String key;
     private Object defaultValue;
