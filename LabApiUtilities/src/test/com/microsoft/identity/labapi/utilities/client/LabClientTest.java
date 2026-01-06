@@ -37,6 +37,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Map;
+
 /**
  * Test Various function calls through the lab api including
  * Temp-User Creation, fetching existing cloud, guest, and federated accounts, as well as
@@ -187,14 +189,20 @@ public class LabClientTest {
     @Test
     public void canFetchAccountUpnJsonString() {
         try {
-            final JsonObject accountUpnMap = mLabClient.getAccountUpnJsonFromMobileBuildKeyVault();
+            final Map<String, LabJsonStringAccountEntry> accountUpnMap = mLabClient.getAccountUpnJsonFromMobileBuildKeyVault();
             Assert.assertTrue(accountUpnMap != null && !accountUpnMap.isEmpty());
 
-            final JsonObject basicAccount = accountUpnMap.getAsJsonObject("BASIC");
+            final LabJsonStringAccountEntry basicAccount = accountUpnMap.get("BASIC");
             Assert.assertNotNull(basicAccount);
-            Assert.assertNotNull(basicAccount.get(LabClient.JSON_UPN_KEY));
-            Assert.assertNotNull(basicAccount.get(LabClient.JSON_ID_KEY));
-            Assert.assertNotNull(basicAccount.get(LabClient.JSON_KEY_VAULT_ENTRY_KEY));
+            Assert.assertNotNull(basicAccount.getUpn());
+            Assert.assertNotNull(basicAccount.getId());
+            Assert.assertNotNull(basicAccount.getKeyVaultEntry());
+
+            final LabJsonStringAccountEntry msaAccount = accountUpnMap.get("MSA");
+            Assert.assertNotNull(msaAccount);
+            Assert.assertNotNull(msaAccount.getUpn());
+            Assert.assertNotNull(msaAccount.getId());
+            Assert.assertNotNull(msaAccount.getKeyVaultEntry());
         } catch (final LabApiException e){
             throw new AssertionError(e);
         }

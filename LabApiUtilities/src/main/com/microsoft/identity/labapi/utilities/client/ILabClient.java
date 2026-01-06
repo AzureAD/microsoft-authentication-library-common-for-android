@@ -27,6 +27,7 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -101,10 +102,10 @@ public interface ILabClient {
     /**
      * Get the account UPN JSON from the Mobile Build Key Vault.
      *
-     * @return a JsonObject containing the account information
+     * @return a Map containing the account information entries
      * @throws LabApiException if an error occurs while trying to load the UPN JSON string
      */
-    JsonObject getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException;
+    Map<String, LabJsonStringAccountEntry> getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException;
 
     /**
      * Reset the password for the username given, then reset it back to the original password.

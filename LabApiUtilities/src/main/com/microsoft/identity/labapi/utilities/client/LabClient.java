@@ -45,12 +45,11 @@ import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
-import com.nimbusds.jose.shaded.gson.JsonObject;
-import com.nimbusds.jose.shaded.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
@@ -73,10 +72,7 @@ public class LabClient implements ILabClient {
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
-    public static final String JSON_UPN_KEY = "Upn";
-    public static final String JSON_ID_KEY = "Id";
-    public static final String JSON_KEY_VAULT_ENTRY_KEY = "KeyVaultEntry";
-    private static JsonObject labUPNJsonMap = null;
+    private static Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
@@ -326,7 +322,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public JsonObject getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException {
+    public Map<String, LabJsonStringAccountEntry> getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException {
         if (labUPNJsonMap != null) {
             return labUPNJsonMap;
         }
@@ -338,7 +334,8 @@ public class LabClient implements ILabClient {
 
         try {
             final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(ACCOUNT_UPN_JSON_STRING_SECRET_NAME);
-            labUPNJsonMap = JsonParser.parseString(secretBundle.getValue()).getAsJsonObject();
+
+            labUPNJsonMap = LabJsonStringAccountEntry.parseJsonToMap(secretBundle.getValue());
             return labUPNJsonMap;
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
