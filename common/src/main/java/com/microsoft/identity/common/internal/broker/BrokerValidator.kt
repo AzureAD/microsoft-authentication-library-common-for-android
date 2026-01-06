@@ -91,6 +91,7 @@ open class BrokerValidator: IBrokerValidator {
                 setOf(expectedSigningCertificateThumbprint).iterator()
             )
 
+            // Removing the outdated check, but we can bring it back with a feature flag.
             if (CommonFlightsManager.getFlightsProvider()
                     .isFlightEnabled(CommonFlight.RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS)
             ) {
