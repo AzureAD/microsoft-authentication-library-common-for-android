@@ -72,7 +72,7 @@ public class LabClient implements ILabClient {
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
-    private static Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
+    private Map<String, LabJsonStringAccountEntry> labUPNJsonMap;
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
