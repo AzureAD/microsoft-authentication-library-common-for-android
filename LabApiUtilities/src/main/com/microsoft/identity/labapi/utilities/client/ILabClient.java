@@ -23,8 +23,8 @@
 package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
-import com.nimbusds.jose.shaded.gson.JsonObject;
 
 import java.util.List;
 import java.util.Map;
@@ -105,7 +105,16 @@ public interface ILabClient {
      * @return a Map containing the account information entries
      * @throws LabApiException if an error occurs while trying to load the UPN JSON string
      */
-    Map<String, LabJsonStringAccountEntry> getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException;
+    Map<String, LabJsonStringAccountEntry> getAccountMapJsonFromMobileBuildKeyVault() throws LabApiException;
+
+    /**
+     * Get the account from the Mobile Build Key Vault based on the user type.
+     *
+     * @param userType the user type (key) of the desired account
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to load the account
+     */
+    ILabAccount getAccountFromLabJsonStringInMobileBuildVault(UserType userType) throws LabApiException;
 
     /**
      * Reset the password for the username given, then reset it back to the original password.

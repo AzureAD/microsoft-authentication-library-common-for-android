@@ -322,7 +322,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public Map<String, LabJsonStringAccountEntry> getAccountUpnJsonFromMobileBuildKeyVault() throws LabApiException {
+    public Map<String, LabJsonStringAccountEntry> getAccountMapJsonFromMobileBuildKeyVault() throws LabApiException {
         if (labUPNJsonMap != null) {
             return labUPNJsonMap;
         }
@@ -340,6 +340,27 @@ public class LabClient implements ILabClient {
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_LAB, ex);
         }
+    }
+
+    @Override
+    public ILabAccount getAccountFromLabJsonStringInMobileBuildVault(UserType userType) throws LabApiException {
+        // Make sure the UPN JSON map is loaded
+        getAccountMapJsonFromMobileBuildKeyVault();
+
+        final LabJsonStringAccountEntry accountEntry = labUPNJsonMap.get(userType.toString());
+        if (accountEntry == null) {
+            throw new LabApiException(LabError.ACCOUNT_NOT_FOUND_IN_MOBILE_BUILD_KEYVAULT_JSON, " Desired userType: " + userType);
+        }
+        final String accountPassword = getPassword(accountEntry.getKeyVaultEntry());
+
+        return new LabAccount.LabAccountBuilder()
+                .username(accountEntry.getUpn())
+                .password(accountPassword)
+                .userType(userType)
+                .homeTenantId(accountEntry.getHomeTenantId())
+                .homeObjectId(accountEntry.getHomeObjectId())
+                .build();
+
     }
 
     @Override

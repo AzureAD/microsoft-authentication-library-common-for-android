@@ -38,8 +38,10 @@ public class LabJsonStringAccountEntry implements Serializable {
 
     @SerializedName("Upn")
     private String upn;
-    @SerializedName("Id")
-    private String id;
+    @SerializedName("HomeObjectId")
+    private String homeObjectId;
+    @SerializedName("HomeTenantId")
+    private String homeTenantId;
     @SerializedName("KeyVaultEntry")
     private String keyVaultEntry;
 
@@ -47,8 +49,12 @@ public class LabJsonStringAccountEntry implements Serializable {
         return upn;
     }
 
-    public String getId() {
-        return id;
+    public String getHomeObjectId() {
+        return homeObjectId;
+    }
+
+    public String getHomeTenantId() {
+        return homeTenantId;
     }
 
     public String getKeyVaultEntry() {

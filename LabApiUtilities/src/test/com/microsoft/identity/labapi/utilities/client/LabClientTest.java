@@ -29,7 +29,6 @@ import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
-import com.nimbusds.jose.shaded.gson.JsonObject;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -189,20 +188,29 @@ public class LabClientTest {
     @Test
     public void canFetchAccountUpnJsonString() {
         try {
-            final Map<String, LabJsonStringAccountEntry> accountUpnMap = mLabClient.getAccountUpnJsonFromMobileBuildKeyVault();
+            final Map<String, LabJsonStringAccountEntry> accountUpnMap = mLabClient.getAccountMapJsonFromMobileBuildKeyVault();
             Assert.assertTrue(accountUpnMap != null && !accountUpnMap.isEmpty());
 
-            final LabJsonStringAccountEntry basicAccount = accountUpnMap.get("BASIC");
-            Assert.assertNotNull(basicAccount);
-            Assert.assertNotNull(basicAccount.getUpn());
-            Assert.assertNotNull(basicAccount.getId());
-            Assert.assertNotNull(basicAccount.getKeyVaultEntry());
+            final ILabAccount basicUser = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.BASIC);
+            Assert.assertNotNull(basicUser);
+            Assert.assertNotNull(basicUser.getUsername());
+            Assert.assertNotNull(basicUser.getPassword());
+            Assert.assertNotNull(basicUser.getHomeObjectId());
+            Assert.assertNotNull(basicUser.getHomeTenantId());
 
-            final LabJsonStringAccountEntry msaAccount = accountUpnMap.get("MSA");
-            Assert.assertNotNull(msaAccount);
-            Assert.assertNotNull(msaAccount.getUpn());
-            Assert.assertNotNull(msaAccount.getId());
-            Assert.assertNotNull(msaAccount.getKeyVaultEntry());
+            final ILabAccount msaUser = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.MSA);
+            Assert.assertNotNull(msaUser);
+            Assert.assertNotNull(msaUser.getUsername());
+            Assert.assertNotNull(msaUser.getPassword());
+            Assert.assertNotNull(msaUser.getHomeObjectId());
+            Assert.assertNotNull(msaUser.getHomeTenantId());
+
+            final ILabAccount resourceAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.RESOURCE_ACCOUNT_1);
+            Assert.assertNotNull(resourceAccount);
+            Assert.assertNotNull(resourceAccount.getUsername());
+            Assert.assertNotNull(resourceAccount.getPassword());
+            Assert.assertNotNull(resourceAccount.getHomeObjectId());
+            Assert.assertNotNull(resourceAccount.getHomeTenantId());
         } catch (final LabApiException e){
             throw new AssertionError(e);
         }
