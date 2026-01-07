@@ -143,7 +143,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
-            brokerRequestBuilder.webAppsState(((BrokerInteractiveTokenCommandParameters) parameters).getWebAppsState());
         }
 
         return brokerRequestBuilder.build();
