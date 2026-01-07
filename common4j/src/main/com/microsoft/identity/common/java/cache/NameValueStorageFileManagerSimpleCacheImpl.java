@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.cache;
 import lombok.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -66,6 +68,8 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     private static final Map<String, ReentrantReadWriteLock> STORAGE_LOCKS = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock metadataCacheLock;
 
+    private final boolean useLocks;
+
     /**
      * Constructs a new NameValueStorageFileManagerSimpleCacheImpl. Convenience class for persisting
      * lists of arbitrarily-typed data. Duplicate reinsertion is disabled (backcompat) by default.
@@ -102,6 +106,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
         mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
         // Get or create a lock for this specific storage file
         metadataCacheLock = STORAGE_LOCKS.computeIfAbsent(name, k -> new ReentrantReadWriteLock());
+        useLocks = CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE);
     }
 
     private interface NamedRunnable<V> extends Callable<V> {
@@ -130,6 +135,36 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     @Override
     public boolean insert(final T t) {
+        if (useLocks) {
+            return insertWithLocks(t);
+        }
+        return execWithTiming(new NamedRunnable<Boolean>() {
+            @Override
+            public String getName() {
+                return "insert";
+            }
+
+            @Override
+            public Boolean call() {
+                final Set<T> allMetadata = new HashSet<>(getAllInternal());
+
+                if (mForceReinsertionOfDuplicates) {
+                    // This is a bit of workaround for Set's default behavior
+                    // where items already within the Set are not replaced if they are
+                    // inserted but already exist.
+                    // This makes it behave more like a Map.
+                    allMetadata.remove(t);
+                }
+
+                allMetadata.add(t);
+                final String json = mGson.toJson(allMetadata);
+                mStorage.put(mKeySingleEntry, json);
+                return true;
+            }
+        });
+    }
+
+    private boolean insertWithLocks(final T t) {
         metadataCacheLock.writeLock().lock();
         try {
             return execWithTiming(new NamedRunnable<Boolean>() {
@@ -196,6 +231,15 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
         }
     }
 
+    private List<T> getAllWithLocks() {
+        metadataCacheLock.readLock().lock();
+        try {
+            return getAllInternal();
+        } finally {
+            metadataCacheLock.readLock().unlock();
+        }
+    }
+
     /**
      * Internal helper method to retrieve all items from storage without acquiring a lock.
      * This method should only be called when a lock (read or write) is already held by the caller.
@@ -227,6 +271,24 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     @Override
     public boolean clear() {
+        if (useLocks) {
+            return clearWithLocks();
+        }
+        return execWithTiming(new NamedRunnable<Boolean>() {
+            @Override
+            public String getName() {
+                return "clear";
+            }
+
+            @Override
+            public Boolean call() {
+                mStorage.clear();
+                return true;
+            }
+        });
+    }
+
+    private boolean clearWithLocks() {
         metadataCacheLock.writeLock().lock();
         try {
             return execWithTiming(new NamedRunnable<Boolean>() {
@@ -244,6 +306,5 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
         } finally {
             metadataCacheLock.writeLock().unlock();
         }
-
     }
 }

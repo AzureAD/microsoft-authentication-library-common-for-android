@@ -206,7 +206,12 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to re-enable validating signing certificate chain for broker validation
      * We want to disable the check by default but have the ability to bring it back just in case.
      */
-    RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false);
+    RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
+
+    /**
+     * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
+     */
+    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false);
 
     private String key;
     private Object defaultValue;
