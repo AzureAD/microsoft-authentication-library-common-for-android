@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
-import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 import lombok.Builder;
@@ -55,22 +54,18 @@ public class LabAccount implements ILabAccount {
     @NonNull
     private final String mHomeObjectId;
 
-    // nullable
-    // dependency for Nullable annotation not currently added to LabApiUtilities
-    private final ConfigInfo mConfigInfo;
+    private final String mAssociatedClientId;
 
-    @Override
-    public String getAssociatedClientId() {
-        return mConfigInfo.getAppInfo().getAppId();
-    }
+    private final String mCloudUrl;
 
+    private final String mAzureEnvironment;
+
+    /**
+     * Deprecated: Use getCloudUrl() instead.
+     * @return the cloud URL for this account.
+     */
     @Override
     public String getAuthority() {
-        return mConfigInfo.getLabInfo().getAuthority();
-    }
-
-    @Override
-    public String getAzureEnvironment() {
-        return mConfigInfo.getLabInfo().getAzureEnvironment();
+        return mCloudUrl;
     }
 }

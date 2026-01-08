@@ -39,6 +39,7 @@ import com.microsoft.identity.internal.test.labapi.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.ResetOperation;
@@ -147,7 +148,9 @@ public class LabClient implements ILabClient {
                 .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
                 .homeTenantId(configInfo.getUserInfo().getHomeTenantID())
                 .homeObjectId(configInfo.getUserInfo().getHomeObjectId())
-                .configInfo(configInfo)
+                .associatedClientId(configInfo.getAppInfo().getAppId())
+                .cloudUrl(configInfo.getLabInfo().getAuthority())
+                .azureEnvironment(configInfo.getLabInfo().getAzureEnvironment())
                 .build();
     }
 
@@ -359,6 +362,8 @@ public class LabClient implements ILabClient {
                 .userType(userType)
                 .homeTenantId(accountEntry.getHomeTenantId())
                 .homeObjectId(accountEntry.getHomeObjectId())
+                .azureEnvironment(accountEntry.getAzureEnvironment())
+                .cloudUrl(accountEntry.getCloudUrl())
                 .build();
 
     }
