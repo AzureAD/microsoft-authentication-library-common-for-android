@@ -31,35 +31,31 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import lombok.Getter;
+
 /**
  * Represents a lab account entry parsed from a JSON string.
  */
+@Getter
 public class LabJsonStringAccountEntry implements Serializable {
 
     @SerializedName("Upn")
     private String upn;
+
     @SerializedName("HomeObjectId")
     private String homeObjectId;
+
     @SerializedName("HomeTenantId")
     private String homeTenantId;
+
     @SerializedName("KeyVaultEntry")
     private String keyVaultEntry;
 
-    public String getUpn() {
-        return upn;
-    }
+    @SerializedName("AzureEnvironment")
+    private String azureEnvironment = "AzureCloud";
 
-    public String getHomeObjectId() {
-        return homeObjectId;
-    }
-
-    public String getHomeTenantId() {
-        return homeTenantId;
-    }
-
-    public String getKeyVaultEntry() {
-        return keyVaultEntry;
-    }
+    @SerializedName("CloudUrl")
+    private String cloudUrl = "https://login.microsoftonline.com/";
 
 
     /**
