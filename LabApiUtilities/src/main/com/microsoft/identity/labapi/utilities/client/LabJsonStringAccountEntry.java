@@ -52,10 +52,10 @@ public class LabJsonStringAccountEntry implements Serializable {
     private String keyVaultEntry;
 
     @SerializedName("AzureEnvironment")
-    private String azureEnvironment = "AzureCloud";
+    private String azureEnvironment;
 
     @SerializedName("CloudUrl")
-    private String cloudUrl = "https://login.microsoftonline.com/";
+    private String cloudUrl;
 
 
     /**
