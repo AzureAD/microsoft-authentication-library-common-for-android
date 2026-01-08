@@ -63,6 +63,7 @@ public class BrokerRequest implements Serializable {
         final static String LOCAL_ACCOUNT_ID = "local_account_id";
         final static String USERNAME = "username";
         final static String EXTRA_QUERY_STRING_PARAMETER = "extra_query_param";
+        final static String REQUEST_HEADERS = "request_headers";
         final static String CORRELATION_ID = "correlation_id";
         final static String PROMPT = "prompt";
         final static String CLAIMS = "claims";
@@ -141,6 +142,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.EXTRA_QUERY_STRING_PARAMETER)
     private String mExtraQueryStringParameter;
+
+    /**
+     * Additional request headers for the request.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.REQUEST_HEADERS)
+    private String mRequestHeaders;
 
     /**
      * Extra options flags for the request.
