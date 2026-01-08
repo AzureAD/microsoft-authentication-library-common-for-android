@@ -107,6 +107,23 @@ public class BrokerOAuth2TokenCache
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
+
+    /**
+     * Static map of locks for ensuring atomicity of compound save/update/load operations.
+     * Since each thread creates a new BrokerOAuth2TokenCache instance, we need locks
+     * shared across all instances to prevent race conditions when multiple instances
+     * access the same underlying storage (FOCI cache or UID-specific cache).
+     * <p>
+     * Keys are cache identifiers:
+     * <ul>
+     *   <li>"FOCI" - for Family of Client IDs cache (shared by all FOCI apps)</li>
+     *   <li>"UID_<uid>" - for process UID-specific caches (one per UID)</li>
+     * </ul>
+     * This ensures that operations on the same logical cache are serialized, even
+     * when invoked through different BrokerOAuth2TokenCache instances.
+     */
+    private static final ConcurrentHashMap<String, Object> CACHE_OPERATION_LOCKS = new ConcurrentHashMap<>();
+
     /**
      * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
      * storage (SharedPreferences) name.
@@ -1745,10 +1762,14 @@ public class BrokerOAuth2TokenCache
                 "refreshTokenRecord, familyId, authScheme)";
 
         final ICacheRecord cacheRecord;
-        synchronized (this) {
-            final long saveAndLoadStartTime = System.currentTimeMillis();
+        final long saveAndLoadStartTime = System.currentTimeMillis();
 
-            final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        // Determine lock key based on which cache we're operating on
+        final String lockKey = isFoci ? "FOCI" : "UID_" + mUid;
+        final Object lock = CACHE_OPERATION_LOCKS.computeIfAbsent(lockKey, k -> new Object());
+
+        synchronized (lock) {
             final MsalOAuth2TokenCache targetCache;
 
             if (isFoci) {
@@ -1808,6 +1829,5 @@ public class BrokerOAuth2TokenCache
                     saveAndLoadStartTime);
             return cacheRecordList;
         }
-
     }
 }
