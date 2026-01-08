@@ -1,0 +1,1 @@
+Every code file such as Java or Kotlin files must have a comment at the top that says "this file is part of the Broker project."
