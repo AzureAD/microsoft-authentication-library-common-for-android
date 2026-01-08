@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 23.2.0
+----------
 - [MINOR] Add additional allowed origins for PasskeyWebListener (#2839)
 - [PATCH] Add JavascriptInterface rules to consumer proguard rules (#2837)
 - [MINOR] Add optimized saveAndLoadAggregatedAccountData method in BrokerOAuth2TokenCache (#2832)
