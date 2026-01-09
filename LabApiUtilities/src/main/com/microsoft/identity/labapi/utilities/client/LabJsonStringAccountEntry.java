@@ -20,52 +20,52 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 package com.microsoft.identity.labapi.utilities.client;
 
-import com.microsoft.identity.labapi.utilities.constants.UserType;
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
+import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.util.Map;
+
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
 
 /**
- * An account object model that will used to represent accounts used for testing purposes.
+ * Represents a lab account entry parsed from a JSON string.
  */
 @Getter
-@Accessors(prefix = "m")
-@Builder
-@EqualsAndHashCode
-public class LabAccount implements ILabAccount {
+public class LabJsonStringAccountEntry implements Serializable {
 
-    @NonNull
-    private final String mUsername;
+    @SerializedName("Upn")
+    private String upn;
 
-    @NonNull
-    private final String mPassword;
+    @SerializedName("HomeObjectId")
+    private String homeObjectId;
 
-    @NonNull
-    private final UserType mUserType;
+    @SerializedName("HomeTenantId")
+    private String homeTenantId;
 
-    @NonNull
-    private final String mHomeTenantId;
+    @SerializedName("KeyVaultEntry")
+    private String keyVaultEntry;
 
-    @NonNull
-    private final String mHomeObjectId;
+    @SerializedName("AzureEnvironment")
+    private String azureEnvironment;
 
-    private final String mAssociatedClientId;
+    @SerializedName("CloudUrl")
+    private String cloudUrl;
 
-    private final String mCloudUrl;
-
-    private final String mAzureEnvironment;
 
     /**
-     * Deprecated: Use getCloudUrl() instead.
-     * @return the cloud URL for this account.
+     * Parses a JSON string into a Map<String, LabJsonStringAccountEntry> using Gson.
+     * @param json the JSON string to parse
+     * @return a map of key to LabJsonStringAccountEntry
      */
-    @Override
-    public String getAuthority() {
-        return mCloudUrl;
+    public static Map<String, LabJsonStringAccountEntry> parseJsonToMap(String json) {
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, LabJsonStringAccountEntry>>(){}.getType();
+        return gson.fromJson(json, type);
     }
 }
