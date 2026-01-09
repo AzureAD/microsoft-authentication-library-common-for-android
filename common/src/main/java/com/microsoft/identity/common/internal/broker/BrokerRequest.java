@@ -144,7 +144,7 @@ public class BrokerRequest implements Serializable {
     private String mExtraQueryStringParameter;
 
     /**
-     * Additional request headers for the request.
+     * Additional request headers for the request. These values should not be logged anywhere, they may contain sentitive information.
      */
     @Nullable
     @SerializedName(SerializedNames.REQUEST_HEADERS)
