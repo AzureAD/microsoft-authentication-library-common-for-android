@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.HashMap;
@@ -34,13 +35,15 @@ import lombok.NonNull;
  * Utility class for serializing and deserializing request header maps
  */
 public class RequestHeaderSerializationUtil {
+
+    private static final Gson mGson = new GsonBuilder().create();
+
     public static String toJson(@NonNull final Map<String, String> headerMap) {
-        return new Gson().toJson(headerMap);
+        return mGson.toJson(headerMap);
     }
 
     public static HashMap<String, String> fromJson(@NonNull final String jsonString) {
-        return new Gson()
-                .fromJson(
+        return mGson.fromJson(
                         jsonString,
                         TypeToken.getParameterized(
                                 HashMap.class,
