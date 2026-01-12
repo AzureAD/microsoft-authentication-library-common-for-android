@@ -524,5 +524,11 @@ public enum AttributeName {
     /**
      *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
      */
-    elapsed_time_load_aggregated_account_data
+    elapsed_time_load_aggregated_account_data,
+
+    /**
+     * Indicates if account aggregation is skipped during saveTokenResult() call.
+     */
+    is_account_aggregation_skipped;
+
 }

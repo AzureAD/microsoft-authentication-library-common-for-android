@@ -1267,7 +1267,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mDefaultFociTestBundle.mGeneratedAccessToken,
                 mDefaultFociTestBundle.mGeneratedRefreshToken,
                 "1",
-                BEARER_AUTHENTICATION_SCHEME
+                BEARER_AUTHENTICATION_SCHEME,
+                true
         );
 
         verifyFociAppSaveAndLoadAggregatedAccountData(result);
@@ -1295,7 +1296,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mDefaultFociTestBundle.mGeneratedAccessToken,
                 mDefaultFociTestBundle.mGeneratedRefreshToken,
                 "1",
-                BEARER_AUTHENTICATION_SCHEME
+                BEARER_AUTHENTICATION_SCHEME,
+                false
         );
 
         verifyFociAppSaveAndLoadAggregatedAccountData(result);
@@ -1356,7 +1358,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
                 mDefaultAppUidTestBundle.mGeneratedRefreshToken,
                 null,
-                BEARER_AUTHENTICATION_SCHEME
+                BEARER_AUTHENTICATION_SCHEME,
+                true
         );
 
         verifyNonFociAppSaveAndLoadAggregatedAccountData(result);
@@ -1382,7 +1385,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
                 mDefaultAppUidTestBundle.mGeneratedRefreshToken,
                 null,
-                BEARER_AUTHENTICATION_SCHEME
+                BEARER_AUTHENTICATION_SCHEME,
+                false
         );
 
         verifyNonFociAppSaveAndLoadAggregatedAccountData(result);
@@ -1447,15 +1451,15 @@ public class BrokerOAuth2TokenCacheTest {
         final List<ICacheRecord> result1 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, false);
         final List<ICacheRecord> result2 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, false);
         final List<ICacheRecord> result3 = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, false);
 
         assertNotNull("First result should not be null", result1);
         assertNotNull("Second result should not be null", result2);
@@ -1497,7 +1501,7 @@ public class BrokerOAuth2TokenCacheTest {
         mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, true);
 
         final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle =
                 new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
@@ -1528,7 +1532,7 @@ public class BrokerOAuth2TokenCacheTest {
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, false);
 
         assertNotNull("Result should not be null", result);
         assertTrue("Should return multiple records (primary + guest)", result.size() >= 1);
@@ -1551,7 +1555,7 @@ public class BrokerOAuth2TokenCacheTest {
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, true);
         assertNotNull("Result should not be null", result);
         assertTrue("Result should have at least one record", result.size() > 0);
     }
@@ -1567,7 +1571,7 @@ public class BrokerOAuth2TokenCacheTest {
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, true);
 
         assertNotNull("Result should not be null", result);
 
@@ -1586,7 +1590,7 @@ public class BrokerOAuth2TokenCacheTest {
         final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
                 mDefaultFociTestBundle.mGeneratedAccount, mDefaultFociTestBundle.mGeneratedIdToken,
                 mDefaultFociTestBundle.mGeneratedAccessToken, mDefaultFociTestBundle.mGeneratedRefreshToken,
-                "1", BEARER_AUTHENTICATION_SCHEME);
+                "1", BEARER_AUTHENTICATION_SCHEME, false);
 
         assertNotNull("Result should not be null", result);
 

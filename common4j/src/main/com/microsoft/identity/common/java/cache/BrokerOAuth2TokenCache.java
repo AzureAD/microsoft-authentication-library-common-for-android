@@ -276,17 +276,22 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final @NonNull boolean shouldSkipAccountAggregation) throws ClientException {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
+        SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
+                shouldSkipAccountAggregation);
+
         if (isFlightEnabled) {
             return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
                     idTokenRecord,
                     accessTokenRecord,
                     refreshTokenRecord,
                     familyId,
-                    authScheme);
+                    authScheme,
+                    shouldSkipAccountAggregation);
         }
 
         synchronized (this) {
@@ -298,7 +303,11 @@ public class BrokerOAuth2TokenCache
                     familyId
             );
 
-            return loadAggregatedAccountData(authScheme, cacheRecord);
+            if (!shouldSkipAccountAggregation) {
+                return loadAggregatedAccountData(authScheme, cacheRecord);
+            } else {
+                return Collections.singletonList(cacheRecord);
+            }
         }
     }
 
@@ -1756,7 +1765,8 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final @NonNull boolean shouldSkipAccountAggregation
     ) throws ClientException{
         final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
                 "refreshTokenRecord, familyId, authScheme)";
@@ -1816,18 +1826,24 @@ public class BrokerOAuth2TokenCache
                     mUid
             );
 
-            Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-            List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
-                    clientId,
-                    applicationIdentifier,
-                    mamEnrollmentIdentifier,
-                    target,
-                    cacheRecord.getAccount(),
-                    authScheme
-            );
-            OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
-                    saveAndLoadStartTime);
-            return cacheRecordList;
+            if(!shouldSkipAccountAggregation) {
+                Logger.info(TAG + methodName, "Starting to load aggregated account data..");
+                List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        target,
+                        cacheRecord.getAccount(),
+                        authScheme
+                );
+                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+                        saveAndLoadStartTime);
+                return cacheRecordList;
+            } else {
+                // return empty list if skipping aggregation
+                Logger.info(TAG, methodName, "Skipping account aggregation.");
+                return Collections.singletonList(cacheRecord);
+            }
         }
     }
 }
