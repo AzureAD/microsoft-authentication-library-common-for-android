@@ -88,7 +88,7 @@ public class PackageHelper {
         try {
             final String SHA256Thumbprint = getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
             final String SHA512Thumbprint = getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), true);
-            Logger.info("SHA Thumbprints: ", "SHA-1: " + SHA256Thumbprint + ", SHA-512: " + SHA512Thumbprint);
+            Logger.info("SHA Thumbprints: ", "Package name: " + packageName " SHA-1: " + SHA256Thumbprint + ", SHA-512: " + SHA512Thumbprint);
             return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
