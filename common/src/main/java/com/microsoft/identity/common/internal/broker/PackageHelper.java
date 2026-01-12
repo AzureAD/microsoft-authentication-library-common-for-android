@@ -86,6 +86,8 @@ public class PackageHelper {
     public String getSha1SignatureForPackage(final String packageName) {
         final String methodTag = TAG + ":getSha1SignatureForPackage";
         try {
+            final String SHA256Thumbprint = getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
+            final String SHA512Thumbprint = getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), true);
             return getSigningCertificateThumbprintForPackage(getPackageInfo(mPackageManager, packageName), false);
         } catch (NameNotFoundException e) {
             Logger.error(methodTag, "Calling App's package does not exist in PackageManager. ", "", e);
@@ -124,7 +126,7 @@ public class PackageHelper {
             final Signature[] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
-                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA"); // CodeQL [SM05136] MSAL still uses SHA-1 format in redirect url.
+                MessageDigest md = MessageDigest.getInstance(useSha512 ? "SHA-512" : "SHA-256"); // CodeQL [SM05136] MSAL still uses SHA-1 format in redirect url.
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
             }
