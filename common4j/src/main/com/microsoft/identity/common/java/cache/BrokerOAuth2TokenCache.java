@@ -306,6 +306,7 @@ public class BrokerOAuth2TokenCache
             if (!shouldSkipAccountAggregation) {
                 return loadAggregatedAccountData(authScheme, cacheRecord);
             } else {
+                // return a list with only the cacheRecord associated with the request
                 return Collections.singletonList(cacheRecord);
             }
         }
@@ -1840,7 +1841,7 @@ public class BrokerOAuth2TokenCache
                         saveAndLoadStartTime);
                 return cacheRecordList;
             } else {
-                // return empty list if skipping aggregation
+                // return a list with only the cacheRecord associated with the request
                 Logger.info(TAG, methodName, "Skipping account aggregation.");
                 return Collections.singletonList(cacheRecord);
             }
