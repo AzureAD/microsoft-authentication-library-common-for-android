@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 0.0.00953-RC1
+Version 0.0.00953
 ----------
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
 
