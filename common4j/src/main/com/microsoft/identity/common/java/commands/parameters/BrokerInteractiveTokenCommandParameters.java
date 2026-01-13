@@ -86,6 +86,9 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     // Optional field to persist state for WebApps interactive token requests.
     private final String webAppsState;
 
+    // Optional field to persist nonce for WebApps interactive token requests.
+    private final String webAppsNonce;
+
     @Override
     public void validate() throws ArgumentException, ClientException {
         super.validate();

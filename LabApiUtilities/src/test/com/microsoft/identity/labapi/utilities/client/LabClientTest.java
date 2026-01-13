@@ -36,6 +36,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Map;
+
 /**
  * Test Various function calls through the lab api including
  * Temp-User Creation, fetching existing cloud, guest, and federated accounts, as well as
@@ -173,6 +175,46 @@ public class LabClientTest {
         }
     }
 
+    @Test
+    public void canFetchPasswordFromKeyVault() {
+        try {
+            final String password = mLabClient.getPasswordSecretFromLabsKeyVault("ID4SLAB2");
+            Assert.assertTrue(password != null && !password.isEmpty());
+        } catch (final LabApiException e){
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canFetchAccountUpnJsonString() {
+        try {
+            final Map<String, LabJsonStringAccountEntry> accountUpnMap = mLabClient.getAccountMapJsonFromMobileBuildKeyVault();
+            Assert.assertTrue(accountUpnMap != null && !accountUpnMap.isEmpty());
+
+            final ILabAccount basicUser = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.BASIC);
+            Assert.assertNotNull(basicUser);
+            Assert.assertNotNull(basicUser.getUsername());
+            Assert.assertNotNull(basicUser.getPassword());
+            Assert.assertNotNull(basicUser.getHomeObjectId());
+            Assert.assertNotNull(basicUser.getHomeTenantId());
+
+            final ILabAccount msaUser = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.MSA);
+            Assert.assertNotNull(msaUser);
+            Assert.assertNotNull(msaUser.getUsername());
+            Assert.assertNotNull(msaUser.getPassword());
+            Assert.assertNotNull(msaUser.getHomeObjectId());
+            Assert.assertNotNull(msaUser.getHomeTenantId());
+
+            final ILabAccount resourceAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.RESOURCE_ACCOUNT_1);
+            Assert.assertNotNull(resourceAccount);
+            Assert.assertNotNull(resourceAccount.getUsername());
+            Assert.assertNotNull(resourceAccount.getPassword());
+            Assert.assertNotNull(resourceAccount.getHomeObjectId());
+            Assert.assertNotNull(resourceAccount.getHomeTenantId());
+        } catch (final LabApiException e){
+            throw new AssertionError(e);
+        }
+    }
 
     // Helper to assert common properties of a lab account
     private void assertLabAccount(final ILabAccount labAccount,

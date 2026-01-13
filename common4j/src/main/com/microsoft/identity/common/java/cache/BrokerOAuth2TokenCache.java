@@ -107,6 +107,23 @@ public class BrokerOAuth2TokenCache
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
+
+    /**
+     * Static map of locks for ensuring atomicity of compound save/update/load operations.
+     * Since each thread creates a new BrokerOAuth2TokenCache instance, we need locks
+     * shared across all instances to prevent race conditions when multiple instances
+     * access the same underlying storage (FOCI cache or UID-specific cache).
+     * <p>
+     * Keys are cache identifiers:
+     * <ul>
+     *   <li>"FOCI" - for Family of Client IDs cache (shared by all FOCI apps)</li>
+     *   <li>"UID_<uid>" - for process UID-specific caches (one per UID)</li>
+     * </ul>
+     * This ensures that operations on the same logical cache are serialized, even
+     * when invoked through different BrokerOAuth2TokenCache instances.
+     */
+    private static final ConcurrentHashMap<String, Object> CACHE_OPERATION_LOCKS = new ConcurrentHashMap<>();
+
     /**
      * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
      * storage (SharedPreferences) name.
@@ -259,17 +276,22 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final @NonNull boolean shouldSkipAccountAggregation) throws ClientException {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
+        SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
+                shouldSkipAccountAggregation);
+
         if (isFlightEnabled) {
             return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
                     idTokenRecord,
                     accessTokenRecord,
                     refreshTokenRecord,
                     familyId,
-                    authScheme);
+                    authScheme,
+                    shouldSkipAccountAggregation);
         }
 
         synchronized (this) {
@@ -281,7 +303,12 @@ public class BrokerOAuth2TokenCache
                     familyId
             );
 
-            return loadAggregatedAccountData(authScheme, cacheRecord);
+            if (!shouldSkipAccountAggregation) {
+                return loadAggregatedAccountData(authScheme, cacheRecord);
+            } else {
+                // return a list with only the cacheRecord associated with the request
+                return Collections.singletonList(cacheRecord);
+            }
         }
     }
 
@@ -1739,16 +1766,21 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final @NonNull boolean shouldSkipAccountAggregation
     ) throws ClientException{
         final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
                 "refreshTokenRecord, familyId, authScheme)";
 
         final ICacheRecord cacheRecord;
-        synchronized (this) {
-            final long saveAndLoadStartTime = System.currentTimeMillis();
+        final long saveAndLoadStartTime = System.currentTimeMillis();
 
-            final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        // Determine lock key based on which cache we're operating on
+        final String lockKey = isFoci ? "FOCI" : "UID_" + mUid;
+        final Object lock = CACHE_OPERATION_LOCKS.computeIfAbsent(lockKey, k -> new Object());
+
+        synchronized (lock) {
             final MsalOAuth2TokenCache targetCache;
 
             if (isFoci) {
@@ -1795,19 +1827,24 @@ public class BrokerOAuth2TokenCache
                     mUid
             );
 
-            Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-            List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
-                    clientId,
-                    applicationIdentifier,
-                    mamEnrollmentIdentifier,
-                    target,
-                    cacheRecord.getAccount(),
-                    authScheme
-            );
-            OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
-                    saveAndLoadStartTime);
-            return cacheRecordList;
+            if(!shouldSkipAccountAggregation) {
+                Logger.info(TAG + methodName, "Starting to load aggregated account data..");
+                List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        target,
+                        cacheRecord.getAccount(),
+                        authScheme
+                );
+                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+                        saveAndLoadStartTime);
+                return cacheRecordList;
+            } else {
+                // return a list with only the cacheRecord associated with the request
+                Logger.info(TAG, methodName, "Skipping account aggregation.");
+                return Collections.singletonList(cacheRecord);
+            }
         }
-
     }
 }
