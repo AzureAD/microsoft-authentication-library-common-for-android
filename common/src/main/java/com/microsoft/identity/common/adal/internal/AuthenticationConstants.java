@@ -1062,6 +1062,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * OneAuth Test App package name.
+         */
+        public static final String ONEAUTH_TEST_APP_PACKAGE_NAME = "com.msft.oneauth.testapp";
+
+        /**
          * Mock AuthApp package name.
          */
         public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
@@ -1147,6 +1152,12 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
+        /**
+         * Signing certificate thumbprint of the OneAuth Test App.
+         * Generated with SHA-512.
+         */
+        public static final String ONEAUTH_TEST_APP_SIGNATURE_SHA512 = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==";
 
         /**
          * Package name of the Link To Windows app.
