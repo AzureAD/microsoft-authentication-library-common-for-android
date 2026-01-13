@@ -73,7 +73,6 @@ public enum SpanName {
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     PasskeyWebListener,
-    PersistToStorageAsync,
     InstallCertOnWpj,
     /**
      * Span name for fetching initial ECS flight configurations.
