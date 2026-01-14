@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.numberMatch
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Helper to facilitate NumberMatchFlow. Used in conjunction with {@link AuthUxJavaScriptInterface}
@@ -42,7 +43,16 @@ class NumberMatchHelper {
     // long enough for AuthApp to call the broker api to fetch the number match
     companion object {
         val TAG = NumberMatchHelper::class.java.simpleName
-        val numberMatchMap: HashMap<String, String> = HashMap()
+        val numberMatchMap: ConcurrentHashMap<String, String> = ConcurrentHashMap()
+
+        // Regex for GUID: 8-4-4-4-12 hex digits, case-insensitive
+        val guidRegex = Regex("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$")
+
+        // Regex for 8-character alphanumeric string
+        val alphaNum8Regex = Regex("^[A-Za-z0-9]{8}$")
+
+        // Regex for 2-digit number string
+        val twoDigitRegex = Regex("^\\d{2}$")
 
         /**
          * Method to add a key:value pair of sessionID:numberMatch to static hashmap. This hashmap will be accessed
@@ -55,18 +65,46 @@ class NumberMatchHelper {
 
             val span = SpanExtension.current()
 
-            // If both parameters are non-null, add a new entry to the hashmap
-            if (sessionId != null && numberMatch != null) {
-                numberMatchMap[sessionId] = numberMatch
+            // Validate that the sessionId and numberMatch are in expected formats
+            val parametersValid = checkSessionIdAndNumberMatchAreValid(sessionId, numberMatch)
+
+            // If both parameters are proper format, add a new entry to the hashmap
+            if (parametersValid) {
+                numberMatchMap[sessionId!!] = numberMatch!!
                 span.setAttribute(AttributeName.stored_number_match_entry.name, true)
             }
-            // If either parameter is null, do nothing
+            // If either parameter is misformatted, do nothing
             else {
-                Logger.warn(methodTag,
-                    "Either session ID or number match is null. Nothing to add for number match."
-                )
                 span.setAttribute(AttributeName.stored_number_match_entry.name, false)
             }
+        }
+
+        /**
+         * Validate that sessionId is non-null and either a GUID or an 8-character alphanumeric string,
+         * and that numberMatch is a non-null 2-digit numerical string.
+         */
+        private fun checkSessionIdAndNumberMatchAreValid(sessionId: String?, numberMatch: String?) : Boolean {
+            if (sessionId.isNullOrEmpty()) {
+                Logger.warn(TAG, "Session ID is null or empty.")
+                return false
+            }
+
+            if (!guidRegex.matches(sessionId) && !alphaNum8Regex.matches(sessionId)) {
+                Logger.warn(TAG, "Session ID is not a valid GUID or 8-character alphanumeric string. Value: $sessionId")
+                return false
+            }
+
+            if (numberMatch.isNullOrEmpty()) {
+                Logger.warn(TAG, "Number match is null or empty.")
+                return false
+            }
+
+            if (!twoDigitRegex.matches(numberMatch)) {
+                Logger.warn(TAG, "Number match is not a valid 2-digit numerical string. Value: $numberMatch")
+                return false
+            }
+
+            return true
         }
 
         /**
