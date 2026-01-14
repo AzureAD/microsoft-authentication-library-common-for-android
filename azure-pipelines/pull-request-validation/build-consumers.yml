@@ -32,9 +32,9 @@ resources:
     endpoint: ANDROID_GITHUB
   - repository: broker
     type: github
-    name: AzureAD/ad-accounts-for-android
+    name: identity-authnz-teams/ad-accounts-for-android
     ref: dev
-    endpoint: ANDROID_GITHUB
+    endpoint: github-inside-microsoft
 
 stages:
 - stage: getLabel
