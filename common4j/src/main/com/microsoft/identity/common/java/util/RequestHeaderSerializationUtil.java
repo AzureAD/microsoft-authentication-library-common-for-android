@@ -38,10 +38,20 @@ public class RequestHeaderSerializationUtil {
 
     private static final Gson mGson = new GsonBuilder().create();
 
+    /**
+     * Serializes a map of request headers (Expects a String : String pairing Map) to a JSON string.
+     * @param headerMap Map of request headers
+     * @return the JSON String generated through GSON
+     */
     public static String toJson(@NonNull final Map<String, String> headerMap) {
         return mGson.toJson(headerMap);
     }
 
+    /**
+     * Deserializes a JSON String of request headers into a HashMap<String, String> object.
+     * @param jsonString JSON String representing the request headers
+     * @return the HashMap<String, String> generated through GSON
+     */
     public static HashMap<String, String> fromJson(@NonNull final String jsonString) {
         return mGson.fromJson(
                         jsonString,
