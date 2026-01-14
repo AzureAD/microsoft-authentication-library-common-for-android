@@ -20,31 +20,13 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.activebrokerdiscovery
-
-import android.content.Context
-import com.microsoft.identity.common.internal.broker.BrokerData
+package com.microsoft.identity.common.java.broker
 
 /**
- * An [IBrokerDiscoveryClient] which is based on AccountManager.
- **/
-class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
-
-    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
-        return AccountManagerBrokerDiscoveryUtil(context)
-            .getActiveBrokerFromAccountManager()
-    }
-
-    override fun getActiveBroker(
-        shouldSkipCache: Boolean,
-        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
-    ): BrokerData? {
-        telemetryCallback.onUseAccountManager()
-        return AccountManagerBrokerDiscoveryUtil(context)
-            .getActiveBrokerFromAccountManager()
-    }
-
-    override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
-        throw UnsupportedOperationException("LegacyBrokerDiscoveryClient does not support forceBrokerRediscovery.")
-    }
+ * Holds broker performance metrics derived from timestamps in authentication flows.
+ * Calculates processing and latency durations at construction time.
+ * Mainly used to pass metrics between broker and client.
+ */
+interface IBrokerPerformanceMetricsProvider {
+    val brokerPerformanceMetrics: BrokerPerformanceMetrics?
 }

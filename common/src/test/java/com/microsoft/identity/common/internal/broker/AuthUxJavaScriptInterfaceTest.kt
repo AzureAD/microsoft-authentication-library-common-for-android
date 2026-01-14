@@ -32,7 +32,7 @@ class AuthUxJavaScriptInterfaceTest {
 
     private lateinit var authUxJavaScriptInterface: AuthUxJavaScriptInterface
 
-    private val mockSessionId = "1234"
+    private val mockSessionId = "12345678"
     private val mockNumberMatchValue = "00"
 
     private val numberMatchTestPayload = """

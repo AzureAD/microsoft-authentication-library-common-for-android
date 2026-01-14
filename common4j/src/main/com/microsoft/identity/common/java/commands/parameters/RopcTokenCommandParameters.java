@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.EqualsAndHashCode;
@@ -39,7 +40,7 @@ public class RopcTokenCommandParameters extends TokenCommandParameters {
     private final String mPassword;
 
     @Override
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         if (StringUtil.isNullOrEmpty(mUsername)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_WITH_PASSWORD_OPERATION_NAME,

@@ -265,6 +265,7 @@ public interface IDevicePopManager {
      * @return The encrypted plaintext.
      * @throws ClientException If encryption fails.
      */
+    @Deprecated
     String encrypt(Cipher cipher, String plaintext) throws ClientException;
 
     /**
@@ -275,6 +276,7 @@ public interface IDevicePopManager {
      * @return The encrypted plaintext.
      * @throws ClientException If encryption fails.
      */
+    @Deprecated
     byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException;
 
     /**
@@ -285,6 +287,7 @@ public interface IDevicePopManager {
      * @return The decrypted text.
      * @throws ClientException If decryption fails.
      */
+    @Deprecated
     String decrypt(Cipher cipher, String ciphertext) throws ClientException;
 
     /**
@@ -295,6 +298,7 @@ public interface IDevicePopManager {
      * @return The decrypted text.
      * @throws ClientException If decryption fails.
      */
+    @Deprecated
     byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException;
 
     /**

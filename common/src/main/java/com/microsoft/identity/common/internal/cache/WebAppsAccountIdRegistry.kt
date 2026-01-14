@@ -50,6 +50,7 @@ class WebAppsAccountIdRegistry private constructor(
          * @param supplier The storage supplier.
          * @return A new instance of [WebAppsAccountIdRegistry].
          */
+        @JvmStatic
         fun create(supplier: IStorageSupplier): WebAppsAccountIdRegistry {
             val store = supplier.getEncryptedFileStore(WEBAPPS_ACCOUNT_ID_REGISTRY_STORAGE_KEY)
             return WebAppsAccountIdRegistry(store)
