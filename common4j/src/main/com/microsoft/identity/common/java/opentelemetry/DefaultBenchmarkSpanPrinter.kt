@@ -378,10 +378,10 @@ class DefaultBenchmarkSpanPrinter(
         }
 
         // Map each status occurrence to its statistical data, maintaining insertion order
-        return statusOccurrencesMap.map { (statusName, timingSincePrevsValues) ->
+        return statusOccurrencesMap.map { (statusName, timeSincePreviousValues) ->
             StatisticalStatusData(
                 statusName = statusName,
-                timeSincePreviousStats = calculateMetrics(timingSincePrevsValues)
+                timeSincePreviousStats = calculateMetrics(timeSincePreviousValues)
             )
         }
     }
