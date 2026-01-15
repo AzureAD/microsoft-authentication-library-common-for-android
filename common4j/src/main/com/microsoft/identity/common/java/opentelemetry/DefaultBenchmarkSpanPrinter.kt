@@ -58,11 +58,22 @@ class DefaultBenchmarkSpanPrinter(
 ) : IBenchmarkSpanPrinter {
 
     companion object {
+        /** Tag used for logging messages from this class */
         private val TAG = DefaultBenchmarkSpanPrinter::class.java.simpleName
+
+        /** Date format pattern for timestamp display in benchmark output */
         private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+
+        /** Maximum width in characters for the status entry column in output tables */
         private const val STATUS_COLUMN_WIDTH = 48
+
+        /** Maximum width in characters for the metric label column in output tables */
         private const val METRIC_COLUMN_WIDTH = 6
+
+        /** Maximum width in characters for the time value column in output tables */
         private const val TIME_COLUMN_WIDTH = 19
+
+        /** Maximum length in characters for exception messages displayed in group titles */
         private const val EXCEPTION_MESSAGE_MAX_LENGTH = 60
     }
 
@@ -245,8 +256,13 @@ class DefaultBenchmarkSpanPrinter(
         }
 
         // Write a table for each exception message group
-        spansByExceptionMessage.entries.sortedBy { it.key }.forEachIndexed { index, (exceptionMessage, spans) ->
-            val groupTitle = "ERROR FLOWS - ${exceptionMessage.take(EXCEPTION_MESSAGE_MAX_LENGTH)}"
+        spansByExceptionMessage.entries.sortedBy { it.key }.forEach { (exceptionMessage, spans) ->
+            val truncatedMessage = if (exceptionMessage.length > EXCEPTION_MESSAGE_MAX_LENGTH) {
+                "${exceptionMessage.take(EXCEPTION_MESSAGE_MAX_LENGTH)}..."
+            } else {
+                exceptionMessage
+            }
+            val groupTitle = "ERROR FLOWS - $truncatedMessage"
             writeSpanGroupStatistics(writer, spans, groupTitle)
         }
     }
@@ -375,12 +391,11 @@ class DefaultBenchmarkSpanPrinter(
      * @return The enumerated status name (e.g., "status" for first occurrence, "[2] status" for second)
      */
     private fun getStatusName(spanOccurrenceIndex: Int, statusName: String): String {
-        val occurrenceStatusName = if (spanOccurrenceIndex > 1) {
+        return if (spanOccurrenceIndex > 1) {
             "[$spanOccurrenceIndex] $statusName"
         } else {
             statusName
         }
-        return occurrenceStatusName
     }
 
     /**
