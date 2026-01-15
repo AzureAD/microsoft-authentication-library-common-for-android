@@ -303,16 +303,16 @@ class DefaultBenchmarkSpanPrinter(
             .trim('_')
             .takeIf { it.isNotEmpty() } ?: "span"
     }
-
-
-
+    
     /**
      * Calculate statistical metrics (average, percentiles) for all status entries across the batch of spans.
      *
      * For each status occurrence found across all spans (including duplicates), this method:
-     * 1. Collects timing values (time since previous status) from all spans
-     * 2. Calculates configured statistical metrics (e.g., Avg, P50, P75, P90)
-     * 3. Returns the results in the order they appear in the first span
+     * 1. Scans all spans to discover all unique status occurrences (not just from the first span)
+     * 2. Collects timing values (time since previous status) from all spans for each occurrence
+     * 3. Calculates configured statistical metrics (e.g., Avg, P50, P75, P90)
+     * 4. Returns the results in the order they appear in the first span, with any additional
+     *    occurrences found only in later spans appended at the end
      *
      * Note: If the same status name appears multiple times within a span, each occurrence is tracked separately
      * with an enumeration (e.g., "[2] status", "[3] status"). The first occurrence uses the plain status name.
@@ -331,22 +331,28 @@ class DefaultBenchmarkSpanPrinter(
         // Use LinkedHashMap to maintain insertion order based on first span's status sequence
         val statusOccurrencesMap = linkedMapOf<String, MutableList<Long>>() // Maps enumerated status name to timing values
 
-        // Process first span to establish the order and which statuses to track
-        val firstSpan = spans.first()
-        val firstSpanStatuses = firstSpan.getStatuses()
-        val firstSpanStatusCounts = mutableMapOf<String, Int>()
+        // First pass: Discover all unique status occurrences across ALL spans
+        // This ensures we don't silently drop occurrences that only appear in later spans
+        val allUniqueOccurrences = linkedSetOf<String>() // Maintains first-seen order
 
-        // Initialize the map with statuses from the first span to establish display order
-        firstSpanStatuses.forEach { (statusName, _) ->
-            val spanOccurrenceIndex = firstSpanStatusCounts.getOrDefault(statusName, 0) + 1
-            firstSpanStatusCounts[statusName] = spanOccurrenceIndex
-            val occurrenceStatusName = getStatusName(spanOccurrenceIndex, statusName)
+        for (span in spans) {
+            val statuses = span.getStatuses()
+            val spanStatusCounts = mutableMapOf<String, Int>()
 
-            // Initialize empty list for this status occurrence (LinkedHashMap maintains insertion order)
+            statuses.forEach { (statusName, _) ->
+                val spanOccurrenceIndex = spanStatusCounts.getOrDefault(statusName, 0) + 1
+                spanStatusCounts[statusName] = spanOccurrenceIndex
+                val occurrenceStatusName = getStatusName(spanOccurrenceIndex, statusName)
+                allUniqueOccurrences.add(occurrenceStatusName)
+            }
+        }
+
+        // Initialize the map with all discovered status occurrences
+        allUniqueOccurrences.forEach { occurrenceStatusName ->
             statusOccurrencesMap[occurrenceStatusName] = mutableListOf()
         }
 
-        // Process all spans (including the first one again) to collect timing data for each status occurrence
+        // Second pass: Collect timing data for each status occurrence from all spans
         for (span in spans) {
             val statuses = span.getStatuses()
             val startTime = span.getStartTimeInNanoSeconds()
@@ -358,7 +364,7 @@ class DefaultBenchmarkSpanPrinter(
                 spanStatusCounts[statusName] = spanOccurrenceIndex
                 val occurrenceStatusName = getStatusName(spanOccurrenceIndex, statusName)
 
-                // Only process if this status occurrence was in the first span (exists in our map)
+                // Now this will always succeed because we discovered all occurrences in the first pass
                 statusOccurrencesMap[occurrenceStatusName]?.let {
                     val previousTime = if (statusIndex > 0) {
                         statuses[statusIndex - 1].second
