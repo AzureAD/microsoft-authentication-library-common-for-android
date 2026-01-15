@@ -60,6 +60,10 @@ class DefaultBenchmarkSpanPrinter(
     companion object {
         private val TAG = DefaultBenchmarkSpanPrinter::class.java.simpleName
         private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+        private const val STATUS_COLUMN_WIDTH = 48
+        private const val METRIC_COLUMN_WIDTH = 6
+        private const val TIME_COLUMN_WIDTH = 19
+        private const val EXCEPTION_MESSAGE_MAX_LENGTH = 60
     }
 
     private val singleThreadExecutor = Executors.newSingleThreadExecutor { runnable ->
@@ -72,6 +76,14 @@ class DefaultBenchmarkSpanPrinter(
     private val batchedSpansByName = mutableMapOf<String, MutableList<IBenchmarkSpan>>()
     private val batchCounterByName = mutableMapOf<String, Int>()
 
+    /**
+     * Asynchronously prints a benchmark span to file.
+     *
+     * Spans are batched by span name, and written to file when the batch size is reached.
+     * Each span name has its own batch and counter to ensure proper grouping.
+     *
+     * @param span The benchmark span to print
+     */
     override fun printAsync(span: IBenchmarkSpan) {
         singleThreadExecutor.submit {
             try {
@@ -96,6 +108,15 @@ class DefaultBenchmarkSpanPrinter(
         }
     }
 
+    /**
+     * Writes a batch of spans to file with statistical analysis.
+     *
+     * Spans are separated into success flows (without exceptions) and error flows (with exceptions).
+     * Each group is written with its own statistical table. Error flows are further grouped by
+     * exception message for better organization.
+     *
+     * @param spans List of spans to write (all spans should have the same span name)
+     */
     private fun writeSpansToFile(spans: List<IBenchmarkSpan>) {
         if (spans.isEmpty()) return
 
@@ -134,7 +155,15 @@ class DefaultBenchmarkSpanPrinter(
     }
 
     /**
-     * Write statistical data for a specific group of spans
+     * Write statistical data for a specific group of spans.
+     *
+     * Generates a formatted table showing status entries with their timing metrics.
+     * Includes group summary information such as average total duration and concurrent request size.
+     * Each status entry shows the configured metrics (e.g., Avg, P50, P75, P90).
+     *
+     * @param writer FileWriter to write the output to
+     * @param spans List of spans to analyze for this group
+     * @param groupTitle Title to display for this group (e.g., "SUCCESS FLOWS" or "ERROR FLOWS - Exception")
      */
     private fun writeSpanGroupStatistics(writer: FileWriter, spans: List<IBenchmarkSpan>, groupTitle: String) {
         val statisticalData = calculateStatistics(spans)
@@ -146,7 +175,7 @@ class DefaultBenchmarkSpanPrinter(
             return
         }
 
-        // Calculate group-specific metrics
+        // Calculate average total duration for this group
         val totalDurationFormatted = spans.mapNotNull { span ->
             val spanStartTime = span.getStartTimeInNanoSeconds()
             val spanEndTime = span.getEndTimeInNanoSeconds()
@@ -162,6 +191,7 @@ class DefaultBenchmarkSpanPrinter(
             }
         }
 
+        // Calculate average concurrent request size (during each span) for this group.
         val avgConcurrentSize = spans.map { it.getConcurrentSilentRequestSize() }.average()
         val avgConcurrentSizeFormatted = String.format(Locale.US, "%.2f", avgConcurrentSize)
 
@@ -169,27 +199,27 @@ class DefaultBenchmarkSpanPrinter(
         writer.appendLine("Avg Total Duration: $totalDurationFormatted | Avg Concurrent Size: $avgConcurrentSizeFormatted | Spans: ${spans.size}")
         writer.appendLine("")
 
+        // Print table header and separator for status entries with their timing metrics
         writer.appendLine("| Status Entry                                     | Metric | Time Since Previous |")
         writer.appendLine("|--------------------------------------------------|--------|---------------------|")
 
         statisticalData.forEach { statsData ->
-            val paddedStatus = statsData.statusName.take(48).padEnd(48)
+            val paddedStatus = statsData.statusName.take(STATUS_COLUMN_WIDTH).padEnd(STATUS_COLUMN_WIDTH)
 
-            // Print only the configured metrics
+            // Print each configured metric type (Avg, P50, P75, P90, etc.) for this status entry
             metricsToDisplay.forEach { metricType ->
-                val metricLabel = metricType.displayName.padEnd(6)
-                val sincePrevValue = getMetricValue(statsData.timeSincePreviousStats, metricType).padEnd(19)
+                val metricLabel = metricType.displayName.padEnd(METRIC_COLUMN_WIDTH)
+                val sincePrevValue = getMetricValue(statsData.timeSincePreviousStats, metricType).padEnd(TIME_COLUMN_WIDTH)
 
                 val statusColumn = if (metricType == metricsToDisplay.first()) {
                     paddedStatus
                 } else {
-                    "".padEnd(48)
+                    "".padEnd(STATUS_COLUMN_WIDTH)
                 }
 
                 writer.appendLine("| $statusColumn | $metricLabel | $sincePrevValue |")
             }
 
-            // Separator line between status entries
             writer.appendLine("|--------------------------------------------------|--------|---------------------|")
         }
 
@@ -197,7 +227,13 @@ class DefaultBenchmarkSpanPrinter(
     }
 
     /**
-     * Write separate statistical tables for each unique exception message
+     * Write separate statistical tables for each unique exception message.
+     *
+     * Groups spans by their exception type and message, then writes a statistical table
+     * for each group. This allows for detailed analysis of different error scenarios.
+     *
+     * @param writer FileWriter to write the output to
+     * @param spansWithExceptions List of spans that have exceptions
      */
     private fun writeSpanGroupsByExceptionMessage(writer: FileWriter, spansWithExceptions: List<IBenchmarkSpan>) {
         // Group spans by exception message
@@ -210,7 +246,7 @@ class DefaultBenchmarkSpanPrinter(
 
         // Write a table for each exception message group
         spansByExceptionMessage.entries.sortedBy { it.key }.forEachIndexed { index, (exceptionMessage, spans) ->
-            val groupTitle = "ERROR FLOWS - ${exceptionMessage.take(60)}"
+            val groupTitle = "ERROR FLOWS - ${exceptionMessage.take(EXCEPTION_MESSAGE_MAX_LENGTH)}"
             writeSpanGroupStatistics(writer, spans, groupTitle)
         }
     }
@@ -219,8 +255,13 @@ class DefaultBenchmarkSpanPrinter(
 
     /**
      * Get a file to write the benchmark result to.
-     * Separate file for each span name.
-     **/
+     *
+     * Creates a separate file for each span name in the configured output directory.
+     * The filename is based on the sanitized span name with "_benchmark.log" suffix.
+     *
+     * @param spanName The name of the span to create a file for
+     * @return File object for writing benchmark results
+     */
     private fun getFile(spanName: String): File {
         val outputDir = File(outputDirectoryAbsolutePath)
         outputDir.mkdirs()
@@ -232,8 +273,14 @@ class DefaultBenchmarkSpanPrinter(
     }
 
     /**
-     * Replace characters that are not safe for filenames
-     **/
+     * Sanitizes a string to make it safe for use as a filename.
+     *
+     * Replaces all characters that are not alphanumeric, underscore, or hyphen with underscores.
+     * Multiple consecutive underscores are collapsed into one, and leading/trailing underscores are removed.
+     *
+     * @param name The original name to sanitize
+     * @return A sanitized filename-safe string, or "span" if the result would be empty
+     */
     private fun sanitizeFileName(name: String): String {
         return name.replace(Regex("[^a-zA-Z0-9_-]"), "_")
             .replace(Regex("_+"), "_")
@@ -247,54 +294,55 @@ class DefaultBenchmarkSpanPrinter(
      * Calculate statistical metrics (average, percentiles) for all status entries across the batch of spans.
      *
      * For each status occurrence found across all spans (including duplicates), this method:
-     * 1. Collects timing values (time since previous status, time since start) from all spans
+     * 1. Collects timing values (time since previous status) from all spans
      * 2. Calculates configured statistical metrics (e.g., Avg, P50, P75, P90)
-     * 3. Returns the results sorted by the first configured metric's time since start value
+     * 3. Returns the results in the order they appear in the first span
      *
-     * Note: If the same status name appears multiple times, each occurrence is tracked separately
-     * with an enumeration (e.g., "status [1]", "status [2]").
+     * Note: If the same status name appears multiple times within a span, each occurrence is tracked separately
+     * with an enumeration (e.g., "[2] status", "[3] status"). The first occurrence uses the plain status name.
      *
-     * The "Time Since Previous" column shows the statistical timing for how long each status
+     * The "Time Since Previous" metrics show the statistical timing for how long each status
      * typically takes to execute relative to the previous status within individual spans.
      * When aggregated across spans, these represent independent timing measurements.
      *
      * @param spans     List of spans to analyze (all spans should have the same span name)
      *
-     * @return List of statistical data for each status occurrence, sorted by the first configured metric's time since start
+     * @return List of statistical data for each status occurrence, maintaining insertion order from the first span
      */
     private fun calculateStatistics(spans: List<IBenchmarkSpan>): List<StatisticalStatusData> {
         if (spans.isEmpty()) return emptyList()
 
-        // Use LinkedHashMap to maintain insertion order based on first span's status appearances
-        val statusOccurrencesMap = linkedMapOf<String, MutableList<Long>>() // timeSincePrevious values
+        // Use LinkedHashMap to maintain insertion order based on first span's status sequence
+        val statusOccurrencesMap = linkedMapOf<String, MutableList<Long>>() // Maps enumerated status name to timing values
 
         // Process first span to establish the order and which statuses to track
         val firstSpan = spans.first()
         val firstSpanStatuses = firstSpan.getStatuses()
         val firstSpanStatusCounts = mutableMapOf<String, Int>()
 
-        // Initialize the map with statuses from the first span to establish order
+        // Initialize the map with statuses from the first span to establish display order
         firstSpanStatuses.forEach { (statusName, _) ->
             val spanOccurrenceIndex = firstSpanStatusCounts.getOrDefault(statusName, 0) + 1
             firstSpanStatusCounts[statusName] = spanOccurrenceIndex
             val occurrenceStatusName = getStatusName(spanOccurrenceIndex, statusName)
 
-            // Initialize empty list for this status (maintains insertion order)
+            // Initialize empty list for this status occurrence (LinkedHashMap maintains insertion order)
             statusOccurrencesMap[occurrenceStatusName] = mutableListOf()
         }
 
-        // Now process all spans (including the first one again) to collect timing data
+        // Process all spans (including the first one again) to collect timing data for each status occurrence
         for (span in spans) {
             val statuses = span.getStatuses()
             val startTime = span.getStartTimeInNanoSeconds()
             val spanStatusCounts = mutableMapOf<String, Int>()
 
             statuses.forEachIndexed { statusIndex, (statusName, timestamp) ->
+                // Track how many times this status name has appeared in this specific span
                 val spanOccurrenceIndex = spanStatusCounts.getOrDefault(statusName, 0) + 1
                 spanStatusCounts[statusName] = spanOccurrenceIndex
                 val occurrenceStatusName = getStatusName(spanOccurrenceIndex, statusName)
 
-                // Only process if this status was in the first span (exists in our map)
+                // Only process if this status occurrence was in the first span (exists in our map)
                 statusOccurrencesMap[occurrenceStatusName]?.let {
                     val previousTime = if (statusIndex > 0) {
                         statuses[statusIndex - 1].second
@@ -307,7 +355,7 @@ class DefaultBenchmarkSpanPrinter(
             }
         }
 
-        // LinkedHashMap maintains insertion order, so no sorting needed
+        // Map each status occurrence to its statistical data, maintaining insertion order
         return statusOccurrencesMap.map { (statusName, timingSincePrevsValues) ->
             StatisticalStatusData(
                 statusName = statusName,
@@ -316,6 +364,16 @@ class DefaultBenchmarkSpanPrinter(
         }
     }
 
+    /**
+     * Generates an enumerated status name for tracking duplicate status occurrences.
+     *
+     * For the first occurrence (occurrence index 1), returns the plain status name.
+     * For subsequent occurrences (occurrence index 2+), returns the status name prefixed with the occurrence number in brackets.
+     *
+     * @param spanOccurrenceIndex The occurrence index of this status name within a span (1-based)
+     * @param statusName The original status name
+     * @return The enumerated status name (e.g., "status" for first occurrence, "[2] status" for second)
+     */
     private fun getStatusName(spanOccurrenceIndex: Int, statusName: String): String {
         val occurrenceStatusName = if (spanOccurrenceIndex > 1) {
             "[$spanOccurrenceIndex] $statusName"
@@ -325,6 +383,15 @@ class DefaultBenchmarkSpanPrinter(
         return occurrenceStatusName
     }
 
+    /**
+     * Calculates statistical metrics for a list of timing values.
+     *
+     * Only calculates the metrics configured in metricsToDisplay parameter.
+     * Supports AVERAGE, P50, P75, P90, P95, and P99 metric types.
+     *
+     * @param values List of timing values in milliseconds
+     * @return Map of MetricType to calculated metric value in milliseconds
+     */
     private fun calculateMetrics(values: List<Long>): Map<MetricType, Long> {
         if (values.isEmpty()) return emptyMap()
 
@@ -346,6 +413,16 @@ class DefaultBenchmarkSpanPrinter(
         return result
     }
 
+    /**
+     * Calculates the percentile value from a list of values using linear interpolation.
+     *
+     * Uses the nearest-rank method with linear interpolation between values when the
+     * percentile index falls between two data points.
+     *
+     * @param values List of timing values in milliseconds
+     * @param percentile The percentile to calculate (0.0 to 100.0)
+     * @return The calculated percentile value in milliseconds
+     */
     private fun percentile(values: List<Long>, percentile: Double): Long {
         if (values.isEmpty()) return 0L
         if (values.size == 1) return values[0]
@@ -365,7 +442,14 @@ class DefaultBenchmarkSpanPrinter(
     }
 
     /**
-     * Get the metric value from the metrics map based on MetricType
+     * Retrieves and formats a metric value from the metrics map.
+     *
+     * Extracts the specified metric value and formats it with "ms" suffix.
+     * Returns "0ms" if the metric type is not found in the map.
+     *
+     * @param metricsMap Map containing calculated metric values
+     * @param metricType The type of metric to retrieve
+     * @return Formatted metric value string with "ms" suffix
      */
     private fun getMetricValue(metricsMap: Map<MetricType, Long>, metricType: MetricType): String {
         val value = metricsMap[metricType] ?: 0L
