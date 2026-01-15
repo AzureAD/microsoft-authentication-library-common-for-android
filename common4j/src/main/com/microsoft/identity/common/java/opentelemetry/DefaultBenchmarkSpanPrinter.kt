@@ -247,28 +247,37 @@ class DefaultBenchmarkSpanPrinter(
      * @param spansWithExceptions List of spans that have exceptions
      */
     private fun writeSpanGroupsByExceptionMessage(writer: FileWriter, spansWithExceptions: List<IBenchmarkSpan>) {
-        // Group spans by exception message
+        // Group spans by normalized exception message to avoid unbounded cardinality.
         val spansByExceptionMessage = spansWithExceptions.groupBy { span ->
             val exception = span.getException()
             val exceptionMessage = exception?.message ?: "Unknown Error"
             val exceptionType = exception?.javaClass?.simpleName ?: "Unknown"
-            "$exceptionType: $exceptionMessage"
+            val normalizedMessage = normalizeExceptionMessage(exceptionMessage)
+            "$exceptionType: $normalizedMessage"
         }
 
         // Write a table for each exception message group
         spansByExceptionMessage.entries.sortedBy { it.key }.forEach { (exceptionMessage, spans) ->
-            val truncatedMessage = if (exceptionMessage.length > EXCEPTION_MESSAGE_MAX_LENGTH) {
-                "${exceptionMessage.take(EXCEPTION_MESSAGE_MAX_LENGTH)}..."
-            } else {
-                exceptionMessage
-            }
-            val groupTitle = "ERROR FLOWS - $truncatedMessage"
+            val groupTitle = "ERROR FLOWS - $exceptionMessage"
             writeSpanGroupStatistics(writer, spans, groupTitle)
         }
     }
 
-
-
+    /**
+     * Normalize an exception message for grouping to reduce cardinality.
+     *
+     * Replaces numeric sequences (e.g., IDs, timestamps) with a placeholder and
+     * truncates the result to EXCEPTION_MESSAGE_MAX_LENGTH characters.
+     */
+    private fun normalizeExceptionMessage(message: String): String {
+        // Replace digit sequences to avoid unique groups per ID/timestamp-like value.
+        val normalized = message.replace(Regex("\\d+"), "#")
+        return if (normalized.length > EXCEPTION_MESSAGE_MAX_LENGTH) {
+            normalized.take(EXCEPTION_MESSAGE_MAX_LENGTH) + "..."
+        } else {
+            normalized
+        }
+    }
     /**
      * Get a file to write the benchmark result to.
      *
