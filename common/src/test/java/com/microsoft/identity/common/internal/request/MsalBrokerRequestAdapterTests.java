@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -51,12 +52,14 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.RequestHeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -288,6 +291,9 @@ public class MsalBrokerRequestAdapterTests {
 
         final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
 
+        final HashMap<String, String> requestHeaders = new HashMap<>();
+        requestHeaders.put("header1", "value1");
+
         final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
@@ -309,6 +315,7 @@ public class MsalBrokerRequestAdapterTests {
                 .preferredBrowser(new BrowserDescriptor("chrome", "signature", null, null))
                 .claimsRequestJson("claims_request")
                 .brokerBrowserSupportEnabled(true)
+                .requestHeaders(requestHeaders)
                 .build();
         final MsalBrokerRequestAdapter msalBrokerRequestAdapter = new MsalBrokerRequestAdapter();
         final BrokerRequest brokerRequest = msalBrokerRequestAdapter.brokerRequestFromAcquireTokenParameters(params);
@@ -327,6 +334,8 @@ public class MsalBrokerRequestAdapterTests {
         assertEquals(params.getAuthenticationScheme(), brokerRequest.getAuthenticationScheme());
         assertEquals(params.getPrompt().name(), brokerRequest.getPrompt());
         assertEquals(params.isSuppressBrokerAccountPicker(), brokerRequest.isSuppressAccountPicker());
+        assertNotNull(brokerRequest.getRequestHeaders());
+        assertEquals(params.getRequestHeaders(), RequestHeaderSerializationUtil.fromJson(brokerRequest.getRequestHeaders()));
         assertNull(brokerRequest.getSignInWithGoogleCredential());
     }
 
