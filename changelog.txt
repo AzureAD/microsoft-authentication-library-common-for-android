@@ -2,6 +2,7 @@ vNext
 ----------
 - [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
+- [MINOR] Increase CommandDispatcher thread pool size to 8
 
 Version 23.2.0
 

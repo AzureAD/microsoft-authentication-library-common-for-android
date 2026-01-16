@@ -100,6 +100,7 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED = 8;
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
@@ -888,6 +889,61 @@ public class CommandDispatcher {
             sSilentExecutor.shutdownNow();
         }
     }
+    /**
+     * Initializes the silent executor with expanded thread pool if the flight is enabled.
+     * <p>
+     * This method should ONLY be called by Broker during its initialization phase.
+     * MSAL client apps should NOT call this method - they will use the default pool size.
+     * </p>
+     * <p>
+     * This enables Broker to handle more concurrent silent token requests (8 vs 5 threads)
+     * without affecting MSAL client apps which run in separate processes.
+     * </p>
+     */
+    public static void initializeSilentExecutorForBroker() {
+        final String methodTag = TAG + ":initializeSilentExecutorForBroker";
+
+        final boolean useExpandedPool = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .getBooleanValue(CommonFlight.ENABLE_EXPANDED_BROKER_SILENT_THREAD_POOL);
+
+        if (useExpandedPool) {
+            Logger.info(methodTag, "Flight enabled: Expanding silent thread pool size for Broker");
+            resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+        } else {
+            Logger.info(methodTag, "Flight disabled: Using default silent thread pool size for Broker");
+        }
+    }
+
+    /**
+     * Resets the SilentRequestsExecutor with a custom thread pool size.
+     * <p>
+     * This gracefully shuts down the existing executor before creating a new one.
+     * </p>
+     *
+     * @param poolSize the desired thread pool size
+     */
+    private static void resetSilentRequestExecutorWithSize(final int poolSize) {
+        final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
+        Logger.info(methodTag, "Resetting silent Executor with pool size: " + poolSize);
+
+        // Gracefully shutdown existing executor
+        sSilentExecutor.shutdown();
+        try {
+            if (!sSilentExecutor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
+                Logger.warn(methodTag, "Executor did not terminate gracefully, forcing shutdown");
+                sSilentExecutor.shutdownNow();
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
+            sSilentExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        sSilentExecutor = Executors.newFixedThreadPool(poolSize);
+        Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
+    }
+
     /***
      * Resets the SilentRequestsExecutor.
      * This creates a new Executor for the silent request.
