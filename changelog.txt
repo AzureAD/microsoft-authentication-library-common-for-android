@@ -2,6 +2,7 @@ vNext
 ----------
 - [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
+- [PATCH] Adding WebAppsNonce to JWT request body (#2867)
 
 Version 23.2.0
 
