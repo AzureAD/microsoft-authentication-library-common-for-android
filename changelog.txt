@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Cleanup code related to emitting ests telemetry (#2868)
 - [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
 
