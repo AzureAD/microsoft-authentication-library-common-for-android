@@ -642,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "19.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "20.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1062,6 +1062,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * OneAuth Test App package name.
+         */
+        public static final String ONEAUTH_TEST_APP_PACKAGE_NAME = "com.msft.oneauth.testapp";
+
+        /**
          * Mock AuthApp package name.
          */
         public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
@@ -1147,6 +1152,12 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
+        /**
+         * Signing certificate thumbprint of the OneAuth Test App.
+         * Generated with SHA-512.
+         */
+        public static final String ONEAUTH_TEST_APP_SIGNATURE_SHA512 = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==";
 
         /**
          * Package name of the Link To Windows app.
@@ -1379,22 +1390,37 @@ public final class AuthenticationConstants {
         /**
          * String for broker webapps get contracts result.
          */
-        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "contracts";
-
-        /**
-         * String for broker webapps error result.
-         */
-        public static final String BROKER_WEB_APPS_ERROR = "error";
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "web_apps_contracts";
 
         /**
          * String for broker webapps request.
          */
-        public static final String BROKER_WEB_APPS_REQUEST = "request";
+        public static final String BROKER_WEB_APPS_EXECUTE_REQUEST = "web_apps_execute_request";
+
+        /**
+         * String for broker webapps additional required params.
+         */
+        public static final String BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS = "additional_required_params";
 
         /**
          * String for broker webapps response.
          */
-        public static final String BROKER_WEB_APPS_RESPONSE = "response";
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
+
+        /**
+         * String for compressed broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED = "web_app_successful_result_compressed";
+
+        /**
+         * String for broker webapps interactive intent.
+         */
+        public static final String BROKER_WEB_APPS_INTERACTIVE_INTENT = "web_apps_interactive_intent";
+
+        /**
+         * String for broker webapps error result.
+         */
+        public static final String BROKER_WEB_APPS_ERROR_RESULT = "web_apps_error_result";
 
         /**
          * String for generate shr result.
@@ -2142,4 +2168,3 @@ public final class AuthenticationConstants {
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
 }
-

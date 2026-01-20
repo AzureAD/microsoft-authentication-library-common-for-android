@@ -183,14 +183,35 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_OPENID_ISSUER_VALIDATION_REPORTING("EnableOpenIdIssuerValidationReporting", true),
 
     /**
+     * Flight to disable Web Apps API.
+     */
+    DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
+
+    /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
      */
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
 
     /**
+     * Flight to control whether or not to use the optimized saveAndLoadAggregatedAccountData() method.
+     */
+    CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD("UseRefactoredSaveAndLoadAggregatedAccountMethod", false),
+
+    /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
      */
-    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false);
+    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false),
+
+    /**
+     * Flight to re-enable validating signing certificate chain for broker validation
+     * We want to disable the check by default but have the ability to bring it back just in case.
+     */
+    RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
+
+    /**
+     * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
+     */
+    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false);
 
     private String key;
     private Object defaultValue;

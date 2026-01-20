@@ -146,9 +146,16 @@ public enum AttributeName {
     http_status_code,
 
     /**
-     * The size of the silent command executor queue when starting to process an ATS request.
+     * The number of unique cacheable silent requests currently being tracked in the executing command map.
+     * This represents deduplicated commands that are either executing or waiting in the thread pool queue.
      */
     num_concurrent_silent_requests,
+
+    /**
+     * The number of tasks waiting in the silent request thread pool queue to be executed.
+     * This does not include tasks currently being executed by worker threads.
+     */
+    silent_requests_queue_size,
 
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
@@ -171,7 +178,7 @@ public enum AttributeName {
     elapsed_time_cache_load_with_aggregated_account_data,
 
     /**
-     * The time (in milliseconds) spent in executing the saveAndLoadAggregatedAccountData method in OAuth2TokenCache.
+     * The time (in milliseconds) spent in executing the optimized saveAndLoadAggregatedAccountData method in OAuth2TokenCache.
      */
     elapsed_time_cache_save_and_load_aggregated_account_data,
 
@@ -495,6 +502,11 @@ public enum AttributeName {
     in_memory_cache_used_for_accounts_and_credentials,
 
     /**
+     * Elapsed time (in milliseconds) spent in executing the load() method in BrokerOAuth2TokenCache for in memory cache.
+     */
+    elapsed_time_in_memory_cache_load,
+
+    /**
      * Passkey operation type (e.g., registration, authentication).
      */
     passkey_operation_type,
@@ -512,5 +524,11 @@ public enum AttributeName {
     /**
      *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
      */
-    elapsed_time_load_aggregated_account_data
+    elapsed_time_load_aggregated_account_data,
+
+    /**
+     * Indicates if account aggregation is skipped during saveTokenResult() call.
+     */
+    is_account_aggregation_skipped;
+
 }
