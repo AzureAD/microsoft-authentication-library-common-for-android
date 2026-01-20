@@ -22,11 +22,26 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.broker;
 
+import javax.annotation.Nullable;
+
 /**
  * Interface to provide broker app information.
  */
 public interface IBrokerInfoProvider {
+    /**
+     * Gets the broker app version.
+     * Response can be null if broker app response did not contain version info.
+     *
+     * @return The broker app version.
+     */
+    @Nullable
     String getBrokerAppVersion();
 
+    /**
+     * Gets the broker app package name.
+     * Response can be null if broker app response did not contain package name info.
+     * @return
+     */
+    @Nullable
     String getBrokerAppPackageName();
 }

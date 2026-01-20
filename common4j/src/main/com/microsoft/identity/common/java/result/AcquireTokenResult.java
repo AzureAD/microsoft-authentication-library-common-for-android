@@ -29,6 +29,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
+import javax.annotation.Nullable;
+
 public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
@@ -39,8 +41,10 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
 
     private Boolean mSucceeded = false;
 
+    @Nullable
     private String mBrokerAppVersion;
 
+    @Nullable
     private String mBrokerAppPackageName;
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
@@ -85,12 +89,12 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
         return mSucceeded;
     }
 
-    public void setBrokerAppVersion(final String mBrokerVersion) {
-        this.mBrokerAppVersion = mBrokerVersion;
+    public void setBrokerAppVersion(final String brokerVersion) {
+        this.mBrokerAppVersion = brokerVersion;
     }
 
-    public void setBrokerAppPackageName(final String mBrokerPackageName) {
-        this.mBrokerAppPackageName = mBrokerPackageName;
+    public void setBrokerAppPackageName(final String brokerPackageName) {
+        this.mBrokerAppPackageName = brokerPackageName;
     }
 
     @Override

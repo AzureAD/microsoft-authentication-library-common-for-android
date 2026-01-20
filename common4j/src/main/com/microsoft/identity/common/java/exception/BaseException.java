@@ -80,8 +80,10 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     private String mUsername;
 
+    @Nullable
     private String mBrokerAppVersion;
 
+    @Nullable
     private String mBrokerAppPackageName;
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
@@ -262,12 +264,12 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
 
-    public void setBrokerAppPackageName(final String mBrokerAppPackageName) {
-        this.mBrokerAppPackageName = mBrokerAppPackageName;
+    public void setBrokerAppPackageName(final String brokerAppPackageName) {
+        this.mBrokerAppPackageName = brokerAppPackageName;
     }
 
-    public void setBrokerAppVersion(final String mBrokerAppVersion) {
-        this.mBrokerAppVersion = mBrokerAppVersion;
+    public void setBrokerAppVersion(final String brokerAppVersion) {
+        this.mBrokerAppVersion = brokerAppVersion;
     }
 
     @Override
