@@ -2,7 +2,8 @@ vNext
 ----------
 - [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
-- [MINOR] Increase CommandDispatcher thread pool size to 8
+- [MINOR] Add flight-controlled option (ENABLE_EXPANDED_BROKER_SILENT_THREAD_POOL) to expand Broker
+CommandDispatcher silent thread pool to 8 threads (default remains 5; MSAL clients unaffected). Fixes AB#3492151 (#2865)
 
 Version 23.2.0
 

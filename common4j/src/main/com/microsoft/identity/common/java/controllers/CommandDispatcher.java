@@ -102,6 +102,8 @@ public class CommandDispatcher {
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED = 8;
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
+    private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
@@ -906,10 +908,16 @@ public class CommandDispatcher {
         final boolean useExpandedPool = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .getBooleanValue(CommonFlight.ENABLE_EXPANDED_BROKER_SILENT_THREAD_POOL);
+        final int poolSize = useExpandedPool ? SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED : SILENT_REQUEST_THREAD_POOL_SIZE;
+
+        SpanExtension.current().setAttribute(
+                AttributeName.silent_executor_pool_size.name(),
+                poolSize
+        );
 
         if (useExpandedPool) {
             Logger.info(methodTag, "Flight enabled: Expanding silent thread pool size for Broker");
-            resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+            resetSilentRequestExecutorWithSize(poolSize);
         } else {
             Logger.info(methodTag, "Flight disabled: Using default silent thread pool size for Broker");
         }
@@ -920,8 +928,12 @@ public class CommandDispatcher {
      * <p>
      * This gracefully shuts down the existing executor before creating a new one.
      * </p>
+     * <p>
+     * <strong>IMPORTANT:</strong> This method should ONLY be called during Broker initialization
+     * or after global signout in Shared Device Mode when no silent requests are active.
+     * </p>
      *
-     * @param poolSize the desired thread pool size
+     * @param poolSize the desired thread pool size. Must be positive non-zero integer.
      */
     private static void resetSilentRequestExecutorWithSize(final int poolSize) {
         final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
@@ -929,10 +941,22 @@ public class CommandDispatcher {
 
         // Gracefully shutdown existing executor
         sSilentExecutor.shutdown();
+        boolean terminated = false;
         try {
-            if (!sSilentExecutor.awaitTermination(500, TimeUnit.MILLISECONDS)) {
-                Logger.warn(methodTag, "Executor did not terminate gracefully, forcing shutdown");
-                sSilentExecutor.shutdownNow();
+            // Wait for graceful completion (500ms timeout)
+            terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+            if (!terminated) {
+                Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
+                final List<Runnable> droppedTasks = sSilentExecutor.shutdownNow();
+
+                if (!droppedTasks.isEmpty()) {
+                    Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
+                        " tasks (expected during reset after signout)");
+                }
+
+                // Ensure complete shutdown after forced termination
+                terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException e) {
             Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
@@ -940,19 +964,22 @@ public class CommandDispatcher {
             Thread.currentThread().interrupt();
         }
 
+        if (!terminated) {
+            Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
+        }
+
         sSilentExecutor = Executors.newFixedThreadPool(poolSize);
         Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
     }
 
     /***
-     * Resets the SilentRequestsExecutor.
-     * This creates a new Executor for the silent request.
+     * Resets the SilentRequestsExecutor with the default thread pool size.
+     * This creates a new Executor for silent requests.
      * This is expected to be called after global signout is performed in Shared Device mode.
      * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
      */
     public static void resetSilentRequestExecutor() {
-        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
-        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE);
     }
 }
 

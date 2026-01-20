@@ -410,6 +410,57 @@ public class CommandDispatcherTest {
         Assert.assertEquals(TEST_RESULT_STR, result.getResult());
     }
 
+    @Test
+    public void testInitializeSilentExecutorForBroker_WithFlightEnabled() throws Exception {
+        // Clean state first
+        CommandDispatcher.clearState();
+
+        // Mock flight to return true - you'll need to set this up based on your mocking framework
+        // Assuming there's a way to mock CommonFlightsManager.INSTANCE.getFlightsProvider()
+
+        // Call the method
+        CommandDispatcher.initializeSilentExecutorForBroker();
+
+        // Verify executor is functional by submitting a test command
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        final TestCommand testCommand = getTestCommand(testLatch);
+
+        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        testLatch.await();
+
+        // Verify result
+        CommandResult result = future.get();
+        Assert.assertEquals(ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+        Assert.assertEquals(TEST_RESULT_STR, result.getResult());
+        Assert.assertTrue(future.isDone());
+        future.isCleanedUp();
+    }
+
+    @Test
+    public void testInitializeSilentExecutorForBroker_WithFlightDisabled() throws Exception {
+        // Clean state first
+        CommandDispatcher.clearState();
+
+        // Mock flight to return false - default behavior
+
+        // Call the method
+        CommandDispatcher.initializeSilentExecutorForBroker();
+
+        // Verify executor is functional by submitting a test command
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        final TestCommand testCommand = getTestCommand(testLatch);
+
+        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        testLatch.await();
+
+        // Verify result
+        CommandResult result = future.get();
+        Assert.assertEquals(ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+        Assert.assertEquals(TEST_RESULT_STR, result.getResult());
+        Assert.assertTrue(future.isDone());
+        future.isCleanedUp();
+    }
+
     private TestCommand getTestCommand(final CountDownLatch testLatch) {
         return new TestCommand(
                 getEmptyTestParams(),
