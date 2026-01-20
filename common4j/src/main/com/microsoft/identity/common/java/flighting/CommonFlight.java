@@ -172,11 +172,6 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEBVIEW_SECURITY_SETTINGS("EnableWebViewSecuritySettings", false),
 
     /**
-     * Flight to skip ests telemetry.
-     */
-    SKIP_ESTS_TELEMETRY("SkipEstsTelemetry", false),
-
-    /**
      * Flight to enable OpenID issuer validation code which validates issuer against the open id well known
      * config endpoint and only reports the failure result.
      */
