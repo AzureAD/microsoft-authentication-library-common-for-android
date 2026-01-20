@@ -112,6 +112,7 @@ public class CommandDispatcher {
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final Object mapAccessLock = new Object();
+    private static final Object sExecutorLock = new Object();
 
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
@@ -939,37 +940,39 @@ public class CommandDispatcher {
         final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
         Logger.info(methodTag, "Resetting silent Executor with pool size: " + poolSize);
 
-        // Gracefully shutdown existing executor
-        sSilentExecutor.shutdown();
-        boolean terminated = false;
-        try {
-            // Wait for graceful completion (500ms timeout)
-            terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        synchronized (sExecutorLock) {
+            // Gracefully shutdown existing executor
+            sSilentExecutor.shutdown();
+            boolean terminated = false;
+            try {
+                // Wait for graceful completion (500ms timeout)
+                terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+                if (!terminated) {
+                    Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
+                    final List<Runnable> droppedTasks = sSilentExecutor.shutdownNow();
+
+                    if (!droppedTasks.isEmpty()) {
+                        Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
+                                " tasks (expected during reset after signout)");
+                    }
+
+                    // Ensure complete shutdown after forced termination
+                    terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                }
+            } catch (final InterruptedException e) {
+                Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
+                sSilentExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
 
             if (!terminated) {
-                Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
-                final List<Runnable> droppedTasks = sSilentExecutor.shutdownNow();
-
-                if (!droppedTasks.isEmpty()) {
-                    Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
-                        " tasks (expected during reset after signout)");
-                }
-
-                // Ensure complete shutdown after forced termination
-                terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
             }
-        } catch (final InterruptedException e) {
-            Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
-            sSilentExecutor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
 
-        if (!terminated) {
-            Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
+            sSilentExecutor = Executors.newFixedThreadPool(poolSize);
+            Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
         }
-
-        sSilentExecutor = Executors.newFixedThreadPool(poolSize);
-        Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
     }
 
     /***
