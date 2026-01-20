@@ -50,9 +50,7 @@ import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -778,7 +776,6 @@ public class CommandDispatcher {
                                     "Completed interactive request for correlation id : **" + correlationId +
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
-                            EstsTelemetry.getInstance().flush(command, commandResult);
                             returnCommandResult(command, commandResult);
                         } finally {
                             DiagnosticContext.INSTANCE.clear();
