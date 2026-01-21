@@ -277,7 +277,7 @@ public class BrokerOAuth2TokenCache
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
-            final @NonNull boolean shouldSkipAccountAggregation) throws ClientException {
+            final boolean shouldSkipAccountAggregation) throws ClientException {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
@@ -1767,7 +1767,7 @@ public class BrokerOAuth2TokenCache
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
-            final @NonNull boolean shouldSkipAccountAggregation
+            final boolean shouldSkipAccountAggregation
     ) throws ClientException{
         final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
                 "refreshTokenRecord, familyId, authScheme)";

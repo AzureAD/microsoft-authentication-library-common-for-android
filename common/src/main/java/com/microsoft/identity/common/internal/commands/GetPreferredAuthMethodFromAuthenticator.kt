@@ -44,8 +44,4 @@ class GetPreferredAuthMethodFromAuthenticator(
     override fun execute(): PreferredAuthMethod {
         return controllerFactory.getDefaultController().preferredAuthMethod
     }
-
-    override fun isEligibleForEstsTelemetry(): Boolean {
-        return false
-    }
 }

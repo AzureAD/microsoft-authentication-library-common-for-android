@@ -70,11 +70,6 @@ public class RefreshOnCommand extends BaseCommand<VoidResult>{
     }
 
     @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return false;
-    }
-
-    @Override
     public boolean isEligibleForCaching() {
         return false;
     }

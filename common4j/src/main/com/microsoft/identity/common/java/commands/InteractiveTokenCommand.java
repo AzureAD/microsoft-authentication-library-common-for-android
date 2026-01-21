@@ -109,9 +109,4 @@ public class InteractiveTokenCommand extends TokenCommand {
                                              @NonNull final PropertyBag data) {
         mController.onFinishAuthorizationSession(requestCode, resultCode, data);
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }
