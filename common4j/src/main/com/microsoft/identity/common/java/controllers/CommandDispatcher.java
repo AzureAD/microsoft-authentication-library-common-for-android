@@ -114,6 +114,36 @@ public class CommandDispatcher {
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
+     * Enum representing the lifecycle states of a request for timeout classification.
+     * This enables precise tracking of where a timeout occurred in the request processing pipeline.
+     */
+    private enum RequestState {
+        /** Request is waiting to acquire the mapAccessLock (lock contention) */
+        WAITING_FOR_LOCK,
+        /** Request has been queued in the thread pool executor (thread pool contention) */
+        QUEUED,
+        /** Request is actively being executed by a worker thread (slow execution) */
+        EXECUTING
+    }
+
+    // Track timeout location per request for timeout classification
+    // Maps correlation ID to its current state in the request lifecycle
+    private static final ConcurrentMap<String, RequestState> sTimeoutLocationMap =
+        new ConcurrentHashMap<>();
+
+    // Timeout diagnostic message templates
+    private static final String TIMEOUT_MSG_LOCK_CONTENTION = 
+        "Lock contention detected. Request timed out waiting to acquire mapAccessLock.";
+    private static final String TIMEOUT_MSG_THREAD_POOL_SATURATED = 
+        "Thread pool saturated. All %d threads busy, %d requests queued.";
+    private static final String TIMEOUT_MSG_THREAD_POOL_CONTENTION = 
+        "Thread pool contention. Request queued but not picked up in time.";
+    private static final String TIMEOUT_MSG_EXECUTION_SLOW = 
+        "Slow execution. Request was executing but didn't complete in time.";
+    private static final String TIMEOUT_MSG_UNKNOWN_STATE = 
+        "Unknown state '%s'.";
+
+    /**
      * Returns the approximate number of threads that are actively
      * executing tasks in the silent request thread pool.
      */
@@ -165,6 +195,9 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             sExecutingCommandMap.clear();
         }
+        // Clear timeout tracking map
+        sTimeoutLocationMap.clear();
+        
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
@@ -176,6 +209,94 @@ public class CommandDispatcher {
         f.setAccessible(true);
         f.set(null, Executors.newSingleThreadExecutor());
         f.setAccessible(false);
+    }
+
+    /**
+     * Builds a consistent diagnostic message for timeout exceptions.
+     *
+     * @param location The method where timeout occurred
+     * @param message The specific timeout reason message
+     * @param activeThreads Number of active threads in the pool
+     * @param queueSize Number of requests waiting in the queue
+     * @return Formatted diagnostic message
+     */
+    private static String buildTimeoutDiagnosticMessage(
+            @NonNull final String location,
+            @NonNull final String message,
+            final int activeThreads,
+            final int queueSize) {
+        return String.format(
+            "Timeout in %s: %s [ActiveThreads=%d, QueueSize=%d, PoolSize=%d]",
+            location, message, activeThreads, queueSize, SILENT_REQUEST_THREAD_POOL_SIZE);
+    }
+
+    /**
+     * Creates a ClientException with a specific timeout error code based on the request state.
+     * This enables definitive classification of timeout root causes for telemetry and diagnostics.
+     *
+     * Classification logic:
+     * - WAITING_FOR_LOCK: Timeout while waiting for mapAccessLock (lock contention)
+     * - QUEUED + pool saturated: All threads busy AND queue has waiting requests (severe saturation)
+     * - QUEUED + not saturated: Threads busy but queue not fully saturated (moderate contention)
+     * - EXECUTING: Request was picked up but didn't complete (slow execution)
+     * - null/unknown: Fallback to generic timeout
+     *
+     * @param timeoutLocation The method where timeout occurred
+     * @param correlationId The correlation ID of the request
+     * @param state The request state at timeout (WAITING_FOR_LOCK, QUEUED, EXECUTING, or null)
+     * @param activeThreads Number of active threads in the pool
+     * @param queueSize Number of requests waiting in the queue
+     * @param cause The original TimeoutException
+     * @return ClientException with classified error code and diagnostic message
+     */
+    private static ClientException createTimeoutException(
+            @NonNull final String timeoutLocation,
+            @NonNull final String correlationId,
+            @Nullable final RequestState state,
+            final int activeThreads,
+            final int queueSize,
+            @NonNull final TimeoutException cause) {
+        final String errorCode;
+        final String reasonMessage;
+        
+        if (state == null) {
+            errorCode = ClientException.TIMED_OUT;
+            reasonMessage = String.format(TIMEOUT_MSG_UNKNOWN_STATE, "null");
+        } else {
+            switch (state) {
+                case WAITING_FOR_LOCK:
+                    errorCode = ClientException.TIMED_OUT_LOCK_CONTENTION;
+                    reasonMessage = TIMEOUT_MSG_LOCK_CONTENTION;
+                    break;
+                case QUEUED:
+                    // All threads busy AND requests queued = Pool completely saturated
+                    if (activeThreads >= SILENT_REQUEST_THREAD_POOL_SIZE && queueSize > 0) {
+                        errorCode = ClientException.TIMED_OUT_THREAD_POOL_SATURATED;
+                        reasonMessage = String.format(TIMEOUT_MSG_THREAD_POOL_SATURATED, activeThreads, queueSize);
+                    } else {
+                        // Threads busy but pool not saturated = Temporary contention
+                        errorCode = ClientException.TIMED_OUT_THREAD_POOL_CONTENTION;
+                        reasonMessage = TIMEOUT_MSG_THREAD_POOL_CONTENTION;
+                    }
+                    break;
+                case EXECUTING:
+                    errorCode = ClientException.TIMED_OUT_EXECUTION;
+                    reasonMessage = TIMEOUT_MSG_EXECUTION_SLOW;
+                    break;
+                default:
+                    errorCode = ClientException.TIMED_OUT;
+                    reasonMessage = String.format(TIMEOUT_MSG_UNKNOWN_STATE, state.name());
+                    break;
+            }
+        }
+        
+        final String diagnosticMessage = buildTimeoutDiagnosticMessage(
+            timeoutLocation, reasonMessage, activeThreads, queueSize);
+        Logger.error(TAG, diagnosticMessage, cause);
+
+        final ClientException exception = new ClientException(errorCode, diagnosticMessage, cause);
+        exception.setCorrelationId(correlationId);
+        return exception;
     }
 
     /**
@@ -254,15 +375,31 @@ public class CommandDispatcher {
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
         final CommandResult commandResult;
+        // Get or generate correlation ID early - this is the tracking key
+        final String correlationId = command.getParameters().getCorrelationId();
+
         try {
+            final FinalizableResultFuture<CommandResult> future = submitSilentReturningFuture(command);
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
-                commandResult = submitSilentReturningFuture(command).get();
+                commandResult = future.get();
             } else {
                 final int silentTokenTimeOutMs = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
-                commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
+                commandResult = future.get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
-        } catch (final InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (final TimeoutException e) {
+            // Classify timeout based on request state using correlation ID
+            throw createTimeoutException(
+                    "submitAcquireTokenSilentSync",
+                    correlationId,
+                    sTimeoutLocationMap.get(correlationId),
+                    getSilentRequestActiveCount(),
+                    ((ThreadPoolExecutor) sSilentExecutor).getQueue().size(),
+                    e);
+        } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
+        } finally {
+            // Always clean up the tracking map entry
+            sTimeoutLocationMap.remove(correlationId);
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
@@ -312,7 +449,14 @@ public class CommandDispatcher {
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
+        // Track state BEFORE entering synchronized block using correlation ID
+        // This enables detection of lock contention timeouts
+        sTimeoutLocationMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
+
         synchronized (mapAccessLock) {
+            // Update state: lock acquired, now queued for thread pool
+            sTimeoutLocationMap.put(correlationId, RequestState.QUEUED);
+
             final FinalizableResultFuture<CommandResult> finalFuture;
             if (command.isEligibleForCaching()) {
                 FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
@@ -353,6 +497,9 @@ public class CommandDispatcher {
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    // Update state: thread has picked up the request, now executing
+                    sTimeoutLocationMap.put(correlationId, RequestState.EXECUTING);
+
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         //initializing again since the request is transferred to a different thread pool
@@ -377,6 +524,9 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
+                        // Clean up timeout tracking - execution completed (success or failure)
+                        sTimeoutLocationMap.remove(correlationId);
+                        
                         synchronized (mapAccessLock) {
                             if (command.isEligibleForCaching()) {
                                 final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);

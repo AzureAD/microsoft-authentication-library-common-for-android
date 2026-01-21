@@ -24,7 +24,10 @@ package com.microsoft.identity.common;
 
 import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -35,6 +38,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.EmptyCommandCallback;
+import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -67,6 +71,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -85,10 +90,31 @@ import java.util.function.Consumer;
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
 
+    private static final String TAG = "CommandDispatcherTest";
+
     private static final AtomicInteger INTEGER = new AtomicInteger(1);
     private static final String TEST_RESULT_STR = "test_result_str";
     private static final AcquireTokenResult TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT = getRefreshExpiredTokenResult();
     private static final AcquireTokenResult TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT = getRefreshUnexpiredTokenResult();
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Constants for State-Based Timeout Detection Tests
+    // ════════════════════════════════════════════════════════════════════════════
+
+    /** Duration for slow execution tests - must exceed the 30 second timeout */
+    private static final long SLOW_EXECUTION_DURATION_MS = 35000;
+
+    /** Wait time for runnable's finally block to complete cleanup after future.get() returns */
+    private static final long CLEANUP_WAIT_MS = 500;
+
+    /** Small delay to ensure blocking tasks are fully blocking before submitting test request */
+    private static final long TASK_STABILIZATION_DELAY_MS = 100;
+
+    /** Thread pool size for silent requests (matches CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE) */
+    private static final int SILENT_THREAD_POOL_SIZE = 5;
+
+    /** Number of concurrent requests for state collision test */
+    private static final int CONCURRENT_REQUEST_COUNT = 20;
 
     @Test
     public void testSubmitSilentShouldRefresh() throws Exception {
@@ -736,6 +762,410 @@ public class CommandDispatcherTest {
         }
     }
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // State-Based Timeout Detection Tests
+    // ════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Test that timeout while queued with saturated pool is classified as
+     * TIMED_OUT_THREAD_POOL_SATURATED.
+     *
+     * <p>Test Strategy:
+     * <ol>
+     *   <li>Fill all {@link #SILENT_THREAD_POOL_SIZE} thread pool threads with blocking tasks</li>
+     *   <li>Submit a new request that will be queued (state: QUEUED)</li>
+     *   <li>Request times out after 30 seconds while still in queue</li>
+     *   <li>Verify error code is TIMED_OUT_THREAD_POOL_SATURATED</li>
+     * </ol>
+     *
+     * <p>Expected Duration: ~30 seconds (timeout duration)
+     *
+     * @throws Exception if test setup fails
+     */
+    @Test
+    public void testTimeoutClassification_ThreadPoolSaturated() throws Exception {
+        Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: Starting test");
+        final int POOL_SIZE = SILENT_THREAD_POOL_SIZE;
+        final CountDownLatch tasksStarted = new CountDownLatch(POOL_SIZE);
+        final CountDownLatch releaseBlockingTasks = new CountDownLatch(1);
+        final CountDownLatch tasksCompleted = new CountDownLatch(POOL_SIZE); // Track completion
+
+        try {
+            // Fill the thread pool with blocking tasks
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: Filling thread pool with " + POOL_SIZE + " blocking tasks");
+            for (int i = 0; i < POOL_SIZE; i++) {
+                BlockingTestCommand blockingCommand = new BlockingTestCommand(
+                    getEmptyTestParams(),
+                    new EmptyCommandCallback(),
+                    tasksStarted,
+                    releaseBlockingTasks,
+                    tasksCompleted
+                );
+                CommandDispatcher.submitSilentReturningFuture(blockingCommand);
+            }
+
+            // Wait for all blocking tasks to start (threads are now busy)
+            Assert.assertTrue("All blocking tasks should start",
+                tasksStarted.await(10, TimeUnit.SECONDS));
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: All blocking tasks started, pool is saturated");
+
+            // Small delay to ensure tasks are fully blocking
+            Thread.sleep(TASK_STABILIZATION_DELAY_MS);
+
+            // Submit request - should timeout in queue (all threads busy)
+            SilentTokenCommandParameters params = createTestSilentTokenParams();
+            SilentTokenCommand command = createTestSilentTokenCommand(params);
+
+            try {
+                CommandDispatcher.submitAcquireTokenSilentSync(command);
+                Assert.fail("Expected ClientException with TIMED_OUT_THREAD_POOL_SATURATED");
+            } catch (ClientException e) {
+                // Verify timeout classified as thread pool saturated
+                Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: Caught expected exception with error code: " + e.getErrorCode());
+                Assert.assertEquals("Expected TIMED_OUT_THREAD_POOL_SATURATED but got " + e.getErrorCode(),
+                    ClientException.TIMED_OUT_THREAD_POOL_SATURATED, e.getErrorCode());
+                Assert.assertTrue("Message should mention thread pool saturated",
+                    e.getMessage().contains("Thread pool saturated"));
+                Assert.assertNotNull("Correlation ID should be set", e.getCorrelationId());
+            }
+        } finally {
+            // Release blocking tasks
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: Releasing blocking tasks");
+            releaseBlockingTasks.countDown();
+
+            // Wait for all blocking tasks to complete (not just sleep)
+            Assert.assertTrue("All blocking tasks should complete",
+                tasksCompleted.await(10, TimeUnit.SECONDS));
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: All blocking tasks completed, test finished");
+        }
+    }
+
+    /**
+     * Test that timeout during execution is classified as TIMED_OUT_EXECUTION.
+     *
+     * <p>Test Strategy:
+     * <ol>
+     *   <li>Submit a command that sleeps for {@link #SLOW_EXECUTION_DURATION_MS} (35s)</li>
+     *   <li>Command starts executing (state: EXECUTING)</li>
+     *   <li>Request times out after 30 seconds while still executing</li>
+     *   <li>Verify error code is TIMED_OUT_EXECUTION</li>
+     * </ol>
+     *
+     * <p>Expected Duration: ~30 seconds (timeout duration)
+     *
+     * @throws Exception if test setup fails
+     */
+    @Test
+    public void testTimeoutClassification_SlowExecution() throws Exception {
+        Log.d(TAG, "testTimeoutClassification_SlowExecution: Starting test with execution duration " + SLOW_EXECUTION_DURATION_MS + "ms");
+        // Create command that executes slowly (SLOW_EXECUTION_DURATION_MS > 30 second timeout)
+        SilentTokenCommandParameters params = createTestSilentTokenParams();
+        SilentTokenCommand slowCommand = createSlowExecutionSilentTokenCommand(params, SLOW_EXECUTION_DURATION_MS);
+
+        try {
+            CommandDispatcher.submitAcquireTokenSilentSync(slowCommand);
+            Assert.fail("Expected ClientException with TIMED_OUT_EXECUTION");
+        } catch (ClientException e) {
+            // Verify timeout classified as slow execution
+            Log.d(TAG, "testTimeoutClassification_SlowExecution: Caught expected exception with error code: " + e.getErrorCode());
+            Assert.assertEquals("Expected TIMED_OUT_EXECUTION error code",
+                ClientException.TIMED_OUT_EXECUTION, e.getErrorCode());
+            Assert.assertTrue("Message should mention slow execution",
+                e.getMessage().contains("Slow execution"));
+            Assert.assertNotNull("Correlation ID should be set", e.getCorrelationId());
+        }
+
+        // Verify cleanup
+        Assert.assertEquals("Timeout location map should be cleaned up",
+            0, getTimeoutLocationMapSizeViaReflection());
+    }
+
+    /**
+     * Test that timeout location map is cleaned up after successful request.
+     *
+     * <p>Verifies that sTimeoutLocationMap entries are properly removed after
+     * a request completes successfully. This prevents memory leaks from
+     * accumulating tracking state.
+     *
+     * <p>Note: A {@link #CLEANUP_WAIT_MS} delay is needed because future.get()
+     * returns when the result is set, but the finally block that removes the
+     * entry from sTimeoutLocationMap runs AFTER that.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testTimeoutLocationMap_CleanupAfterSuccess() throws Exception {
+        // Get initial map size
+        int initialSize = getTimeoutLocationMapSizeViaReflection();
+
+        // Execute successful request
+        TestCommand successCommand = new TestCommand(getEmptyTestParams(), new EmptyCommandCallback(), 999);
+        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(successCommand);
+
+        // Wait for completion
+        CommandResult result = future.get(10, TimeUnit.SECONDS);
+        Assert.assertEquals("Command should complete successfully",
+            ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+
+        // Wait for the runnable's finally block to complete cleanup
+        // Note: future.get() returns when result is set, but the finally block
+        // that removes the entry from sTimeoutLocationMap runs AFTER that
+        Thread.sleep(CLEANUP_WAIT_MS);
+
+        // Verify cleanup - map should return to initial size
+        int finalSize = getTimeoutLocationMapSizeViaReflection();
+        Assert.assertEquals("Timeout location map should be cleaned up after success",
+            initialSize, finalSize);
+    }
+
+    /**
+     * Test that timeout location map is cleaned up after timeout.
+     *
+     * <p>Verifies that sTimeoutLocationMap entries are properly removed after
+     * a request times out. Cleanup happens in submitAcquireTokenSilentSync()'s
+     * finally block, which runs immediately when TimeoutException is caught.
+     *
+     * <p>Expected Duration: ~30 seconds (timeout duration)
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testTimeoutLocationMap_CleanupAfterTimeout() throws Exception {
+        // Get initial map size
+        int initialSize = getTimeoutLocationMapSizeViaReflection();
+
+        // Execute request that will timeout
+        SilentTokenCommandParameters params = createTestSilentTokenParams();
+        SilentTokenCommand slowCommand = createSlowExecutionSilentTokenCommand(params, SLOW_EXECUTION_DURATION_MS);
+
+        try {
+            CommandDispatcher.submitAcquireTokenSilentSync(slowCommand);
+            Assert.fail("Expected timeout");
+        } catch (ClientException e) {
+            // Expected - verify it's a timeout error
+            Assert.assertTrue("Should be a timeout error",
+                e.getErrorCode().startsWith("timed_out"));
+        }
+
+        // Verify cleanup - map should return to initial size
+        int finalSize = getTimeoutLocationMapSizeViaReflection();
+        Assert.assertEquals("Timeout location map should be cleaned up after timeout",
+            initialSize, finalSize);
+    }
+
+    /**
+     * Test concurrent requests don't cause state collision in timeout tracking.
+     *
+     * <p>Test Strategy:
+     * <ol>
+     *   <li>Launch {@link #CONCURRENT_REQUEST_COUNT} threads simultaneously</li>
+     *   <li>Each thread submits a unique (non-cacheable) request</li>
+     *   <li>Wait for all requests to complete</li>
+     *   <li>Verify all requests tracked independently (no state collision)</li>
+     *   <li>Verify sTimeoutLocationMap is cleaned up (no memory leaks)</li>
+     * </ol>
+     *
+     * <p>This test validates that correlation ID-based tracking correctly
+     * isolates concurrent requests.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testConcurrentRequests_NoStateCollision() throws Exception {
+        final int NUM_REQUESTS = CONCURRENT_REQUEST_COUNT;
+        final CountDownLatch startLatch = new CountDownLatch(1);
+        final CountDownLatch completeLatch = new CountDownLatch(NUM_REQUESTS);
+        final AtomicInteger successCount = new AtomicInteger(0);
+        final AtomicInteger errorCount = new AtomicInteger(0);
+        final AtomicReference<Throwable> firstError = new AtomicReference<>(null);
+
+        // Launch concurrent requests
+        for (int i = 0; i < NUM_REQUESTS; i++) {
+            final int requestId = i;
+            new Thread(() -> {
+                try {
+                    startLatch.await(); // Wait for all threads to be ready
+
+                    TestCommand cmd = new TestCommand(
+                        getEmptyTestParams(),
+                        new EmptyCommandCallback(),
+                        requestId
+                    ) {
+                        @Override
+                        public boolean isEligibleForCaching() {
+                            return false; // Each request is unique
+                        }
+                    };
+
+                    FinalizableResultFuture<CommandResult> future =
+                        CommandDispatcher.submitSilentReturningFuture(cmd);
+                    CommandResult result = future.get(30, TimeUnit.SECONDS);
+
+                    if (result.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
+                        successCount.incrementAndGet();
+                    } else {
+                        errorCount.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    errorCount.incrementAndGet();
+                    firstError.compareAndSet(null, e);
+                } finally {
+                    completeLatch.countDown();
+                }
+            }).start();
+        }
+
+        // Start all requests simultaneously
+        startLatch.countDown();
+
+        // Wait for all requests to complete
+        Assert.assertTrue("All requests should complete within 60 seconds",
+            completeLatch.await(60, TimeUnit.SECONDS));
+
+        // Wait for the runnable's finally blocks to complete cleanup
+        // Note: future.get() returns when result is set, but the finally block
+        // that removes the entry from sTimeoutLocationMap runs AFTER that
+        Thread.sleep(CLEANUP_WAIT_MS);
+
+        // Verify all requests tracked independently
+        Assert.assertEquals("Timeout location map should be cleaned up",
+            0, getTimeoutLocationMapSizeViaReflection());
+
+        // Verify all requests succeeded
+        Assert.assertEquals("All requests should succeed",
+            NUM_REQUESTS, successCount.get());
+        Assert.assertEquals("No requests should fail",
+            0, errorCount.get());
+
+        // Fail if any error occurred
+        if (firstError.get() != null) {
+            Assert.fail("Unexpected error during concurrent execution: " + firstError.get().getMessage());
+        }
+    }
+
+    /**
+     * Test that correlation ID is properly set on timeout exceptions.
+     *
+     * <p>Verifies that when a timeout occurs, the resulting ClientException
+     * contains the same correlation ID that was set on the original command
+     * parameters. This is essential for correlating timeout errors with
+     * specific requests in logs and telemetry.
+     *
+     * <p>Expected Duration: ~30 seconds (timeout duration)
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testTimeoutException_ContainsCorrelationId() throws Exception {
+        final String expectedCorrelationId = java.util.UUID.randomUUID().toString();
+
+        SilentTokenCommandParameters params = SilentTokenCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
+            .correlationId(expectedCorrelationId)
+            .build();
+
+        SilentTokenCommand slowCommand = createSlowExecutionSilentTokenCommand(params, SLOW_EXECUTION_DURATION_MS);
+
+        try {
+            CommandDispatcher.submitAcquireTokenSilentSync(slowCommand);
+            Assert.fail("Expected ClientException due to timeout");
+        } catch (ClientException e) {
+            // Verify it's a timeout error
+            Assert.assertTrue("Should be a timeout error",
+                e.getErrorCode().startsWith("timed_out"));
+            // Verify correlation ID is correctly propagated
+            Assert.assertEquals("Correlation ID should match",
+                expectedCorrelationId, e.getCorrelationId());
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Reflection Helper Methods for Timeout Classification Tests
+    // ════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Gets the timeout location map size via reflection.
+     */
+    private int getTimeoutLocationMapSizeViaReflection() throws Exception {
+        Field field = CommandDispatcher.class.getDeclaredField("sTimeoutLocationMap");
+        field.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        java.util.concurrent.ConcurrentMap<String, ?> map =
+            (java.util.concurrent.ConcurrentMap<String, ?>) field.get(null);
+        return map.size();
+    }
+
+    /**
+     * Creates SilentTokenCommandParameters with a random correlation ID for testing.
+     */
+    private SilentTokenCommandParameters createTestSilentTokenParams() {
+        return SilentTokenCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponentsFactory.createFromContext(ApplicationProvider.getApplicationContext()))
+            .correlationId(java.util.UUID.randomUUID().toString())
+            .build();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Helper Methods for Creating Test SilentTokenCommands
+    // ════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Creates a test SilentTokenCommand that executes quickly.
+     */
+    private SilentTokenCommand createTestSilentTokenCommand(
+            @NonNull final SilentTokenCommandParameters parameters) {
+        return new SilentTokenCommand(
+            parameters,
+            getTestSilentController().asControllerFactory(),
+            new EmptyCommandCallback(),
+            "test_silent_command"
+        );
+    }
+
+    /**
+     * Creates a SilentTokenCommand that executes slowly for the specified duration.
+     */
+    private SilentTokenCommand createSlowExecutionSilentTokenCommand(
+            @NonNull final SilentTokenCommandParameters parameters,
+            final long executionDurationMs) {
+        return new SilentTokenCommand(
+            parameters,
+            getSlowExecutionController(executionDurationMs).asControllerFactory(),
+            new EmptyCommandCallback(),
+            "slow_silent_command"
+        );
+    }
+
+    /**
+     * Returns a test controller for quick-executing SilentTokenCommands.
+     */
+    private static BaseController getTestSilentController() {
+        return new TestBaseController() {
+            @Override
+            public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
+                return getRefreshUnexpiredTokenResult();
+            }
+        };
+    }
+
+    /**
+     * Returns a controller that sleeps for the specified duration before returning.
+     * Used for testing TIMED_OUT_EXECUTION classification.
+     */
+    private static BaseController getSlowExecutionController(final long executionDurationMs) {
+        return new TestBaseController() {
+            @Override
+            public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
+                Thread.sleep(executionDurationMs);
+                return getRefreshUnexpiredTokenResult();
+            }
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Test Command Classes
+    // ════════════════════════════════════════════════════════════════════════════
+
     static class ExceptionCommand extends BaseCommand<String> {
 
         public ExceptionCommand(@NonNull final CommandParameters parameters,
@@ -900,6 +1330,55 @@ public class CommandDispatcherTest {
             return null;
         }
     }
+
+    /**
+     * Command that blocks until released via CountDownLatch.
+     * Used to saturate the thread pool for testing queue saturation.
+     */
+    static class BlockingTestCommand extends BaseCommand<String> {
+        private final CountDownLatch started;
+        private final CountDownLatch release;
+        private final CountDownLatch completed;
+
+        public BlockingTestCommand(
+                @NonNull final CommandParameters parameters,
+                @NonNull final CommandCallback callback,
+                @NonNull final CountDownLatch started,
+                @NonNull final CountDownLatch release) {
+            this(parameters, callback, started, release, null);
+        }
+
+        public BlockingTestCommand(
+                @NonNull final CommandParameters parameters,
+                @NonNull final CommandCallback callback,
+                @NonNull final CountDownLatch started,
+                @NonNull final CountDownLatch release,
+                @Nullable final CountDownLatch completed) {
+            super(parameters, getTestController().asControllerFactory(), callback, "blocking_test_id");
+            this.started = started;
+            this.release = release;
+            this.completed = completed;
+        }
+
+        @Override
+        public String execute() throws Exception {
+            try {
+                started.countDown(); // Signal that we've started
+                release.await(60, TimeUnit.SECONDS); // Block until released
+                return "completed";
+            } finally {
+                if (completed != null) {
+                    completed.countDown(); // Signal completion
+                }
+            }
+        }
+
+        @Override
+        public boolean isEligibleForCaching() {
+            return false; // Each blocking command is unique
+        }
+    }
+
     private static BaseController getTestController() {
         return new TestBaseController() {
         };

@@ -452,6 +452,32 @@ public class ClientException extends BaseException {
     public static final String TIMED_OUT = "timed_out";
 
     /**
+     * Timeout occurred while waiting to acquire the mapAccessLock.
+     * Indicates high lock contention - many requests competing for the synchronized block.
+     */
+    public static final String TIMED_OUT_LOCK_CONTENTION = "timed_out_lock_contention";
+
+    /**
+     * Timeout occurred while request was queued waiting for a thread.
+     * All thread pool threads are busy AND queue has waiting requests.
+     * Indicates severe thread pool saturation - consider increasing pool size or reducing load.
+     */
+    public static final String TIMED_OUT_THREAD_POOL_SATURATED = "timed_out_thread_pool_saturated";
+
+    /**
+     * Timeout occurred while request was queued waiting for a thread.
+     * Threads are busy but queue is not fully saturated.
+     * Indicates moderate thread pool contention.
+     */
+    public static final String TIMED_OUT_THREAD_POOL_CONTENTION = "timed_out_thread_pool_contention";
+
+    /**
+     * Timeout occurred during actual execution (network, token processing, etc.).
+     * Request was picked up by a thread but didn't complete in time.
+     */
+    public static final String TIMED_OUT_EXECUTION = "timed_out_execution";
+
+    /**
      * A NullPointerException was thrown.
      */
     public static final String NULL_POINTER_ERROR = "null_pointer_error";
