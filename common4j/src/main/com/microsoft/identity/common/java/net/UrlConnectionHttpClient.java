@@ -53,14 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.NoRouteToHostException;
-import java.net.ProtocolException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -435,7 +428,32 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
         final String methodName = ":setupConnection";
-        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
+
+        Proxy proxy = Proxy.NO_PROXY;
+        try {
+            ProxySelector proxySelector = ProxySelector.getDefault();
+            if (proxySelector != null) {
+                URI uri = request.getRequestUrl().toURI();
+                List<Proxy> proxies = proxySelector.select(uri);
+                if (!proxies.isEmpty()) {
+                    for (Proxy candidate : proxies) {
+                        if (candidate != Proxy.NO_PROXY && candidate.type() == Proxy.Type.HTTP) {
+                            proxy = candidate;
+                            Logger.verbose(TAG + methodName, "Selected proxy for " + uri.getScheme() + ": " + proxy);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            Logger.warn(TAG + methodName, "Invalid URI for proxy selection: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            Logger.warn(TAG + methodName, "Invalid argument for proxy selection: " + e.getMessage());
+        } catch (SecurityException e) {
+            Logger.warn(TAG + methodName, "Security error accessing proxy settings: " + e.getMessage());
+        }
+
+        final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl(), proxy);
 
         // Apply request headers and update the headers with default attributes first
         final Set<Map.Entry<String, String>> headerEntries = request.getRequestHeaders().entrySet();
