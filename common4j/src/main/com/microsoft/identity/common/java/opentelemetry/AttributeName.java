@@ -462,11 +462,6 @@ public enum AttributeName {
     web_cp_flight_get_time,
 
     /**
-     * Indicates if ests telemetry was skipped.
-     */
-    skipped_ests_telemetry,
-
-    /**
      * Indicates the OpenID issuer returned in the discovery document.
      */
     openid_issuer,

@@ -72,9 +72,4 @@ public class RemoveCurrentAccountCommand extends BaseCommand<Boolean> {
 
         return false;
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }
