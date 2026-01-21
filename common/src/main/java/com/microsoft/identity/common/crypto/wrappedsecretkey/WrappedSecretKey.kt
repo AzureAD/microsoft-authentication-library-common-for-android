@@ -24,6 +24,8 @@ package com.microsoft.identity.common.crypto.wrappedsecretkey
 
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 
 /**
  * Represents a wrapped secret key with cryptographic metadata.
@@ -76,6 +78,10 @@ data class WrappedSecretKey(
     fun serialize(): ByteArray {
         val serializerId = CommonFlightsManager.getFlightsProvider()
             .getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION)
+        SpanExtension.current().setAttribute(
+            AttributeName.wrapped_secret_key_serializer_id.name,
+            serializerId.toDouble()
+        )
         return WrappedSecretKeySerializerManager
             .getSerializer(serializerId)
             .serialize(this)
@@ -91,6 +97,10 @@ data class WrappedSecretKey(
          */
         fun deserialize(data: ByteArray): WrappedSecretKey {
             val serializerId = WrappedSecretKeySerializerManager.identifySerializer(data)
+            SpanExtension.current().setAttribute(
+                AttributeName.wrapped_secret_key_serializer_id.name,
+                serializerId.toDouble()
+            )
             return WrappedSecretKeySerializerManager
                 .getSerializer(serializerId)
                 .deserialize(data)

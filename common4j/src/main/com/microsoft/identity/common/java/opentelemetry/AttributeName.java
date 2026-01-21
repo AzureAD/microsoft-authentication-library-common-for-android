@@ -355,7 +355,12 @@ public enum AttributeName {
     /**
      * Indicates the encryption paddings used to generate a keypair.
      */
-    key_pair_gen_encryptionPaddings,
+    key_pair_gen_encryption_paddings,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_failure_history,
 
     /**
      * Indicates the exception in generating a keypair.
@@ -529,6 +534,25 @@ public enum AttributeName {
     /**
      * Indicates if account aggregation is skipped during saveTokenResult() call.
      */
-    is_account_aggregation_skipped;
+    is_account_aggregation_skipped,
 
+    /**
+     * Indicates the wrapped secret key serializer id.
+     */
+    wrapped_secret_key_serializer_id,
+
+    /**
+     * Indicates if the key pair was retrieved from keystore or generated anew.
+     */
+    key_pair_from_keystore,
+
+    /**
+     * Indicates the supported paddings for key pair in the device.
+     */
+    key_pair_supported_paddings,
+
+    /**
+     * Indicates the available cipher specs in the device.
+     */
+    available_cipher_specs,
 }
