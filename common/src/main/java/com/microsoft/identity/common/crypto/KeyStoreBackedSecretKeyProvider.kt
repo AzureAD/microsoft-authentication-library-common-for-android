@@ -518,7 +518,7 @@ class KeyStoreBackedSecretKeyProvider(
      */
     private fun logAndBuildErrorHistory(failures: Map<IKeyGenSpec, Throwable>) {
         val errorMessageBuilder = StringBuilder()
-        for( (spec, exception) in failures) {
+        for ((spec, exception) in failures) {
             errorMessageBuilder.append("${spec.print()}: ${exception.message};")
         }
         SpanExtension.current().setAttribute(

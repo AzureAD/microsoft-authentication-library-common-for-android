@@ -358,7 +358,7 @@ public enum AttributeName {
     key_pair_gen_encryption_paddings,
 
     /**
-     * Indicates the encryption paddings used to generate a keypair.
+     * Indicates the history of key generation failures with details of each failed attempt.
      */
     key_pair_gen_failure_history,
 
