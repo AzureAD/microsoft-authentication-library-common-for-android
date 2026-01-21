@@ -477,7 +477,7 @@ public enum AttributeName {
     openid_config_request_authority,
 
     /**
-     * Records the Cipher transformation used to encrypt/decrypt the keypair.
+     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
      */
     secret_key_wrapping_transformation,
 
@@ -534,7 +534,7 @@ public enum AttributeName {
     /**
      * Indicates the wrapped secret key serializer id.
      */
-    wrapped_secret_key_serializer_id,
+    secret_key_wrapping_serializer_id,
 
     /**
      * Indicates if the key pair was retrieved from keystore or generated anew.

@@ -79,7 +79,7 @@ data class WrappedSecretKey(
         val serializerId = CommonFlightsManager.getFlightsProvider()
             .getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION)
         SpanExtension.current().setAttribute(
-            AttributeName.wrapped_secret_key_serializer_id.name,
+            AttributeName.secret_key_wrapping_serializer_id.name,
             serializerId.toDouble()
         )
         return WrappedSecretKeySerializerManager
@@ -98,7 +98,7 @@ data class WrappedSecretKey(
         fun deserialize(data: ByteArray): WrappedSecretKey {
             val serializerId = WrappedSecretKeySerializerManager.identifySerializer(data)
             SpanExtension.current().setAttribute(
-                AttributeName.wrapped_secret_key_serializer_id.name,
+                AttributeName.secret_key_wrapping_serializer_id.name,
                 serializerId.toDouble()
             )
             return WrappedSecretKeySerializerManager
