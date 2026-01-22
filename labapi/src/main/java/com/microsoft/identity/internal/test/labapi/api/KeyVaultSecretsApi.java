@@ -45,13 +45,14 @@ import java.util.Map;
  */
 public class KeyVaultSecretsApi {
     private final ApiClient apiClient;
-    private final String DEFAULT_VAULT_URL = "https://msidlabs.vault.azure.net";
+    public static final String MSIDLABS_VAULT_URL = "https://msidlabs.vault.azure.net";
+    public static final String MOBILE_BUILD_VAULT_URL = "https://mobilebuildvault.vault.azure.net";
     private final String mVaultUrl;
     private final String DEFAULT_API_VERSION = "2025-07-01";
 
     public KeyVaultSecretsApi() {
         apiClient = Configuration.getKeyVaultApiClient();
-        mVaultUrl = DEFAULT_VAULT_URL;
+        mVaultUrl = MSIDLABS_VAULT_URL;
     }
 
     public KeyVaultSecretsApi(final String basePath) {

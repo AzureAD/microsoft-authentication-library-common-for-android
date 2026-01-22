@@ -79,6 +79,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
+import com.microsoft.identity.common.java.util.RequestHeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -99,6 +100,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
+        final String requestHeaders = parameters.getRequestHeaders() != null ?
+                RequestHeaderSerializationUtil.toJson(parameters.getRequestHeaders()) : null;
+
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
@@ -109,6 +113,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
+                .requestHeaders(requestHeaders)
                 .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
@@ -143,7 +148,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
             brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
-            brokerRequestBuilder.webAppsState(((BrokerInteractiveTokenCommandParameters) parameters).getWebAppsState());
         }
 
         return brokerRequestBuilder.build();

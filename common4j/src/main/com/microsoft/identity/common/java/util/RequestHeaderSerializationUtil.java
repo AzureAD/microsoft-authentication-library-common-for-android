@@ -1,0 +1,65 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+package com.microsoft.identity.common.java.util;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import lombok.NonNull;
+
+/**
+ * Utility class for serializing and deserializing request header maps
+ */
+public class RequestHeaderSerializationUtil {
+
+    private static final Gson mGson = new GsonBuilder().create();
+
+    /**
+     * Serializes a map of request headers (Expects a String : String pairing Map) to a JSON string.
+     * @param headerMap Map of request headers
+     * @return the JSON String generated through GSON
+     */
+    public static String toJson(@NonNull final Map<String, String> headerMap) {
+        return mGson.toJson(headerMap);
+    }
+
+    /**
+     * Deserializes a JSON String of request headers into a HashMap<String, String> object.
+     * @param jsonString JSON String representing the request headers
+     * @return the HashMap<String, String> generated through GSON
+     */
+    public static HashMap<String, String> fromJson(@NonNull final String jsonString) {
+        return mGson.fromJson(
+                        jsonString,
+                        TypeToken.getParameterized(
+                                HashMap.class,
+                                String.class,
+                                String.class
+                        ).getType()
+                );
+    }
+}

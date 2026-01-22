@@ -1,6 +1,12 @@
 vNext
 ----------
 - [MINOR] Add SpanContext support to PasskeyWebListener and WebViewAuthorizationFragment (#2850)
+- [MINOR] Cleanup code related to emitting ests telemetry (#2868)
+- [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
+- [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
+
+Version 23.2.0
+
 - [MINOR] Add additional allowed origins for PasskeyWebListener (#2839)
 - [PATCH] Add JavascriptInterface rules to consumer proguard rules (#2837)
 - [MINOR] Add optimized saveAndLoadAggregatedAccountData method in BrokerOAuth2TokenCache (#2832)
@@ -10,6 +16,7 @@ vNext
 - [MINOR] Enable Broker Discovery by default in MSAL/Broker API (#2818)
 - [MINOR] Fix for SDL violation in device pop scenarios, Fixes AB#3284510 (#2744)
 - [MINOR] Adds Authentication Constants to be used for broker latency timestamp in response (#2831)
+- [MINOR] Updating broker protocol version; updating parameter attributes (extraTokenBodyParameters and webAppsNonce) (#2848)
 - [MINOR] Implemented Common logic to retrieve broker latency duration from result Broker Bundle (#2835)
 - [MINOR] Add support for WebApps getToken API (#2803)
 - [MINOR] Added telemetry to capture the DRSNonce call (#3302)

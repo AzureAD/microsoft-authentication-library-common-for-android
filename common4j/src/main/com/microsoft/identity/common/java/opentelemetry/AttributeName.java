@@ -457,11 +457,6 @@ public enum AttributeName {
     web_cp_flight_get_time,
 
     /**
-     * Indicates if ests telemetry was skipped.
-     */
-    skipped_ests_telemetry,
-
-    /**
      * Indicates the OpenID issuer returned in the discovery document.
      */
     openid_issuer,
@@ -524,5 +519,11 @@ public enum AttributeName {
     /**
      *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
      */
-    elapsed_time_load_aggregated_account_data
+    elapsed_time_load_aggregated_account_data,
+
+    /**
+     * Indicates if account aggregation is skipped during saveTokenResult() call.
+     */
+    is_account_aggregation_skipped;
+
 }

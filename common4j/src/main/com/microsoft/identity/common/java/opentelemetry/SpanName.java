@@ -73,7 +73,6 @@ public enum SpanName {
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     PasskeyWebListener,
-    PersistToStorageAsync,
     InstallCertOnWpj,
     /**
      * Span name for fetching initial ECS flight configurations.
@@ -87,5 +86,9 @@ public enum SpanName {
     /**
      * Span name for Device POP crypto operations.
      */
-    DevicePopCryptoOperation
+    DevicePopCryptoOperation,
+    /**
+     * Span name for web apps API execute requests.
+     */
+    ExecuteWebAppsRequest
 }
