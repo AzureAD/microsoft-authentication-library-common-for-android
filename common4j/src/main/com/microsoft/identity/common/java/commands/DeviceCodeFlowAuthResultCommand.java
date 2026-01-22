@@ -119,9 +119,4 @@ public class DeviceCodeFlowAuthResultCommand extends BaseCommand<AuthorizationRe
             span.end();
         }
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }
