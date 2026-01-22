@@ -317,6 +317,7 @@ public class BrokerOAuth2TokenCache
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
         final long loadStartTime = System.currentTimeMillis();
+        final long loadStartTimeInNanos = System.nanoTime();
 
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
@@ -347,6 +348,8 @@ public class BrokerOAuth2TokenCache
         );
         OTelUtility.recordElapsedTime(AttributeName.elapsed_time_load_aggregated_account_data.name(),
                 loadStartTime);
+        OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_load_aggregated_account_data_using_nanos.name(),
+                loadStartTimeInNanos);
         return cacheRecordList;
     }
 
