@@ -158,10 +158,4 @@ public class SilentTokenCommand extends TokenCommand {
         }
         return true;
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
-
 }

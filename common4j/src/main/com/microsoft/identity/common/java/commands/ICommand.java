@@ -33,11 +33,6 @@ public interface ICommand<T> {
     T execute() throws Exception;
 
     /**
-     * Returns true if this command should be sent with ESTS Telemetry.
-     */
-    boolean isEligibleForEstsTelemetry();
-
-    /**
      * Returns a correlation ID associated to the command.
      */
     String getCorrelationId();

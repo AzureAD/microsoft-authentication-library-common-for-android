@@ -105,6 +105,7 @@ public class JwtRequestTests {
         body.setIssuer("issuer");
         body.setGrantType(TokenRequest.GrantTypes.JWT_BEARER);
         body.setNonce("request_nonce");
+        body.setWebAppsNonce("webapps_nonce");
         body.setRedirectUri("redirect_uri");
         body.setResource("resource");
         body.setIat(1000);
@@ -118,6 +119,7 @@ public class JwtRequestTests {
                 map.get(AbstractJwtRequest.ClaimNames.GRANT_TYPE));
         Assert.assertEquals("resource", map.get(AbstractJwtRequest.ClaimNames.RESOURCE));
         Assert.assertEquals("request_nonce", map.get(AbstractJwtRequest.ClaimNames.NONCE));
+        Assert.assertEquals("webapps_nonce", map.get(AbstractJwtRequest.ClaimNames.WEBAPPS_NONCE));
         Assert.assertEquals("redirect_uri", map.get(AbstractJwtRequest.ClaimNames.REDIRECT_URI));
         Assert.assertEquals("1000", body.getIat());
         Assert.assertEquals("2000", body.getNbf());
