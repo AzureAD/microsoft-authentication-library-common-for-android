@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugBrokerHost
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugCompanyPortal
+import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugIntuneCE
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockAuthApp
@@ -101,6 +102,7 @@ class BrokerDataTest {
         Assert.assertTrue(brokerData.contains(debugCompanyPortal))
         Assert.assertTrue(brokerData.contains(debugMockCp))
         Assert.assertTrue(brokerData.contains(debugMockAuthApp))
+        Assert.assertTrue(brokerData.contains(debugIntuneCE))
         Assert.assertTrue(brokerData.contains(prodIntuneCE))
     }
 
