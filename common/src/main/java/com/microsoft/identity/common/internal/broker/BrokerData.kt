@@ -37,14 +37,16 @@ import java.util.Collections
  * @param nickName                      Nickname of this [BrokerData] object.
  *                                      If set, this will be printed when toString() is invoked.
  */
-data class BrokerData(val packageName : String,
-                      val signingCertificateThumbprint : String,
-                      private val nickName: String?) {
-    constructor(packageName: String, signingCertificateThumbprint: String):
-                this(packageName, signingCertificateThumbprint, null)
+data class BrokerData(
+    val packageName: String,
+    val signingCertificateThumbprint: String,
+    private val nickName: String?
+) {
+    constructor(packageName: String, signingCertificateThumbprint: String) :
+            this(packageName, signingCertificateThumbprint, null)
 
     override fun equals(other: Any?): Boolean {
-        if (other !is BrokerData){
+        if (other !is BrokerData) {
             return false
         }
 
@@ -205,6 +207,7 @@ data class BrokerData(val packageName : String,
                     add(debugMockCp)
                     add(debugMockAuthApp)
                     add(debugMockLtw)
+                    add(debugIntuneCE)
                 }
             })
 
@@ -215,6 +218,18 @@ data class BrokerData(val packageName : String,
                     add(prodMicrosoftAuthenticator)
                     add(prodCompanyPortal)
                     add(prodLTW)
+                }
+            })
+
+
+        @JvmStatic
+        val prodDeviceRegistrationBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    add(prodMicrosoftAuthenticator)
+                    add(prodCompanyPortal)
+                    add(prodLTW)
+                    add(prodIntuneCE)
                 }
             })
 
@@ -232,9 +247,23 @@ data class BrokerData(val packageName : String,
          * see [sShouldTrustDebugBrokers] for more info regarding testing.
          **/
         @JvmStatic
-        fun getKnownBrokerApps() : Set<BrokerData> {
+        fun getKnownBrokerApps(): Set<BrokerData> {
             return if (sShouldTrustDebugBrokers) allBrokers else prodBrokers
         }
+
+        /**
+         * Returns the list of known broker apps
+         * which are allowed to perform device registration operations.
+         **/
+        @JvmStatic
+        fun getDeviceRegistrationBrokerAllowlist(): Set<BrokerData> {
+            return if (sShouldTrustDebugBrokers) {
+                allBrokers
+            } else {
+                prodDeviceRegistrationBrokers
+            }
+        }
+
 
         /**
          * Returns true if the owner of the [Context] is a broker app
@@ -247,7 +276,7 @@ data class BrokerData(val packageName : String,
 
         /**
          * Returns a [BrokerData] object matching the owner of the [Context].
-         * 
+         *
          * NOTE: This method does NOT perform any validation.
          * If you want to make sure that the context owner is not a malicious app, use [BrokerValidator]
          **/
