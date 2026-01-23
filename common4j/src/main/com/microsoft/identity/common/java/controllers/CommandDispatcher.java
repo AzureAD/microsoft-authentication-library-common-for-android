@@ -126,9 +126,9 @@ public class CommandDispatcher {
         EXECUTING
     }
 
-    // Track timeout location per request for timeout classification
+    // Track request state per request for timeout classification
     // Maps correlation ID to its current state in the request lifecycle
-    private static final ConcurrentMap<String, RequestState> sTimeoutLocationMap =
+    private static final ConcurrentMap<String, RequestState> sRequestStateMap =
         new ConcurrentHashMap<>();
 
     // Timeout diagnostic message templates
@@ -196,7 +196,7 @@ public class CommandDispatcher {
             sExecutingCommandMap.clear();
         }
         // Clear timeout tracking map
-        sTimeoutLocationMap.clear();
+        sRequestStateMap.clear();
         
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
@@ -391,7 +391,7 @@ public class CommandDispatcher {
             throw createTimeoutException(
                     "submitAcquireTokenSilentSync",
                     correlationId,
-                    sTimeoutLocationMap.get(correlationId),
+                    sRequestStateMap.get(correlationId),
                     getSilentRequestActiveCount(),
                     ((ThreadPoolExecutor) sSilentExecutor).getQueue().size(),
                     e);
@@ -399,7 +399,7 @@ public class CommandDispatcher {
             throw ExceptionAdapter.baseExceptionFromException(e);
         } finally {
             // Always clean up the tracking map entry
-            sTimeoutLocationMap.remove(correlationId);
+            sRequestStateMap.remove(correlationId);
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
@@ -451,11 +451,16 @@ public class CommandDispatcher {
 
         // Track state BEFORE entering synchronized block using correlation ID
         // This enables detection of lock contention timeouts
-        sTimeoutLocationMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
+        // Only track state for non-DCF requests
+        if (!isDeviceCodeFlowRequest) {
+            sRequestStateMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
+        }
 
         synchronized (mapAccessLock) {
-            // Update state: lock acquired, now queued for thread pool
-            sTimeoutLocationMap.put(correlationId, RequestState.QUEUED);
+            // Update state: lock acquired, now queued for thread pool, only track non-DCF requests
+            if (!isDeviceCodeFlowRequest) {
+                sRequestStateMap.put(correlationId, RequestState.QUEUED);
+            }
 
             final FinalizableResultFuture<CommandResult> finalFuture;
             if (command.isEligibleForCaching()) {
@@ -498,7 +503,10 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     // Update state: thread has picked up the request, now executing
-                    sTimeoutLocationMap.put(correlationId, RequestState.EXECUTING);
+                    // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
+                    if (!isDeviceCodeFlowRequest) {
+                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                    }
 
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
@@ -524,9 +532,6 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
-                        // Clean up timeout tracking - execution completed (success or failure)
-                        sTimeoutLocationMap.remove(correlationId);
-                        
                         synchronized (mapAccessLock) {
                             if (command.isEligibleForCaching()) {
                                 final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);

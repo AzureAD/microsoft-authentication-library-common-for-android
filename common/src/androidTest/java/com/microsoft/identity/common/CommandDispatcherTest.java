@@ -877,43 +877,37 @@ public class CommandDispatcherTest {
 
         // Verify cleanup
         Assert.assertEquals("Timeout location map should be cleaned up",
-            0, getTimeoutLocationMapSizeViaReflection());
+            0, getRequestStateMapSizeViaReflection());
     }
 
     /**
      * Test that timeout location map is cleaned up after successful request.
      *
-     * <p>Verifies that sTimeoutLocationMap entries are properly removed after
-     * a request completes successfully. This prevents memory leaks from
-     * accumulating tracking state.
+     * <p>Verifies that sRequestStateMap entries are properly removed after
+     * a request completes successfully via submitAcquireTokenSilentSync().
+     * This prevents memory leaks from accumulating tracking state.
      *
-     * <p>Note: A {@link #CLEANUP_WAIT_MS} delay is needed because future.get()
-     * returns when the result is set, but the finally block that removes the
-     * entry from sTimeoutLocationMap runs AFTER that.
+     * <p>Note: State tracking only happens for requests going through
+     * submitAcquireTokenSilentSync(), which is the real production path.
      *
      * @throws Exception if test fails
      */
     @Test
     public void testTimeoutLocationMap_CleanupAfterSuccess() throws Exception {
         // Get initial map size
-        int initialSize = getTimeoutLocationMapSizeViaReflection();
+        int initialSize = getRequestStateMapSizeViaReflection();
 
-        // Execute successful request
-        TestCommand successCommand = new TestCommand(getEmptyTestParams(), new EmptyCommandCallback(), 999);
-        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(successCommand);
+        // Execute successful request through the real entry point
+        SilentTokenCommandParameters params = createTestSilentTokenParams();
+        SilentTokenCommand successCommand = createTestSilentTokenCommand(params);
 
-        // Wait for completion
-        CommandResult result = future.get(10, TimeUnit.SECONDS);
-        Assert.assertEquals("Command should complete successfully",
-            ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+        // This is the real production path that tracks and cleans up state
+        ILocalAuthenticationResult result = CommandDispatcher.submitAcquireTokenSilentSync(successCommand);
+        Assert.assertNotNull("Command should return a result", result);
 
-        // Wait for the runnable's finally block to complete cleanup
-        // Note: future.get() returns when result is set, but the finally block
-        // that removes the entry from sTimeoutLocationMap runs AFTER that
-        Thread.sleep(CLEANUP_WAIT_MS);
-
-        // Verify cleanup - map should return to initial size
-        int finalSize = getTimeoutLocationMapSizeViaReflection();
+        // Verify cleanup - map should return to initial size immediately
+        // (cleanup happens in submitAcquireTokenSilentSync's finally block)
+        int finalSize = getRequestStateMapSizeViaReflection();
         Assert.assertEquals("Timeout location map should be cleaned up after success",
             initialSize, finalSize);
     }
@@ -921,7 +915,7 @@ public class CommandDispatcherTest {
     /**
      * Test that timeout location map is cleaned up after timeout.
      *
-     * <p>Verifies that sTimeoutLocationMap entries are properly removed after
+     * <p>Verifies that sRequestStateMap entries are properly removed after
      * a request times out. Cleanup happens in submitAcquireTokenSilentSync()'s
      * finally block, which runs immediately when TimeoutException is caught.
      *
@@ -932,7 +926,7 @@ public class CommandDispatcherTest {
     @Test
     public void testTimeoutLocationMap_CleanupAfterTimeout() throws Exception {
         // Get initial map size
-        int initialSize = getTimeoutLocationMapSizeViaReflection();
+        int initialSize = getRequestStateMapSizeViaReflection();
 
         // Execute request that will timeout
         SilentTokenCommandParameters params = createTestSilentTokenParams();
@@ -948,7 +942,7 @@ public class CommandDispatcherTest {
         }
 
         // Verify cleanup - map should return to initial size
-        int finalSize = getTimeoutLocationMapSizeViaReflection();
+        int finalSize = getRequestStateMapSizeViaReflection();
         Assert.assertEquals("Timeout location map should be cleaned up after timeout",
             initialSize, finalSize);
     }
@@ -959,14 +953,14 @@ public class CommandDispatcherTest {
      * <p>Test Strategy:
      * <ol>
      *   <li>Launch {@link #CONCURRENT_REQUEST_COUNT} threads simultaneously</li>
-     *   <li>Each thread submits a unique (non-cacheable) request</li>
+     *   <li>Each thread submits a unique request via submitAcquireTokenSilentSync()</li>
      *   <li>Wait for all requests to complete</li>
      *   <li>Verify all requests tracked independently (no state collision)</li>
-     *   <li>Verify sTimeoutLocationMap is cleaned up (no memory leaks)</li>
+     *   <li>Verify sRequestStateMap is cleaned up (no memory leaks)</li>
      * </ol>
      *
      * <p>This test validates that correlation ID-based tracking correctly
-     * isolates concurrent requests.
+     * isolates concurrent requests through the real production path.
      *
      * @throws Exception if test fails
      */
@@ -981,27 +975,19 @@ public class CommandDispatcherTest {
 
         // Launch concurrent requests
         for (int i = 0; i < NUM_REQUESTS; i++) {
-            final int requestId = i;
             new Thread(() -> {
                 try {
                     startLatch.await(); // Wait for all threads to be ready
 
-                    TestCommand cmd = new TestCommand(
-                        getEmptyTestParams(),
-                        new EmptyCommandCallback(),
-                        requestId
-                    ) {
-                        @Override
-                        public boolean isEligibleForCaching() {
-                            return false; // Each request is unique
-                        }
-                    };
+                    // Use real production path with unique correlation ID
+                    SilentTokenCommandParameters params = createTestSilentTokenParams();
+                    SilentTokenCommand cmd = createTestSilentTokenCommand(params);
 
-                    FinalizableResultFuture<CommandResult> future =
-                        CommandDispatcher.submitSilentReturningFuture(cmd);
-                    CommandResult result = future.get(30, TimeUnit.SECONDS);
+                    // This is the real production path
+                    ILocalAuthenticationResult result = 
+                        CommandDispatcher.submitAcquireTokenSilentSync(cmd);
 
-                    if (result.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
+                    if (result != null) {
                         successCount.incrementAndGet();
                     } else {
                         errorCount.incrementAndGet();
@@ -1022,14 +1008,11 @@ public class CommandDispatcherTest {
         Assert.assertTrue("All requests should complete within 60 seconds",
             completeLatch.await(60, TimeUnit.SECONDS));
 
-        // Wait for the runnable's finally blocks to complete cleanup
-        // Note: future.get() returns when result is set, but the finally block
-        // that removes the entry from sTimeoutLocationMap runs AFTER that
-        Thread.sleep(CLEANUP_WAIT_MS);
-
-        // Verify all requests tracked independently
+        // Verify cleanup - should be immediate since cleanup happens in
+        // submitAcquireTokenSilentSync's finally block
+        int finalSize = getRequestStateMapSizeViaReflection();
         Assert.assertEquals("Timeout location map should be cleaned up",
-            0, getTimeoutLocationMapSizeViaReflection());
+            0, finalSize);
 
         // Verify all requests succeeded
         Assert.assertEquals("All requests should succeed",
@@ -1084,10 +1067,11 @@ public class CommandDispatcherTest {
     // ════════════════════════════════════════════════════════════════════════════
 
     /**
-     * Gets the timeout location map size via reflection.
+     * Gets the request state map size via reflection.
+     * Used to verify cleanup of sRequestStateMap entries after requests complete.
      */
-    private int getTimeoutLocationMapSizeViaReflection() throws Exception {
-        Field field = CommandDispatcher.class.getDeclaredField("sTimeoutLocationMap");
+    private int getRequestStateMapSizeViaReflection() throws Exception {
+        Field field = CommandDispatcher.class.getDeclaredField("sRequestStateMap");
         field.setAccessible(true);
         @SuppressWarnings("unchecked")
         java.util.concurrent.ConcurrentMap<String, ?> map =
