@@ -112,7 +112,6 @@ public class CommandDispatcher {
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final Object mapAccessLock = new Object();
-    private static final Object sExecutorLock = new Object();
 
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
@@ -893,9 +892,10 @@ public class CommandDispatcher {
         }
     }
     /**
-     * Initializes the silent executor with expanded thread pool if the flight is enabled.
+     * Initializes the silent executor with expanded thread pool size (8 threads).
      * <p>
-     * This method should ONLY be called by Broker during its initialization phase.
+     * This method should ONLY be called by Broker during its initialization phase
+     * when the flight check determines that expanded pool is enabled.
      * MSAL client apps should NOT call this method - they will use the default pool size.
      * </p>
      * <p>
@@ -903,25 +903,16 @@ public class CommandDispatcher {
      * without affecting MSAL client apps which run in separate processes.
      * </p>
      */
-    public static void initializeSilentExecutorForBroker() {
-        final String methodTag = TAG + ":initializeSilentExecutorForBroker";
-
-        final boolean useExpandedPool = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .getBooleanValue(CommonFlight.ENABLE_EXPANDED_BROKER_SILENT_THREAD_POOL);
-        final int poolSize = useExpandedPool ? SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED : SILENT_REQUEST_THREAD_POOL_SIZE;
+    public static void initializeSilentExecutorWithExpandedPool() {
+        final String methodTag = TAG + ":initializeSilentExecutorWithExpandedPool";
 
         SpanExtension.current().setAttribute(
                 AttributeName.silent_executor_pool_size.name(),
-                poolSize
+                SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED
         );
 
-        if (useExpandedPool) {
-            Logger.info(methodTag, "Flight enabled: Expanding silent thread pool size for Broker");
-            resetSilentRequestExecutorWithSize(poolSize);
-        } else {
-            Logger.info(methodTag, "Flight disabled: Using default silent thread pool size for Broker");
-        }
+        Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
     }
 
     /**
@@ -940,7 +931,7 @@ public class CommandDispatcher {
         final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
         Logger.info(methodTag, "Resetting silent Executor with pool size: " + poolSize);
 
-        synchronized (sExecutorLock) {
+        synchronized (mapAccessLock) {
             // Gracefully shutdown existing executor
             sSilentExecutor.shutdown();
             boolean terminated = false;

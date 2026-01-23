@@ -80,13 +80,6 @@ public enum CommonFlight implements IFlightConfig {
     STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
 
     /**
-     * Flight to enable expanded silent thread pool size (8 threads) for Broker.
-     * This flight is ONLY effective in Broker process - MSAL client apps are not affected.
-     * Default: false (uses 5 threads)
-     */
-    ENABLE_EXPANDED_BROKER_SILENT_THREAD_POOL("EnableExpandedBrokerSilentThreadPool", false),
-
-    /**
      * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
      */
     ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),
