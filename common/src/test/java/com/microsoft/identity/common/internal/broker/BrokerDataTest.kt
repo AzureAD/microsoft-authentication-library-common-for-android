@@ -58,7 +58,7 @@ class BrokerDataTest {
     fun testGetValidBrokersInDebugMode() {
         setShouldTrustDebugBrokers(true)
         val brokerData: Set<BrokerData> = BrokerData.getKnownBrokerApps()
-        Assert.assertEquals(11, brokerData.size.toLong())
+        Assert.assertEquals(10, brokerData.size.toLong())
         Assert.assertTrue(brokerData.contains(debugBrokerHost))
         Assert.assertTrue(brokerData.contains(debugMicrosoftAuthenticator))
         Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
@@ -69,7 +69,6 @@ class BrokerDataTest {
         Assert.assertTrue(brokerData.contains(debugCompanyPortal))
         Assert.assertTrue(brokerData.contains(debugMockCp))
         Assert.assertTrue(brokerData.contains(debugMockAuthApp))
-        Assert.assertTrue(brokerData.contains(debugIntuneCE))
     }
 
     @Test
@@ -92,7 +91,7 @@ class BrokerDataTest {
     fun testGetDeviceRegistrationBrokerAllowlistInDebugMode() {
         setShouldTrustDebugBrokers(true)
         val brokerData: Set<BrokerData> = BrokerData.getDeviceRegistrationBrokerAllowlist()
-        Assert.assertEquals(11, brokerData.size.toLong())
+        Assert.assertEquals(12, brokerData.size.toLong())
         Assert.assertTrue(brokerData.contains(debugBrokerHost))
         Assert.assertTrue(brokerData.contains(debugMicrosoftAuthenticator))
         Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))

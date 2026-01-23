@@ -207,7 +207,6 @@ data class BrokerData(
                     add(debugMockCp)
                     add(debugMockAuthApp)
                     add(debugMockLtw)
-                    add(debugIntuneCE)
                 }
             })
 
@@ -221,24 +220,31 @@ data class BrokerData(
                 }
             })
 
-
-        @JvmStatic
-        val prodDeviceRegistrationBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    add(prodMicrosoftAuthenticator)
-                    add(prodCompanyPortal)
-                    add(prodLTW)
-                    add(prodIntuneCE)
-                }
-            })
-
         @JvmStatic
         val allBrokers: Set<BrokerData> =
             Collections.unmodifiableSet(object : HashSet<BrokerData>() {
                 init {
                     addAll(debugBrokers)
                     addAll(prodBrokers)
+                }
+            })
+
+        @JvmStatic
+        val prodDeviceRegistrationBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    addAll(prodBrokers)
+                    add(prodIntuneCE)
+                }
+            })
+
+        @JvmStatic
+        val allDeviceRegistrationBrokers: Set<BrokerData> =
+            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
+                init {
+                    addAll(allBrokers)
+                    add(prodIntuneCE)
+                    add(debugIntuneCE)
                 }
             })
 
@@ -258,7 +264,7 @@ data class BrokerData(
         @JvmStatic
         fun getDeviceRegistrationBrokerAllowlist(): Set<BrokerData> {
             return if (sShouldTrustDebugBrokers) {
-                allBrokers
+                allDeviceRegistrationBrokers
             } else {
                 prodDeviceRegistrationBrokers
             }
