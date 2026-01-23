@@ -23,12 +23,15 @@
 package com.microsoft.identity.common.java.result;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.broker.IBrokerInfoProvider;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
-public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
+import javax.annotation.Nullable;
+
+public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
@@ -37,6 +40,12 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
     private AuthorizationResult mAuthorizationResult;
 
     private Boolean mSucceeded = false;
+
+    @Nullable
+    private String mBrokerAppVersion;
+
+    @Nullable
+    private String mBrokerAppPackageName;
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
@@ -80,4 +89,21 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider {
         return mSucceeded;
     }
 
+    public void setBrokerAppVersion(final String brokerVersion) {
+        this.mBrokerAppVersion = brokerVersion;
+    }
+
+    public void setBrokerAppPackageName(final String brokerPackageName) {
+        this.mBrokerAppPackageName = brokerPackageName;
+    }
+
+    @Override
+    public String getBrokerAppVersion() {
+        return mBrokerAppVersion;
+    }
+
+    @Override
+    public String getBrokerAppPackageName() {
+        return mBrokerAppPackageName;
+    }
 }
