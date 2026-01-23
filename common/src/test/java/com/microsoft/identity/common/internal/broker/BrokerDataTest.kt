@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugM
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockCp
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.debugMockLtw
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
+import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodIntuneCE
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.setShouldTrustDebugBrokers
@@ -83,5 +84,34 @@ class BrokerDataTest {
     fun testEqual(){
         Assert.assertTrue(BrokerData("HelloPackage", "HelloCertHash")
                 == BrokerData("HelloPackage", "HelloCertHash"))
+    }
+
+    @Test
+    fun testGetDeviceRegistrationBrokerAllowlistInDebugMode() {
+        setShouldTrustDebugBrokers(true)
+        val brokerData: Set<BrokerData> = BrokerData.getDeviceRegistrationBrokerAllowlist()
+        Assert.assertEquals(11, brokerData.size.toLong())
+        Assert.assertTrue(brokerData.contains(debugBrokerHost))
+        Assert.assertTrue(brokerData.contains(debugMicrosoftAuthenticator))
+        Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
+        Assert.assertTrue(brokerData.contains(prodLTW))
+        Assert.assertTrue(brokerData.contains(debugLTW))
+        Assert.assertTrue(brokerData.contains(debugMockLtw))
+        Assert.assertTrue(brokerData.contains(prodCompanyPortal))
+        Assert.assertTrue(brokerData.contains(debugCompanyPortal))
+        Assert.assertTrue(brokerData.contains(debugMockCp))
+        Assert.assertTrue(brokerData.contains(debugMockAuthApp))
+        Assert.assertTrue(brokerData.contains(prodIntuneCE))
+    }
+
+    @Test
+    fun testGetDeviceRegistrationBrokerAllowlistInReleaseMode() {
+        setShouldTrustDebugBrokers(false)
+        val brokerData: Set<BrokerData> = BrokerData.getDeviceRegistrationBrokerAllowlist()
+        Assert.assertEquals(4, brokerData.size.toLong())
+        Assert.assertTrue(brokerData.contains(prodCompanyPortal))
+        Assert.assertTrue(brokerData.contains(prodMicrosoftAuthenticator))
+        Assert.assertTrue(brokerData.contains(prodLTW))
+        Assert.assertTrue(brokerData.contains(prodIntuneCE))
     }
 }
