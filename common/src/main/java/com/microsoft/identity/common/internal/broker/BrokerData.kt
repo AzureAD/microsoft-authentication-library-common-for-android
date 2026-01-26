@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker
 import android.content.Context
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.java.broker.IAppIdentity
 import com.microsoft.identity.common.java.logging.Logger
 import java.util.Collections
 
@@ -38,10 +39,10 @@ import java.util.Collections
  *                                      If set, this will be printed when toString() is invoked.
  */
 data class BrokerData(
-    val packageName: String,
-    val signingCertificateThumbprint: String,
-    private val nickName: String?
-) {
+    override val packageName: String,
+    override val signingCertificateThumbprint: String,
+    override val nickName: String?,
+) : IAppIdentity {
     constructor(packageName: String, signingCertificateThumbprint: String) :
             this(packageName, signingCertificateThumbprint, null)
 
@@ -229,25 +230,6 @@ data class BrokerData(
                 }
             })
 
-        @JvmStatic
-        val prodDeviceRegistrationBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    addAll(prodBrokers)
-                    add(prodIntuneCE)
-                }
-            })
-
-        @JvmStatic
-        val allDeviceRegistrationBrokers: Set<BrokerData> =
-            Collections.unmodifiableSet(object : HashSet<BrokerData>() {
-                init {
-                    addAll(allBrokers)
-                    add(prodIntuneCE)
-                    add(debugIntuneCE)
-                }
-            })
-
         /**
          * Returns the list of known broker apps (which SDK should make requests to).
          * see [sShouldTrustDebugBrokers] for more info regarding testing.
@@ -256,20 +238,6 @@ data class BrokerData(
         fun getKnownBrokerApps(): Set<BrokerData> {
             return if (sShouldTrustDebugBrokers) allBrokers else prodBrokers
         }
-
-        /**
-         * Returns the list of known broker apps
-         * which are allowed to perform device registration operations.
-         **/
-        @JvmStatic
-        fun getDeviceRegistrationBrokerAllowlist(): Set<BrokerData> {
-            return if (sShouldTrustDebugBrokers) {
-                allDeviceRegistrationBrokers
-            } else {
-                prodDeviceRegistrationBrokers
-            }
-        }
-
 
         /**
          * Returns true if the owner of the [Context] is a broker app

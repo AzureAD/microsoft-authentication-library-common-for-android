@@ -31,10 +31,12 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -69,7 +71,7 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_A
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PackageUtils {
-
+    private final static String TAG = PackageUtils.class.getSimpleName();
     /**
      * This pattern should match hexadecimal strings of the form "12:3a:ff" and nothing else.
      */
@@ -165,7 +167,7 @@ public final class PackageUtils {
             }
         }
 
-        throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, BROKER_APP_VERIFICATION_FAILED + " SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_VERIFICATION_FAILED_ERROR, BROKER_APP_VERIFICATION_FAILED + " SignatureHashes: " + hashListStringBuilder);
     }
 
     /**
@@ -174,7 +176,7 @@ public final class PackageUtils {
      * @return a byte array containing the base-64-encoded version of the bytes represented by the
      * string.
      */
-    public static String convertToBase64(final @NonNull String hash) {
+    private static String convertToBase64(final @NonNull String hash) {
         final String[] hexSegments = hash.split(":");
         final byte[] values = new byte[hexSegments.length];
         int i = 0;
@@ -213,7 +215,7 @@ public final class PackageUtils {
      * @return the only self-signed {@link X509Certificate} in the {@link List}
      * @throws ClientException if any number other than 1 self signed certificate is found.
      */
-    public static final X509Certificate getSelfSignedCert(final List<X509Certificate> certs)
+    private static X509Certificate getSelfSignedCert(final List<X509Certificate> certs)
             throws ClientException {
         int count = 0;
         X509Certificate selfSignedCert = null;
@@ -231,4 +233,28 @@ public final class PackageUtils {
 
         return selfSignedCert;
     }
+
+
+    @Nullable
+    public static String getPackageName(final Context context, final int callingAppUid) {
+        String methodTag = TAG + ":getCallingPackageName";
+        String[] callerPackageNames;
+
+        try {
+            callerPackageNames = context.getPackageManager().getPackagesForUid(callingAppUid);
+        } catch (Exception e) {
+            Logger.info(
+                    methodTag,
+                    "Cannot get calling package name for uid " + callingAppUid + ": " + e.getMessage()
+            );
+            return null;
+        }
+
+        if (callerPackageNames != null && callerPackageNames.length > 0) {
+            return callerPackageNames[0];
+        } else {
+            return null;
+        }
+    }
+
 }
