@@ -857,11 +857,6 @@ public class CommandDispatcherTest {
         public String execute() {
             throw new RuntimeException("An unexpected exception!");
         }
-
-        @Override
-        public boolean isEligibleForEstsTelemetry() {
-            return false;
-        }
     }
 
     static class CommandThrowingIErrorInformationException extends BaseCommand<String> {
@@ -876,11 +871,6 @@ public class CommandDispatcherTest {
         @Override
         public String execute() {
             throw new TerminalException("An unexpected exception!", new Exception("Exception"), mErrorCode);
-        }
-
-        @Override
-        public boolean isEligibleForEstsTelemetry() {
-            return false;
         }
     }
 
@@ -902,11 +892,6 @@ public class CommandDispatcherTest {
         @Override
         public boolean isEligibleForCaching() {
             return true;
-        }
-
-        @Override
-        public boolean isEligibleForEstsTelemetry() {
-            return false;
         }
 
         @Override
@@ -1003,11 +988,6 @@ public class CommandDispatcherTest {
         }
 
         @Override
-        public boolean isEligibleForEstsTelemetry() {
-            return false;
-        }
-
-        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || (!(o instanceof TestCommand))) return false;
@@ -1028,11 +1008,6 @@ public class CommandDispatcherTest {
         public Object execute() throws Exception {
             Thread.sleep(10000);
             return null;
-        }
-
-        @Override
-        public boolean isEligibleForEstsTelemetry() {
-            return false;
         }
     }
     private static BaseController getTestController() {

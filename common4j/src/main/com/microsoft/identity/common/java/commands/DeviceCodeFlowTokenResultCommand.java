@@ -114,9 +114,4 @@ public class DeviceCodeFlowTokenResultCommand extends TokenCommand{
             span.end();
         }
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }

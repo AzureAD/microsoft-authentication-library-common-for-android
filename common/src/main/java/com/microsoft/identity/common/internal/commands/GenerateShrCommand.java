@@ -123,10 +123,4 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
         return result;
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        // There is no web service interaction in this flow.
-        return false;
-    }
 }

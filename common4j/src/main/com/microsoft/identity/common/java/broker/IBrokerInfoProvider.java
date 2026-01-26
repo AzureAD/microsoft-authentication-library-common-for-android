@@ -20,30 +20,28 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands;
+package com.microsoft.identity.common.java.broker;
+
+import javax.annotation.Nullable;
 
 /**
- * Interface for Broker/MSAL command classes.
- * */
-public interface ICommand<T> {
+ * Interface to provide broker app information.
+ */
+public interface IBrokerInfoProvider {
+    /**
+     * Gets the broker app version.
+     * Response can be null if broker app response did not contain version info.
+     *
+     * @return The broker app version.
+     */
+    @Nullable
+    String getBrokerAppVersion();
 
     /**
-     * Executes the command's operation.
+     * Gets the broker app package name.
+     * Response can be null if broker app response did not contain package name info.
+     * @return
      */
-    T execute() throws Exception;
-
-    /**
-     * Returns a correlation ID associated to the command.
-     */
-    String getCorrelationId();
-
-    /**
-     * Returns true if this command can be cached (for throttling purpose).
-     */
-    boolean isEligibleForCaching();
-
-    /**
-     * Returns true if this command reaches the token endpoint.
-     */
-    boolean willReachTokenEndpoint();
+    @Nullable
+    String getBrokerAppPackageName();
 }

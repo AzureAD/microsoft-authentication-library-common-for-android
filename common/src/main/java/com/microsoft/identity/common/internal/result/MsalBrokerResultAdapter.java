@@ -505,6 +505,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             baseException.setBrokerPerformanceMetrics(metrics);
         }
 
+        // Set broker app info if available
+        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
+            baseException.setBrokerAppVersion(
+                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
+            );
+        }
+        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
+            baseException.setBrokerAppPackageName(
+                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
+            );
+        }
+
         return baseException;
     }
 
@@ -997,6 +1009,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
             if (metrics != null) {
                 acquireTokenResult.setBrokerPerformanceMetrics(metrics);
+            }
+
+            // Set broker app info if available
+            if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
+                acquireTokenResult.setBrokerAppVersion(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
+                );
+            }
+            if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
+                acquireTokenResult.setBrokerAppPackageName(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
+                );
             }
             return acquireTokenResult;
         }

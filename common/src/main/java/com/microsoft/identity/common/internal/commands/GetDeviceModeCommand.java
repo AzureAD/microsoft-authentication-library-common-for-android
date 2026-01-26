@@ -53,9 +53,4 @@ public class GetDeviceModeCommand extends BaseCommand<Boolean> {
     public Boolean execute() throws Exception {
         return getControllerFactory().getDefaultController().getDeviceMode(getParameters());
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return false;
-    }
 }

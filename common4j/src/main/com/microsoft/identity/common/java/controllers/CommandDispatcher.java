@@ -51,9 +51,7 @@ import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -366,16 +364,7 @@ public class CommandDispatcher {
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        initTelemetryForCommand(command);
-
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
                         CommandResult<?> commandResult = null;
-
-                        //Log operation parameters
-                        if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                            EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
-                        }
 
                         codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
                         try {
@@ -387,7 +376,6 @@ public class CommandDispatcher {
                                 + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
-                        EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
@@ -452,14 +440,11 @@ public class CommandDispatcher {
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                         CommandResult commandResult = executeCommand(command);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
                                 + " is cacheable : " + command.isEligibleForCaching());
-                        EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
@@ -472,12 +457,6 @@ public class CommandDispatcher {
             }));
             return finalFuture;
         }
-    }
-
-    private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
-        EstsTelemetry.getInstance().setUp(
-                command.getParameters().getPlatformComponents());
-        EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
@@ -763,10 +742,6 @@ public class CommandDispatcher {
 
                             logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                            initTelemetryForCommand(command);
-
-                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
                             final BaseException[] receiverException = new BaseException[1];
 
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
@@ -803,7 +778,6 @@ public class CommandDispatcher {
                                     "Completed interactive request for correlation id : **" + correlationId +
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
-                            EstsTelemetry.getInstance().flush(command, commandResult);
                             returnCommandResult(command, commandResult);
                         } finally {
                             DiagnosticContext.INSTANCE.clear();

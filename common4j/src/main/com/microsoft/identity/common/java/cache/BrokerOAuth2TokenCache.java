@@ -277,7 +277,7 @@ public class BrokerOAuth2TokenCache
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
-            final @NonNull boolean shouldSkipAccountAggregation) throws ClientException {
+            final boolean shouldSkipAccountAggregation) throws ClientException {
         final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
@@ -317,6 +317,7 @@ public class BrokerOAuth2TokenCache
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
         final long loadStartTime = System.currentTimeMillis();
+        final long loadStartTimeInNanos = System.nanoTime();
 
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
@@ -347,6 +348,8 @@ public class BrokerOAuth2TokenCache
         );
         OTelUtility.recordElapsedTime(AttributeName.elapsed_time_load_aggregated_account_data.name(),
                 loadStartTime);
+        OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_load_aggregated_account_data_using_nanos.name(),
+                loadStartTimeInNanos);
         return cacheRecordList;
     }
 
@@ -1767,7 +1770,7 @@ public class BrokerOAuth2TokenCache
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
-            final @NonNull boolean shouldSkipAccountAggregation
+            final boolean shouldSkipAccountAggregation
     ) throws ClientException{
         final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
                 "refreshTokenRecord, familyId, authScheme)";

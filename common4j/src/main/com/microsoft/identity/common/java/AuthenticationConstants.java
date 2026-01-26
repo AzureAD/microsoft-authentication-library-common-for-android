@@ -593,6 +593,16 @@ public class AuthenticationConstants {
          */
         public static final String BROKER_RESPONSE_GENERATION_TIMESTAMP = "broker_response_generation_timestamp";
 
+        /**
+         * Broker application version name.
+         */
+        public static final String BROKER_VERSION = "broker_version";
+
+        /**
+         * Active broker package name.
+         */
+        public static final String BROKER_PACKAGE_NAME = "broker_package_name";
+
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
