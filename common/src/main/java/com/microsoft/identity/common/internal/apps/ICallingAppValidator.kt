@@ -23,6 +23,9 @@ interface ICallingAppValidator {
      */
     val allowedApps: Set<IAppIdentity>
 
+    /**
+     * The application [Context].
+     */
     val context: Context
 
     /**
@@ -65,6 +68,13 @@ interface ICallingAppValidator {
         }
     }
 
+    /**
+     * Validates that the calling app is signed by one of the expected signing keys.
+     **
+     * @param callingAppPackageName The package name of the calling app.
+     * @param expectedThumbprints The set of expected signing certificate thumbprints.
+     * @return true if the calling app is signed by one of the expected keys, false otherwise.
+     */
     fun isSignedByKnownKeys(
         callingAppPackageName: String,
         expectedThumbprints: Set<String>
@@ -99,6 +109,4 @@ interface ICallingAppValidator {
             return false
         }
     }
-
-
 }
