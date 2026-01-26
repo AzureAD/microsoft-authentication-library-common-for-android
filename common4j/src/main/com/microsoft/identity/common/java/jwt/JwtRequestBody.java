@@ -56,6 +56,9 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.NONCE)
     private String mNonce;
 
+    @SerializedName(ClaimNames.WEBAPPS_NONCE)
+    private String mWebAppsNonce;
+
     @SerializedName(ClaimNames.REDIRECT_URI)
     private String mRedirectUri;
 
