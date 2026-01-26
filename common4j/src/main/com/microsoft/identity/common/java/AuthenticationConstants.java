@@ -522,6 +522,21 @@ public class AuthenticationConstants {
     public static final class Broker {
 
         /**
+         * Azure Authenticator app package name.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
+
+        /**
+         * Microsoft Authenticator app package name.
+         */
+        public static final String MICROSOFT_AUTHENTICATOR_APP_PACKAGE_NAME = "com.microsoft.azureauthenticator";
+
+        /**
+         * Company Portal app package name.
+         */
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
          * Default timeout for broker tasks/futures.
          */
         public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);

@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
@@ -891,6 +892,22 @@ public class CommandDispatcher {
             sSilentExecutor.shutdownNow();
         }
     }
+
+    /**
+     * Checks if the given package name belongs to a Broker application.
+     *
+     * @param packageName the package name to check
+     * @return true if the package name is a Broker app, false otherwise
+     */
+    private static boolean isBrokerPackageName(@Nullable final String packageName) {
+        if (StringUtil.isNullOrEmpty(packageName)) {
+            return false;
+        }
+        return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.MICROSOFT_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(packageName);
+    }
+
     /**
      * Initializes the silent executor with expanded thread pool size (8 threads).
      * <p>
@@ -902,9 +919,22 @@ public class CommandDispatcher {
      * This enables Broker to handle more concurrent silent token requests (8 vs 5 threads)
      * without affecting MSAL client apps which run in separate processes.
      * </p>
+     *
+     * @param callingPackageName the package name of the calling application for validation
+     * @throws ClientException if called from a non-Broker application
      */
-    public static void initializeSilentExecutorWithExpandedPool() {
+    public static void initializeSilentExecutorWithExpandedPool(@NonNull final String callingPackageName) throws ClientException {
         final String methodTag = TAG + ":initializeSilentExecutorWithExpandedPool";
+        Logger.info(methodTag, "callingPackageName = " + callingPackageName);
+
+        // Validate caller is a Broker application
+        if (!isBrokerPackageName(callingPackageName)) {
+            Logger.error(methodTag, "Method called from non-Broker application: " + callingPackageName, null);
+            throw new ClientException(
+                    ErrorStrings.BROKER_ONLY_OPERATION,
+                    "This operation is only available for Broker applications."
+            );
+        }
 
         SpanExtension.current().setAttribute(
                 AttributeName.silent_executor_pool_size.name(),
@@ -914,6 +944,7 @@ public class CommandDispatcher {
         Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
         resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
     }
+
 
     /**
      * Resets the SilentRequestsExecutor with a custom thread pool size.
