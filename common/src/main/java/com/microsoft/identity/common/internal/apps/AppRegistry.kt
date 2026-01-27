@@ -69,7 +69,8 @@ object AppRegistry {
         signingCertificateThumbprint = AppSignaturesSha512Base64.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
     )
 
-    val ALLOWED_SSO_TOKEN_APPS = buildSet {
+    @JvmField
+    val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
         add(EDGE_BETA)
         add(EDGE_CANARY)
@@ -79,7 +80,8 @@ object AppRegistry {
         }
     }
 
-    val ALLOWED_DEVICE_TOKEN_APPS = buildSet {
+    @JvmField
+    val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
         if (BuildConfig.DEBUG) {
             add(INTUNE_AOSP_AGENT_DEBUG)
@@ -88,7 +90,8 @@ object AppRegistry {
         }
     }
 
-    val ALLOWED_DEVICE_REGISTRATION_APPS = buildSet {
+    @JvmField
+    val DEVICE_REGISTRATION_AUTHORIZED_APPS = buildSet {
         add(BrokerData.prodMicrosoftAuthenticator)
         add(BrokerData.prodCompanyPortal)
         add(BrokerData.prodIntuneCE)

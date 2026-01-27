@@ -1115,12 +1115,6 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
 
         /**
-         * Intune AOSP Agent app package name.
-         */
-        public static final String INTUNE_AOSP_AGENT_PACKAGE_NAME = "com.microsoft.intune.aospagent";
-
-
-        /**
          * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-1.
          *
@@ -1136,27 +1130,23 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512 = "oIuNoUwMsxC10VneTQXnt/GXN+Pjqd6mpOKEMF/cH3i06K93TZMBWq+fHN/zt4zUe/W6zGj6YLymd1/tGuypNQ==";
 
 
-        public static final String GLOBAL_INTUNE_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Intune Company portal app.
+         * Generated with SHA-512.
+         */
+        public static final String SHARED_INTUNE_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
          * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-512.
          */
-        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = GLOBAL_INTUNE_RELEASE_SIGNATURE_SHA512;
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
 
         /**
          * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
          * Generated with SHA-512.
          */
-        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = GLOBAL_INTUNE_RELEASE_SIGNATURE_SHA512;
-
-        /**
-         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune AOSP Agent app.
-         * Generated with SHA-512.
-         */
-        public static final String INTUNE_AOSP_AGENT_SHA512_RELEASE_SIGNATURE = GLOBAL_INTUNE_RELEASE_SIGNATURE_SHA512;
-
-
+        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
 
         /**
          * Signing certificate thumbprint of the PROD-signed Microsoft Authenticator app.
