@@ -208,14 +208,13 @@ class KeyStoreBackedSecretKeyProvider(
                     GENERATE_SECRET_KEY_SPAN_NAME
                 )
                 val newSecretKey = AES256SecretKeyGenerator.generateRandomKey()
-                val keyPair: KeyPair = AndroidKeyStoreUtil.readKey(alias)
-                    ?: run {
-                        span.setAttribute(AttributeName.key_pair_from_keystore.name, false)
-                        Logger.info(methodTag, "No existing keypair found. Generating a new one.")
-                        generateKeyPair()
-                    }
+                val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
+                     Logger.info(methodTag, "No existing keypair found. Generating a new one.")
+                    generateKeyPair()
+                }
                 val wrappedSecretKey = wrapSecretKey(newSecretKey, keyPair)
                 FileUtil.writeDataToFile(wrappedSecretKey.serialize(), keyFile)
+                span.setStatus(StatusCode.OK)
                 return newSecretKey
             }
         } catch (exception: Exception) {
@@ -250,10 +249,10 @@ class KeyStoreBackedSecretKeyProvider(
                     READ_SECRET_KEY_SPAN_NAME
                 )
                 val keyPair = AndroidKeyStoreUtil.readKey(alias)
-                span.setAttribute(AttributeName.key_pair_from_keystore.name, keyPair != null)
                 if (keyPair == null) {
                     Logger.info(methodTag, "key does not exist in keystore")
                     deleteSecretKeyFromStorage()
+                    span.setStatus(StatusCode.OK)
                     return null
                 }
                 val rawWrappedSecretKey = loadSecretKeyFromFile()
@@ -263,10 +262,13 @@ class KeyStoreBackedSecretKeyProvider(
                     // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
                     FileUtil.deleteFile(keyFile)
                     clearKeyFromCache()
+                    span.setStatus(StatusCode.OK)
                     return null
                 }
                 val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
-                return unwrapSecretKey(wrappedSecretKey, keyPair)
+                val unWrappedSecretKey = unwrapSecretKey(wrappedSecretKey, keyPair)
+                span.setStatus(StatusCode.OK)
+                return unWrappedSecretKey
             }
         } catch (e: ClientException) {
             span.setStatus(StatusCode.ERROR)
@@ -295,7 +297,7 @@ class KeyStoreBackedSecretKeyProvider(
                 "No compatible cipher specs found for key pair: $keyPair"
             )
         SpanExtension.current().setAttribute(
-            AttributeName.secret_key_wrapping_transformation.name, //elected
+            AttributeName.secret_key_wrapping_transformation.name,
             cipherParamsSpec.transformation
         )
         Logger.info(methodTag, "Wrapping secret key with cipher spec: $cipherParamsSpec")
@@ -522,7 +524,7 @@ class KeyStoreBackedSecretKeyProvider(
             errorMessageBuilder.append("${spec.print()}: ${exception.message};")
         }
         SpanExtension.current().setAttribute(
-            AttributeName.keypair_gen_exception.name,
+            AttributeName.key_pair_gen_failure_history.name,
             errorMessageBuilder.toString()
         )
     }

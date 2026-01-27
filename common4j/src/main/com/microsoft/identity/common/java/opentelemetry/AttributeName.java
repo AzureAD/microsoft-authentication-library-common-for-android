@@ -537,11 +537,6 @@ public enum AttributeName {
     secret_key_wrapping_serializer_id,
 
     /**
-     * Indicates if the key pair was retrieved from keystore or generated anew.
-     */
-    key_pair_from_keystore,
-
-    /**
      * Indicates the supported paddings for key pair in the device.
      */
     key_pair_supported_paddings,
