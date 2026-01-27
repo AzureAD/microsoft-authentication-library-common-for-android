@@ -951,6 +951,12 @@ public class CommandDispatcher {
                     if (!droppedTasks.isEmpty()) {
                         Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
                                 " tasks (expected during reset after signout)");
+
+                        // Emit telemetry for dropped tasks due to forced shutdown
+                        SpanExtension.current().setAttribute(
+                                AttributeName.silent_executor_forced_shutdown_dropped_tasks.name(),
+                                droppedTasks.size()
+                        );
                     }
 
                     // Ensure complete shutdown after forced termination
@@ -964,6 +970,12 @@ public class CommandDispatcher {
 
             if (!terminated) {
                 Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
+
+                // Emit telemetry for incomplete termination
+                SpanExtension.current().setAttribute(
+                        AttributeName.silent_executor_incomplete_termination.name(),
+                        true
+                );
             }
 
             sSilentExecutor = Executors.newFixedThreadPool(poolSize);
