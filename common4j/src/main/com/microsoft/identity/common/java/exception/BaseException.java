@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.java.broker.IBrokerInfoProvider;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
@@ -40,7 +41,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider {
+public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
 
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
     // When MSAL converts the result bundle it looks for this value to know about exception type
@@ -78,6 +79,12 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     // The username of the account that owns the flow.
     @Nullable
     private String mUsername;
+
+    @Nullable
+    private String mBrokerAppVersion;
+
+    @Nullable
+    private String mBrokerAppPackageName;
 
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
@@ -254,5 +261,24 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Override
     public List<Map<String, String>> getTelemetry() {
         return mTelemetry;
+    }
+
+
+    public void setBrokerAppPackageName(final String brokerAppPackageName) {
+        this.mBrokerAppPackageName = brokerAppPackageName;
+    }
+
+    public void setBrokerAppVersion(final String brokerAppVersion) {
+        this.mBrokerAppVersion = brokerAppVersion;
+    }
+
+    @Override
+    public String getBrokerAppVersion() {
+        return mBrokerAppVersion;
+    }
+
+    @Override
+    public String getBrokerAppPackageName() {
+        return mBrokerAppPackageName;
     }
 }

@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -203,7 +204,7 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
     @Override
     public AccountRecord getAccountByLocalAccountId(String environment, String clientId, String localAccountId) {
         final long startTime = System.currentTimeMillis();
-
+        final long startTimeInNanos = System.nanoTime();
         try {
             return mCacheToWrap.getAccountByLocalAccountId(environment, clientId, localAccountId);
         } finally {
@@ -213,6 +214,8 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
                     AttributeName.elapsed_time_cache_get_account_by_local_account_id.name(),
                     elapsedTime
             );
+            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_cache_get_account_by_local_account_id_using_nanos.name(),
+                    startTimeInNanos);
         }
     }
 
