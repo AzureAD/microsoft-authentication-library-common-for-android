@@ -28,8 +28,9 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
-import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
@@ -44,7 +45,7 @@ import io.opentelemetry.context.Context;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-public class AuthorizationActivity extends DualScreenActivity {
+public class AuthorizationActivity extends FragmentActivity {
 
     public static final String TAG = AuthorizationActivity.class.getSimpleName();
     @Getter
@@ -88,6 +89,7 @@ public class AuthorizationActivity extends DualScreenActivity {
                 Logger.error(methodTag, "Exception thrown during extraction: " + e.getMessage(), e);
             }
         }
+        setContentView(R.layout.common_activity_content);
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
@@ -96,6 +98,9 @@ public class AuthorizationActivity extends DualScreenActivity {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
-        setFragment(mFragment);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, mFragment)
+                .commit();
     }
 }

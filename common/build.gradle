@@ -170,8 +170,6 @@ dependencies {
 
     implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
 
-    implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
-
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.activity:activity:1.8.2"

@@ -32,8 +32,9 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
-import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION;
@@ -48,7 +49,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * DEFAULT today is to create a new task for authorization; however this leads to problems if the user
  * navigates away during authorization (to home screen for example) or when using multi-window.
  */
-public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
+public class CurrentTaskAuthorizationActivity extends FragmentActivity {
 
     private static final String TAG = CurrentTaskAuthorizationActivity.class.getSimpleName();
 
@@ -94,7 +95,11 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             return;
         }
 
-        setFragment(mFragment);
+        setContentView(R.layout.common_activity_content);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, mFragment)
+                .commit();
 
         if (savedInstanceState == null) {
 
