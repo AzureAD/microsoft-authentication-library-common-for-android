@@ -375,11 +375,13 @@ public class CommandDispatcher {
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
         final CommandResult commandResult;
-        // Get or generate correlation ID early - this is the tracking key
-        final String correlationId = command.getParameters().getCorrelationId();
+        // Initialize to null, will be set after submitSilentReturningFuture returns
+        // when it's guaranteed to be initialized on the parameters
+        String correlationId = null;
 
         try {
             final FinalizableResultFuture<CommandResult> future = submitSilentReturningFuture(command);
+            correlationId = command.getParameters().getCorrelationId();
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = future.get();
             } else {
@@ -388,18 +390,21 @@ public class CommandDispatcher {
             }
         } catch (final TimeoutException e) {
             // Classify timeout based on request state using correlation ID
+            final String effectiveCorrelationId = correlationId != null ? correlationId : "unknown";
             throw createTimeoutException(
                     "submitAcquireTokenSilentSync",
-                    correlationId,
-                    sRequestStateMap.get(correlationId),
+                    effectiveCorrelationId,
+                    correlationId != null ? sRequestStateMap.get(correlationId) : null,
                     getSilentRequestActiveCount(),
                     ((ThreadPoolExecutor) sSilentExecutor).getQueue().size(),
                     e);
         } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
         } finally {
-            // Always clean up the tracking map entry
-            sRequestStateMap.remove(correlationId);
+            // Only clean up if correlationId was initialized
+            if (correlationId != null) {
+                sRequestStateMap.remove(correlationId);
+            }
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
@@ -476,10 +481,20 @@ public class CommandDispatcher {
                     } else {
                         // Our value was not inserted, grab the one that was and hang a new listener off it
                         putValue.whenComplete(getCommandResultConsumer(command));
+                        // This request is sharing another request's future - it's effectively EXECUTING
+                        // Update state to prevent incorrect timeout classification as QUEUED
+                        if (!isDeviceCodeFlowRequest) {
+                            sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                        }
                         return putValue;
                     }
                 } else {
                     future.whenComplete(getCommandResultConsumer(command));
+                    // This request is sharing another request's future - it's effectively EXECUTING
+                    // Update state to prevent incorrect timeout classification as QUEUED
+                    if (!isDeviceCodeFlowRequest) {
+                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                    }
                     return future;
                 }
 

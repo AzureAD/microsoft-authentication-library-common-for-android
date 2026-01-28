@@ -104,9 +104,6 @@ public class CommandDispatcherTest {
     /** Duration for slow execution tests - must exceed the 30 second timeout */
     private static final long SLOW_EXECUTION_DURATION_MS = 35000;
 
-    /** Wait time for runnable's finally block to complete cleanup after future.get() returns */
-    private static final long CLEANUP_WAIT_MS = 500;
-
     /** Small delay to ensure blocking tasks are fully blocking before submitting test request */
     private static final long TASK_STABILIZATION_DELAY_MS = 100;
 
