@@ -365,6 +365,11 @@ public class CommandDispatcher {
                     AttributeName.silent_requests_queue_size.name(),
                     queueSize
             );
+            // Report the actual pool size being used
+            SpanExtension.current().setAttribute(
+                    AttributeName.silent_executor_pool_size.name(),
+                    ((ThreadPoolExecutor)sSilentExecutor).getCorePoolSize()
+            );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
@@ -911,7 +916,6 @@ public class CommandDispatcher {
      */
     public static void initializeSilentExecutorWithExpandedPool(@NonNull final String callingPackageName) throws ClientException {
         final String methodTag = TAG + ":initializeSilentExecutorWithExpandedPool";
-        Logger.info(methodTag, "callingPackageName = " + callingPackageName);
 
         // Validate caller is a Broker application
         if (!isBrokerPackageName(callingPackageName)) {
@@ -921,11 +925,6 @@ public class CommandDispatcher {
                     "This operation is only available for Broker applications."
             );
         }
-
-        SpanExtension.current().setAttribute(
-                AttributeName.silent_executor_pool_size.name(),
-                SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED
-        );
 
         Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
         resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
@@ -946,77 +945,85 @@ public class CommandDispatcher {
      */
     private static void resetSilentRequestExecutorWithSize(final int poolSize) {
         final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
-        Logger.info(methodTag, "Resetting silent Executor with pool size: " + poolSize);
 
+        final int effectivePoolSize;
+        if (poolSize <= 0) {
+            Logger.error(methodTag, "Invalid poolSize: " + poolSize + ". Using default: " + SILENT_REQUEST_THREAD_POOL_SIZE, null);
+            effectivePoolSize = SILENT_REQUEST_THREAD_POOL_SIZE;
+        } else {
+            effectivePoolSize = poolSize;
+        }
+
+        Logger.info(methodTag, "Resetting silent Executor with pool size: " + effectivePoolSize);
+
+        // Step 1: Atomically swap executor while holding lock (minimal lock duration)
+        // This ensures new submissions go to the new executor immediately
+        final ExecutorService oldExecutor;
         synchronized (mapAccessLock) {
-            boolean terminated = false;
-            boolean forcedShutdown = false;
-            ExecutorTerminationOutcome terminationOutcome = ExecutorTerminationOutcome.FAILED;
+            oldExecutor = sSilentExecutor;
+            sSilentExecutor = Executors.newFixedThreadPool(effectivePoolSize);
+            Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
+        }
 
-            try {
-                // Gracefully shutdown existing executor
-                sSilentExecutor.shutdown();
+        // Step 2: Shutdown old executor OUTSIDE the lock to avoid deadlock
+        // Workers can now complete their finally blocks (which need mapAccessLock)
+        shutdownOldExecutor(oldExecutor, methodTag);
+    }
 
-                // Wait for graceful completion (500ms timeout)
-                terminated = sSilentExecutor.awaitTermination(EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    /**
+     * Gracefully shuts down an old executor service.
+     * <p>
+     * <strong>IMPORTANT:</strong> Must be called WITHOUT holding mapAccessLock to avoid deadlock.
+     * Worker tasks in their finally blocks need mapAccessLock to complete cleanup.
+     * </p>
+     *
+     * @param executor  the old executor to shutdown
+     * @param methodTag tag for logging
+     */
+    private static void shutdownOldExecutor(@NonNull final ExecutorService executor,
+                                            @NonNull final String methodTag) {
+        ExecutorTerminationOutcome terminationOutcome = ExecutorTerminationOutcome.FAILED;
 
-                if (!terminated) {
-                    forcedShutdown = true;
-                    Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
-                    final List<Runnable> droppedTasks = sSilentExecutor.shutdownNow();
+        try {
+            // Gracefully shutdown old executor
+            executor.shutdown();
 
-                    if (!droppedTasks.isEmpty()) {
-                        Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
-                                " tasks (expected during reset after signout)");
+            // Wait for graceful completion
+            if (executor.awaitTermination(EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                terminationOutcome = ExecutorTerminationOutcome.GRACEFUL;
+            } else {
+                Logger.warn(methodTag, "Executor did not terminate gracefully within " +
+                        EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
 
-                        // Emit telemetry for dropped tasks due to forced shutdown
-                        SpanExtension.current().setAttribute(
-                                AttributeName.silent_executor_forced_shutdown_dropped_tasks.name(),
-                                droppedTasks.size()
-                        );
-                    }
+                final List<Runnable> droppedTasks = executor.shutdownNow();
 
-                    // Ensure complete shutdown after forced termination
-                    terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (!droppedTasks.isEmpty()) {
+                    Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
+                            " tasks (expected during reset after signout)");
                 }
 
-                // Determine termination outcome
-                if (terminated && !forcedShutdown) {
-                    terminationOutcome = ExecutorTerminationOutcome.GRACEFUL;
-                } else if (terminated) {
+                // Wait for forced termination to complete
+                if (executor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                     terminationOutcome = ExecutorTerminationOutcome.FORCED;
+                } else {
+                    Logger.error(methodTag, "Executor did not terminate after forced shutdown within " +
+                            EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms", null);
                 }
-            } catch (final InterruptedException e) {
-                Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
-                sSilentExecutor.shutdownNow();
-                Thread.currentThread().interrupt();
-            } catch (final RuntimeException e) {
-                Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
-                try {
-                    sSilentExecutor.shutdownNow();
-                } catch (final RuntimeException ignored) {
-                    Logger.error(methodTag, "Failed to force shutdown executor", ignored);
-                }
-            } finally {
-                // Emit telemetry for termination outcome
-                if (terminationOutcome == ExecutorTerminationOutcome.FAILED) {
-                    Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
-                    SpanExtension.current().setAttribute(
-                            AttributeName.silent_executor_incomplete_termination.name(),
-                            true
-                    );
-                }
-
-                SpanExtension.current().setAttribute(
-                        AttributeName.silent_executor_termination_outcome.name(),
-                        terminationOutcome.name().toLowerCase()
-                );
-
-                // Always create new executor, even if shutdown failed
-                sSilentExecutor = Executors.newFixedThreadPool(poolSize);
-                Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        } catch (final RuntimeException e) {
+            Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
+            try {
+                executor.shutdownNow();
+            } catch (final RuntimeException ignored) {
+                Logger.error(methodTag, "Failed to force shutdown executor", ignored);
             }
         }
+
+        Logger.info(methodTag, "Old executor shutdown complete: " + terminationOutcome.name());
     }
 
     /***

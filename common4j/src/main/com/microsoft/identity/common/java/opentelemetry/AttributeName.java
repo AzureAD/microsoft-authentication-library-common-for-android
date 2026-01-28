@@ -162,21 +162,6 @@ public enum AttributeName {
     silent_executor_pool_size,
 
     /**
-     * Number of tasks dropped when silent executor was forcefully shutdown during reset.
-     */
-    silent_executor_forced_shutdown_dropped_tasks,
-
-    /**
-     * Indicates the silent executor did not fully terminate before creating new executor.
-     */
-    silent_executor_incomplete_termination,
-
-    /**
-     * Tracks the outcome of silent executor termination during reset.
-     */
-    silent_executor_termination_outcome,
-
-    /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */
     elapsed_time_cache_save,

@@ -437,7 +437,7 @@ public class CommandDispatcherTest {
     public void testInitializeSilentExecutorWithExpandedPool_AllBrokerPackages() throws Exception {
         final String[] brokerPackages = {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
-                AuthenticationConstants.Broker.MICROSOFT_AUTHENTICATOR_APP_PACKAGE_NAME,
+                AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
                 AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME
         };
 
