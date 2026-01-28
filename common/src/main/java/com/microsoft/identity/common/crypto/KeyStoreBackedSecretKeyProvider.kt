@@ -59,9 +59,10 @@ class KeyStoreBackedSecretKeyProvider(
 ) : ISecretKeyProvider {
     companion object {
         private const val TAG = "KeyStoreBackedSecretKeyProvider"
-
-        private const val GENERATE_SECRET_KEY_SPAN_NAME = "GenerateSecretKey"
-        private const val READ_SECRET_KEY_SPAN_NAME = "ReadSecretKeyFromStorage"
+        enum class SecretKeyOperation {
+            GENERATE_SECRET_KEY_SPAN_NAME,
+            READ_SECRET_KEY_SPAN_NAME
+        }
 
         /**
          * AES is 16 bytes (128 bits), thus PKCS#5 padding should not work, but in
@@ -205,7 +206,7 @@ class KeyStoreBackedSecretKeyProvider(
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(
                     AttributeName.secret_key_wrapping_operation.name,
-                    GENERATE_SECRET_KEY_SPAN_NAME
+                    SecretKeyOperation.GENERATE_SECRET_KEY_SPAN_NAME.toString()
                 )
                 val newSecretKey = AES256SecretKeyGenerator.generateRandomKey()
                 val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
@@ -246,7 +247,7 @@ class KeyStoreBackedSecretKeyProvider(
             SpanExtension.makeCurrentSpan(span).use { _ ->
                 span.setAttribute(
                     AttributeName.secret_key_wrapping_operation.name,
-                    READ_SECRET_KEY_SPAN_NAME
+                    SecretKeyOperation.READ_SECRET_KEY_SPAN_NAME.toString()
                 )
                 val keyPair = AndroidKeyStoreUtil.readKey(alias)
                 if (keyPair == null) {
