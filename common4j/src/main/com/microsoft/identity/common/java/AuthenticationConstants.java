@@ -527,14 +527,14 @@ public class AuthenticationConstants {
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
 
         /**
-         * Microsoft Authenticator app package name.
-         */
-        public static final String MICROSOFT_AUTHENTICATOR_APP_PACKAGE_NAME = "com.microsoft.azureauthenticator";
-
-        /**
          * Company Portal app package name.
          */
         public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
 
         /**
          * Default timeout for broker tasks/futures.

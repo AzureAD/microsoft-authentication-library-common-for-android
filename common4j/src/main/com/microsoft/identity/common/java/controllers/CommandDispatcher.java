@@ -112,6 +112,18 @@ public class CommandDispatcher {
 
     private static final Object mapAccessLock = new Object();
 
+    /**
+     * Enum representing the possible outcomes of silent executor termination during reset.
+     */
+    private enum ExecutorTerminationOutcome {
+        /** Executor terminated successfully within graceful timeout. */
+        GRACEFUL,
+        /** Executor required forced shutdown but eventually terminated. */
+        FORCED,
+        /** Executor did not fully terminate even after forced shutdown. */
+        FAILED
+    }
+
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
@@ -878,8 +890,8 @@ public class CommandDispatcher {
             return false;
         }
         return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
-                AuthenticationConstants.Broker.MICROSOFT_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
-                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(packageName);
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME.equals(packageName);
     }
 
     /**
@@ -937,15 +949,20 @@ public class CommandDispatcher {
         Logger.info(methodTag, "Resetting silent Executor with pool size: " + poolSize);
 
         synchronized (mapAccessLock) {
-            // Gracefully shutdown existing executor
-            sSilentExecutor.shutdown();
             boolean terminated = false;
+            boolean forcedShutdown = false;
+            ExecutorTerminationOutcome terminationOutcome = ExecutorTerminationOutcome.FAILED;
+
             try {
+                // Gracefully shutdown existing executor
+                sSilentExecutor.shutdown();
+
                 // Wait for graceful completion (500ms timeout)
-                terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                terminated = sSilentExecutor.awaitTermination(EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
                 if (!terminated) {
-                    Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
+                    forcedShutdown = true;
+                    Logger.warn(methodTag, "Executor did not terminate gracefully within " + EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
                     final List<Runnable> droppedTasks = sSilentExecutor.shutdownNow();
 
                     if (!droppedTasks.isEmpty()) {
@@ -962,24 +979,43 @@ public class CommandDispatcher {
                     // Ensure complete shutdown after forced termination
                     terminated = sSilentExecutor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 }
+
+                // Determine termination outcome
+                if (terminated && !forcedShutdown) {
+                    terminationOutcome = ExecutorTerminationOutcome.GRACEFUL;
+                } else if (terminated) {
+                    terminationOutcome = ExecutorTerminationOutcome.FORCED;
+                }
             } catch (final InterruptedException e) {
                 Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
                 sSilentExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
-            }
+            } catch (final RuntimeException e) {
+                Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
+                try {
+                    sSilentExecutor.shutdownNow();
+                } catch (final RuntimeException ignored) {
+                    Logger.error(methodTag, "Failed to force shutdown executor", ignored);
+                }
+            } finally {
+                // Emit telemetry for termination outcome
+                if (terminationOutcome == ExecutorTerminationOutcome.FAILED) {
+                    Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
+                    SpanExtension.current().setAttribute(
+                            AttributeName.silent_executor_incomplete_termination.name(),
+                            true
+                    );
+                }
 
-            if (!terminated) {
-                Logger.error(methodTag, "Executor did not fully terminate. Creating new executor anyway.", null);
-
-                // Emit telemetry for incomplete termination
                 SpanExtension.current().setAttribute(
-                        AttributeName.silent_executor_incomplete_termination.name(),
-                        true
+                        AttributeName.silent_executor_termination_outcome.name(),
+                        terminationOutcome.name().toLowerCase()
                 );
-            }
 
-            sSilentExecutor = Executors.newFixedThreadPool(poolSize);
-            Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
+                // Always create new executor, even if shutdown failed
+                sSilentExecutor = Executors.newFixedThreadPool(poolSize);
+                Logger.info(methodTag, "Silent Executor reset complete with " + poolSize + " threads");
+            }
         }
     }
 

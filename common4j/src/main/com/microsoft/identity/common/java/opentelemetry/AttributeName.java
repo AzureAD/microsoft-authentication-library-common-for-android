@@ -172,6 +172,11 @@ public enum AttributeName {
     silent_executor_incomplete_termination,
 
     /**
+     * Tracks the outcome of silent executor termination during reset.
+     */
+    silent_executor_termination_outcome,
+
+    /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */
     elapsed_time_cache_save,
