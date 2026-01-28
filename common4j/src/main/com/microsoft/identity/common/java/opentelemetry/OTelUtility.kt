@@ -26,6 +26,7 @@ import io.opentelemetry.api.metrics.LongCounter
 import io.opentelemetry.api.metrics.Meter
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
+import java.util.concurrent.TimeUnit
 
 object OTelUtility {
     private val TAG = OTelUtility::class.java.simpleName
@@ -113,6 +114,19 @@ object OTelUtility {
     fun recordElapsedTime(attributeName: String, startTimeMillis: Long) {
         val endTimeMillis = System.currentTimeMillis()
         val elapsedTimeMillis = endTimeMillis - startTimeMillis
+        SpanExtension.current().setAttribute(attributeName, elapsedTimeMillis)
+    }
+
+    /**
+     * Records the elapsed time in milliseconds since the provided start time in nanoseconds as a span attribute.
+     *
+     * @param attributeName The name of the attribute to record in the telemetry.
+     * @param startTimeNanos The start time in nanoseconds.
+     *                       The elapsed time is calculated using System.nanoTime() and converted to milliseconds.
+     */
+    @JvmStatic
+    fun recordElapsedTimeFromNanos(attributeName: String, startTimeNanos: Long) {
+        val elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTimeNanos)
         SpanExtension.current().setAttribute(attributeName, elapsedTimeMillis)
     }
 }

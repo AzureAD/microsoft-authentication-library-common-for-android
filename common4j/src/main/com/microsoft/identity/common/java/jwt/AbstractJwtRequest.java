@@ -45,6 +45,10 @@ public abstract class AbstractJwtRequest {
         public static final String ISSUER = "iss";
         public static final String GRANT_TYPE = "grant_type";
         public static final String NONCE = "request_nonce";
+        // WebApps-provided nonce claim. When WebApps (e.g., web-based authentication scenarios) provide a nonce,
+        // it should be included in the JWT using this standard 'nonce' claim name,
+        // distinct from the library's internal request_nonce used for other purposes.
+        public static final String WEBAPPS_NONCE = "nonce";
         public static final String REDIRECT_URI = "redirect_uri";
 
         public static final String BRK_REDIRECT_URI = "brk_redirect_uri";
