@@ -226,7 +226,6 @@ class KeyStoreBackedSecretKeyProvider(
             span.end()
         }
 
-
     }
 
     /**
