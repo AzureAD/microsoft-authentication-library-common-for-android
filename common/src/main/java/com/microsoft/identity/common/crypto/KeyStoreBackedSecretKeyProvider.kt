@@ -313,7 +313,6 @@ class KeyStoreBackedSecretKeyProvider(
             cipherTransformation = cipherParamsSpec.transformation
         )
 
-
     }
 
     private fun unwrapSecretKey(
