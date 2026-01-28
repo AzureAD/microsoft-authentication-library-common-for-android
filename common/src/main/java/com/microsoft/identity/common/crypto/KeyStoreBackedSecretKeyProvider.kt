@@ -408,10 +408,10 @@ class KeyStoreBackedSecretKeyProvider(
                     )
                     attemptKeyGeneration(spec)
                         .onSuccess { keyPair ->
-                            Logger.info(
-                                methodTag,
-                                "Key pair generated successfully with spec: $spec"
-                            )
+                            if (!failures.isEmpty()){
+                                // Log previous failures for telemetry
+                                logAndBuildErrorHistory(failures, false)
+                            }
                             span.setAttribute(
                                 AttributeName.key_pair_gen_description.name,
                                 spec.description
@@ -424,8 +424,11 @@ class KeyStoreBackedSecretKeyProvider(
                                 AttributeName.key_pair_gen_encryption_paddings.name,
                                 spec.encryptionPaddings.toString()
                             )
-                            logAndBuildErrorHistory(failures)
                             span.setStatus(StatusCode.OK)
+                            Logger.info(
+                                methodTag,
+                                "Key pair generated successfully with spec: $spec"
+                            )
                             return@use keyPair
                         }
                         .onFailure { throwable ->
@@ -501,11 +504,12 @@ class KeyStoreBackedSecretKeyProvider(
         require(failures.isNotEmpty()) {
             "No failures encountered, but no key pair generated. This should not happen."
         }
-        val finalError = failures.values.last()
-        Logger.error(methodTag,
-            "All key generation attempts failed. Total failures: ${failures.size}",
-            finalError
+        logAndBuildErrorHistory(failures, true)
+        val finalError = ClientException(
+            ClientException.UNKNOWN_CRYPTO_ERROR,
+            "All key generation attempts failed. Total failures: ${failures.size}"
         )
+        Logger.error(methodTag, finalError.message, finalError)
         SpanExtension.current().setStatus(StatusCode.ERROR)
         SpanExtension.current().recordException(finalError)
         throw ExceptionAdapter.clientExceptionFromException(finalError)
@@ -515,17 +519,27 @@ class KeyStoreBackedSecretKeyProvider(
      * Logs each key generation failure and builds a consolidated error history string.
      *
      * @param failures Map of key generation specifications to their corresponding exceptions
+     * @param logAsError If true, logs messages as errors; otherwise, logs as warnings
      * @return Consolidated error history string for telemetry
      */
-    private fun logAndBuildErrorHistory(failures: Map<IKeyGenSpec, Throwable>) {
+    private fun logAndBuildErrorHistory(failures: Map<IKeyGenSpec, Throwable>, logAsError: Boolean): String {
+        val methodTag = "$TAG:logAndBuildErrorHistory"
         val errorMessageBuilder = StringBuilder()
         for ((spec, exception) in failures) {
+            val errorMessage = "Key generation failed with spec: $spec, error: ${exception.message}"
+            if (logAsError) {
+                Logger.error(methodTag, errorMessage, exception)
+            } else {
+                Logger.warn(methodTag, errorMessage)
+            }
             errorMessageBuilder.append("${spec.print()}: ${exception.message};")
         }
+        val errorMessage = errorMessageBuilder.toString()
         SpanExtension.current().setAttribute(
             AttributeName.key_pair_gen_failure_history.name,
-            errorMessageBuilder.toString()
+            errorMessage
         )
+        return errorMessage
     }
 
     /**
