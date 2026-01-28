@@ -209,7 +209,7 @@ class KeyStoreBackedSecretKeyProvider(
                 )
                 val newSecretKey = AES256SecretKeyGenerator.generateRandomKey()
                 val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
-                     Logger.info(methodTag, "No existing keypair found. Generating a new one.")
+                    Logger.info(methodTag, "No existing keypair found. Generating a new one.")
                     generateKeyPair()
                 }
                 val wrappedSecretKey = wrapSecretKey(newSecretKey, keyPair)
