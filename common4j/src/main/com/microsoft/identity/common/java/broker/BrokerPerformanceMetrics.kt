@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.broker
 
+import com.microsoft.identity.common.java.controllers.CommandDispatcher
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
@@ -39,7 +40,14 @@ class BrokerPerformanceMetrics(
      * Timestamp when the broker generated the authentication response (epoch milliseconds).
      * Used to calculate both broker handling time and response latency.
      */
-    val brokerResponseGenerationTimestamp: Long
+    val brokerResponseGenerationTimestamp: Long,
+
+    /**
+     * The configured pool size of the silent executor at the time of the request.
+     * Helps diagnose concurrency-related performance issues.
+     * Defaults to the standard silent executor pool size.
+     */
+    val silentExecutorPoolSize: Int = CommandDispatcher.getDefaultSilentExecutorPoolSize()
 ) {
     /**
      * Time spent by broker processing the request (in milliseconds).
@@ -70,7 +78,8 @@ class BrokerPerformanceMetrics(
                 "brokerHandlingTime=$brokerHandlingTime, " +
                 "responseLatency=$responseLatency, " +
                 "brokerRequestReceivedTimestamp=$brokerRequestReceivedTimestamp, " +
-                "brokerResponseGenerationTimestamp=$brokerResponseGenerationTimestamp)"
+                "brokerResponseGenerationTimestamp=$brokerResponseGenerationTimestamp, " +
+                "silentExecutorPoolSize=$silentExecutorPoolSize)"
     }
 
     companion object {

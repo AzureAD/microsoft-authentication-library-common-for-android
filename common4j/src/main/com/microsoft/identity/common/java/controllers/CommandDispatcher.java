@@ -168,6 +168,25 @@ public class CommandDispatcher {
     }
 
     /**
+     * Returns the core pool size of the silent request thread pool.
+     *
+     * @return the core pool size of the silent executor
+     */
+    public static int getSilentExecutorPoolSize() {
+        return ((ThreadPoolExecutor) sSilentExecutor).getCorePoolSize();
+    }
+
+    /**
+     * Returns the default silent request thread pool size.
+     * Used as default value when pool size is not available from broker response.
+     *
+     * @return the default pool size constant
+     */
+    public static int getDefaultSilentExecutorPoolSize() {
+        return SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
+    /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
      * been changed, remove will not work, construct a new map and add all keys that are not identically
      * that key into the new map.  <strong>MUST</strong> only be used under the mapAccessLock.

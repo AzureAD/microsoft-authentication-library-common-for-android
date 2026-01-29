@@ -594,6 +594,12 @@ public class AuthenticationConstants {
         public static final String BROKER_RESPONSE_GENERATION_TIMESTAMP = "broker_response_generation_timestamp";
 
         /**
+         * Key for the silent executor pool size in broker response bundles.
+         * Used by clients (e.g., OneAuth) to recreate BrokerPerformanceMetrics.
+         */
+        public static final String BROKER_SILENT_EXECUTOR_POOL_SIZE = "broker_silent_executor_pool_size";
+
+        /**
          * Broker application version name.
          */
         public static final String BROKER_VERSION = "broker_version";
