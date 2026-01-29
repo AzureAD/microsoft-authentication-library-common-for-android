@@ -1,3 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.internal.apps
 
 import android.content.Context
@@ -39,7 +61,7 @@ interface ICallingAppValidator {
         val callingAppPackageName =
             PackageUtils.getPackageName(context, callingUid) ?: throw ClientException(
                 ErrorStrings.UNAUTHORIZED_CLIENT,
-                ErrorStrings.BROKER_APP_VERIFICATION_FAILED
+                ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND
             )
 
         val allowedCallers: List<IAppIdentity> = allowedApps.filter {
@@ -49,7 +71,7 @@ interface ICallingAppValidator {
         if (allowedCallers.isEmpty()) {
             throw ClientException(
                 ErrorStrings.UNAUTHORIZED_CLIENT,
-                "${ErrorStrings.BROKER_APP_VERIFICATION_FAILED}: $callingAppPackageName"
+                "$callingAppPackageName is not in the list of allowed callers."
             )
         }
         val expectedThumbprints: Set<String> = allowedCallers
@@ -81,10 +103,8 @@ interface ICallingAppValidator {
     ): Boolean {
         val methodTag = "$TAG:isSignedByKnownKeys"
         try {
-            //getSigningCertificateForApp
             val signingCertificates =
                 PackageUtils.readCertDataForApp(callingAppPackageName, context)
-            //validateSigningCertificate
             PackageUtils.verifySignatureHash(
                 signingCertificates,
                 expectedThumbprints.iterator()
@@ -92,7 +112,7 @@ interface ICallingAppValidator {
 
             val requiresCertChainValidation = CommonFlightsManager.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS)
-            // Removing the outdated check, but we can b`ring it back with a feature flag.
+            // Removing the outdated check, but we can bring it back with a feature flag.
             if (requiresCertChainValidation) {
                 // Perform the certificate chain validation. If there is only one cert returned,
                 // no need to perform certificate chain validation.

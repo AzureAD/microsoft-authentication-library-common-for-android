@@ -24,6 +24,10 @@ package com.microsoft.identity.common.internal.apps
 
 
 import com.microsoft.identity.common.BuildConfig
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
 
@@ -36,37 +40,37 @@ object AppRegistry {
     val EDGE = App(
         nickName = "Microsoft Edge",
         packageName = "com.microsoft.emmx",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.SHARED_EDGE_SIGNATURE
+        signingCertificateThumbprint = SHARED_EDGE_SIGNATURE
     )
 
     val EDGE_BETA = App(
         nickName = "Microsoft Edge Beta",
         packageName = "com.microsoft.emmx.beta",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.SHARED_EDGE_SIGNATURE
+        signingCertificateThumbprint = SHARED_EDGE_SIGNATURE
     )
 
     val EDGE_CANARY = App(
         nickName = "Microsoft Edge Canary",
         packageName = "com.microsoft.emmx.canary",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.SHARED_EDGE_SIGNATURE
+        signingCertificateThumbprint = SHARED_EDGE_SIGNATURE
     )
 
     val ONE_AUTH_TEST_APP = App(
         nickName = "OneAuth Test App",
         packageName = "com.msft.oneauth.testapp",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.ONE_AUTH_TEST_APP_SIGNATURE
+        signingCertificateThumbprint = ONE_AUTH_TEST_APP_SIGNATURE
     )
 
     val INTUNE_AOSP_AGENT_PROD = App(
-        nickName = "Intune AOSP Agent",
+        nickName = "Intune AOSP Agent Prod",
         packageName =  "com.microsoft.intune.aospagent",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.SHARED_INTUNE_APP_SIGNATURE
+        signingCertificateThumbprint = INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
     )
 
     val INTUNE_AOSP_AGENT_DEBUG = App(
-        nickName = "Intune AOSP Agent",
+        nickName = "Intune AOSP Agent Debug",
         packageName =  "com.microsoft.intune.aospagent",
-        signingCertificateThumbprint = AppSignaturesSha512Base64.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
+        signingCertificateThumbprint = INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
     )
 
     @JvmField

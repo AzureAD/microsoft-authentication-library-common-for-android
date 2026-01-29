@@ -234,27 +234,34 @@ public final class PackageUtils {
         return selfSignedCert;
     }
 
-
+    /**
+     * Get the package name for a given calling app uid.
+     *
+     * @param context       The context to use.
+     * @param callingAppUid The uid of the calling app.
+     * @return The package name of the calling app, or null if it cannot be determined.
+     */
     @Nullable
     public static String getPackageName(final Context context, final int callingAppUid) {
-        String methodTag = TAG + ":getCallingPackageName";
-        String[] callerPackageNames;
-
+        final String methodTag = TAG + ":getCallingPackageName";
+        final String[] callerPackageNames;
         try {
             callerPackageNames = context.getPackageManager().getPackagesForUid(callingAppUid);
         } catch (Exception e) {
-            Logger.info(
+            Logger.warn(
                     methodTag,
                     "Cannot get calling package name for uid " + callingAppUid + ": " + e.getMessage()
             );
             return null;
         }
-
         if (callerPackageNames != null && callerPackageNames.length > 0) {
             return callerPackageNames[0];
         } else {
+            Logger.warn(
+                    methodTag,
+                    "No package name found for uid " + callingAppUid
+            );
             return null;
         }
     }
-
 }
