@@ -1129,11 +1129,46 @@ public final class AuthenticationConstants {
          */
         public static final String COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512 = "oIuNoUwMsxC10VneTQXnt/GXN+Pjqd6mpOKEMF/cH3i06K93TZMBWq+fHN/zt4zUe/W6zGj6YLymd1/tGuypNQ==";
 
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Intune Company portal app.
+         * Generated with SHA-512.
+         */
+        public static final String SHARED_INTUNE_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
         /**
          * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-512.
          */
-        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the PROD-signed Intune AOSP Agent app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_AOSP_AGENT_RELEASE_SIGNATURE = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the DEBUG-signed Intune AOSP Agent app.
+         */
+        public static final String INTUNE_AOSP_AGENT_DEBUG_SIGNATURE = "P+9aBy/EDfZVqtyeHWaLWpyklznLb4FkhAbjPHe/pHLa084vhjZdGEb9z7Fef9OghQqYmMfg3T8QqW8gMHfGyA==";
+
+        /**
+         * Signing certificate thumbprint of the edge apps.
+         */
+        public static final String SHARED_EDGE_SIGNATURE = "Ivy+Rk6ztai/IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy/M5mOPpfjZrd3vOx3t+cA6fVQ==";
+
+        /**
+         * Signing certificate thumbprint of the PROD-signed Microsoft Edge app.
+         * Generated with SHA-512.
+         */
+        public static final String  ONE_AUTH_TEST_APP_SIGNATURE = "3V1mY6V7xXG5h0jz6KX1K5e4Z1k3q5V7y8Z9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f1";
 
         /**
          * Signing certificate thumbprint of the PROD-signed Microsoft Authenticator app.
@@ -1181,12 +1216,6 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String INTUNE_APP_SHA512_DEBUG_SIGNATURE = "F+Tat7A/mlOJCzRYEmj9DgLRHU2Nb0VSQjgZEyAehqW9+cOT0oYjkT/fa33hYcVMwUzaSy0hUOVt9KQtyFRnVQ==";
-
-        /**
-         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
-         * Generated with SHA-512.
-         */
-        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
