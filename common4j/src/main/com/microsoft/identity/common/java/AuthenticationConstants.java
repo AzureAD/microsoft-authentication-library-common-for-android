@@ -522,6 +522,21 @@ public class AuthenticationConstants {
     public static final class Broker {
 
         /**
+         * Azure Authenticator app package name.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
+
+        /**
+         * Company Portal app package name.
+         */
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
          * Default timeout for broker tasks/futures.
          */
         public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
@@ -577,6 +592,12 @@ public class AuthenticationConstants {
          * Timestamp when the broker generated the authentication response.
          */
         public static final String BROKER_RESPONSE_GENERATION_TIMESTAMP = "broker_response_generation_timestamp";
+
+        /**
+         * Key for the silent executor pool size in broker response bundles.
+         * Used by clients (e.g., OneAuth) to recreate BrokerPerformanceMetrics.
+         */
+        public static final String BROKER_SILENT_EXECUTOR_POOL_SIZE = "broker_silent_executor_pool_size";
 
         /**
          * Broker application version name.
