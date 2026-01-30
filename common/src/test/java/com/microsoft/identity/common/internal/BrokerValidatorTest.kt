@@ -22,12 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal
 
+import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.internal.util.PackageUtils
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mockStatic
+import org.mockito.kotlin.any
 import org.robolectric.RobolectricTestRunner
 import java.security.cert.X509Certificate
 
@@ -44,102 +47,128 @@ class BrokerValidatorTest {
 
     @Test
     fun testValidationSucceed(){
-        val validator = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.debugMockLtw),
-            getSigningCertificateForApp = {
-                getMockBrokerRawCert()
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert = getMockBrokerRawCert()
+            mocked.`when`<List<X509Certificate>> {
+                PackageUtils.readCertDataForApp(any(), any())
+            }.thenReturn(mockCert)
 
-        Assert.assertTrue(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
-        Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.prodCompanyPortal.packageName))
+            val validator = BrokerValidator(
+                allowedApps = setOf(BrokerData.debugMockLtw),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertTrue(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+            Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.prodCompanyPortal.packageName))
+        }
     }
 
     @Test
     fun testValidationFailed_NotInAllowedBrokerAppList(){
-        val validator = BrokerValidator(
-            allowedBrokerApps = setOf(
-                BrokerData.debugMockAuthApp,
-                BrokerData.debugMockCp),
-            getSigningCertificateForApp = {
-                getMockBrokerRawCert()
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert = getMockBrokerRawCert()
+            mocked.`when`<List<X509Certificate>> {
+                PackageUtils.readCertDataForApp(any(), any())
+            }.thenReturn(mockCert)
 
-        Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+            val validator = BrokerValidator(
+                allowedApps = setOf(BrokerData.debugMockAuthApp, BrokerData.debugMockCp),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+        }
+
     }
 
     @Test
     fun testValidationFailed_CannotGetSigningCertificate(){
-        val validator = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.debugMockLtw),
-            getSigningCertificateForApp = {
-                throw RuntimeException("Fail to get cert for some reason")
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
+        mockStatic(PackageUtils::class.java).use { mocked ->
+                mocked.`when`<List<X509Certificate>> {
+                    PackageUtils.readCertDataForApp(any(), any())
+                }.thenThrow(RuntimeException("Fail to get cert for some reason"))
 
-        Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+            val validator = BrokerValidator(
+                allowedApps = setOf(BrokerData.debugMockLtw),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+        }
     }
 
     @Test
     fun testSigningCertificationValidationFailed(){
-        val validator = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.debugMockLtw),
-            getSigningCertificateForApp = {
-                getMockBrokerRawCert()
-            },
-            validateSigningCertificate = { _, _ ->
-               throw RuntimeException("Fail to validate for some reason")
-            }
-        )
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert = getMockBrokerRawCert()
+                mocked.`when`<List<X509Certificate>> {
+                    PackageUtils.readCertDataForApp(any(), any())
+                }.thenReturn(mockCert)
 
-        Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+            mocked.`when`<String> {
+                PackageUtils.verifySignatureHash(any(), any())
+            }.thenThrow(RuntimeException("Fail to validate for some reason"))
+
+            val validator = BrokerValidator(
+                allowedApps = setOf(BrokerData.debugMockLtw),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertFalse(validator.isValidBrokerPackage(BrokerData.debugMockLtw.packageName))
+        }
     }
 
     @Test
-    fun testValidAppWithReleaseAndDebugAppsAddedToKnownApps() {
-        // Validate if debug app is installed, it should be recognized as a valid broker app
-        val validatorWithDebugAppInsatlled = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator,
-                BrokerData.prodMicrosoftAuthenticator),
-            getSigningCertificateForApp = { packageName: String ->
-                listOf(PackageUtils.createCertificateFromByteArray(mockDebugAuthAppCertificate))
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
-
-        Assert.assertTrue(validatorWithDebugAppInsatlled.isValidBrokerPackage(BrokerData.debugMicrosoftAuthenticator.packageName))
-
+    fun testValidAppWithReleaseAndDebugAppsAddedToKnownAppsDebug() {
         // Validate if release app is installed, it should be recognized as a valid broker app
-        val validatorWithReleaseAppInsatlled = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.debugMicrosoftAuthenticator,
-                BrokerData.prodMicrosoftAuthenticator),
-            getSigningCertificateForApp = {
-                listOf(PackageUtils.createCertificateFromByteArray(mockReleaseAuthAppCertificate))
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
-        Assert.assertTrue(validatorWithReleaseAppInsatlled.isValidBrokerPackage(BrokerData.prodMicrosoftAuthenticator.packageName))
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert =  listOf(PackageUtils.createCertificateFromByteArray(mockReleaseAuthAppCertificate))
+                mocked.`when`<List<X509Certificate>> {
+                    PackageUtils.readCertDataForApp(any(), any())
+                }.thenReturn(mockCert)
+
+            val validatorWithReleaseAppInstalled = BrokerValidator(
+                allowedApps = setOf(BrokerData.debugMicrosoftAuthenticator,
+                    BrokerData.prodMicrosoftAuthenticator),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertTrue(validatorWithReleaseAppInstalled.isValidBrokerPackage(BrokerData.prodMicrosoftAuthenticator.packageName))
+        }
+    }
+
+
+    @Test
+    fun testValidAppWithReleaseAndDebugAppsAddedToKnownAppsRelease() {
+        // Validate if debug app is installed, it should be recognized as a valid broker app
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert = listOf(PackageUtils.createCertificateFromByteArray(mockDebugAuthAppCertificate))
+                mocked.`when`<List<X509Certificate>> {
+                    PackageUtils.readCertDataForApp(any(), any())
+                }.thenReturn(mockCert)
+
+            val validatorWithDebugAppInstalled = BrokerValidator(
+                allowedApps =setOf(BrokerData.debugMicrosoftAuthenticator,
+                    BrokerData.prodMicrosoftAuthenticator),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertTrue(validatorWithDebugAppInstalled.isValidBrokerPackage(BrokerData.debugMicrosoftAuthenticator.packageName))
+        }
     }
 
     @Test
     fun testValidAppWithReleaseAppsAddedToKnownApps() {
         // Validate if release app is installed, it should be recognized as a valid broker app
-        val validatorWithReleaseAppInsatlled = BrokerValidator(
-            allowedBrokerApps = setOf(BrokerData.prodMicrosoftAuthenticator),
-            getSigningCertificateForApp = {
-                listOf(PackageUtils.createCertificateFromByteArray(mockReleaseAuthAppCertificate))
-            },
-            validateSigningCertificate = BrokerValidator.Companion::validateSigningCertificate
-        )
-        Assert.assertTrue(validatorWithReleaseAppInsatlled.isValidBrokerPackage(BrokerData.prodMicrosoftAuthenticator.packageName))
+        mockStatic(PackageUtils::class.java).use { mocked ->
+            val mockCert = listOf(PackageUtils.createCertificateFromByteArray(mockReleaseAuthAppCertificate))
+                mocked.`when`<List<X509Certificate>> {
+                    PackageUtils.readCertDataForApp(any(), any())
+                }.thenReturn(mockCert)
+
+            val validatorWithReleaseAppInstalled = BrokerValidator(
+                allowedApps = setOf(BrokerData.prodMicrosoftAuthenticator),
+                context = ApplicationProvider.getApplicationContext()
+            )
+            Assert.assertTrue(validatorWithReleaseAppInstalled.isValidBrokerPackage(BrokerData.prodMicrosoftAuthenticator.packageName))
+        }
     }
 
     private fun getMockBrokerRawCert(): List<X509Certificate>{
         return listOf(PackageUtils.createCertificateFromByteArray(mockLtwCertificate))
     }
-
 }

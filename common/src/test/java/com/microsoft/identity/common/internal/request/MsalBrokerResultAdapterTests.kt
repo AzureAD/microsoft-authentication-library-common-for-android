@@ -423,4 +423,49 @@ class MsalBrokerResultAdapterTests {
         val metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle)
         assertNull(metrics)
     }
+
+    @Test
+    @SneakyThrows
+    fun testGetBaseExceptionFromBundle_WithBrokerAppInfo() {
+        val mockErrorCode = "test_error"
+        val mockErrorMessage = "Test error message"
+        val mockBrokerVersion = "1.2.3"
+        val mockBrokerPackageName = "com.microsoft.broker"
+
+        val clientException = ClientException(mockErrorCode, mockErrorMessage)
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = resultAdapter.bundleFromBaseException(clientException, null).apply {
+            putString(AuthenticationConstants.Broker.BROKER_VERSION, mockBrokerVersion)
+            putString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME, mockBrokerPackageName)
+        }
+
+        val receivedException = resultAdapter.getBaseExceptionFromBundle(resultBundle)
+
+        assertNotNull(receivedException)
+        assertEquals(mockErrorCode, receivedException.errorCode)
+        assertEquals(mockErrorMessage, receivedException.message)
+        assertEquals(mockBrokerVersion, receivedException.brokerAppVersion)
+        assertEquals(mockBrokerPackageName, receivedException.brokerAppPackageName)
+    }
+
+    @Test
+    @SneakyThrows
+    fun testGetBaseExceptionFromBundle_WithoutBrokerAppInfo() {
+        val mockErrorCode = "test_error"
+        val mockErrorMessage = "Test error message"
+
+        val clientException = ClientException(mockErrorCode, mockErrorMessage)
+        val resultAdapter = MsalBrokerResultAdapter()
+
+        val resultBundle = resultAdapter.bundleFromBaseException(clientException, null)
+
+        val receivedException = resultAdapter.getBaseExceptionFromBundle(resultBundle)
+
+        assertNotNull(receivedException)
+        assertEquals(mockErrorCode, receivedException.errorCode)
+        assertEquals(mockErrorMessage, receivedException.message)
+        assertNull(receivedException.brokerAppVersion)
+        assertNull(receivedException.brokerAppPackageName)
+    }
 }

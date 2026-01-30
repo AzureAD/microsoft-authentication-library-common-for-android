@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.broker.ipc
 
 import android.accounts.AuthenticatorDescription
 import android.accounts.AuthenticatorException
+import android.content.Context
 import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -48,6 +50,9 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
         override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean {
             return true
         }
+
+        override val context: Context
+            get() = mock(Context::class.java)
     }
 
     private val properlySetUpAccountManagerApps = {
@@ -234,6 +239,9 @@ class AccountManagerBackupIpcStrategyTargetingSpecificBrokerAppTest {
                 override fun isSignedByKnownKeys(brokerData: BrokerData): Boolean {
                     return false
                 }
+
+                override val context: Context
+                    get() = mock(Context::class.java)
             }
         )
 

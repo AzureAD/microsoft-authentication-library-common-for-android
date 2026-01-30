@@ -22,27 +22,26 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.broker;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.util.Map;
-
-import lombok.NonNull;
+import javax.annotation.Nullable;
 
 /**
- * An interface that throws an exception if the caller is not acceptable given a UID.
+ * Interface to provide broker app information.
  */
-public interface ICallValidator {
+public interface IBrokerInfoProvider {
     /**
-     * Throws a ClientException if the caller cannot be validated or is unauthorized.  In android,
-     * this will end up taking a map of package name to string of signatures.  In Linux, this is
-     * probably a list of client ids.
-     * @param methodName the method name for logging purposes.
-     * @param callingUid the identifier for the caller, platform dependent.
-     * @param allowedApplications A map of name to iterable of verification string for calling apps.
-     * @throws ClientException if the caller cannot be validated.
+     * Gets the broker app version.
+     * Response can be null if broker app response did not contain version info.
+     *
+     * @return The broker app version.
      */
-    void throwIfNotInvokedByAcceptableApp(@NonNull String methodName,
-                                          int callingUid,
-                                          @NonNull Map<String, Iterable<String>> allowedApplications)
-            throws ClientException;
+    @Nullable
+    String getBrokerAppVersion();
+
+    /**
+     * Gets the broker app package name.
+     * Response can be null if broker app response did not contain package name info.
+     * @return
+     */
+    @Nullable
+    String getBrokerAppPackageName();
 }

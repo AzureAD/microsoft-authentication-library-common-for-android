@@ -22,10 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker
 
+import com.microsoft.identity.common.internal.apps.ICallingAppValidator
+import com.microsoft.identity.common.java.broker.IAppIdentity
+
 /**
  * An interface for validating if a given app is a valid broker app.
  * */
-interface IBrokerValidator {
+interface IBrokerValidator : ICallingAppValidator {
+
+    override val allowedApps: Set<IAppIdentity>
+        get() = BrokerData.getKnownBrokerApps()
 
     /**
      * Returns true if the provided package name is

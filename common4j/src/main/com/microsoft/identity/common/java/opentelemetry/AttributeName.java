@@ -156,6 +156,10 @@ public enum AttributeName {
      * This does not include tasks currently being executed by worker threads.
      */
     silent_requests_queue_size,
+    /**
+     * The size of the silent request executor pool.
+     */
+    silent_executor_pool_size,
 
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
@@ -201,6 +205,11 @@ public enum AttributeName {
      * The time (in milliseconds) spent in executing the getAccountByLocalAccountId method in OAuth2TokenCache.
      */
     elapsed_time_cache_get_account_by_local_account_id,
+
+    /**
+     * The time (in milliseconds), calculated using nanos, spent in executing the getAccountByLocalAccountId method in OAuth2TokenCache.
+     */
+    elapsed_time_cache_get_account_by_local_account_id_using_nanos,
 
     /**
      * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
@@ -256,6 +265,11 @@ public enum AttributeName {
      * The time (in milliseconds) spent on network when acquiring AT.
      */
     elapsed_time_network_acquire_at,
+
+    /**
+     * The time (in milliseconds), calculated using nanos, spent on network when acquiring AT.
+     */
+    elapsed_time_network_acquire_at_using_nanos,
 
     /**
      * The broker operation name.
@@ -520,6 +534,11 @@ public enum AttributeName {
      *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
      */
     elapsed_time_load_aggregated_account_data,
+
+    /**
+     *  Elapsed time (in milliseconds), calculated using nanos, spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
+     */
+    elapsed_time_load_aggregated_account_data_using_nanos,
 
     /**
      * Indicates if account aggregation is skipped during saveTokenResult() call.
