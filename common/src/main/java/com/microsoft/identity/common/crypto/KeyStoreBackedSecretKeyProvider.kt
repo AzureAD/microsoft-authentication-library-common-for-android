@@ -485,9 +485,11 @@ private fun handleAllFailures(failures: Map<IKeyGenSpec, Throwable>): Nothing {
         "No failures encountered, but no key pair generated. This should not happen."
     }
     logAndBuildErrorHistory(failures, true)
+    val lastFailure = failures.values.last()
     val finalError = ClientException(
         ClientException.UNKNOWN_CRYPTO_ERROR,
-        "All key generation attempts failed. Total failures: ${failures.size}"
+        "All key generation attempts failed. Total failures: ${failures.size}",
+        lastFailure
     )
     Logger.error(methodTag, finalError.message, finalError)
     throw finalError
