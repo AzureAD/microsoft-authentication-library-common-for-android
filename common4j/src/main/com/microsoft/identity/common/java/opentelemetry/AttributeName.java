@@ -522,7 +522,7 @@ public enum AttributeName {
     key_pair_gen_failure_history,
 
     /**
-     * The time (in milliseconds) spent on generating a keypair.
+     * The time (in nanoseconds) spent on generating a keypair.
      */
     elapsed_time_keypair_generation,
 
