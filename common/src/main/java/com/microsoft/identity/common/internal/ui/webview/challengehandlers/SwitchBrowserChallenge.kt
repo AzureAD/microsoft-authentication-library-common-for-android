@@ -33,6 +33,23 @@ data class SwitchBrowserChallenge(
     val processUri: Uri,
     val authorizationUrl: String
 ) {
+    
+    /**
+     * Extract the redirect scheme from the authorization URL.
+     * The redirect URI is typically in the format msauth://<package>/<signature>.
+     * This method extracts the scheme portion (e.g., "msauth").
+     *
+     * @return The redirect scheme if found, null otherwise.
+     */
+    fun getRedirectScheme(): String? {
+        return try {
+            val authUri = Uri.parse(authorizationUrl)
+            val redirectUri = authUri.getQueryParameter("redirect_uri")
+            redirectUri?.let { Uri.parse(it).scheme }
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     companion object {
         /**

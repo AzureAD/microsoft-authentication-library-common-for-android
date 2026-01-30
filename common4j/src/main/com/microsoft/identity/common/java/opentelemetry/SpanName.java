@@ -90,5 +90,13 @@ public enum SpanName {
     /**
      * Span name for web apps API execute requests.
      */
-    ExecuteWebAppsRequest
+    ExecuteWebAppsRequest,
+    /**
+     * Span name for Auth Tab launch operations.
+     */
+    AuthTabLaunch,
+    /**
+     * Span name for Auth Tab result handling.
+     */
+    AuthTabResult
 }

@@ -206,7 +206,14 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
      */
-    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false);
+    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false),
+
+    /**
+     * Flight to enable Auth Tab (Chrome 137+) for authentication flows.
+     * Auth Tab provides enhanced security and simplified UX compared to Custom Tabs.
+     * When disabled or unsupported, falls back to standard Custom Tabs.
+     */
+    ENABLE_AUTH_TAB("EnableAuthTab", true);
 
     private String key;
     private Object defaultValue;
