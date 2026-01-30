@@ -390,7 +390,7 @@ class KeyStoreBackedSecretKeyProvider(
             )
             attemptKeyGeneration(spec)
                 .onSuccess { keyPair ->
-                    if (!failures.isEmpty()) {
+                    if (failures.isNotEmpty()) {
                         // Log previous failures for telemetry
                         logAndBuildErrorHistory(failures, false)
                     }
