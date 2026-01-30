@@ -427,120 +427,120 @@ class KeyStoreBackedSecretKeyProvider(
     }
 
 
-/**
- * Validates that key generation specifications are available for use.
- *
- * Ensures at least one specification exists before attempting key generation.
- * Records telemetry and throws exception if no specs are available.
- *
- * @param specs List of key generation specifications to validate
- * @throws ClientException if specs list is empty
- */
-@Throws(ClientException::class)
-private fun validateSpecsAvailable(specs: List<IKeyGenSpec>) {
-    if (specs.isEmpty()) {
-        throw ClientException(
-            ClientException.UNKNOWN_CRYPTO_ERROR,
-            "No key generation specifications available for generating key pair."
-        )
-    }
-}
-
-/**
- * Attempts key pair generation with a single specification and measures performance.
- *
- * Wraps key generation in Result for safe exception handling and tracks
- * generation time for telemetry purposes.
- *
- * @param spec The key generation specification to attempt
- * @return [Result] containing generated KeyPair or captured exception
- */
-private fun attemptKeyGeneration(spec: IKeyGenSpec): Result<KeyPair> {
-    return runCatching {
-        val startTime = System.nanoTime()
-        val keyPair = AndroidKeyStoreUtil.generateKeyPair(
-            spec.algorithm,
-            spec.algorithmParameterSpec
-        )
-        val elapsedTime = System.nanoTime() - startTime
-        SpanExtension.current().setAttribute(
-            AttributeName.elapsed_time_keypair_generation.name,
-            elapsedTime
-        )
-        keyPair
-    }
-}
-
-/**
- * Handles all key generation failures and throws a ClientException.
- *
- * Logs each failure, records telemetry data, and throws an exception based on the last failure.
- *
- * @param failures List of exceptions encountered during key generation attempts
- * @throws ClientException Always throws after processing all failures
- */
-private fun handleAllFailures(failures: Map<IKeyGenSpec, Throwable>): Nothing {
-    val methodTag = "$TAG:handleAllFailures"
-    require(failures.isNotEmpty()) {
-        "No failures encountered, but no key pair generated. This should not happen."
-    }
-    logAndBuildErrorHistory(failures, true)
-    val lastFailure = failures.values.last()
-    val finalError = ClientException(
-        ClientException.UNKNOWN_CRYPTO_ERROR,
-        "All key generation attempts failed. Total failures: ${failures.size}",
-        lastFailure
-    )
-    Logger.error(methodTag, finalError.message, finalError)
-    throw finalError
-}
-
-/**
- * Logs each key generation failure and builds a consolidated error history string.
- *
- * @param failures Map of key generation specifications to their corresponding exceptions
- * @param logAsError If true, logs messages as errors; otherwise, logs as warnings
- * @return Consolidated error history string for telemetry
- */
-private fun logAndBuildErrorHistory(
-    failures: Map<IKeyGenSpec, Throwable>,
-    logAsError: Boolean
-): String {
-    val methodTag = "$TAG:logAndBuildErrorHistory"
-    val errorMessageBuilder = StringBuilder()
-    for ((spec, exception) in failures) {
-        val errorMessage = "Key generation failed with spec: $spec, error: ${exception.message}"
-        if (logAsError) {
-            Logger.error(methodTag, errorMessage, exception)
-        } else {
-            Logger.warn(methodTag, errorMessage)
+    /**
+     * Validates that key generation specifications are available for use.
+     *
+     * Ensures at least one specification exists before attempting key generation.
+     * Records telemetry and throws exception if no specs are available.
+     *
+     * @param specs List of key generation specifications to validate
+     * @throws ClientException if specs list is empty
+     */
+    @Throws(ClientException::class)
+    private fun validateSpecsAvailable(specs: List<IKeyGenSpec>) {
+        if (specs.isEmpty()) {
+            throw ClientException(
+                ClientException.UNKNOWN_CRYPTO_ERROR,
+                "No key generation specifications available for generating key pair."
+            )
         }
-        errorMessageBuilder.append("${spec.print()}: ${exception.message};")
     }
-    val errorMessage = errorMessageBuilder.toString()
-    SpanExtension.current().setAttribute(
-        AttributeName.key_pair_gen_failure_history.name,
-        errorMessage
-    )
-    return errorMessage
-}
 
-/**
- * Loads a wrapped secret key from file, automatically detecting the storage format.
- *
- * @return WrappedSecretKey instance or null if file doesn't exist or is empty
- */
-private fun loadSecretKeyFromFile(): ByteArray? {
-    val methodTag = "$TAG:loadFromFile"
-    if (!keyFile.exists()) {
-        Logger.warn(methodTag, "Key file does not exist")
-        return null
+    /**
+     * Attempts key pair generation with a single specification and measures performance.
+     *
+     * Wraps key generation in Result for safe exception handling and tracks
+     * generation time for telemetry purposes.
+     *
+     * @param spec The key generation specification to attempt
+     * @return [Result] containing generated KeyPair or captured exception
+     */
+    private fun attemptKeyGeneration(spec: IKeyGenSpec): Result<KeyPair> {
+        return runCatching {
+            val startTime = System.nanoTime()
+            val keyPair = AndroidKeyStoreUtil.generateKeyPair(
+                spec.algorithm,
+                spec.algorithmParameterSpec
+            )
+            val elapsedTime = System.nanoTime() - startTime
+            SpanExtension.current().setAttribute(
+                AttributeName.elapsed_time_keypair_generation.name,
+                elapsedTime
+            )
+            keyPair
+        }
     }
-    val wrappedSecretKeyData = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
-    if (wrappedSecretKeyData == null || wrappedSecretKeyData.isEmpty()) {
-        Logger.warn(methodTag, "Key file is empty")
-        return null
+
+    /**
+     * Handles all key generation failures and throws a ClientException.
+     *
+     * Logs each failure, records telemetry data, and throws an exception based on the last failure.
+     *
+     * @param failures List of exceptions encountered during key generation attempts
+     * @throws ClientException Always throws after processing all failures
+     */
+    private fun handleAllFailures(failures: Map<IKeyGenSpec, Throwable>): Nothing {
+        val methodTag = "$TAG:handleAllFailures"
+        require(failures.isNotEmpty()) {
+            "No failures encountered, but no key pair generated. This should not happen."
+        }
+        logAndBuildErrorHistory(failures, true)
+        val lastFailure = failures.values.last()
+        val finalError = ClientException(
+            ClientException.UNKNOWN_CRYPTO_ERROR,
+            "All key generation attempts failed. Total failures: ${failures.size}",
+            lastFailure
+        )
+        Logger.error(methodTag, finalError.message, finalError)
+        throw finalError
     }
-    return wrappedSecretKeyData
-}
+
+    /**
+     * Logs each key generation failure and builds a consolidated error history string.
+     *
+     * @param failures Map of key generation specifications to their corresponding exceptions
+     * @param logAsError If true, logs messages as errors; otherwise, logs as warnings
+     * @return Consolidated error history string for telemetry
+     */
+    private fun logAndBuildErrorHistory(
+        failures: Map<IKeyGenSpec, Throwable>,
+        logAsError: Boolean
+    ): String {
+        val methodTag = "$TAG:logAndBuildErrorHistory"
+        val errorMessageBuilder = StringBuilder()
+        for ((spec, exception) in failures) {
+            val errorMessage = "Key generation failed with spec: $spec, error: ${exception.message}"
+            if (logAsError) {
+                Logger.error(methodTag, errorMessage, exception)
+            } else {
+                Logger.warn(methodTag, errorMessage)
+            }
+            errorMessageBuilder.append("${spec.print()}: ${exception.message};")
+        }
+        val errorMessage = errorMessageBuilder.toString()
+        SpanExtension.current().setAttribute(
+            AttributeName.key_pair_gen_failure_history.name,
+            errorMessage
+        )
+        return errorMessage
+    }
+
+    /**
+     * Loads a wrapped secret key from file, automatically detecting the storage format.
+     *
+     * @return WrappedSecretKey instance or null if file doesn't exist or is empty
+     */
+    private fun loadSecretKeyFromFile(): ByteArray? {
+        val methodTag = "$TAG:loadFromFile"
+        if (!keyFile.exists()) {
+            Logger.warn(methodTag, "Key file does not exist")
+            return null
+        }
+        val wrappedSecretKeyData = FileUtil.readFromFile(keyFile, KEY_FILE_SIZE)
+        if (wrappedSecretKeyData == null || wrappedSecretKeyData.isEmpty()) {
+            Logger.warn(methodTag, "Key file is empty")
+            return null
+        }
+        return wrappedSecretKeyData
+    }
 }
