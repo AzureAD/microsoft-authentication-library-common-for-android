@@ -33,6 +33,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.BaseCommand;
@@ -54,6 +55,7 @@ import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -431,6 +433,114 @@ public class CommandDispatcherTest {
         CommandResult result = future.get();
         Assert.assertEquals(ICommandResult.ResultStatus.COMPLETED, result.getStatus());
         Assert.assertEquals(TEST_RESULT_STR, result.getResult());
+    }
+
+    /**
+     * Tests that initializeSilentExecutorWithExpandedPool() correctly expands the thread pool
+     * when called with a valid Broker package name (Azure Authenticator).
+     */
+    @Test
+    public void testInitializeSilentExecutorWithExpandedPool_WithValidBrokerPackage() throws Exception {
+        CommandDispatcher.clearState();
+
+        // Test with Azure Authenticator package
+        CommandDispatcher.initializeSilentExecutorWithExpandedPool(
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        // Verify executor is functional
+        verifyExecutorIsFunctional();
+
+        CommandDispatcher.clearState();
+    }
+
+    /**
+     * Tests that initializeSilentExecutorWithExpandedPool() works with all valid Broker packages.
+     */
+    @Test
+    public void testInitializeSilentExecutorWithExpandedPool_AllBrokerPackages() throws Exception {
+        final String[] brokerPackages = {
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+                AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME
+        };
+
+        for (final String packageName : brokerPackages) {
+            CommandDispatcher.clearState();
+            CommandDispatcher.initializeSilentExecutorWithExpandedPool(packageName);
+            verifyExecutorIsFunctional();
+        }
+
+        CommandDispatcher.clearState();
+    }
+
+    /**
+     * Tests that initializeSilentExecutorWithExpandedPool() throws ClientException
+     * when called with a non-Broker package name.
+     */
+    @Test
+    public void testInitializeSilentExecutorWithExpandedPool_WithNonBrokerPackage_ThrowsException() throws Exception {
+        CommandDispatcher.clearState();
+
+        try {
+            CommandDispatcher.initializeSilentExecutorWithExpandedPool("com.some.msal.app");
+            Assert.fail("Expected ClientException to be thrown for non-Broker package");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ErrorStrings.BROKER_ONLY_OPERATION, e.getErrorCode());
+            // Verify message does NOT contain the package name (no sensitive info leak)
+            Assert.assertFalse(e.getMessage().contains("com.some.msal.app"));
+        } finally {
+            CommandDispatcher.clearState();
+        }
+    }
+
+    /**
+     * Tests that initializeSilentExecutorWithExpandedPool() throws NullPointerException
+     * when called with null package name due to @NonNull annotation enforcement.
+     * Passing null is a programming error and should fail fast.
+     */
+    @Test(expected = NullPointerException.class)
+    public void testInitializeSilentExecutorWithExpandedPool_WithNullPackage_ThrowsException() throws Exception {
+        CommandDispatcher.clearState();
+        try {
+            CommandDispatcher.initializeSilentExecutorWithExpandedPool(null);
+        } finally {
+            CommandDispatcher.clearState();
+        }
+    }
+
+    /**
+     * Tests that initializeSilentExecutorWithExpandedPool() throws ClientException
+     * when called with empty package name.
+     */
+    @Test
+    public void testInitializeSilentExecutorWithExpandedPool_WithEmptyPackage_ThrowsException()  throws Exception {
+        CommandDispatcher.clearState();
+
+        try {
+            CommandDispatcher.initializeSilentExecutorWithExpandedPool("");
+            Assert.fail("Expected ClientException to be thrown for empty package");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ErrorStrings.BROKER_ONLY_OPERATION, e.getErrorCode());
+        } finally {
+            CommandDispatcher.clearState();
+        }
+    }
+
+    /**
+     * Helper method to verify the silent executor is functional after initialization.
+     */
+    private void verifyExecutorIsFunctional() throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        final TestCommand testCommand = getTestCommand(testLatch);
+
+        final FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        testLatch.await();
+
+        final CommandResult result = future.get();
+        Assert.assertEquals(ICommandResult.ResultStatus.COMPLETED, result.getStatus());
+        Assert.assertEquals(TEST_RESULT_STR, result.getResult());
+        Assert.assertTrue(future.isDone());
+        future.isCleanedUp();
     }
 
     private TestCommand getTestCommand(final CountDownLatch testLatch) {

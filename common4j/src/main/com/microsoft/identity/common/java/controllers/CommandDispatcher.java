@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
@@ -98,7 +99,10 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED = 8;
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
+    private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
@@ -107,6 +111,18 @@ public class CommandDispatcher {
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final Object mapAccessLock = new Object();
+
+    /**
+     * Enum representing the possible outcomes of silent executor termination during reset.
+     */
+    private enum ExecutorTerminationOutcome {
+        /** Executor terminated successfully within graceful timeout. */
+        GRACEFUL,
+        /** Executor required forced shutdown but eventually terminated. */
+        FORCED,
+        /** Executor did not fully terminate even after forced shutdown. */
+        FAILED
+    }
 
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
@@ -149,6 +165,25 @@ public class CommandDispatcher {
      */
     public static int getSilentRequestActiveCount(){
         return ((ThreadPoolExecutor)sSilentExecutor).getActiveCount();
+    }
+
+    /**
+     * Returns the core pool size of the silent request thread pool.
+     *
+     * @return the core pool size of the silent executor
+     */
+    public static int getSilentExecutorPoolSize() {
+        return ((ThreadPoolExecutor) sSilentExecutor).getCorePoolSize();
+    }
+
+    /**
+     * Returns the default silent request thread pool size.
+     * Used as default value when pool size is not available from broker response.
+     *
+     * @return the default pool size constant
+     */
+    public static int getDefaultSilentExecutorPoolSize() {
+        return SILENT_REQUEST_THREAD_POOL_SIZE;
     }
 
     /**
@@ -512,6 +547,11 @@ public class CommandDispatcher {
             SpanExtension.current().setAttribute(
                     AttributeName.silent_requests_queue_size.name(),
                     queueSize
+            );
+            // Report the actual pool size being used
+            SpanExtension.current().setAttribute(
+                    AttributeName.silent_executor_pool_size.name(),
+                    getSilentExecutorPoolSize()
             );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
@@ -1032,15 +1072,158 @@ public class CommandDispatcher {
             sSilentExecutor.shutdownNow();
         }
     }
+
+    /**
+     * Checks if the given package name belongs to a Broker application.
+     *
+     * @param packageName the package name to check
+     * @return true if the package name is a Broker app, false otherwise
+     */
+    private static boolean isBrokerPackageName(@Nullable final String packageName) {
+        if (StringUtil.isNullOrEmpty(packageName)) {
+            return false;
+        }
+        return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME.equals(packageName);
+    }
+
+    /**
+     * Initializes the silent executor with expanded thread pool size (8 threads).
+     * <p>
+     * This method should ONLY be called by Broker during its initialization phase
+     * when the flight check determines that expanded pool is enabled.
+     * MSAL client apps should NOT call this method - they will use the default pool size.
+     * </p>
+     * <p>
+     * This enables Broker to handle more concurrent silent token requests (8 vs 5 threads)
+     * without affecting MSAL client apps which run in separate processes.
+     * </p>
+     *
+     * @param callingPackageName the package name of the calling application for validation
+     * @throws ClientException if called from a non-Broker application
+     */
+    public static void initializeSilentExecutorWithExpandedPool(@NonNull final String callingPackageName) throws ClientException {
+        final String methodTag = TAG + ":initializeSilentExecutorWithExpandedPool";
+
+        // Validate caller is a Broker application
+        if (!isBrokerPackageName(callingPackageName)) {
+            Logger.error(methodTag, "Method called from non-Broker application: " + callingPackageName, null);
+            throw new ClientException(
+                    ErrorStrings.BROKER_ONLY_OPERATION,
+                    "This operation is only available for Broker applications."
+            );
+        }
+
+        Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+    }
+
+
+    /**
+     * Resets the SilentRequestsExecutor with a custom thread pool size.
+     * <p>
+     * This gracefully shuts down the existing executor before creating a new one.
+     * </p>
+     * <p>
+     * <strong>IMPORTANT:</strong> This method should ONLY be called during Broker initialization
+     * or after global signout in Shared Device Mode when no silent requests are active.
+     * </p>
+     *
+     * @param poolSize the desired thread pool size. Must be positive non-zero integer.
+     */
+    private static void resetSilentRequestExecutorWithSize(final int poolSize) {
+        final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
+
+        final int effectivePoolSize;
+        if (poolSize <= 0) {
+            Logger.error(methodTag, "Invalid poolSize: " + poolSize + ". Using default: " + SILENT_REQUEST_THREAD_POOL_SIZE, null);
+            effectivePoolSize = SILENT_REQUEST_THREAD_POOL_SIZE;
+        } else {
+            effectivePoolSize = poolSize;
+        }
+
+        Logger.info(methodTag, "Resetting silent Executor with pool size: " + effectivePoolSize);
+
+        // Step 1: Atomically swap executor while holding lock (minimal lock duration)
+        // This ensures new submissions go to the new executor immediately
+        final ExecutorService oldExecutor;
+        synchronized (mapAccessLock) {
+            oldExecutor = sSilentExecutor;
+            sSilentExecutor = Executors.newFixedThreadPool(effectivePoolSize);
+            Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
+            sExecutingCommandMap.clear();
+        }
+
+        // Step 2: Shutdown old executor OUTSIDE the lock to avoid deadlock
+        // Workers can now complete their finally blocks (which need mapAccessLock)
+        shutdownOldExecutor(oldExecutor, methodTag);
+    }
+
+    /**
+     * Gracefully shuts down an old executor service.
+     * <p>
+     * <strong>IMPORTANT:</strong> Must be called WITHOUT holding mapAccessLock to avoid deadlock.
+     * Worker tasks in their finally blocks need mapAccessLock to complete cleanup.
+     * </p>
+     *
+     * @param executor  the old executor to shutdown
+     * @param methodTag tag for logging
+     */
+    private static void shutdownOldExecutor(@NonNull final ExecutorService executor,
+                                            @NonNull final String methodTag) {
+        ExecutorTerminationOutcome terminationOutcome = ExecutorTerminationOutcome.FAILED;
+
+        try {
+            // Gracefully shutdown old executor
+            executor.shutdown();
+
+            // Wait for graceful completion
+            if (executor.awaitTermination(EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                terminationOutcome = ExecutorTerminationOutcome.GRACEFUL;
+            } else {
+                Logger.warn(methodTag, "Executor did not terminate gracefully within " +
+                        EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
+
+                final List<Runnable> droppedTasks = executor.shutdownNow();
+
+                if (!droppedTasks.isEmpty()) {
+                    Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
+                            " tasks (expected during reset after signout)");
+                }
+
+                // Wait for forced termination to complete
+                if (executor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    terminationOutcome = ExecutorTerminationOutcome.FORCED;
+                } else {
+                    Logger.error(methodTag, "Executor did not terminate after forced shutdown within " +
+                            EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms", null);
+                }
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        } catch (final RuntimeException e) {
+            Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
+            try {
+                executor.shutdownNow();
+            } catch (final RuntimeException ignored) {
+                Logger.error(methodTag, "Failed to force shutdown executor", ignored);
+            }
+        }
+
+        Logger.info(methodTag, "Old executor shutdown complete: " + terminationOutcome.name());
+    }
+
     /***
-     * Resets the SilentRequestsExecutor.
-     * This creates a new Executor for the silent request.
+     * Resets the SilentRequestsExecutor with the default thread pool size.
+     * This creates a new Executor for silent requests.
      * This is expected to be called after global signout is performed in Shared Device mode.
      * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
      */
     public static void resetSilentRequestExecutor() {
-        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
-        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE);
     }
 }
 

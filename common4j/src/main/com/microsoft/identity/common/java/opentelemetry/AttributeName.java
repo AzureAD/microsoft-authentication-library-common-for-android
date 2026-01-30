@@ -156,6 +156,10 @@ public enum AttributeName {
      * This does not include tasks currently being executed by worker threads.
      */
     silent_requests_queue_size,
+    /**
+     * The size of the silent request executor pool.
+     */
+    silent_executor_pool_size,
 
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.

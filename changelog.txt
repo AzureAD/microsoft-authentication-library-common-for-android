@@ -5,6 +5,7 @@ vNext
 - [MINOR] Cleanup code related to emitting ests telemetry (#2868)
 - [MINOR] Skip account aggregation when responding to AcquireTokenSilent api call for OneAuth (#2863)
 - [MINOR] Introduce locks at NameValueStorageFileManagerSimpleCacheImpl layer (#2842)
+- [MINOR] Add flight-controlled option to expand Broker CommandDispatcher silent thread pool to 8 threads (default remains 5; MSAL clients unaffected) (#2865)
 - [PATCH] Implement State-Based Timeout Classification for Silent Token Requests (#2870)
 - [MINOR] Added Authentication Constants to be used for broker version and name (#2859)
 - [PATCH] Adding WebAppsNonce to JWT request body (#2867)
