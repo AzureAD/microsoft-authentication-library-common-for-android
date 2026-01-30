@@ -114,9 +114,9 @@ class SwitchBrowserRequestHandler(
                 putExtra(SwitchBrowserActivity.BROWSER_PACKAGE_NAME, browser.packageName)
                 putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, browser.isCustomTabsServiceSupported)
                 putExtra(SwitchBrowserActivity.PROCESS_URI, switchBrowserChallenge.processUri.toString())
-                // Pass redirect scheme for Auth Tab support
-                switchBrowserChallenge.getRedirectScheme()?.let { scheme ->
-                    putExtra(SwitchBrowserActivity.REDIRECT_SCHEME, scheme)
+                // Pass redirect URI for Auth Tab support
+                switchBrowserChallenge.getRedirectUri()?.let { redirectUri ->
+                    putExtra(SwitchBrowserActivity.REDIRECT_URI, redirectUri.toString())
                 }
                 setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }

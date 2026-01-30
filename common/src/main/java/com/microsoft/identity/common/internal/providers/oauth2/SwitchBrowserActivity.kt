@@ -25,17 +25,17 @@ package com.microsoft.identity.common.internal.providers.oauth2
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.result.ActivityResultCaller
-import androidx.activity.result.ActivityResultLauncher
-import androidx.browser.auth.AuthTabIntent
+import androidx.core.net.toUri
+import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.internal.ui.browser.authtab.AuthTabManager
+import com.microsoft.identity.common.internal.ui.browser.authtab.AuthTabResult
 import com.microsoft.identity.common.internal.ui.browser.authtab.AuthTabSupport
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.logging.Logger
-import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 
 
 /**
@@ -74,7 +74,7 @@ class SwitchBrowserActivity : FragmentActivity() {
     private var customTabsManager = CustomTabsManager(this)
     
     // Auth Tab support
-    private var authTabLauncher: ActivityResultLauncher<Intent>? = null
+    private var authTabManager: AuthTabManager? = null
     private var usingAuthTab = false
 
     companion object {
@@ -92,8 +92,8 @@ class SwitchBrowserActivity : FragmentActivity() {
         /** Intent extra key indicating a resume request from the browser redirect */
         const val RESUME_REQUEST = "resume_request"
         
-        /** Intent extra key for the redirect scheme used with Auth Tab */
-        const val REDIRECT_SCHEME = "redirect_scheme"
+        /** Intent extra key for the full redirect URI used with Auth Tab */
+        const val REDIRECT_URI = "redirect_uri"
     }
 
     /**
@@ -123,27 +123,32 @@ class SwitchBrowserActivity : FragmentActivity() {
     private fun registerAuthTabLauncherIfSupported() {
         val methodTag = "$TAG:registerAuthTabLauncherIfSupported"
         
-        if (!AuthTabSupport.isAuthTabAvailable(this)) {
-            Logger.info(methodTag, "Auth Tab not available - will use Custom Tabs")
+        // Check if Auth Tab flight is enabled
+        if (!CommonFlightsManager.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)) {
+            Logger.info(methodTag, "Auth Tab flight is disabled - will use Custom Tabs")
             return
         }
         
+        // Check if the specific browser supports Auth Tab
         val browserPackage = intent.extras?.getString(BROWSER_PACKAGE_NAME)
-        if (browserPackage != null && !AuthTabSupport.isAuthTabSupportedByBrowser(this, browserPackage)) {
+        if (browserPackage.isNullOrBlank()) {
+            Logger.info(methodTag, "No browser package specified - will use Custom Tabs")
+            return
+        }
+        
+        if (!AuthTabSupport.isAuthTabSupportedByBrowser(this, browserPackage)) {
             Logger.info(methodTag, "Auth Tab not supported by browser: $browserPackage - will use Custom Tabs")
             return
         }
         
-        try {
-            authTabLauncher = AuthTabIntent.registerActivityResultLauncher(
-                this as ActivityResultCaller
-            ) { result ->
-                handleAuthTabResult(result)
-            }
-            Logger.info(methodTag, "Auth Tab launcher registered successfully")
-        } catch (e: Exception) {
-            Logger.warn(methodTag, "Failed to register Auth Tab launcher: ${e.message}")
-            authTabLauncher = null
+        authTabManager = AuthTabManager(this)
+        val registered = authTabManager!!.registerLauncher { result ->
+            handleAuthTabResult(result)
+        }
+        
+        if (!registered) {
+            Logger.warn(methodTag, "Failed to register Auth Tab launcher")
+            authTabManager = null
         }
     }
 
@@ -167,7 +172,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
         val browserSupportsCustomTabs = extras.getBoolean(BROWSER_SUPPORTS_CUSTOM_TABS, false)
         val processUri = extras.getString(PROCESS_URI)
-        val redirectScheme = extras.getString(REDIRECT_SCHEME)
+        val redirectUriString = extras.getString(REDIRECT_URI)
 
         // Validate required parameters
         if (browserPackageName.isNullOrBlank()) {
@@ -187,9 +192,9 @@ class SwitchBrowserActivity : FragmentActivity() {
         )
 
         // Try Auth Tab first if available and launcher is registered
-        if (authTabLauncher != null && !redirectScheme.isNullOrBlank()) {
+        if (authTabManager?.isLauncherRegistered == true && !redirectUriString.isNullOrBlank()) {
             Logger.info(methodTag, "Using Auth Tab for switch browser flow")
-            launchWithAuthTab(processUri, redirectScheme)
+            launchWithAuthTab(processUri, redirectUriString)
             return
         }
 
@@ -200,12 +205,11 @@ class SwitchBrowserActivity : FragmentActivity() {
     /**
      * Launch the browser using Auth Tab API.
      */
-    private fun launchWithAuthTab(processUri: String, redirectScheme: String) {
+    private fun launchWithAuthTab(processUri: String, redirectUriString: String) {
         val methodTag = "$TAG:launchWithAuthTab"
         try {
             usingAuthTab = true
-            val authTabIntent = AuthTabIntent.Builder().build()
-            authTabIntent.launch(authTabLauncher!!, Uri.parse(processUri), redirectScheme)
+            authTabManager!!.launch(processUri.toUri(), redirectUriString.toUri())
             Logger.info(methodTag, "Auth Tab launched successfully")
         } catch (e: Exception) {
             Logger.error(methodTag, "Failed to launch Auth Tab, falling back to Custom Tabs", e)
@@ -250,49 +254,57 @@ class SwitchBrowserActivity : FragmentActivity() {
     /**
      * Handle the result from Auth Tab.
      * Converts the result to the expected format and passes it to WebViewAuthorizationFragment.
+     * Falls back to Custom Tabs if Auth Tab verification fails.
      */
-    private fun handleAuthTabResult(result: AuthTabIntent.AuthResult) {
+    private fun handleAuthTabResult(result: AuthTabResult) {
         val methodTag = "$TAG:handleAuthTabResult"
-        Logger.info(methodTag, "Auth Tab result received with code: ${result.resultCode}")
         
-        when (result.resultCode) {
-            AuthTabIntent.RESULT_OK -> {
-                val resultUri = result.resultUri
-                if (resultUri != null) {
-                    Logger.info(methodTag, "Auth Tab completed successfully")
-                    // Extract the switch browser resume parameters from the result URI
-                    val actionUri = resultUri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
-                    val code = resultUri.getQueryParameter(SWITCH_BROWSER.CODE)
-                    val state = resultUri.getQueryParameter(SWITCH_BROWSER.STATE)
-                    
-                    val bundle = bundleOf(
-                        SWITCH_BROWSER.ACTION_URI to actionUri,
-                        SWITCH_BROWSER.CODE to code,
-                        SWITCH_BROWSER.STATE to state,
-                        RESUME_REQUEST to true
-                    )
-                    WebViewAuthorizationFragment.setSwitchBrowserBundle(bundle)
-                } else {
-                    Logger.warn(methodTag, "Auth Tab returned OK but with null URI")
-                }
+        // Check if we should fall back to Custom Tabs (verification failed/timed out)
+        if (result.shouldFallBackToCustomTabs) {
+            Logger.warn(methodTag, "Auth Tab verification issue, falling back to Custom Tabs")
+            usingAuthTab = false
+            val extras = intent.extras ?: Bundle()
+            val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
+            val browserSupportsCustomTabs = extras.getBoolean(BROWSER_SUPPORTS_CUSTOM_TABS, false)
+            val processUri = extras.getString(PROCESS_URI)
+            
+            if (!browserPackageName.isNullOrBlank() && !processUri.isNullOrBlank()) {
+                launchWithCustomTabsOrBrowser(browserPackageName, browserSupportsCustomTabs, processUri)
+                return
             }
-            AuthTabIntent.RESULT_CANCELED -> {
-                Logger.info(methodTag, "Auth Tab was cancelled by user")
-                // User cancelled - no bundle to set
+            // If we can't fall back, finish with failure
+            Logger.error(methodTag, "Cannot fall back to Custom Tabs - missing parameters", null)
+            finishAndRemoveTask()
+            return
+        }
+        
+        when (result) {
+            is AuthTabResult.Success -> {
+                // Extract the switch browser resume parameters from the result URI
+                val resultUri = result.uri
+                val actionUri = resultUri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
+                val code = resultUri.getQueryParameter(SWITCH_BROWSER.CODE)
+                val state = resultUri.getQueryParameter(SWITCH_BROWSER.STATE)
+                
+                val bundle = bundleOf(
+                    SWITCH_BROWSER.ACTION_URI to actionUri,
+                    SWITCH_BROWSER.CODE to code,
+                    SWITCH_BROWSER.STATE to state,
+                    RESUME_REQUEST to true
+                )
+                WebViewAuthorizationFragment.setSwitchBrowserBundle(bundle)
             }
-            AuthTabIntent.RESULT_VERIFICATION_FAILED -> {
-                Logger.warn(methodTag, "Auth Tab verification failed")
+            
+            is AuthTabResult.Cancelled -> {
+                // User cancelled - no bundle to set, just finish
             }
-            AuthTabIntent.RESULT_VERIFICATION_TIMED_OUT -> {
-                Logger.warn(methodTag, "Auth Tab verification timed out")
-            }
+            
             else -> {
-                Logger.warn(methodTag, "Auth Tab returned unknown result code: ${result.resultCode}")
+                // SuccessWithNullUri, Unknown - unexpected states, just finish
+                Logger.warn(methodTag, "Unexpected Auth Tab result: $result")
             }
         }
         
-        // Clean up: finish this activity and remove it from task stack
-        Logger.info(methodTag, "Finishing activity after Auth Tab result")
         finishAndRemoveTask()
     }
 

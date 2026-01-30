@@ -95,19 +95,12 @@ public class AndroidAuthorizationStrategyFactory implements IAuthorizationStrate
      * Get current task browser authorization strategy or default browser authorization strategy.
      * If the authorization is in current task, use current task browser authorization strategy.
      *
-     * Note: Auth Tab is not supported here because it requires ActivityResultLauncher registration
-     * before the activity reaches STARTED state. Since this factory is called during auth flows
-     * when the activity is already RESUMED, Auth Tab cannot be used. Auth Tab is supported in
-     * broker-owned activities like SwitchBrowserActivity where we control the activity lifecycle.
-     *
      * @param browser         The browser to use for authorization.
      * @param isBrokerRequest True if the request is from broker.
      * @return The browser authorization strategy.
      */
     private IAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final Browser browser,
                                                                    final boolean isBrokerRequest) {
-        final String methodTag = TAG + ":getBrowserAuthorizationStrategy";
-
         if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
             return new CurrentTaskBrowserAuthorizationStrategy(
                     mContext,

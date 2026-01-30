@@ -36,19 +36,42 @@ data class SwitchBrowserChallenge(
     
     /**
      * Extract the redirect scheme from the authorization URL.
-     * The redirect URI is typically in the format msauth://<package>/<signature>.
-     * This method extracts the scheme portion (e.g., "msauth").
+     * The redirect URI is typically in the format msauth://<package>/<signature> or
+     * https://<host>/<path>.
      *
      * @return The redirect scheme if found, null otherwise.
      */
     fun getRedirectScheme(): String? {
         return try {
-            val authUri = Uri.parse(authorizationUrl)
-            val redirectUri = authUri.getQueryParameter("redirect_uri")
-            redirectUri?.let { Uri.parse(it).scheme }
+            val redirectUri = getRedirectUri()
+            redirectUri?.scheme
         } catch (e: Exception) {
             null
         }
+    }
+    
+    /**
+     * Get the full redirect URI parsed from the authorization URL.
+     *
+     * @return The parsed redirect URI, or null if not found.
+     */
+    fun getRedirectUri(): Uri? {
+        return try {
+            val authUri = Uri.parse(authorizationUrl)
+            val redirectUriString = authUri.getQueryParameter("redirect_uri")
+            redirectUriString?.let { Uri.parse(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
+     * Check if the redirect URI uses HTTPS scheme.
+     *
+     * @return true if the redirect URI is HTTPS, false otherwise.
+     */
+    fun isHttpsRedirect(): Boolean {
+        return getRedirectScheme()?.equals("https", ignoreCase = true) == true
     }
 
     companion object {
