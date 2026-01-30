@@ -239,7 +239,7 @@ class KeyStoreBackedSecretKeyProvider(
                 if (keyPair == null) {
                     Logger.info(methodTag, "key does not exist in keystore")
                     deleteSecretKeyFromStorage()
-                    span.setStatus(StatusCode.ERROR)
+                    span.setStatus(StatusCode.OK)
                     return null
                 }
                 val rawWrappedSecretKey = loadSecretKeyFromFile()
@@ -249,7 +249,7 @@ class KeyStoreBackedSecretKeyProvider(
                     // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
                     FileUtil.deleteFile(keyFile)
                     clearKeyFromCache()
-                    span.setStatus(StatusCode.ERROR)
+                    span.setStatus(StatusCode.OK)
                     return null
                 }
                 val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
