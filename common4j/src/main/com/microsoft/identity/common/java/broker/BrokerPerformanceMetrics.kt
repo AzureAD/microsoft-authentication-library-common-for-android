@@ -47,7 +47,7 @@ class BrokerPerformanceMetrics(
      * Helps diagnose concurrency-related performance issues.
      * Defaults to the standard silent executor pool size.
      */
-    val silentExecutorPoolSize: Int = CommandDispatcher.getDefaultSilentExecutorPoolSize()
+    val silentExecutorPoolSize: Int
 ) {
     /**
      * Time spent by broker processing the request (in milliseconds).

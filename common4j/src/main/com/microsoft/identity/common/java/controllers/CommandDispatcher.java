@@ -551,7 +551,7 @@ public class CommandDispatcher {
             // Report the actual pool size being used
             SpanExtension.current().setAttribute(
                     AttributeName.silent_executor_pool_size.name(),
-                    ((ThreadPoolExecutor)sSilentExecutor).getCorePoolSize()
+                    getSilentExecutorPoolSize()
             );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
@@ -1152,6 +1152,7 @@ public class CommandDispatcher {
             oldExecutor = sSilentExecutor;
             sSilentExecutor = Executors.newFixedThreadPool(effectivePoolSize);
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
+            sExecutingCommandMap.clear();
         }
 
         // Step 2: Shutdown old executor OUTSIDE the lock to avoid deadlock
