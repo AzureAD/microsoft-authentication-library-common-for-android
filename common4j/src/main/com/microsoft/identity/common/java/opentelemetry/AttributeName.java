@@ -347,34 +347,9 @@ public enum AttributeName {
     is_new_refresh_token_cred_header_attached,
 
     /**
-     * The time (in milliseconds) spent on generating a keypair.
-     */
-    elapsed_time_keypair_generation,
-
-    /**
      * Indicates the successful method used to generate a keypair.
      */
     key_pair_gen_successful_method,
-
-    /**
-     * Describes the keypair generation operation.
-     */
-    key_pair_gen_description,
-
-    /**
-     * Indicates the algorithm used to generate a keypair.
-     */
-    key_pair_gen_algorithm,
-
-    /**
-     * Indicates the encryption paddings used to generate a keypair.
-     */
-    key_pair_gen_encryption_paddings,
-
-    /**
-     * Indicates the history of key generation failures with details of each failed attempt.
-     */
-    key_pair_gen_failure_history,
 
     /**
      * Indicates the exception in generating a keypair.
@@ -491,16 +466,6 @@ public enum AttributeName {
     openid_config_request_authority,
 
     /**
-     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
-     */
-    secret_key_wrapping_transformation,
-
-    /**
-     * Records the operation used to wrap/unwrap the secret key.
-     */
-    secret_key_wrapping_operation,
-
-    /**
      * Indicates if the request is a redirect to playstore launch from webcp.
      */
     is_redirect_to_playstore_launch_from_webcp,
@@ -550,6 +515,37 @@ public enum AttributeName {
      */
     is_account_aggregation_skipped,
 
+    //region KeyPair and SecretKey generation
+    /**
+     * Indicates the history of key generation failures with details of each failed attempt.
+     */
+    key_pair_gen_failure_history,
+
+    /**
+     * The time (in milliseconds) spent on generating a keypair.
+     */
+    elapsed_time_keypair_generation,
+
+    /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryption_paddings,
+
+    /**
+     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
+     */
+    secret_key_cipher_transformation,
+
     /**
      * Indicates the wrapped secret key serializer id.
      */
@@ -561,7 +557,9 @@ public enum AttributeName {
     key_pair_supported_paddings,
 
     /**
-     * Indicates the available cipher specs in the device.
+     * Records the prioritized list of cipher specifications used for secret key wrapping/unwrapping.
      */
-    available_cipher_specs,
+    cipher_specs_prioritized_list,
+    //endregion
+
 }
