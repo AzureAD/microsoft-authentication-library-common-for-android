@@ -205,11 +205,13 @@ class KeyStoreBackedSecretKeyProvider(
                     generateKeyPair()
                 }
                 val wrappedSecretKey = wrapSecretKey(newSecretKey, keyPair)
+                recordSecretKey(wrappedSecretKey)
                 FileUtil.writeDataToFile(wrappedSecretKey.serialize(), keyFile)
                 span.setStatus(StatusCode.OK)
                 return newSecretKey
             }
         } catch (exception: Exception) {
+            deleteSecretKeyFromStorage()
             Logger.error(methodTag, "Failed to wrap secret key", exception)
             span.setStatus(StatusCode.ERROR)
             span.recordException(exception)
@@ -229,37 +231,25 @@ class KeyStoreBackedSecretKeyProvider(
     @Throws(ClientException::class)
     fun readSecretKeyFromStorage(): SecretKey? {
         val methodTag = "$TAG:readSecretKeyFromStorage"
-        val span = OTelUtility.createSpanFromParent(
-            SpanName.SecretKeyRetrieval.name,
-            SpanExtension.current().spanContext
-        )
         try {
-            SpanExtension.makeCurrentSpan(span).use { _ ->
-                val keyPair = AndroidKeyStoreUtil.readKey(alias)
-                if (keyPair == null) {
-                    Logger.info(methodTag, "key does not exist in keystore")
-                    deleteSecretKeyFromStorage()
-                    span.setStatus(StatusCode.OK)
-                    return null
-                }
-                val rawWrappedSecretKey = loadSecretKeyFromFile()
-                if (rawWrappedSecretKey == null) {
-                    Logger.warn(methodTag, "Key file is empty")
-                    // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
-                    // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
-                    FileUtil.deleteFile(keyFile)
-                    clearKeyFromCache()
-                    span.setStatus(StatusCode.OK)
-                    return null
-                }
-                val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
-                val unWrappedSecretKey = unwrapSecretKey(wrappedSecretKey, keyPair)
-                span.setStatus(StatusCode.OK)
-                return unWrappedSecretKey
+            // Load KeyPair from Android KeyStore
+            val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
+                Logger.info(methodTag, "key does not exist in keystore")
+                deleteSecretKeyFromStorage()
+                return null
             }
+            // Load wrapped secret key from file
+            val rawWrappedSecretKey = readRawWrappedSecretKeyFromFile() ?: run {
+                Logger.warn(methodTag, "Key file is empty")
+                // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
+                // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
+                FileUtil.deleteFile(keyFile)
+                clearKeyFromCache()
+                return null
+            }
+            // Deserialize and unwrap the secret key
+            return deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
         } catch (e: ClientException) {
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(e)
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.warn(
@@ -268,8 +258,66 @@ class KeyStoreBackedSecretKeyProvider(
             )
             deleteSecretKeyFromStorage()
             throw e
-        } finally {
-            span.end()
+        }
+    }
+
+    /**
+     * Deserializes the raw wrapped secret key data and unwraps it using the provided KeyPair.
+     *
+     * @param rawWrappedSecretKey The raw byte array of the wrapped secret key.
+     * @param keyPair The KeyPair used to unwrap the secret key.
+     * @return The unwrapped SecretKey.
+     * @throws ClientException if there is an error during deserialization or unwrapping.
+     */
+    private fun deserializeAndUnwrapSecretKey(
+        rawWrappedSecretKey: ByteArray,
+        keyPair: KeyPair
+    ): SecretKey {
+        val methodTag = "$TAG:deserializeAndUnwrapSecretKey"
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.SecretKeyRetrieval.name,
+            SpanExtension.current().spanContext
+        )
+        SpanExtension.makeCurrentSpan(span).use { _ ->
+            try {
+                val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
+                recordSecretKey(wrappedSecretKey)
+                val secretKey = unwrapSecretKey(wrappedSecretKey, keyPair)
+                span.setStatus(StatusCode.OK)
+                return secretKey
+            } catch (exception: Exception) {
+                Logger.error(
+                    methodTag,
+                    "Failed to deserialize and unwrap secret key",
+                    exception
+                )
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(exception)
+                throw exception
+            } finally {
+                span.end()
+            }
+        }
+    }
+
+    /**
+     * Records telemetry attributes for secret key
+     *
+     * Captures the cipher transformation and algorithm used for the wrapped secret key
+     * in the active span for observability and auditing purposes.
+     *
+     * @param wrappedSecretKey The deserialized wrapped secret key containing metadata
+     */
+    private fun recordSecretKey(wrappedSecretKey: WrappedSecretKey) {
+        SpanExtension.current().apply {
+            setAttribute(
+                AttributeName.secret_key_transformation.name,
+                wrappedSecretKey.cipherTransformation
+            )
+            setAttribute(
+                AttributeName.secret_key_algorithm.name,
+                wrappedSecretKey.algorithm
+            )
         }
     }
 
@@ -345,7 +393,7 @@ class KeyStoreBackedSecretKeyProvider(
                 supportedPaddings.toString()
             )
             setAttribute(
-                AttributeName.cipher_specs_prioritized_list.name,
+                AttributeName.available_transformation_list.name,
                 availableCipherSpecs.joinToString(separator = ",") { spec -> spec.transformation }
             )
         }
@@ -357,7 +405,7 @@ class KeyStoreBackedSecretKeyProvider(
         }
         if (compatibleSpecs.isNotEmpty()) {
             SpanExtension.current().setAttribute(
-                AttributeName.secret_key_cipher_transformation.name,
+                AttributeName.elected_cipher_transformation.name,
                 compatibleSpecs.first().transformation
             )
         }
@@ -382,67 +430,48 @@ class KeyStoreBackedSecretKeyProvider(
         val methodTag = "$TAG:generateKeyPair"
         val failures = mutableMapOf<IKeyGenSpec, Throwable>()
         val specs = cryptoParameterSpecFactory.getPrioritizedKeyGenParameterSpecs()
-        validateSpecsAvailable(specs)
-        for ((index, spec) in specs.withIndex()) {
-            Logger.verbose(
-                methodTag,
-                "Attempting key generation with spec ${index + 1}: $spec"
-            )
-            attemptKeyGeneration(spec)
-                .onSuccess { keyPair ->
-                    if (failures.isNotEmpty()) {
-                        // Log previous failures for telemetry
-                        logAndBuildErrorHistory(failures, false)
-                    }
-                    SpanExtension.current().apply {
-                        setAttribute(
-                            AttributeName.key_pair_gen_description.name,
-                            spec.description
-                        )
-                        setAttribute(
-                            AttributeName.key_pair_gen_algorithm.name,
-                            spec.algorithm
-                        )
-                        setAttribute(
-                            AttributeName.key_pair_gen_encryption_paddings.name,
-                            spec.encryptionPaddings.toString()
-                        )
-                        setStatus(StatusCode.OK)
-                    }
-                    Logger.info(
-                        methodTag,
-                        "Key pair generated successfully with spec: $spec"
-                    )
-                    return keyPair
-                }
-                .onFailure { throwable ->
-                    Logger.warn(
-                        methodTag,
-                        "Failed to generate key pair with spec: $spec, error: ${throwable.message}"
-                    )
-                    failures[spec] = throwable
-                }
-        }
-        handleAllFailures(failures)
-    }
-
-
-    /**
-     * Validates that key generation specifications are available for use.
-     *
-     * Ensures at least one specification exists before attempting key generation.
-     * Records telemetry and throws exception if no specs are available.
-     *
-     * @param specs List of key generation specifications to validate
-     * @throws ClientException if specs list is empty
-     */
-    @Throws(ClientException::class)
-    private fun validateSpecsAvailable(specs: List<IKeyGenSpec>) {
         if (specs.isEmpty()) {
             throw ClientException(
                 ClientException.UNKNOWN_CRYPTO_ERROR,
                 "No key generation specifications available for generating key pair."
             )
+        }
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.KeyPairGeneration.name,
+            SpanExtension.current().spanContext
+        )
+        SpanExtension.makeCurrentSpan(span).use { _ ->
+            try {
+                for ((index, spec) in specs.withIndex()) {
+                    Logger.verbose(
+                        methodTag,
+                        "Attempting key generation with spec ${index + 1}: $spec"
+                    )
+                    attemptKeyGeneration(spec)
+                        .onSuccess { keyPair ->
+                            recordKeyPairGenSuccess(spec, failures)
+                            Logger.info(
+                                methodTag,
+                                "Key pair generated successfully with spec: $spec"
+                            )
+                            return keyPair
+                        }
+                        .onFailure { throwable ->
+                            Logger.warn(
+                                methodTag,
+                                "Failed to generate key pair with spec: $spec, error: ${throwable.message}"
+                            )
+                            failures[spec] = throwable
+                        }
+                }
+                handleAllFailures(failures)
+            } catch (e: ClientException) {
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(e)
+                throw e
+            } finally {
+                span.end()
+            }
         }
     }
 
@@ -464,10 +493,44 @@ class KeyStoreBackedSecretKeyProvider(
             )
             val elapsedTime = System.nanoTime() - startTime
             SpanExtension.current().setAttribute(
-                AttributeName.elapsed_time_keypair_generation.name,
+                AttributeName.key_pair_gen_elapsed_time.name,
                 elapsedTime
             )
             keyPair
+        }
+    }
+
+    /**
+     * Records telemetry attributes for successful key pair generation.
+     *
+     * Captures key generation specifications, encryption paddings, and failure history
+     * in the active span for observability and debugging purposes.
+     *
+     * @param spec The successful key generation specification
+     * @param failures Map of previously failed key generation attempts
+     */
+    private fun recordKeyPairGenSuccess(
+        spec: IKeyGenSpec,
+        failures: Map<IKeyGenSpec, Throwable>
+    ) {
+        SpanExtension.current().apply {
+            setAttribute(
+                AttributeName.key_pair_gen_description.name,
+                spec.description
+            )
+            setAttribute(
+                AttributeName.key_pair_gen_algorithm.name,
+                spec.algorithm
+            )
+            setAttribute(
+                AttributeName.key_pair_gen_encryption_paddings.name,
+                spec.encryptionPaddings.toString()
+            )
+            setAttribute(
+                AttributeName.key_pair_gen_failure_history.name,
+                formatFailureHistory(failures)
+            )
+            setStatus(StatusCode.OK)
         }
     }
 
@@ -484,7 +547,6 @@ class KeyStoreBackedSecretKeyProvider(
         require(failures.isNotEmpty()) {
             "No failures encountered, but no key pair generated. This should not happen."
         }
-        logAndBuildErrorHistory(failures, true)
         val lastFailure = failures.values.last()
         val finalError = ClientException(
             ClientException.UNKNOWN_CRYPTO_ERROR,
@@ -496,42 +558,29 @@ class KeyStoreBackedSecretKeyProvider(
     }
 
     /**
-     * Logs each key generation failure and builds a consolidated error history string.
+     * Formats key generation failures into a semicolon-delimited summary string for telemetry.
      *
      * @param failures Map of key generation specifications to their corresponding exceptions
-     * @param logAsError If true, logs messages as errors; otherwise, logs as warnings
-     * @return Consolidated error history string for telemetry
+     * @return Formatted failure history string (e.g., "spec1: error1;spec2: error2;")
+     * if no failures, returns "None"
      */
-    private fun logAndBuildErrorHistory(
-        failures: Map<IKeyGenSpec, Throwable>,
-        logAsError: Boolean
-    ): String {
-        val methodTag = "$TAG:logAndBuildErrorHistory"
-        val errorMessageBuilder = StringBuilder()
-        for ((spec, exception) in failures) {
-            val errorMessage = "Key generation failed with spec: $spec, error: ${exception.message}"
-            if (logAsError) {
-                Logger.error(methodTag, errorMessage, exception)
-            } else {
-                Logger.warn(methodTag, errorMessage)
-            }
-            errorMessageBuilder.append("${spec.print()}: ${exception.message};")
+    private fun formatFailureHistory(failures: Map<IKeyGenSpec, Throwable>): String {
+        if (failures.isEmpty()) return "None"
+        return failures.entries.joinToString(separator = ";") { (spec, exception) ->
+            "$spec: ${exception.message}"
         }
-        val errorMessage = errorMessageBuilder.toString()
-        SpanExtension.current().setAttribute(
-            AttributeName.key_pair_gen_failure_history.name,
-            errorMessage
-        )
-        return errorMessage
     }
 
     /**
-     * Loads a wrapped secret key from file, automatically detecting the storage format.
+     * Reads the raw wrapped secret key data from the file system.
      *
-     * @return WrappedSecretKey instance or null if file doesn't exist or is empty
+     * Attempts to read the serialized wrapped secret key from the configured key file.
+     * Returns null if the file does not exist or contains no data.
+     *
+     * @return Raw byte array containing the serialized wrapped secret key, or null if file is missing or empty
      */
-    private fun loadSecretKeyFromFile(): ByteArray? {
-        val methodTag = "$TAG:loadFromFile"
+    private fun readRawWrappedSecretKeyFromFile(): ByteArray? {
+        val methodTag = "$TAG:readRawWrappedSecretKeyFromFile"
         if (!keyFile.exists()) {
             Logger.warn(methodTag, "Key file does not exist")
             return null

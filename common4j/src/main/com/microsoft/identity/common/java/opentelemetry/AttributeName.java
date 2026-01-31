@@ -515,16 +515,7 @@ public enum AttributeName {
      */
     is_account_aggregation_skipped,
 
-    //region KeyPair and SecretKey generation
-    /**
-     * Indicates the history of key generation failures with details of each failed attempt.
-     */
-    key_pair_gen_failure_history,
-
-    /**
-     * The time (in nanoseconds) spent on generating a keypair.
-     */
-    elapsed_time_keypair_generation,
+    //region KeyPair generation
 
     /**
      * Describes the keypair generation operation.
@@ -542,14 +533,17 @@ public enum AttributeName {
     key_pair_gen_encryption_paddings,
 
     /**
-     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
+     * Indicates the history of key generation failures with details of each failed attempt.
      */
-    secret_key_cipher_transformation,
+    key_pair_gen_failure_history,
 
     /**
-     * Indicates the wrapped secret key serializer id.
+     * The time (in nanoseconds) spent on generating a keypair.
      */
-    secret_key_wrapping_serializer_id,
+    key_pair_gen_elapsed_time,
+
+    //endregion
+    //region Secret Key Wrapping
 
     /**
      * Indicates the supported paddings for key pair in the device.
@@ -559,7 +553,35 @@ public enum AttributeName {
     /**
      * Records the prioritized list of cipher specifications used for secret key wrapping/unwrapping.
      */
-    cipher_specs_prioritized_list,
-    //endregion
+    available_transformation_list,
 
+    /**
+     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
+     */
+    elected_cipher_transformation,
+
+    /**
+     * Indicates the transformation used for wrapping/unwrapping the secret key.
+     */
+    secret_key_transformation,
+
+    /**
+     * Indicates the algorithm used for wrapping/unwrapping the secret key.
+     */
+    secret_key_algorithm,
+    /**
+     * Indicates the wrapped secret key serializer id.
+     */
+    secret_key_wrapping_serializer_id,
+
+    /**
+     * The size (in bits) of the secret key.
+     */
+    secret_key_size,
+
+    /**
+     * The time (in milliseconds) spent on secret key serialization/deserialization.
+     */
+    secret_key_serialization_duration,
+    //endregion
 }
