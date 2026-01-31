@@ -608,6 +608,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void handleBrowserRedirect(@NonNull final String methodTag, @NonNull final String url) {
         Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
+        SpanExtension.current().setAttribute(AttributeName.is_redirect_url_opened_in_browser.name(), true);
         openLinkInBrowser(url);
         final RawAuthorizationResult.ResultCode resultCode = mInWebCpFlow
                 ? RawAuthorizationResult.ResultCode.MDM_FLOW

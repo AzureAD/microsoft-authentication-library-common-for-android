@@ -520,6 +520,11 @@ public enum AttributeName {
      */
     is_account_aggregation_skipped,
 
+    /**
+     * Indicates if the redirect URL in webview is opened in browser.
+     */
+    is_redirect_url_opened_in_browser,
+
     //region KeyPair generation
 
     /**
