@@ -131,7 +131,7 @@ public class CommandDispatcherTest {
         CommandDispatcher.clearState();
     }
 
-    @Test
+    /*@Test
     public void testSubmitSilentShouldRefresh() throws Exception {
         final CountDownLatch callbackLatch = new CountDownLatch(1);
         CountDownLatch tryLatch = new CountDownLatch(1);
@@ -191,6 +191,94 @@ public class CommandDispatcherTest {
 
         silentReturningFuture.isCleanedUp();
         Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
+    }*/
+
+    @Test
+    public void testSubmitSilentShouldRefresh() throws Exception {
+        Log.d(TAG, "=== testSubmitSilentShouldRefresh START ===");
+        final long testStartTime = System.currentTimeMillis();
+
+        final CountDownLatch callbackLatch = new CountDownLatch(1);
+        CountDownLatch tryLatch = new CountDownLatch(1);
+        CountDownLatch executeMethodEntranceVerifierLatch = new CountDownLatch(1);
+
+        CountDownLatch controllerLatch = new CountDownLatch(2);
+        final AtomicInteger renewAccessTokenCallCount = new AtomicInteger(0);
+        final AtomicInteger acquireTokenSilentCallCount = new AtomicInteger(0);
+        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
+
+        final BaseCommand silentTokenCommand = new LatchedRefreshInTestCommand(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT,
+                getEmptySilentTokenParameters(),
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
+                    @Override
+                    public void onTaskCompleted(final ILocalAuthenticationResult actual) {
+                        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] onTaskCompleted called");
+                        ILocalAuthenticationResult expected = TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT.getLocalAuthenticationResult();
+                        Assert.assertEquals(expected, actual);
+                        taskCompleteCount.getAndIncrement();
+                        callbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Log.e(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] onCancel called - UNEXPECTED");
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Log.e(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] onError called - UNEXPECTED: " + error.getMessage());
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                }, 3, tryLatch, executeMethodEntranceVerifierLatch,
+                renewAccessTokenCallCount, acquireTokenSilentCallCount,
+                controllerLatch, true, false) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return false;
+            }
+
+        };
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Submitting command...");
+        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Waiting for executeMethodEntranceVerifierLatch...");
+        executeMethodEntranceVerifierLatch.await();
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Releasing tryLatch...");
+        tryLatch.countDown();
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Waiting for controllerLatch (count=" + controllerLatch.getCount() + ")...");
+        boolean controllerLatchResult = controllerLatch.await(30, TimeUnit.SECONDS);
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] controllerLatch.await() returned: " + controllerLatchResult + ", remaining count=" + controllerLatch.getCount());
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Waiting for callbackLatch...");
+        boolean callbackLatchResult = callbackLatch.await(10, TimeUnit.SECONDS);
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] callbackLatch.await() returned: " + callbackLatchResult);
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] Second controllerLatch.await()...");
+        controllerLatch.await();
+
+        Log.d(TAG, "[" + (System.currentTimeMillis() - testStartTime) + "ms] === BEFORE ASSERTIONS ===");
+        Log.d(TAG, "  - acquireTokenSilentCallCount: " + acquireTokenSilentCallCount.get());
+        Log.d(TAG, "  - renewAccessTokenCallCount: " + renewAccessTokenCallCount.get());
+        Log.d(TAG, "  - taskCompleteCount: " + taskCompleteCount.get());
+        Log.d(TAG, "  - controllerLatch remaining: " + controllerLatch.getCount());
+
+        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
+
+        Assert.assertTrue(silentReturningFuture.isDone());
+        Assert.assertEquals(1, taskCompleteCount.get());
+        Assert.assertEquals("renewAccessTokenCallCount mismatch", 1, renewAccessTokenCallCount.get());
+        Assert.assertEquals(1, acquireTokenSilentCallCount.get());
+
+        silentReturningFuture.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
+        Log.d(TAG, "=== testSubmitSilentShouldRefresh END ===");
     }
 
     @Test
@@ -1514,8 +1602,9 @@ public class CommandDispatcherTest {
                                                              final Boolean shouldRefresh,
                                                              final Boolean throwRenewAccessTokenError) {
         return new TestBaseController() {
-            @Override
+            /*@Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
+                Log.d(TAG, "acquireTokenSilent called....." + throwRenewAccessTokenError);
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
                 if(shouldRefresh){
@@ -1524,16 +1613,64 @@ public class CommandDispatcherTest {
                 }
 
                 return expectedAcquireTokenResult;
+            }*/
+            @Override
+            public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
+                Log.d(TAG, ">>> acquireTokenSilent ENTER - Thread: " + Thread.currentThread().getName());
+                // IMPORTANT: Increment counter BEFORE any latch operations
+                acquireTokenSilentCallCount.getAndIncrement();
+                Log.d(TAG, "    acquireTokenSilentCallCount: " + acquireTokenSilentCallCount.get());
+
+                if(shouldRefresh){
+                    Log.d(TAG, "    shouldRefresh=true, submitting RefreshOnCommand...");
+                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), "LocalMSALControllerMockPubId");
+                    CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
+                    Log.d(TAG, "    RefreshOnCommand submitted (fire-and-forget)");
+                } else {
+                    Log.d(TAG, "    shouldRefresh=false, skipping refresh");
+                }
+
+                Log.d(TAG, "    controllerLatch count BEFORE countdown: " + controllerLatch.getCount());
+                controllerLatch.countDown();
+                Log.d(TAG, "    controllerLatch count AFTER countdown: " + controllerLatch.getCount());
+
+                Log.d(TAG, "<<< acquireTokenSilent EXIT");
+                return expectedAcquireTokenResult;
             }
 
-            @Override
+            /*@Override
             public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException {
+                Log.d(TAG, "renewAccessToken called....." + throwRenewAccessTokenError);
                 if(!throwRenewAccessTokenError) {
                     controllerLatch.countDown();
                     renewAccessTokenCallCount.getAndIncrement();
+                    Log.d(TAG, "renewAccessTokenCallCount: " + renewAccessTokenCallCount.get());
                 }else{
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", 503, null);
                 }
+                return new TokenResult();
+            }*/
+
+            @Override
+            public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException {
+                Log.d(TAG, ">>> renewAccessToken ENTER - Thread: " + Thread.currentThread().getName());
+                Log.d(TAG, "    throwRenewAccessTokenError: " + throwRenewAccessTokenError);
+
+                if(!throwRenewAccessTokenError) {
+                    // FIX: Increment counter BEFORE countdown to avoid race condition
+                    renewAccessTokenCallCount.getAndIncrement();
+                    Log.d(TAG, "    renewAccessTokenCallCount: " + renewAccessTokenCallCount.get());
+
+                    Log.d(TAG, "    controllerLatch count BEFORE countdown: " + controllerLatch.getCount());
+                    controllerLatch.countDown();
+                    Log.d(TAG, "    controllerLatch count AFTER countdown: " + controllerLatch.getCount());
+                } else {
+                    Log.e(TAG, "    Throwing ServiceException");
+                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", 503, null);
+                }
+
+
+                Log.d(TAG, "<<< renewAccessToken EXIT");
                 return new TokenResult();
             }
         };
