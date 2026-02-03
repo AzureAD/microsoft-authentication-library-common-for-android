@@ -58,8 +58,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.TerminalException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.request.SdkType;
@@ -1049,29 +1047,14 @@ public class CommandDispatcherTest {
         // Get initial map size
         int initialSize = getRequestStateMapSizeViaReflection();
 
-        Log.d(TAG, "DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT = " +
-                com.microsoft.identity.common.java.BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT);
-
-        // Check the configured timeout value
-        int timeoutMs = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
-        Log.d(TAG, "ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS = " + timeoutMs);
-        Log.d(TAG, "SLOW_EXECUTION_DURATION_MS = " + SLOW_EXECUTION_DURATION_MS);
-
         // Execute request that will timeout
         SilentTokenCommandParameters params = createTestSilentTokenParams();
-        long startTime = System.currentTimeMillis();
         SilentTokenCommand slowCommand = createSlowExecutionSilentTokenCommand(params, SLOW_EXECUTION_DURATION_MS);
 
         try {
             CommandDispatcher.submitAcquireTokenSilentSync(slowCommand);
-            long duration = System.currentTimeMillis() - startTime;
-            Log.d(TAG, "1. debugTimeoutBehavior: 5s slow command completed in " + duration + "ms");
-
             Assert.fail("Expected timeout");
         } catch (ClientException e) {
-            long duration = System.currentTimeMillis() - startTime;
-            Log.e(TAG, "2. debugTimeoutBehavior: 5s slow command failed in " + duration + "ms: " + e.getClass().getName() + " - " + e.getMessage());
             // Expected - verify it's a timeout error
             Assert.assertTrue("Should be a timeout error",
                 e.getErrorCode().startsWith("timed_out"));
@@ -1109,7 +1092,6 @@ public class CommandDispatcherTest {
         final AtomicInteger errorCount = new AtomicInteger(0);
         final AtomicReference<Throwable> firstError = new AtomicReference<>(null);
 
-        Log.d(TAG, "Initial RequestStateMap Size: " + getRequestStateMapSizeViaReflection());
         // Launch concurrent requests
         for (int i = 0; i < NUM_REQUESTS; i++) {
             new Thread(() -> {
