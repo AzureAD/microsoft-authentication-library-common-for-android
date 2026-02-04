@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.apps
 
 
-import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
@@ -78,7 +77,7 @@ object AppRegistry {
         add(EDGE)
         add(EDGE_BETA)
         add(EDGE_CANARY)
-        if (BuildConfig.DEBUG) {
+        if (BrokerData.getShouldTrustDebugBrokers()) {
             add(BrokerData.debugBrokerHost)
             add(ONE_AUTH_TEST_APP)
         }
@@ -87,7 +86,7 @@ object AppRegistry {
     @JvmField
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
-        if (BuildConfig.DEBUG) {
+        if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
@@ -100,7 +99,7 @@ object AppRegistry {
         add(BrokerData.prodCompanyPortal)
         add(BrokerData.prodIntuneCE)
         add(INTUNE_AOSP_AGENT_PROD)
-        if (BuildConfig.DEBUG) {
+        if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
