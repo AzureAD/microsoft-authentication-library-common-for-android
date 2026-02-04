@@ -57,7 +57,7 @@ jacoco {
 
 tasks.withType(Test) {
     jacoco {
-        includeNoLocationClasses = true // Required for Robolectric
+        includeNoLocationClasses = true
         excludes = ['jdk.internal.*']
     }
     // https://blog.gradle.org/gradle-flaky-test-retry-plugin
@@ -72,7 +72,7 @@ tasks.withType(Test) {
 }
 
 jacocoTestReport {
-    dependsOn "test" // Run Robolectric tests first
+    dependsOn test
 
     reports {
         xml.required = true
@@ -80,13 +80,17 @@ jacocoTestReport {
     }
 
     def fileFilter = [
-            '**/R.class', '**/R$*.class', '**/BuildConfig.*',
-            '**/Manifest*.*', '**/*Test*.*',
-            'android/**/*.*'
+            '**/BuildConfig.*',
+            '**/*Test*.*'
     ]
 
-    def classes = fileTree(
-            dir: "$buildDir/classes",
+    def javaClasses = fileTree(
+            dir: "$buildDir/classes/java/main",
+            excludes: fileFilter
+    )
+
+    def kotlinClasses = fileTree(
+            dir: "$buildDir/classes/kotlin/main",
             excludes: fileFilter
     )
 
@@ -94,14 +98,8 @@ jacocoTestReport {
             "$projectDir/src/main/java",
             "$projectDir/src/main/kotlin"
     ]))
-    classDirectories.setFrom(files([classes]))
-    executionData.setFrom(fileTree(
-            dir: buildDir,
-            includes: [
-                    "jacoco/testLocalDebugUnitTest.exec",
-                    "outputs/unit_test_code_coverage/localDebugUnitTest/testLocalDebugUnitTest.exec"
-            ]
-    ))
+    classDirectories.setFrom(files([javaClasses, kotlinClasses]))
+    executionData.setFrom(files("$buildDir/jacoco/test.exec"))
 }
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
