@@ -52,7 +52,7 @@ jobs:
       jdkVersionOption: 1.17
   - script: tree "$(Build.SourcesDirectory)" /F /A
     displayName: 'Print File Structure Tree'
-  - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+  - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
     artifact: jacocoReport
     displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
   - task: PublishCodeCoverageResults@1
@@ -60,7 +60,7 @@ jobs:
     condition: always()
     inputs:
       codeCoverageTool: 'JaCoCo'
-      summaryFileLocation: '$(Build.SourcesDirectory)/msal/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
-      reportDirectory: '$(Build.SourcesDirectory)/msal/build/reports/jacoco/jacocoTestReport/html'
+      summaryFileLocation: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/html'
       failIfCoverageEmpty: false
 ...
