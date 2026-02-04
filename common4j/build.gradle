@@ -55,12 +55,12 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
-// https://blog.gradle.org/gradle-flaky-test-retry-plugin
 tasks.withType(Test) {
     jacoco {
         includeNoLocationClasses = true // Required for Robolectric
         excludes = ['jdk.internal.*']
     }
+    // https://blog.gradle.org/gradle-flaky-test-retry-plugin
     retry {
         // The maximum number of test failures that are allowed before retrying is disabled.
         maxRetries = 2
@@ -85,13 +85,8 @@ jacocoTestReport {
             'android/**/*.*'
     ]
 
-    def kotlinClasses = fileTree(
-            dir: "$buildDir/tmp/kotlin-classes/localDebug",
-            excludes: fileFilter
-    )
-
-    def javaClasses = fileTree(
-            dir: "$buildDir/intermediates/javac/localDebug/compileLocalDebugJavaWithJavac/classes",
+    def classes = fileTree(
+            dir: "$buildDir/classes",
             excludes: fileFilter
     )
 
@@ -99,7 +94,7 @@ jacocoTestReport {
             "$projectDir/src/main/java",
             "$projectDir/src/main/kotlin"
     ]))
-    classDirectories.setFrom(files([kotlinClasses, javaClasses]))
+    classDirectories.setFrom(files([classes]))
     executionData.setFrom(fileTree(
             dir: buildDir,
             includes: [
