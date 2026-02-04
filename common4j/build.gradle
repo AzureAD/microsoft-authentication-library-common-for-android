@@ -80,28 +80,22 @@ jacocoTestReport {
     }
 
     def fileFilter = [
-            '**/R.class', '**/R$*.class', '**/BuildConfig.*',
-            '**/Manifest*.*', '**/*Test*.*',
-            'android/**/*.*'
+            '**/BuildConfig.*',
+            '**/*Test*.*'
     ]
 
-    def classes = fileTree(
-            dir: "$buildDir/classes",
+    def javaClasses = fileTree(
+            dir: "$buildDir/classes/java/main",
             excludes: fileFilter
     )
 
-    sourceDirectories.setFrom(files([
-            "$projectDir/src/main/java",
-            "$projectDir/src/main/kotlin"
-    ]))
-    classDirectories.setFrom(files([classes]))
-    executionData.setFrom(fileTree(
-            dir: buildDir,
-            includes: [
-                    "jacoco/testLocalDebugUnitTest.exec",
-                    "outputs/unit_test_code_coverage/localDebugUnitTest/testLocalDebugUnitTest.exec"
-            ]
-    ))
+    def kotlinClasses = fileTree(
+            dir: "$buildDir/classes/kotlin/main",
+            excludes: fileFilter
+    )
+
+    classDirectories.setFrom(files([javaClasses, kotlinClasses]))
+    executionData.setFrom(files("$buildDir/jacoco/test.exec"))
 }
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
