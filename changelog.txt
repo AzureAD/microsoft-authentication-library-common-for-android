@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 23.3.0-RC1
+Version 23.3.0-RC2
 ----------
 - [MINOR] Introduce AppRegistry and refactor calling app validation (#2872)
 - [MINOR] Add attributes that calculate elapsed_times using nanos (#2871)
