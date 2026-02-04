@@ -81,7 +81,8 @@ jacocoTestReport {
 
     def fileFilter = [
             '**/BuildConfig.*',
-            '**/*Test*.*'
+            '**/*Test*.*',
+            'io/opentelemetry/**'
     ]
 
     def javaClasses = fileTree(

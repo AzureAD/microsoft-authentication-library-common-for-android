@@ -20,9 +20,9 @@ stages:
       displayName: PR VS. Dev
       steps:
         - download: current
-          artifact: ${{ parameters.jacocoReport }} # Adjust artifact name as needed
+          artifact: ${{ parameters.prBranchReportArtifact }} # Adjust artifact name as needed
         - download: current
-          artifact: ${{ parameters.jacocoReportDev }} # Adjust artifact name as needed
+          artifact: ${{ parameters.devBranchReportArtifact }} # Adjust artifact name as needed
         - script: |
             python ./compare_coverage.py $(Pipeline.Workspace)/jacocoReport/jacocoTestReport.xml $(Pipeline.Workspace)/jacocoReportDev/jacocoTestReport.xml
           displayName: Compare Jacoco Coverage

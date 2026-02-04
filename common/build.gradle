@@ -58,7 +58,7 @@ tasks.register("jacocoTestReport", JacocoReport) {
     def fileFilter = [
             '**/R.class', '**/R$*.class', '**/BuildConfig.*',
             '**/Manifest*.*', '**/*Test*.*',
-            'android/**/*.*'
+            'android/**/*.*', 'com/microsoft/aad/adal/**'
     ]
 
     def kotlinClasses = fileTree(
