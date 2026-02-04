@@ -47,7 +47,20 @@ jobs:
     displayName: Run the unit tests.
     inputs:
       cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: common4j:test -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
+      tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
       javaHomeOption: JDKVersion
       jdkVersionOption: 1.17
+  - script: tree "$(Build.SourcesDirectory)" /F /A
+    displayName: 'Print File Structure Tree'
+  - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+    artifact: jacocoReport
+    displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
+  - task: PublishCodeCoverageResults@1
+    displayName: Publish Code Coverage Results
+    condition: always()
+    inputs:
+      codeCoverageTool: 'JaCoCo'
+      summaryFileLocation: '$(Build.SourcesDirectory)/msal/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)/msal/build/reports/jacoco/jacocoTestReport/html'
+      failIfCoverageEmpty: false
 ...
