@@ -46,7 +46,7 @@ public class ProcessUtil {
      * Cached result of whether this is a broker process.
      * Safe to cache because process identity doesn't change during app lifetime.
      */
-    private static Boolean sCachedIsBrokerProcess = null;
+    private static volatile Boolean sCachedIsBrokerProcess = null;
 
     private ProcessUtil() {
     }
