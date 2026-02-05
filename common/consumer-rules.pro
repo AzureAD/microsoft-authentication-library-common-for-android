@@ -76,10 +76,6 @@
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken { *; }
 
-##---------------Begin: proguard configuration for OpenTelemetry  --------
-# keep everything in this package from being removed or renamed
-#-keep class io.opentelemetry.** { *; }
-
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers class com.microsoft.identity.** {
   @com.google.gson.annotations.SerializedName <fields>;
