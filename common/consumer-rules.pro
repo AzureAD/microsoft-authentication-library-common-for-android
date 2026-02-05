@@ -78,7 +78,7 @@
 
 ##---------------Begin: proguard configuration for OpenTelemetry  --------
 # keep everything in this package from being removed or renamed
--keep class io.opentelemetry.** { *; }
+#-keep class io.opentelemetry.** { *; }
 
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers class com.microsoft.identity.** {
