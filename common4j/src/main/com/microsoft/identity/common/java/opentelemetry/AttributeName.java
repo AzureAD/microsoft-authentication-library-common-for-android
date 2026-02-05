@@ -579,6 +579,7 @@ public enum AttributeName {
      * Indicates the algorithm used for wrapping/unwrapping the secret key.
      */
     secret_key_algorithm,
+
     /**
      * Indicates the wrapped secret key serializer id.
      */

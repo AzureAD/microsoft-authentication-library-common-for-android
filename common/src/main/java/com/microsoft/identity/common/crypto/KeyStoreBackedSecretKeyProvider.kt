@@ -211,7 +211,6 @@ class KeyStoreBackedSecretKeyProvider(
                 return newSecretKey
             }
         } catch (exception: Exception) {
-            deleteSecretKeyFromStorage()
             Logger.error(methodTag, "Failed to wrap secret key", exception)
             span.setStatus(StatusCode.ERROR)
             span.recordException(exception)
