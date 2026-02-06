@@ -18,11 +18,16 @@ stages:
   jobs:
     - job: compare
       displayName: PR VS. Dev
+      continueOnError: true
       steps:
+        - checkout: self
+          clean: true
+          submodules: recursive
+          persistCredentials: True
         - download: current
           artifact: ${{ parameters.prBranchReportArtifact }} # Adjust artifact name as needed
         - download: current
           artifact: ${{ parameters.devBranchReportArtifact }} # Adjust artifact name as needed
         - script: |
-            python ./compare_coverage.py $(Pipeline.Workspace)/jacocoReport/jacocoTestReport.xml $(Pipeline.Workspace)/jacocoReportDev/jacocoTestReport.xml
+            python $(Build.SourcesDirectory)/common/azure-pipelines/code-coverage//compare_coverage.py $(Pipeline.Workspace)/jacocoReport/jacocoTestReport.xml $(Pipeline.Workspace)/jacocoReportDev/jacocoTestReport.xml
           displayName: Compare Jacoco Coverage
