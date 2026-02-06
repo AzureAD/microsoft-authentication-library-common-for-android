@@ -697,577 +697,577 @@ public class BrokerOAuth2TokenCacheTest {
         assertNotNull(account);
     }
 
-//    @Test
-//    public void testGetAccountWithLocalAccountIdFociCache() throws ClientException {
-//        configureMocksForFoci();
-//
-//        mBrokerOAuth2TokenCache.save(
-//                mockStrategy,
-//                mockRequest,
-//                mockResponse
-//        );
-//
-//        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
-//                ENVIRONMENT,
-//                CLIENT_ID,
-//                LOCAL_ACCOUNT_ID
-//        );
-//
-//        assertNotNull(account);
-//    }
-//
-//    @Test
-//    public void testRemoveAccountFromDevice() throws ClientException {
-//        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
-//        int ii = 0;
-//        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
-//            configureMocks(mOtherCacheTestBundles.get(ii));
-//
-//            final ICacheRecord cacheRecord = cache.save(
-//                    mockStrategy,
-//                    mockRequest,
-//                    mockResponse
-//            );
-//
-//            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
-//            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
-//            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
-//            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
-//            applicationMetadata.setUid(testAppUids[ii++]);
-//
-//            mApplicationMetadataCache.insert(applicationMetadata);
-//        }
-//
-//        final List<String> clientIds = new ArrayList<>();
-//
-//        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
-//            clientIds.add(
-//                    testBundle.mGeneratedRefreshToken.getClientId()
-//            );
-//        }
-//
-//        final List<AccountRecord> xAppAccounts = mBrokerOAuth2TokenCache.getAccounts();
-//
-//        // Deleting one of these AccountRecords should remove all of them...
-//        final AccountDeletionRecord deletionRecord = mBrokerOAuth2TokenCache.removeAccountFromDevice(
-//                xAppAccounts.get(0)
-//        );
-//
-//        assertEquals(xAppAccounts.size(), deletionRecord.size());
-//        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
-//    }
-//
-//    @Test
-//    public void testGetAccountsAdal() throws ClientException {
-//        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
-//        int ii = 0;
-//        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
-//            configureMocks(mOtherCacheTestBundles.get(ii));
-//
-//            final ICacheRecord cacheRecord = cache.save(
-//                    mockStrategy,
-//                    mockRequest,
-//                    mockResponse
-//            );
-//
-//            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
-//            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
-//            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
-//            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
-//            applicationMetadata.setUid(testAppUids[ii++]);
-//
-//            mApplicationMetadataCache.insert(applicationMetadata);
-//        }
-//
-//        final List<String> clientIds = new ArrayList<>();
-//
-//        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
-//            clientIds.add(
-//                    testBundle.mGeneratedRefreshToken.getClientId()
-//            );
-//        }
-//
-//        final List<AccountRecord> xAppAccounts = new ArrayList<>();
-//
-//        for (final int testUid : testAppUids) {
-//            // Create the cache to query...
-//            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-//                    mPlatformComponents,
-//                    testUid,
-//                    mApplicationMetadataCache,
-//                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
-//                        @Override
-//                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
-//                            return initAppUidCache(context, bindingProcessUid);
-//                        }
-//                    },
-//                    mFociCache
-//            );
-//
-//            for (final String clientId : clientIds) {
-//                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
-//                        ENVIRONMENT,
-//                        clientId
-//                );
-//
-//                xAppAccounts.addAll(accountsInCache);
-//            }
-//        }
-//
-//        assertEquals(
-//                clientIds.size(),
-//                xAppAccounts.size()
-//        );
-//
-//        final List<AccountRecord> xAppAccountsNoParam = new ArrayList<>(
-//                mBrokerOAuth2TokenCache.getAccounts()
-//        );
-//
-//        assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
-//    }
-//
-//    @Test
-//    public void testGetAccountsMsal() throws ClientException {
-//        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
-//        int ii = 0;
-//        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
-//            configureMocks(mOtherCacheTestBundles.get(ii));
-//
-//            final ICacheRecord cacheRecord = cache.save(
-//                    mockStrategy,
-//                    mockRequest,
-//                    mockResponse
-//            );
-//
-//
-//            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
-//            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
-//            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
-//            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
-//            applicationMetadata.setUid(testAppUids[ii++]);
-//
-//            mApplicationMetadataCache.insert(applicationMetadata);
-//        }
-//
-//        final List<String> clientIds = new ArrayList<>();
-//
-//        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
-//            clientIds.add(
-//                    testBundle.mGeneratedRefreshToken.getClientId()
-//            );
-//        }
-//
-//        final List<AccountRecord> xAppAccounts = new ArrayList<>();
-//
-//        for (final int testUid : testAppUids) {
-//            // Create the cache to query...
-//            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-//                    mPlatformComponents,
-//                    testUid,
-//                    mApplicationMetadataCache,
-//                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
-//                        @Override
-//                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
-//                            return initAppUidCache(context, bindingProcessUid);
-//                        }
-//                    },
-//                    mFociCache
-//            );
-//
-//            for (final String clientId : clientIds) {
-//                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
-//                        ENVIRONMENT,
-//                        clientId
-//                );
-//
-//                xAppAccounts.addAll(accountsInCache);
-//            }
-//        }
-//
-//        assertEquals(
-//                clientIds.size(),
-//                xAppAccounts.size()
-//        );
-//
-//        final List<AccountRecord> xAppAccountsNoParam = new ArrayList<>(
-//                mBrokerOAuth2TokenCache.getAccounts()
-//        );
-//
-//        assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
-//
-//        final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-//                mPlatformComponents,
-//                TEST_APP_UID,
-//                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
-//        );
-//
-//        assertEquals(
-//                0,
-//                brokerOAuth2TokenCache.getAccounts(ENVIRONMENT, CLIENT_ID).size()
-//        );
-//
-//        final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
-//                mPlatformComponents,
-//                TEST_APP_UID,
-//                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
-//        );
-//
-//        assertEquals(
-//                xAppAccounts.size(),
-//                brokerOAuth2TokenCache2.getAccounts().size()
-//        );
-//    }
-//
-//    @Test
-//    public void testWPJSaveNonFoci() throws ClientException {
-//        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
-//                mDefaultAppUidTestBundle.mGeneratedAccount,
-//                mDefaultAppUidTestBundle.mGeneratedIdToken,
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-//                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
-//                null
-//        );
-//
-//        assertNotNull(saveResult);
-//        assertNotNull(saveResult.getAccount());
-//        assertNotNull(saveResult.getIdToken());
-//        assertNotNull(saveResult.getAccessToken());
-//        assertNotNull(saveResult.getRefreshToken());
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedAccount,
-//                saveResult.getAccount()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedIdToken,
-//                saveResult.getIdToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-//                saveResult.getAccessToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
-//                saveResult.getRefreshToken()
-//        );
-//
-//        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
-//                mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
-//                mDefaultAppUidTestBundle.mGeneratedAccount,
-//                BEARER_AUTHENTICATION_SCHEME
-//        );
-//
-//        assertNotNull(retrievedResult);
-//        assertNotNull(retrievedResult.getAccount());
-//        assertNotNull(retrievedResult.getIdToken());
-//        assertNotNull(retrievedResult.getAccessToken());
-//        assertNotNull(retrievedResult.getRefreshToken());
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedAccount,
-//                retrievedResult.getAccount()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedIdToken,
-//                retrievedResult.getIdToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedAccessToken,
-//                retrievedResult.getAccessToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
-//                saveResult.getRefreshToken()
-//        );
-//    }
-//
-//    @Test
-//    public void testWPJSaveFoci() throws ClientException {
-//        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
-//                mDefaultFociTestBundle.mGeneratedAccount,
-//                mDefaultFociTestBundle.mGeneratedIdToken,
-//                mDefaultFociTestBundle.mGeneratedAccessToken,
-//                mDefaultFociTestBundle.mGeneratedRefreshToken,
-//                "1"
-//        );
-//
-//        assertNotNull(saveResult);
-//        assertNotNull(saveResult.getAccount());
-//        assertNotNull(saveResult.getIdToken());
-//        assertNotNull(saveResult.getAccessToken());
-//        assertNotNull(saveResult.getRefreshToken());
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedAccount,
-//                saveResult.getAccount()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedIdToken,
-//                saveResult.getIdToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedAccessToken,
-//                saveResult.getAccessToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedRefreshToken,
-//                saveResult.getRefreshToken()
-//        );
-//
-//        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
-//                mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
-//                mDefaultFociTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
-//                mDefaultFociTestBundle.mGeneratedAccessToken.getAccessTokenType(),
-//                mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
-//                mDefaultFociTestBundle.mGeneratedAccount,
-//                BEARER_AUTHENTICATION_SCHEME
-//        );
-//
-//        assertNotNull(retrievedResult);
-//        assertNotNull(retrievedResult.getAccount());
-//        assertNotNull(retrievedResult.getIdToken());
-//        assertNotNull(retrievedResult.getAccessToken());
-//        assertNotNull(retrievedResult.getRefreshToken());
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedAccount,
-//                retrievedResult.getAccount()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedIdToken,
-//                retrievedResult.getIdToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedAccessToken,
-//                retrievedResult.getAccessToken()
-//        );
-//
-//        assertEquals(
-//                mDefaultFociTestBundle.mGeneratedRefreshToken,
-//                retrievedResult.getRefreshToken()
-//        );
-//    }
-//
-//    @Test
-//    public void testClearAll() throws ClientException {
-//        int appIndex = 0;
-//        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
-//            configureMocks(mOtherCacheTestBundles.get(appIndex));
-//
-//            final ICacheRecord cacheRecord = cache.save(mockStrategy, mockRequest, mockResponse);
-//
-//            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
-//            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
-//            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
-//            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
-//            applicationMetadata.setUid(testAppUids[appIndex++]);
-//
-//            mApplicationMetadataCache.insert(applicationMetadata);
-//        }
-//
-//        final List<String> clientIds = new ArrayList<>();
-//
-//        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
-//            clientIds.add(
-//                    testBundle.mGeneratedRefreshToken.getClientId()
-//            );
-//        }
-//
-//        configureMocksForFoci();
-//        final ICacheRecord fociCacheRecord = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
-//        final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
-//        applicationMetadata.setClientId(fociCacheRecord.getIdToken().getClientId());
-//        applicationMetadata.setEnvironment(fociCacheRecord.getIdToken().getEnvironment());
-//        applicationMetadata.setFoci(fociCacheRecord.getRefreshToken().getFamilyId());
-//        applicationMetadata.setUid(0);
-//
-//        mApplicationMetadataCache.insert(applicationMetadata);
-//        clientIds.add(fociCacheRecord.getIdToken().getClientId());
-//
-//        // Verify the broker cache is populated
-//        assertEquals(true, mBrokerOAuth2TokenCache.getAccounts().size() > 0);
-//        assertEquals(true, mBrokerOAuth2TokenCache.getFociCacheRecords().size() > 0);
-//        assertEquals(true, mApplicationMetadataCache.getAll().size() > 0);
-//
-//        for( final String clientId :clientIds) {
-//            assertEquals(true, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
-//        }
-//
-//        // Clear Broker Cache
-//        mBrokerOAuth2TokenCache.clearAll();
-//
-//        // Verify Broker cache is cleared
-//        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
-//        assertEquals(0, mBrokerOAuth2TokenCache.getFociCacheRecords().size());
-//        assertEquals(0, mApplicationMetadataCache.getAll().size());
-//        for( final String clientId :clientIds) {
-//            assertEquals(false, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
-//        }
-//    }
-//
-//    @Test
-//    public void testSaveAndLoadAggregatedAccountDataWithAggregationSkipped() throws ClientException {
-//        // First, create guest tenant accounts to simulate multi-tenant scenario
-//        final String guestRealm1 = "guest-tenant-1";
-//        final String guestRealm2 = "guest-tenant-2";
-//
-//        // Create guest tenant 1 bundle
-//        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle1 =
-//                createGuestBundle(guestRealm1);
-//
-//        // Create guest tenant 2 bundle
-//        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle2 =
-//                createGuestBundle(guestRealm2);
-//
-//        // Save guest tenant records to cache using BrokerOAuth2TokenCache API
-//        // This properly initializes the cache
-//        mBrokerOAuth2TokenCache.save(
-//                guestBundle1.mGeneratedAccount,
-//                guestBundle1.mGeneratedIdToken,
-//                guestBundle1.mGeneratedAccessToken,
-//                guestBundle1.mGeneratedRefreshToken,
-//                null // familyId
-//        );
-//
-//        mBrokerOAuth2TokenCache.save(
-//                guestBundle2.mGeneratedAccount,
-//                guestBundle2.mGeneratedIdToken,
-//                guestBundle2.mGeneratedAccessToken,
-//                guestBundle2.mGeneratedRefreshToken,
-//                null // familyId
-//        );
-//
-//        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = true
-//        final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
-//        final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
-//        final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
-//        final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
-//        final String familyId = null; // Non-FOCI
-//        final boolean shouldSkipAccountAggregation = true;
-//
-//        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-//                accountRecord,
-//                idTokenRecord,
-//                accessTokenRecord,
-//                refreshTokenRecord,
-//                familyId,
-//                BEARER_AUTHENTICATION_SCHEME,
-//                shouldSkipAccountAggregation
-//        );
-//
-//        // Verify the result - even though there are guest tenant records in cache,
-//        // aggregation is skipped so only 1 record should be returned
-//        assertNotNull(result);
-//        assertEquals("Should return only the saved record without aggregation, ignoring guest tenants", 1, result.size());
-//
-//        // Verify the returned record contains the saved data (primary account)
-//        final ICacheRecord cacheRecord = result.get(0);
-//        assertNotNull(cacheRecord);
-//        assertNotNull(cacheRecord.getAccount());
-//        assertNotNull(cacheRecord.getIdToken());
-//        assertNotNull(cacheRecord.getAccessToken());
-//        assertNotNull(cacheRecord.getRefreshToken());
-//
-//        assertEquals(accountRecord, cacheRecord.getAccount());
-//        assertEquals(idTokenRecord, cacheRecord.getIdToken());
-//        assertEquals(accessTokenRecord, cacheRecord.getAccessToken());
-//        assertEquals(refreshTokenRecord, cacheRecord.getRefreshToken());
-//    }
-//
-//    @Test
-//    public void testSaveAndLoadAggregatedAccountDataWithoutAggregationSkipped() throws ClientException {
-//        // First, create guest tenant accounts to simulate multi-tenant scenario
-//        final String guestRealm1 = "guest-tenant-1";
-//        final String guestRealm2 = "guest-tenant-2";
-//
-//        // Create guest tenant 1 bundle
-//
-//        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle1 =
-//                createGuestBundle(guestRealm1);
-//
-//        // Create guest tenant 2 bundle
-//        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle2 =
-//                createGuestBundle(guestRealm2);
-//
-//        // Save guest tenant records to cache using BrokerOAuth2TokenCache API
-//        // This properly initializes the cache
-//        mBrokerOAuth2TokenCache.save(
-//                guestBundle1.mGeneratedAccount,
-//                guestBundle1.mGeneratedIdToken,
-//                guestBundle1.mGeneratedAccessToken,
-//                guestBundle1.mGeneratedRefreshToken,
-//                null // familyId
-//        );
-//
-//        mBrokerOAuth2TokenCache.save(
-//                guestBundle2.mGeneratedAccount,
-//                guestBundle2.mGeneratedIdToken,
-//                guestBundle2.mGeneratedAccessToken,
-//                guestBundle2.mGeneratedRefreshToken,
-//                null // familyId
-//        );
-//
-//        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = false
-//        final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
-//        final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
-//        final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
-//        final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
-//        final String familyId = null; // Non-FOCI
-//        final boolean shouldSkipAccountAggregation = false;
-//
-//        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
-//                accountRecord,
-//                idTokenRecord,
-//                accessTokenRecord,
-//                refreshTokenRecord,
-//                familyId,
-//                BEARER_AUTHENTICATION_SCHEME,
-//                shouldSkipAccountAggregation
-//        );
-//
-//        // Verify the result - when aggregation is NOT skipped, should return primary + guest tenant records
-//        assertNotNull(result);
-//        // We expect: 1 primary account (realm=REALM) + 2 guest tenants (guestRealm1, guestRealm2) = 3 total
-//        assertEquals("Should return primary account plus guest tenant accounts", 3, result.size());
-//
-//        // Verify the first record (index 0) is the primary account with matching realm
-//        final ICacheRecord primaryRecord = result.get(0);
-//        assertNotNull(primaryRecord);
-//        assertNotNull(primaryRecord.getAccount());
-//        assertEquals("Primary record should have the requested realm", REALM, primaryRecord.getAccount().getRealm());
-//        assertNotNull(primaryRecord.getIdToken());
-//        assertNotNull(primaryRecord.getAccessToken());
-//        assertNotNull(primaryRecord.getRefreshToken());
-//
-//        // Verify guest tenant records are included (indices 1 and 2)
-//        final ICacheRecord guestRecord1 = result.get(1);
-//        final ICacheRecord guestRecord2 = result.get(2);
-//
-//        // Both guest records should have the same home account ID but different realms
-//        assertEquals(HOME_ACCOUNT_ID, guestRecord1.getAccount().getHomeAccountId());
-//        assertEquals(HOME_ACCOUNT_ID, guestRecord2.getAccount().getHomeAccountId());
-//
-//        // Verify guest realms are present (order may vary)
-//        final String guestRealm1Result = guestRecord1.getAccount().getRealm();
-//        final String guestRealm2Result = guestRecord2.getAccount().getRealm();
-//        assertTrue("Guest realms should be present",
-//                (guestRealm1Result.equals(guestRealm1) || guestRealm1Result.equals(guestRealm2)) &&
-//                        (guestRealm2Result.equals(guestRealm1) || guestRealm2Result.equals(guestRealm2)));
-//    }
+    @Test
+    public void testGetAccountWithLocalAccountIdFociCache() throws ClientException {
+        configureMocksForFoci();
+
+        mBrokerOAuth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        final AccountRecord account = mBrokerOAuth2TokenCache.getAccountByLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+
+        assertNotNull(account);
+    }
+
+    @Test
+    public void testRemoveAccountFromDevice() throws ClientException {
+        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
+        int ii = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(ii));
+
+            final ICacheRecord cacheRecord = cache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[ii++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        final List<AccountRecord> xAppAccounts = mBrokerOAuth2TokenCache.getAccounts();
+
+        // Deleting one of these AccountRecords should remove all of them...
+        final AccountDeletionRecord deletionRecord = mBrokerOAuth2TokenCache.removeAccountFromDevice(
+                xAppAccounts.get(0)
+        );
+
+        assertEquals(xAppAccounts.size(), deletionRecord.size());
+        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
+    }
+
+    @Test
+    public void testGetAccountsAdal() throws ClientException {
+        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
+        int ii = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(ii));
+
+            final ICacheRecord cacheRecord = cache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[ii++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        final List<AccountRecord> xAppAccounts = new ArrayList<>();
+
+        for (final int testUid : testAppUids) {
+            // Create the cache to query...
+            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                    mPlatformComponents,
+                    testUid,
+                    mApplicationMetadataCache,
+                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
+                        @Override
+                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
+                            return initAppUidCache(context, bindingProcessUid);
+                        }
+                    },
+                    mFociCache
+            );
+
+            for (final String clientId : clientIds) {
+                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
+                        ENVIRONMENT,
+                        clientId
+                );
+
+                xAppAccounts.addAll(accountsInCache);
+            }
+        }
+
+        assertEquals(
+                clientIds.size(),
+                xAppAccounts.size()
+        );
+
+        final List<AccountRecord> xAppAccountsNoParam = new ArrayList<>(
+                mBrokerOAuth2TokenCache.getAccounts()
+        );
+
+        assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
+    }
+
+    @Test
+    public void testGetAccountsMsal() throws ClientException {
+        // Load up the 'other caches' which a bunch of test credentials, see if we can get them out...
+        int ii = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(ii));
+
+            final ICacheRecord cacheRecord = cache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[ii++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        final List<AccountRecord> xAppAccounts = new ArrayList<>();
+
+        for (final int testUid : testAppUids) {
+            // Create the cache to query...
+            mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                    mPlatformComponents,
+                    testUid,
+                    mApplicationMetadataCache,
+                    new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
+                        @Override
+                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
+                            return initAppUidCache(context, bindingProcessUid);
+                        }
+                    },
+                    mFociCache
+            );
+
+            for (final String clientId : clientIds) {
+                final List<AccountRecord> accountsInCache = mBrokerOAuth2TokenCache.getAccounts(
+                        ENVIRONMENT,
+                        clientId
+                );
+
+                xAppAccounts.addAll(accountsInCache);
+            }
+        }
+
+        assertEquals(
+                clientIds.size(),
+                xAppAccounts.size()
+        );
+
+        final List<AccountRecord> xAppAccountsNoParam = new ArrayList<>(
+                mBrokerOAuth2TokenCache.getAccounts()
+        );
+
+        assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
+
+        final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
+                mPlatformComponents,
+                TEST_APP_UID,
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+        );
+
+        assertEquals(
+                0,
+                brokerOAuth2TokenCache.getAccounts(ENVIRONMENT, CLIENT_ID).size()
+        );
+
+        final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
+                mPlatformComponents,
+                TEST_APP_UID,
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+        );
+
+        assertEquals(
+                xAppAccounts.size(),
+                brokerOAuth2TokenCache2.getAccounts().size()
+        );
+    }
+
+    @Test
+    public void testWPJSaveNonFoci() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                null
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNotNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getMamEnrollmentIdentifier(),
+                mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNotNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+    }
+
+    @Test
+    public void testWPJSaveFoci() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                "1"
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNotNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getApplicationIdentifier(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getAccessTokenType(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNotNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                retrievedResult.getRefreshToken()
+        );
+    }
+
+    @Test
+    public void testClearAll() throws ClientException {
+        int appIndex = 0;
+        for (final OAuth2TokenCache cache : mOtherAppTokenCaches) {
+            configureMocks(mOtherCacheTestBundles.get(appIndex));
+
+            final ICacheRecord cacheRecord = cache.save(mockStrategy, mockRequest, mockResponse);
+
+            final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+            applicationMetadata.setClientId(cacheRecord.getIdToken().getClientId());
+            applicationMetadata.setEnvironment(cacheRecord.getIdToken().getEnvironment());
+            applicationMetadata.setFoci(cacheRecord.getRefreshToken().getFamilyId());
+            applicationMetadata.setUid(testAppUids[appIndex++]);
+
+            mApplicationMetadataCache.insert(applicationMetadata);
+        }
+
+        final List<String> clientIds = new ArrayList<>();
+
+        for (final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle testBundle : mOtherCacheTestBundles) {
+            clientIds.add(
+                    testBundle.mGeneratedRefreshToken.getClientId()
+            );
+        }
+
+        configureMocksForFoci();
+        final ICacheRecord fociCacheRecord = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+        final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
+        applicationMetadata.setClientId(fociCacheRecord.getIdToken().getClientId());
+        applicationMetadata.setEnvironment(fociCacheRecord.getIdToken().getEnvironment());
+        applicationMetadata.setFoci(fociCacheRecord.getRefreshToken().getFamilyId());
+        applicationMetadata.setUid(0);
+
+        mApplicationMetadataCache.insert(applicationMetadata);
+        clientIds.add(fociCacheRecord.getIdToken().getClientId());
+
+        // Verify the broker cache is populated
+        assertEquals(true, mBrokerOAuth2TokenCache.getAccounts().size() > 0);
+        assertEquals(true, mBrokerOAuth2TokenCache.getFociCacheRecords().size() > 0);
+        assertEquals(true, mApplicationMetadataCache.getAll().size() > 0);
+
+        for( final String clientId :clientIds) {
+            assertEquals(true, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
+        }
+
+        // Clear Broker Cache
+        mBrokerOAuth2TokenCache.clearAll();
+
+        // Verify Broker cache is cleared
+        assertEquals(0, mBrokerOAuth2TokenCache.getAccounts().size());
+        assertEquals(0, mBrokerOAuth2TokenCache.getFociCacheRecords().size());
+        assertEquals(0, mApplicationMetadataCache.getAll().size());
+        for( final String clientId :clientIds) {
+            assertEquals(false, mBrokerOAuth2TokenCache.isClientIdKnownToCache(clientId));
+        }
+    }
+
+    @Test
+    public void testSaveAndLoadAggregatedAccountDataWithAggregationSkipped() throws ClientException {
+        // First, create guest tenant accounts to simulate multi-tenant scenario
+        final String guestRealm1 = "guest-tenant-1";
+        final String guestRealm2 = "guest-tenant-2";
+
+        // Create guest tenant 1 bundle
+        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle1 =
+                createGuestBundle(guestRealm1);
+
+        // Create guest tenant 2 bundle
+        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle2 =
+                createGuestBundle(guestRealm2);
+
+        // Save guest tenant records to cache using BrokerOAuth2TokenCache API
+        // This properly initializes the cache
+        mBrokerOAuth2TokenCache.save(
+                guestBundle1.mGeneratedAccount,
+                guestBundle1.mGeneratedIdToken,
+                guestBundle1.mGeneratedAccessToken,
+                guestBundle1.mGeneratedRefreshToken,
+                null // familyId
+        );
+
+        mBrokerOAuth2TokenCache.save(
+                guestBundle2.mGeneratedAccount,
+                guestBundle2.mGeneratedIdToken,
+                guestBundle2.mGeneratedAccessToken,
+                guestBundle2.mGeneratedRefreshToken,
+                null // familyId
+        );
+
+        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = true
+        final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
+        final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
+        final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
+        final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
+        final String familyId = null; // Non-FOCI
+        final boolean shouldSkipAccountAggregation = true;
+
+        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                refreshTokenRecord,
+                familyId,
+                BEARER_AUTHENTICATION_SCHEME,
+                shouldSkipAccountAggregation
+        );
+
+        // Verify the result - even though there are guest tenant records in cache,
+        // aggregation is skipped so only 1 record should be returned
+        assertNotNull(result);
+        assertEquals("Should return only the saved record without aggregation, ignoring guest tenants", 1, result.size());
+
+        // Verify the returned record contains the saved data (primary account)
+        final ICacheRecord cacheRecord = result.get(0);
+        assertNotNull(cacheRecord);
+        assertNotNull(cacheRecord.getAccount());
+        assertNotNull(cacheRecord.getIdToken());
+        assertNotNull(cacheRecord.getAccessToken());
+        assertNotNull(cacheRecord.getRefreshToken());
+
+        assertEquals(accountRecord, cacheRecord.getAccount());
+        assertEquals(idTokenRecord, cacheRecord.getIdToken());
+        assertEquals(accessTokenRecord, cacheRecord.getAccessToken());
+        assertEquals(refreshTokenRecord, cacheRecord.getRefreshToken());
+    }
+
+    @Test
+    public void testSaveAndLoadAggregatedAccountDataWithoutAggregationSkipped() throws ClientException {
+        // First, create guest tenant accounts to simulate multi-tenant scenario
+        final String guestRealm1 = "guest-tenant-1";
+        final String guestRealm2 = "guest-tenant-2";
+
+        // Create guest tenant 1 bundle
+
+        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle1 =
+                createGuestBundle(guestRealm1);
+
+        // Create guest tenant 2 bundle
+        final MsalOAuth2TokenCacheTest.AccountCredentialTestBundle guestBundle2 =
+                createGuestBundle(guestRealm2);
+
+        // Save guest tenant records to cache using BrokerOAuth2TokenCache API
+        // This properly initializes the cache
+        mBrokerOAuth2TokenCache.save(
+                guestBundle1.mGeneratedAccount,
+                guestBundle1.mGeneratedIdToken,
+                guestBundle1.mGeneratedAccessToken,
+                guestBundle1.mGeneratedRefreshToken,
+                null // familyId
+        );
+
+        mBrokerOAuth2TokenCache.save(
+                guestBundle2.mGeneratedAccount,
+                guestBundle2.mGeneratedIdToken,
+                guestBundle2.mGeneratedAccessToken,
+                guestBundle2.mGeneratedRefreshToken,
+                null // familyId
+        );
+
+        // Now call saveAndLoadAggregatedAccountData with shouldSkipAccountAggregation = false
+        final AccountRecord accountRecord = mDefaultAppUidTestBundle.mGeneratedAccount;
+        final IdTokenRecord idTokenRecord = mDefaultAppUidTestBundle.mGeneratedIdToken;
+        final AccessTokenRecord accessTokenRecord = mDefaultAppUidTestBundle.mGeneratedAccessToken;
+        final RefreshTokenRecord refreshTokenRecord = mDefaultAppUidTestBundle.mGeneratedRefreshToken;
+        final String familyId = null; // Non-FOCI
+        final boolean shouldSkipAccountAggregation = false;
+
+        final List<ICacheRecord> result = mBrokerOAuth2TokenCache.saveAndLoadAggregatedAccountData(
+                accountRecord,
+                idTokenRecord,
+                accessTokenRecord,
+                refreshTokenRecord,
+                familyId,
+                BEARER_AUTHENTICATION_SCHEME,
+                shouldSkipAccountAggregation
+        );
+
+        // Verify the result - when aggregation is NOT skipped, should return primary + guest tenant records
+        assertNotNull(result);
+        // We expect: 1 primary account (realm=REALM) + 2 guest tenants (guestRealm1, guestRealm2) = 3 total
+        assertEquals("Should return primary account plus guest tenant accounts", 3, result.size());
+
+        // Verify the first record (index 0) is the primary account with matching realm
+        final ICacheRecord primaryRecord = result.get(0);
+        assertNotNull(primaryRecord);
+        assertNotNull(primaryRecord.getAccount());
+        assertEquals("Primary record should have the requested realm", REALM, primaryRecord.getAccount().getRealm());
+        assertNotNull(primaryRecord.getIdToken());
+        assertNotNull(primaryRecord.getAccessToken());
+        assertNotNull(primaryRecord.getRefreshToken());
+
+        // Verify guest tenant records are included (indices 1 and 2)
+        final ICacheRecord guestRecord1 = result.get(1);
+        final ICacheRecord guestRecord2 = result.get(2);
+
+        // Both guest records should have the same home account ID but different realms
+        assertEquals(HOME_ACCOUNT_ID, guestRecord1.getAccount().getHomeAccountId());
+        assertEquals(HOME_ACCOUNT_ID, guestRecord2.getAccount().getHomeAccountId());
+
+        // Verify guest realms are present (order may vary)
+        final String guestRealm1Result = guestRecord1.getAccount().getRealm();
+        final String guestRealm2Result = guestRecord2.getAccount().getRealm();
+        assertTrue("Guest realms should be present",
+                (guestRealm1Result.equals(guestRealm1) || guestRealm1Result.equals(guestRealm2)) &&
+                        (guestRealm2Result.equals(guestRealm1) || guestRealm2Result.equals(guestRealm2)));
+    }
 
     private MsalOAuth2TokenCacheTest.AccountCredentialTestBundle createGuestBundle(String guestRealm) {
         return new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
