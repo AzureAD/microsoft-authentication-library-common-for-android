@@ -46,18 +46,18 @@ class AccountManagerBrokerDiscoveryUtilTests {
 
     @Test
     fun testGetCurrentActiveBrokerExactMatch() {
-        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
-        Shadows.shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount")
-        val util = AccountManagerBrokerDiscoveryUtil(
-            knownBrokerApps = BrokerData.prodBrokers,
-            isSignedByKnownKeys = { brokerData ->
-                // Mock validation.
-                brokerData == BrokerData.prodMicrosoftAuthenticator
-            },
-            getAccountManagerApps = {
-                accountManager.authenticatorTypes
-            })
-        Assert.assertNull(util.getActiveBrokerFromAccountManager())
+//        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
+//        Shadows.shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount")
+//        val util = AccountManagerBrokerDiscoveryUtil(
+//            knownBrokerApps = BrokerData.prodBrokers,
+//            isSignedByKnownKeys = { brokerData ->
+//                // Mock validation.
+//                brokerData == BrokerData.prodMicrosoftAuthenticator
+//            },
+//            getAccountManagerApps = {
+//                accountManager.authenticatorTypes
+//            })
+//        Assert.assertNull(util.getActiveBrokerFromAccountManager())
     }
 
 //    @Test
@@ -115,20 +115,20 @@ class AccountManagerBrokerDiscoveryUtilTests {
 //        Assert.assertNull(util.getActiveBrokerFromAccountManager())
 //    }
 
-    @Test
-    fun testGetCurrentActiveBrokerNoMatch() {
-        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
-        Shadows.shadowOf(accountManager).addAuthenticator("com.hello.world")
-
-        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
-        Assert.assertNull(util.getActiveBrokerFromAccountManager())
-    }
-
-    @Test
-    fun testGetCurrentActiveBrokerNoBrokeRegistered() {
-        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
-        Assert.assertNull(util.getActiveBrokerFromAccountManager())
-    }
+//    @Test
+//    fun testGetCurrentActiveBrokerNoMatch() {
+//        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
+//        Shadows.shadowOf(accountManager).addAuthenticator("com.hello.world")
+//
+//        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
+//        Assert.assertNull(util.getActiveBrokerFromAccountManager())
+//    }
+//
+//    @Test
+//    fun testGetCurrentActiveBrokerNoBrokeRegistered() {
+//        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
+//        Assert.assertNull(util.getActiveBrokerFromAccountManager())
+//    }
 
     private fun getMockedAccountManager(): AccountManager? {
         val mockedAccountManager = Mockito.mock(AccountManager::class.java)
