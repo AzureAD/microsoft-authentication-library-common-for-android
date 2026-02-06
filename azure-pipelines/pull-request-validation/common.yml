@@ -117,7 +117,7 @@ stages:
         - script: tree "$(Build.SourcesDirectory)" /F /A
           displayName: 'Print File Structure Tree'
         - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
-          artifact: jacocoReport
+          artifact: jacocoReportDev
           displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
 
     - job: spotbugs
