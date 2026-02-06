@@ -29,5 +29,5 @@ stages:
         - download: current
           artifact: ${{ parameters.devBranchReportArtifact }} # Adjust artifact name as needed
         - script: |
-            python $(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py $(Pipeline.Workspace)/jacocoReport/jacocoTestReport.xml $(Pipeline.Workspace)/jacocoReportDev/jacocoTestReport.xml
+            python $(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py $(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/jacocoTestReport.xml $(Pipeline.Workspace)/${{ parameters.devBranchReportArtifact }}/jacocoTestReport.xml
           displayName: Compare Jacoco Coverage
