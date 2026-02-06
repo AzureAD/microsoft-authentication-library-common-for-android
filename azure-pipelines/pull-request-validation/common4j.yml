@@ -68,7 +68,8 @@ stages:
           summaryFileLocation: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml'
           reportDirectory: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/html'
           failIfCoverageEmpty: false
-    - job: build_test
+
+    - job: build_test_dev
       displayName: Dev Branch Testing
       steps:
         - checkout: common-dev

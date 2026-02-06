@@ -74,7 +74,8 @@ stages:
           summaryFileLocation: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
           reportDirectory: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/html'
           failIfCoverageEmpty: false
-    - job: build_test
+
+    - job: build_test_dev
       displayName: Dev Branch Testing
       cancelTimeoutInMinutes: 1
       variables:
