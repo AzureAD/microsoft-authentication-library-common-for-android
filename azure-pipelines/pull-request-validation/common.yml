@@ -16,76 +16,92 @@ resources:
 pool:
   vmImage: 'windows-2022'
 
-jobs:
-- job: build_test
-  displayName: Build & Test
-  cancelTimeoutInMinutes: 1
-  variables:
-    Codeql.Enabled: true
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - template: ../templates/steps/automation-cert.yml
-  - bash: |
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-    displayName: 'Set VSTS Fields in Environment'
-  - task: CodeQL3000Init@0
-  - task: Gradle@3
-    name: Gradle3   
-    displayName: Assemble Local
-    inputs:
-      javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.17"
-      tasks: clean common:assembleLocal
-      publishJUnitResults: false
-      jdkArchitecture: x64
-      sqAnalysisEnabled: false
-  - task: CodeQL3000Finalize@0
-  - task: Gradle@2
-    displayName: Run Unit tests
-    inputs:
-      javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.17"
-      tasks: common:testLocalDebugUnitTest -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
-  - task: Gradle@3
-    displayName: Check Dependencies size
-    condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
-    inputs:
-      tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-      jdkVersionOption: "1.17"
+stages:
+  - stage: build_and_test
+    displayName: Build and Test
+    jobs:
+    - job: build_test
+      displayName: PR Branch Testing
+      cancelTimeoutInMinutes: 1
+      variables:
+        Codeql.Enabled: true
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - template: ../templates/steps/automation-cert.yml
+      - bash: |
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+        displayName: 'Set VSTS Fields in Environment'
+      - task: CodeQL3000Init@0
+      - task: Gradle@3
+        name: Gradle3
+        displayName: Assemble Local
+        inputs:
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
+          tasks: clean common:assembleLocal
+          publishJUnitResults: false
+          jdkArchitecture: x64
+          sqAnalysisEnabled: false
+      - task: CodeQL3000Finalize@0
+      - task: Gradle@2
+        displayName: Run Unit tests
+        inputs:
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
+          tasks: common:jacocoTestReport -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
+      - task: Gradle@3
+        displayName: Check Dependencies size
+        condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
+        inputs:
+          tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
+          jdkVersionOption: "1.17"
+      - script: tree "$(Build.SourcesDirectory)" /F /A
+        displayName: 'Print File Structure Tree'
+      - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+        artifact: jacocoReport
+        displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
+      - task: PublishCodeCoverageResults@1
+        displayName: Publish Code Coverage Results
+        condition: always()
+        inputs:
+          codeCoverageTool: 'JaCoCo'
+          summaryFileLocation: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
+          reportDirectory: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/html'
+          failIfCoverageEmpty: false
 
-- job: spotbugs
-  displayName: SpotBugs
-  cancelTimeoutInMinutes: 1
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - template: ../templates/steps/spotbugs.yml
-    parameters:
-      project: common
-    
-- job: lint
-  displayName: Lint
-  cancelTimeoutInMinutes: 1
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - bash: |
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-    displayName: 'Set VSTS Fields in Environment'
-  - task: Gradle@3
-    displayName: Lint
-    inputs:
-      tasks: clean common:lintLocalDebug
-      publishJUnitResults: false
-      javaHomeSelection: JDKVersion
-      jdkVersionOption: "1.17"
+    - job: spotbugs
+      displayName: SpotBugs
+      cancelTimeoutInMinutes: 1
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - template: ../templates/steps/spotbugs.yml
+        parameters:
+          project: common
+
+    - job: lint
+      displayName: Lint
+      cancelTimeoutInMinutes: 1
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - bash: |
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+        displayName: 'Set VSTS Fields in Environment'
+      - task: Gradle@3
+        displayName: Lint
+        inputs:
+          tasks: clean common:lintLocalDebug
+          publishJUnitResults: false
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
 ...
