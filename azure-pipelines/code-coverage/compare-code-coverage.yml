@@ -1,0 +1,28 @@
+# Description: Template to build & publish any auth client android sdk library to internal maven feed
+
+parameters:
+- name: prBranchReportArtifact
+  default: jacocoReport
+- name: devBranchReportArtifact
+  default: jacocoReportDev
+# List of stages this templates depends on to start.
+- name: dependsOn
+  type: object
+  default: []
+
+stages:
+- stage: compare_coverage
+  displayName: Compare Code Coverage
+  dependsOn:
+    - build_and_test
+  jobs:
+    - job: compare
+      displayName: PR VS. Dev
+      steps:
+        - download: current
+          artifact: ${{ parameters.prBranchReportArtifact }} # Adjust artifact name as needed
+        - download: current
+          artifact: ${{ parameters.devBranchReportArtifact }} # Adjust artifact name as needed
+        - script: |
+            python ./compare_coverage.py $(Pipeline.Workspace)/jacocoReport/jacocoTestReport.xml $(Pipeline.Workspace)/jacocoReportDev/jacocoTestReport.xml
+          displayName: Compare Jacoco Coverage
