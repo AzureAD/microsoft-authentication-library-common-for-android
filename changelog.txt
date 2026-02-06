@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Remove OpenTelemetry from keep rules
+- [MINOR] Remove OpenTelemetry from keep rules (#2881)
 
 Version 23.3.0
 ----------
