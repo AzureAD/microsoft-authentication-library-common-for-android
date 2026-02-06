@@ -121,7 +121,7 @@ stages:
           displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
 
     - job: spotbugs
-      displayName: SpotBugs
+      displayName: SpotBugs (PR)
       cancelTimeoutInMinutes: 1
       steps:
       - checkout: self
@@ -133,7 +133,7 @@ stages:
           project: common
 
     - job: lint
-      displayName: Lint
+      displayName: Lint (PR)
       cancelTimeoutInMinutes: 1
       steps:
       - checkout: self
