@@ -23,5 +23,6 @@ def main():
         sys.exit(1)
     else:
         print("SUCCESS: PR branch coverage is not lower than dev branch, this is acceptable!")
+        sys.exit(0)
 
 main()
