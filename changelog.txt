@@ -1,12 +1,9 @@
 vNext
 ----------
-<<<<<<< mchand/remove-opentelemetry-keep
 - [MINOR] Remove OpenTelemetry from keep rules
-=======
 
 Version 23.3.0
 ----------
->>>>>>> dev
 - [MINOR] Introduce AppRegistry and refactor calling app validation (#2872)
 - [MINOR] Add attributes that calculate elapsed_times using nanos (#2871)
 - [MINOR] Cleanup code related to emitting ests telemetry (#2868)
