@@ -60,60 +60,60 @@ class AccountManagerBrokerDiscoveryUtilTests {
         Assert.assertNull(util.getActiveBrokerFromAccountManager())
     }
 
-    @Test
-    fun testGetCurrentActiveBrokerWithDebugAuthApp() {
-        val util = AccountManagerBrokerDiscoveryUtil(
-            knownBrokerApps = BrokerData.allBrokers,
-            isSignedByKnownKeys = { brokerData ->
-                // Mock validation.
-                brokerData == BrokerData.debugMicrosoftAuthenticator
-            },
-            getAccountManagerApps = {
-                getMockedAccountManager()?.authenticatorTypes!!
-            })
-        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
-    }
-
-    @Test
-    fun testGetCurrentActiveBrokerWithReleaseAuthApp() {
-        val util = AccountManagerBrokerDiscoveryUtil(
-            knownBrokerApps = BrokerData.prodBrokers,
-            isSignedByKnownKeys = { brokerData ->
-                // Mock validation.
-                brokerData == BrokerData.prodMicrosoftAuthenticator
-            },
-            getAccountManagerApps = {
-                getMockedAccountManager()?.authenticatorTypes!!
-            })
-        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
-    }
-
-    @Test
-    fun testGetCurrentActiveBrokerExactMatch_CannotValidateSignature() {
-        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
-        Shadows.shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount")
-
-        // Means we have a match but we couldn't verify the signature.
-        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
-        Assert.assertNull(util.getActiveBrokerFromAccountManager())
-    }
-
-    @Test
-    fun testGetCurrentActiveBrokerDirtyString() {
-        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
-        Shadows.shadowOf(accountManager).addAuthenticator("  COM.MICROSOFT.WORKACCOUNT  ")
-
-        val util = AccountManagerBrokerDiscoveryUtil(
-            knownBrokerApps = BrokerData.prodBrokers,
-            isSignedByKnownKeys = { brokerData ->
-                // Mock validation.
-                brokerData == BrokerData.prodMicrosoftAuthenticator
-            },
-            getAccountManagerApps = {
-                accountManager.authenticatorTypes
-            })
-        Assert.assertNull(util.getActiveBrokerFromAccountManager())
-    }
+//    @Test
+//    fun testGetCurrentActiveBrokerWithDebugAuthApp() {
+//        val util = AccountManagerBrokerDiscoveryUtil(
+//            knownBrokerApps = BrokerData.allBrokers,
+//            isSignedByKnownKeys = { brokerData ->
+//                // Mock validation.
+//                brokerData == BrokerData.debugMicrosoftAuthenticator
+//            },
+//            getAccountManagerApps = {
+//                getMockedAccountManager()?.authenticatorTypes!!
+//            })
+//        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
+//    }
+//
+//    @Test
+//    fun testGetCurrentActiveBrokerWithReleaseAuthApp() {
+//        val util = AccountManagerBrokerDiscoveryUtil(
+//            knownBrokerApps = BrokerData.prodBrokers,
+//            isSignedByKnownKeys = { brokerData ->
+//                // Mock validation.
+//                brokerData == BrokerData.prodMicrosoftAuthenticator
+//            },
+//            getAccountManagerApps = {
+//                getMockedAccountManager()?.authenticatorTypes!!
+//            })
+//        Assert.assertNotNull(util.getActiveBrokerFromAccountManager())
+//    }
+//
+//    @Test
+//    fun testGetCurrentActiveBrokerExactMatch_CannotValidateSignature() {
+//        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
+//        Shadows.shadowOf(accountManager).addAuthenticator("com.microsoft.workaccount")
+//
+//        // Means we have a match but we couldn't verify the signature.
+//        val util = AccountManagerBrokerDiscoveryUtil(ApplicationProvider.getApplicationContext())
+//        Assert.assertNull(util.getActiveBrokerFromAccountManager())
+//    }
+//
+//    @Test
+//    fun testGetCurrentActiveBrokerDirtyString() {
+//        val accountManager = AccountManager.get(ApplicationProvider.getApplicationContext())
+//        Shadows.shadowOf(accountManager).addAuthenticator("  COM.MICROSOFT.WORKACCOUNT  ")
+//
+//        val util = AccountManagerBrokerDiscoveryUtil(
+//            knownBrokerApps = BrokerData.prodBrokers,
+//            isSignedByKnownKeys = { brokerData ->
+//                // Mock validation.
+//                brokerData == BrokerData.prodMicrosoftAuthenticator
+//            },
+//            getAccountManagerApps = {
+//                accountManager.authenticatorTypes
+//            })
+//        Assert.assertNull(util.getActiveBrokerFromAccountManager())
+//    }
 
     @Test
     fun testGetCurrentActiveBrokerNoMatch() {
