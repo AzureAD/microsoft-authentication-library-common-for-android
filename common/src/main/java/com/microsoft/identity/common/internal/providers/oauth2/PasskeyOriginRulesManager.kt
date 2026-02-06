@@ -101,7 +101,7 @@ object PasskeyOriginRulesManager {
             val origin = "https://$host".lowercase()
 
             // Check if it's a production origin (any path allowed)
-            if (PRODUCTION_ORIGINS.contains(origin)){
+            if (getAllowedOriginRules().contains(origin)){
                 return true
             }
 
