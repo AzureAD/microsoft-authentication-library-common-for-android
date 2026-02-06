@@ -30,6 +30,9 @@ plugins {
     // Add kotlin support
     id 'org.jetbrains.kotlin.jvm'
 
+    // Add Jacoco for code coverage
+    id 'jacoco'
+
     // Test retries
     id 'org.gradle.test-retry' version '1.5.6'
 }
@@ -48,8 +51,16 @@ codeCoverageReport {
     coverage.enabled = enableCodeCoverage
 }
 
-// https://blog.gradle.org/gradle-flaky-test-retry-plugin
+jacoco {
+    toolVersion = "0.8.10"
+}
+
 tasks.withType(Test) {
+    jacoco {
+        includeNoLocationClasses = true // Required for Robolectric
+        excludes = ['jdk.internal.*']
+    }
+    // https://blog.gradle.org/gradle-flaky-test-retry-plugin
     retry {
         // The maximum number of test failures that are allowed before retrying is disabled.
         maxRetries = 2
@@ -58,6 +69,34 @@ tasks.withType(Test) {
         // Controls whether tests that initially fail and then pass on retry should fail the task.
         failOnPassedAfterRetry = false
     }
+}
+
+jacocoTestReport {
+    dependsOn "test" // Run Robolectric tests first
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+    def fileFilter = [
+            '**/BuildConfig.*',
+            '**/*Test*.*',
+            'io/opentelemetry/**'
+    ]
+
+    def javaClasses = fileTree(
+            dir: "$buildDir/classes/java/main",
+            excludes: fileFilter
+    )
+
+    def kotlinClasses = fileTree(
+            dir: "$buildDir/classes/kotlin/main",
+            excludes: fileFilter
+    )
+
+    classDirectories.setFrom(files([javaClasses, kotlinClasses]))
+    executionData.setFrom(files("$buildDir/jacoco/test.exec"))
 }
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
