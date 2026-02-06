@@ -108,4 +108,8 @@ stages:
           displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
 
   - template: ../code-coverage/compare-code-coverage.yml
+    parameters:
+      commonRepoAlias: self
+      dependsOn:
+        - build_and_test
 ...

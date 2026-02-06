@@ -5,6 +5,7 @@ parameters:
   default: jacocoReport
 - name: devBranchReportArtifact
   default: jacocoReportDev
+- name: commonRepoAlias
 # List of stages this templates depends on to start.
 - name: dependsOn
   type: object
@@ -13,14 +14,13 @@ parameters:
 stages:
 - stage: compare_coverage
   displayName: Compare Code Coverage
-  dependsOn:
-    - build_and_test
+  dependsOn: ${{ parameters.dependsOn }}
   jobs:
     - job: compare
       displayName: PR VS. Dev
       continueOnError: true
       steps:
-        - checkout: self
+        - checkout: ${{ parameters.commonRepoAlias }}
           clean: true
           submodules: recursive
           persistCredentials: True
