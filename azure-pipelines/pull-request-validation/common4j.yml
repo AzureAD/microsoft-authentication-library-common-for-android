@@ -60,7 +60,7 @@ stages:
       - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
         artifact: jacocoReport
         displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
-      - task: PublishCodeCoverageResults@2
+      - task: PublishCodeCoverageResults@1
         displayName: Publish Code Coverage Results
         condition: always()
         inputs:
