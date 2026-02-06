@@ -69,7 +69,9 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -114,6 +116,16 @@ public class CommandDispatcherTest {
 
     /** Number of concurrent requests for state collision test */
     private static final int CONCURRENT_REQUEST_COUNT = 20;
+
+    @Before
+    public void setUp() throws Exception {
+        CommandDispatcher.clearState();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        CommandDispatcher.clearState();
+    }
 
     @Test
     public void testSubmitSilentShouldRefresh() throws Exception {
@@ -1484,21 +1496,20 @@ public class CommandDispatcherTest {
         return new TestBaseController() {
             @Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
-                controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
                 if(shouldRefresh){
                     final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this.asControllerFactory(), "LocalMSALControllerMockPubId");
                     CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
                 }
-
+                controllerLatch.countDown();
                 return expectedAcquireTokenResult;
             }
 
             @Override
             public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException {
                 if(!throwRenewAccessTokenError) {
-                    controllerLatch.countDown();
                     renewAccessTokenCallCount.getAndIncrement();
+                    controllerLatch.countDown();
                 }else{
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", 503, null);
                 }
