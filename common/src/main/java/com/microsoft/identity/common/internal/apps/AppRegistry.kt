@@ -72,6 +72,18 @@ object AppRegistry {
         signingCertificateThumbprint = INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
     )
 
+    val MDE_APP_PROD = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA=="
+    )
+
+    val MDE_APP_DEBUG = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==" // TODO this is for PROD, need to get the debug cert thumbprint if it's different
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -86,10 +98,12 @@ object AppRegistry {
     @JvmField
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
+            add(MDE_APP_DEBUG)
         }
     }
 
