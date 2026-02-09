@@ -23,15 +23,17 @@
 package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
-import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.Callable;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NonNull;
 
 /**
  * A retry policy that implements exponential backoff based around functions that operate on the
@@ -110,5 +112,20 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
             Thread.currentThread().interrupt();
             return false;
         }
+    }
+
+    public static StatusCodeAndExceptionRetry getDefaultRetryPolicy(@NonNull final String tag) {
+        return StatusCodeAndExceptionRetry.builder()
+                .number(1)
+                .isRetryableException(e -> {
+                    if (e instanceof ClientException
+                            && ((ClientException) e).getErrorCode().equals(ClientException.IO_ERROR)
+                            && !(e.getCause() instanceof SocketTimeoutException)) {
+                        Logger.info(tag + ":getRetryPolicy", "Retrying due to exception: " + e);
+                        return Boolean.TRUE;
+                    }
+                    return Boolean.FALSE;
+                })
+                .build();
     }
 }
