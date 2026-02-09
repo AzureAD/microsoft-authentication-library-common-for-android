@@ -81,7 +81,7 @@ object AppRegistry {
     val MDE_APP_DEBUG = App(
         nickName = "Microsoft Defender for Endpoint",
         packageName = "com.microsoft.scmx",
-        signingCertificateThumbprint = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==" // TODO this is for PROD, need to get the debug cert thumbprint if it's different
+        signingCertificateThumbprint = "k0ZSm/+bEPZAq6mXujRXqP3B6+Zb2yXCiqwuvtCooLfKS91zvHCf+D9FFUYIkJyIKmn1onyWbwRXHEWfS5SaHQ=="
     )
 
     @JvmField
