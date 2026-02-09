@@ -114,6 +114,12 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
         }
     }
 
+    /**
+     * Creates a default retry policy that retries once on IO errors, except timeouts.
+     *
+     * @param tag The logging tag for tracing retry attempts
+     * @return A configured {@link StatusCodeAndExceptionRetry} instance
+     */
     public static StatusCodeAndExceptionRetry getDefaultRetryPolicy(@NonNull final String tag) {
         return StatusCodeAndExceptionRetry.builder()
                 .number(1)
