@@ -70,6 +70,40 @@ object TenantUtil {
         return null
     }
 
+    /**
+     * Resolves a tenant identifier to a tenant ID (GUID).
+     *
+     * If the input is already a valid GUID, it is returned as-is.
+     * Otherwise, the method treats it as a hostname/domain and attempts to resolve
+     * the tenant ID by loading the OpenID provider configuration metadata.
+     *
+     * @param tenant The tenant identifier, which can be either:
+     *               - A tenant ID (GUID) (e.g., "12345678-1234-1234-1234-123456789012")
+     *               - A hostname/domain (e.g., "contoso.com")
+     * @return The tenant ID (GUID) if successful, null if resolution fails
+     */
+    fun getTenantIdFromTenant(tenant: String): String? {
+        val methodTag = "$TAG:getTenantIdFromIdentifier"
+
+        // If already a GUID, return as-is
+        if (UUID_REGEX.matches(tenant)) {
+            Logger.info(methodTag, "Tenant is already a GUID, returning as-is.")
+            return tenant
+        }
+
+        // Otherwise, resolve via OpenID configuration
+        try {
+            val configuration =
+                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(tenant)
+            val tenantId =
+                AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(configuration)
+            Logger.info(methodTag, "Successfully got tenant ID from identifier.")
+            return tenantId
+        } catch (e: Exception) {
+            Logger.error(methodTag, "Failed to get tenant ID from identifier.", e)
+            return null
+        }
+    }
 
     /**
      * Extracts tenant ID from a login hint by resolving the tenant information.
@@ -89,16 +123,7 @@ object TenantUtil {
             Logger.warn(methodTag, correlationId, "Login hint is invalid or empty.")
             return null
         }
-        try {
-            val configuration =
-                AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(tenantName)
-            val tenantId =
-                AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(configuration)
-            Logger.info(methodTag, correlationId, "Successfully got tenant ID from login hint.")
-            return tenantId
-        } catch (e: Exception) {
-            Logger.error(methodTag, correlationId, "Failed to get tenant ID from login hint.", e)
-            return null
-        }
+
+        return getTenantIdFromTenant(tenantName)
     }
 }
