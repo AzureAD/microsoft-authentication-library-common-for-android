@@ -548,6 +548,18 @@ public enum AttributeName {
     /**
      * Indicates if the redirect URL in webview is opened in browser.
      */
-    is_redirect_url_opened_in_browser;
+    is_redirect_url_opened_in_browser,
+
+    /**
+     * Number of PRT accounts for which SSO token generation succeeded in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_success_count,
+
+    /**
+     * Number of PRT accounts for which SSO token generation failed in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_failure_count;
 
 }

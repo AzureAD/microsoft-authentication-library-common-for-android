@@ -90,5 +90,9 @@ public enum SpanName {
     /**
      * Span name for web apps API execute requests.
      */
-    ExecuteWebAppsRequest
+    ExecuteWebAppsRequest,
+    /**
+     * Span name for the Browser SSO header generation operation.
+     */
+    GetBrowserSsoHeaders
 }
