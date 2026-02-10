@@ -163,43 +163,43 @@ class TenantUtilTest {
         assertNull(result)
     }
 
-    // ===== Tests for getTenantIdFromTenant =====
+    // ===== Tests for resolveTenantId =====
 
     @Test
-    fun `getTenantIdFromTenant returns GUID as-is for valid GUID`() {
+    fun `resolveTenantId returns GUID as-is for valid GUID`() {
         val tenantId = "12345678-1234-1234-1234-123456789012"
-        val result = TenantUtil.getTenantIdFromTenant(tenantId)
+        val result = TenantUtil.resolveTenantId(tenantId)
         assertEquals(tenantId, result)
     }
 
     @Test
-    fun `getTenantIdFromTenant returns GUID as-is for valid GUID with uppercase letters`() {
+    fun `resolveTenantId returns GUID as-is for valid GUID with uppercase letters`() {
         val tenantId = "12345678-ABCD-EFAB-CDEF-123456789012"
-        val result = TenantUtil.getTenantIdFromTenant(tenantId)
+        val result = TenantUtil.resolveTenantId(tenantId)
         assertEquals(tenantId, result)
     }
 
     @Test
-    fun `getTenantIdFromTenant returns GUID as-is for valid GUID with mixed case`() {
+    fun `resolveTenantId returns GUID as-is for valid GUID with mixed case`() {
         val tenantId = "12345678-AbCd-EfAb-CdEf-123456789012"
-        val result = TenantUtil.getTenantIdFromTenant(tenantId)
+        val result = TenantUtil.resolveTenantId(tenantId)
         assertEquals(tenantId, result)
     }
 
     @Test
-    fun `getTenantIdFromTenant does not call OpenID configuration for GUID input`() {
+    fun `resolveTenantId does not call OpenID configuration for GUID input`() {
         val tenantId = "12345678-1234-1234-1234-123456789012"
 
         mockkStatic(AzureActiveDirectory::class)
 
-        val result = TenantUtil.getTenantIdFromTenant(tenantId)
+        val result = TenantUtil.resolveTenantId(tenantId)
 
         assertEquals(tenantId, result)
         verify(exactly = 0) { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(any()) }
     }
 
     @Test
-    fun `getTenantIdFromTenant resolves tenant ID from domain via OpenID configuration`() {
+    fun `resolveTenantId resolves tenant ID from domain via OpenID configuration`() {
         val domain = "contoso.com"
         val expectedTenantId = "12345678-1234-1234-1234-123456789012"
         val mockConfiguration = mockk<OpenIdProviderConfiguration>()
@@ -210,7 +210,7 @@ class TenantUtilTest {
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) } returns mockConfiguration
         every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } returns expectedTenantId
 
-        val result = TenantUtil.getTenantIdFromTenant(domain)
+        val result = TenantUtil.resolveTenantId(domain)
 
         assertEquals(expectedTenantId, result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) }
@@ -218,7 +218,7 @@ class TenantUtilTest {
     }
 
     @Test
-    fun `getTenantIdFromTenant resolves tenant ID from subdomain via OpenID configuration`() {
+    fun `resolveTenantId resolves tenant ID from subdomain via OpenID configuration`() {
         val domain = "sub.contoso.com"
         val expectedTenantId = "12345678-1234-1234-1234-123456789012"
         val mockConfiguration = mockk<OpenIdProviderConfiguration>()
@@ -229,14 +229,14 @@ class TenantUtilTest {
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) } returns mockConfiguration
         every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } returns expectedTenantId
 
-        val result = TenantUtil.getTenantIdFromTenant(domain)
+        val result = TenantUtil.resolveTenantId(domain)
 
         assertEquals(expectedTenantId, result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) }
     }
 
     @Test
-    fun `getTenantIdFromTenant returns null when configuration loading fails`() {
+    fun `resolveTenantId returns null when configuration loading fails`() {
         val domain = "contoso.com"
         val exception = RuntimeException("Failed to load configuration")
 
@@ -244,14 +244,14 @@ class TenantUtilTest {
 
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) } throws exception
 
-        val result = TenantUtil.getTenantIdFromTenant(domain)
+        val result = TenantUtil.resolveTenantId(domain)
 
         assertNull(result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) }
     }
 
     @Test
-    fun `getTenantIdFromTenant returns null when tenant ID extraction fails`() {
+    fun `resolveTenantId returns null when tenant ID extraction fails`() {
         val domain = "contoso.com"
         val mockConfiguration = mockk<OpenIdProviderConfiguration>()
         val exception = RuntimeException("Failed to extract tenant ID")
@@ -262,7 +262,7 @@ class TenantUtilTest {
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) } returns mockConfiguration
         every { AzureActiveDirectoryAudience.getTenantIdFromOpenIdProviderConfiguration(mockConfiguration) } throws exception
 
-        val result = TenantUtil.getTenantIdFromTenant(domain)
+        val result = TenantUtil.resolveTenantId(domain)
 
         assertNull(result)
         verify { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(domain) }
@@ -270,7 +270,7 @@ class TenantUtilTest {
     }
 
     @Test
-    fun `getTenantIdFromTenant returns null for invalid GUID that fails resolution`() {
+    fun `resolveTenantId returns null for invalid GUID that fails resolution`() {
         val invalidGuid = "12345678-1234-1234-1234-12345678901"  // Too short - not a valid GUID
         val exception = RuntimeException("Failed to load configuration")
 
@@ -278,7 +278,7 @@ class TenantUtilTest {
 
         every { AzureActiveDirectory.loadOpenIdProviderConfigurationMetadataForTenant(invalidGuid) } throws exception
 
-        val result = TenantUtil.getTenantIdFromTenant(invalidGuid)
+        val result = TenantUtil.resolveTenantId(invalidGuid)
 
         assertNull(result)
         // Since it's not a valid GUID, it should try to resolve via OpenID configuration

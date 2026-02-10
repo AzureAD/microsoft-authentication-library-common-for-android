@@ -82,8 +82,8 @@ object TenantUtil {
      *               - A hostname/domain (e.g., "contoso.com")
      * @return The tenant ID (GUID) if successful, null if resolution fails
      */
-    fun getTenantIdFromTenant(tenant: String): String? {
-        val methodTag = "$TAG:getTenantIdFromIdentifier"
+    fun resolveTenantId(tenant: String): String? {
+        val methodTag = "$TAG:resolveTenantId"
 
         // If already a GUID, return as-is
         if (UUID_REGEX.matches(tenant)) {
@@ -124,6 +124,6 @@ object TenantUtil {
             return null
         }
 
-        return getTenantIdFromTenant(tenantName)
+        return resolveTenantId(tenantName)
     }
 }
