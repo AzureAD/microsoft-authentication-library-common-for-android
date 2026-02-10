@@ -548,6 +548,10 @@ public enum AttributeName {
     /**
      * Indicates if the redirect URL in webview is opened in browser.
      */
-    is_redirect_url_opened_in_browser;
+    is_redirect_url_opened_in_browser,
 
+    /**
+     * Indicates the operation that is being retried in a retry policy.
+     */
+    network_retry_operation,
 }

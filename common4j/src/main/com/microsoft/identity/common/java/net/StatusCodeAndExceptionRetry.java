@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -130,6 +132,10 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
         return StatusCodeAndExceptionRetry.builder()
                 .number(1)
                 .isRetryableException(e -> {
+                    SpanExtension.current().setAttribute(
+                            AttributeName.network_retry_operation.name(),
+                            tag
+                    );
                     if (e instanceof ClientException
                             && ((ClientException) e).getErrorCode().equals(ClientException.IO_ERROR)
                             && !(e.getCause() instanceof SocketTimeoutException)) {
