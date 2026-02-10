@@ -248,9 +248,9 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
 
         // Verify all data was inserted correctly
         List<TestData> actualData = cache.getAll();
-        Assert.assertEquals("Expected all items to be present", 
+        Assert.assertEquals("Expected all items to be present",
                 expectedData.size(), actualData.size());
-        Assert.assertTrue("All expected items should be in cache", 
+        Assert.assertTrue("All expected items should be in cache",
                 new HashSet<>(actualData).containsAll(expectedData));
     }
 
@@ -465,7 +465,7 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
 
         // Verify we completed all operations
         int expectedOperations = THREAD_COUNT * OPERATIONS_PER_THREAD;
-        Assert.assertEquals("All operations should complete", 
+        Assert.assertEquals("All operations should complete",
                 expectedOperations, operationCount.get());
 
         // Verify final state is consistent
@@ -494,10 +494,10 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
 
                     for (int j = 0; j < ITERATIONS; j++) {
                         TestData data = new TestData("thread-" + threadId, j);
-                        
+
                         // Insert
                         cache.insert(data);
-                        
+
                         // Immediately read and verify
                         List<TestData> allData = cache.getAll();
                         boolean found = false;
