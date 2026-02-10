@@ -115,19 +115,25 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
     }
 
     /**
-     * Creates a default retry policy that retries once on IO errors, except timeouts.
+     * Creates a retry policy that retries on IO exceptions only.
+     * <p>
+     * This policy retries ONLY on {@link ClientException#IO_ERROR} exceptions
+     * (excluding {@link SocketTimeoutException}).
+     * <p>
+     * Use this for scenarios where you want IO-error-specific retry logic.
+     * For the library's standard retry behavior, use {@link UrlConnectionHttpClient#getDefaultInstance()}.
      *
      * @param tag The logging tag for tracing retry attempts
-     * @return A configured {@link StatusCodeAndExceptionRetry} instance
+     * @return A configured {@link StatusCodeAndExceptionRetry} instance for IO errors only
      */
-    public static StatusCodeAndExceptionRetry getDefaultRetryPolicy(@NonNull final String tag) {
+    public static StatusCodeAndExceptionRetry getIOExceptionRetryPolicy(@NonNull final String tag) {
         return StatusCodeAndExceptionRetry.builder()
                 .number(1)
                 .isRetryableException(e -> {
                     if (e instanceof ClientException
                             && ((ClientException) e).getErrorCode().equals(ClientException.IO_ERROR)
                             && !(e.getCause() instanceof SocketTimeoutException)) {
-                        Logger.info(tag + ":getRetryPolicy", "Retrying due to exception: " + e);
+                        Logger.info(tag + ":getIOExceptionRetryPolicy", "Retrying due to exception: " + e);
                         return Boolean.TRUE;
                     }
                     return Boolean.FALSE;

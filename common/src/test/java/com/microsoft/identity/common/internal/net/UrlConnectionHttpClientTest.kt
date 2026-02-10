@@ -51,7 +51,6 @@ class UrlConnectionHttpClientTest {
 
         init {
             try {
-                TEST_HEADERS
                 TEST_URL = URL("https://www.bing.com")
             } catch (e: MalformedURLException) {
                 throw RuntimeException(e)
@@ -101,7 +100,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getDefaultRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
             .build()
 
         val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
@@ -130,7 +129,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getDefaultRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
             .build()
 
         val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
@@ -158,7 +157,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getDefaultRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
             .build()
 
         Assert.assertThrows(ClientException::class.java) {
@@ -183,5 +182,35 @@ class UrlConnectionHttpClientTest {
         val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
         Assert.assertEquals(200, response.statusCode)
         Assert.assertEquals(2, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
+
+    /**
+     * Verifies that SocketTimeoutException is not retried even with retry policy enabled.
+     * Expects: Single request (no retry), ClientException thrown immediately.
+     */
+    @Test
+    @Throws(Exception::class)
+    fun testGet_withRetryPolicy_doesNotRetryOnSocketTimeoutException() {
+        ShadowUrlConnectionHttpClient.setBehavior { _ ->
+            NetworkResult.Failure(
+                ClientException(
+                    ClientException.IO_ERROR,
+                    "Socket timeout",
+                    java.net.SocketTimeoutException("Connection timed out")
+                )
+            )
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
+            .build()
+
+        Assert.assertThrows(ClientException::class.java) {
+            urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        }
+        Assert.assertEquals(1, ShadowUrlConnectionHttpClient.getRequestCount())
     }
 }

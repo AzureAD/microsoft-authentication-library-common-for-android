@@ -90,10 +90,15 @@ class ShadowUrlConnectionHttpClient {
         return when (val result = networkBehavior(currentAttempt)) {
             is NetworkResult.Failure -> throw result.exception
             is NetworkResult.Success -> {
+                // Create unmodifiable headers to match HttpURLConnection#getHeaderFields() behavior
+                val unmodifiableHeaders = result.headers
+                    .mapValues { java.util.Collections.unmodifiableList(it.value) }
+                    .let { java.util.Collections.unmodifiableMap(it) }
+
                 val response = HttpResponse(
                     result.statusCode,
                     result.body,
-                    result.headers.mapKeys { it.key }.mapValues { it.value.toMutableList() }.toMutableMap()
+                    unmodifiableHeaders
                 )
                 completionCallback.accept(response)
                 response
