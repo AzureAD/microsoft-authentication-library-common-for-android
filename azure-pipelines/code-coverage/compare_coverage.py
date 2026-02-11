@@ -5,7 +5,8 @@ def get_coverage(xml_path):
     tree = ET.parse(xml_path)
     root = tree.getroot()
     # Get the overall counter (direct child of report element, not nested in packages/classes)
-    counter = root.find("./counter[@type='INSTRUCTION']")
+    # Use LINE coverage to match Azure DevOps reporting
+    counter = root.find("./counter[@type='LINE']")
     covered = int(counter.attrib['covered'])
     missed = int(counter.attrib['missed'])
     return covered / (covered + missed)

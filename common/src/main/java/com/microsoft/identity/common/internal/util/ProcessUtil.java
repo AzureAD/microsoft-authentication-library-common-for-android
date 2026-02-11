@@ -42,24 +42,36 @@ import java.util.Set;
  */
 public class ProcessUtil {
 
+    /**
+     * Cached result of whether this is a broker process.
+     * Safe to cache because process identity doesn't change during app lifetime.
+     */
+    private static volatile Boolean sCachedIsBrokerProcess = null;
+
     private ProcessUtil() {
     }
 
     /**
      * Returns true if the calling app is the auth process.
+     * The result is cached since process identity is immutable during app lifetime.
      */
     public static boolean isBrokerProcess(@NonNull final Context context) {
-        final String processName = getProcessName(context);
+        if (sCachedIsBrokerProcess != null) {
+            return sCachedIsBrokerProcess;
+        }
 
+        final String processName = getProcessName(context);
         final Set<BrokerData> validBrokers = BrokerData.getKnownBrokerApps();
 
         for (final BrokerData brokerData : validBrokers) {
             final String authProcess = brokerData.getPackageName() + ":auth";
             if (authProcess.equalsIgnoreCase(processName)) {
+                sCachedIsBrokerProcess = true;
                 return true;
             }
         }
 
+        sCachedIsBrokerProcess = false;
         return false;
     }
 

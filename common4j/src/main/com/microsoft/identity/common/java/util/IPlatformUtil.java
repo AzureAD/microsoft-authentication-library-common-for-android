@@ -138,4 +138,11 @@ public interface IPlatformUtil {
      */
     @Nullable
     List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList);
+
+    /**
+     * Checks if the current process is a broker process.
+     *
+     * @return true if running in a broker process, false otherwise.
+     */
+    boolean isBrokerProcess();
 }

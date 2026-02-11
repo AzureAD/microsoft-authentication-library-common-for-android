@@ -64,7 +64,6 @@ public enum SpanName {
     ProcessCrossCloudRedirect,
     SwitchBrowserResume,
     SwitchBrowserProcess,
-    SecretKeyWrapping,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
     ProvisionResourceAccount,
@@ -90,5 +89,13 @@ public enum SpanName {
     /**
      * Span name for web apps API execute requests.
      */
-    ExecuteWebAppsRequest
+    ExecuteWebAppsRequest,
+    /**
+     * Span name for secret key generation operations.
+     */
+    SecretKeyGeneration,
+    /**
+     * Span name for secret key retrieval operations.
+     */
+    SecretKeyRetrieval
 }
