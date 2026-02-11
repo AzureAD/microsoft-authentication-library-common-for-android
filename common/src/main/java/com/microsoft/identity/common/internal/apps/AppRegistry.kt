@@ -113,12 +113,14 @@ object AppRegistry {
         add(BrokerData.prodCompanyPortal)
         add(BrokerData.prodIntuneCE)
         add(INTUNE_AOSP_AGENT_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(BrokerData.debugCompanyPortal)
             add(BrokerData.debugIntuneCE)
+            add(MDE_APP_DEBUG)
         }
     }
 }
