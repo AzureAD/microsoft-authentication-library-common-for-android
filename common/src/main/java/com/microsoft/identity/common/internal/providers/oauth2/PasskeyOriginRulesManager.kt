@@ -100,8 +100,13 @@ object PasskeyOriginRulesManager {
             val host = uri.host ?: return false
             val origin = "https://$host".lowercase()
 
+            // Check if it's a PPE origin (only in debug builds)
+            if (BuildConfig.DEBUG && ALLOWED_ORIGIN_PPE.contains(origin)) {
+                return true
+            }
+
             // Check if it's a production origin (any path allowed)
-            if (getAllowedOriginRules().contains(origin)){
+            if (PRODUCTION_ORIGINS.contains(origin)){
                 return true
             }
 
