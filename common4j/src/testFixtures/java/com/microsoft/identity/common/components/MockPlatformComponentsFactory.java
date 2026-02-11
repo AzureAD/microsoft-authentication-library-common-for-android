@@ -192,6 +192,11 @@ public class MockPlatformComponentsFactory {
         public List<Map.Entry<String, String>> updateWithAndGetPlatformSpecificExtraQueryParameters(@Nullable List<Map.Entry<String, String>> originalList) {
             return originalList;
         }
+
+        @Override
+        public boolean isBrokerProcess() {
+            throw new UnsupportedOperationException();
+        }
     };
 
     public static final IBrowserSelector NON_FUNCTIONAL_BROWSER_SELECTOR = new NoopBrowserSelector();

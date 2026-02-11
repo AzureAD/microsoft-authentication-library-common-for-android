@@ -1,6 +1,11 @@
 vNext
 ----------
 - [MINOR] Rework OpenTelemetry spans for secret key generation and retrieval operations (#2869)
+- [MAJOR] add isBrokerProcess to IPlatformUtil (#2882)
+- [MINOR] Remove OpenTelemetry from keep rules (#2881)
+
+Version 23.3.0
+----------
 - [MINOR] Introduce AppRegistry and refactor calling app validation (#2872)
 - [MINOR] Add attributes that calculate elapsed_times using nanos (#2871)
 - [MINOR] Cleanup code related to emitting ests telemetry (#2868)
