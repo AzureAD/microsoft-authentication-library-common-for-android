@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MAJOR] add isBrokerProcess to IPlatformUtil (#2882)
 - [MINOR] Remove OpenTelemetry from keep rules (#2881)
 
 Version 23.3.0
