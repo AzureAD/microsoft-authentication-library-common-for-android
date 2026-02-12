@@ -194,7 +194,7 @@ class PasskeyReplyChannel(
                 span.setAttribute(AttributeName.passkey_dom_exception_name.name, errorMessage.domExceptionName)
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(throwable)
-                Logger.error(methodTag, "RequestType: $requestType failed with error: $errorMessage", null)
+                Logger.error(methodTag, "RequestType: $requestType failed with error: $errorMessage", throwable)
             }
         } catch (unexpectedException: Throwable) {
             span.setStatus(StatusCode.ERROR)
