@@ -253,6 +253,66 @@ class PasskeyOriginRulesManagerTest {
         assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://signin.microsoft.com"))
     }
 
+    // ==================== PPE Origins Tests (DEBUG builds only) ====================
+
+    @Test
+    fun `isAllowedOrigin returns true for account live-int com in DEBUG build`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://account.live-int.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://account.live-int.com/"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://account.live-int.com/page/webauthn"))
+    }
+
+    @Test
+    fun `isAllowedOrigin returns true for login windows-ppe net in DEBUG build`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows-ppe.net"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows-ppe.net/"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows-ppe.net/common/oauth2/authorize"))
+    }
+
+    @Test
+    fun `isAllowedOrigin returns true for mysignins-ppe microsoft com in DEBUG build`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://mysignins-ppe.microsoft.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://mysignins-ppe.microsoft.com/"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://mysignins-ppe.microsoft.com/auth/passkey"))
+    }
+
+    @Test
+    fun `isAllowedOrigin is case insensitive for PPE origins`() {
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HTTPS://account.live-int.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://ACCOUNT.LIVE-INT.COM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://Account.Live-Int.Com"))
+
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HTTPS://login.windows-ppe.net"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://LOGIN.WINDOWS-PPE.NET"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://Login.Windows-Ppe.Net"))
+
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HTTPS://mysignins-ppe.microsoft.com"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("https://MYSIGNINS-PPE.MICROSOFT.COM"))
+        assertTrue(PasskeyOriginRulesManager.isAllowedOrigin("HtTpS://MySignins-Ppe.Microsoft.Com"))
+    }
+
+    @Test
+    fun `isAllowedOrigin returns false for PPE subdomain spoofing`() {
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://account.live-int.com.evil.com"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows-ppe.net.attacker.io"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://mysignins-ppe.microsoft.com.fake.net"))
+    }
+
+    @Test
+    fun `isAllowedOrigin returns false for PPE prefix attack`() {
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://fake.account.live-int.com"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://evil.login.windows-ppe.net"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://malicious.mysignins-ppe.microsoft.com"))
+    }
+
+    @Test
+    fun `isAllowedOrigin returns false for similar but different PPE hosts`() {
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://accounts.live-int.com"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows.net"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://login.windows-ppe.com"))
+        assertFalse(PasskeyOriginRulesManager.isAllowedOrigin("https://mysignins-prod.microsoft.com"))
+    }
+
     // ==================== Edge Cases ====================
 
     @Test
@@ -297,9 +357,19 @@ class PasskeyOriginRulesManagerTest {
     }
 
     @Test
+    fun `getAllowedOriginRules contains all required PPE origins in DEBUG build`() {
+        val rules = PasskeyOriginRulesManager.getAllowedOriginRules()
+        assertTrue(rules.contains("https://account.live-int.com"))
+        assertTrue(rules.contains("https://login.windows-ppe.net"))
+        assertTrue(rules.contains("https://mysignins-ppe.microsoft.com"))
+    }
+
+    @Test
     fun `getAllowedOriginRules returns non-empty set`() {
         val rules = PasskeyOriginRulesManager.getAllowedOriginRules()
         assertTrue(rules.isNotEmpty())
-        assertTrue(rules.size >= 12) // At least production + sovereign cloud origins
+        // In DEBUG: 6 production + 6 sovereign cloud + 3 PPE = 15 origins
+        // In RELEASE: 6 production + 6 sovereign cloud = 12 origins
+        assertTrue(rules.size >= 12)
     }
 }
