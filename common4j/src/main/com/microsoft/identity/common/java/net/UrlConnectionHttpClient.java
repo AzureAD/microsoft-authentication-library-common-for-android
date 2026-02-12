@@ -48,30 +48,24 @@ import net.jcip.annotations.ThreadSafe;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.ConnectException;
 import java.net.HttpURLConnection;
-import java.net.NoRouteToHostException;
-import java.net.ProtocolException;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 
 import javax.annotation.Nullable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 
 import io.opentelemetry.api.trace.Span;
@@ -197,8 +191,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                 }
                             })
                             .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                            .isRetryable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
+                            .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
+                                public Boolean apply(HttpResponse response, Integer attemptNumber) {
                                     return response != null && isRetryableError(response.getStatusCode());
                                 }
                             })

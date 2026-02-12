@@ -525,6 +525,16 @@ public enum AttributeName {
      */
     is_redirect_url_opened_in_browser,
 
+    /**
+     * Indicates the number of retry attempts made in DRS discovery when the retry policy is enabled.
+     */
+    drs_discovery_retry_number,
+
+    /**
+     * Indicates the number of retry attempts made in TLS connection when the retry policy is enabled.
+     */
+    client_tls_retry_number,
+
     //region KeyPair generation
 
     /**
@@ -595,5 +605,6 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+    
     //endregion
 }
