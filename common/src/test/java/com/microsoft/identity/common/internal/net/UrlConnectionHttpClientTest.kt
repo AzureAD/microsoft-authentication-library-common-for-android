@@ -100,7 +100,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 1, null))
             .build()
 
         val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
@@ -129,7 +129,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 1, null))
             .build()
 
         val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
@@ -157,7 +157,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 1, null))
             .build()
 
         Assert.assertThrows(ClientException::class.java) {
@@ -205,7 +205,7 @@ class UrlConnectionHttpClientTest {
             .builder()
             .connectTimeoutMs(1000)
             .readTimeoutMs(1000)
-            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST"))
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 1, null))
             .build()
 
         Assert.assertThrows(ClientException::class.java) {
@@ -213,4 +213,91 @@ class UrlConnectionHttpClientTest {
         }
         Assert.assertEquals(1, ShadowUrlConnectionHttpClient.getRequestCount())
     }
+
+    /**
+     * Verifies that retry policy with 0 retries behaves like no retry (only initial attempt).
+     * Expects: Single request, ClientException thrown on failure.
+     */
+    @Test
+    fun testGet_withZeroRetries_failsImmediately() {
+        ShadowUrlConnectionHttpClient.setBehavior { _ ->
+            NetworkResult.Failure(
+                ClientException(
+                    ClientException.IO_ERROR,
+                    "Network error"
+                )
+            )
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 0, null))
+            .build()
+
+        Assert.assertThrows(ClientException::class.java) {
+            urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        }
+        Assert.assertEquals(1, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
+
+    /**
+     * Verifies that retry policy with 2 retries allows up to 3 total attempts.
+     * Expects: Three requests (initial + 2 retries), final success on third attempt.
+     */
+    @Test
+    fun testGet_withTwoRetries_succeedsOnThirdAttempt() {
+        ShadowUrlConnectionHttpClient.setBehavior { attempt ->
+            when (attempt) {
+                1, 2 -> NetworkResult.Failure(
+                    ClientException(
+                        ClientException.IO_ERROR,
+                        "Temporary error"
+                    )
+                )
+                else -> NetworkResult.Success(200, "{\"success\":true}")
+            }
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 2, null))
+            .build()
+
+        val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        Assert.assertEquals(200, response.statusCode)
+        Assert.assertEquals(3, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
+
+    /**
+     * Verifies that all 3 attempts fail when retries are exhausted with 2 retries configured.
+     * Expects: Three requests (initial + 2 retries), ClientException thrown.
+     */
+    @Test
+    fun testGet_withTwoRetries_failsAfterAllAttemptsExhausted() {
+        ShadowUrlConnectionHttpClient.setBehavior { _ ->
+            NetworkResult.Failure(
+                ClientException(
+                    ClientException.IO_ERROR,
+                    "Persistent error"
+                )
+            )
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 2, null))
+            .build()
+
+        Assert.assertThrows(ClientException::class.java) {
+            urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        }
+        Assert.assertEquals(3, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
 }
+

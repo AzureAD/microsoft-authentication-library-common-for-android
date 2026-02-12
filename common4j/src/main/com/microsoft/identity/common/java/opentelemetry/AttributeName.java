@@ -526,9 +526,14 @@ public enum AttributeName {
     is_redirect_url_opened_in_browser,
 
     /**
-     * Indicates the operation that is being retried in a retry policy.
+     * Indicates the number of retry attempts made in DRS discovery when the retry policy is enabled.
      */
-    network_retry_operation,
+    drs_discovery_retry_number,
+
+    /**
+     * Indicates the number of retry attempts made in TLS connection when the retry policy is enabled.
+     */
+    client_tls_retry_number,
 
     //region KeyPair generation
 

@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.net;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.ported.Function;
 import net.jcip.annotations.Immutable;
@@ -32,6 +31,9 @@ import net.jcip.annotations.ThreadSafe;
 
 import java.net.SocketTimeoutException;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
+
+import javax.annotation.Nullable;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,9 +58,9 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
         }
     };
     @Builder.Default
-    private final Function<HttpResponse, Boolean> isRetryable = new Function<HttpResponse, Boolean>() {
+    private final BiFunction<HttpResponse, Integer, Boolean> isRetryable = new BiFunction<HttpResponse, Integer, Boolean>() {
         @Override
-        public Boolean apply(HttpResponse input) {
+        public Boolean apply(HttpResponse input, Integer attemptNumber) {
             return Boolean.FALSE;
         }
     };
@@ -84,7 +86,7 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
             try {
                 HttpResponse response = supplier.call();
                 //If there are no retries left, or the response is acceptable, or it is not retryable.
-                if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response)) {
+                if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response, attemptNumber)) {
                     return response;
                 }
             } catch (final Exception e) {
@@ -122,20 +124,38 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
      * This policy retries ONLY on {@link ClientException#IO_ERROR} exceptions
      * (excluding {@link SocketTimeoutException}).
      * <p>
+     * The {@code numberOfRetries} parameter controls how many retry attempts will be made
+     * after the initial attempt fails. For example:
+     * <ul>
+     *     <li>{@code numberOfRetries = 0}: 1 total attempt (no retries)</li>
+     *     <li>{@code numberOfRetries = 1}: 2 total attempts (1 original + 1 retry)</li>
+     *     <li>{@code numberOfRetries = 2}: 3 total attempts (1 original + 2 retries)</li>
+     * </ul>
+     * <p>
      * Use this for scenarios where you want IO-error-specific retry logic.
      * For the library's standard retry behavior, use {@link UrlConnectionHttpClient#getDefaultInstance()}.
      *
      * @param tag The logging tag for tracing retry attempts
+     * @param numberOfRetries The number of retry attempts after the initial attempt (must be non-negative)
      * @return A configured {@link StatusCodeAndExceptionRetry} instance for IO errors only
+     * @throws IllegalArgumentException if numberOfRetries is negative
      */
-    public static StatusCodeAndExceptionRetry getIOExceptionRetryPolicy(@NonNull final String tag) {
+    public static StatusCodeAndExceptionRetry getIOExceptionRetryPolicy(
+            @NonNull final String tag,
+            final int numberOfRetries,
+            @Nullable String attributeNameForRetry) {
+        if (numberOfRetries < 0) {
+            throw new IllegalArgumentException("numberOfRetries must be non-negative, got: " + numberOfRetries);
+        }
         return StatusCodeAndExceptionRetry.builder()
-                .number(1)
+                .number(numberOfRetries)
                 .isRetryableException(e -> {
-                    SpanExtension.current().setAttribute(
-                            AttributeName.network_retry_operation.name(),
-                            tag
-                    );
+                    if (attributeNameForRetry != null) {
+                        SpanExtension.current().setAttribute(
+                                attributeNameForRetry,
+                                numberOfRetries
+                        );
+                    }
                     if (e instanceof ClientException
                             && ((ClientException) e).getErrorCode().equals(ClientException.IO_ERROR)
                             && !(e.getCause() instanceof SocketTimeoutException)) {
