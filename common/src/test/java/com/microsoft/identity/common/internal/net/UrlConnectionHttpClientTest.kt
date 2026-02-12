@@ -299,5 +299,67 @@ class UrlConnectionHttpClientTest {
         }
         Assert.assertEquals(3, ShadowUrlConnectionHttpClient.getRequestCount())
     }
+
+    /**
+     * Verifies that getIOExceptionRetryPolicy rejects negative retry counts.
+     */
+    @Test
+    fun testGetIOExceptionRetryPolicy_withNegativeRetries_throwsException() {
+        Assert.assertThrows(IllegalArgumentException::class.java) {
+            StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", -1, null)
+        }
+    }
+
+    /**
+     * Verifies that non-IO exceptions are not retried.
+     */
+    @Test
+    fun testGet_withNonIOException_doesNotRetry() {
+        ShadowUrlConnectionHttpClient.setBehavior { _ ->
+            NetworkResult.Failure(
+                ClientException(
+                    "DIFFERENT_ERROR",
+                    "Not an IO error"
+                )
+            )
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 2, null))
+            .build()
+
+        Assert.assertThrows(ClientException::class.java) {
+            urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        }
+        Assert.assertEquals(1, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
+
+    /**
+     * Verifies that with attributeNameForRetry set, policy executes successfully.
+     */
+    @Test
+    fun testGet_withAttributeName_executesSuccessfully() {
+        ShadowUrlConnectionHttpClient.setBehavior { _ ->
+            NetworkResult.Success(200, "{\"data\":\"value\"}")
+        }
+
+        val urlConnectionHttpClient = UrlConnectionHttpClient
+            .builder()
+            .connectTimeoutMs(1000)
+            .readTimeoutMs(1000)
+            .retryPolicy(
+                StatusCodeAndExceptionRetry.getIOExceptionRetryPolicy("TEST", 1, "test_attribute")
+            )
+            .build()
+
+        val response = urlConnectionHttpClient.get(TEST_URL, TEST_HEADERS)
+        Assert.assertEquals(200, response.statusCode)
+        Assert.assertEquals(1, ShadowUrlConnectionHttpClient.getRequestCount())
+    }
 }
+
+
 
