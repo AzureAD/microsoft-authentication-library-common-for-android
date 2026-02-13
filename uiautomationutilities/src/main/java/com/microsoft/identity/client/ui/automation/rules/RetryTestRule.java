@@ -28,6 +28,7 @@ import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 
+import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -82,6 +83,10 @@ public class RetryTestRule implements TestRule {
                         base.evaluate();
                         Logger.i(TAG, "Attempt #" + (i + 1) + " has succeeded!!");
                         return;
+                    } catch (final AssumptionViolatedException assumptionException) {
+                        // Test assumptions not met - skip the test without retrying
+                        Logger.i(TAG, "Test " + description.getMethodName() + " skipped due to assumption violation: " + assumptionException.getMessage());
+                        throw assumptionException;
                     } catch (final Throwable throwable) {
                         caughtThrowable = throwable;
                         Logger.e(TAG, description.getMethodName() + ": Attempt " + (i + 1) +
