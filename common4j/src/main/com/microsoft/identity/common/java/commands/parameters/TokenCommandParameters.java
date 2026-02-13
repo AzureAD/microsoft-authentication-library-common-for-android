@@ -74,11 +74,17 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final List<Map.Entry<String, String>> extraOptions;
 
+    private final List<Map.Entry<String, String>> extraQueryStringParametersForWebApps;
+
     // Only put in the token request body
     private final List<Map.Entry<String, String>> extraTokenBodyParameters;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
+    public List<Map.Entry<String, String>> getExtraQueryStringParametersForWebApps() {
+        return this.extraQueryStringParametersForWebApps == null ? null : new ArrayList<>(this.extraQueryStringParametersForWebApps);
     }
 
     public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
