@@ -42,6 +42,9 @@ import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -234,5 +237,67 @@ public abstract class AuthorizationFragment extends Fragment {
 
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
+    }
+
+    /**
+     * Tracks the URLs loaded in the WebView along with their load status.
+     * Key: Load order (int), Value: URL and success status (boolean).
+     */
+    private final Map<Integer, UrlLoadStatus> mUrlLoadTracker = new LinkedHashMap<>();
+    private int mUrlLoadCounter = 0;
+
+    /**
+     * Class to represent the URL, its load status, and an optional error message.
+     */
+    private static class UrlLoadStatus {
+        private final String url;
+        private final boolean isSuccess;
+        private final String error; // Error message if the load fails
+
+        UrlLoadStatus(String url, boolean isSuccess, String error) {
+            this.url = sanitizeUrl(url);
+            this.isSuccess = isSuccess;
+            this.error = error;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public boolean isSuccess() {
+            return isSuccess;
+        }
+
+        public String getError() {
+            return error;
+        }
+
+        /**
+         * Sanitize the URL to ensure no sensitive data is tracked.
+         */
+        private static String sanitizeUrl(String url) {
+            // Implement URL sanitization logic here
+            return url.replaceAll("[?&]sensitive_param=[^&]*", "");
+        }
+    }
+
+    /**
+     * Tracks a URL load event.
+     *
+     * @param url       The URL being loaded.
+     * @param isSuccess Whether the load was successful.
+     * @param error     The error message if the load fails (null if successful).
+     */
+    protected void trackUrlLoad(String url, boolean isSuccess, String error) {
+        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, isSuccess, error));
+    }
+
+    /**
+     * Retrieves the tracked URL load events.
+     *
+     * @return A copy of the URL load tracker map.
+     */
+    public Map<Integer, UrlLoadStatus> getUrlLoadTracker() {
+        return new LinkedHashMap<>(mUrlLoadTracker);
     }
 }
