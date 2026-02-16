@@ -96,6 +96,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import android.webkit.WebResourceError;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -145,13 +147,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private String mPasskeyRegistrationScript;
 
+    /**
+     * Callback for tracking URL load events.
+     */
+    private final IUrlLoadTracker mUrlLoadTracker;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
                                              @Nullable final String utid,
-                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
@@ -159,6 +167,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
+        mUrlLoadTracker = urlLoadTracker;
     }
 
     /**
@@ -172,22 +181,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
-        }
-    }
-
-    @Override
-    public void onPageFinished(final WebView view,
-                               final String url) {
-        super.onPageFinished(view, url);
-
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
         }
     }
 
@@ -1144,11 +1137,67 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        // Track URL load started
+        if (mUrlLoadTracker != null) {
+            // Initially track as in-progress (success will be updated in onPageFinished or error methods)
+            mUrlLoadTracker.trackUrlLoad(url, true, null);
+        }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
             Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
             view.evaluateJavascript(mPasskeyRegistrationScript, null);
         }
+    }
+
+    @Override
+    public void onPageFinished(final WebView view, final String url) {
+        super.onPageFinished(view, url);
+        // Track successful URL load completion
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.trackUrlLoad(url, true, null);
+        }
+
+        if (mAuthUxJavaScriptInterfaceAdded) {
+            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
+            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
+            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+            view.evaluateJavascript(jsScript, null);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onReceivedError(final WebView view,
+                                final int errorCode,
+                                final String description,
+                                final String failingUrl) {
+        final String methodTag = TAG + ":onReceivedError";
+        Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + errorCode + ", Description: " + description);
+        // Track URL load failure
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.trackUrlLoad(failingUrl, false, "Code:" + errorCode + ", " + description);
+        }
+        super.onReceivedError(view, errorCode, description, failingUrl);
+    }
+
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onReceivedError(@NonNull final WebView view,
+                                @NonNull final WebResourceRequest request,
+                                @NonNull final WebResourceError error) {
+        final String methodTag = TAG + ":onReceivedError";
+        final String failingUrl = request.getUrl() != null ? request.getUrl().toString() : "unknown";
+        Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + error.getErrorCode() + 
+                ", Description: " + error.getDescription());
+        // Track URL load failure for main frame only
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.trackUrlLoad(failingUrl, false, "Code:" + error.getErrorCode() + 
+                    ", " + error.getDescription());
+        }
+        super.onReceivedError(view, request, error);
     }
 
     /**

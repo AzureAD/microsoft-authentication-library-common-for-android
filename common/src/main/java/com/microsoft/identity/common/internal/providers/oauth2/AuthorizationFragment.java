@@ -301,3 +301,4 @@ public abstract class AuthorizationFragment extends Fragment {
         return new LinkedHashMap<>(mUrlLoadTracker);
     }
 }
+
