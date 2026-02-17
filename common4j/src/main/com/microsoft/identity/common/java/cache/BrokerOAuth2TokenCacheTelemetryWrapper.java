@@ -203,18 +203,11 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
 
     @Override
     public AccountRecord getAccountByLocalAccountId(String environment, String clientId, String localAccountId) {
-        final long startTime = System.currentTimeMillis();
         final long startTimeInNanos = System.nanoTime();
         try {
             return mCacheToWrap.getAccountByLocalAccountId(environment, clientId, localAccountId);
         } finally {
-            final long endTime = System.currentTimeMillis();
-            final long elapsedTime = endTime - startTime;
-            SpanExtension.current().setAttribute(
-                    AttributeName.elapsed_time_cache_get_account_by_local_account_id.name(),
-                    elapsedTime
-            );
-            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_cache_get_account_by_local_account_id_using_nanos.name(),
+            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_cache_get_account_by_local_account_id.name(),
                     startTimeInNanos);
         }
     }
