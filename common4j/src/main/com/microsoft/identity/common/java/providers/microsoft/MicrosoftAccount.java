@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,12 +88,12 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * @param idToken    id token of the Microsoft account.
      * @param clientInfo the client_info for this Account.
      */
-    public MicrosoftAccount(@NonNull final IDToken idToken,
+    public MicrosoftAccount(@Nullable final IDToken idToken,
                             @NonNull final ClientInfo clientInfo) {
         Logger.verbose(TAG, "Init: " + TAG);
         mIDToken = idToken;
         mRawClientInfo = clientInfo.getRawClientInfo();
-        final Map<String, ?> claims = idToken.getTokenClaims();
+        final Map<String, ?> claims = idToken != null ? idToken.getTokenClaims(): new HashMap<>();
         mUserId = getUserId(claims);
         mDisplayableId = getDisplayableIdFromClaims(claims);
         mName = (String) claims.get(AzureActiveDirectoryIdToken.NAME);

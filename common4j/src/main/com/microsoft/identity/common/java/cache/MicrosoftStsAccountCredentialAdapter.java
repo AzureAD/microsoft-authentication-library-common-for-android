@@ -61,6 +61,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -302,7 +303,7 @@ public class MicrosoftStsAccountCredentialAdapter
             accountRecord = new AccountRecord(azureActiveDirectoryAccount);
         } else {
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    new IDToken(microsoftStsTokenResponse.getIdToken()),
+                    !Objects.equals(microsoftStsTokenResponse.getIdToken(), "none") ? new IDToken(microsoftStsTokenResponse.getIdToken()) : null,
                     clientInfo
             );
             accountRecord = new AccountRecord(microsoftStsAccount);

@@ -102,6 +102,7 @@ import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThrowableUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -112,6 +113,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -181,9 +183,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         }
         // Some parameters can be null, so double checking.
-        final String username = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccountRecord().getUsername(), WebAppsAccountItem.FIELD_USER_NAME);
         final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
         final String idToken = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getIdToken(), WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN);
+        // When ESTS makes a lookup mode request, id token is set to "none". There is no username in this case, but we shouldn't block on that.
+        final String username = Objects.equals(authenticationResult.getAccountRecord().getUsername(), SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE) ? null : authenticationResult.getAccountRecord().getUsername();
         final WebAppsAccountItem accountItem = new WebAppsAccountItem(username, homeAccountId, null);
 
         final WebAppsGetTokenSubOperationResponse getTokenResponse = new WebAppsGetTokenSubOperationResponse(
