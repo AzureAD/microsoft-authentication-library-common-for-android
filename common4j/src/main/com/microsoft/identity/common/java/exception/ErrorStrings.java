@@ -489,4 +489,9 @@ public final class ErrorStrings {
      * A generic error code used when no other error code is applicable.
      */
     public static final String UNEXPECTED_ERROR = "unexpected_error";
+
+    /**
+     * The operation is only allowed for Broker applications.
+     */
+    public static final String BROKER_ONLY_OPERATION = "broker_only_operation";
 }

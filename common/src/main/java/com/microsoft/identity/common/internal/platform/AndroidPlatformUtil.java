@@ -47,10 +47,10 @@ import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -329,6 +329,11 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return BuildConfig.DEBUG && (redirectUri.equals("msauth://com.microsoft.teams/VCpKgbYCXucoq1mZ4BZPsh5taNE=")
                 || redirectUri.equals("msauth://com.microsoft.teams/fcg80qvoM1YMKJZibjBwQcDfOno=")
                 || redirectUri.equals("https://login.microsoftonline.com/common/oauth2/nativeclient"));
+    }
+
+    @Override
+    public boolean isBrokerProcess(){
+        return ProcessUtil.isBrokerProcess(mContext);
     }
 
     protected Context getContext() {

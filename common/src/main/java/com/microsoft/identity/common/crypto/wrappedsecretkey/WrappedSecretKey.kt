@@ -24,6 +24,8 @@ package com.microsoft.identity.common.crypto.wrappedsecretkey
 
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 
 /**
  * Represents a wrapped secret key with cryptographic metadata.
@@ -76,9 +78,20 @@ data class WrappedSecretKey(
     fun serialize(): ByteArray {
         val serializerId = CommonFlightsManager.getFlightsProvider()
             .getIntValue(CommonFlight.WRAPPED_SECRET_KEY_SERIALIZER_VERSION)
-        return WrappedSecretKeySerializerManager
-            .getSerializer(serializerId)
-            .serialize(this)
+        SpanExtension.current().setAttribute(
+            AttributeName.secret_key_wrapping_serializer_id.name,
+            serializerId.toLong()
+        )
+        val serializedKey = measureAndRecordTelemetry {
+            WrappedSecretKeySerializerManager
+                .getSerializer(serializerId)
+                .serialize(this)
+        }
+        SpanExtension.current().setAttribute(
+            AttributeName.secret_key_size.name,
+            serializedKey.size.toLong()
+        )
+        return serializedKey
     }
 
     companion object {
@@ -91,9 +104,41 @@ data class WrappedSecretKey(
          */
         fun deserialize(data: ByteArray): WrappedSecretKey {
             val serializerId = WrappedSecretKeySerializerManager.identifySerializer(data)
-            return WrappedSecretKeySerializerManager
-                .getSerializer(serializerId)
-                .deserialize(data)
+            SpanExtension.current().apply {
+                setAttribute(
+                    AttributeName.secret_key_wrapping_serializer_id.name,
+                    serializerId.toLong()
+                )
+                setAttribute(
+                    AttributeName.secret_key_size.name,
+                    data.size.toLong()
+                )
+            }
+            return measureAndRecordTelemetry {
+                WrappedSecretKeySerializerManager
+                    .getSerializer(serializerId)
+                    .deserialize(data)
+            }
+        }
+
+        /**
+         * Executes an operation while measuring its duration and recording telemetry.
+         *
+         * Records the elapsed time to the specified attribute in the current span.
+         *
+         * @param T The return type of the operation
+         * @param operation The operation to execute and measure
+         * @return The result of the operation
+         */
+        private inline fun <T> measureAndRecordTelemetry(operation: () -> T): T {
+            val startTime = System.nanoTime()
+            val result = operation()
+            val elapsedTime = System.nanoTime() - startTime
+            SpanExtension.current().setAttribute(
+                AttributeName.secret_key_serialization_duration.name,
+                elapsedTime
+            )
+            return result
         }
     }
 }

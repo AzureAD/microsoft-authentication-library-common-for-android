@@ -26,7 +26,6 @@ import android.os.Bundle
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodCompanyPortal
-import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodLTW
 import com.microsoft.identity.common.internal.broker.BrokerData.Companion.prodMicrosoftAuthenticator
 import com.microsoft.identity.common.internal.broker.ipc.AbstractIpcStrategyWithServiceValidation
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle

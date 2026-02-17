@@ -63,8 +63,4 @@ abstract class BaseNativeAuthCommand<T>(
     override fun willReachTokenEndpoint(): Boolean {
         return false
     }
-
-    override fun isEligibleForEstsTelemetry(): Boolean {
-        return true
-    }
 }

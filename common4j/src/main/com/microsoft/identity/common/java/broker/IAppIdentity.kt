@@ -20,53 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.eststelemetry;
+package com.microsoft.identity.common.java.broker
 
-import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-
-import lombok.Builder;
-import lombok.NonNull;
-
-@Builder
-public class MockCommand implements ICommand<Boolean> {
-
-    private String correlationId;
-
-    @Builder.Default
-    private Boolean result = true;
-
-    @Builder.Default
-    private Boolean isEligibleForEstsTelemetry = true;
-
-    @Builder.Default
-    private Boolean isEligibleForCaching = true;
-
-    @Builder.Default
-    private Boolean willReachTokenEndpoint = true;
-
-    @Override
-    public Boolean execute() throws Exception {
-        return false;
-    }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return result;
-    }
-
-    @Override
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    @Override
-    public boolean isEligibleForCaching() {
-        return isEligibleForCaching;
-    }
-
-    @Override
-    public boolean willReachTokenEndpoint() {
-        return willReachTokenEndpoint;
-    }
+/**
+ * Interface representing the identity of an application.
+ */
+interface IAppIdentity {
+    val packageName: String
+    val signingCertificateThumbprint: String
+    val nickName: String?
 }
+
+/**
+ * Data class representing an application identity.
+ */
+data class App(
+    override val packageName: String,
+    override val signingCertificateThumbprint: String,
+    override val nickName: String? = null
+) : IAppIdentity

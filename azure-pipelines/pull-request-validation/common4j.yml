@@ -10,44 +10,106 @@ variables:
 
 resources:
   repositories:
-  - repository: self
-    type: git
+  - repository: common-dev
+    type: github
+    name: AzureAD/microsoft-authentication-library-common-for-android
     ref: dev
+    endpoint: ANDROID_GITHUB
 
 pool:
   vmImage: 'windows-2022'
 
-jobs:
-- job: build_test
-  displayName: Build & Test
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - bash: |
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-      echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-    displayName: 'Set VSTS Fields in Environment'
-  - template: ../templates/steps/automation-cert.yml
-  - task: Gradle@1
-    name: Gradle1
-    displayName: Assembles the outputs of this project.
-    inputs:
-      cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: clean common4j:assemble
-      javaHomeOption: JDKVersion
-      jdkVersionOption: 1.17
-  - template: ../templates/steps/spotbugs.yml
+stages:
+  - stage: build_and_test
+    displayName: Build and Test
+    jobs:
+    - job: build_test
+      displayName: PR Branch Testing
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - bash: |
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+        displayName: 'Set VSTS Fields in Environment'
+      - template: ../templates/steps/automation-cert.yml
+      - task: Gradle@1
+        name: Gradle1
+        displayName: Assembles the outputs of this project.
+        inputs:
+          cwd: $(Build.SourcesDirectory)/common-java-root
+          tasks: clean common4j:assemble
+          javaHomeOption: JDKVersion
+          jdkVersionOption: 1.17
+      - template: ../templates/steps/spotbugs.yml
+        parameters:
+          project: common4j
+          cwd: $(Build.SourcesDirectory)/common-java-root
+          spotbugsCommand: spotbugsMain
+      - task: Gradle@2
+        displayName: Run the unit tests.
+        inputs:
+          cwd: $(Build.SourcesDirectory)/common-java-root
+          tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
+          javaHomeOption: JDKVersion
+          jdkVersionOption: 1.17
+      - script: tree "$(Build.SourcesDirectory)" /F /A
+        displayName: 'Print File Structure Tree'
+      - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
+        artifact: jacocoReport
+        displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
+      - task: PublishCodeCoverageResults@1
+        displayName: Publish Code Coverage Results
+        condition: always()
+        inputs:
+          codeCoverageTool: 'JaCoCo'
+          summaryFileLocation: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml'
+          reportDirectory: '$(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/html'
+          failIfCoverageEmpty: false
+
+    - job: build_test_dev
+      displayName: Dev Branch Testing
+      steps:
+        - checkout: common-dev
+          clean: true
+          submodules: recursive
+          persistCredentials: True
+        - bash: |
+            echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+            echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+          displayName: 'Set VSTS Fields in Environment'
+        - template: ../templates/steps/automation-cert.yml
+        - task: Gradle@1
+          name: Gradle1
+          displayName: Assembles the outputs of this project.
+          inputs:
+            cwd: $(Build.SourcesDirectory)/common-java-root
+            tasks: clean common4j:assemble
+            javaHomeOption: JDKVersion
+            jdkVersionOption: 1.17
+        - template: ../templates/steps/spotbugs.yml
+          parameters:
+            project: common4j
+            cwd: $(Build.SourcesDirectory)/common-java-root
+            spotbugsCommand: spotbugsMain
+        - task: Gradle@2
+          displayName: Run the unit tests.
+          inputs:
+            cwd: $(Build.SourcesDirectory)/common-java-root
+            tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
+            javaHomeOption: JDKVersion
+            jdkVersionOption: 1.17
+        - script: tree "$(Build.SourcesDirectory)" /F /A
+          displayName: 'Print File Structure Tree'
+        - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
+          artifact: jacocoReportDev
+          displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
+
+  - template: ../code-coverage/compare-code-coverage.yml
     parameters:
-      project: common4j
-      cwd: $(Build.SourcesDirectory)/common-java-root
-      spotbugsCommand: spotbugsMain
-  - task: Gradle@2
-    displayName: Run the unit tests.
-    inputs:
-      cwd: $(Build.SourcesDirectory)/common-java-root
-      tasks: common4j:test -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
-      javaHomeOption: JDKVersion
-      jdkVersionOption: 1.17
+      commonRepoAlias: self
+      dependsOn:
+        - build_and_test
 ...

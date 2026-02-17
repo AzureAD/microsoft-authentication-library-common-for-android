@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.result;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_REQUEST_RECEIVED_TIMESTAMP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_RESPONSE_GENERATION_TIMESTAMP;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_SILENT_EXECUTOR_POOL_SIZE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
@@ -65,6 +66,7 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudien
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.commands.webapps.WebAppsAccountItem;
@@ -505,6 +507,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             baseException.setBrokerPerformanceMetrics(metrics);
         }
 
+        // Set broker app info if available
+        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
+            baseException.setBrokerAppVersion(
+                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
+            );
+        }
+        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
+            baseException.setBrokerAppPackageName(
+                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
+            );
+        }
+
         return baseException;
     }
 
@@ -525,11 +539,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 BROKER_RESPONSE_GENERATION_TIMESTAMP,
                 INVALID_TIMESTAMP
         );
+        final int silentExecutorPoolSize = resultBundle.getInt(
+                BROKER_SILENT_EXECUTOR_POOL_SIZE,
+                CommandDispatcher.getDefaultSilentExecutorPoolSize()
+        );
 
         if (brokerRequestReceivedTimestamp != INVALID_TIMESTAMP && brokerResponseGenerationTimestamp != INVALID_TIMESTAMP) {
             return new BrokerPerformanceMetrics(
                     brokerRequestReceivedTimestamp,
-                    brokerResponseGenerationTimestamp
+                    brokerResponseGenerationTimestamp,
+                    silentExecutorPoolSize
             );
         } else {
             Logger.warn(TAG, "Broker performance metrics not found in the result bundle.");
@@ -997,6 +1016,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
             if (metrics != null) {
                 acquireTokenResult.setBrokerPerformanceMetrics(metrics);
+            }
+
+            // Set broker app info if available
+            if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
+                acquireTokenResult.setBrokerAppVersion(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
+                );
+            }
+            if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
+                acquireTokenResult.setBrokerAppPackageName(
+                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
+                );
             }
             return acquireTokenResult;
         }
