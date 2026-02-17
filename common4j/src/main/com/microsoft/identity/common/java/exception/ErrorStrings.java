@@ -287,7 +287,19 @@ public final class ErrorStrings {
      * Strong Device registration not enabled.
      */
     public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_CODE = "Strong_device_registration_not_enabled";
-    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_MESSAGE = "Strong device registration required, but is not yet enabled in broker";
+    public static final String STRONG_DEVICE_REGISTRATION_NOT_ENABLED_ERROR_MESSAGE = "Strong device registration required, but is not yet enabled in broker. Please contact your administrator for more information. Learn more here https://go.microsoft.com/fwlink/?linkid=2280772.";
+
+    /**
+     * Device registration upgrade not supported in shared device.
+     */
+    public static final String DEVICE_REGISTRATION_UPGRADE_NOT_SUPPORTED_IN_SHARED_DEVICE_ERROR_CODE = "device_registration_upgrade_not_supported_in_shared_device";
+    public static final String DEVICE_REGISTRATION_UPGRADE_NOT_SUPPORTED_IN_SHARED_DEVICE_ERROR_MESSAGE = "Token Binding CA policy is not supported in shared device. Please contact your administrator for more information. Learn more here https://go.microsoft.com/fwlink/?linkid=2280772.";
+
+    /**
+     * Device registration upgrade not supported due to user mismatch.
+     */
+    public static final String DEVICE_REGISTRATION_UPGRADE_NOT_SUPPORTED_USER_MISMATCH_ERROR_CODE = "device_registration_upgrade_not_supported_in_shared_device";
+    public static final String DEVICE_REGISTRATION_UPGRADE_NOT_SUPPORTED_USER_MISMATCH_ERROR_MESSAGE = "The currently signed in user is not a registered owner for this device. Please contact your administrator for more information. Learn more here https://go.microsoft.com/fwlink/?linkid=2280772.";
 
     /**
      * Device unregistration/leave failed.
