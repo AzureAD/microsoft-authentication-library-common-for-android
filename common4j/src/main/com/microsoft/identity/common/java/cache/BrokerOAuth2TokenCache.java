@@ -317,7 +317,6 @@ public class BrokerOAuth2TokenCache
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
         final long loadStartTimeInNanos = System.nanoTime();
-
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
