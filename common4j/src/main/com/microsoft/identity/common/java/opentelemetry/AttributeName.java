@@ -207,14 +207,14 @@ public enum AttributeName {
     elapsed_time_cache_get_account_by_local_account_id,
 
     /**
-     * The time (in milliseconds), calculated using nanos, spent in executing the getAccountByLocalAccountId method in OAuth2TokenCache.
-     */
-    elapsed_time_cache_get_account_by_local_account_id_using_nanos,
-
-    /**
      * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
      */
     elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id,
+
+    /**
+     * The time (in milliseconds) spent in saving account data to Shared Preferences.
+     */
+    elapsed_time_save_account_shared_preferences,
 
     /**
      * The time (in milliseconds) spent in executing the getAccounts method in OAuth2TokenCache.
@@ -265,11 +265,6 @@ public enum AttributeName {
      * The time (in milliseconds) spent on network when acquiring AT.
      */
     elapsed_time_network_acquire_at,
-
-    /**
-     * The time (in milliseconds), calculated using nanos, spent on network when acquiring AT.
-     */
-    elapsed_time_network_acquire_at_using_nanos,
 
     /**
      * The broker operation name.
@@ -509,11 +504,6 @@ public enum AttributeName {
      *  Elapsed time (in milliseconds) spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
      */
     elapsed_time_load_aggregated_account_data,
-
-    /**
-     *  Elapsed time (in milliseconds), calculated using nanos, spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
-     */
-    elapsed_time_load_aggregated_account_data_using_nanos,
 
     /**
      * Indicates if account aggregation is skipped during saveTokenResult() call.
