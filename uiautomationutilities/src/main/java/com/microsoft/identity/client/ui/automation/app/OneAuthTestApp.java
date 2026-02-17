@@ -83,9 +83,9 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-            // On later apis there is an extra permission prompt, we handle the button by text
-            UiAutomatorUtils.handleButtonClickForObjectWithText("Allow access to manage all files");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // On Android 11+ there is an extra permission prompt for managing all files
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Allow access to manage all files");
             UiAutomatorUtils.pressBack();
         }
         CommonUtils.grantPackagePermission();
