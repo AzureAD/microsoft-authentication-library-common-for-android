@@ -4,6 +4,7 @@ vNext
 - [MAJOR] add isBrokerProcess to IPlatformUtil (#2882)
 - [MINOR] Remove OpenTelemetry from keep rules (#2881)
 - [MINOR] Adding ExtraQueryStringParametersForWebApps (#2891)
+- [MINOR] Added flight-controlled option to enable Broker CommandDispatcher silent thread pool size based on processor count and default to 12 threads.
 
 Version 23.3.0
 ----------

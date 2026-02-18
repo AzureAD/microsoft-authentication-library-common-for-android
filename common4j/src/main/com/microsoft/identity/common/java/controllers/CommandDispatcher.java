@@ -88,6 +88,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -98,8 +99,9 @@ import lombok.NonNull;
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED = 8;
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 12;
+    // CPU core count is used as a reference for sizing SilentRequestThreadPool.
+    private static final int CPU_CORE_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
     private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
@@ -1089,14 +1091,14 @@ public class CommandDispatcher {
     }
 
     /**
-     * Initializes the silent executor with expanded thread pool size (8 threads).
+     * Initializes the silent executor with expanded thread pool size based on Processor count.
      * <p>
      * This method should ONLY be called by Broker during its initialization phase
      * when the flight check determines that expanded pool is enabled.
      * MSAL client apps should NOT call this method - they will use the default pool size.
      * </p>
      * <p>
-     * This enables Broker to handle more concurrent silent token requests (8 vs 5 threads)
+     * This enables Broker to handle more concurrent silent token requests (12 vs CPU count based on flight)
      * without affecting MSAL client apps which run in separate processes.
      * </p>
      *
@@ -1115,8 +1117,8 @@ public class CommandDispatcher {
             );
         }
 
-        Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
-        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+        Logger.info(methodTag, "Expanding silent thread pool size for Broker to core pool size " + CPU_CORE_COUNT + ", based on processor count.");
+        resetSilentRequestExecutorWithSize(CPU_CORE_COUNT);
     }
 
 
@@ -1150,7 +1152,12 @@ public class CommandDispatcher {
         final ExecutorService oldExecutor;
         synchronized (mapAccessLock) {
             oldExecutor = sSilentExecutor;
-            sSilentExecutor = Executors.newFixedThreadPool(effectivePoolSize);
+            sSilentExecutor = new ThreadPoolExecutor(
+                    poolSize, // core pool size
+                    poolSize*2, // max pool size
+                    30L, // keep-alive time for idle threads above core pool size
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>());
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
         }
