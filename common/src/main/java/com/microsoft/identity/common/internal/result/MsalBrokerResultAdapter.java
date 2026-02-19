@@ -168,24 +168,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                                                            @Nullable final String negotiatedBrokerProtocolVersion,
                                                            @Nullable final String state) throws BaseException {
         final String methodTag = TAG + ":bundleFromAuthenticationResultForWebApps";
-        final String errorMessagePrefix = "Received a successful interactive result, but: ";
         Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
 
         final Bundle resultBundle = new Bundle();
 
         final String homeAccountId = authenticationResult.getUniqueId();
-
-        final String clientInfo = WebAppsUtil.homeAccountIdToClientInfo(homeAccountId);
-        if (StringUtil.isNullOrEmpty(clientInfo)) {
-            throw new ClientException(
-                    ErrorStrings.UNKNOWN_ERROR,
-                    errorMessagePrefix + "clientInfo could not be derived from homeAccountId."
-            );
-        }
+        final String clientInfo = authenticationResult.getAccountRecord().getClientInfo();
         // Some parameters can be null, so double checking.
         final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
         final String idToken = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getIdToken(), WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN);
-        // When ESTS makes a lookup mode request, id token is set to "none". There is no username in this case, but we shouldn't block on that.
+        // When ESTS makes a lookup mode request, id token is set to "none". We have logic to get the username from the account data storage.
+        // However, in the case where we don't find the username in the cache (for whatever reason), I don't think we should block the lookup mode response from being sent back.
         final String username = Objects.equals(authenticationResult.getAccountRecord().getUsername(), SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE) ? null : authenticationResult.getAccountRecord().getUsername();
         final WebAppsAccountItem accountItem = new WebAppsAccountItem(username, homeAccountId, null);
 
