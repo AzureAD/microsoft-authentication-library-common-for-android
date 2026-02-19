@@ -206,7 +206,12 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
      */
-    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false);
+    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false),
+    /**
+     * Flight to enable increased thread pool size for silent requests.
+     * When true, uses 12 threads. When false, uses legacy 5 threads.
+     */
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", true);
 
     private String key;
     private Object defaultValue;
