@@ -89,10 +89,8 @@ data class BrokerData(
         @JvmStatic
         fun setShouldTrustDebugBrokers(value: Boolean) {
             val methodTag = "$TAG:setShouldTrustDebugBrokers"
-            if (!BuildConfig.DEBUG && value) {
-                Logger.warn(methodTag, "You are forcing to trust debug brokers in non-debug builds.")
-            }
-            sShouldTrustDebugBrokers = value
+            Logger.warn(methodTag, "Ignoring the value of $value for shouldTrustDebugBrokers. " +
+                    "This value is determined by BuildConfig and cannot be overridden at runtime.")
         }
 
         @JvmStatic
