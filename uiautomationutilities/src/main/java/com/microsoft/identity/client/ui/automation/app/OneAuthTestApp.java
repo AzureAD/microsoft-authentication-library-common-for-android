@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.app;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
+import android.os.Build;
 import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
@@ -82,6 +83,11 @@ public class OneAuthTestApp extends App implements IFirstPartyApp {
 
     @Override
     public void handleFirstRun() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // On Android 11+ there is an extra permission prompt for managing all files
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Allow access to manage all files");
+            UiAutomatorUtils.pressBack();
+        }
         CommonUtils.grantPackagePermission();
         // Because switching the App Configuration will decide whether to truly enable the Broker,
         // it's essential to turn on the Broker beforehand.
