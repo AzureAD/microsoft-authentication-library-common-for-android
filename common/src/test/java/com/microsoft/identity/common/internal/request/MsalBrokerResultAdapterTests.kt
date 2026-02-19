@@ -651,7 +651,7 @@ class MsalBrokerResultAdapterTests {
         assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_ACCOUNT))
         assertTrue(resultString.contains(WebAppsAccountItem.FIELD_HOME_ACCOUNT_ID))
 
-        // The username field in the account object should be null (represented as "username":null in JSON)
+        // The username field in the account object should be null
         // We verify that the special MISSING_FROM_THE_TOKEN_RESPONSE value is NOT in the result
         Assert.assertFalse(
             "Username should be null/absent, not the MISSING_FROM_THE_TOKEN_RESPONSE value",
