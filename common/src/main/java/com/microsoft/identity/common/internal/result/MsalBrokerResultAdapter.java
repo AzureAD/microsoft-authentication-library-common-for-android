@@ -168,12 +168,22 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                                                            @Nullable final String negotiatedBrokerProtocolVersion,
                                                            @Nullable final String state) throws BaseException {
         final String methodTag = TAG + ":bundleFromAuthenticationResultForWebApps";
+        final String errorMessagePrefix = "Received a successful interactive result, but: ";
         Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
 
         final Bundle resultBundle = new Bundle();
 
         final String homeAccountId = authenticationResult.getUniqueId();
-        final String clientInfo = authenticationResult.getAccountRecord().getClientInfo();
+        String clientInfo = authenticationResult.getAccountRecord().getClientInfo();
+        if (clientInfo == null) {
+            clientInfo = WebAppsUtil.homeAccountIdToClientInfo(homeAccountId);
+            if (clientInfo == null) {
+                throw new ClientException(
+                        ErrorStrings.UNKNOWN_ERROR,
+                        errorMessagePrefix + "clientInfo could not be derived from homeAccountId."
+                );
+            }
+        }
         // Some parameters can be null, so double checking.
         final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
         final String idToken = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getIdToken(), WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN);

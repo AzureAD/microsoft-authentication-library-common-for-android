@@ -146,6 +146,22 @@ class WebAppsUtil {
             }
         }
 
+        /**
+         * Converts a homeAccountId of the form uid.utid into the raw client_info string
+         * (Base64URL encoded JSON: {"uid":"<uid>","utid":"<utid>"}).
+         *
+         * @param homeAccountId The home account id (uid.utid).
+         * @return Base64URL (unpadded) encoded client_info or null if input invalid.
+         */
+        @JvmStatic
+        fun homeAccountIdToClientInfo(homeAccountId: String?): String? {
+            if (homeAccountId.isNullOrBlank()) return null
+            val parts = homeAccountId.split(".")
+            if (parts.size != 2 || parts[0].isBlank() || parts[1].isBlank()) return null
+            val json = "{\"uid\":\"${parts[0]}\",\"utid\":\"${parts[1]}\"}"
+            return Base64Util.encodeUrlSafeString(json)
+        }
+
         @JvmStatic
         fun getSchemeAndHost(url: String): String {
             val uri = try { URI(url.trim()) } catch (e: Exception) {
