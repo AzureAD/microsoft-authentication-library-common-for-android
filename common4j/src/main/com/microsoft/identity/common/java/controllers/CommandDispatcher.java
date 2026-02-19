@@ -1153,11 +1153,11 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             oldExecutor = sSilentExecutor;
             sSilentExecutor = new ThreadPoolExecutor(
-                    poolSize, // core pool size
-                    poolSize*2, // max pool size
+                    effectivePoolSize, // core pool size
+                    effectivePoolSize*2, // max pool size
                     30L, // keep-alive time for idle threads above core pool size
                     TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>());
+                    new LinkedBlockingQueue<Runnable>(effectivePoolSize));
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
         }
