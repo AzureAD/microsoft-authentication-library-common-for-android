@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
@@ -302,8 +303,10 @@ public class MicrosoftStsAccountCredentialAdapter
                     );
             accountRecord = new AccountRecord(azureActiveDirectoryAccount);
         } else {
+            final String idTokenValue = microsoftStsTokenResponse.getIdToken();
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    !Objects.equals(microsoftStsTokenResponse.getIdToken(), "none") ? new IDToken(microsoftStsTokenResponse.getIdToken()) : null,
+                    Objects.equals(idTokenValue, AuthenticationConstants.Broker.LOOKUP_MODE_EXPECTED_TOKEN_VALUE) ?
+                            IDToken.createForLookup(idTokenValue) : new IDToken(idTokenValue),
                     clientInfo
             );
             accountRecord = new AccountRecord(microsoftStsAccount);

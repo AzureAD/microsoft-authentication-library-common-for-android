@@ -608,6 +608,30 @@ public class AuthenticationConstants {
          * Active broker package name.
          */
         public static final String BROKER_PACKAGE_NAME = "broker_package_name";
+        /**
+         * Key which ESTS sends for nativebroker extra query param.
+         */
+        public static final String NATIVEBROKER_KEY = "nativebroker";
+        /**
+         * Value which ESTS sends for nativebroker extra query param.
+         */
+        public static final String NATIVEBROKER_VALUE = "1";
+        /**
+         * Key for nativebroker mode sent in the extra query param by ESTS.
+         */
+        public static final String NATIVEBROKER_MODE_KEY = "nativebroker_mode";
+        /**
+         * Value for nativebroker mode sent in the extra query param by ESTS when the request is from lookup.
+         */
+        public static final String LOOKUP_MODE_VALUE = "Lookup";
+        /**
+         * Value sent by ESTS when in lookup mode.
+         */
+        public static final String LOOKUP_MODE_EXPECTED_TOKEN_VALUE = "none";
+        /**
+         * Value sent by ESTS when in lookup mode.
+         */
+        public static final String LOOKUP_MODE_EXPECTED_SCOPE_VALUE = "none";
 
     }
 

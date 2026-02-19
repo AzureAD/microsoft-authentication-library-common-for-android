@@ -212,6 +212,38 @@ public class IDToken {
     }
 
     /**
+     * Private constructor for lookup mode only.
+     * Creates an IDToken instance with empty token claims.
+     *
+     * @param rawIdToken raw ID token
+     * @param isLookupMode flag indicating this is for lookup purposes only
+     */
+    private IDToken(final String rawIdToken, final boolean isLookupMode) {
+        if (StringUtil.isNullOrEmpty(rawIdToken)) {
+            throw new IllegalArgumentException("null or empty raw idtoken");
+        }
+
+        mRawIdToken = rawIdToken;
+
+        if (isLookupMode) {
+            mTokenClaims = Collections.emptyMap();
+        } else {
+            throw new IllegalStateException("This constructor is for lookup mode only");
+        }
+    }
+
+    /**
+     * Factory method to create an IDToken instance for lookup purposes only.
+     * The token claims will be empty.
+     *
+     * @param rawIdToken raw ID token
+     * @return IDToken instance with empty claims
+     */
+    public static IDToken createForLookup(final String rawIdToken) {
+        return new IDToken(rawIdToken, true);
+    }
+
+    /**
      * @return mRawIdToken of IDToken object.
      */
     public String getRawIDToken() {
