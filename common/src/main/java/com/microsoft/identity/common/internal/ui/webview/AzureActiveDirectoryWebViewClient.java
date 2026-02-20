@@ -197,6 +197,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    @Override
+    public void onPageFinished(final WebView view, final String url) {
+        super.onPageFinished(view, url);
+
+        if (mAuthUxJavaScriptInterfaceAdded) {
+            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
+            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
+            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+            view.evaluateJavascript(jsScript, null);
+        }
+    }
+
     /**
      * Give the host application a chance to take over the control when a new url is about to be loaded in the current WebView.
      * This method was deprecated in API level 24.
@@ -1159,21 +1174,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
             Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
             view.evaluateJavascript(mPasskeyRegistrationScript, null);
-        }
-    }
-
-    @Override
-    public void onPageFinished(final WebView view, final String url) {
-        super.onPageFinished(view, url);
-
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
         }
     }
 
