@@ -141,7 +141,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             }
 
             final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
+            final long sharedPreferencesSaveStartTime = System.nanoTime();
             mSharedPreferencesFileManager.put(cacheKey, cacheValue);
+            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_save_account_shared_preferences.name(), sharedPreferencesSaveStartTime);
             mCachedAccountRecordsWithKeys.put(cacheKey, accountToSave);
         }
     }

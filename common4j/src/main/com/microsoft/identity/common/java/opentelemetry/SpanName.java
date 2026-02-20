@@ -64,7 +64,6 @@ public enum SpanName {
     ProcessCrossCloudRedirect,
     SwitchBrowserResume,
     SwitchBrowserProcess,
-    SecretKeyWrapping,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
     ProvisionResourceAccount,
@@ -94,5 +93,13 @@ public enum SpanName {
     /**
      * Span name for the Browser SSO header generation operation.
      */
-    GetBrowserSsoHeaders
+    GetBrowserSsoHeaders,
+    /**
+     * Span name for secret key generation operations.
+     */
+    SecretKeyGeneration,
+    /**
+     * Span name for secret key retrieval operations.
+     */
+    SecretKeyRetrieval
 }

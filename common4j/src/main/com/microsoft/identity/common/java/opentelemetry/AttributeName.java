@@ -207,14 +207,14 @@ public enum AttributeName {
     elapsed_time_cache_get_account_by_local_account_id,
 
     /**
-     * The time (in milliseconds), calculated using nanos, spent in executing the getAccountByLocalAccountId method in OAuth2TokenCache.
-     */
-    elapsed_time_cache_get_account_by_local_account_id_using_nanos,
-
-    /**
      * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
      */
     elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id,
+
+    /**
+     * The time (in milliseconds) spent in saving account data to Shared Preferences.
+     */
+    elapsed_time_save_account_shared_preferences,
 
     /**
      * The time (in milliseconds) spent in executing the getAccounts method in OAuth2TokenCache.
@@ -265,11 +265,6 @@ public enum AttributeName {
      * The time (in milliseconds) spent on network when acquiring AT.
      */
     elapsed_time_network_acquire_at,
-
-    /**
-     * The time (in milliseconds), calculated using nanos, spent on network when acquiring AT.
-     */
-    elapsed_time_network_acquire_at_using_nanos,
 
     /**
      * The broker operation name.
@@ -355,21 +350,6 @@ public enum AttributeName {
      * Indicates the successful method used to generate a keypair.
      */
     key_pair_gen_successful_method,
-
-    /**
-     * Describes the keypair generation operation.
-     */
-    key_pair_gen_description,
-
-    /**
-     * Indicates the algorithm used to generate a keypair.
-     */
-    key_pair_gen_algorithm,
-
-    /**
-     * Indicates the encryption paddings used to generate a keypair.
-     */
-    key_pair_gen_encryptionPaddings,
 
     /**
      * Indicates the exception in generating a keypair.
@@ -486,16 +466,6 @@ public enum AttributeName {
     openid_config_request_authority,
 
     /**
-     * Records the Cipher transformation used to encrypt/decrypt the keypair.
-     */
-    secret_key_wrapping_transformation,
-
-    /**
-     * Records the operation used to wrap/unwrap the secret key.
-     */
-    secret_key_wrapping_operation,
-
-    /**
      * Indicates if the request is a redirect to playstore launch from webcp.
      */
     is_redirect_to_playstore_launch_from_webcp,
@@ -536,11 +506,6 @@ public enum AttributeName {
     elapsed_time_load_aggregated_account_data,
 
     /**
-     *  Elapsed time (in milliseconds), calculated using nanos, spent in executing the loadAggregatedAccountData() method in BrokerOAuth2TokenCache.
-     */
-    elapsed_time_load_aggregated_account_data_using_nanos,
-
-    /**
      * Indicates if account aggregation is skipped during saveTokenResult() call.
      */
     is_account_aggregation_skipped,
@@ -560,6 +525,88 @@ public enum AttributeName {
      * Number of PRT accounts for which SSO token generation failed in a Browser SSO request.
      * DataClassification: SystemMetadata.
      */
-    browser_sso_failure_count;
+    browser_sso_failure_count,
 
+    /**
+     * Indicates the number of retry attempts made in DRS discovery when the retry policy is enabled.
+     */
+    drs_discovery_retry_number,
+
+    /**
+     * Indicates the number of retry attempts made in TLS connection when the retry policy is enabled.
+     */
+    client_tls_retry_number,
+
+    //region KeyPair generation
+
+    /**
+     * Describes the keypair generation operation.
+     */
+    key_pair_gen_description,
+
+    /**
+     * Indicates the algorithm used to generate a keypair.
+     */
+    key_pair_gen_algorithm,
+
+    /**
+     * Indicates the encryption paddings used to generate a keypair.
+     */
+    key_pair_gen_encryption_paddings,
+
+    /**
+     * Indicates the history of key generation failures with details of each failed attempt.
+     */
+    key_pair_gen_failure_history,
+
+    /**
+     * The time (in nanoseconds) spent on generating a keypair.
+     */
+    key_pair_gen_elapsed_time,
+
+    //endregion
+
+    //region Secret Key Wrapping
+
+    /**
+     * Indicates the supported paddings for key pair in the device.
+     */
+    key_pair_supported_paddings,
+
+    /**
+     * Records the prioritized list of cipher specifications used for secret key wrapping/unwrapping.
+     */
+    available_transformation_list,
+
+    /**
+     * Records the full Cipher transformation string (e.g., "AES/GCM/NoPadding").
+     */
+    elected_cipher_transformation,
+
+    /**
+     * Indicates the transformation used for wrapping/unwrapping the secret key.
+     */
+    secret_key_transformation,
+
+    /**
+     * Indicates the algorithm used for wrapping/unwrapping the secret key.
+     */
+    secret_key_algorithm,
+
+    /**
+     * Indicates the wrapped secret key serializer id.
+     */
+    secret_key_wrapping_serializer_id,
+
+    /**
+     * The size (in bits) of the secret key.
+     */
+    secret_key_size,
+
+    /**
+     * The time (in milliseconds) spent on secret key serialization/deserialization.
+     */
+    secret_key_serialization_duration,
+    
+    //endregion
 }
