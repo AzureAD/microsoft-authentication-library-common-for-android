@@ -251,25 +251,37 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     private static class UrlLoadStatus {
         private final String url;
-        private final boolean isSuccess;
-        private final String error; // Error message if the load fails
+        private boolean isFinishedLoading;
 
-        UrlLoadStatus(String url, boolean isSuccess, String error) {
+        private String sslError;
+        private String serverError; // Error from server-side
+
+        UrlLoadStatus(final String url, final boolean isFinishedLoading, final String serverError) {
             this.url = sanitizeUrl(url);
-            this.isSuccess = isSuccess;
-            this.error = error;
+            this.isFinishedLoading = isFinishedLoading;
+            this.serverError = serverError;
         }
 
         public String getUrl() {
             return url;
         }
 
-        public boolean isSuccess() {
-            return isSuccess;
+        public boolean isFinishedLoading() {
+            return isFinishedLoading;
         }
 
-        public String getError() {
-            return error;
+        public String getServerError() {
+            return serverError;
+        }
+
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("url=").append(url);
+            sb.append(", isFinishedLoading=").append(isFinishedLoading);
+            if (serverError != null) {
+                sb.append(", error=").append(serverError);
+            }
+            return sb.toString();
         }
 
         /**
@@ -282,14 +294,18 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     /**
-     * Tracks a URL load event.
+     * Tracks a URL load event. Returns the index it was added at.
      *
      * @param url       The URL being loaded.
-     * @param isSuccess Whether the load was successful.
+     * @param finishedLoading Whether the load was successful.
      * @param error     The error message if the load fails (null if successful).
      */
-    protected void trackUrlLoad(String url, boolean isSuccess, String error) {
-        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, isSuccess, error));
+    protected void trackUrlLoadStatus(String url, boolean finishedLoading, String error) {
+        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, error));
+    }
+
+    protected void updateLatestUrlLoadStatus( final String url, final boolean finishedLoading, final String error) {
+        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, error));
     }
 
     /**

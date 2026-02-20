@@ -35,8 +35,17 @@ public interface IUrlLoadTracker {
      * Called to track a URL load event.
      *
      * @param url       The URL being loaded.
-     * @param isSuccess Whether the load was successful.
+     * @param isFinishedLoading Whether the load was successful.
      * @param error     The error message if the load failed (null if successful).
      */
-    void trackUrlLoad(@NonNull String url, boolean isSuccess, @Nullable String error);
+    void trackUrlLoad(@NonNull String url, boolean isFinishedLoading, @Nullable String error);
+
+    /**
+     * Called to update the most recent Url status.
+     *
+     * @param url The URL being updated.
+     * @param isSuccess Whether the load was successful.
+     * @param error The error message if the load failed (null if successful).
+     */
+     void updateLatestUrlStatus(@NonNull String url, boolean isSuccess, @Nullable String error);
 }

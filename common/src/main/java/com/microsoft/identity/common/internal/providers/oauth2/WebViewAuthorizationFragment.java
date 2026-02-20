@@ -271,8 +271,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 isWebViewWebcpEnabledInBrokerlessCase,
                 new IUrlLoadTracker() {
                     @Override
-                    public void trackUrlLoad(@NonNull String url, boolean isSuccess, @Nullable String error) {
-                        WebViewAuthorizationFragment.this.trackUrlLoad(url, isSuccess, error);
+                    public void trackUrlLoad(@NonNull String url, boolean isFinishedLoading, @Nullable String error) {
+                        WebViewAuthorizationFragment.this.trackUrlLoadStatus(url, isFinishedLoading, error);
+                    }
+
+                    @Override
+                    public void updateLatestUrlStatus(@NonNull String url, boolean isFinishedLoading, @Nullable String error) {
+                        WebViewAuthorizationFragment.this.updateLatestUrlLoadStatus(url, isFinishedLoading, error);
                     }
                 }
         );

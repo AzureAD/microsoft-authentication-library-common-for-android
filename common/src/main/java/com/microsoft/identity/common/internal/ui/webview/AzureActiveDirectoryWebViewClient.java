@@ -29,9 +29,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
@@ -1140,7 +1142,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
-            mUrlLoadTracker.trackUrlLoad(url, true, null);
+            mUrlLoadTracker.trackUrlLoad(url, false, null);
         }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
@@ -1154,7 +1156,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super.onPageFinished(view, url);
         // Track successful URL load completion
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackUrlLoad(url, true, null);
+            mUrlLoadTracker.updateLatestUrlStatus(url, true, null);
         }
 
         if (mAuthUxJavaScriptInterfaceAdded) {
@@ -1176,9 +1178,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 final String failingUrl) {
         final String methodTag = TAG + ":onReceivedError";
         Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + errorCode + ", Description: " + description);
-        // Track URL load failure
+        // Track URL load status, and error from server-side
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackUrlLoad(failingUrl, false, "Code:" + errorCode + ", " + description);
+            mUrlLoadTracker.trackUrlLoad(failingUrl, true, "Code:" + errorCode + ", " + description);
         }
         super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -1194,10 +1196,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 ", Description: " + error.getDescription());
         // Track URL load failure for main frame only
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.trackUrlLoad(failingUrl, false, "Code:" + error.getErrorCode() + 
+            mUrlLoadTracker.trackUrlLoad(failingUrl, true, "Code:" + error.getErrorCode() +
                     ", " + error.getDescription());
         }
         super.onReceivedError(view, request, error);
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view,
+                                   final SslErrorHandler handler,
+                                   final SslError error) {
+        final String methodTag = TAG + ":onReceivedSslError";
+
     }
 
     /**
