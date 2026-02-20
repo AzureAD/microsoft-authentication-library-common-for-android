@@ -255,7 +255,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
     /**
      * Tracks the URLs loaded in the WebView along with their load status.
-     * Key: Load order (int), Value: URL and success status (boolean).
+     * Key: Load order (int), Value: URL Status object
      */
     private final Map<Integer, UrlStatus> mUrlStatusTracker = new LinkedHashMap<>();
 
