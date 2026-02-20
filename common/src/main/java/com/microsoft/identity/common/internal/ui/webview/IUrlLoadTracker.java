@@ -39,21 +39,19 @@ public interface IUrlLoadTracker {
      * Called to track a new URL load event.
      *
      * @param url       The URL being loaded.
-     * @param isFinishedLoading Whether the load was successful.
      * @param loadingError The error if the load failed (null if successful).
      * @param serverError The error received from server side.
      */
-    void trackNewUrlLoadStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError);
+    void trackNewUrlLoadStatus(final String url, final String loadingError, final String serverError);
 
     /**
      * Called to update the most recent Url status.
      *
      * @param url The URL being updated.
-     * @param isFinishedLoading Whether the load was successful.
      * @param loadingError The error if the load failed (null if successful).
      * @param serverError The error received from server side.
      */
-     void updateLatestUrlStatus(final String url, boolean isFinishedLoading, final String loadingError, final String serverError);
+     void updateLatestUrlStatus(final String url, final String loadingError, final String serverError);
 
      /**
       * Gets the list of URL load statuses tracked so far.

@@ -254,8 +254,6 @@ public abstract class AuthorizationFragment extends Fragment {
     public static class UrlLoadStatus {
         @Getter
         private final String url;
-        @Getter
-        private boolean isFinishedLoading;
 
         /**
          * Error encountered during loading
@@ -269,9 +267,8 @@ public abstract class AuthorizationFragment extends Fragment {
         @Getter
         private String serverError;
 
-        UrlLoadStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError) {
+        UrlLoadStatus(final String url, final String loadingError, final String serverError) {
             this.url = sanitizeUrl(url);
-            this.isFinishedLoading = isFinishedLoading;
             this.loadingError = loadingError;
             this.serverError = serverError;
         }
@@ -280,7 +277,6 @@ public abstract class AuthorizationFragment extends Fragment {
         public String toString() {
             final StringBuilder sb = new StringBuilder();
             sb.append("url=").append(url);
-            sb.append(", isFinishedLoading=").append(isFinishedLoading);
             if (loadingError != null) {
                 sb.append(", loadingError=").append(loadingError);
             }
@@ -303,24 +299,22 @@ public abstract class AuthorizationFragment extends Fragment {
      * Tracks a URL load event. Returns the index it was added at.
      *
      * @param url       The URL being loaded.
-     * @param finishedLoading Whether the load was successful.
      * @param loadingError The error if the load failed (null if successful).
      * @param serverError The error received from server-side.
      */
-    protected void trackUrlLoadStatus(final String url, final boolean finishedLoading, final String loadingError, final String serverError) {
-        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, loadingError, serverError));
+    protected void trackUrlLoadStatus(final String url, final String loadingError, final String serverError) {
+        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, loadingError, serverError));
     }
 
     /**
      * Updates the most recent URL load event with new status information.
      *
      * @param url The URL being updated.
-     * @param finishedLoading Whether the load was successful.
      * @param loadingError The error if the load failed (null if successful).
      * @param serverError The error received from server-side.
      */
-    protected void updateLatestUrlLoadStatus( final String url, final boolean finishedLoading, final String loadingError, final String serverError) {
-        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, loadingError, serverError));
+    protected void updateLatestUrlLoadStatus( final String url, final String loadingError, final String serverError) {
+        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, loadingError, serverError));
     }
 
     /**

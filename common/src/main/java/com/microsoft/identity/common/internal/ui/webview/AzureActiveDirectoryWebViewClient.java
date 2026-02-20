@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.webkit.ClientCertRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -1153,7 +1154,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
-            mUrlLoadTracker.trackNewUrlLoadStatus(url, false, null,null);
+            mUrlLoadTracker.trackNewUrlLoadStatus(url, null,null);
         }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
@@ -1165,10 +1166,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageFinished(final WebView view, final String url) {
         super.onPageFinished(view, url);
-        // Track successful URL load completion
-        if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.updateLatestUrlStatus(url, true, null,null);
-        }
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -1189,9 +1186,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 final String failingUrl) {
         final String methodTag = TAG + ":onReceivedError";
         Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + errorCode + ", Description: " + description);
-        // Track URL load status, and error from server-side
+        // Track error from server side
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, true, null, "Code:" + errorCode + ", " + description);
+            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, null, "Code:" + errorCode + ", " + description);
         }
         super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -1205,9 +1202,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String failingUrl = request.getUrl() != null ? request.getUrl().toString() : "unknown";
         Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + error.getErrorCode() + 
                 ", Description: " + error.getDescription());
-        // Track URL load failure for main frame only
+        // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
+        // we only want to track for main frame requests to avoid noise in telemetry.
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, true, null, "Code:" + error.getErrorCode() +
+            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, null, "Code:" + error.getErrorCode() +
                     ", " + error.getDescription());
         }
         super.onReceivedError(view, request, error);
@@ -1219,10 +1217,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                    final SslError error) {
         // Track SSL error for the URL
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(error.getUrl(), false, error.toString(), null);
+            mUrlLoadTracker.trackNewUrlLoadStatus(error.getUrl(), error.toString(), null);
         }
 
         super.onReceivedSslError(view, handler, error);
+    }
+
+    @Override
+    public void onReceivedHttpError(final WebView view,
+                                    final WebResourceRequest request,
+                                    final WebResourceResponse errorResponse) {
+        // Track HTTP error for the URL
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.trackNewUrlLoadStatus(request.getUrl().toString(), "HTTP Error Code: " + errorResponse.getStatusCode(), null);
+        }
+        super.onReceivedHttpError(view, request, errorResponse);
     }
 
     /**
