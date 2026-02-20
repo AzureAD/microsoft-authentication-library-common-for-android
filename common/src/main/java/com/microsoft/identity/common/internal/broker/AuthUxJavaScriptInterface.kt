@@ -78,8 +78,7 @@ class AuthUxJavaScriptInterface {
             return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
-                    host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST_SUFFIX)
+                    host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX)
         }
     }
 
