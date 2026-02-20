@@ -301,8 +301,10 @@ public class MicrosoftStsAccountCredentialAdapter
                     );
             accountRecord = new AccountRecord(azureActiveDirectoryAccount);
         } else {
+            final String idTokenValue = microsoftStsTokenResponse.getIdToken();
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    new IDToken(microsoftStsTokenResponse.getIdToken()),
+                    parameters.isLookupMode() ?
+                            IDToken.createForLookup(idTokenValue) : new IDToken(idTokenValue),
                     clientInfo
             );
             accountRecord = new AccountRecord(microsoftStsAccount);
@@ -429,8 +431,9 @@ public class MicrosoftStsAccountCredentialAdapter
         // Required fields
         idToken.setHomeAccountId(accountRecord.getHomeAccountId());
         idToken.setRealm(accountRecord.getRealm());
-        idToken.setCredentialType(SchemaUtil.getCredentialTypeFromVersion(
-                tokenResponse.getIdToken())
+        idToken.setCredentialType(parameters.isLookupMode() ?
+                CredentialType.IdToken.name() : SchemaUtil.getCredentialTypeFromVersion(
+                        tokenResponse.getIdToken())
         );
         idToken.setClientId(parameters.getClientId());
         idToken.setSecret(tokenResponse.getIdToken());

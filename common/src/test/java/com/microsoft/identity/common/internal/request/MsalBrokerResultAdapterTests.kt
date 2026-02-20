@@ -28,12 +28,15 @@ import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter.REMOVE_RT_FROM_AAD_RESULT_MSAL_PROTOCOL_VERSION
 import com.microsoft.identity.common.java.cache.CacheRecord
 import com.microsoft.identity.common.java.cache.ICacheRecord
+import com.microsoft.identity.common.java.commands.webapps.WebAppsAccountItem
+import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationResponse
 import com.microsoft.identity.common.java.dto.AadDeviceIdRecord
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.UiRequiredException
 import com.microsoft.identity.common.java.request.SdkType
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult
+import com.microsoft.identity.common.java.util.SchemaUtil
 import com.microsoft.identity.internal.testutils.MockRecords
 import lombok.SneakyThrows
 import org.junit.Assert
@@ -467,5 +470,192 @@ class MsalBrokerResultAdapterTests {
         assertEquals(mockErrorMessage, receivedException.message)
         assertNull(receivedException.brokerAppVersion)
         assertNull(receivedException.brokerAppPackageName)
+    }
+
+    // ==================== bundleFromAuthenticationResultForWebApps Tests ====================
+
+    /**
+     * Test that bundleFromAuthenticationResultForWebApps includes all required token fields
+     */
+    @Test
+    @SneakyThrows
+    fun testBundleFromAuthenticationResultForWebApps_ContainsAllRequiredFields() {
+        val mockCacheRecord = CacheRecord.builder()
+            .account(MockRecords.getMockAccountRecord_AAD())
+            .idToken(MockRecords.getMockIdTokenRecord_AAD())
+            .accessToken(MockRecords.getMockAccessTokenRecord_AAD())
+            .refreshToken(MockRecords.getMockRefreshTokenRecord_AAD())
+            .build()
+
+        val cacheRecords: MutableList<ICacheRecord> = ArrayList()
+        cacheRecords.add(mockCacheRecord)
+
+        val mockResult = LocalAuthenticationResult(
+            mockCacheRecord,
+            cacheRecords,
+            SdkType.MSAL,
+            false
+        )
+
+        val resultAdapter = getInstance()
+        val mockState = "field_validation_state"
+        val protocolVersion = null // Use null to ensure no compression
+
+        val resultBundle = resultAdapter.bundleFromAuthenticationResultForWebApps(
+            mockResult,
+            protocolVersion,
+            mockState
+        )
+
+        assertNotNull(resultBundle)
+        val resultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT)
+        assertNotNull(resultString)
+
+        // Verify the JSON contains expected fields
+        assertTrue(resultString!!.contains(WebAppsGetTokenSubOperationResponse.FIELD_STATE))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_CLIENT_INFO))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_ACCOUNT))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_ACCESS_TOKEN))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_SCOPES))
+    }
+
+    /**
+     * Test that bundleFromAuthenticationResultForWebApps handles empty state string
+     */
+    @Test
+    @SneakyThrows
+    fun testBundleFromAuthenticationResultForWebApps_WithEmptyState_Success() {
+        val mockCacheRecord = CacheRecord.builder()
+            .account(MockRecords.getMockAccountRecord_AAD())
+            .idToken(MockRecords.getMockIdTokenRecord_AAD())
+            .accessToken(MockRecords.getMockAccessTokenRecord_AAD())
+            .refreshToken(MockRecords.getMockRefreshTokenRecord_AAD())
+            .build()
+
+        val cacheRecords: MutableList<ICacheRecord> = ArrayList()
+        cacheRecords.add(mockCacheRecord)
+
+        val mockResult = LocalAuthenticationResult(
+            mockCacheRecord,
+            cacheRecords,
+            SdkType.MSAL,
+            false
+        )
+
+        val resultAdapter = getInstance()
+        val protocolVersion = "10.0"
+
+        val resultBundle = resultAdapter.bundleFromAuthenticationResultForWebApps(
+            mockResult,
+            protocolVersion,
+            "" // empty state
+        )
+
+        assertNotNull(resultBundle)
+        assertTrue(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED))
+    }
+
+    /**
+     * Test that bundleFromAuthenticationResultForWebApps handles special characters in state
+     */
+    @Test
+    @SneakyThrows
+    fun testBundleFromAuthenticationResultForWebApps_WithSpecialCharactersInState_Success() {
+        val mockCacheRecord = CacheRecord.builder()
+            .account(MockRecords.getMockAccountRecord_AAD())
+            .idToken(MockRecords.getMockIdTokenRecord_AAD())
+            .accessToken(MockRecords.getMockAccessTokenRecord_AAD())
+            .refreshToken(MockRecords.getMockRefreshTokenRecord_AAD())
+            .build()
+
+        val cacheRecords: MutableList<ICacheRecord> = ArrayList()
+        cacheRecords.add(mockCacheRecord)
+
+        val mockResult = LocalAuthenticationResult(
+            mockCacheRecord,
+            cacheRecords,
+            SdkType.MSAL,
+            false
+        )
+
+        val resultAdapter = getInstance()
+        val mockState = "state_with_special_chars_!@#$%^&*()_+-={}[]|:;<>?,./"
+        val protocolVersion = "10.0"
+
+        val resultBundle = resultAdapter.bundleFromAuthenticationResultForWebApps(
+            mockResult,
+            protocolVersion,
+            mockState
+        )
+
+        assertNotNull(resultBundle)
+        assertTrue(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED))
+    }
+
+    /**
+     * Test that bundleFromAuthenticationResultForWebApps handles username being ".MISSING_FROM_THE_TOKEN_RESPONSE"
+     * In this case, username should be set to null in the WebAppsAccountItem
+     * This scenario occurs during lookup mode requests where ESTS sets id token to "none"
+     * and the username is not found in the cache
+     */
+    @Test
+    @SneakyThrows
+    fun testBundleFromAuthenticationResultForWebApps_WithMissingUsernameToken_SetsUsernameToNull() {
+        // Create a custom account record with username set to the special "missing" value
+        val accountRecordWithMissingUsername = AccountRecord()
+        accountRecordWithMissingUsername.username = SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE
+        accountRecordWithMissingUsername.homeAccountId = "mock-home-account-id"
+        accountRecordWithMissingUsername.localAccountId = "mock-local-account-id"
+        accountRecordWithMissingUsername.clientInfo = "mock-client-info"
+        accountRecordWithMissingUsername.environment = "login.microsoftonline.com"
+        accountRecordWithMissingUsername.realm = "mock-tenant-id"
+
+        val mockCacheRecord = CacheRecord.builder()
+            .account(accountRecordWithMissingUsername)
+            .idToken(MockRecords.getMockIdTokenRecord_AAD())
+            .accessToken(MockRecords.getMockAccessTokenRecord_AAD())
+            .refreshToken(MockRecords.getMockRefreshTokenRecord_AAD())
+            .build()
+
+        val cacheRecords: MutableList<ICacheRecord> = ArrayList()
+        cacheRecords.add(mockCacheRecord)
+
+        val mockResult = LocalAuthenticationResult(
+            mockCacheRecord,
+            cacheRecords,
+            SdkType.MSAL,
+            false
+        )
+
+        val resultAdapter = getInstance()
+        val mockState = "lookup_mode_state"
+        val protocolVersion = null // Use null to ensure no compression for easier inspection
+
+        val resultBundle = resultAdapter.bundleFromAuthenticationResultForWebApps(
+            mockResult,
+            protocolVersion,
+            mockState
+        )
+
+        assertNotNull(resultBundle)
+        assertTrue(resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT))
+
+        val resultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT)
+        assertNotNull(resultString)
+
+        // Verify the JSON structure is valid and contains expected fields
+        assertTrue(resultString!!.contains(WebAppsGetTokenSubOperationResponse.FIELD_STATE))
+        assertTrue(resultString.contains(mockState))
+        assertTrue(resultString.contains(WebAppsGetTokenSubOperationResponse.FIELD_ACCOUNT))
+        assertTrue(resultString.contains(WebAppsAccountItem.FIELD_HOME_ACCOUNT_ID))
+
+        // The username field in the account object should be null
+        // We verify that the special MISSING_FROM_THE_TOKEN_RESPONSE value is NOT in the result
+        Assert.assertFalse(
+            "Username should be null/absent, not the MISSING_FROM_THE_TOKEN_RESPONSE value",
+            resultString.contains(SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE)
+        )
     }
 }
