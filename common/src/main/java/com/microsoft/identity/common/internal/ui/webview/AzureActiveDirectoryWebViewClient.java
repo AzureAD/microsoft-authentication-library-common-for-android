@@ -198,7 +198,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     @Override
-    public void onPageFinished(final WebView view, final String url) {
+    public void onPageFinished(final WebView view,
+                               final String url) {
         super.onPageFinished(view, url);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
