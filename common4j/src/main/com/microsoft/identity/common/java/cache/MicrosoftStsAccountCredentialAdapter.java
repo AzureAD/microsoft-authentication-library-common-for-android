@@ -305,7 +305,7 @@ public class MicrosoftStsAccountCredentialAdapter
         } else {
             final String idTokenValue = microsoftStsTokenResponse.getIdToken();
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    Objects.equals(idTokenValue, AuthenticationConstants.Broker.LOOKUP_MODE_EXPECTED_TOKEN_VALUE) ?
+                    parameters.isLookupMode() ?
                             IDToken.createForLookup(idTokenValue) : new IDToken(idTokenValue),
                     clientInfo
             );
@@ -433,8 +433,9 @@ public class MicrosoftStsAccountCredentialAdapter
         // Required fields
         idToken.setHomeAccountId(accountRecord.getHomeAccountId());
         idToken.setRealm(accountRecord.getRealm());
-        idToken.setCredentialType(SchemaUtil.getCredentialTypeFromVersion(
-                tokenResponse.getIdToken())
+        idToken.setCredentialType(parameters.isLookupMode() ?
+                CredentialType.IdToken.name() : SchemaUtil.getCredentialTypeFromVersion(
+                        tokenResponse.getIdToken())
         );
         idToken.setClientId(parameters.getClientId());
         idToken.setSecret(tokenResponse.getIdToken());

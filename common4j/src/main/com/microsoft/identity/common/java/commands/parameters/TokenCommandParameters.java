@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_VALUE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_MODE_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_VALUE;
+
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -37,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -156,5 +162,31 @@ public class TokenCommandParameters extends CommandParameters {
                 );
             }
         }
+    }
+
+    /**
+     * Checks if the request is for ESTS' lookup mode.
+     * In lookup mode, access token, id token, and scope are all set to "none".
+     * This is a special response from ESTS when extra query parameters are sent to indicate a token lookup request.
+     *
+     * @return true if in lookup mode, false otherwise
+     */
+    public boolean isLookupMode() {
+        if (extraTokenBodyParameters == null) return false;
+        boolean hasNativeBrokerIndicator = false;
+        boolean hasLookupModeIndicator = false;
+        for (final Map.Entry<String, String> entry : extraTokenBodyParameters) {
+            if (NATIVEBROKER_KEY.equals(entry.getKey())
+                    && NATIVEBROKER_VALUE.equals(entry.getValue())) {
+                hasNativeBrokerIndicator = true;
+            }
+            if (NATIVEBROKER_MODE_KEY.equals(entry.getKey())
+                    && LOOKUP_MODE_VALUE.equals(entry.getValue())) {
+                hasLookupModeIndicator = true;
+            }
+        }
+
+        return hasNativeBrokerIndicator
+                && hasLookupModeIndicator;
     }
 }
