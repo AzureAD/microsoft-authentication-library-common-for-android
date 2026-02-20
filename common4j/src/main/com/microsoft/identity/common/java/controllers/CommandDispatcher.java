@@ -106,8 +106,10 @@ public class CommandDispatcher {
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
     private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
+    // Cache the pool size for the session
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = computeSilentRequestThreadPoolSize();
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(getSilentRequestThreadPoolSize());
+    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
@@ -162,15 +164,25 @@ public class CommandDispatcher {
     private static final String TIMEOUT_MSG_UNKNOWN_STATE = 
         "Unknown state '%s'.";
 
-    // Get the actual default pool size from flight configuration
-    private static int getSilentRequestThreadPoolSize() {
+    // Compute the thread pool size based on flight configuration
+    private static int computeSilentRequestThreadPoolSize() {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider() != null) {
             boolean useIncreasedPoolSize = CommonFlightsManager.INSTANCE.getFlightsProvider()
                     .getBooleanValue(CommonFlight.USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE);
             return useIncreasedPoolSize ? DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE
                     : LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
         }
-        return DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE;
+        return LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
+    /**
+     * Returns the cached thread pool size for silent requests.
+     * This value is computed once during class initialization based on flight configuration.
+     *
+     * @return the cached pool size for the session
+     */
+    private static int getSilentRequestThreadPoolSize() {
+        return SILENT_REQUEST_THREAD_POOL_SIZE;
     }
 
     /**

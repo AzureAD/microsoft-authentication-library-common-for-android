@@ -211,7 +211,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", true);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
 
     private String key;
     private Object defaultValue;
