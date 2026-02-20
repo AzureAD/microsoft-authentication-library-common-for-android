@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -167,7 +166,7 @@ public class TokenCommandParameters extends CommandParameters {
     /**
      * Checks if the request is for ESTS' lookup mode.
      * In lookup mode, access token, id token, and scope are all set to "none".
-     * This is a special response from ESTS when extra query parameters are sent to indicate a token lookup request.
+     * This is a special response from ESTS when extra token body parameters are sent to indicate a token lookup request.
      *
      * @return true if in lookup mode, false otherwise
      */

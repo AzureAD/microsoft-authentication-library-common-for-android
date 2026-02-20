@@ -188,8 +188,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
         final String idToken = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getIdToken(), WebAppsGetTokenSubOperationResponse.FIELD_ID_TOKEN);
         // When ESTS makes a lookup mode request, id token is set to "none". We have logic to get the username from the account data storage.
-        // However, in the case where we don't find the username in the cache (for whatever reason), I don't think we should block the lookup mode response from being sent back.
-        final String username = Objects.equals(authenticationResult.getAccountRecord().getUsername(), SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE) ? null : authenticationResult.getAccountRecord().getUsername();
+        // However, in the case where we don't find the username in the cache (for whatever reason), we won't block the lookup mode response from being sent back.
+        final String rawUsername = authenticationResult.getAccountRecord().getUsername();
+        final String username = Objects.equals(rawUsername, SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE)
+                ? null
+                : WebAppsUtil.requireNotNullOrEmpty(rawUsername, WebAppsAccountItem.FIELD_USER_NAME);
         final WebAppsAccountItem accountItem = new WebAppsAccountItem(username, homeAccountId, null);
 
         final WebAppsGetTokenSubOperationResponse getTokenResponse = new WebAppsGetTokenSubOperationResponse(

@@ -24,7 +24,6 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
@@ -62,7 +61,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
