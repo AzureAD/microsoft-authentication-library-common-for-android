@@ -224,7 +224,7 @@ public abstract class AuthorizationFragment extends Fragment {
         Logger.info(methodTag, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         // Track the final result code we got for this authorization flow
-        finalResultCode = result.getResultCode();
+        mFinalResultCode = result.getResultCode();
 
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
@@ -260,7 +260,7 @@ public abstract class AuthorizationFragment extends Fragment {
     private final Map<Integer, UrlStatus> mUrlStatusTracker = new LinkedHashMap<>();
 
     @Getter
-    private RawAuthorizationResult.ResultCode finalResultCode;
+    private RawAuthorizationResult.ResultCode mFinalResultCode;
     private int mUrlLoadCounter = 0;
 
     /**
