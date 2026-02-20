@@ -256,17 +256,13 @@ public abstract class OAuth2Strategy
         }
 
         final URL requestUrl = new URL(getTokenEndpoint());
-        final long networkStartTime = System.currentTimeMillis();
         final long networkStartTimeInNanos = System.nanoTime();
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
-        final long networkEndTime = System.currentTimeMillis();
-        final long networkTime = networkEndTime - networkStartTime;
-        SpanExtension.current().setAttribute(AttributeName.elapsed_time_network_acquire_at.name(), networkTime);
-        OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_network_acquire_at_using_nanos.name(),
+        OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_network_acquire_at.name(),
                 networkStartTimeInNanos);
 
         // Record the clock skew between *this device* and EVO...
