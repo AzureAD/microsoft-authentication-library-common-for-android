@@ -33,6 +33,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
@@ -42,6 +43,7 @@ import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -303,10 +305,55 @@ public abstract class AuthorizationFragment extends Fragment {
 
         /**
          * Sanitize the URL to ensure no sensitive data is tracked.
+         * Only allows URLs with known AAD/MSA host suffixes.
+         * All query parameters are stripped for privacy.
+         *
+         * @param url The URL to sanitize.
+         * @return The sanitized URL (scheme + host + path only) or "[REDACTED]" if host is not allowed.
          */
-        private static String sanitizeUrl(String url) {
-            // Implement URL sanitization logic here
-            return url.replaceAll("[?&]sensitive_param=[^&]*", "");
+        private static String sanitizeUrl(final String url) {
+            if (url == null || url.isEmpty()) {
+                return url;
+            }
+
+            try {
+                final URI uri = new URI(url);
+                final String host = uri.getHost();
+
+                if (host == null || host.isEmpty()) {
+                    return host;
+                }
+
+                // Only allow URLs with known AAD/MSA host suffixes
+                final boolean isAllowedHost =
+                        host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST_SUFFIX);
+
+                if (!isAllowedHost) {
+                    return "[REDACTED]";
+                }
+
+                // Build sanitized URL: scheme + host + path only (no query params or fragments)
+                final StringBuilder sanitizedUrl = new StringBuilder();
+                final String scheme = uri.getScheme();
+                if (scheme != null) {
+                    sanitizedUrl.append(scheme).append("://");
+                }
+                sanitizedUrl.append(host);
+
+                final String path = uri.getPath();
+                if (path != null && !path.isEmpty()) {
+                    sanitizedUrl.append(path);
+                }
+
+                return sanitizedUrl.toString();
+            } catch (final Exception e) {
+                // If URL parsing fails, redact the entire URL for safety
+                return "[PARSING_ERROR]";
+            }
         }
     }
 
