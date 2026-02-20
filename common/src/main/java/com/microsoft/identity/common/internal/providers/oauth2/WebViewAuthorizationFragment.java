@@ -83,6 +83,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -271,13 +272,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 isWebViewWebcpEnabledInBrokerlessCase,
                 new IUrlLoadTracker() {
                     @Override
-                    public void trackUrlLoad(@NonNull String url, boolean isFinishedLoading, @Nullable String error) {
-                        WebViewAuthorizationFragment.this.trackUrlLoadStatus(url, isFinishedLoading, error);
+                    public void trackNewUrlLoadStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError) {
+                        WebViewAuthorizationFragment.this.trackUrlLoadStatus(url, isFinishedLoading, loadingError, serverError);
                     }
 
                     @Override
-                    public void updateLatestUrlStatus(@NonNull String url, boolean isFinishedLoading, @Nullable String error) {
-                        WebViewAuthorizationFragment.this.updateLatestUrlLoadStatus(url, isFinishedLoading, error);
+                    public void updateLatestUrlStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError) {
+                        WebViewAuthorizationFragment.this.updateLatestUrlLoadStatus(url, isFinishedLoading, loadingError, serverError);
+                    }
+
+                    @Override
+                    public Map<Integer, UrlLoadStatus> getUrlStatusList() {
+                        return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
                 }
         );

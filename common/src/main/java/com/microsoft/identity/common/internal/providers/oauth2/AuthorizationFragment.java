@@ -50,6 +50,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
+import lombok.Getter;
+
 /**
  * This base classes
  * - handles how AuthorizationFragments communicates with the outside world.
@@ -249,37 +251,41 @@ public abstract class AuthorizationFragment extends Fragment {
     /**
      * Class to represent the URL, its load status, and an optional error message.
      */
-    private static class UrlLoadStatus {
+    public static class UrlLoadStatus {
+        @Getter
         private final String url;
+        @Getter
         private boolean isFinishedLoading;
 
-        private String sslError;
-        private String serverError; // Error from server-side
+        /**
+         * Error encountered during loading
+         */
+        @Getter
+        private String loadingError;
 
-        UrlLoadStatus(final String url, final boolean isFinishedLoading, final String serverError) {
+        /**
+         * Error returned from server
+         */
+        @Getter
+        private String serverError;
+
+        UrlLoadStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError) {
             this.url = sanitizeUrl(url);
             this.isFinishedLoading = isFinishedLoading;
+            this.loadingError = loadingError;
             this.serverError = serverError;
         }
 
-        public String getUrl() {
-            return url;
-        }
-
-        public boolean isFinishedLoading() {
-            return isFinishedLoading;
-        }
-
-        public String getServerError() {
-            return serverError;
-        }
-
+        @NonNull
         public String toString() {
             final StringBuilder sb = new StringBuilder();
             sb.append("url=").append(url);
             sb.append(", isFinishedLoading=").append(isFinishedLoading);
+            if (loadingError != null) {
+                sb.append(", loadingError=").append(loadingError);
+            }
             if (serverError != null) {
-                sb.append(", error=").append(serverError);
+                sb.append(", serverError=").append(serverError);
             }
             return sb.toString();
         }
@@ -298,14 +304,23 @@ public abstract class AuthorizationFragment extends Fragment {
      *
      * @param url       The URL being loaded.
      * @param finishedLoading Whether the load was successful.
-     * @param error     The error message if the load fails (null if successful).
+     * @param loadingError The error if the load failed (null if successful).
+     * @param serverError The error received from server-side.
      */
-    protected void trackUrlLoadStatus(String url, boolean finishedLoading, String error) {
-        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, error));
+    protected void trackUrlLoadStatus(final String url, final boolean finishedLoading, final String loadingError, final String serverError) {
+        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, loadingError, serverError));
     }
 
-    protected void updateLatestUrlLoadStatus( final String url, final boolean finishedLoading, final String error) {
-        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, error));
+    /**
+     * Updates the most recent URL load event with new status information.
+     *
+     * @param url The URL being updated.
+     * @param finishedLoading Whether the load was successful.
+     * @param loadingError The error if the load failed (null if successful).
+     * @param serverError The error received from server-side.
+     */
+    protected void updateLatestUrlLoadStatus( final String url, final boolean finishedLoading, final String loadingError, final String serverError) {
+        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, finishedLoading, loadingError, serverError));
     }
 
     /**

@@ -25,6 +25,10 @@ package com.microsoft.identity.common.internal.ui.webview;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
+
+import java.util.Map;
+
 /**
  * Callback interface for tracking URL load events in WebView.
  * This is used to improve understanding of user experience during authorization requests.
@@ -32,20 +36,29 @@ import androidx.annotation.Nullable;
 public interface IUrlLoadTracker {
 
     /**
-     * Called to track a URL load event.
+     * Called to track a new URL load event.
      *
      * @param url       The URL being loaded.
      * @param isFinishedLoading Whether the load was successful.
-     * @param error     The error message if the load failed (null if successful).
+     * @param loadingError The error if the load failed (null if successful).
+     * @param serverError The error received from server side.
      */
-    void trackUrlLoad(@NonNull String url, boolean isFinishedLoading, @Nullable String error);
+    void trackNewUrlLoadStatus(final String url, final boolean isFinishedLoading, final String loadingError, final String serverError);
 
     /**
      * Called to update the most recent Url status.
      *
      * @param url The URL being updated.
-     * @param isSuccess Whether the load was successful.
-     * @param error The error message if the load failed (null if successful).
+     * @param isFinishedLoading Whether the load was successful.
+     * @param loadingError The error if the load failed (null if successful).
+     * @param serverError The error received from server side.
      */
-     void updateLatestUrlStatus(@NonNull String url, boolean isSuccess, @Nullable String error);
+     void updateLatestUrlStatus(final String url, boolean isFinishedLoading, final String loadingError, final String serverError);
+
+     /**
+      * Gets the list of URL load statuses tracked so far.
+      *
+      * @return A map of URL load statuses, where the key is an integer identifier and the value is the corresponding UrlLoadStatus.
+      */
+     Map<Integer, AuthorizationFragment.UrlLoadStatus> getUrlStatusList();
 }

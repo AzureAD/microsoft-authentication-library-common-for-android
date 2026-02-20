@@ -96,6 +96,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import android.webkit.WebResourceError;
@@ -170,6 +171,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mUrlLoadTracker = urlLoadTracker;
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -1142,7 +1153,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
-            mUrlLoadTracker.trackUrlLoad(url, false, null);
+            mUrlLoadTracker.trackNewUrlLoadStatus(url, false, null,null);
         }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
@@ -1156,7 +1167,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         super.onPageFinished(view, url);
         // Track successful URL load completion
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.updateLatestUrlStatus(url, true, null);
+            mUrlLoadTracker.updateLatestUrlStatus(url, true, null,null);
         }
 
         if (mAuthUxJavaScriptInterfaceAdded) {
@@ -1180,7 +1191,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + errorCode + ", Description: " + description);
         // Track URL load status, and error from server-side
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackUrlLoad(failingUrl, true, "Code:" + errorCode + ", " + description);
+            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, true, null, "Code:" + errorCode + ", " + description);
         }
         super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -1196,7 +1207,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 ", Description: " + error.getDescription());
         // Track URL load failure for main frame only
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.trackUrlLoad(failingUrl, true, "Code:" + error.getErrorCode() +
+            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, true, null, "Code:" + error.getErrorCode() +
                     ", " + error.getDescription());
         }
         super.onReceivedError(view, request, error);
@@ -1206,8 +1217,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedSslError(final WebView view,
                                    final SslErrorHandler handler,
                                    final SslError error) {
-        final String methodTag = TAG + ":onReceivedSslError";
+        // Track SSL error for the URL
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.trackNewUrlLoadStatus(error.getUrl(), false, error.toString(), null);
+        }
 
+        super.onReceivedSslError(view, handler, error);
     }
 
     /**
