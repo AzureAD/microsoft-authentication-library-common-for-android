@@ -137,8 +137,8 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
                 recordProperties[3].trim().startsWith("isShared:")
         );
         Assert.assertTrue(
-                "Record should have isRegisteredWithStrongKeys." + recordProperties[3],
-                recordProperties[3].trim().startsWith("isRegisteredWithStrongKeys:")
+                "Record should have isRegisteredWithStrongKeys." + recordProperties[4],
+                recordProperties[4].trim().startsWith("isRegisteredWithStrongKeys:")
         );
         // The 6th line is the Account name of the device registration record, which is optional.
         final Map<String, String> deviceRegistrationRecord = new HashMap<>();
