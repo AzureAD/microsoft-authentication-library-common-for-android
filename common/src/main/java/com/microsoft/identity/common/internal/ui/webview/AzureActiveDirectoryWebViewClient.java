@@ -97,7 +97,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import android.webkit.WebResourceError;
@@ -1154,7 +1153,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
-            mUrlLoadTracker.trackNewUrlLoadStatus(url, null,null);
+            mUrlLoadTracker.trackNewUrlStatus(url, null,null);
         }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
@@ -1184,11 +1183,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 final int errorCode,
                                 final String description,
                                 final String failingUrl) {
-        final String methodTag = TAG + ":onReceivedError";
-        Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + errorCode + ", Description: " + description);
         // Track error from server side
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, null, "Code:" + errorCode + ", " + description);
+            mUrlLoadTracker.updateLatestUrlStatus(null, "Code:" + errorCode + ", " + description);
         }
         super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -1198,14 +1195,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        final String methodTag = TAG + ":onReceivedError";
-        final String failingUrl = request.getUrl() != null ? request.getUrl().toString() : "unknown";
-        Logger.warn(methodTag, "Received error loading URL. ErrorCode: " + error.getErrorCode() + 
-                ", Description: " + error.getDescription());
         // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
         // we only want to track for main frame requests to avoid noise in telemetry.
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(failingUrl, null, "Code:" + error.getErrorCode() +
+            mUrlLoadTracker.updateLatestUrlStatus(null, "Code:" + error.getErrorCode() +
                     ", " + error.getDescription());
         }
         super.onReceivedError(view, request, error);
@@ -1217,7 +1210,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                    final SslError error) {
         // Track SSL error for the URL
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(error.getUrl(), error.toString(), null);
+            mUrlLoadTracker.updateLatestUrlStatus(error.toString(), null);
         }
 
         super.onReceivedSslError(view, handler, error);
@@ -1229,7 +1222,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                     final WebResourceResponse errorResponse) {
         // Track HTTP error for the URL
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.trackNewUrlLoadStatus(request.getUrl().toString(), "HTTP Error Code: " + errorResponse.getStatusCode(), null);
+            mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
         }
         super.onReceivedHttpError(view, request, errorResponse);
     }

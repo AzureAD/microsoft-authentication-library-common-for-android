@@ -22,9 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment;
 
 import java.util.Map;
@@ -40,23 +37,22 @@ public interface IUrlLoadTracker {
      *
      * @param url       The URL being loaded.
      * @param loadingError The error if the load failed (null if successful).
-     * @param serverError The error received from server side.
+     * @param authError The error received from server side.
      */
-    void trackNewUrlLoadStatus(final String url, final String loadingError, final String serverError);
+    void trackNewUrlStatus(final String url, final String loadingError, final String authError);
 
     /**
      * Called to update the most recent Url status.
      *
-     * @param url The URL being updated.
      * @param loadingError The error if the load failed (null if successful).
-     * @param serverError The error received from server side.
+     * @param authError The error received from server side.
      */
-     void updateLatestUrlStatus(final String url, final String loadingError, final String serverError);
+     void updateLatestUrlStatus(final String loadingError, final String authError);
 
      /**
       * Gets the list of URL load statuses tracked so far.
       *
       * @return A map of URL load statuses, where the key is an integer identifier and the value is the corresponding UrlLoadStatus.
       */
-     Map<Integer, AuthorizationFragment.UrlLoadStatus> getUrlStatusList();
+     Map<Integer, AuthorizationFragment.UrlStatus> getUrlStatusList();
 }

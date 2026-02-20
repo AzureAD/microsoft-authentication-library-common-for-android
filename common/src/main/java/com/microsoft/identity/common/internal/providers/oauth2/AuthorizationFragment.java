@@ -202,6 +202,9 @@ public abstract class AuthorizationFragment extends Fragment {
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
+
+            // Log hosting activity destruction in the url tracker
+            updateLatestUrlStatus(null, "SDK_CANCELLED: Activity destroyed before auth completion");
         }
 
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
@@ -220,6 +223,9 @@ public abstract class AuthorizationFragment extends Fragment {
         final String methodTag = TAG + ":sendResult";
         Logger.info(methodTag, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
+        // Track the final result code we got for this authorization flow
+        finalResultCode = result.getResultCode();
+
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
 
@@ -232,9 +238,15 @@ public abstract class AuthorizationFragment extends Fragment {
         if (isCancelledByUser) {
             Logger.info(methodTag, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
+
+            // Log this in the url load status tracker
+            updateLatestUrlStatus(null, "CANCELLED: Authorization cancelled by user.");
         } else {
             Logger.info(methodTag, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
+
+            // Log this in the url load status tracker
+            updateLatestUrlStatus(null, "SDK_CANCELLED: Authorization cancelled by SDK.");
         }
 
         Telemetry.emit(new UiEndEvent().isUserCancelled());
@@ -245,13 +257,16 @@ public abstract class AuthorizationFragment extends Fragment {
      * Tracks the URLs loaded in the WebView along with their load status.
      * Key: Load order (int), Value: URL and success status (boolean).
      */
-    private final Map<Integer, UrlLoadStatus> mUrlLoadTracker = new LinkedHashMap<>();
+    private final Map<Integer, UrlStatus> mUrlStatusTracker = new LinkedHashMap<>();
+
+    @Getter
+    private RawAuthorizationResult.ResultCode finalResultCode;
     private int mUrlLoadCounter = 0;
 
     /**
-     * Class to represent the URL, its load status, and an optional error message.
+     * Class to represent the URL loaded and whether or not it received a loading error or a server error
      */
-    public static class UrlLoadStatus {
+    public static class UrlStatus {
         @Getter
         private final String url;
 
@@ -265,12 +280,12 @@ public abstract class AuthorizationFragment extends Fragment {
          * Error returned from server
          */
         @Getter
-        private String serverError;
+        private String authError;
 
-        UrlLoadStatus(final String url, final String loadingError, final String serverError) {
+        UrlStatus(final String url, final String loadingError, final String authError) {
             this.url = sanitizeUrl(url);
             this.loadingError = loadingError;
-            this.serverError = serverError;
+            this.authError = authError;
         }
 
         @NonNull
@@ -280,8 +295,8 @@ public abstract class AuthorizationFragment extends Fragment {
             if (loadingError != null) {
                 sb.append(", loadingError=").append(loadingError);
             }
-            if (serverError != null) {
-                sb.append(", serverError=").append(serverError);
+            if (authError != null) {
+                sb.append(", authError=").append(authError);
             }
             return sb.toString();
         }
@@ -300,21 +315,27 @@ public abstract class AuthorizationFragment extends Fragment {
      *
      * @param url       The URL being loaded.
      * @param loadingError The error if the load failed (null if successful).
-     * @param serverError The error received from server-side.
+     * @param authError The error received from server-side.
      */
-    protected void trackUrlLoadStatus(final String url, final String loadingError, final String serverError) {
-        mUrlLoadTracker.put(++mUrlLoadCounter, new UrlLoadStatus(url, loadingError, serverError));
+    protected void trackUrlStatus(final String url, final String loadingError, final String authError) {
+        mUrlStatusTracker.put(++mUrlLoadCounter, new UrlStatus(url, loadingError, authError));
     }
 
     /**
      * Updates the most recent URL load event with new status information.
      *
-     * @param url The URL being updated.
      * @param loadingError The error if the load failed (null if successful).
-     * @param serverError The error received from server-side.
+     * @param authError The error received from server-side.
      */
-    protected void updateLatestUrlLoadStatus( final String url, final String loadingError, final String serverError) {
-        mUrlLoadTracker.put(mUrlLoadCounter, new UrlLoadStatus(url, loadingError, serverError));
+    protected void updateLatestUrlStatus(final String loadingError, final String authError) {
+        final UrlStatus latestStatus = mUrlStatusTracker.get(mUrlLoadCounter);
+
+        if (latestStatus == null) {
+            Logger.warn(TAG, "No URL load status to update.");
+            return;
+        }
+
+        mUrlStatusTracker.put(mUrlLoadCounter, new UrlStatus(latestStatus.getUrl(), loadingError, authError));
     }
 
     /**
@@ -322,8 +343,8 @@ public abstract class AuthorizationFragment extends Fragment {
      *
      * @return A copy of the URL load tracker map.
      */
-    public Map<Integer, UrlLoadStatus> getUrlLoadTracker() {
-        return new LinkedHashMap<>(mUrlLoadTracker);
+    public Map<Integer, UrlStatus> getUrlLoadTracker() {
+        return new LinkedHashMap<>(mUrlStatusTracker);
     }
 }
 
