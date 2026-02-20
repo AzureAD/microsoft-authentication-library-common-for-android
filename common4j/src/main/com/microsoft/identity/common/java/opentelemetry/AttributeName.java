@@ -161,8 +161,6 @@ public enum AttributeName {
      */
     silent_executor_pool_size,
 
-    flight_increased_default_silent_request_pool_size,
-
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */

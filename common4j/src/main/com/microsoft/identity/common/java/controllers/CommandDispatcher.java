@@ -580,13 +580,6 @@ public class CommandDispatcher {
                     getSilentExecutorPoolSize()
             );
 
-            boolean isIncreasedDefaultSilentRequestPoolSize = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                    .getBooleanValue(CommonFlight.USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE);
-            SpanExtension.current().setAttribute(
-                    AttributeName.flight_increased_default_silent_request_pool_size.name(),
-                    isIncreasedDefaultSilentRequestPoolSize
-            );
-
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
