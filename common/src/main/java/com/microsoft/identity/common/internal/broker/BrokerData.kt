@@ -93,9 +93,10 @@ data class BrokerData(
                 sShouldTrustDebugBrokers = value
                 Logger.info(methodTag, "Setting shouldTrustDebugBrokers to $value." +
                         " This should only be used for testing purposes.")
+            } else {
+                Logger.warn(methodTag, "Attempting to set shouldTrustDebugBrokers to $value. " +
+                        "This change will be ignored since the current build is not a debug build.")
             }
-            Logger.warn(methodTag, "Attempting to set shouldTrustDebugBrokers to $value. " +
-                    "This change will be ignored since the current build is not a debug build.")
         }
 
         @JvmStatic
