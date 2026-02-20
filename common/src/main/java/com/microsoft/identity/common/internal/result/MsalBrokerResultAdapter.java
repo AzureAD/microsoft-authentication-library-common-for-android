@@ -174,12 +174,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final Bundle resultBundle = new Bundle();
 
         final String homeAccountId = authenticationResult.getUniqueId();
-        final String clientInfo = WebAppsUtil.homeAccountIdToClientInfo(homeAccountId);
+        String clientInfo = authenticationResult.getAccountRecord().getClientInfo();
         if (StringUtil.isNullOrEmpty(clientInfo)) {
-            throw new ClientException(
-                    ErrorStrings.UNKNOWN_ERROR,
-                    errorMessagePrefix + "clientInfo could not be derived from homeAccountId."
-            );
+            clientInfo = WebAppsUtil.homeAccountIdToClientInfo(homeAccountId);
+            if (StringUtil.isNullOrEmpty(clientInfo)) {
+                throw new ClientException(
+                        ErrorStrings.UNKNOWN_ERROR,
+                        errorMessagePrefix + "clientInfo was not present in result and could not be derived from homeAccountId."
+                );
+            }
         }
         // Some parameters can be null, so double checking.
         final String expiresOn = WebAppsUtil.requireNotNullOrEmpty(authenticationResult.getAccessTokenRecord().getExpiresOn(), WebAppsGetTokenSubOperationResponse.FIELD_EXPIRES_IN);
