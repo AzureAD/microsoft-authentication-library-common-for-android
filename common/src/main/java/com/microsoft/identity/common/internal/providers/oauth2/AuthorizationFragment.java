@@ -53,6 +53,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * This base classes
@@ -276,12 +277,14 @@ public abstract class AuthorizationFragment extends Fragment {
          * Error encountered during loading
          */
         @Getter
+        @Setter
         private String loadingError;
 
         /**
          * Error returned from server
          */
         @Getter
+        @Setter
         private String authError;
 
         UrlStatus(final String url, final String loadingError, final String authError) {
@@ -382,7 +385,10 @@ public abstract class AuthorizationFragment extends Fragment {
             return;
         }
 
-        mUrlStatusTracker.put(mUrlLoadCounter, new UrlStatus(latestStatus.getUrl(), loadingError, authError));
+        latestStatus.setLoadingError(loadingError);
+        latestStatus.setAuthError(authError);
+
+        mUrlStatusTracker.put(mUrlLoadCounter, latestStatus);
     }
 
     /**

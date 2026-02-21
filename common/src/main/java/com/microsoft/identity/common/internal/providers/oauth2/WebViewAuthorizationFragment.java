@@ -282,7 +282,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
 
                     @Override
-                    public Map<Integer, UrlStatus> getUrlStatusList() {
+                    public Map<Integer, UrlStatus> getUrlStatusMap() {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
                 }

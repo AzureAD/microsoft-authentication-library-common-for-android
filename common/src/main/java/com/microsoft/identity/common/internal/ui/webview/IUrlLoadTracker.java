@@ -54,5 +54,5 @@ public interface IUrlLoadTracker {
       *
       * @return A map of URL load statuses, where the key is an integer identifier and the value is the corresponding UrlLoadStatus.
       */
-     Map<Integer, AuthorizationFragment.UrlStatus> getUrlStatusList();
+     Map<Integer, AuthorizationFragment.UrlStatus> getUrlStatusMap();
 }
