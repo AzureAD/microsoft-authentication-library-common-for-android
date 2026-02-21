@@ -1224,7 +1224,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
             mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
         }
-        super.onReceivedHttpError(view, request, errorResponse);
     }
 
     /**
