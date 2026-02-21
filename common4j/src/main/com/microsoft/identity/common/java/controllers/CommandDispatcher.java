@@ -88,6 +88,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -98,11 +99,15 @@ import lombok.NonNull;
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED = 8;
+    private static final int DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE = 12;
+    private static final int LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    // CPU core count is used as a reference for sizing SilentRequestThreadPool.
+    private static final int CPU_CORE_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
     private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
+    // Cache the pool size for the session
+    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = computeSilentRequestThreadPoolSize();
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
@@ -159,6 +164,27 @@ public class CommandDispatcher {
     private static final String TIMEOUT_MSG_UNKNOWN_STATE = 
         "Unknown state '%s'.";
 
+    // Compute the thread pool size based on flight configuration
+    private static int computeSilentRequestThreadPoolSize() {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider() != null) {
+            boolean useIncreasedPoolSize = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .getBooleanValue(CommonFlight.USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE);
+            return useIncreasedPoolSize ? DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE
+                    : LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
+        }
+        return LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
+    /**
+     * Returns the cached thread pool size for silent requests.
+     * This value is computed once during class initialization based on flight configuration.
+     *
+     * @return the cached pool size for the session
+     */
+    private static int getSilentRequestThreadPoolSize() {
+        return SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
     /**
      * Returns the approximate number of threads that are actively
      * executing tasks in the silent request thread pool.
@@ -183,7 +209,7 @@ public class CommandDispatcher {
      * @return the default pool size constant
      */
     public static int getDefaultSilentExecutorPoolSize() {
-        return SILENT_REQUEST_THREAD_POOL_SIZE;
+        return getSilentRequestThreadPoolSize();
     }
 
     /**
@@ -237,7 +263,7 @@ public class CommandDispatcher {
         sInteractiveExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
         f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
         f.setAccessible(false);
 
         f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
@@ -262,7 +288,7 @@ public class CommandDispatcher {
             final int queueSize) {
         return String.format(
             "Timeout in %s: %s [ActiveThreads=%d, QueueSize=%d, PoolSize=%d]",
-            location, message, activeThreads, queueSize, SILENT_REQUEST_THREAD_POOL_SIZE);
+            location, message, activeThreads, queueSize, getSilentRequestThreadPoolSize());
     }
 
     /**
@@ -305,7 +331,7 @@ public class CommandDispatcher {
                     break;
                 case QUEUED:
                     // All threads busy AND requests queued = Pool completely saturated
-                    if (activeThreads >= SILENT_REQUEST_THREAD_POOL_SIZE && queueSize > 0) {
+                    if (activeThreads >= getSilentRequestThreadPoolSize() && queueSize > 0) {
                         errorCode = ClientException.TIMED_OUT_THREAD_POOL_SATURATED;
                         reasonMessage = String.format(TIMEOUT_MSG_THREAD_POOL_SATURATED, activeThreads, queueSize);
                     } else {
@@ -1089,14 +1115,14 @@ public class CommandDispatcher {
     }
 
     /**
-     * Initializes the silent executor with expanded thread pool size (8 threads).
+     * Initializes the silent executor with expanded thread pool size based on Processor count.
      * <p>
      * This method should ONLY be called by Broker during its initialization phase
      * when the flight check determines that expanded pool is enabled.
      * MSAL client apps should NOT call this method - they will use the default pool size.
      * </p>
      * <p>
-     * This enables Broker to handle more concurrent silent token requests (8 vs 5 threads)
+     * This enables Broker to handle more concurrent silent token requests (12 vs CPU count based on flight)
      * without affecting MSAL client apps which run in separate processes.
      * </p>
      *
@@ -1115,8 +1141,8 @@ public class CommandDispatcher {
             );
         }
 
-        Logger.info(methodTag, "Expanding silent thread pool size for Broker to " + SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
-        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE_EXPANDED);
+        Logger.info(methodTag, "Expanding silent thread pool size for Broker to core pool size " + CPU_CORE_COUNT + ", based on processor count.");
+        resetSilentRequestExecutorWithSize(CPU_CORE_COUNT);
     }
 
 
@@ -1137,8 +1163,9 @@ public class CommandDispatcher {
 
         final int effectivePoolSize;
         if (poolSize <= 0) {
-            Logger.error(methodTag, "Invalid poolSize: " + poolSize + ". Using default: " + SILENT_REQUEST_THREAD_POOL_SIZE, null);
-            effectivePoolSize = SILENT_REQUEST_THREAD_POOL_SIZE;
+            final int defaultPoolSize = getSilentRequestThreadPoolSize();
+            Logger.error(methodTag, "Invalid poolSize: " + poolSize + ". Using default: " + defaultPoolSize, null);
+            effectivePoolSize = defaultPoolSize;
         } else {
             effectivePoolSize = poolSize;
         }
@@ -1150,7 +1177,12 @@ public class CommandDispatcher {
         final ExecutorService oldExecutor;
         synchronized (mapAccessLock) {
             oldExecutor = sSilentExecutor;
-            sSilentExecutor = Executors.newFixedThreadPool(effectivePoolSize);
+            sSilentExecutor = new ThreadPoolExecutor(
+                    effectivePoolSize, // core pool size
+                    effectivePoolSize*2, // max pool size
+                    30L, // keep-alive time for idle threads above core pool size
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<Runnable>(effectivePoolSize));
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
         }
@@ -1223,7 +1255,7 @@ public class CommandDispatcher {
      * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
      */
     public static void resetSilentRequestExecutor() {
-        resetSilentRequestExecutorWithSize(SILENT_REQUEST_THREAD_POOL_SIZE);
+        resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
 
