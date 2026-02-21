@@ -28,9 +28,9 @@ import com.google.gson.annotations.SerializedName
  * Represents an account item in Web Apps broker communication.
  */
 data class WebAppsAccountItem(
-    // Required; UPN
+    // Optional due to lookup mode scenarios. But note that in the vast majority of scenarios we should have a UPN.
     @SerializedName(FIELD_USER_NAME)
-    val userName: String,
+    val userName: String? = null,
 
     // Required.
     @SerializedName(FIELD_HOME_ACCOUNT_ID)
