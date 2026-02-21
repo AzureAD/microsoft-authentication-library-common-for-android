@@ -1186,7 +1186,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 final String failingUrl) {
         // Track error from server side
         if (mUrlLoadTracker != null) {
-            mUrlLoadTracker.updateLatestUrlStatus(null, "Code:" + errorCode + ", " + description);
+            mUrlLoadTracker.updateLatestUrlStatus( "Code:" + errorCode + ", " + description, null);
         }
         super.onReceivedError(view, errorCode, description, failingUrl);
     }
@@ -1199,8 +1199,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
         // we only want to track for main frame requests to avoid noise in telemetry.
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.updateLatestUrlStatus(null, "Code:" + error.getErrorCode() +
-                    ", " + error.getDescription());
+            mUrlLoadTracker.updateLatestUrlStatus("Code:" + error.getErrorCode() + ", " + error.getDescription(), null);
         }
         super.onReceivedError(view, request, error);
     }
