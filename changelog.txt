@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 24.0.0-RC1
+----------
 - [MINOR] Add tracking for urls loaded by our webview (#2892)
 - [MINOR] Rework OpenTelemetry spans for secret key generation and retrieval operations (#2869)
 - [MAJOR] add isBrokerProcess to IPlatformUtil (#2882)
