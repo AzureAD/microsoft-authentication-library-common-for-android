@@ -10,7 +10,6 @@ Version 24.0.0-RC1
 - [MINOR] Adding ExtraQueryStringParametersForWebApps (#2891)
 - [MINOR] Added flight-controlled option to enable Broker CommandDispatcher silent thread pool size based on processor count and default to 12 threads (#2897)
 - [MINOR] Edge TB: Allow For Lookup Mode (#2898)
-- [MINOR] Fix test failure due to flight-controlled thread pool size mismatch (#2905)
 
 Version 23.3.0
 ----------
