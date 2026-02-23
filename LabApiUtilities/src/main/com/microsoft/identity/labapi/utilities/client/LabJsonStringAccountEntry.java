@@ -48,6 +48,9 @@ public class LabJsonStringAccountEntry implements Serializable {
     @SerializedName("HomeTenantId")
     private String homeTenantId;
 
+    @SerializedName("AssociatedClientId")
+    private String associatedClientId;
+
     @SerializedName("KeyVaultEntry")
     private String keyVaultEntry;
 

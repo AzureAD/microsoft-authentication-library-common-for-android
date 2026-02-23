@@ -24,6 +24,7 @@ package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
+import com.microsoft.identity.labapi.utilities.constants.AzureEnvironment;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
@@ -117,6 +118,44 @@ public class LabClientTest {
         try {
             final ILabAccount labAccount = mLabClient.getLabAccount(query);
             assertLabAccount(labAccount, UserType.FEDERATED, "msidlab4");
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canFetchUsGovAccount() {
+        final LabQuery query = LabQuery.builder()
+                .azureEnvironment(AzureEnvironment.AZURE_US_GOVERNMENT)
+                .build();
+        try {
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
+            final ILabAccount labAccount2 = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.USGOV);
+
+            assertLabAccount(labAccount, null, "arlmsidlab1");
+            assertLabAccount(labAccount2, null, "arlmsidlab1");
+
+            Assert.assertEquals(labAccount.getUsername(), labAccount2.getUsername());
+            Assert.assertEquals(labAccount.getAssociatedClientId(), labAccount2.getAssociatedClientId());
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Test
+    public void canFetchChinaAccount() {
+        final LabQuery query = LabQuery.builder()
+                .azureEnvironment(AzureEnvironment.AZURE_CHINA_CLOUD)
+                .build();
+        try {
+            final ILabAccount labAccount = mLabClient.getLabAccount(query);
+            final ILabAccount labAccount2 = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.CHINA);
+
+            assertLabAccount(labAccount, null, "mncmsidlab1");
+            assertLabAccount(labAccount2, null, "mncmsidlab1");
+
+            Assert.assertEquals(labAccount.getUsername(), labAccount2.getUsername());
+            Assert.assertEquals(labAccount.getAssociatedClientId(), labAccount2.getAssociatedClientId());
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }

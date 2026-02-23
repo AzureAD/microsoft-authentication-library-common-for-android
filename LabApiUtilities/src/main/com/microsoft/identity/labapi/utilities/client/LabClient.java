@@ -75,6 +75,8 @@ public class LabClient implements ILabClient {
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
     private Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
 
+    public static ILabAccount latestLabAccount = null;
+
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
         // Adding a second attempt here, api sometimes fails to fetch the user.
@@ -142,7 +144,7 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(configInfo);
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account = new LabAccount.LabAccountBuilder()
                 .username(username)
                 .password(password)
                 .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
@@ -152,6 +154,10 @@ public class LabClient implements ILabClient {
                 .cloudUrl(configInfo.getLabInfo().getAuthority())
                 .azureEnvironment(configInfo.getLabInfo().getAzureEnvironment())
                 .build();
+
+        latestLabAccount = account;
+
+        return account;
     }
 
     private List<ConfigInfo> fetchConfigsFromLab(@NonNull final String upn) throws LabApiException {
@@ -252,7 +258,7 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(tempUser);
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account = new LabAccount.LabAccountBuilder()
                 .username(tempUser.getUpn())
                 .password(password)
                 // all temp users created by Lab Api are currently cloud users
@@ -260,6 +266,9 @@ public class LabClient implements ILabClient {
                 .homeTenantId(tempUser.getTenantId())
                 .homeObjectId(tempUser.getObjectId())
                 .build();
+
+        latestLabAccount = account;
+        return account;
     }
 
     @Override
@@ -356,16 +365,20 @@ public class LabClient implements ILabClient {
         }
         final String accountPassword = getPassword(accountEntry.getKeyVaultEntry());
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account =  new LabAccount.LabAccountBuilder()
                 .username(accountEntry.getUpn())
                 .password(accountPassword)
                 .userType(userType)
                 .homeTenantId(accountEntry.getHomeTenantId())
                 .homeObjectId(accountEntry.getHomeObjectId())
+                .associatedClientId(accountEntry.getAssociatedClientId())
                 .azureEnvironment(accountEntry.getAzureEnvironment())
                 .cloudUrl(accountEntry.getCloudUrl())
                 .build();
 
+        latestLabAccount = account;
+
+        return account;
     }
 
     @Override
