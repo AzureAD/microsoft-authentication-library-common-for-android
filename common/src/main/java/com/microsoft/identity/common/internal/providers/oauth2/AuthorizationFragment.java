@@ -33,6 +33,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
@@ -42,10 +43,17 @@ import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * This base classes
@@ -197,6 +205,9 @@ public abstract class AuthorizationFragment extends Fragment {
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
+
+            // Log hosting activity destruction in the url tracker
+            updateLatestUrlStatus(null, "SDK_CANCELLED: Activity destroyed before auth completion");
         }
 
         LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
@@ -215,6 +226,9 @@ public abstract class AuthorizationFragment extends Fragment {
         final String methodTag = TAG + ":sendResult";
         Logger.info(methodTag, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
+        // Track the final result code we got for this authorization flow
+        mFinalResultCode = result.getResultCode();
+
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
 
@@ -227,12 +241,163 @@ public abstract class AuthorizationFragment extends Fragment {
         if (isCancelledByUser) {
             Logger.info(methodTag, "Received Authorization flow cancelled by the user");
             sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
+
+            // Log this in the url load status tracker
+            updateLatestUrlStatus(null, "CANCELLED: Authorization cancelled by user.");
         } else {
             Logger.info(methodTag, "Received Authorization flow cancel request from SDK");
             sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
+
+            // Log this in the url load status tracker
+            updateLatestUrlStatus(null, "SDK_CANCELLED: Authorization cancelled by SDK.");
         }
 
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
+
+    /**
+     * Tracks the URLs loaded in the WebView along with their load status.
+     * Key: Load order (int), Value: URL Status object
+     */
+    private final Map<Integer, UrlStatus> mUrlStatusTracker = new LinkedHashMap<>();
+
+    @Getter
+    private RawAuthorizationResult.ResultCode mFinalResultCode;
+    private int mUrlLoadCounter = 0;
+
+    /**
+     * Class to represent the URL loaded and whether or not it received a loading error or a server error
+     */
+    public static class UrlStatus {
+        @Getter
+        private final String url;
+
+        /**
+         * Error encountered during loading
+         */
+        @Getter
+        @Setter
+        private String loadingError;
+
+        /**
+         * Error returned from server
+         */
+        @Getter
+        @Setter
+        private String authError;
+
+        UrlStatus(final String url, final String loadingError, final String authError) {
+            this.url = sanitizeUrl(url);
+            this.loadingError = loadingError;
+            this.authError = authError;
+        }
+
+        @NonNull
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("url=").append(url);
+            if (loadingError != null) {
+                sb.append(", loadingError=").append(loadingError);
+            }
+            if (authError != null) {
+                sb.append(", authError=").append(authError);
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Sanitize the URL to ensure no sensitive data is tracked.
+         * Only allows URLs with known AAD/MSA host suffixes.
+         * All query parameters are stripped for privacy.
+         *
+         * @param url The URL to sanitize.
+         * @return The sanitized URL (scheme + host + path only) or "[REDACTED]" if host is not allowed.
+         */
+        private static String sanitizeUrl(final String url) {
+            if (url == null || url.isEmpty()) {
+                return url;
+            }
+
+            try {
+                final URI uri = new URI(url);
+                final String host = uri.getHost();
+
+                if (host == null || host.isEmpty()) {
+                    return host;
+                }
+
+                // Only allow URLs with known AAD/MSA host suffixes
+                final boolean isAllowedHost =
+                        host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
+                        host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST_SUFFIX);
+
+                if (!isAllowedHost) {
+                    return "[REDACTED]";
+                }
+
+                // Build sanitized URL: scheme + host + path only (no query params or fragments)
+                final StringBuilder sanitizedUrl = new StringBuilder();
+                final String scheme = uri.getScheme();
+                if (scheme != null) {
+                    sanitizedUrl.append(scheme).append("://");
+                }
+                sanitizedUrl.append(host);
+
+                final String path = uri.getPath();
+                if (path != null && !path.isEmpty()) {
+                    sanitizedUrl.append(path);
+                }
+
+                return sanitizedUrl.toString();
+            } catch (final Exception e) {
+                // If URL parsing fails, redact the entire URL for safety
+                return "[PARSING_ERROR]";
+            }
+        }
+    }
+
+    /**
+     * Tracks a URL load event. Returns the index it was added at.
+     *
+     * @param url       The URL being loaded.
+     * @param loadingError The error if the load failed (null if successful).
+     * @param authError The error received from server-side.
+     */
+    protected void trackUrlStatus(final String url, final String loadingError, final String authError) {
+        mUrlStatusTracker.put(++mUrlLoadCounter, new UrlStatus(url, loadingError, authError));
+    }
+
+    /**
+     * Updates the most recent URL load event with new status information.
+     *
+     * @param loadingError The error if the load failed (null if successful).
+     * @param authError The error received from server-side.
+     */
+    protected void updateLatestUrlStatus(final String loadingError, final String authError) {
+        final UrlStatus latestStatus = mUrlStatusTracker.get(mUrlLoadCounter);
+
+        if (latestStatus == null) {
+            Logger.warn(TAG, "No URL load status to update.");
+            return;
+        }
+
+        latestStatus.setLoadingError(loadingError);
+        latestStatus.setAuthError(authError);
+
+        mUrlStatusTracker.put(mUrlLoadCounter, latestStatus);
+    }
+
+    /**
+     * Retrieves the tracked URL load events.
+     *
+     * @return A copy of the URL load tracker map.
+     */
+    public Map<Integer, UrlStatus> getUrlLoadTracker() {
+        return new LinkedHashMap<>(mUrlStatusTracker);
+    }
 }
+

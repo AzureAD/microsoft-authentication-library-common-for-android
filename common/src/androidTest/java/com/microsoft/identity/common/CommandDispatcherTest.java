@@ -112,7 +112,7 @@ public class CommandDispatcherTest {
     private static final long TASK_STABILIZATION_DELAY_MS = 100;
 
     /** Thread pool size for silent requests (matches CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE) */
-    private static final int SILENT_THREAD_POOL_SIZE = 5;
+    private static final int SILENT_THREAD_POOL_SIZE = 12;
 
     /** Number of concurrent requests for state collision test */
     private static final int CONCURRENT_REQUEST_COUNT = 20;
