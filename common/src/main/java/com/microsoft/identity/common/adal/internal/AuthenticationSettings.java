@@ -120,7 +120,7 @@ public enum AuthenticationSettings {
      * If the calling app needs to set the key,
      * this method must be invoked before any other MSAL classes,
      * otherwise the key might not be loaded
-     * (The existing encrypted key will not be readable,
+     * (The existing data (that was encrypted by the user provided key) will not be readable,
      * and new data will be encrypted with a Keystore-wrapped key).
      *
      * Please note: If a device with an existing installation of the ADAL/MSAL host-app is upgraded
