@@ -111,9 +111,6 @@ public class CommandDispatcherTest {
     /** Small delay to ensure blocking tasks are fully blocking before submitting test request */
     private static final long TASK_STABILIZATION_DELAY_MS = 100;
 
-    /** Thread pool size for silent requests (matches CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE) */
-    private static final int SILENT_THREAD_POOL_SIZE = 12;
-
     /** Number of concurrent requests for state collision test */
     private static final int CONCURRENT_REQUEST_COUNT = 20;
 
@@ -891,7 +888,7 @@ public class CommandDispatcherTest {
      *
      * <p>Test Strategy:
      * <ol>
-     *   <li>Fill all {@link #SILENT_THREAD_POOL_SIZE} thread pool threads with blocking tasks</li>
+     *   <li>Fill all thread pool threads with blocking tasks</li>
      *   <li>Submit a new request that will be queued (state: QUEUED)</li>
      *   <li>Request times out after 30 seconds while still in queue</li>
      *   <li>Verify error code is TIMED_OUT_THREAD_POOL_SATURATED</li>
@@ -904,7 +901,7 @@ public class CommandDispatcherTest {
     @Test
     public void testTimeoutClassification_ThreadPoolSaturated() throws Exception {
         Log.d(TAG, "testTimeoutClassification_ThreadPoolSaturated: Starting test");
-        final int POOL_SIZE = SILENT_THREAD_POOL_SIZE;
+        final int POOL_SIZE = CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE;
         final CountDownLatch tasksStarted = new CountDownLatch(POOL_SIZE);
         final CountDownLatch releaseBlockingTasks = new CountDownLatch(1);
         final CountDownLatch tasksCompleted = new CountDownLatch(POOL_SIZE); // Track completion
