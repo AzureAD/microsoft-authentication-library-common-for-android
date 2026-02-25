@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -47,6 +48,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -114,6 +116,8 @@ public class BrokerOperationExecutor {
 
     private final List<IIpcStrategy> mStrategies;
 
+    private final IpcRetryPolicy mRetryPolicy;
+
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
@@ -121,6 +125,7 @@ public class BrokerOperationExecutor {
                                    @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
         mStrategies = strategies;
         mCacheUpdaterManager = cacheUpdaterManager;
+        mRetryPolicy = new IpcRetryPolicy();
     }
 
     /**
@@ -216,6 +221,10 @@ public class BrokerOperationExecutor {
 
     /**
      * Execute the given operation with a given IIpcStrategy.
+     * Retries on {@link BrokerCommunicationException} with
+     * {@link BrokerCommunicationException.Category#CONNECTION_ERROR} when the
+     * {@link com.microsoft.identity.common.java.flighting.CommonFlight#ENABLE_IPC_RETRY_WITH_EXPONENTIAL_BACKOFF}
+     * feature flag is enabled.
      */
     private <T> T performStrategy(@NonNull final IIpcStrategy strategy,
                                   @NonNull final BrokerOperation<T> operation) throws BaseException {
@@ -227,13 +236,19 @@ public class BrokerOperationExecutor {
         );
 
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
+        final AtomicInteger retryCount = new AtomicInteger(0);
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+            final Bundle resultBundle = mRetryPolicy.execute(
+                    strategy.getClass().getSimpleName(),
+                    null,
+                    retryCount,
+                    () -> strategy.communicateToBroker(brokerOperationBundle));
 
             mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
 
@@ -245,6 +260,7 @@ public class BrokerOperationExecutor {
             span.recordException(throwable);
             throw throwable;
         } finally {
+            span.setAttribute(AttributeName.ipc_retry_count.name(), retryCount.get());
             span.end();
         }
     }

@@ -102,6 +102,12 @@ public enum AttributeName {
     ipc_strategy,
 
     /**
+     * The number of IPC retries performed for a given strategy call.
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_count,
+
+    /**
      * The API ID of an MSAL PCA method.
      */
     public_api_id,
