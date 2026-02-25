@@ -300,7 +300,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @Override
     public final boolean contains(final String key) {
         synchronized (cacheLock) {
-            return !StringUtil.isNullOrEmpty(mSharedPreferences.getString(key, null));
+            return mSharedPreferences.contains(key);
         }
     }
 
