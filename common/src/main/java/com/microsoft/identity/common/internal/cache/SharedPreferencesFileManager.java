@@ -159,9 +159,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @Nullable
     public final String getString(final String key) {
         final String methodTag = TAG + ":getString";
-        final String storedValue;
-
-        storedValue = mSharedPreferences.getString(key, null);
+        final String storedValue = mSharedPreferences.getString(key, null);
 
         if (StringUtil.isNullOrEmpty(storedValue)) {
             Logger.info(methodTag, "Data associated to the given key is null or empty", null);
@@ -201,7 +199,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
         @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
-
+        final String methodTag = TAG + ":getAll";
         if (null != mEncryptionManager) {
             for (Map.Entry<String, String> entry : entries.entrySet()) {
                 final String storedValue = entry.getValue();
@@ -213,7 +211,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 try {
                     decryptedValue = mEncryptionManager.decrypt(storedValue);
                 } catch (final ClientException e) {
-                    Logger.error(TAG + ":getAll", "Failed to decrypt value", null);
+                    Logger.error(methodTag, "Failed to decrypt value", null);
                     continue;
                 }
 
