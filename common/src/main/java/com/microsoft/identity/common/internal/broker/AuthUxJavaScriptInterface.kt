@@ -74,7 +74,7 @@ class AuthUxJavaScriptInterface {
             val host = uri.host
 
             // Otherwise, make sure uri is a valid uri
-            // We only want to allow URIs that have the AAD or MSA uri hosts
+            // We only want to allow URIs that have the AAD uri hosts
             return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
                     host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||

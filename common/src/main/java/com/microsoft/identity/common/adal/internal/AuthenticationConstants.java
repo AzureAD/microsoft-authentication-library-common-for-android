@@ -1283,6 +1283,11 @@ public final class AuthenticationConstants {
         public static final String AAD_INTUNE_MDM_URL_HOST_SUFFIX = ".microsoft.com";
 
         /**
+         * Suffix for MSA urls
+         */
+        public static final String MSA_URL_HOST_SUFFIX = ".live.com";
+
+        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";

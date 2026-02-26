@@ -29,10 +29,13 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -96,6 +99,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import android.webkit.WebResourceError;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -145,13 +150,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private String mPasskeyRegistrationScript;
 
+    /**
+     * Callback for tracking URL load events.
+     */
+    private final IUrlLoadTracker mUrlLoadTracker;
+
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
                                              @Nullable final String utid,
-                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
@@ -159,6 +170,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
+        mUrlLoadTracker = urlLoadTracker;
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -1144,10 +1166,63 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        // Track URL load started
+        if (mUrlLoadTracker != null) {
+            // Initially track as in-progress (success will be updated in onPageFinished or error methods)
+            mUrlLoadTracker.trackNewUrlStatus(url, null,null);
+        }
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
             Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
             view.evaluateJavascript(mPasskeyRegistrationScript, null);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onReceivedError(final WebView view,
+                                final int errorCode,
+                                final String description,
+                                final String failingUrl) {
+        // Track error from server side
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus( "Code:" + errorCode + ", " + description, null);
+        }
+        super.onReceivedError(view, errorCode, description, failingUrl);
+    }
+
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onReceivedError(@NonNull final WebView view,
+                                @NonNull final WebResourceRequest request,
+                                @NonNull final WebResourceError error) {
+        // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
+        // we only want to track for main frame requests to avoid noise in telemetry.
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.updateLatestUrlStatus("Code:" + error.getErrorCode() + ", " + error.getDescription(), null);
+        }
+        super.onReceivedError(view, request, error);
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view,
+                                   final SslErrorHandler handler,
+                                   final SslError error) {
+        // Track SSL error for the URL
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus(error.toString(), null);
+        }
+
+        super.onReceivedSslError(view, handler, error);
+    }
+
+    @Override
+    public void onReceivedHttpError(final WebView view,
+                                    final WebResourceRequest request,
+                                    final WebResourceResponse errorResponse) {
+        // Track HTTP error for the URL
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
         }
     }
 
