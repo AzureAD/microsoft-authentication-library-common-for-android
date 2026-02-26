@@ -244,12 +244,11 @@ public class BrokerOperationExecutor {
         );
 
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
+        int retryCount = 0;
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
-
-            int retryCount = 0;
 
             while (true) {
                 try {
@@ -270,9 +269,8 @@ public class BrokerOperationExecutor {
                         retryCount++;
                         final long delayMs = mRetryPolicy.getDelayMs(retryCount - 1);
                         Logger.warn(TAG + ":performStrategy",
-                                "IPC connection error for strategy " + strategy.getType().name()
-                                        + ". Retrying attempt " + retryCount + "/" + mRetryPolicy.getMaxRetries()
-                                        + " after " + delayMs + "ms.");
+                                String.format("IPC connection error for strategy %s. Retrying attempt %d/%d after %dms.",
+                                        strategy.getType().name(), retryCount, mRetryPolicy.getMaxRetries(), delayMs));
                         mRetryPolicy.sleepBeforeRetry(delayMs);
                     } else {
                         throw brokerCommunicationException;
@@ -280,6 +278,7 @@ public class BrokerOperationExecutor {
                 }
             }
         } catch (final Throwable throwable) {
+            span.setAttribute(AttributeName.ipc_retry_count.name(), (long) retryCount);
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;

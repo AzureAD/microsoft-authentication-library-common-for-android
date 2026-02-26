@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.broker.ipc
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
-import kotlin.random.Random
+import java.util.concurrent.ThreadLocalRandom
 
 /**
  * Defines the retry policy for IPC operations with exponential backoff.
@@ -67,7 +67,7 @@ class IpcRetryPolicy @JvmOverloads constructor(
      */
     fun getDelayMs(attempt: Int): Long {
         val exponentialDelay = baseDelayMs * (1L shl attempt)
-        val jitter = Random.nextLong(-jitterMs, jitterMs + 1)
+        val jitter = ThreadLocalRandom.current().nextLong(-jitterMs, jitterMs + 1)
         return maxOf(0L, exponentialDelay + jitter)
     }
 

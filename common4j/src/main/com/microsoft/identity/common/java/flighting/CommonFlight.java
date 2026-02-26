@@ -215,7 +215,8 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Flight to enable IPC retry with exponential backoff for transient connection errors.
-     * When enabled, up to 3 retries are attempted with 500ms, 1000ms, and 2000ms delays (plus jitter).
+     * When enabled, up to 3 retries are attempted with base delays of 500ms, 1000ms, and 2000ms
+     * (before jitter is applied). See {@code IpcRetryPolicy} for full details.
      */
     ENABLE_IPC_RETRY_WITH_EXPONENTIAL_BACKOFF("EnableIpcRetryWithExponentialBackoff", false);
 
