@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -114,13 +115,26 @@ public class BrokerOperationExecutor {
 
     private final List<IIpcStrategy> mStrategies;
 
+    private final IpcRetryPolicy mRetryPolicy;
+
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
     public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
                                    @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
+        this(strategies, cacheUpdaterManager, new IpcRetryPolicy());
+    }
+
+    /**
+     * @param strategies  list of IIpcStrategy to be invoked.
+     * @param retryPolicy the retry policy to use for transient IPC failures.
+     */
+    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                                   @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager,
+                                   @NonNull final IpcRetryPolicy retryPolicy) {
         mStrategies = strategies;
         mCacheUpdaterManager = cacheUpdaterManager;
+        mRetryPolicy = retryPolicy;
     }
 
     /**
@@ -216,6 +230,9 @@ public class BrokerOperationExecutor {
 
     /**
      * Execute the given operation with a given IIpcStrategy.
+     * On {@link BrokerCommunicationException} with {@link BrokerCommunicationException.Category#CONNECTION_ERROR},
+     * retries with exponential backoff when {@link com.microsoft.identity.common.java.flighting.CommonFlight#ENABLE_IPC_RETRY_WITH_EXPONENTIAL_BACKOFF}
+     * is enabled. All other exceptions propagate immediately.
      */
     private <T> T performStrategy(@NonNull final IIpcStrategy strategy,
                                   @NonNull final BrokerOperation<T> operation) throws BaseException {
@@ -231,15 +248,37 @@ public class BrokerOperationExecutor {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
-            operation.performPrerequisites(strategy);
-            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
-            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+            int retryCount = 0;
 
-            span.setStatus(StatusCode.OK);
-            return operation.extractResultBundle(resultBundle);
-            // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+            while (true) {
+                try {
+                    operation.performPrerequisites(strategy);
+                    final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+                    final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+                    mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+
+                    span.setAttribute(AttributeName.ipc_retry_count.name(), (long) retryCount);
+                    span.setStatus(StatusCode.OK);
+                    return operation.extractResultBundle(resultBundle);
+                    // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+                } catch (final BrokerCommunicationException brokerCommunicationException) {
+                    if (mRetryPolicy.isEnabled()
+                            && mRetryPolicy.isRetryable(brokerCommunicationException)
+                            && retryCount < mRetryPolicy.getMaxRetries()) {
+                        retryCount++;
+                        final long delayMs = mRetryPolicy.getDelayMs(retryCount - 1);
+                        Logger.warn(TAG + ":performStrategy",
+                                "IPC connection error for strategy " + strategy.getType().name()
+                                        + ". Retrying attempt " + retryCount + "/" + mRetryPolicy.getMaxRetries()
+                                        + " after " + delayMs + "ms.");
+                        mRetryPolicy.sleepBeforeRetry(delayMs);
+                    } else {
+                        throw brokerCommunicationException;
+                    }
+                }
+            }
         } catch (final Throwable throwable) {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);

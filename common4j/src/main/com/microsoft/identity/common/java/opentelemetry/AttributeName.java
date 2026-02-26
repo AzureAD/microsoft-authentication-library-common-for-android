@@ -597,4 +597,10 @@ public enum AttributeName {
     secret_key_serialization_duration,
     
     //endregion
+
+    /**
+     * The number of IPC retry attempts made within a single strategy execution.
+     * NOTE : Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_count,
 }
