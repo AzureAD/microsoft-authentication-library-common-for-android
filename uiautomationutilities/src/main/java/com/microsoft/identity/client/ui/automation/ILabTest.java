@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation;
 
 import com.microsoft.identity.labapi.utilities.client.LabQuery;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 /**
  * An interface describing a test that can leverage the Lab Api to fetch accounts. Implementing this
@@ -37,7 +38,7 @@ public interface ILabTest {
      *
      * @return A {@link LabQuery} object that can be used to pull user via LAB API
      */
-    LabQuery getLabQuery();
+    UserType getJsonUserType();
 
     /**
      * Get the type of temp user that can be used to create a new temp user via LAB API.
