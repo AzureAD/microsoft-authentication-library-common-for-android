@@ -44,6 +44,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -354,6 +355,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+        // Allow mixed content (HTTPS pages loading HTTP sub-resources) for compatibility
+        // with ToU/MFA pages that may load resources over HTTP.
+        mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
@@ -365,6 +370,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     );
                     mCameraPermissionRequestHandler.handle(request, requireContext());
                 });
+            }
+
+            @Override
+            public boolean onConsoleMessage(final ConsoleMessage consoleMessage) {
+                // Log JS console messages to help debug WebView rendering issues (e.g., ToU blank screen)
+                final String level = consoleMessage.messageLevel().name();
+                final String msg = "JS Console [" + level + "]: " + consoleMessage.message()
+                        + " (source: " + consoleMessage.sourceId()
+                        + ", line: " + consoleMessage.lineNumber() + ")";
+                if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+                    Logger.error(methodTag, msg, null);
+                } else if (consoleMessage.messageLevel() == ConsoleMessage.MessageLevel.WARNING) {
+                    Logger.warn(methodTag, msg);
+                } else {
+                    Logger.info(methodTag, msg);
+                }
+                return true;
             }
 
             @Override

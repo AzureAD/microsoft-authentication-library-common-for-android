@@ -202,6 +202,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                final String url) {
         super.onPageFinished(view, url);
 
+        // Track page load completion
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus("PAGE_FINISHED", null);
+        }
+
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
             // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict

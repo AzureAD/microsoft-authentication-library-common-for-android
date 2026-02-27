@@ -229,6 +229,11 @@ public abstract class AuthorizationFragment extends Fragment {
         // Track the final result code we got for this authorization flow
         mFinalResultCode = result.getResultCode();
 
+        // Log the URL load tracker for debugging WebView navigation issues
+        if (!mUrlStatusTracker.isEmpty()) {
+            Logger.info(methodTag, "URL Load Tracker (" + mUrlStatusTracker.size() + " entries): " + mUrlStatusTracker);
+        }
+
         final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
         propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
 
@@ -334,10 +339,6 @@ public abstract class AuthorizationFragment extends Fragment {
                         host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
                         host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
                         host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST_SUFFIX);
-
-                if (!isAllowedHost) {
-                    return "[REDACTED]";
-                }
 
                 // Build sanitized URL: scheme + host + path only (no query params or fragments)
                 final StringBuilder sanitizedUrl = new StringBuilder();
