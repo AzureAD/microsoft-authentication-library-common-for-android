@@ -63,6 +63,7 @@ import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
+import com.microsoft.identity.common.internal.ui.webview.IUrlLoadTracker;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
@@ -82,6 +83,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -267,7 +269,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mRedirectUri,
                 getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
                 mUtid,
-                isWebViewWebcpEnabledInBrokerlessCase
+                isWebViewWebcpEnabledInBrokerlessCase,
+                new IUrlLoadTracker() {
+                    @Override
+                    public void trackNewUrlStatus(final String url, final String loadingError, final String authError) {
+                        WebViewAuthorizationFragment.this.trackUrlStatus(url, loadingError, authError);
+                    }
+
+                    @Override
+                    public void updateLatestUrlStatus(final String loadingError, final String authError) {
+                        WebViewAuthorizationFragment.this.updateLatestUrlStatus(loadingError, authError);
+                    }
+
+                    @Override
+                    public Map<Integer, UrlStatus> getUrlStatusMap() {
+                        return WebViewAuthorizationFragment.this.getUrlLoadTracker();
+                    }
+                }
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
