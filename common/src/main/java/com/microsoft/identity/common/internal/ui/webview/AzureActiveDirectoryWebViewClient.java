@@ -201,11 +201,66 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+        Logger.info(TAG, "onPageFinished: " + sanitizeUrlForLogging(url));
 
         // Track page load completion
         if (mUrlLoadTracker != null) {
             mUrlLoadTracker.updateLatestUrlStatus("PAGE_FINISHED", null);
         }
+
+        // Check if the page actually rendered content or stayed blank (empty SPA shell).
+        // This helps diagnose blank-screen issues where the HTML loads but JS fails to render.
+        // Immediate check + delayed check (3s) since React apps with defer scripts need time to mount.
+        final String renderCheckScript =
+                "(function() {" +
+                "  var root = document.getElementById('root');" +
+                "  var body = document.body;" +
+                "  var rootContent = root ? root.innerHTML.trim().length : -1;" +
+                "  var bodyContent = body ? body.innerText.trim().length : -1;" +
+                "  var scripts = document.scripts.length;" +
+                "  var jsErrors = window.__brokerJsErrors || [];" +
+                "  return JSON.stringify({rootLen: rootContent, bodyTextLen: bodyContent, scriptCount: scripts, title: document.title, jsErrors: jsErrors.length});" +
+                "})()";
+
+        final android.webkit.ValueCallback<String> renderCheckCallback = new android.webkit.ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String value) {
+                Logger.info(TAG, "Page render check for " + sanitizeUrlForLogging(url) + ": " + value);
+                if (mUrlLoadTracker != null && value != null) {
+                    // evaluateJavascript returns strings JSON-encoded (outer quotes + escaped inner quotes).
+                    // Decode to get the raw JSON for reliable parsing.
+                    String decoded = value;
+                    if (decoded.startsWith("\"") && decoded.endsWith("\"")) {
+                        decoded = decoded.substring(1, decoded.length() - 1)
+                                .replace("\\\"", "\"")
+                                .replace("\\\\", "\\");
+                    }
+                    // If root element exists and is empty, the SPA failed to render
+                    if (decoded.contains("\"rootLen\":0") || decoded.contains("\"rootLen\": 0")) {
+                        mUrlLoadTracker.updateLatestUrlStatus("BLANK_PAGE_DETECTED",
+                                "Page has empty #root element - JS framework failed to render. Render check: " + value);
+                    }
+                }
+            }
+        };
+
+        // Immediate check
+        view.evaluateJavascript(renderCheckScript, renderCheckCallback);
+
+        // Delayed check (3 seconds) — gives deferred JS time to execute and React to mount
+        view.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (view.isAttachedToWindow()) {
+                        Logger.info(TAG, "Delayed page render check (3s) for " + sanitizeUrlForLogging(url));
+                        view.evaluateJavascript(renderCheckScript, renderCheckCallback);
+                    }
+                } catch (final Exception e) {
+                    Logger.info(TAG, "Delayed render check skipped - WebView no longer available.");
+                }
+            }
+        }, 3000);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -1169,13 +1224,40 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     @Override
+    public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request) {
+        // Log every sub-resource request to diagnose blank page issues (e.g., blocked JS/CSS/fonts)
+        final String url = request.getUrl() != null ? request.getUrl().toString() : "null";
+        final String method = request.getMethod();
+        final boolean isMainFrame = request.isForMainFrame();
+        if (!isMainFrame) {
+            Logger.info(TAG, "SubResource [" + method + "]: " + sanitizeUrlForLogging(url));
+        }
+        return super.shouldInterceptRequest(view, request);
+    }
+
+    @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        Logger.info(TAG, "onPageStarted: " + sanitizeUrlForLogging(url));
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
             mUrlLoadTracker.trackNewUrlStatus(url, null,null);
         }
+
+        // Inject global error trap BEFORE page scripts run.
+        // Catches uncaught JS errors and unhandled promise rejections from SPA frameworks (e.g., ToU consent page).
+        view.evaluateJavascript(
+                "(function() {" +
+                "  window.onerror = function(msg, src, line, col, err) {" +
+                "    console.error('BROKER_JS_TRAP: ' + msg + ' at ' + src + ':' + line + ':' + col);" +
+                "    return false;" +  // don't suppress — let onConsoleMessage also see it
+                "  };" +
+                "  window.addEventListener('unhandledrejection', function(e) {" +
+                "    console.error('BROKER_JS_TRAP: Unhandled promise rejection: ' + (e.reason ? (e.reason.message || e.reason) : 'unknown'));" +
+                "  });" +
+                "})()", null);
+
         // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
         if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
             Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
@@ -1201,10 +1283,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
-        // we only want to track for main frame requests to avoid noise in telemetry.
+        // Track error from server-side for main frame requests in URL tracker
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
             mUrlLoadTracker.updateLatestUrlStatus("Code:" + error.getErrorCode() + ", " + error.getDescription(), null);
+        }
+        // Log sub-resource errors too — these can cause blank pages (e.g., failed JS/CSS loads)
+        if (!request.isForMainFrame()) {
+            final String url = request.getUrl() != null ? request.getUrl().toString() : "null";
+            Logger.warn(TAG, "SubResource ERROR [" + error.getErrorCode() + "]: "
+                    + error.getDescription() + " url=" + sanitizeUrlForLogging(url));
         }
         super.onReceivedError(view, request, error);
     }
@@ -1228,6 +1315,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Track HTTP error for the URL
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
             mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
+        }
+        // Log sub-resource HTTP errors too — 4xx/5xx on JS/CSS can cause blank pages
+        if (!request.isForMainFrame()) {
+            final String url = request.getUrl() != null ? request.getUrl().toString() : "null";
+            Logger.warn(TAG, "SubResource HTTP " + errorResponse.getStatusCode()
+                    + ": " + sanitizeUrlForLogging(url));
         }
     }
 
@@ -1315,5 +1408,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     public void addPasskeyRegistrationJsScript(@NonNull final String script) {
         this.mPasskeyRegistrationScript = script;
+    }
+
+    /**
+     * Sanitize URL for non-PII logging: returns scheme://host/path (strips query params and fragments).
+     *
+     * @param url The URL to sanitize.
+     * @return Sanitized URL with scheme, host, and path only.
+     */
+    private static String sanitizeUrlForLogging(final String url) {
+        if (url == null || url.isEmpty()) {
+            return url;
+        }
+        try {
+            final URI uri = new URI(url);
+            final StringBuilder sb = new StringBuilder();
+            if (uri.getScheme() != null) {
+                sb.append(uri.getScheme()).append("://");
+            }
+            if (uri.getHost() != null) {
+                sb.append(uri.getHost());
+            }
+            if (uri.getPath() != null && !uri.getPath().isEmpty()) {
+                sb.append(uri.getPath());
+            }
+            return sb.toString();
+        } catch (final URISyntaxException e) {
+            return "[INVALID_URL]";
+        }
     }
 }

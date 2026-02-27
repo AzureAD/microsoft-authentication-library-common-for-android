@@ -33,7 +33,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
@@ -332,14 +331,6 @@ public abstract class AuthorizationFragment extends Fragment {
                     return host;
                 }
 
-                // Only allow URLs with known AAD/MSA host suffixes
-                final boolean isAllowedHost =
-                        host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
-                        host.endsWith(AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX) ||
-                        host.endsWith(AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX) ||
-                        host.endsWith(AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX) ||
-                        host.endsWith(AuthenticationConstants.Broker.MSA_URL_HOST_SUFFIX);
-
                 // Build sanitized URL: scheme + host + path only (no query params or fragments)
                 final StringBuilder sanitizedUrl = new StringBuilder();
                 final String scheme = uri.getScheme();
@@ -386,8 +377,23 @@ public abstract class AuthorizationFragment extends Fragment {
             return;
         }
 
-        latestStatus.setLoadingError(loadingError);
-        latestStatus.setAuthError(authError);
+        // Append rather than overwrite to preserve prior error info
+        // (e.g., onReceivedError fires before onPageFinished — we don't want to lose the error)
+        if (loadingError != null) {
+            if (latestStatus.getLoadingError() != null) {
+                latestStatus.setLoadingError(latestStatus.getLoadingError() + ", " + loadingError);
+            } else {
+                latestStatus.setLoadingError(loadingError);
+            }
+        }
+
+        if (authError != null) {
+            if (latestStatus.getAuthError() != null) {
+                latestStatus.setAuthError(latestStatus.getAuthError() + ", " + authError);
+            } else {
+                latestStatus.setAuthError(authError);
+            }
+        }
 
         mUrlStatusTracker.put(mUrlLoadCounter, latestStatus);
     }
