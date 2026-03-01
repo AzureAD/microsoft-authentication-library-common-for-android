@@ -30,6 +30,9 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import com.microsoft.identity.common.internal.broker.ipc.IpcStrategyWithRetry
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.logging.Logger
 
@@ -73,19 +76,27 @@ class OneAuthSharedFunctions {
         ): List<IIpcStrategy> {
             val methodTag = "$TAG:getIpcStrategies"
             val strategies: MutableList<IIpcStrategy> = ArrayList()
+            val retryEnabled = CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_IPC_RETRY_WITH_BACKOFF)
 
             val sb = StringBuilder(100)
             sb.append("Broker Strategies added : ")
             val contentProviderStrategy = ContentProviderStrategy(context, components)
             if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("ContentProviderStrategy, ")
-                strategies.add(contentProviderStrategy)
+                strategies.add(
+                    if (retryEnabled) IpcStrategyWithRetry(contentProviderStrategy)
+                    else contentProviderStrategy
+                )
             }
 
             val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
             if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("BoundServiceStrategy, ")
-                strategies.add(boundServiceStrategy)
+                strategies.add(
+                    if (retryEnabled) IpcStrategyWithRetry(boundServiceStrategy)
+                    else boundServiceStrategy
+                )
             }
 
             val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
