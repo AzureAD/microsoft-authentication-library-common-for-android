@@ -292,6 +292,20 @@ public enum AttributeName {
     backup_ipc_used,
 
     /**
+     * Indicates the current retry attempt number for an IPC operation (0-based: 0 = initial attempt,
+     * 1 = first retry, and so on up to maxRetries). Set per attempt to track progress.
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_attempt_number,
+
+    /**
+     * Indicates the total number of retries performed in a given IPC flow (0 = no retries, i.e.
+     * the initial attempt succeeded or failed without retry). Set once when the operation completes.
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_total_count,
+
+    /**
      * Indicates the package name of the app making the request to the broker.
      */
     calling_package_name,
