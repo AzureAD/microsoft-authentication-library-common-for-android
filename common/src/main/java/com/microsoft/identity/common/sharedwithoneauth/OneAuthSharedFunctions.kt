@@ -30,6 +30,9 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
+import com.microsoft.identity.common.internal.broker.ipc.IpcStrategyWithRetry
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.logging.Logger
 
@@ -79,23 +82,39 @@ class OneAuthSharedFunctions {
             val contentProviderStrategy = ContentProviderStrategy(context, components)
             if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("ContentProviderStrategy, ")
-                strategies.add(contentProviderStrategy)
+                strategies.add(maybeWrapWithRetry(methodTag, contentProviderStrategy))
             }
 
             val boundServiceStrategy = BoundServiceStrategy(MicrosoftAuthClient(context))
             if (boundServiceStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("BoundServiceStrategy, ")
-                strategies.add(boundServiceStrategy)
+                strategies.add(maybeWrapWithRetry(methodTag, boundServiceStrategy))
             }
 
             val accountManagerStrategy = AccountManagerAddAccountStrategy(context)
             if (accountManagerStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
                 sb.append("AccountManagerStrategy.")
-                strategies.add(accountManagerStrategy)
+                strategies.add(maybeWrapWithRetry(methodTag, accountManagerStrategy))
             }
 
             Logger.info(methodTag, sb.toString())
             return strategies
+        }
+
+        /**
+         * Wraps the given [IIpcStrategy] with [IpcStrategyWithRetry] if the
+         * [CommonFlight.IPC_RETRY_ENABLED] flight is enabled; otherwise returns the strategy as-is.
+         */
+        internal fun maybeWrapWithRetry(methodTag: String, strategy: IIpcStrategy): IIpcStrategy {
+            val flightsProvider = CommonFlightsManager.getFlightsProvider()
+            return if (flightsProvider.isFlightEnabled(CommonFlight.IPC_RETRY_ENABLED)) {
+                val maxRetries = maxOf(0, flightsProvider.getIntValue(CommonFlight.IPC_RETRY_MAX_ATTEMPTS))
+                val baseDelayMs = maxOf(0L, flightsProvider.getIntValue(CommonFlight.IPC_RETRY_BASE_DELAY_MS).toLong())
+                Logger.info(methodTag, "IPC retry enabled, wrapping strategies")
+                IpcStrategyWithRetry(strategy, maxRetries, baseDelayMs)
+            } else {
+                strategy
+            }
         }
 
     }

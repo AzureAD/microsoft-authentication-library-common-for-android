@@ -211,7 +211,28 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+
+    /**
+     * Flight to enable IPC retry logic when communicating with the Broker.
+     * When enabled, each IPC strategy is wrapped with {@code IpcStrategyWithRetry}.
+     * Default is false (no retry).
+     */
+    IPC_RETRY_ENABLED("IpcRetryEnabled", false),
+
+    /**
+     * Flight to control the maximum number of retry attempts for IPC operations.
+     * Used when {@link #IPC_RETRY_ENABLED} is true.
+     * Default is 3.
+     */
+    IPC_RETRY_MAX_ATTEMPTS("IpcRetryMaxAttempts", 3),
+
+    /**
+     * Flight to control the base delay in milliseconds between IPC retry attempts.
+     * Used when {@link #IPC_RETRY_ENABLED} is true.
+     * Default is 500 ms.
+     */
+    IPC_RETRY_BASE_DELAY_MS("IpcRetryBaseDelayMs", 500);
 
     private String key;
     private Object defaultValue;
