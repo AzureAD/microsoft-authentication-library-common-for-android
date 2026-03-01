@@ -57,6 +57,14 @@ class IpcStrategyWithRetry(
     private val jitterFactor: Double = DEFAULT_JITTER_FACTOR
 ) : IIpcStrategy {
 
+    init {
+        require(maxRetries >= 0) { "maxRetries must be >= 0 but was $maxRetries" }
+        require(initialDelayMs >= 0L) { "initialDelayMs must be >= 0 but was $initialDelayMs" }
+        require(maxDelayMs >= 0L) { "maxDelayMs must be >= 0 but was $maxDelayMs" }
+        require(backoffFactor >= 1.0) { "backoffFactor must be >= 1.0 but was $backoffFactor" }
+        require(jitterFactor in 0.0..1.0) { "jitterFactor must be in the range [0.0, 1.0] but was $jitterFactor" }
+    }
+
     companion object {
         private val TAG = IpcStrategyWithRetry::class.simpleName
 
@@ -95,6 +103,10 @@ class IpcStrategyWithRetry(
         var lastException: BrokerCommunicationException? = null
 
         for (attempt in 0..maxRetries) {
+            SpanExtension.current().setAttribute(
+                AttributeName.ipc_retry_attempt_number.name,
+                attempt.toLong()
+            )
             if (attempt > 0) {
                 val jitter = (Random.nextDouble() * 2 - 1) * jitterFactor * currentDelay
                 val sleepMs = (currentDelay + jitter).toLong().coerceAtLeast(0L)
@@ -104,7 +116,23 @@ class IpcStrategyWithRetry(
                         "Strategy: ${inner.getType().name}. " +
                         "Last error: ${lastException?.message}"
                 )
-                Thread.sleep(sleepMs)
+                try {
+                    Thread.sleep(sleepMs)
+                } catch (ie: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    SpanExtension.current().setAttribute(
+                        AttributeName.ipc_retry_total_count.name,
+                        attempt.toLong()
+                    )
+                    throw BrokerCommunicationException(
+                        BrokerCommunicationException.Category.CONNECTION_ERROR,
+                        inner.getType(),
+                        "IPC retry interrupted while sleeping between attempts. " +
+                            "Attempt: $attempt/$maxRetries. " +
+                            "Strategy: ${inner.getType().name}.",
+                        ie
+                    )
+                }
                 currentDelay = min((currentDelay * backoffFactor).toLong(), maxDelayMs)
             }
 
@@ -130,7 +158,7 @@ class IpcStrategyWithRetry(
                     if (attempt >= maxRetries) {
                         Logger.error(
                             methodTag,
-                            "IPC retry exhausted after $attempt attempt(s). " +
+                            "IPC retry exhausted after ${attempt + 1} attempt(s). " +
                                 "Strategy: ${inner.getType().name}.",
                             e
                         )
