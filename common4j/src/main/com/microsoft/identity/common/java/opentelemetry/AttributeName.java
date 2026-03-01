@@ -595,6 +595,20 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
-    
+
+    //endregion
+
+    //region IPC Retry
+
+    /**
+     * The number of IPC retry attempts made before the request succeeded or ultimately failed.
+     */
+    ipc_retry_count,
+
+    /**
+     * Indicates whether the IPC request succeeded after one or more retry attempts.
+     */
+    ipc_retry_succeeded,
+
     //endregion
 }
