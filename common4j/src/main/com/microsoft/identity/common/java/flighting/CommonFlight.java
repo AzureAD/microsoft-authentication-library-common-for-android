@@ -211,7 +211,12 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+
+    /**
+     * Flight to enable broadcasting device registration state change notifications.
+     */
+    ENABLE_DEVICE_REGISTRATION_STATE_BROADCAST("EnableDeviceRegistrationStateBroadcast", false);
 
     private String key;
     private Object defaultValue;
