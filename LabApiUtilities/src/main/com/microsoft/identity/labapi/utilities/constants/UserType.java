@@ -49,6 +49,7 @@ public enum UserType {
     DUNA_MDM_CA_2(LabConstants.UserType.DUNA_MDM_CA_2),
     DUNA_MFA_1(LabConstants.UserType.DUNA_MFA_1),
     DUNA_MFA_2(LabConstants.UserType.DUNA_MFA_2),
+    TP_CA(LabConstants.UserType.TP_CA),
     CLOUD(LabConstants.UserType.CLOUD),
     B2C(LabConstants.UserType.B2C),
     GUEST(LabConstants.UserType.GUEST),

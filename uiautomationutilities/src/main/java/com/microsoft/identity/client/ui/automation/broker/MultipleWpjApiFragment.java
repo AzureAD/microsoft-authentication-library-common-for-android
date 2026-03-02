@@ -117,8 +117,8 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private Map<String, String> recordStringToMap(@NonNull final String recordRaw) {
         final String[] recordProperties = recordRaw.split(System.lineSeparator());
         Assert.assertTrue(
-                "Device registration record should have 4 or 5 lines",
-                recordProperties.length == 4 || recordProperties.length == 5
+                "Device registration record should have 5 or 6 lines",
+                recordProperties.length == 5 || recordProperties.length == 6
         );
         Assert.assertTrue(
                 "Record should have a valid tenant id." + recordProperties[0],
@@ -136,12 +136,17 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
                 "Record should have a shared status tag." + recordProperties[3],
                 recordProperties[3].trim().startsWith("isShared:")
         );
-        // The 5th line is the Account name of the device registration record, which is optional.
+        Assert.assertTrue(
+                "Record should have isRegisteredWithStrongKeys." + recordProperties[4],
+                recordProperties[4].trim().startsWith("isRegisteredWithStrongKeys:")
+        );
+        // The 6th line is the Account name of the device registration record, which is optional.
         final Map<String, String> deviceRegistrationRecord = new HashMap<>();
         deviceRegistrationRecord.put("TenantId", recordProperties[0].replace("TenantId:", "").trim());
         deviceRegistrationRecord.put("Upn", recordProperties[1].replace("Upn:", "").trim());
         deviceRegistrationRecord.put("DeviceId", recordProperties[2].replace("DeviceId:", "").trim());
         deviceRegistrationRecord.put("isShared", recordProperties[3].replace("isShared:", "").trim());
+        deviceRegistrationRecord.put("isRegisteredWithStrongKeys", recordProperties[4].replace("isRegisteredWithStrongKeys:", "").trim());
         return deviceRegistrationRecord;
     }
 
