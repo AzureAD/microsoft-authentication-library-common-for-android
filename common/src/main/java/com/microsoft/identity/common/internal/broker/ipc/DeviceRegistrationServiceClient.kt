@@ -54,7 +54,7 @@ class DeviceRegistrationServiceClient(context: Context) :
      * @param binder the [IBinder] returned by the service connection.
      * @return the [IDeviceRegistrationService] interface for communicating with the service.
      */
-    override fun getInterfaceFromIBinder(binder: IBinder): IDeviceRegistrationService =
+    protected override fun getInterfaceFromIBinder(binder: IBinder): IDeviceRegistrationService =
         IDeviceRegistrationService.Stub.asInterface(binder)
 
     /**
@@ -64,7 +64,7 @@ class DeviceRegistrationServiceClient(context: Context) :
      * @param aidlInterface the [IDeviceRegistrationService] AIDL interface bound to the service.
      * @return a [Bundle] containing the result of the device registration protocol, or null if no result.
      */
-    override fun performOperationInternal(
+    protected override fun performOperationInternal(
         inputBundle: BrokerOperationBundle,
         aidlInterface: IDeviceRegistrationService
     ): Bundle? = aidlInterface.executeDeviceRegistrationProtocol(inputBundle.bundle)
