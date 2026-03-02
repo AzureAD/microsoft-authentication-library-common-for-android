@@ -39,10 +39,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLooper;
 
-@RunWith(JUnit4.class)
+@RunWith(RobolectricTestRunner.class)
 public class DeviceRegistrationStateBroadcastReceiverTests {
 
     private String actualCallbackReceived;
@@ -87,52 +88,52 @@ public class DeviceRegistrationStateBroadcastReceiverTests {
     }
 
     @Test
-    public void testDeviceRegisteredBroadcast() throws InterruptedException {
+    public void testDeviceRegisteredBroadcast() {
         sendBroadcast(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_REGISTERED);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertEquals(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_REGISTERED, actualCallbackReceived);
     }
 
     @Test
-    public void testDeviceUnregisteredBroadcast() throws InterruptedException {
+    public void testDeviceUnregisteredBroadcast() {
         sendBroadcast(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_UNREGISTERED);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertEquals(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_UNREGISTERED, actualCallbackReceived);
     }
 
     @Test
-    public void testDeviceRegistrationUpgradedBroadcast() throws InterruptedException {
+    public void testDeviceRegistrationUpgradedBroadcast() {
         sendBroadcast(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_REGISTRATION_UPGRADED);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertEquals(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_REGISTRATION_UPGRADED, actualCallbackReceived);
     }
 
     @Test
-    public void testDeviceStateChangedBroadcast() throws InterruptedException {
+    public void testDeviceStateChangedBroadcast() {
         sendBroadcast(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_STATE_CHANGED);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertEquals(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_STATE_CHANGED, actualCallbackReceived);
     }
 
     @Test
-    public void testUnknownBroadcastTypeHandledGracefully() throws InterruptedException {
+    public void testUnknownBroadcastTypeHandledGracefully() {
         sendBroadcast("UNKNOWN_TYPE");
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertNull(actualCallbackReceived);
     }
 
     @Test
-    public void testNullBroadcastTypeHandledGracefully() throws InterruptedException {
+    public void testNullBroadcastTypeHandledGracefully() {
         final Intent intent = new Intent();
         intent.setAction(DeviceRegistrationBroadcastConstants.DEVICE_REGISTRATION_STATE_CHANGED_BROADCAST_IDENTIFIER);
         // Do not put a broadcast type extra - results in null
         ApplicationProvider.getApplicationContext().sendBroadcast(intent);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertNull(actualCallbackReceived);
     }
 
     @Test
-    public void testReceiverNotRegisteredWhenFeatureFlagIsOff() throws InterruptedException {
+    public void testReceiverNotRegisteredWhenFeatureFlagIsOff() {
         // Unregister the receiver set up in setUp() and reset the flight manager to defaults
         DeviceRegistrationStateBroadcastReceiver.unregister(ApplicationProvider.getApplicationContext());
         CommonFlightsManager.INSTANCE.resetFlightsManager();
@@ -145,7 +146,7 @@ public class DeviceRegistrationStateBroadcastReceiverTests {
 
         // Send a broadcast - it should not be received since the receiver was never registered
         sendBroadcast(DeviceRegistrationBroadcastConstants.BROADCAST_TYPE_DEVICE_REGISTERED);
-        Thread.sleep(100);
+        ShadowLooper.idleMainLooper();
         Assert.assertNull(actualCallbackReceived);
     }
 
