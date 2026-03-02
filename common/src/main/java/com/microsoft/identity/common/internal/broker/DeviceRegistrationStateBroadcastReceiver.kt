@@ -151,10 +151,10 @@ object DeviceRegistrationStateBroadcastReceiver {
                 }
                 span.setStatus(StatusCode.OK)
             }
-        } catch (t: Throwable) {
+        } catch (e: Exception) {
             span.setStatus(StatusCode.ERROR)
-            span.recordException(t)
-            throw t
+            span.recordException(e)
+            Logger.error(methodTag, "Error handling device registration state broadcast.", e)
         } finally {
             span.end()
         }
