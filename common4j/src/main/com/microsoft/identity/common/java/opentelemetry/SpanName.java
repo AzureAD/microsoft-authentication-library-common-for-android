@@ -97,5 +97,13 @@ public enum SpanName {
     /**
      * Span name for secret key retrieval operations.
      */
-    SecretKeyRetrieval
+    SecretKeyRetrieval,
+    /**
+     * Span name for sending device registration state change notifications to client apps.
+     */
+    DeviceRegistrationStateNotification,
+    /**
+     * Span name for receiving device registration state change notifications in client apps.
+     */
+    DeviceRegistrationStateNotificationReceived
 }
