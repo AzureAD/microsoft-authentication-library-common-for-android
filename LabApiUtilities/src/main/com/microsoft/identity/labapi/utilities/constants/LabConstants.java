@@ -88,6 +88,7 @@ public class LabConstants {
         public static final String TRUE_MAM_CA = "truemamca";
         public static final String MAM_SPO = "mamspo";
         public static final String BLOCKED = "blocked";
+        public static final String GLOBAL_MFA = "globalmfa";
     }
 
     static final class HomeDomain {

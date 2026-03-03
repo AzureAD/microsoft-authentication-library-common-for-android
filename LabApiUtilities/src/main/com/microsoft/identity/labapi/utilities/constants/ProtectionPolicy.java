@@ -27,6 +27,7 @@ public enum ProtectionPolicy {
     CA(LabConstants.ProtectionPolicy.CA),
     CADJ(LabConstants.ProtectionPolicy.CADJ),
     MAM(LabConstants.ProtectionPolicy.MAM),
+    GLOBAL_MFA(LabConstants.ProtectionPolicy.GLOBAL_MFA),
     MDM(LabConstants.ProtectionPolicy.MDM),
     MAM_CA(LabConstants.ProtectionPolicy.MAM_CA),
     MDM_CA(LabConstants.ProtectionPolicy.MDM_CA),
