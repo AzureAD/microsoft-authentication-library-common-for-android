@@ -326,13 +326,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         webSettings.setJavaScriptEnabled(true);
 
         // Security settings to prevent unauthorized access - controlled by flight
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
+       // if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
             webSettings.setAllowFileAccess(false);
             webSettings.setAllowContentAccess(false);
             webSettings.setAllowFileAccessFromFileURLs(false);
             webSettings.setAllowUniversalAccessFromFileURLs(false);
             webSettings.setGeolocationEnabled(false);
-        }
+       // }
 
         mWebView.requestFocus(View.FOCUS_DOWN);
 

@@ -210,7 +210,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Check if the page actually rendered content or stayed blank (empty SPA shell).
         // This helps diagnose blank-screen issues where the HTML loads but JS fails to render.
-        // Immediate check + delayed check (3s) since React apps with defer scripts need time to mount.
+        // Immediate check + delayed checks (3s and 10s) since React/SPA apps with defer scripts
+        // need time to mount. The 10s check catches slow-network scenarios (e.g., government clouds).
         final String renderCheckScript =
                 "(function() {" +
                 "  var root = document.getElementById('root');" +
@@ -222,6 +223,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "  return JSON.stringify({rootLen: rootContent, bodyTextLen: bodyContent, scriptCount: scripts, title: document.title, jsErrors: jsErrors.length});" +
                 "})()";
 
+        // Callback for the immediate render check — logs results and detects empty #root.
+        // This fires right at onPageFinished, so SPA pages will typically show bodyTextLen:0
+        // at this point (React has not yet mounted). That's expected and not flagged here.
         final android.webkit.ValueCallback<String> renderCheckCallback = new android.webkit.ValueCallback<String>() {
             @Override
             public void onReceiveValue(String value) {
@@ -244,23 +248,72 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         };
 
+        // Callback for delayed render checks — detects pages that are still blank after
+        // the SPA framework should have had time to mount and render content.
+        // Covers cases like the ToU consent page where #root is non-empty (SPA shell HTML)
+        // but bodyTextLen remains 0 because API calls failed or JS didn't execute.
+        final android.webkit.ValueCallback<String> delayedRenderCheckCallback = new android.webkit.ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String value) {
+                Logger.info(TAG, "Page render check for " + sanitizeUrlForLogging(url) + ": " + value);
+                if (mUrlLoadTracker != null && value != null) {
+                    String decoded = value;
+                    if (decoded.startsWith("\"") && decoded.endsWith("\"")) {
+                        decoded = decoded.substring(1, decoded.length() - 1)
+                                .replace("\\\"", "\"")
+                                .replace("\\\\", "\\");
+                    }
+                    // Flag if #root exists and is empty (SPA framework never rendered)
+                    if (decoded.contains("\"rootLen\":0") || decoded.contains("\"rootLen\": 0")) {
+                        mUrlLoadTracker.updateLatestUrlStatus("BLANK_PAGE_DETECTED",
+                                "Page has empty #root element - JS framework failed to render. Render check: " + value);
+                    }
+                    // Also flag if the page has a non-empty DOM shell but no visible text content.
+                    // This catches SPA pages (e.g., ToU consent) where the HTML skeleton loads
+                    // but React/JS failed to render actual content (API failures, CORS blocks, etc.)
+                    if ((decoded.contains("\"bodyTextLen\":0") || decoded.contains("\"bodyTextLen\": 0"))
+                            && !decoded.contains("\"rootLen\":-1")) {
+                        mUrlLoadTracker.updateLatestUrlStatus("BLANK_PAGE_DETECTED",
+                                "Page has DOM elements but no visible text - SPA content failed to render. Render check: " + value);
+                    }
+                }
+            }
+        };
+
         // Immediate check
         view.evaluateJavascript(renderCheckScript, renderCheckCallback);
 
-        // Delayed check (3 seconds) — gives deferred JS time to execute and React to mount
+        // Delayed check (3 seconds) — gives deferred JS time to execute and React to mount.
+        // Uses delayedRenderCheckCallback which also checks bodyTextLen for SPA blank pages.
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
                     if (view.isAttachedToWindow()) {
                         Logger.info(TAG, "Delayed page render check (3s) for " + sanitizeUrlForLogging(url));
-                        view.evaluateJavascript(renderCheckScript, renderCheckCallback);
+                        view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
                     }
                 } catch (final Exception e) {
                     Logger.info(TAG, "Delayed render check skipped - WebView no longer available.");
                 }
             }
         }, 3000);
+
+        // Extended delayed check (10 seconds) — catches slow-network scenarios (e.g., government
+        // cloud endpoints, military networks with strict proxies) where SPA API calls take longer.
+        view.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (view.isAttachedToWindow()) {
+                        Logger.info(TAG, "Delayed page render check (10s) for " + sanitizeUrlForLogging(url));
+                        view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
+                    }
+                } catch (final Exception e) {
+                    Logger.info(TAG, "Delayed render check skipped - WebView no longer available.");
+                }
+            }
+        }, 10000);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -407,7 +460,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                  Logger.info(methodTag, "It is an intent request");
                 // Intent URI format is case sensitive, so we need to provide the original URI.
                 processIntentToInstallBrokerApp(view, url);
-            } else if (!isUriSSLProtected(formattedURL)) {
+            } else if (formattedURL.startsWith("openid-vc://")) {
+                Logger.info(methodTag, "It is an VID app request");
+                processVidUri(url);
+            }
+             else if (!isUriSSLProtected(formattedURL)) {
                 Logger.info(methodTag,"Check for SSL protection");
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
@@ -961,6 +1018,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Sent Intent to launch Amazon app");
     }
 
+    private void processVidUri(@NonNull final String url) {
+        final String methodTag = TAG + ":processVidUri";
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            Logger.info(methodTag, "Sent Intent to launch Auth app for VID");
+            getActivity().startActivity(intent);
+        } else {
+            Logger.info(methodTag, "AuthApp not installed");
+            // Authenticator not installed — handle gracefully
+        }
+
+    }
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void openLinkInBrowser(final String url) {
         final String methodTag = TAG + ":openLinkInBrowser";
@@ -1074,7 +1145,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processSSLProtectionCheck";
         final String redactedUrl = removeQueryParametersOrRedact(url);
 
-        Logger.error(methodTag,"The webView was redirected to an unsafe URL: " + redactedUrl, null);
+        Logger.error(methodTag,"The webView was redirected to an unsafe URL: " + url, null);
         returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
         view.stopLoading();
     }
@@ -1223,6 +1294,54 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         });
     }
 
+    // ToU (Terms of Use) flow depends on MyAccount frontend served via EcosHosting CDN.
+    // The loading chain is: index.static.html -> main.shim.js -> main.<hash>.js -> React app -> API calls.
+    // These patterns identify the critical resources whose failure causes blank ToU pages.
+    private static final String TOU_RESOURCE_PATTERN_SHIM = "main.shim";
+    private static final String TOU_RESOURCE_PATTERN_MAIN_JS = "main.";
+    private static final String TOU_RESOURCE_PATTERN_API = "/api/termsofuse/";
+    private static final String TOU_RESOURCE_PATTERN_CONSENT = "/termsofuse/consent";
+    private static final String TOU_RESOURCE_PATTERN_MYACCOUNT = "myaccount.";
+
+    /**
+     * Checks if a URL is a ToU-critical resource (CDN JS bundle or API call).
+     * Failure of these resources causes the ToU consent page to appear blank.
+     */
+    private static boolean isToUCriticalResource(@NonNull final String url) {
+        final String lower = url.toLowerCase(Locale.ROOT);
+        if (!lower.contains(TOU_RESOURCE_PATTERN_MYACCOUNT)) {
+            return false;
+        }
+        return lower.contains(TOU_RESOURCE_PATTERN_SHIM)
+                || (lower.contains(TOU_RESOURCE_PATTERN_MAIN_JS) && lower.endsWith(".js"))
+                || lower.contains(TOU_RESOURCE_PATTERN_API)
+                || lower.contains(TOU_RESOURCE_PATTERN_CONSENT);
+    }
+
+    /**
+     * Returns a classification label for a ToU-critical resource, or null if not ToU-related.
+     */
+    @Nullable
+    private static String classifyToUResource(@NonNull final String url) {
+        final String lower = url.toLowerCase(Locale.ROOT);
+        if (!lower.contains(TOU_RESOURCE_PATTERN_MYACCOUNT)) {
+            return null;
+        }
+        if (lower.contains(TOU_RESOURCE_PATTERN_SHIM)) {
+            return "TOU_CDN_SHIM_JS";
+        }
+        if (lower.contains(TOU_RESOURCE_PATTERN_MAIN_JS) && lower.endsWith(".js")) {
+            return "TOU_CDN_MAIN_JS";
+        }
+        if (lower.contains(TOU_RESOURCE_PATTERN_API)) {
+            return "TOU_BACKEND_API";
+        }
+        if (lower.contains(TOU_RESOURCE_PATTERN_CONSENT)) {
+            return "TOU_CONSENT_PAGE";
+        }
+        return null;
+    }
+
     @Override
     public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request) {
         // Log every sub-resource request to diagnose blank page issues (e.g., blocked JS/CSS/fonts)
@@ -1230,7 +1349,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String method = request.getMethod();
         final boolean isMainFrame = request.isForMainFrame();
         if (!isMainFrame) {
-            Logger.info(TAG, "SubResource [" + method + "]: " + sanitizeUrlForLogging(url));
+            final String touClass = classifyToUResource(url);
+            if (touClass != null) {
+                // Elevated logging for ToU-critical resources: CDN JS bundles and backend API calls.
+                // Failure of these causes blank ToU consent pages.
+                Logger.info(TAG, "SubResource [" + method + "] [" + touClass + "]: " + sanitizeUrlForLogging(url));
+            } else {
+                Logger.info(TAG, "SubResource [" + method + "]: " + sanitizeUrlForLogging(url));
+            }
         }
         return super.shouldInterceptRequest(view, request);
     }
@@ -1287,11 +1413,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
             mUrlLoadTracker.updateLatestUrlStatus("Code:" + error.getErrorCode() + ", " + error.getDescription(), null);
         }
-        // Log sub-resource errors too — these can cause blank pages (e.g., failed JS/CSS loads)
+        // Log sub-resource errors — these can cause blank pages (e.g., failed JS/CSS loads)
         if (!request.isForMainFrame()) {
             final String url = request.getUrl() != null ? request.getUrl().toString() : "null";
-            Logger.warn(TAG, "SubResource ERROR [" + error.getErrorCode() + "]: "
-                    + error.getDescription() + " url=" + sanitizeUrlForLogging(url));
+            final String touClass = classifyToUResource(url);
+            if (touClass != null) {
+                // ToU-critical resource failed to load. This is a likely root cause for blank ToU pages.
+                // CDN shim/main.js failure = React never boots. API failure = page renders but has no data.
+                Logger.error(TAG, "ToU CRITICAL SubResource ERROR [" + touClass + "] ["
+                        + error.getErrorCode() + "]: " + error.getDescription()
+                        + " url=" + sanitizeUrlForLogging(url), null);
+                if (mUrlLoadTracker != null) {
+                    mUrlLoadTracker.updateLatestUrlStatus("TOU_RESOURCE_FAILED",
+                            touClass + " failed to load: error=" + error.getErrorCode()
+                                    + " desc=" + error.getDescription()
+                                    + " url=" + sanitizeUrlForLogging(url));
+                }
+            } else {
+                Logger.warn(TAG, "SubResource ERROR [" + error.getErrorCode() + "]: "
+                        + error.getDescription() + " url=" + sanitizeUrlForLogging(url));
+            }
         }
         super.onReceivedError(view, request, error);
     }
@@ -1316,11 +1457,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mUrlLoadTracker != null && request.isForMainFrame()) {
             mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
         }
-        // Log sub-resource HTTP errors too — 4xx/5xx on JS/CSS can cause blank pages
+        // Log sub-resource HTTP errors — 4xx/5xx on JS/CSS can cause blank pages
         if (!request.isForMainFrame()) {
             final String url = request.getUrl() != null ? request.getUrl().toString() : "null";
-            Logger.warn(TAG, "SubResource HTTP " + errorResponse.getStatusCode()
-                    + ": " + sanitizeUrlForLogging(url));
+            final String touClass = classifyToUResource(url);
+            if (touClass != null) {
+                // ToU-critical resource returned HTTP error.
+                // 404 on main.<hash>.js = CDN hash mismatch during deployment.
+                // 4xx/5xx on /api/termsofuse/ = backend failure, ToU data unavailable.
+                Logger.error(TAG, "ToU CRITICAL SubResource HTTP " + errorResponse.getStatusCode()
+                        + " [" + touClass + "]: " + sanitizeUrlForLogging(url), null);
+                if (mUrlLoadTracker != null) {
+                    mUrlLoadTracker.updateLatestUrlStatus("TOU_RESOURCE_HTTP_ERROR",
+                            touClass + " HTTP " + errorResponse.getStatusCode()
+                                    + " url=" + sanitizeUrlForLogging(url));
+                }
+            } else {
+                Logger.warn(TAG, "SubResource HTTP " + errorResponse.getStatusCode()
+                        + ": " + sanitizeUrlForLogging(url));
+            }
         }
     }
 
