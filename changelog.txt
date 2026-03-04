@@ -3,6 +3,7 @@ vNext
 
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
 - [MINOR] Edge TB: Claims (#2925)
+- [MINOR] Add AuthTab (Chrome 137+) support for browser-based authentication flows via ENABLE_AUTH_TAB feature flag (#3533538)
 
 Version 24.0.0
 ----------

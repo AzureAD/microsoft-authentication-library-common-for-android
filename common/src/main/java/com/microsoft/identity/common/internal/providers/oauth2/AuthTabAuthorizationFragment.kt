@@ -86,10 +86,13 @@ class AuthTabAuthorizationFragment : AuthorizationFragment() {
         val methodTag = "$TAG:onResume"
 
         if (authFlowStarted) {
-            // The fragment resumed after returning from AuthTab without a result
-            // (e.g., user pressed back). Treat this as user cancellation.
-            Logger.info(methodTag, "AuthTab flow already started and resumed without result - treating as cancellation.")
-            cancelAuthorization(true)
+            // The fragment resumed after returning from AuthTab.
+            // If a result was already sent (via handleAuthResult), do nothing further.
+            // If no result was sent yet, it means the user backed out without completing auth.
+            if (!mAuthResultSent) {
+                Logger.info(methodTag, "AuthTab flow already started and resumed without result - treating as cancellation.")
+                cancelAuthorization(true)
+            }
             return
         }
 

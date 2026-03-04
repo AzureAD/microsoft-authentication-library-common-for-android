@@ -178,11 +178,19 @@ public class CustomTabsManager {
     }
 
     /**
-     * Checks whether the given browser package supports AuthTab.
+     * Checks whether the given browser package supports AuthTab (Chrome 137+).
      *
-     * @param context        The application context.
-     * @param browserPackage The package name of the browser to check.
-     * @return {@code true} if the browser supports AuthTab; {@code false} otherwise.
+     * <p>AuthTab is a specialized Custom Tab variant for authentication that returns results
+     * via {@link androidx.activity.result.ActivityResultLauncher} instead of intent-based redirects.
+     * It requires Chrome 137 or higher (or an equivalent browser that supports the AuthTab protocol).
+     *
+     * <p>This method is safe to call from any thread. It does not perform any blocking I/O.
+     *
+     * @param context        The application context; must not be null.
+     * @param browserPackage The package name of the browser to query; must not be null.
+     * @return {@code true} if the given browser package supports AuthTab; {@code false} otherwise,
+     *         including if the browser is not installed, the package name is invalid, or any
+     *         exception occurs during the check.
      */
     public static boolean isAuthTabSupported(@NonNull final Context context,
                                              @NonNull final String browserPackage) {
