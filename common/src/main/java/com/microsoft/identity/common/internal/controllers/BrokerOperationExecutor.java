@@ -245,6 +245,10 @@ public class BrokerOperationExecutor {
             final boolean retryEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                     .isFlightEnabled(CommonFlight.ENABLE_IPC_RETRY_WITH_BACKOFF);
             if (retryEnabled) {
+                // Note: The retry loop is implemented inline rather than delegating to
+                // IpcRetryPolicy.executeWithRetry() because the communicateToBroker() call
+                // throws BrokerCommunicationException (a checked exception), and Java lambdas
+                // cannot throw checked exceptions when passed to Kotlin's Function0.
                 final String correlationId = DiagnosticContext.INSTANCE.getRequestContext()
                         .get(DiagnosticContext.CORRELATION_ID);
                 int retryCount = 0;
@@ -269,6 +273,8 @@ public class BrokerOperationExecutor {
                         try {
                             Thread.sleep(delay);
                         } catch (final InterruptedException ie) {
+                            // Thread was interrupted during backoff sleep; restore interrupt status
+                            // and abort the retry by rethrowing the last IPC exception.
                             Thread.currentThread().interrupt();
                             throw e;
                         }

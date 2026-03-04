@@ -90,7 +90,12 @@ class IpcRetryPolicy(
                     "[$correlationId] IPC strategy [$strategyName] failed with CONNECTION_ERROR " +
                         "(attempt $attempt/$maxRetries). Retrying in ${delay}ms. Cause: ${e.message}"
                 )
-                Thread.sleep(delay)
+                try {
+                    Thread.sleep(delay)
+                } catch (ie: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw e
+                }
             }
         }
     }

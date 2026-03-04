@@ -599,7 +599,8 @@ public enum AttributeName {
     /**
      * The number of IPC retries performed for a single strategy attempt.
      * Set on the MSAL_PerformIpcStrategy span.
-     * Note: Any changes to this enum should also be made in the corresponding enum in Broker.
+     * Note: This attribute must also be added to AttributeName.java in the Broker repository
+     * (AzureAD/ad-accounts-for-android) to maintain cross-repo telemetry consistency.
      */
     ipc_retry_count,
     
