@@ -31,6 +31,21 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
+        <!-- FileProvider for sharing camera capture temporary files with camera apps
+             during WebView file upload flows (onShowFileChooser). Uses a library-specific
+             subclass (MsalFileProvider) to avoid manifest-merge conflicts with host-app
+             FileProvider declarations. The authority uses ${applicationId} so it is unique
+             per app. -->
+        <provider
+            android:name="com.microsoft.identity.common.internal.providers.oauth2.MsalFileProvider"
+            android:authorities="${applicationId}.microsoft.common.file.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/msal_image_capture_paths" />
+        </provider>
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
@@ -56,6 +71,10 @@
         <intent>
             <action android:name=
                 "android.support.customtabs.action.CustomTabsService" />
+        </intent>
+        <!-- Required for API Level 30 to detect camera apps for WebView file chooser (image capture). -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
     </queries>
 
