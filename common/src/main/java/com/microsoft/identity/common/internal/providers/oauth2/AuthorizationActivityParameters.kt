@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent
  * @param utid                       The tenant unique id, if applicable
  * @param webViewEnableSilentAuthorizationFlowTimeOutMs                 If set to a non-null value, this indicates that the flow is silent and specifies the timeout for the silent authorization flow in milliseconds.
  * @param isWebViewWebCpEnabled        This parameter controls whether webcp URLs should be handled within the WebView or redirected to external browser
+ * @param useAuthTab                 When true, use the AuthTab API (Chrome 137+) instead of Custom Tabs for browser-based authentication flows.
  */
 data class AuthorizationActivityParameters @JvmOverloads constructor(
     val context: Context,
@@ -60,4 +61,14 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val utid: String? = null,
     val webViewEnableSilentAuthorizationFlowTimeOutMs: Long? = null,
     val isWebViewWebCpEnabled: Boolean = false,
-)
+    val useAuthTab: Boolean = false,
+) {
+    companion object {
+        /**
+         * Bundle key for passing AuthTab enablement state to authorization activities.
+         * Set as a Boolean extra in the Intent when launching authorization flows
+         * that should use the AuthTab API (Chrome 137+) instead of Custom Tabs.
+         */
+        const val USE_AUTH_TAB = "com.microsoft.identity.USE_AUTH_TAB"
+    }
+}
