@@ -60,7 +60,7 @@ steps:
       Write-Output "Using download link: $downloadLink"
 
 
-      $dest = "$env:Temp\GoogleCloudSDKInstaller.zip"
+      $dest = "$env:AGENT_TEMPDIRECTORY\GoogleCloudSDKInstaller.zip"
 
       (New-Object Net.WebClient).DownloadFile($downloadLink, $dest)
 
