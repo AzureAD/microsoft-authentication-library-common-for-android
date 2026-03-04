@@ -39,6 +39,8 @@ import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFie
 import com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
@@ -172,6 +174,9 @@ object AuthorizationActivityFactory {
             } else {
                 if (libraryConfig.isAuthorizationInCurrentTask) {
                     CurrentTaskBrowserAuthorizationFragment()
+                } else if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)) {
+                    AuthTabAuthorizationFragment()
                 } else {
                     BrowserAuthorizationFragment()
                 }

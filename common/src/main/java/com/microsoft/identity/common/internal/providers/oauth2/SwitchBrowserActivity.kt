@@ -24,10 +24,14 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.browser.auth.AuthTabIntent
 import androidx.fragment.app.FragmentActivity
+import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.logging.Logger
 import androidx.core.net.toUri
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 
 
 /**
@@ -64,6 +68,7 @@ class SwitchBrowserActivity : FragmentActivity() {
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
     private var customTabsManager = CustomTabsManager(this)
+    private var mAuthTabLauncher: ActivityResultLauncher<android.net.Uri>? = null
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -91,6 +96,10 @@ class SwitchBrowserActivity : FragmentActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         val methodTag = "$TAG:onCreate"
+        // Register AuthTab launcher before the STARTED state (must be called in onCreate)
+        mAuthTabLauncher = AuthTabIntent.registerActivityResultLauncher(this) { authResult ->
+            handleAuthTabResult(authResult)
+        }
         super.onCreate(savedInstanceState)
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
         launchBrowser()
@@ -134,7 +143,17 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         // Create an intent to launch the browser
         val browserIntent: Intent
-        if (browserSupportsCustomTabs) {
+        val authTabFlagEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)
+        val launcher = mAuthTabLauncher
+        if (authTabFlagEnabled && launcher != null &&
+            CustomTabsManager.isAuthTabSupported(this, browserPackageName)) {
+            Logger.info(methodTag, "Launching via AuthTab for browser: $browserPackageName")
+            val authTabIntent = AuthTabIntent.Builder().build()
+            val redirectScheme = "" // SwitchBrowser flows use intent-based redirects via onNewIntent
+            authTabIntent.launch(launcher, processUri.toUri(), redirectScheme)
+            return
+        } else if (browserSupportsCustomTabs) {
             Logger.info(methodTag, "CustomTabsService is supported.")
             //create customTabsIntent
             if (!customTabsManager.bind(this, browserPackageName)) {
@@ -150,6 +169,39 @@ class SwitchBrowserActivity : FragmentActivity() {
         }
         browserIntent.setData(processUri.toUri())
         startActivity(browserIntent)
+    }
+
+    /**
+     * Handles the result from an AuthTab-based DUNA authentication flow.
+     *
+     * @param authResult The result returned by AuthTab after the authentication attempt.
+     */
+    private fun handleAuthTabResult(authResult: AuthTabIntent.AuthResult) {
+        val methodTag = "$TAG:handleAuthTabResult"
+        Logger.info(methodTag, "AuthTab result received: ${authResult.resultCode}")
+        when (authResult.resultCode) {
+            AuthTabIntent.AuthResult.RESULT_OK -> {
+                val resultUri = authResult.resultUri
+                if (resultUri != null) {
+                    Logger.info(methodTag, "AuthTab completed successfully.")
+                    val bundle = android.os.Bundle().apply {
+                        putString(RESUME_REQUEST, resultUri.toString())
+                    }
+                    WebViewAuthorizationFragment.setSwitchBrowserBundle(bundle)
+                } else {
+                    Logger.warn(methodTag, "AuthTab RESULT_OK but resultUri is null.")
+                }
+                finishAndRemoveTask()
+            }
+            AuthTabIntent.AuthResult.RESULT_CANCELED -> {
+                Logger.info(methodTag, "AuthTab cancelled by user.")
+                finishAndRemoveTask()
+            }
+            else -> {
+                Logger.warn(methodTag, "AuthTab returned error result code: ${authResult.resultCode}")
+                finishAndRemoveTask()
+            }
+        }
     }
 
     /**

@@ -45,11 +45,16 @@ import android.content.Intent;
 
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -92,6 +97,11 @@ public class AuthorizationActivityFactoryTest {
             sourceLibraryName,
             sourceLibraryVersion
     );
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
 
     @SneakyThrows
     @Test
@@ -254,6 +264,42 @@ public class AuthorizationActivityFactoryTest {
         final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(silentFlowIntent);
 
         // Verify it creates BrowserAuthorizationFragment even with silent flow when not WebView
+        assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentReturnsAuthTabFragmentWhenFlagEnabled() {
+        // Enable the AuthTab feature flag
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)).thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
+
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
+        assertEquals(AuthTabAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentReturnsBrowserFragmentWhenFlagDisabled() {
+        // Disable the AuthTab feature flag (default behavior)
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)).thenReturn(false);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
+
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
     }
 }
