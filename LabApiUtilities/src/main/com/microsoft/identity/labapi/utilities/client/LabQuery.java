@@ -40,6 +40,7 @@ import com.microsoft.identity.labapi.utilities.constants.PasswordPolicyValidityP
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
 import com.microsoft.identity.labapi.utilities.constants.PublicClient;
 import com.microsoft.identity.labapi.utilities.constants.SignInAudience;
+import com.microsoft.identity.labapi.utilities.constants.TokenLifetime;
 import com.microsoft.identity.labapi.utilities.constants.TokenLifetimePolicy;
 import com.microsoft.identity.labapi.utilities.constants.TokenType;
 import com.microsoft.identity.labapi.utilities.constants.UserRole;
@@ -88,7 +89,7 @@ public class LabQuery {
     private final PasswordPolicyNotificationDays mPasswordPolicyNotificationDays;
     private final TokenLifetimePolicy mTokenLifetimePolicy;
     private final TokenType mTokenType;
-    private final TokenLifetimePolicy mTokenLifetime;
+    private final TokenLifetime mTokenLifetime;
     private final IsAdminConsented mIsAdminConsented;
 
     // Overriding this to only print NonNull values
