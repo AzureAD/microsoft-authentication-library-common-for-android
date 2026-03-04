@@ -104,6 +104,10 @@ public class CommandDispatcher {
     // CPU core count is used as a reference for sizing SilentRequestThreadPool.
     private static final int CPU_CORE_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
+    // Dedicated thread pool for auto-dispatch (fire-and-forget background token refresh) operations.
+    // Kept small since these are low-priority background operations that should not compete with
+    // user-initiated silent token requests.
+    private static final int AUTO_DISPATCH_THREAD_POOL_SIZE = 3;
     private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
     private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
     // Cache the pool size for the session
@@ -112,6 +116,10 @@ public class CommandDispatcher {
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
+    // Dedicated executor for auto-dispatch operations (e.g., RefreshOnCommand). Using a separate
+    // pool prevents background refresh operations from consuming thread slots in sSilentExecutor
+    // and causing contention with user-initiated silent token requests.
+    private static volatile ExecutorService sAutoDispatchExecutor = Executors.newFixedThreadPool(AUTO_DISPATCH_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -262,6 +270,7 @@ public class CommandDispatcher {
         
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
+        sAutoDispatchExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
         f.setAccessible(true);
         f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
@@ -270,6 +279,11 @@ public class CommandDispatcher {
         f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
         f.setAccessible(true);
         f.set(null, Executors.newSingleThreadExecutor());
+        f.setAccessible(false);
+
+        f = CommandDispatcher.class.getDeclaredField("sAutoDispatchExecutor");
+        f.setAccessible(true);
+        f.set(null, Executors.newFixedThreadPool(AUTO_DISPATCH_THREAD_POOL_SIZE));
         f.setAccessible(false);
     }
 
@@ -644,7 +658,7 @@ public class CommandDispatcher {
 
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
-        final String methodName = ":submit";
+        final String methodName = ":submitAutoDispatch";
 
         final CommandParameters commandParameters = command.getParameters();
         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
@@ -657,39 +671,40 @@ public class CommandDispatcher {
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
         Logger.info(
                 TAG,
-                "RefreshOnCommand with CorrelationId: "
+                "Auto-dispatch command with CorrelationId: "
                         + correlationId
         );
 
-        synchronized (mapAccessLock) {
-            final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
-            finalFuture.whenComplete(getCommandResultConsumer(command));
-            sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
-                @Override
-                public void run() {
+        // Use the dedicated auto-dispatch executor to avoid competing with user-initiated
+        // silent token requests in sSilentExecutor. No mapAccessLock needed since auto-dispatch
+        // commands are not tracked in sExecutingCommandMap.
+        final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
+        finalFuture.whenComplete(getCommandResultConsumer(command));
+        sAutoDispatchExecutor.execute(OtelContextExtension.wrap(new Runnable() {
+            @Override
+            public void run() {
 
-                    try {
-                        //initializing again since the request is transferred to a different thread pool
-                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                                commandParameters.getSdkVersion());
+                try {
+                    //initializing again since the request is transferred to a different thread pool
+                    initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
+                                    SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                            commandParameters.getSdkVersion());
 
-                        CommandResult commandResult = executeCommand(command);
-                        Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
-                                + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
-                                + " is cacheable : " + command.isEligibleForCaching());
-                        finalFuture.setResult(commandResult);
-                    } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                        finalFuture.setException(new ExecutionException(t));
-                    } finally {
-                        DiagnosticContext.INSTANCE.clear();
-                    }
-
+                    CommandResult commandResult = executeCommand(command);
+                    Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
+                            + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
+                            + " is cacheable : " + command.isEligibleForCaching());
+                    finalFuture.setResult(commandResult);
+                } catch (final Throwable t) {
+                    Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                    finalFuture.setException(new ExecutionException(t));
+                } finally {
+                    DiagnosticContext.INSTANCE.clear();
                 }
-            }));
-            return finalFuture;
-        }
+
+            }
+        }));
+        return finalFuture;
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,

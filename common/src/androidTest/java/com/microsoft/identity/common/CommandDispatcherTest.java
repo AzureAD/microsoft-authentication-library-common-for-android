@@ -1178,6 +1178,70 @@ public class CommandDispatcherTest {
         }
     }
 
+    /**
+     * Test that auto-dispatch commands execute on the dedicated auto-dispatch executor
+     * and are not blocked when the silent executor is fully saturated.
+     *
+     * <p>This verifies that background token refresh operations (RefreshOnCommand) do not
+     * compete with user-initiated silent token requests for the same thread pool slots.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testAutoDispatch_ExecutesIndependentlyOfSilentExecutor() throws Exception {
+        final int POOL_SIZE = CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE;
+        final CountDownLatch blockingTasksStarted = new CountDownLatch(POOL_SIZE);
+        final CountDownLatch releaseBlockingTasks = new CountDownLatch(1);
+        final CountDownLatch autoDispatchCompleted = new CountDownLatch(1);
+        final AtomicInteger autoDispatchExecutionCount = new AtomicInteger(0);
+
+        try {
+            // Fill the silent executor with blocking tasks to fully saturate it
+            for (int i = 0; i < POOL_SIZE; i++) {
+                CommandDispatcher.submitSilentReturningFuture(new BlockingTestCommand(
+                    getEmptyTestParams(),
+                    new EmptyCommandCallback(),
+                    blockingTasksStarted,
+                    releaseBlockingTasks
+                ));
+            }
+
+            // Wait for all blocking tasks to start (silent executor is now saturated)
+            Assert.assertTrue("Silent executor blocking tasks should start",
+                blockingTasksStarted.await(10, TimeUnit.SECONDS));
+
+            // Submit an auto-dispatch command; it should execute on its own dedicated executor
+            // and complete even though the silent executor is fully occupied.
+            final CommandParameters params = getEmptyTestParams();
+            final RefreshOnCommand autoDispatchCommand = new RefreshOnCommand(
+                    SilentTokenCommandParameters.builder()
+                        .platformComponents(params.getPlatformComponents())
+                        .build(),
+                    new TestBaseController() {
+                        @Override
+                        public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) {
+                            autoDispatchExecutionCount.incrementAndGet();
+                            autoDispatchCompleted.countDown();
+                            final TokenResult tokenResult = new TokenResult();
+                            tokenResult.setSuccess(true);
+                            return tokenResult;
+                        }
+                    }.asControllerFactory(),
+                    "test_auto_dispatch"
+            );
+
+            CommandDispatcher.submitAndForgetReturningFuture(autoDispatchCommand);
+
+            // The auto-dispatch command must complete even though the silent executor is saturated
+            Assert.assertTrue("Auto-dispatch command should complete independently of silent executor",
+                autoDispatchCompleted.await(10, TimeUnit.SECONDS));
+            Assert.assertEquals("Auto-dispatch command should have executed exactly once",
+                1, autoDispatchExecutionCount.get());
+        } finally {
+            releaseBlockingTasks.countDown();
+        }
+    }
+
     // ════════════════════════════════════════════════════════════════════════════
     // Reflection Helper Methods for Timeout Classification Tests
     // ════════════════════════════════════════════════════════════════════════════

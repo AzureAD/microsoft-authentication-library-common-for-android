@@ -3,6 +3,7 @@ vNext
 
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
 - [MINOR] Edge TB: Claims (#2925)
+- [MINOR] Add dedicated auto-dispatch executor for background token refresh to prevent competing with user-initiated silent token requests (#2967)
 
 Version 24.0.0
 ----------
