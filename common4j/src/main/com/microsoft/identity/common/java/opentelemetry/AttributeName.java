@@ -597,4 +597,22 @@ public enum AttributeName {
     secret_key_serialization_duration,
     
     //endregion
+
+    /**
+     * Indicates whether AuthTab was used for the authorization flow.
+     * Note: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    is_auth_tab_used,
+
+    /**
+     * Records the result code returned by the AuthTab authorization flow.
+     * Note: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    auth_tab_result_code,
+
+    /**
+     * Indicates whether the browser supports AuthTab.
+     * Note: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    auth_tab_supported,
 }

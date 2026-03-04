@@ -178,6 +178,26 @@ public class CustomTabsManager {
     }
 
     /**
+     * Checks whether the given browser package supports AuthTab.
+     *
+     * @param context        The application context.
+     * @param browserPackage The package name of the browser to check.
+     * @return {@code true} if the browser supports AuthTab; {@code false} otherwise.
+     */
+    public static boolean isAuthTabSupported(@NonNull final Context context,
+                                             @NonNull final String browserPackage) {
+        final String methodTag = TAG + ":isAuthTabSupported";
+        try {
+            final boolean supported = CustomTabsClient.isAuthTabSupported(context, browserPackage);
+            Logger.info(methodTag, "AuthTab supported by " + browserPackage + ": " + supported);
+            return supported;
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Exception checking AuthTab support for " + browserPackage + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Method to unbind custom tabs service {@link androidx.browser.customtabs.CustomTabsService}.
      */
     public synchronized void unbind() {

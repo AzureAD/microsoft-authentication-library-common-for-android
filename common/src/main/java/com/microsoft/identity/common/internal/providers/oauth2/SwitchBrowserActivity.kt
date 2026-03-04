@@ -24,10 +24,14 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.browser.auth.AuthTabIntent
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.logging.Logger
 import androidx.core.net.toUri
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 
 
 /**
@@ -65,6 +69,9 @@ class SwitchBrowserActivity : FragmentActivity() {
     private var cctLaunched = false
     private var customTabsManager = CustomTabsManager(this)
 
+    // AuthTab launcher for DUNA flows when AuthTab is supported
+    private lateinit var authTabLauncher: ActivityResultLauncher<AuthTabIntent>
+
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
@@ -91,6 +98,11 @@ class SwitchBrowserActivity : FragmentActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         val methodTag = "$TAG:onCreate"
+        // Register the AuthTab launcher before super.onCreate() to ensure it is registered
+        // before the activity reaches the STARTED state, as required by the Activity Result API.
+        authTabLauncher = AuthTabIntent.registerActivityResultLauncher(this) { result ->
+            handleAuthTabResult(result)
+        }
         super.onCreate(savedInstanceState)
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
         launchBrowser()
@@ -134,6 +146,20 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         // Create an intent to launch the browser
         val browserIntent: Intent
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)
+            && CustomTabsManager.isAuthTabSupported(this, browserPackageName)) {
+            Logger.info(methodTag, "AuthTab is supported - launching via AuthTabIntent.")
+            val authTabIntent = AuthTabIntent.Builder().build()
+            val scheme = processUri.toUri().scheme
+            if (scheme.isNullOrBlank()) {
+                Logger.error(methodTag, "Could not extract scheme from processUri: $processUri - Cannot launch AuthTab", null)
+                finish()
+                return
+            }
+            authTabIntent.launch(authTabLauncher, processUri.toUri(), scheme)
+            return
+        }
+
         if (browserSupportsCustomTabs) {
             Logger.info(methodTag, "CustomTabsService is supported.")
             //create customTabsIntent
@@ -150,6 +176,48 @@ class SwitchBrowserActivity : FragmentActivity() {
         }
         browserIntent.setData(processUri.toUri())
         startActivity(browserIntent)
+    }
+
+    /**
+     * Handles the result from AuthTab for DUNA authentication flows.
+     *
+     * @param result The [AuthTabIntent.AuthResult] returned by AuthTab.
+     */
+    private fun handleAuthTabResult(result: AuthTabIntent.AuthResult) {
+        val methodTag = "$TAG:handleAuthTabResult"
+        Logger.info(methodTag, "AuthTab result received, resultCode: ${result.resultCode}")
+        when (result.resultCode) {
+            AuthTabIntent.RESULT_OK -> {
+                val resultUri = result.resultUri
+                if (resultUri != null) {
+                    val bundle = Bundle().apply {
+                        putString(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.ACTION_URI,
+                            resultUri.getQueryParameter(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.ACTION_URI))
+                        putString(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.CODE,
+                            resultUri.getQueryParameter(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.CODE))
+                        putString(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.STATE,
+                            resultUri.getQueryParameter(com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER.STATE))
+                        putBoolean(RESUME_REQUEST, true)
+                    }
+                    WebViewAuthorizationFragment.setSwitchBrowserBundle(bundle)
+                } else {
+                    Logger.warn(methodTag, "AuthTab RESULT_OK but resultUri is null.")
+                }
+            }
+            AuthTabIntent.RESULT_CANCELED -> {
+                Logger.info(methodTag, "AuthTab result: RESULT_CANCELED - user cancelled.")
+            }
+            AuthTabIntent.RESULT_VERIFICATION_FAILED -> {
+                Logger.error(methodTag, "AuthTab result: RESULT_VERIFICATION_FAILED.", null)
+            }
+            AuthTabIntent.RESULT_VERIFICATION_TIMED_OUT -> {
+                Logger.error(methodTag, "AuthTab result: RESULT_VERIFICATION_TIMED_OUT.", null)
+            }
+            else -> {
+                Logger.warn(methodTag, "AuthTab result: unknown resultCode ${result.resultCode}.")
+            }
+        }
+        finishAndRemoveTask()
     }
 
     /**

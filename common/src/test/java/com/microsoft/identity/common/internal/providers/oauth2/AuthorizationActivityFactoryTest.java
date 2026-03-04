@@ -45,11 +45,16 @@ import android.content.Intent;
 
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -92,6 +97,11 @@ public class AuthorizationActivityFactoryTest {
             sourceLibraryName,
             sourceLibraryVersion
     );
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
 
     @SneakyThrows
     @Test
@@ -255,5 +265,62 @@ public class AuthorizationActivityFactoryTest {
 
         // Verify it creates BrowserAuthorizationFragment even with silent flow when not WebView
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntent_whenAuthTabFlagEnabled_returnsAuthTabFragment() {
+        // Arrange: enable ENABLE_AUTH_TAB flight
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)).thenReturn(true);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
+
+        // Act
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
+        // Assert: should return AuthTabAuthorizationFragment when flag is on
+        assertEquals(AuthTabAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntent_whenAuthTabFlagDisabled_returnsBrowserFragment() {
+        // Arrange: ENABLE_AUTH_TAB flight is disabled (default)
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)).thenReturn(false);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
+
+        // Act
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
+        // Assert: should still use BrowserAuthorizationFragment when flag is off
+        assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testGetAuthorizationFragmentFromStartIntent_whenAuthTabFlagEnabled_butWebView_returnsWebViewFragment() {
+        // Arrange: enable ENABLE_AUTH_TAB flight but use WebView agent
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB)).thenReturn(true);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+
+        final Intent intent = new Intent();
+        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
+
+        // Act
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
+
+        // Assert: WebView agent should always use WebViewAuthorizationFragment regardless of flag
+        assertEquals(WebViewAuthorizationFragment.class, fragment.getClass());
     }
 }
