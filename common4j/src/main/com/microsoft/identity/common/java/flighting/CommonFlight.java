@@ -211,7 +211,14 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+
+    /**
+     * Flight to enable Chrome's AuthTab (AuthTabIntent) for browser-based authentication flows.
+     * When enabled and the browser supports AuthTab, AuthTabIntent will be used instead of
+     * the standard CustomTabsIntent for interactive authentication.
+     */
+    ENABLE_AUTH_TAB("EnableAuthTab", false);
 
     private String key;
     private Object defaultValue;
