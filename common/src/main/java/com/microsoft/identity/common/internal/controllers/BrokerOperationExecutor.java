@@ -28,10 +28,13 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -114,13 +117,26 @@ public class BrokerOperationExecutor {
 
     private final List<IIpcStrategy> mStrategies;
 
+    private final IpcRetryPolicy mRetryPolicy;
+
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
     public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
                                    @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
+        this(strategies, cacheUpdaterManager, new IpcRetryPolicy());
+    }
+
+    /**
+     * @param strategies  list of IIpcStrategy to be invoked.
+     * @param retryPolicy the retry policy for transient IPC connection errors.
+     */
+    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                                   @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager,
+                                   @NonNull final IpcRetryPolicy retryPolicy) {
         mStrategies = strategies;
         mCacheUpdaterManager = cacheUpdaterManager;
+        mRetryPolicy = retryPolicy;
     }
 
     /**
@@ -216,6 +232,13 @@ public class BrokerOperationExecutor {
 
     /**
      * Execute the given operation with a given IIpcStrategy.
+     * When the ENABLE_IPC_RETRY_WITH_BACKOFF flight is enabled, transient
+     * {@link BrokerCommunicationException} with category
+     * {@link BrokerCommunicationException.Category#CONNECTION_ERROR} will be retried
+     * with exponential backoff up to the configured maximum number of retries.
+     *
+     * <p>This method blocks the calling thread during retry sleep intervals.
+     * It must always be invoked from a background (worker) thread – never from the main/UI thread.
      */
     private <T> T performStrategy(@NonNull final IIpcStrategy strategy,
                                   @NonNull final BrokerOperation<T> operation) throws BaseException {
@@ -227,24 +250,56 @@ public class BrokerOperationExecutor {
         );
 
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
+        int retryCount = 0;
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
-            operation.performPrerequisites(strategy);
-            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
-            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+            final boolean retryEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(CommonFlight.ENABLE_IPC_RETRY_WITH_BACKOFF);
 
-            span.setStatus(StatusCode.OK);
-            return operation.extractResultBundle(resultBundle);
-            // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+            for (int attempt = 0; attempt <= mRetryPolicy.getMaxRetries(); attempt++) {
+                try {
+                    operation.performPrerequisites(strategy);
+                    final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+                    final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+                    mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+
+                    span.setStatus(StatusCode.OK);
+                    return operation.extractResultBundle(resultBundle);
+                } catch (final BrokerCommunicationException communicationException) {
+                    if (retryEnabled && mRetryPolicy.shouldRetry(communicationException)
+                            && attempt < mRetryPolicy.getMaxRetries()) {
+                        final long delayMs = mRetryPolicy.getDelayMs(attempt);
+                        retryCount++;
+                        Logger.warn(
+                                TAG + ":" + operation.getMethodName(),
+                                "Strategy " + strategy.getClass().getSimpleName()
+                                        + " failed with CONNECTION_ERROR. Retry attempt "
+                                        + retryCount + " of " + mRetryPolicy.getMaxRetries()
+                                        + " after " + delayMs + "ms.");
+                        try {
+                            Thread.sleep(delayMs);
+                        } catch (final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw communicationException;
+                        }
+                    } else {
+                        throw communicationException;
+                    }
+                }
+            }
+            // Unreachable: the loop always exits via return or throw on the last iteration.
+            throw new ClientException(ErrorStrings.UNEXPECTED_ERROR,
+                    "Unexpected exit from IPC retry loop.");
         } catch (final Throwable throwable) {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;
         } finally {
+            span.setAttribute(AttributeName.ipc_retry_count.name(), retryCount);
             span.end();
         }
     }

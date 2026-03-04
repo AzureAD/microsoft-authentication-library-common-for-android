@@ -525,6 +525,12 @@ public enum AttributeName {
      */
     client_tls_retry_number,
 
+    /**
+     * Indicates the number of IPC retry attempts made when the IPC retry policy is enabled.
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_count,
+
     //region KeyPair generation
 
     /**
