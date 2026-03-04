@@ -629,6 +629,17 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
+                        // Remove request state tracking entry to prevent memory leaks.
+                        // This covers callers that do not go through submitAcquireTokenSilentSync
+                        // (e.g. submitSilent), which have no other cleanup path.
+                        // For submitAcquireTokenSilentSync callers, the remove() in its finally
+                        // block is the authoritative cleanup; this call is a harmless no-op if
+                        // the entry was already removed by a timeout handler.
+                        // DCF requests are excluded because they are never tracked in sRequestStateMap
+                        // (see the isDeviceCodeFlowRequest guard on the put() calls above).
+                        if (!isDeviceCodeFlowRequest) {
+                            sRequestStateMap.remove(correlationId);
+                        }
                         DiagnosticContext.INSTANCE.clear();
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);

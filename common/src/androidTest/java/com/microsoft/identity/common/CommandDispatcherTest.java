@@ -84,7 +84,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -997,14 +999,100 @@ public class CommandDispatcherTest {
     }
 
     /**
+     * Test that timeout while queued but thread pool not fully saturated is classified as
+     * TIMED_OUT_THREAD_POOL_CONTENTION.
+     *
+     * <p>Test Strategy:
+     * <ol>
+     *   <li>Replace the silent executor with a single-thread pool via reflection (simulating a
+     *       pool with fewer active threads than {@link CommandDispatcher#SILENT_REQUEST_THREAD_POOL_SIZE})</li>
+     *   <li>Fill that single thread with a blocking task</li>
+     *   <li>Submit a new request that will be queued (state: QUEUED)</li>
+     *   <li>Request times out after 30 seconds while still in queue</li>
+     *   <li>Verify error code is TIMED_OUT_THREAD_POOL_CONTENTION because
+     *       {@code activeThreads(1) < POOL_SIZE(5)} makes the saturation check false</li>
+     * </ol>
+     *
+     * <p>Expected Duration: ~30 seconds (timeout duration)
+     *
+     * @throws Exception if test setup fails
+     */
+    @Test
+    public void testTimeoutClassification_ThreadPoolContention() throws Exception {
+        Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Starting test");
+
+        final Field executorField = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
+        executorField.setAccessible(true);
+        final ExecutorService originalExecutor = (ExecutorService) executorField.get(null);
+
+        // Replace with a 1-thread executor so that activeThreads(1) < SILENT_REQUEST_THREAD_POOL_SIZE(5).
+        // At timeout the classification check (activeThreads >= POOL_SIZE && queueSize > 0) is FALSE,
+        // which produces TIMED_OUT_THREAD_POOL_CONTENTION instead of TIMED_OUT_THREAD_POOL_SATURATED.
+        final ThreadPoolExecutor singleThreadExecutor = new ThreadPoolExecutor(
+                1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        executorField.set(null, singleThreadExecutor);
+
+        final CountDownLatch taskStarted = new CountDownLatch(1);
+        final CountDownLatch releaseTask = new CountDownLatch(1);
+        final CountDownLatch taskCompleted = new CountDownLatch(1);
+
+        try {
+            // Fill the single thread with a blocking task
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Filling single thread with blocking task");
+            final BlockingTestCommand blockingCommand = new BlockingTestCommand(
+                    getEmptyTestParams(),
+                    new EmptyCommandCallback(),
+                    taskStarted,
+                    releaseTask,
+                    taskCompleted);
+            CommandDispatcher.submitSilentReturningFuture(blockingCommand);
+
+            // Wait for the blocking task to start (thread is now busy)
+            Assert.assertTrue("Blocking task should start within 10 seconds",
+                    taskStarted.await(10, TimeUnit.SECONDS));
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Blocking task started, single thread is busy");
+
+            // Submit test request - queued since the only thread is occupied
+            final SilentTokenCommandParameters params = createTestSilentTokenParams();
+            final SilentTokenCommand command = createTestSilentTokenCommand(params);
+
+            try {
+                CommandDispatcher.submitAcquireTokenSilentSync(command);
+                Assert.fail("Expected ClientException with TIMED_OUT_THREAD_POOL_CONTENTION");
+            } catch (final ClientException e) {
+                // At timeout: state=QUEUED, activeThreads=1, POOL_SIZE=5
+                // 1 >= 5 is FALSE -> TIMED_OUT_THREAD_POOL_CONTENTION (not SATURATED)
+                Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Caught expected exception: "
+                        + e.getErrorCode());
+                Assert.assertEquals(
+                        "Expected TIMED_OUT_THREAD_POOL_CONTENTION but got " + e.getErrorCode(),
+                        ClientException.TIMED_OUT_THREAD_POOL_CONTENTION, e.getErrorCode());
+                Assert.assertNotNull("Correlation ID should be set", e.getCorrelationId());
+            }
+        } finally {
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Releasing blocking task");
+            releaseTask.countDown();
+            // Wait for the blocking task to finish
+            Assert.assertTrue("Blocking task should complete",
+                    taskCompleted.await(10, TimeUnit.SECONDS));
+            // Gracefully shut down the temporary executor and wait for any pending
+            // runnables to finish (the queued test-request runnable is fast, so this
+            // should return almost immediately).
+            singleThreadExecutor.shutdown();
+            singleThreadExecutor.awaitTermination(10, TimeUnit.SECONDS);
+            // Restore the original executor
+            executorField.set(null, originalExecutor);
+            executorField.setAccessible(false);
+            Log.d(TAG, "testTimeoutClassification_ThreadPoolContention: Original executor restored");
+        }
+    }
+
+    /**
      * Test that timeout location map is cleaned up after successful request.
      *
      * <p>Verifies that sRequestStateMap entries are properly removed after
      * a request completes successfully via submitAcquireTokenSilentSync().
      * This prevents memory leaks from accumulating tracking state.
-     *
-     * <p>Note: State tracking only happens for requests going through
-     * submitAcquireTokenSilentSync(), which is the real production path.
      *
      * @throws Exception if test fails
      */
