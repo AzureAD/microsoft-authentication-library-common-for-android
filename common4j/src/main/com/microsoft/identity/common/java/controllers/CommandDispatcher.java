@@ -637,6 +637,11 @@ public class CommandDispatcher {
                     }
                 }));
             } catch (final RejectedExecutionException e) {
+                // This catch block runs while mapAccessLock is held (the try-catch is nested
+                // inside the enclosing synchronized(mapAccessLock) block that began above).
+                // All map operations below (cleanMap, sRequestStateMap.remove) therefore occur
+                // under the same lock that protects them in the normal execution path.
+                //
                 // The executor rejected the task because the thread pool and its work queue are both
                 // full (or the executor has been shut down). For cacheable commands, the future was
                 // already inserted into the executing command map and any threads sharing that future
@@ -646,6 +651,7 @@ public class CommandDispatcher {
                         "Task rejected by executor for correlation id : **" + correlationId
                                 + ". Thread pool is full or executor is shut down.", e);
                 if (command.isEligibleForCaching()) {
+                    // N.B. cleanMap() is called while mapAccessLock is held (see comment above).
                     cleanMap(command);
                     final ClientException rejectionException = new ClientException(
                             ClientException.THREAD_POOL_REJECTED,
@@ -654,6 +660,11 @@ public class CommandDispatcher {
                     rejectionException.setCorrelationId(correlationId);
                     finalFuture.setException(new ExecutionException(rejectionException));
                     finalFuture.setCleanedUp();
+                    // DCF commands (isDeviceCodeFlowRequest = true) never add an entry to
+                    // sRequestStateMap (only non-DCF commands do, earlier in this method), so the
+                    // remove is only necessary for non-DCF cacheable commands. In practice, all DCF
+                    // command types return false from isEligibleForCaching(), so this guard is
+                    // defensive code for completeness.
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.remove(correlationId);
                     }
