@@ -14,6 +14,10 @@ permissions:
 on:
   create:
 
+concurrency:
+  group: auto-pr-release-fix-${{ github.event.ref }}
+  cancel-in-progress: false
+
 jobs:
   create-pr:
     if: >
