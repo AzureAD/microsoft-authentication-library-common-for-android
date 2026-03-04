@@ -34,26 +34,31 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
@@ -79,6 +84,8 @@ import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -99,6 +106,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @VisibleForTesting
     private static final String PKEYAUTH_STATUS = "pkeyAuthStatus";
+
+    /** FileProvider authority used when sharing temporary camera capture files. */
+    private static final String FILE_PROVIDER_AUTHORITY = "com.microsoft.identity.common.fileprovider";
 
     private WebView mWebView;
 
@@ -134,6 +144,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // This is used by the switch browser protocol to handle the resume of the flow.
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
+    // This is used to receive the file URI(s) chosen by the user in onShowFileChooser.
+    private ValueCallback<Uri[]> mFilePathCallback;
+    // Holds the URI of the temporary image file created for camera capture.
+    private Uri mCameraImageUri;
+    // Holds the temporary File created for camera capture so it can be deleted after use.
+    private File mTempCameraFile;
+    // Launcher used to start the file-chooser / camera-capture activity and receive its result.
+    private ActivityResultLauncher<Intent> mFileChooserLauncher;
+
     private boolean isBrokerRequest = false;
 
     private static Bundle switchBrowserBundle;
@@ -153,6 +172,37 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     new LegacyFidoActivityResultContract(),
                     result -> {
                         Logger.info(methodTag, "Legacy FIDO2 API result received.");
+                    }
+            );
+        }
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_CHOOSER)) {
+            mFileChooserLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (mFilePathCallback == null) {
+                            return;
+                        }
+                        Uri[] uris = null;
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            if (result.getData() == null) {
+                                // Camera capture: no Intent data returned, use the pre-created URI.
+                                if (mCameraImageUri != null) {
+                                    uris = new Uri[]{mCameraImageUri};
+                                }
+                            } else {
+                                final String dataString = result.getData().getDataString();
+                                if (dataString != null) {
+                                    uris = new Uri[]{Uri.parse(dataString)};
+                                }
+                                // File picker was used; the camera temp file is no longer needed.
+                                deleteTempCameraFile();
+                            }
+                        } else {
+                            // Cancelled or error: discard the camera temp file.
+                            deleteTempCameraFile();
+                        }
+                        mFilePathCallback.onReceiveValue(uris);
+                        mFilePathCallback = null;
                     }
             );
         }
@@ -376,6 +426,59 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
+
+            @Override
+            public boolean onShowFileChooser(final WebView webView,
+                                             final ValueCallback<Uri[]> filePathCallback,
+                                             final FileChooserParams fileChooserParams) {
+                final String tag = TAG + ":onShowFileChooser";
+                if (mFileChooserLauncher == null) {
+                    Logger.warn(tag, "File chooser not supported; launcher not initialized.");
+                    filePathCallback.onReceiveValue(null);
+                    return false;
+                }
+                if (mFilePathCallback != null) {
+                    mFilePathCallback.onReceiveValue(null);
+                }
+                mFilePathCallback = filePathCallback;
+
+                // Build an optional camera-capture intent backed by a temp file.
+                final Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                final Context context = requireContext();
+                mCameraImageUri = null;
+                deleteTempCameraFile();
+                // Only include camera capture if a camera app is available to handle the intent.
+                if (cameraIntent.resolveActivity(context.getPackageManager()) != null) {
+                    try {
+                        mTempCameraFile = File.createTempFile(
+                                "camera_capture_", ".jpg", context.getCacheDir());
+                        mCameraImageUri = FileProvider.getUriForFile(
+                                context,
+                                FILE_PROVIDER_AUTHORITY,
+                                mTempCameraFile);
+                        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraImageUri);
+                    } catch (final IOException e) {
+                        Logger.warn(tag, "Failed to create temp file for camera capture.");
+                        mCameraImageUri = null;
+                        mTempCameraFile = null;
+                    }
+                }
+
+                // Always include a general file-picker intent.
+                final Intent filePickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                filePickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                filePickerIntent.setType("*/*");
+
+                final Intent[] extraIntents = mCameraImageUri != null
+                        ? new Intent[]{cameraIntent}
+                        : new Intent[0];
+                final Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
+                chooserIntent.putExtra(Intent.EXTRA_INTENT, filePickerIntent);
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents);
+
+                mFileChooserLauncher.launch(chooserIntent);
+                return true;
+            }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
     }
@@ -422,6 +525,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // but we should still have a check here just to be safe.
             mFidoLauncher.unregister();
         }
+        if (mFilePathCallback != null) {
+            mFilePathCallback.onReceiveValue(null);
+            mFilePathCallback = null;
+        }
+        deleteTempCameraFile();
     }
 
     /**
@@ -554,5 +662,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
         }
 
+    }
+
+    /**
+     * Deletes the temporary camera capture file if it exists, and clears the reference.
+     */
+    private void deleteTempCameraFile() {
+        if (mTempCameraFile != null) {
+            if (!mTempCameraFile.delete()) {
+                Logger.warn(TAG + ":deleteTempCameraFile", "Failed to delete temp camera file.");
+            }
+            mTempCameraFile = null;
+            mCameraImageUri = null;
+        }
     }
 }

@@ -31,6 +31,18 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
+        <!-- FileProvider used to share temporary camera capture files with the camera app
+             during WebView file-chooser interactions (ENABLE_WEBVIEW_FILE_CHOOSER flight). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.microsoft.identity.common.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/common_file_provider_paths" />
+        </provider>
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
