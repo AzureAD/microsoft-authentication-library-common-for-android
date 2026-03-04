@@ -63,11 +63,8 @@ public class DualScreenActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
 
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_HANDLING_FOR_EDGE_TO_EDGE)) {
-            // Force set to a light theme (to status and navigation bars) since broker/common activities always have white background.
-            // We don't support dark mode in broker/common activities yet.
-            // Until then, having everything consistently rendered with a white background looks better.
-            // This will also guarantee that the icons on those bars are always visible.
-            setTheme(getThemeResId());
+            // Use light system bars (dark icons) since the activity content always has a light/white background.
+            // The theme's windowBackground is transparent so WebView overlay elements inherit the correct color.
             setEdgeToEdge();
         }
     }
