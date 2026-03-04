@@ -3,6 +3,7 @@ vNext
 
 Version 24.0.1-RC1
 ----------
+- [PATCH] Allow apps to setShouldTrustDebugBrokers (#2932)
 
 Version 24.0.0
 ----------
