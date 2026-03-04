@@ -594,8 +594,8 @@ For each comment, ensure:
 - It states: (a) issue, (b) impact/rationale, (c) concrete recommendation.
 - It avoids vague language (“might”, “maybe”, “probably”) unless uncertainty is inherent—then state assumptions.
 
-###  A.2 Code Review Guidelines - Severity Legend (Optional)
-- **Severity: High –** Exploitable vulnerability, data leak/PII exposure, authentication/authorization bypass, crypto misuse, race causing security breach, crash enabling denial-of-service, hot-path[...]
+### A.2 Code Review Guidelines - Severity Legend (Optional)
+- **Severity: High –** Exploitable vulnerability, data leak/PII exposure, authentication/authorization bypass, crypto misuse, race causing security breach, crash enabling denial-of-service, hot-path regression degrading production throughput or availability.
 - **Severity: Medium –** Logic flaw causing incorrect results/state corruption, moderate performance regression, missing critical telemetry for a major operation, unhandled recoverable error path.
 - **Low priority:** Immutability, minor docs/style, small clarity improvements, non-hot path micro-optimizations (rarely surface).
 
@@ -616,9 +616,9 @@ If multiple identical lines: show first instance + comment listing other line nu
 
 ---
 
-### A.2 Example Code Review Comments (Good vs Avoid)
+### A.4 Example Code Review Comments (Good vs Avoid)
 Security:
-Good: `Severity: High – Token logged in plaintext` Issue: Access token appended to log line in Error path. Impact: Leakage risk to log aggregation system. Recommendation: Remove token or replace wit[...]
+Good: `Severity: High – Token logged in plaintext` Issue: Access token appended to log line in Error path. Impact: Leakage risk to log aggregation system. Recommendation: Remove token or replace with `<redacted>` placeholder or a hash.
 Avoid: “Don’t log tokens.” (Non-specific)
 
 Concurrency:
@@ -639,7 +639,7 @@ Testing:
 Good: “Missing negative test: parse() returns null for malformed token; add test asserting error mapping for invalid header.”
 
 Documentation:
-Good: “Existing doc: ‘Represents the status of a success response.’ Missing: clarify whether time is server time or device capture time; document units (epoch ms?). Suggest: ‘… timeMillis: U[...]
+Good: “Existing doc: ‘Represents the status of a success response.’ Missing: clarify whether time is server time or device capture time; document units (epoch ms?). Suggest: ‘… timeMillis: UTC epoch milliseconds representing when the server issued the token.’”
 Good: “Public method fetchKeys() lacks thread-safety contract; specify main-thread or safe multi-thread use + blocking behavior.”
 Avoid: “Add proper documentation.” (Too generic)
 
