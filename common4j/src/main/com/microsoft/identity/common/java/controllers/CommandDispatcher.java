@@ -89,6 +89,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -581,59 +582,87 @@ public class CommandDispatcher {
                     getSilentExecutorPoolSize()
             );
 
-            commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
-                @Override
-                public void run() {
-                    // Update state: thread has picked up the request, now executing
-                    // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
-                    if (!isDeviceCodeFlowRequest) {
-                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
-                    }
+            try {
+                commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Update state: thread has picked up the request, now executing
+                        // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
+                        if (!isDeviceCodeFlowRequest) {
+                            sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                        }
 
-                    codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
-                    try {
-                        //initializing again since the request is transferred to a different thread pool
-                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                                commandParameters.getSdkVersion());
-
-                        CommandResult<?> commandResult = null;
-
-                        codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                        codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                         try {
-                            commandResult = executeCommand(command);
-                        } finally {
-                            codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
-                        }
-                        Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
-                                + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
-                                + " is cacheable : " + command.isEligibleForCaching());
-                        // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
-                        finalFuture.setResult(commandResult);
-                    } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                        finalFuture.setException(new ExecutionException(t));
-                    } finally {
-                        synchronized (mapAccessLock) {
-                            if (command.isEligibleForCaching()) {
-                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
-                                if (mapFuture == null) {
-                                    // If this has happened, the command that we started with has mutated.  We will
-                                    // examine every entry in the map, find the one with the same object identity
-                                    // and remove it.
-                                    // ADO:TODO:1153495 - Rekey this map with stable string keys.
-                                    Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
-                                            + " the calling application was " + command.getParameters().getApplicationName(), null);
-                                    cleanMap(command);
-                                }
+                            //initializing again since the request is transferred to a different thread pool
+                            initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
+                                            SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                    commandParameters.getSdkVersion());
+
+                            CommandResult<?> commandResult = null;
+
+                            codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                            try {
+                                commandResult = executeCommand(command);
+                            } finally {
+                                codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_END : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
                             }
-                            finalFuture.setCleanedUp();
+                            Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
+                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
+                                    + " is cacheable : " + command.isEligibleForCaching());
+                            // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
+                            finalFuture.setResult(commandResult);
+                        } catch (final Throwable t) {
+                            Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                            finalFuture.setException(new ExecutionException(t));
+                        } finally {
+                            synchronized (mapAccessLock) {
+                                if (command.isEligibleForCaching()) {
+                                    final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                                    if (mapFuture == null) {
+                                        // If this has happened, the command that we started with has mutated.  We will
+                                        // examine every entry in the map, find the one with the same object identity
+                                        // and remove it.
+                                        // ADO:TODO:1153495 - Rekey this map with stable string keys.
+                                        Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                                + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                        cleanMap(command);
+                                    }
+                                }
+                                finalFuture.setCleanedUp();
+                            }
+                            DiagnosticContext.INSTANCE.clear();
                         }
-                        DiagnosticContext.INSTANCE.clear();
+                        codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                     }
-                    codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
+                }));
+            } catch (final RejectedExecutionException e) {
+                // The executor rejected the task because the thread pool and its work queue are both
+                // full (or the executor has been shut down). For cacheable commands, the future was
+                // already inserted into the executing command map and any threads sharing that future
+                // would hang indefinitely without this cleanup. Remove the map entry and complete the
+                // future with a meaningful error so all waiters are notified promptly.
+                Logger.error(TAG + methodName,
+                        "Task rejected by executor for correlation id : **" + correlationId
+                                + ". Thread pool is full or executor is shut down.", e);
+                if (command.isEligibleForCaching()) {
+                    cleanMap(command);
+                    final ClientException rejectionException = new ClientException(
+                            ClientException.THREAD_POOL_REJECTED,
+                            "Silent request rejected: executor thread pool is full or shut down.",
+                            e);
+                    rejectionException.setCorrelationId(correlationId);
+                    finalFuture.setException(new ExecutionException(rejectionException));
+                    finalFuture.setCleanedUp();
+                    if (!isDeviceCodeFlowRequest) {
+                        sRequestStateMap.remove(correlationId);
+                    }
+                    return finalFuture;
                 }
-            }));
+                // For non-cacheable commands, no future was inserted into the map, so no hang risk.
+                // Re-throw to preserve existing caller-visible behavior.
+                throw e;
+            }
             return finalFuture;
         }
     }
@@ -1186,6 +1215,9 @@ public class CommandDispatcher {
                     new LinkedBlockingQueue<Runnable>(effectivePoolSize));
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
+            // Clear stale request-state entries that belonged to the old executor's in-flight
+            // tasks; those tasks will not complete normally since the executor is being replaced.
+            sRequestStateMap.clear();
         }
 
         // Step 2: Shutdown old executor OUTSIDE the lock to avoid deadlock

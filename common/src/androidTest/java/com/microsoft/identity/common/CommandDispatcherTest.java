@@ -81,6 +81,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -425,6 +426,61 @@ public class CommandDispatcherTest {
         }
         // Restart the silentRequestExecutor again
         CommandDispatcher.resetSilentRequestExecutor();
+    }
+
+    /**
+     * Tests that submitting a CACHEABLE command to a stopped executor does NOT throw
+     * RejectedExecutionException. Instead the future returned to the caller should be
+     * completed with a {@link ClientException} whose error code is
+     * {@link ClientException#THREAD_POOL_REJECTED}. This prevents callers sharing that
+     * future from hanging indefinitely.
+     */
+    @Test
+    public void testStopSilentRequestExecutor_CacheableCommand_ReturnsFutureWithError() throws Exception {
+        // Stop the executor first so any new submission is immediately rejected
+        CommandDispatcher.stopSilentRequestExecutor();
+
+        // Submit a cacheable command - our fix must NOT throw RejectedExecutionException
+        final TestCommand cacheableCommand = new TestCommand(getEmptyTestParams(), new EmptyCommandCallback(), INTEGER.getAndIncrement()) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+        };
+
+        FinalizableResultFuture<CommandResult> future;
+        try {
+            future = CommandDispatcher.submitSilentReturningFuture(cacheableCommand);
+        } catch (final RejectedExecutionException e) {
+            Assert.fail("submitSilentReturningFuture should not throw RejectedExecutionException for cacheable commands; "
+                    + "it must return a completed future instead. Exception: " + e.getMessage());
+            return;
+        }
+
+        // The future must be immediately done (already completed with error)
+        Assert.assertTrue("Future should be done immediately for a rejected cacheable command", future.isDone());
+
+        // The map must be cleaned up – verify before resetting the executor to avoid false positives
+        // caused by the subsequent resetSilentRequestExecutor() clearing the map too.
+        Assert.assertFalse("Map should not contain the rejected command",
+                CommandDispatcher.isCommandOutstanding(cacheableCommand));
+
+        // Reset executor for subsequent assertions and test isolation
+        CommandDispatcher.resetSilentRequestExecutor();
+
+        // get() must throw ExecutionException wrapping the ClientException
+        try {
+            future.get();
+            Assert.fail("Expected ExecutionException from rejected cacheable command");
+        } catch (final ExecutionException e) {
+            // Unwrap: get() wraps mException in another ExecutionException.
+            // mException itself is the ExecutionException we passed to setException().
+            Throwable inner = e.getCause();
+            Throwable root = (inner instanceof ExecutionException) ? inner.getCause() : inner;
+            Assert.assertTrue("Root cause should be a ClientException", root instanceof ClientException);
+            Assert.assertEquals("Error code should be THREAD_POOL_REJECTED",
+                    ClientException.THREAD_POOL_REJECTED, ((ClientException) root).getErrorCode());
+        }
     }
 
     @Test

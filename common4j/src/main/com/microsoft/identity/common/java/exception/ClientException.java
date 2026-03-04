@@ -478,6 +478,15 @@ public class ClientException extends BaseException {
     public static final String TIMED_OUT_EXECUTION = "timed_out_execution";
 
     /**
+     * A silent token request was rejected by the thread pool executor.
+     * The thread pool and its work queue are both full, so the request could not
+     * be accepted. This indicates severe thread pool saturation - the pool is unable
+     * to accept additional work. Unlike {@link #TIMED_OUT_THREAD_POOL_SATURATED},
+     * this is an immediate rejection rather than a timeout after waiting.
+     */
+    public static final String THREAD_POOL_REJECTED = "thread_pool_rejected";
+
+    /**
      * A NullPointerException was thrown.
      */
     public static final String NULL_POINTER_ERROR = "null_pointer_error";
