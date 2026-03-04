@@ -55,15 +55,10 @@ public class FileUtil {
      */
     public static void writeDataToFile(@NonNull final byte[] data,
                                        @NonNull final File file) throws ClientException {
-        final String methodName = ":writeKeyData";
+        final String methodName = ":writeDataToFile";
 
-        try {
-            final OutputStream out = new FileOutputStream(file);
-            try {
-                out.write(data);
-            } finally {
-                out.close();
-            }
+        try (final OutputStream out = new FileOutputStream(file)) {
+            out.write(data);
         } catch (IOException e) {
             final ClientException clientException = new ClientException(
                     IO_ERROR,
@@ -85,32 +80,29 @@ public class FileUtil {
      * Read a data blob from a file.
      *
      * @param file     file to load.
-     * @param dataSize expected size of the resulted data blob.
+     * @param dataSize expected size of the resulted data blob; used as the initial capacity for the
+     *                 read buffer and the output stream. Values &lt;= 0 fall back to a default of
+     *                 8192 bytes.
      * @return A data blob, if exists.
      */
     @Nullable
     public static byte[] readFromFile(@NonNull final File file,
                                       final int dataSize) throws ClientException {
-        final String methodName = ":readKeyData";
+        final String methodName = ":readFromFile";
 
         if (!file.exists()) {
             return null;
         }
 
-        try {
-            final InputStream in = new FileInputStream(file);
-
-            try {
-                final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                final byte[] buffer = new byte[dataSize];
-                int count;
-                while ((count = in.read(buffer)) != -1) {
-                    bytes.write(buffer, 0, count);
-                }
-                return bytes.toByteArray();
-            } finally {
-                in.close();
+        final int bufferSize = dataSize > 0 ? dataSize : 8192;
+        try (final InputStream in = new FileInputStream(file)) {
+            final ByteArrayOutputStream bytes = new ByteArrayOutputStream(bufferSize);
+            final byte[] buffer = new byte[bufferSize];
+            int count;
+            while ((count = in.read(buffer)) != -1) {
+                bytes.write(buffer, 0, count);
             }
+            return bytes.toByteArray();
         } catch (IOException e) {
             final ClientException clientException = new ClientException(
                     IO_ERROR,
