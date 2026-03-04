@@ -36,8 +36,8 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          # Sanitize PR body by removing backticks to prevent command substitution
-          clean=$(printf "%s" "$PR_BODY" | tr -d '`')
+          # Sanitize PR body by removing backticks and $() to prevent command substitution
+          clean=$(printf "%s" "$PR_BODY" | tr -d '`' | sed 's/\$[(][^)]*[)]//g')
       
           # Extract AB ID (AB#1234567) - takes first match if multiple exist
           result=$(printf "%s" "$clean" | grep -oP '(?<=AB#)\d+' | head -n 1)
@@ -78,7 +78,7 @@ jobs:
         run: |
           PR_TITLE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_ID }} \
+            https://api.github.com/repos/${{ github.repository }}/pulls/$PR_ID \
             | jq -r .title)
           echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
 
@@ -134,8 +134,8 @@ jobs:
           curl -X PATCH \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_ID }} \
-            -d '{"title":"'"${{ env.NEW_TITLE }}"'"}'
+            https://api.github.com/repos/${{ github.repository }}/pulls/$PR_ID \
+            -d "$(jq -n --arg title "$NEW_TITLE" '{title: $title}')"
   
   # This job will determine the final status of the workflow and can be made a requirement before merging.
   # The job will succeed if any of the following conditions are met:
