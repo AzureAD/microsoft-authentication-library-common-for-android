@@ -595,6 +595,13 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * The number of IPC retries performed for a single strategy attempt.
+     * Set on the MSAL_PerformIpcStrategy span.
+     * Note: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_count,
     
     //endregion
 }

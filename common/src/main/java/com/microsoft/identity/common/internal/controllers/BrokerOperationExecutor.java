@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -36,6 +37,9 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -114,6 +118,8 @@ public class BrokerOperationExecutor {
 
     private final List<IIpcStrategy> mStrategies;
 
+    private final IpcRetryPolicy mRetryPolicy;
+
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
@@ -121,6 +127,7 @@ public class BrokerOperationExecutor {
                                    @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
         mStrategies = strategies;
         mCacheUpdaterManager = cacheUpdaterManager;
+        mRetryPolicy = new IpcRetryPolicy();
     }
 
     /**
@@ -233,7 +240,45 @@ public class BrokerOperationExecutor {
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
             operation.performPrerequisites(strategy);
             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+
+            final Bundle resultBundle;
+            final boolean retryEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(CommonFlight.ENABLE_IPC_RETRY_WITH_BACKOFF);
+            if (retryEnabled) {
+                final String correlationId = DiagnosticContext.INSTANCE.getRequestContext()
+                        .get(DiagnosticContext.CORRELATION_ID);
+                int retryCount = 0;
+                Bundle tempBundle = null;
+                while (true) {
+                    try {
+                        tempBundle = strategy.communicateToBroker(brokerOperationBundle);
+                        break;
+                    } catch (final BrokerCommunicationException e) {
+                        if (!IpcRetryPolicy.isRetryable(e) || retryCount >= mRetryPolicy.getMaxRetries()) {
+                            throw e;
+                        }
+                        final long delay = mRetryPolicy.computeBackoffDelayMs(retryCount);
+                        retryCount++;
+                        com.microsoft.identity.common.internal.logging.Logger.warn(
+                                TAG + operation.getMethodName(),
+                                "[" + correlationId + "] IPC strategy [" + strategy.getClass().getSimpleName()
+                                        + "] failed with CONNECTION_ERROR (attempt " + retryCount
+                                        + "/" + mRetryPolicy.getMaxRetries()
+                                        + "). Retrying in " + delay + "ms. Cause: " + e.getMessage()
+                        );
+                        try {
+                            Thread.sleep(delay);
+                        } catch (final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw e;
+                        }
+                    }
+                }
+                resultBundle = tempBundle;
+                span.setAttribute(AttributeName.ipc_retry_count.name(), retryCount);
+            } else {
+                resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+            }
 
             mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
 
