@@ -25,5 +25,6 @@ package com.microsoft.identity.common.java.ui;
 public enum AuthorizationAgent {
     DEFAULT,
     WEBVIEW,
-    BROWSER
+    BROWSER,
+    AUTH_TAB
 }

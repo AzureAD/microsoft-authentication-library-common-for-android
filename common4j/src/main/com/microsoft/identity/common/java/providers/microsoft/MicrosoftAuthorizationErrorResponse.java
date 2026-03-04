@@ -121,6 +121,16 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String TIMED_OUT_DESCRIPTION = "The authorization request timed out.";
 
     /**
+     * Error string to return if AuthTab verification fails.
+     */
+    public static final String AUTH_TAB_VERIFICATION_FAILED = "auth_tab_verification_failed";
+
+    /**
+     * Error string to return if AuthTab verification times out.
+     */
+    public static final String AUTH_TAB_VERIFICATION_TIMED_OUT = "auth_tab_verification_timed_out";
+
+    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.
