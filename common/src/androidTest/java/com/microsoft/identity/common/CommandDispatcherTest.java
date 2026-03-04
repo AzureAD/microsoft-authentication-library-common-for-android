@@ -1003,9 +1003,6 @@ public class CommandDispatcherTest {
      * a request completes successfully via submitAcquireTokenSilentSync().
      * This prevents memory leaks from accumulating tracking state.
      *
-     * <p>Note: State tracking only happens for requests going through
-     * submitAcquireTokenSilentSync(), which is the real production path.
-     *
      * @throws Exception if test fails
      */
     @Test
@@ -1021,8 +1018,9 @@ public class CommandDispatcherTest {
         ILocalAuthenticationResult result = CommandDispatcher.submitAcquireTokenSilentSync(successCommand);
         Assert.assertNotNull("Command should return a result", result);
 
-        // Verify cleanup - map should return to initial size immediately
-        // (cleanup happens in submitAcquireTokenSilentSync's finally block)
+        // Verify cleanup - map should return to initial size
+        // (cleanup happens in the runnable's finally block for the async path,
+        //  and also in submitAcquireTokenSilentSync's finally block for the sync path)
         int finalSize = getRequestStateMapSizeViaReflection();
         Assert.assertEquals("Timeout location map should be cleaned up after success",
             initialSize, finalSize);
@@ -1176,6 +1174,36 @@ public class CommandDispatcherTest {
             Assert.assertEquals("Correlation ID should match",
                 expectedCorrelationId, e.getCorrelationId());
         }
+    }
+
+    /**
+     * Test that timeout location map is cleaned up after a successful request dispatched
+     * via the async submitSilent() path (not through submitAcquireTokenSilentSync).
+     *
+     * <p>This verifies the fix for the memory leak where sRequestStateMap entries were
+     * added for all non-DCF requests in submitSilentReturningFuture but were only cleaned
+     * up when going through submitAcquireTokenSilentSync. Requests dispatched via the
+     * async submitSilent() path would accumulate entries indefinitely.
+     *
+     * @throws Exception if test fails
+     */
+    @Test
+    public void testStateMapCleanupAfterSubmitSilent() throws Exception {
+        // Get initial map size
+        int initialSize = getRequestStateMapSizeViaReflection();
+
+        // Dispatch a command via the async submitSilent path (NOT submitAcquireTokenSilentSync)
+        SilentTokenCommandParameters params = createTestSilentTokenParams();
+        SilentTokenCommand command = createTestSilentTokenCommand(params);
+        FinalizableResultFuture<CommandResult> future = CommandDispatcher.submitSilentReturningFuture(command);
+
+        // Wait for the future to fully complete (including cleanup)
+        future.isCleanedUp();
+
+        // Verify cleanup - map should return to initial size after async completion
+        int finalSize = getRequestStateMapSizeViaReflection();
+        Assert.assertEquals("Timeout location map should be cleaned up after async submitSilent",
+            initialSize, finalSize);
     }
 
     // ════════════════════════════════════════════════════════════════════════════

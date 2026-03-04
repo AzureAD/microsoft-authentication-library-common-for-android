@@ -547,6 +547,14 @@ public class CommandDispatcher {
                         // Update state to prevent incorrect timeout classification as QUEUED
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                            // Clean up state when the shared future completes to prevent memory leaks
+                            // for callers that don't go through submitAcquireTokenSilentSync.
+                            putValue.whenComplete(new BiConsumer<CommandResult, Throwable>() {
+                                @Override
+                                public void accept(final CommandResult result, final Throwable throwable) {
+                                    sRequestStateMap.remove(correlationId);
+                                }
+                            });
                         }
                         return putValue;
                     }
@@ -556,6 +564,14 @@ public class CommandDispatcher {
                     // Update state to prevent incorrect timeout classification as QUEUED
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                        // Clean up state when the shared future completes to prevent memory leaks
+                        // for callers that don't go through submitAcquireTokenSilentSync.
+                        future.whenComplete(new BiConsumer<CommandResult, Throwable>() {
+                            @Override
+                            public void accept(final CommandResult result, final Throwable throwable) {
+                                sRequestStateMap.remove(correlationId);
+                            }
+                        });
                     }
                     return future;
                 }
@@ -626,6 +642,12 @@ public class CommandDispatcher {
                                             + " the calling application was " + command.getParameters().getApplicationName(), null);
                                     cleanMap(command);
                                 }
+                            }
+                            // Remove the request state tracking entry before marking as cleaned up.
+                            // This ensures the state map is consistent when isCleanedUp() unblocks,
+                            // and prevents memory leaks for callers not using submitAcquireTokenSilentSync.
+                            if (!isDeviceCodeFlowRequest) {
+                                sRequestStateMap.remove(correlationId);
                             }
                             finalFuture.setCleanedUp();
                         }
