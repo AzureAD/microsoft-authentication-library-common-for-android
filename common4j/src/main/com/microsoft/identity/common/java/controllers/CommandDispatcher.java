@@ -76,10 +76,10 @@ import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -87,8 +87,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -106,12 +104,21 @@ public class CommandDispatcher {
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
     private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
+    // Thread pool names for debugging and thread dumps
+    private static final String SILENT_REQUEST_EXECUTOR_NAME = "MsalSilentRequestExecutor";
+    private static final String INTERACTIVE_EXECUTOR_NAME = "MsalInteractiveExecutor";
+    private static final String DCF_REQUEST_EXECUTOR_NAME = "MsalDcfRequestExecutor";
     // Cache the pool size for the session
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static final int SILENT_REQUEST_THREAD_POOL_SIZE = computeSilentRequestThreadPoolSize();
-    private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
-    private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
+    private static ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+            1, 1, -1, 0L, TimeUnit.SECONDS, INTERACTIVE_EXECUTOR_NAME);
+    private static ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+            SILENT_REQUEST_THREAD_POOL_SIZE, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 0L,
+            TimeUnit.SECONDS, SILENT_REQUEST_EXECUTOR_NAME);
+    private static final ExecutorService sDCFExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+            DCF_REQUEST_THREAD_POOL_SIZE, DCF_REQUEST_THREAD_POOL_SIZE, -1, 0L,
+            TimeUnit.SECONDS, DCF_REQUEST_EXECUTOR_NAME);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -262,15 +269,11 @@ public class CommandDispatcher {
         
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
-        Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
-        f.setAccessible(false);
-
-        f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newSingleThreadExecutor());
-        f.setAccessible(false);
+        sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+                getSilentRequestThreadPoolSize(), getSilentRequestThreadPoolSize(), -1, 0L,
+                TimeUnit.SECONDS, SILENT_REQUEST_EXECUTOR_NAME);
+        sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+                1, 1, -1, 0L, TimeUnit.SECONDS, INTERACTIVE_EXECUTOR_NAME);
     }
 
     /**
@@ -954,7 +957,8 @@ public class CommandDispatcher {
                                 "The previous interactive request was queued but never got processed and is blocking the interactive thread. " +
                                         "Restarting the interactive executor service to enable processing interactive requests again.");
                         List<Runnable> cancelledRequests = sInteractiveExecutor.shutdownNow();
-                        sInteractiveExecutor = Executors.newSingleThreadExecutor();
+                        sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+                                1, 1, -1, 0L, TimeUnit.SECONDS, INTERACTIVE_EXECUTOR_NAME);
                         Logger.info(TAG + methodName, "Cancelled execution of " + cancelledRequests.size() + " interactive requests.");
                     }
                 }
@@ -1178,12 +1182,12 @@ public class CommandDispatcher {
         final ExecutorService oldExecutor;
         synchronized (mapAccessLock) {
             oldExecutor = sSilentExecutor;
-            sSilentExecutor = new ThreadPoolExecutor(
-                    effectivePoolSize, // core pool size
-                    effectivePoolSize*2, // max pool size
-                    30L, // keep-alive time for idle threads above core pool size
-                    TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<Runnable>(effectivePoolSize));
+            // Use a fixed-size pool with an unbounded queue to match initial construction behavior.
+            // Previously a bounded LinkedBlockingQueue could throw RejectedExecutionException when
+            // full while holding mapAccessLock, leaving FinalizableResultFuture unresolved.
+            sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+                    effectivePoolSize, effectivePoolSize, -1, 0L,
+                    TimeUnit.SECONDS, SILENT_REQUEST_EXECUTOR_NAME);
             Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
             sExecutingCommandMap.clear();
         }
