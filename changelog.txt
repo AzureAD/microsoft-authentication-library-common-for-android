@@ -1,6 +1,9 @@
 vNext
 ----------
 
+Version 24.0.1-RC1
+----------
+
 Version 24.0.0
 ----------
 - [MINOR] Add tracking for urls loaded by our webview (#2892)
