@@ -87,3 +87,7 @@ Temporary Items
 .apdisk
 
 .vs/
+
+# Python cache
+__pycache__/
+*.pyc
