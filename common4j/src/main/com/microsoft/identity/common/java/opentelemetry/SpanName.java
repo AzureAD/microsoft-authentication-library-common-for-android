@@ -37,6 +37,14 @@ public enum SpanName {
     CertBasedAuth,
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
+    /**
+     * Span name for device registration state notification sent by Broker.
+     */
+    DeviceRegistrationStateNotification,
+    /**
+     * Span name for device registration state notification received by client.
+     */
+    DeviceRegistrationStateNotificationReceived,
     WorkplaceJoinApi,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
