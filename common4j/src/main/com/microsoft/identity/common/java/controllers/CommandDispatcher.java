@@ -79,7 +79,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -262,15 +261,8 @@ public class CommandDispatcher {
         
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
-        Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
-        f.setAccessible(false);
-
-        f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
-        f.setAccessible(true);
-        f.set(null, Executors.newSingleThreadExecutor());
-        f.setAccessible(false);
+        sSilentExecutor = Executors.newFixedThreadPool(getSilentRequestThreadPoolSize());
+        sInteractiveExecutor = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -547,6 +539,15 @@ public class CommandDispatcher {
                         // Update state to prevent incorrect timeout classification as QUEUED
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                            // Cleanup state tracking when the shared future completes.
+                            // This prevents a memory leak for callers like submitSilent that don't
+                            // perform their own cleanup (only submitAcquireTokenSilentSync does).
+                            putValue.whenComplete(new BiConsumer<CommandResult, Throwable>() {
+                                @Override
+                                public void accept(CommandResult result, Throwable throwable) {
+                                    sRequestStateMap.remove(correlationId);
+                                }
+                            });
                         }
                         return putValue;
                     }
@@ -556,6 +557,15 @@ public class CommandDispatcher {
                     // Update state to prevent incorrect timeout classification as QUEUED
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                        // Cleanup state tracking when the shared future completes.
+                        // This prevents a memory leak for callers like submitSilent that don't
+                        // perform their own cleanup (only submitAcquireTokenSilentSync does).
+                        future.whenComplete(new BiConsumer<CommandResult, Throwable>() {
+                            @Override
+                            public void accept(CommandResult result, Throwable throwable) {
+                                sRequestStateMap.remove(correlationId);
+                            }
+                        });
                     }
                     return future;
                 }
@@ -630,6 +640,13 @@ public class CommandDispatcher {
                             finalFuture.setCleanedUp();
                         }
                         DiagnosticContext.INSTANCE.clear();
+                        // Cleanup request state tracking to prevent memory leak for callers
+                        // like submitSilent that don't have their own cleanup.
+                        // submitAcquireTokenSilentSync handles its own cleanup in its finally block;
+                        // the redundant remove here is a safe no-op for that code path.
+                        if (!isDeviceCodeFlowRequest) {
+                            sRequestStateMap.remove(correlationId);
+                        }
                     }
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
