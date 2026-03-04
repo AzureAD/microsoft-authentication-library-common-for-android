@@ -69,7 +69,7 @@ public class LibraryConfiguration {
      * The current default behavior of common is to launch the activity in a new Task.
      * This creates effectively 2 task stacks (which can appear as 2 windows in multi-window configurations)
      * The 2 task stacks allows for unexpected user experience when navigating away for authorization UI
-     * when the authorizaiton is still in process.
+     * when the authorization is still in process.
      */
     private boolean authorizationInCurrentTask;
 
