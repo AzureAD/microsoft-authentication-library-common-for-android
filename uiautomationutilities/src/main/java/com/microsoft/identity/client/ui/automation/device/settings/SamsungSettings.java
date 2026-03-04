@@ -107,13 +107,6 @@ public class SamsungSettings extends BaseSettings {
     @Override
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
-                               @NonNull final String password) {
-        addWorkAccount(broker, username, password, false);
-    }
-
-    @Override
-    public void addWorkAccount(@NonNull final ITestBroker broker,
-                               @NonNull final String username,
                                @NonNull final String password,
                                final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Samsung Device..");
@@ -146,10 +139,6 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void forwardDeviceTimeForOneDay() {
-        forwardDeviceTime(86400);
-    }
-
     public void forwardDeviceTime(long seconds) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Samsung Device..");
         // Disable Automatic TimeZone

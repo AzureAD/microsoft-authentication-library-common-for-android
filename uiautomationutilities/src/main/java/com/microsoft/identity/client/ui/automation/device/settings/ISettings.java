@@ -27,6 +27,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * An interface describing the Settings app on an Android device during UI Automation.
  */
@@ -68,9 +70,11 @@ public interface ISettings {
      * @param username       the username of the account to add
      * @param password       the password of the account to add
      */
-    void addWorkAccount(final ITestBroker expectedBroker,
+    default void addWorkAccount(final ITestBroker expectedBroker,
                         final String username,
-                        final String password);
+                        final String password) {
+        addWorkAccount(expectedBroker, username, password, false);
+    }
 
     /**
      * Add the supplied account to the device via Account Manager.
@@ -93,7 +97,9 @@ public interface ISettings {
     /**
      * Change the time on the device by advancing the clock by 24 hours.
      */
-    void forwardDeviceTimeForOneDay();
+    default void forwardDeviceTimeForOneDay() {
+        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1));
+    }
 
     /**
      * Change the time on the device by seconds.
@@ -128,23 +134,23 @@ public interface ISettings {
      *
      * @param packageName the package for which to open app info page
      */
-    void launchAppInfoPage(String packageName);
+    void launchAppInfoPage(@NonNull String packageName);
 
     /**
      * Disable an app through the device's settings page instead of shell command.
      * @param packageName name of package to be disabled
      */
-    public void disableAppThroughSettings(@NonNull final String packageName);
+    void disableAppThroughSettings(@NonNull final String packageName);
 
     /**
      * Toggle app notifications in settings page
      * @param packageName package name of the app
      */
-    public void toggleNotificationsThroughSettings(@NonNull final String packageName);
+    void toggleNotificationsThroughSettings(@NonNull final String packageName);
 
     /**
      * Enable an app through the device's settings page instead of shell command.
      * @param packageName name of package to be enabled
      */
-    public void enableAppThroughSettings(@NonNull final String packageName);
+    void enableAppThroughSettings(@NonNull final String packageName);
 }

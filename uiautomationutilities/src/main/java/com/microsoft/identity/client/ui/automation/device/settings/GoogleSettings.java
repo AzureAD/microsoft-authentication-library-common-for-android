@@ -134,12 +134,6 @@ public class GoogleSettings extends BaseSettings {
     @Override
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
-                               @NonNull final String password) {
-        addWorkAccount(broker, username, password, false);
-    }
-
-    public void addWorkAccount(@NonNull final ITestBroker broker,
-                               @NonNull final String username,
                                @NonNull final String password,
                                final boolean isFederatedUser) {
         Logger.i(TAG, "Adding Work Account on Google Device..");
@@ -179,11 +173,6 @@ public class GoogleSettings extends BaseSettings {
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-    }
-
-    @Override
-    public void forwardDeviceTimeForOneDay() {
-        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1));
     }
 
     /**
