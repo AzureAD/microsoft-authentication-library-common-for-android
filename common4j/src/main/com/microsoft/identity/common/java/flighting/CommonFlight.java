@@ -211,7 +211,14 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+
+    /**
+     * Flight to enable WebView file chooser support (onShowFileChooser) for file upload
+     * in authentication WebView flows. When enabled, users can upload files (e.g. images,
+     * documents) from the file system or camera during authentication.
+     */
+    ENABLE_WEBVIEW_FILE_CHOOSER("EnableWebViewFileChooser", false);
 
     private String key;
     private Object defaultValue;
