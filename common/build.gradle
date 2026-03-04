@@ -217,7 +217,9 @@ dependencies {
 
     implementation "androidx.datastore:datastore-preferences:$rootProject.ext.jetpackDataStoreVersion"
 
-    implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
+    // compileOnly: display-mask is a stub; the real implementation is provided by the OS on Surface Duo
+    // devices. Usage in DualScreenActivity is wrapped in try-catch(Throwable) so absence at runtime is safe.
+    compileOnly(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.3'
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
