@@ -595,6 +595,13 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
-    
+
+    /**
+     * The number of IPC retries performed for a given strategy due to transient connection errors.
+     * Value is an integer representing the retry count (0 means first attempt succeeded).
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    ipc_retry_count,
+
     //endregion
 }

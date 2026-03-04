@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -36,6 +37,9 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -231,14 +235,43 @@ public class BrokerOperationExecutor {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
-            operation.performPrerequisites(strategy);
-            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
-            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+            final boolean retryEnabled = CommonFlightsManager.INSTANCE
+                    .getFlightsProvider()
+                    .isFlightEnabled(CommonFlight.ENABLE_IPC_RETRY_WITH_BACKOFF);
 
+            final String correlationId = DiagnosticContext.INSTANCE.getRequestContext()
+                    .get(DiagnosticContext.CORRELATION_ID);
+
+            final T result;
+            final int retryCount;
+            if (retryEnabled) {
+                final IpcRetryPolicy retryPolicy = new IpcRetryPolicy();
+                final IpcRetryPolicy.RetryResult<T> retryResult = retryPolicy.executeWithRetry(
+                        strategy.getClass().getSimpleName(),
+                        correlationId != null ? correlationId : "",
+                        () -> {
+                            operation.performPrerequisites(strategy);
+                            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+                            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+                            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+                            return operation.extractResultBundle(resultBundle);
+                        }
+                );
+                retryCount = retryResult.getRetryCount();
+                result = retryResult.getValue();
+            } else {
+                operation.performPrerequisites(strategy);
+                final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+                final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
+                mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+                result = operation.extractResultBundle(resultBundle);
+                retryCount = 0;
+            }
+
+            span.setAttribute(AttributeName.ipc_retry_count.name(), retryCount);
             span.setStatus(StatusCode.OK);
-            return operation.extractResultBundle(resultBundle);
+            return result;
             // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
         } catch (final Throwable throwable) {
             span.setStatus(StatusCode.ERROR);
