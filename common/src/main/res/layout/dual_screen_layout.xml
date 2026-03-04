@@ -6,6 +6,7 @@
     android:id="@+id/dual_screen_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/com_microsoft_identity_common_white"
     android:weightSum="2"
     android:baselineAligned="false">
 

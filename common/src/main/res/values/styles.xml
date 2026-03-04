@@ -58,8 +58,9 @@
     </style>
 
     <!-- Theme for DualScreenActivity.
-        Force set to a light theme (to status and navigation bars) since broker/common activities always have white background. -->
+        Force set to a light theme (to status and navigation bars) since broker/common activities always have white background.
+        Window background is transparent so that WebView overlay elements (e.g. copy/paste/zoom buttons) also render transparently. -->
     <style name="DualScreenActivityTheme" parent="Theme.AppCompat.Light">
-        <item name="android:windowBackground">@color/com_microsoft_identity_common_white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 </resources>
