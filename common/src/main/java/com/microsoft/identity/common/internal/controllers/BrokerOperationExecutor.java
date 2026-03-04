@@ -28,6 +28,7 @@ import android.os.Bundle;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IpcRetryPolicy;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
@@ -114,13 +115,28 @@ public class BrokerOperationExecutor {
 
     private final List<IIpcStrategy> mStrategies;
 
+    private final IpcRetryPolicy mRetryPolicy;
+
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
     public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
                                    @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager) {
+        this(strategies, cacheUpdaterManager, new IpcRetryPolicy());
+    }
+
+    /**
+     * Constructor with injectable retry policy for testing.
+     *
+     * @param strategies       list of IIpcStrategy to be invoked.
+     * @param retryPolicy      retry policy controlling back-off behaviour.
+     */
+    BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies,
+                            @NonNull final ActiveBrokerCacheUpdater cacheUpdaterManager,
+                            @NonNull final IpcRetryPolicy retryPolicy) {
         mStrategies = strategies;
         mCacheUpdaterManager = cacheUpdaterManager;
+        mRetryPolicy = retryPolicy;
     }
 
     /**
@@ -227,24 +243,47 @@ public class BrokerOperationExecutor {
         );
 
         final Span span = OTelUtility.createSpan(SpanName.MSAL_PerformIpcStrategy.name());
+        int retryCount = 0;
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
             span.setAttribute(AttributeName.broker_operation_name.name(), operation.getMethodName());
-            operation.performPrerequisites(strategy);
-            final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
-            final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
-            mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+            while (true) {
+                try {
+                    // Re-execute prerequisites on each attempt: ensures fresh handshake/hello
+                    // protocol state after a transient failure (e.g. stale bound-service state).
+                    operation.performPrerequisites(strategy);
+                    final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
+                    final Bundle resultBundle = strategy.communicateToBroker(brokerOperationBundle);
 
-            span.setStatus(StatusCode.OK);
-            return operation.extractResultBundle(resultBundle);
-            // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+                    mCacheUpdaterManager.updateCachedActiveBrokerFromResultBundle(resultBundle);
+
+                    span.setStatus(StatusCode.OK);
+                    return operation.extractResultBundle(resultBundle);
+                    // TODO: Emit success rate and performance of each strategy to eSTS in a finally block.
+                } catch (final BrokerCommunicationException communicationException) {
+                    if (mRetryPolicy.isEnabled()
+                            && mRetryPolicy.isRetryable(communicationException)
+                            && retryCount < mRetryPolicy.getMaxRetries()) {
+                        final long delayMs = mRetryPolicy.getDelayMs(retryCount);
+                        retryCount++;
+                        Logger.warn(TAG + operation.getMethodName(),
+                                "IPC strategy " + strategy.getClass().getSimpleName()
+                                        + " failed (attempt " + retryCount + "). "
+                                        + "Retrying in " + delayMs + "ms.");
+                        mRetryPolicy.sleepBeforeRetry(delayMs);
+                    } else {
+                        throw communicationException;
+                    }
+                }
+            }
         } catch (final Throwable throwable) {
             span.setStatus(StatusCode.ERROR);
             span.recordException(throwable);
             throw throwable;
         } finally {
+            span.setAttribute(AttributeName.ipc_retry_count.name(), (long) retryCount);
             span.end();
         }
     }

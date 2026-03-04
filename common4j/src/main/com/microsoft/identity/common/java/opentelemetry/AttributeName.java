@@ -595,6 +595,19 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
-    
+
+    //endregion
+
+    //region IPC Retry
+    // NOTE: Any changes to this region should also be made in the corresponding enum in Broker
+    // (AzureAD/ad-accounts-for-android).
+
+    /**
+     * The number of IPC retry attempts made for a single performStrategy() invocation.
+     * Set on the MSAL_PerformIpcStrategy span on both success and failure paths.
+     * Value is 0 when no retries occurred.
+     */
+    ipc_retry_count,
+
     //endregion
 }
