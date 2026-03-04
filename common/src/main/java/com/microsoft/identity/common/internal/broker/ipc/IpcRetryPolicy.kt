@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.broker.ipc
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.java.exception.BaseException
 import com.microsoft.identity.common.java.logging.Logger
+import java.security.SecureRandom
 
 /**
  * Retry policy for transient IPC connection errors in [BrokerOperationExecutor].
@@ -37,12 +38,14 @@ import com.microsoft.identity.common.java.logging.Logger
  * @param maxRetries      Maximum number of retry attempts (default: [DEFAULT_MAX_RETRIES]).
  * @param baseDelayMs     Base delay in milliseconds before the first retry (default: [DEFAULT_BASE_DELAY_MS]).
  * @param jitterFraction  Fraction of the computed delay to randomise (0.0–1.0; default: [DEFAULT_JITTER_FRACTION]).
+ * @param random          Random source used to compute jitter (default: [SecureRandom]).
  * @param sleepFn         Injectable sleep function (default: [Thread.sleep]) for unit-test overriding.
  */
 class IpcRetryPolicy(
     val maxRetries: Int = DEFAULT_MAX_RETRIES,
     val baseDelayMs: Long = DEFAULT_BASE_DELAY_MS,
     val jitterFraction: Double = DEFAULT_JITTER_FRACTION,
+    private val random: SecureRandom = SecureRandom(),
     private val sleepFn: (Long) -> Unit = { ms -> Thread.sleep(ms) }
 ) {
     companion object {
@@ -94,7 +97,12 @@ class IpcRetryPolicy(
                 val value = operation.execute()
                 return RetryResult(value, attempt)
             } catch (e: BrokerCommunicationException) {
-                if (e.category != BrokerCommunicationException.Category.CONNECTION_ERROR || attempt == maxRetries) {
+                if (e.category != BrokerCommunicationException.Category.CONNECTION_ERROR) {
+                    // Non-retryable category – propagate immediately.
+                    throw e
+                }
+                if (attempt == maxRetries) {
+                    // Retries exhausted – propagate the last connection error.
                     throw e
                 }
                 lastException = e
@@ -119,7 +127,7 @@ class IpcRetryPolicy(
      */
     internal fun computeDelayMs(attempt: Int): Long {
         val exponential = baseDelayMs * (1L shl attempt)
-        val jitter = (exponential * jitterFraction * Math.random()).toLong()
+        val jitter = (exponential * jitterFraction * random.nextDouble()).toLong()
         return exponential + jitter
     }
 

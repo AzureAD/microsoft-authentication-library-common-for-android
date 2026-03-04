@@ -242,6 +242,7 @@ public class BrokerOperationExecutor {
 
             final String correlationId = DiagnosticContext.INSTANCE.getRequestContext()
                     .get(DiagnosticContext.CORRELATION_ID);
+            final String effectiveCorrelationId = correlationId != null ? correlationId : "UNSET";
 
             final T result;
             final int retryCount;
@@ -249,7 +250,7 @@ public class BrokerOperationExecutor {
                 final IpcRetryPolicy retryPolicy = new IpcRetryPolicy();
                 final IpcRetryPolicy.RetryResult<T> retryResult = retryPolicy.executeWithRetry(
                         strategy.getClass().getSimpleName(),
-                        correlationId != null ? correlationId : "",
+                        effectiveCorrelationId,
                         () -> {
                             operation.performPrerequisites(strategy);
                             final BrokerOperationBundle brokerOperationBundle = operation.getBundle();
