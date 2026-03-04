@@ -45,6 +45,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -128,6 +129,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private String mUtid;
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
+
+    private final TempFileCreationHandler mTempFileCreationHandler = new TempFileCreationHandler(this);
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
@@ -375,6 +378,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // This method allows the ChromeClient to provide that default image.
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+            }
+
+            @Override
+            public boolean onShowFileChooser(final WebView webView,
+                                             final ValueCallback<Uri[]> filePathCallback,
+                                             final WebChromeClient.FileChooserParams fileChooserParams) {
+                requireActivity().runOnUiThread(() -> {
+                    Logger.info(methodTag, "File chooser requested from WebView.");
+                    mTempFileCreationHandler.handle(filePathCallback, fileChooserParams, requireContext());
+                });
+                return true;
             }
         });
         setupPasskeyWebListener(mWebView, webViewClient);

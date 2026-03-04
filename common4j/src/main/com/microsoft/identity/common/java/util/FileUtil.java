@@ -129,6 +129,35 @@ public class FileUtil {
     }
 
     /**
+     * Creates a temporary file in the specified directory.
+     *
+     * @param prefix    the prefix string for the temporary file name; must be at least 3 characters long.
+     * @param suffix    the suffix string for the temporary file name; may be null, in which case ".tmp" is used.
+     * @param directory the directory in which the file is to be created.
+     * @return the newly created temporary file.
+     * @throws ClientException if the file cannot be created.
+     */
+    @NonNull
+    public static File createTempFile(@NonNull final String prefix,
+                                      @Nullable final String suffix,
+                                      @NonNull final File directory) throws ClientException {
+        final String methodName = ":createTempFile";
+        try {
+            final File tempFile = File.createTempFile(prefix, suffix, directory);
+            Logger.verbose(TAG + methodName, "Temporary file created.");
+            return tempFile;
+        } catch (final IOException e) {
+            final ClientException clientException = new ClientException(
+                    IO_ERROR,
+                    e.getMessage(),
+                    e
+            );
+            Logger.error(TAG + methodName, clientException.getErrorCode(), e);
+            throw clientException;
+        }
+    }
+
+    /**
      * Delete the wrapped key file (if exists).
      *
      * @param file file to delete.

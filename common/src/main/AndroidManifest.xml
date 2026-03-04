@@ -31,6 +31,21 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
+        <!--
+            FileProvider used to generate content URIs for temporary files when handling
+            WebView file chooser requests (e.g., camera capture for document upload).
+            The authority is scoped per application using ${applicationId}.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.ms_auth_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/ms_auth_file_paths" />
+        </provider>
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
