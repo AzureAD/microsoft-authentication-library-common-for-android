@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -355,6 +356,9 @@ public class MicrosoftStsAccountCredentialAdapter
         } else if (authenticationScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
             accessTokenRecord.setKid(((PopAuthenticationSchemeWithClientKeyInternal) authenticationScheme).getKid());
+        } else if (authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
+            // For WebApps PoP, we use a pre-generated req_cnf; no device key/kid is associated.
+            accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
         } else {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         }

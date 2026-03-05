@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT
 
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -239,7 +240,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
                 if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
                     if (!(authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
-                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP))) {
+                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
+                            || authScheme.equalsIgnoreCase(WebAppsPopAuthenticationSchemeInternal.SCHEME_POP_PREGENERATED))) {
                         continue;
                     }
                 } else if (!authScheme.equalsIgnoreCase(atType)) continue;
