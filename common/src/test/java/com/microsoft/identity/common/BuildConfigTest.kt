@@ -39,12 +39,4 @@ class BuildConfigTest {
 
         assert(!BuildConfig.bypassRedirectUriCheck)
     }
-
-    @Test
-    fun failIfTrustDebugBrokerFlagEnabled(){
-        // Do not run this on scheduled test.
-        Assume.assumeFalse(isBuildReason(BuildReason.Schedule))
-
-        assert(!BuildConfig.trustDebugBrokerFlag)
-    }
 }

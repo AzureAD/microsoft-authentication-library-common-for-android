@@ -24,9 +24,6 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.LruCache;
-
-import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -54,19 +51,13 @@ import java.util.concurrent.ConcurrentMap;
 public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage {
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
-
-    private final Object cacheLock = new Object();
-    @GuardedBy("cacheLock")
-    private final LruCache<String, String> fileCache = new LruCache<>(256);
-    @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
     @VisibleForTesting
     private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
-            new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
-
+            new ConcurrentHashMap<>(16, 0.75f, 1);
 
     /**
      * Constructs an instance of SharedPreferencesFileManager. Operating mode is always MODE_PRIVATE.
@@ -138,67 +129,52 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             final String value) {
         final String methodTag = TAG + ":putString";
 
-        synchronized (cacheLock) {
-            if (value != null) {
-                fileCache.put(key, value);
-            } else {
-                fileCache.remove(key);
-            }
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-
-            if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
-                editor.putString(key, value).apply();
-                return;
-            }
-
-            // What this does is that if the encryption fails, we would still write "null" to the storage.
-            // This might not be the right behavior, but changing this could break stuff.
-            // e.g.
-            //      1. In putString(), we would store data in the in-memory cache first, then try encrypting data.
-            //      2. Assuming the encryption fails, this will persist the key.
-            //      3. the getAll() and getAllFilteredByKey() below relies on the key "in the storage".
-            //         If we don't persist the key to the storage, getAll() will not have any key to pull data from in-memory storage.
-            //
-            // Therefore. i'm leaving this untouched.
-            String encryptedValue = null;
-            try {
-                encryptedValue = mEncryptionManager.encrypt(value);
-            } catch (final ClientException e){
-                Logger.error(methodTag, "Failed to store encrypted value", null);
-            }
-
-            editor.putString(key, encryptedValue).apply();
+        if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
+            editor.putString(key, value).apply();
+            return;
         }
+
+        // What this does is that if the encryption fails, we would still write "null" to the storage.
+        // This might not be the right behavior, but changing this could break stuff.
+        // e.g.
+        //      1. In putString(), we would store data in the in-memory cache first, then try encrypting data.
+        //      2. Assuming the encryption fails, this will persist the key.
+        //      3. the getAll() and getAllFilteredByKey() below relies on the key "in the storage".
+        //         If we don't persist the key to the storage, getAll() will not have any key to pull data from in-memory storage.
+        //
+        // Therefore. i'm leaving this untouched.
+        String encryptedValue = null;
+        try {
+            encryptedValue = mEncryptionManager.encrypt(value);
+        } catch (final ClientException e){
+            Logger.error(methodTag, "Failed to store encrypted value", null);
+        }
+
+        editor.putString(key, encryptedValue).apply();
     }
 
     @Override
     @Nullable
     public final String getString(final String key) {
         final String methodTag = TAG + ":getString";
+        final String storedValue = mSharedPreferences.getString(key, null);
 
-        synchronized (cacheLock) {
-            String memCache = fileCache.get(key);
-            if (memCache != null) {
-                return memCache;
-            }
+        if (StringUtil.isNullOrEmpty(storedValue)) {
+            Logger.info(methodTag, "Data associated to the given key is null or empty", null);
+            return null;
+        }
 
-            final String storedValue = mSharedPreferences.getString(key, null);
-            if (StringUtil.isNullOrEmpty(storedValue)) {
-                Logger.info(methodTag, "Data associated to the given key is null or empty", null);
-                return null;
-            }
+        if (mEncryptionManager == null){
+            return storedValue;
+        }
 
-            if (mEncryptionManager == null){
-                return storedValue;
-            }
-
-            try {
-                return mEncryptionManager.decrypt(storedValue);
-            } catch (final ClientException e){
-                Logger.error(methodTag, "Failed to decrypt value", null);
-                return null;
-            }
+        try {
+            return mEncryptionManager.decrypt(storedValue);
+        } catch (final ClientException e){
+            Logger.error(methodTag, "Failed to decrypt value", null);
+            return null;
         }
     }
 
@@ -223,12 +199,22 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
         @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
-
+        final String methodTag = TAG + ":getAll";
         if (null != mEncryptionManager) {
             for (Map.Entry<String, String> entry : entries.entrySet()) {
-                //This is slightly wasteful, but we have no better key iterator and decryption
-                //is probably more painful than the additional file read when we miss in the cache.
-                String decryptedValue = getString(entry.getKey());
+                final String storedValue = entry.getValue();
+                if (StringUtil.isNullOrEmpty(storedValue)) {
+                    continue;
+                }
+
+                final String decryptedValue;
+                try {
+                    decryptedValue = mEncryptionManager.decrypt(storedValue);
+                } catch (final ClientException e) {
+                    Logger.error(methodTag, "Failed to decrypt value", null);
+                    continue;
+                }
+
                 if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                     entry.setValue(decryptedValue);
                 }
@@ -259,7 +245,19 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                     Map.Entry<String, String> nextElement = iterator.next();
                     if (keyFilter.test(nextElement.getKey())) {
                         if (mEncryptionManager != null) {
-                            String decryptedValue = getString(nextElement.getKey());
+                            final String storedValue = nextElement.getValue();
+                            if (StringUtil.isNullOrEmpty(storedValue)) {
+                                continue;
+                            }
+
+                            final String decryptedValue;
+                            try {
+                                decryptedValue = mEncryptionManager.decrypt(storedValue);
+                            } catch (final ClientException e) {
+                                Logger.error(TAG + ":getAllFilteredByKey", "Failed to decrypt value", null);
+                                continue;
+                            }
+
                             if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                                 nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
                             }
@@ -291,17 +289,14 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
 
     @Override
     public final boolean contains(final String key) {
-        return !StringUtil.isNullOrEmpty(getString(key));
+        return mSharedPreferences.contains(key);
     }
 
     @Override
     public final void clear() {
-        synchronized (cacheLock) {
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.clear();
-            fileCache.evictAll();
-            editor.apply();
-        }
+        mSharedPreferences.edit()
+                .clear()
+                .apply();
     }
 
     @Override
@@ -311,12 +306,10 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
                 methodTag,
                 "Removing cache key"
         );
-        synchronized (cacheLock) {
-            fileCache.remove(key);
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            editor.remove(key);
-            editor.apply();
-        }
+
+        mSharedPreferences.edit()
+            .remove(key)
+            .apply();
 
         Logger.infoPII(
                 methodTag,
@@ -334,9 +327,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
      * NOTE: This method is used by OneAuth
      */
     public boolean flushSharedPreference(){
-        synchronized (cacheLock) {
-            final SharedPreferences.Editor editor = mSharedPreferences.edit();
-            return editor.commit();
-        }
+            return mSharedPreferences.edit()
+                    .commit();
     }
 }
