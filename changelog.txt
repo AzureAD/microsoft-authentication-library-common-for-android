@@ -1,6 +1,10 @@
 vNext
 ----------
 
+Version 24.0.1
+----------
+- [PATCH] Allow apps to setShouldTrustDebugBrokers (#2932)
+
 Version 24.0.0
 ----------
 - [MINOR] Add tracking for urls loaded by our webview (#2892)
