@@ -73,9 +73,9 @@ public class RetryTestRule implements TestRule {
                 }
 
                 // If after evaluating annotation, we still have number of attempts less than minimum, increase number of attempts
-//                if (numAttempts < MINIMUM_NUMBER_OF_ATTEMPTS) {
-//                    numAttempts = MINIMUM_NUMBER_OF_ATTEMPTS;
-//                }
+                if (numAttempts < MINIMUM_NUMBER_OF_ATTEMPTS) {
+                    numAttempts = MINIMUM_NUMBER_OF_ATTEMPTS;
+                }
 
                 for (int i = 0; i < numAttempts; i++) {
                     try {

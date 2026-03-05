@@ -29,7 +29,7 @@ public enum UserType {
     MSA(LabConstants.UserType.MSA),
     MDM_CA(LabConstants.UserType.MDM_CA),
     MAM_CA(LabConstants.UserType.MAM_CA),
-    MAM_ON_SPO(LabConstants.UserType.MAM_CA),
+    MAM_ON_SPO(LabConstants.UserType.MAM_ON_SPO),
     TRUE_MAM_CA(LabConstants.UserType.TRUE_MAM_CA),
     WP(LabConstants.UserType.WP),
     FEDERATED(LabConstants.UserType.FEDERATED),

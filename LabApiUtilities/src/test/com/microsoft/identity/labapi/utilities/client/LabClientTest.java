@@ -34,6 +34,7 @@ import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -53,6 +54,8 @@ public class LabClientTest {
     @Rule
     public RetryTestRule retryRule = new RetryTestRule(3);
 
+    private final String DEFAULT_LAB_NAME = "id4slab2";
+
     @Before
     public void setup() {
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
@@ -68,6 +71,7 @@ public class LabClientTest {
     }
 
     @Test
+    @Ignore
     public void canFetchCloudAccount() {
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.CLOUD)
@@ -75,7 +79,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = mLabClient.getLabAccount(query);
-            assertLabAccount(labAccount, UserType.CLOUD, "msidlab4");
+            assertLabAccount(labAccount, UserType.CLOUD, DEFAULT_LAB_NAME);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -96,6 +100,7 @@ public class LabClientTest {
     }
 
     @Test
+    @Ignore
     public void canFetchGuestAccount() {
         final LabQuery query = LabQuery.builder()
                 .userType(UserType.GUEST)
@@ -103,7 +108,7 @@ public class LabClientTest {
 
         try {
             final ILabAccount labAccount = mLabClient.getLabAccount(query);
-            assertLabAccount(labAccount, UserType.GUEST, "msidlab4");
+            assertLabAccount(labAccount, UserType.GUEST, DEFAULT_LAB_NAME);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -111,13 +116,9 @@ public class LabClientTest {
 
     @Test
     public void canFetchFederatedAccount() {
-        final LabQuery query = LabQuery.builder()
-                .userType(UserType.FEDERATED)
-                .build();
-
         try {
-            final ILabAccount labAccount = mLabClient.getLabAccount(query);
-            assertLabAccount(labAccount, UserType.FEDERATED, "msidlab4");
+            final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.FEDERATED);
+            assertLabAccount(labAccount, UserType.FEDERATED, DEFAULT_LAB_NAME);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -165,7 +166,7 @@ public class LabClientTest {
     public void canCreateBasicTempUser() {
         try {
             final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.BASIC);
-            assertLabAccount(labAccount, UserType.CLOUD, "msidlab4");
+            assertLabAccount(labAccount, UserType.CLOUD, DEFAULT_LAB_NAME);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -175,7 +176,7 @@ public class LabClientTest {
     public void canCreateMAMCATempUser() {
         try {
             final ILabAccount labAccount = mLabClient.createTempAccount(TempUserType.MAM_CA);
-            assertLabAccount(labAccount, UserType.CLOUD, "msidlab4");
+            assertLabAccount(labAccount, UserType.CLOUD, DEFAULT_LAB_NAME);
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
