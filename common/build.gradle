@@ -239,12 +239,6 @@ dependencies {
     implementation "com.google.android.libraries.identity.googleid:googleid:$rootProject.ext.GoogleIdVersion"
     implementation "com.github.stephenc.jcip:jcip-annotations:$rootProject.ext.jcipAnnotationVersion"
 
-    constraints {
-        implementation ("com.squareup.okio:okio:3.4.0") {
-            because "Versions previous to 3.4.0 are associated with a signed to unsigned conversion error vulnerability. See this CVE: https://github.com/advisories/GHSA-w33c-445m-f8w7"
-        }
-    }
-
     compileOnly "com.github.spotbugs:spotbugs-annotations:$rootProject.ext.spotBugsAnnotationVersion"
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
