@@ -611,9 +611,9 @@ public enum AttributeName {
     bound_service_status,
 
     /**
-     * Indicates the status of Legacy Account manager IPC strategy for device registration.
+     * Indicates the status of Legacy Account Manager IPC strategy for device registration.
      */
-    legacy_am_status,
+    legacy_account_manager_status,
 
     /**
      * Indicates the name of the device registration protocol being executed.
