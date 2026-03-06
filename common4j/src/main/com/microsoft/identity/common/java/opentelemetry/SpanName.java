@@ -37,6 +37,7 @@ public enum SpanName {
     CertBasedAuth,
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
+    DeviceRegistrationIpc,
     WorkplaceJoinApi,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
