@@ -211,7 +211,42 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+
+    /**
+     * Flight to control the maximum number of HTTP retry attempts.
+     */
+    HTTP_RETRY_MAX_ATTEMPTS("HttpRetryMaxAttempts", 3),
+
+    /**
+     * Flight to control the initial delay (in milliseconds) before the first HTTP retry.
+     */
+    HTTP_RETRY_INITIAL_DELAY_MS("HttpRetryInitialDelayMs", 1000),
+
+    /**
+     * Flight to control the exponential backoff multiplier for HTTP retries.
+     * The delay after each attempt is multiplied by this factor
+     * (e.g., with factor 2 and initial delay 1000 ms: attempt 1 waits 1000 ms,
+     * attempt 2 waits 2000 ms, attempt 3 waits 4000 ms).
+     */
+    HTTP_RETRY_EXTENSION_FACTOR("HttpRetryExtensionFactor", 2),
+
+    /**
+     * Flight to control the jitter factor applied to HTTP retry delays.
+     * A value between 0.0 and 1.0 representing the maximum random jitter
+     * as a fraction of the calculated delay (e.g., 0.5 adds up to 50% random jitter).
+     */
+    HTTP_RETRY_JITTER_FACTOR("HttpRetryJitterFactor", 0.5),
+
+    /**
+     * Flight to control whether the Retry-After response header is respected during HTTP retries.
+     */
+    HTTP_RETRY_RESPECT_RETRY_AFTER("HttpRetryRespectRetryAfter", true),
+
+    /**
+     * Flight to control the maximum total delay (in milliseconds) across all HTTP retry attempts.
+     */
+    HTTP_RETRY_MAX_TOTAL_DELAY_MS("HttpRetryMaxTotalDelayMs", 60000);
 
     private String key;
     private Object defaultValue;
