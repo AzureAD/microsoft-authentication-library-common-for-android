@@ -44,11 +44,10 @@ import lombok.Getter;
 /**
  * A model for interacting with the BrokerHost app during UI Test.
  * <p>
- * By default all the {@link ITestBroker} operations are performed using the {@link SingleWpjApiFragment} class.
+ * By default all the {@link ITestBroker} operations are performed using the {@link MultipleWpjApiFragment} class.
  * if you want to perform specif broker host operations, you need to call the corresponding fragment class
  * and then call the corresponding method.
  * <p>
- * Legacy WPJ operations are contained in the {@link SingleWpjApiFragment} class.
  * Multiple WPJ operations are contained in the {@link MultipleWpjApiFragment} class.
  * Broker API operations are contained in the {@link BrokerApiFragment} class.
  * Broker Flights operations are contained in the {@link BrokerFlightsFragment} class.
@@ -71,11 +70,8 @@ public class BrokerHost extends AbstractTestBroker {
     public final BrokerFlightsFragment brokerFlightsFragment;
     public final BrokerApiFragment brokerApiFragment;
     @Getter
-    public final SingleWpjApiFragment singleWpjApiFragment;
-    // If you're writing test specifically for MWPJ, use this fragment
-    // the default behavior for brokerHost app is to use the SingleWpjApiFragment
-    @Getter
-    public final MultipleWpjApiFragment multipleWpjApiFragment;
+    private final MultipleWpjApiFragment multipleWpjApiFragment;
+
 
     public BrokerHost() {
         this(BROKER_HOST_APK, BROKER_HOST_APK);
@@ -97,22 +93,18 @@ public class BrokerHost extends AbstractTestBroker {
         localUpdateApkFileName = updateBrokerHostApkName;
         brokerFlightsFragment = new BrokerFlightsFragment();
         brokerApiFragment = new BrokerApiFragment();
-        singleWpjApiFragment = new SingleWpjApiFragment();
         multipleWpjApiFragment = new MultipleWpjApiFragment(this);
     }
 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.performDeviceRegistration(
                 username,
-                password,
-                false,
-                false,
-                getDefaultBrokerPromptHandlerParameters(username)
+                password
         );
-        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        final String joinedUpn = multipleWpjApiFragment.getRecordByUpn(username).get("Upn");
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
@@ -120,30 +112,32 @@ public class BrokerHost extends AbstractTestBroker {
     public void performDeviceRegistration(@NonNull String username,
                                           @NonNull String password,
                                           boolean isFederatedUser) {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.performDeviceRegistration(
                 username,
                 password,
-                isFederatedUser,
                 false,
-                getDefaultBrokerPromptHandlerParameters(username)
+                false,
+                getDefaultBrokerPromptHandlerParameters(username),
+                isFederatedUser
         );
-        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        final String joinedUpn = multipleWpjApiFragment.getRecordByUpn(username).get("Upn");
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.performDeviceRegistration(
                 username,
                 password,
-                false,
                 true,
-                getDefaultBrokerPromptHandlerParameters(username)
+                true,
+                getDefaultBrokerPromptHandlerParameters(username),
+                false
         );
-        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        final String joinedUpn = multipleWpjApiFragment.getRecordByUpn(username).get("Upn");
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
@@ -156,15 +150,15 @@ public class BrokerHost extends AbstractTestBroker {
     @Nullable
     @Override
     public String obtainDeviceId() {
-        singleWpjApiFragment.launch();
-        return singleWpjApiFragment.getDeviceId();
+        multipleWpjApiFragment.launch();
+        return multipleWpjApiFragment.getAllRecords().get(0).get("DeviceId");
     }
 
     @Override
     public void enableBrowserAccess(@NonNull final String username) {
         Logger.i(TAG, "Enable Browser Access..");
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.installCertificate();
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.installCertificate(username);
     }
 
     @Override
@@ -183,31 +177,6 @@ public class BrokerHost extends AbstractTestBroker {
         // nothing needed here
     }
 
-    @Nullable
-    public String getAccountUpn() {
-        singleWpjApiFragment.launch();
-        return singleWpjApiFragment.getWpjAccount();
-    }
-
-    @Nullable
-    public String getDeviceState() {
-        singleWpjApiFragment.launch();
-        return singleWpjApiFragment.getDeviceState();
-    }
-
-    @Nullable
-    public String getBlob(@NonNull final String tenantId) {
-        Logger.i(TAG, "Get Blob..");
-        singleWpjApiFragment.launch();
-        return singleWpjApiFragment.getBlob(tenantId);
-    }
-
-    @NonNull
-    public String getDeviceToken() {
-        Logger.i(TAG, "Get Device Token..");
-        singleWpjApiFragment.launch();
-        return singleWpjApiFragment.getDeviceToken();
-    }
 
     @Override
     public void overwriteFlights(@NonNull final String flightsJson) {
@@ -233,15 +202,16 @@ public class BrokerHost extends AbstractTestBroker {
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password,
                                           @NonNull final PromptHandlerParameters promptHandlerParameters) {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.performDeviceRegistration(
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.performDeviceRegistration(
                 username,
                 password,
                 false,
                 false,
-                promptHandlerParameters
+                promptHandlerParameters,
+                false
         );
-        final String joinedUpn = singleWpjApiFragment.getWpjAccount();
+        final String joinedUpn = multipleWpjApiFragment.getRecordByUpn(username).get("Upn");
         Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
@@ -277,15 +247,11 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
 
-    public void wpjLeave() {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.wpjLeave();
+    public void wpjLeave(@NonNull final String username) {
+        multipleWpjApiFragment.launch();
+        multipleWpjApiFragment.unregister(username);
     }
 
-    public void clickJoinTenant(@NonNull final String tenantId) {
-        singleWpjApiFragment.launch();
-        singleWpjApiFragment.clickJoinTenant(tenantId);
-    }
 
     /**
      * Gets all the accounts added
