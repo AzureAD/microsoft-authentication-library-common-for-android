@@ -30,7 +30,14 @@ import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
 import java.net.SocketTimeoutException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nullable;
@@ -50,6 +57,15 @@ import lombok.NonNull;
 @ThreadSafe
 @Immutable
 public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
+    /**
+     * Thread-safe HTTP-date formatters used when parsing the {@code Retry-After} header.
+     * Listed in preference order as required by RFC 7231 §7.1.3.
+     */
+    private static final DateTimeFormatter[] HTTP_DATE_FORMATTERS = {
+        DateTimeFormatter.RFC_1123_DATE_TIME,                                     // RFC 1123 (preferred)
+        DateTimeFormatter.ofPattern("EEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),  // RFC 850 (obsolete)
+        DateTimeFormatter.ofPattern("EEE MMM d HH:mm:ss yyyy z", Locale.US)      // ANSI C asctime (obsolete)
+    };
     @Builder.Default
     private final Function<Exception, Boolean> isRetryableException = new Function<Exception, Boolean>() {
         @Override
@@ -77,18 +93,53 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
     private final int initialDelay = 1000;
     @Builder.Default
     private final int extensionFactor = 2;
+    /**
+     * Jitter factor applied to each computed delay.
+     * <p>
+     * When {@code jitterFactor > 0}, the effective delay for each retry is:
+     * {@code baseDelay + random(0, baseDelay * jitterFactor)}.
+     * When {@code jitterFactor == 0.0} (the default), no jitter is applied and delays
+     * are deterministic.
+     * </p>
+     */
+    @Builder.Default
+    private final double jitterFactor = 0.0;
+    /**
+     * Whether to respect the {@code Retry-After} response header.
+     * <p>
+     * When {@code true}, the computed delay is {@code max(computedDelay, retryAfterMs)},
+     * where {@code retryAfterMs} is parsed from the {@code Retry-After} header of the last
+     * retryable response. Both delta-seconds and HTTP-date header formats are supported.
+     * Malformed or absent headers are silently ignored.
+     * </p>
+     */
+    @Builder.Default
+    private final boolean respectRetryAfter = false;
+    /**
+     * Per-retry safety cap on the total computed delay, in milliseconds.
+     * <p>
+     * The effective delay for any single retry will never exceed this value, regardless
+     * of the base delay, jitter, or {@code Retry-After} header. Defaults to 60&nbsp;000&nbsp;ms
+     * (60 seconds).
+     * </p>
+     */
+    @Builder.Default
+    private final int maxTotalDelayMs = 60000;
 
     @Override
     public HttpResponse attempt(Callable<HttpResponse> supplier) throws ClientException {
         int attemptNumber = number;
         int cumulativeDelay = initialDelay;
+        HttpResponse lastResponse = null;
         do {
+            lastResponse = null;
             try {
-                HttpResponse response = supplier.call();
+                final HttpResponse response = supplier.call();
                 //If there are no retries left, or the response is acceptable, or it is not retryable.
                 if (attemptNumber <= 0 || isAcceptable.apply(response) || !isRetryable.apply(response, attemptNumber)) {
                     return response;
                 }
+                lastResponse = response;
             } catch (final Exception e) {
                 if (attemptNumber <= 0 || !isRetryableException.apply(e)) {
                     if (e instanceof ClientException) {
@@ -99,18 +150,108 @@ public class StatusCodeAndExceptionRetry implements IRetryPolicy<HttpResponse> {
                     }
                 }
             }
-        } while (attemptNumber-- > 0 && waited(cumulativeDelay) && (cumulativeDelay *= extensionFactor) > 0);
+        } while (attemptNumber-- > 0 && waited(computeDelay(cumulativeDelay, lastResponse)) && (cumulativeDelay *= extensionFactor) > 0);
         throw new IllegalStateException("This code should not be reachable");
     }
 
     /**
+     * Computes the delay to use before the next retry attempt.
+     * <p>
+     * The result is:
+     * <ol>
+     *   <li>Start with {@code baseDelay}.</li>
+     *   <li>If {@link #jitterFactor} {@code > 0}, add a random value in
+     *       {@code [0, baseDelay * jitterFactor]}.</li>
+     *   <li>If {@link #respectRetryAfter} is {@code true} and {@code lastResponse} contains
+     *       a parseable {@code Retry-After} header, take the maximum of the current delay and
+     *       the header value.</li>
+     *   <li>Cap at {@link #maxTotalDelayMs}.</li>
+     * </ol>
+     * </p>
+     *
+     * @param baseDelay    The base delay in milliseconds before jitter/header adjustments.
+     * @param lastResponse The last retryable {@link HttpResponse}, or {@code null} if the
+     *                     previous attempt threw an exception.
+     * @return The adjusted delay in milliseconds, capped at {@link #maxTotalDelayMs}.
+     */
+    private int computeDelay(final int baseDelay, @Nullable final HttpResponse lastResponse) {
+        long delay = baseDelay;
+        if (jitterFactor > 0.0) {
+            final int maxJitter = (int) (baseDelay * jitterFactor);
+            if (maxJitter > 0) {
+                delay += ThreadLocalRandom.current().nextInt(maxJitter + 1);
+            }
+        }
+        if (respectRetryAfter) {
+            final long retryAfterMs = parseRetryAfterHeader(lastResponse);
+            if (retryAfterMs >= 0) {
+                delay = Math.max(delay, retryAfterMs);
+            }
+        }
+        return (int) Math.min(delay, maxTotalDelayMs);
+    }
+
+    /**
+     * Parses the {@code Retry-After} header from the given response.
+     * <p>
+     * Supports both the delta-seconds format (e.g., {@code "120"}) and the HTTP-date
+     * format (e.g., {@code "Tue, 15 Nov 1994 08:12:31 GMT"}). Returns {@code -1} if the
+     * header is absent, empty, or cannot be parsed in any recognised format.
+     * </p>
+     *
+     * @param response The last retryable response, or {@code null}.
+     * @return The parsed delay in milliseconds ({@code >= 0}), or {@code -1} if unavailable.
+     */
+    private long parseRetryAfterHeader(@Nullable final HttpResponse response) {
+        if (response == null) {
+            return -1;
+        }
+        final Map<String, List<String>> headers = response.getHeaders();
+        if (headers == null) {
+            return -1;
+        }
+        List<String> values = headers.get("Retry-After");
+        if (values == null) {
+            values = headers.get("retry-after");
+        }
+        if (values == null || values.isEmpty()) {
+            return -1;
+        }
+        final String retryAfterValue = values.get(0);
+        if (retryAfterValue == null || retryAfterValue.trim().isEmpty()) {
+            return -1;
+        }
+        final String trimmed = retryAfterValue.trim();
+        // Try delta-seconds format first.
+        try {
+            final long seconds = Long.parseLong(trimmed);
+            if (seconds >= 0) {
+                return seconds * 1000L;
+            }
+            return -1;
+        } catch (final NumberFormatException ignored) {
+            // Not a number; fall through to HTTP-date formats.
+        }
+        // Try HTTP-date formats as defined by RFC 7231.
+        for (final DateTimeFormatter formatter : HTTP_DATE_FORMATTERS) {
+            try {
+                final ZonedDateTime retryDateTime = ZonedDateTime.parse(trimmed, formatter);
+                return Math.max(0L, retryDateTime.toInstant().toEpochMilli() - System.currentTimeMillis());
+            } catch (final DateTimeParseException ignored) {
+                // Try next format.
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Just a sleep function that allows for a return to break the loop.
-     * @param cumulativeDelay How long, in milliseconds, to pause.
+     * @param millis How long, in milliseconds, to pause.
      * @return true if we successfully waited, false if interrupted.
      */
-    private boolean waited(int cumulativeDelay) {
+    private boolean waited(final int millis) {
         try {
-            Thread.sleep(cumulativeDelay);
+            Thread.sleep(millis);
             return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
