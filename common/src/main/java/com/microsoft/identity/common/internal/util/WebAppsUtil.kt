@@ -25,9 +25,7 @@ package com.microsoft.identity.common.internal.util
 import android.os.Bundle
 import com.microsoft.identity.common.java.commands.webapps.WebAppError
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
-import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal
 import com.microsoft.identity.common.java.base64.Base64Util
-import com.microsoft.identity.common.java.commands.webapps.WebAppsGetTokenSubOperationRequest
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -177,76 +175,6 @@ class WebAppsUtil {
         @JvmStatic
         fun hasSameSchemeAndHost(urlA: String, urlB: String): Boolean {
             return getSchemeAndHost(urlA) == getSchemeAndHost(urlB)
-        }
-
-        /**
-         * Parses and validates PoP (Proof of Possession) parameters from a
-         * [WebAppsGetTokenSubOperationRequest], returning a [WebAppsPopAuthenticationSchemeInternal]
-         * if the request specifies PoP, or null if Bearer/unspecified.
-         *
-         * Top-level fields (`tokenType`, `reqCnf`) take priority over values found in
-         * `extraParameters`.
-         *
-         * @param request The token sub-operation request to parse.
-         * @return A [WebAppsPopAuthenticationSchemeInternal] if tokenType is "pop" with a valid
-         *         reqCnf, or null if no PoP params are present (Bearer is assumed).
-         * @throws ClientException if PoP params are partially specified or otherwise invalid.
-         */
-        @JvmStatic
-        @Throws(ClientException::class)
-        fun parsePopAuthSchemeFromRequest(request: WebAppsGetTokenSubOperationRequest): WebAppsPopAuthenticationSchemeInternal? {
-            try {
-                // Check top-level fields first (higher priority than extraParameters).
-                // Each field is resolved independently: use top-level if present, else fall back
-                // to extraParameters.
-                val tokenType = if (!request.tokenType.isNullOrBlank()) {
-                    request.tokenType
-                } else {
-                    request.extraParameters?.get(WebAppsGetTokenSubOperationRequest.FIELD_TOKEN_TYPE)
-                }
-
-                val reqCnf = if (!request.reqCnf.isNullOrBlank()) {
-                    request.reqCnf
-                } else {
-                    request.extraParameters?.get(WebAppsGetTokenSubOperationRequest.FIELD_REQ_CNF)
-                }
-
-                // If neither tokenType nor reqCnf is present, no PoP scheme needed.
-                if (tokenType.isNullOrBlank() && reqCnf.isNullOrBlank()) {
-                    return null
-                }
-
-                // Validate: tokenType is "pop" but reqCnf is missing or empty.
-                if ("pop".equals(tokenType, ignoreCase = true) && reqCnf.isNullOrBlank()) {
-                    throw ClientException(
-                        ClientException.MISSING_PARAMETER,
-                        "tokenType is 'pop' but reqCnf is missing or empty."
-                    )
-                }
-
-                // Validate: reqCnf is provided but tokenType is missing or empty.
-                if (!reqCnf.isNullOrBlank() && tokenType.isNullOrBlank()) {
-                    throw ClientException(
-                        ClientException.MISSING_PARAMETER,
-                        "reqCnf is provided but tokenType is missing or empty."
-                    )
-                }
-
-                // If tokenType is "pop" with a valid reqCnf, create and return the scheme.
-                if ("pop".equals(tokenType, ignoreCase = true)) {
-                    return WebAppsPopAuthenticationSchemeInternal(reqCnf!!)
-                }
-
-                // tokenType is present but not "pop" (e.g., "bearer"); no PoP scheme needed.
-                return null
-            } catch (e: Exception) {
-                if (e is ClientException) throw e
-                throw ClientException(
-                    ErrorStrings.UNKNOWN_ERROR,
-                    "Failed to parse PoP parameters from request: ${e.message}",
-                    e
-                )
-            }
         }
     }
 }
