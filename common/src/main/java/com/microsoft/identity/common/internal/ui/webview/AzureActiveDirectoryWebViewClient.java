@@ -285,11 +285,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Delayed check (3 seconds) — gives deferred JS time to execute and React to mount.
         // Uses delayedRenderCheckCallback which also checks bodyTextLen for SPA blank pages.
+<<<<<<< Updated upstream
+=======
+        // Guard: skip if page has navigated since this check was scheduled (url mismatch).
+>>>>>>> Stashed changes
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
+<<<<<<< Updated upstream
                     if (view.isAttachedToWindow()) {
+=======
+                    if (view.isAttachedToWindow() && url.equals(view.getUrl())) {
+>>>>>>> Stashed changes
                         Logger.info(TAG, "Delayed page render check (3s) for " + sanitizeUrlForLogging(url));
                         view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
                     }
@@ -301,11 +309,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Extended delayed check (10 seconds) — catches slow-network scenarios (e.g., government
         // cloud endpoints, military networks with strict proxies) where SPA API calls take longer.
+<<<<<<< Updated upstream
+=======
+        // Guard: skip if page has navigated since this check was scheduled (url mismatch).
+>>>>>>> Stashed changes
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
+<<<<<<< Updated upstream
                     if (view.isAttachedToWindow()) {
+=======
+                    if (view.isAttachedToWindow() && url.equals(view.getUrl())) {
+>>>>>>> Stashed changes
                         Logger.info(TAG, "Delayed page render check (10s) for " + sanitizeUrlForLogging(url));
                         view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
                     }
@@ -314,6 +330,79 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
         }, 10000);
+<<<<<<< Updated upstream
+=======
+
+        // Chromium HTML parser diagnostic: reads back what the DOM parser actually constructed
+        // from the server's HTTP response. This isolates Chromium from the server as the failure
+        // point for blank-page issues (e.g., ToU consent page).
+        //
+        // Possible outcomes:
+        //   hasShimRef:true + no shouldInterceptRequest log for main.shim.js
+        //     → Chromium saw the <script> tag but never fetched it (Chromium bug)
+        //   hasShimRef:false + small htmlLen
+        //     → HTML was truncated before the <script> tag (server/network issue)
+        //   hasShimRef:true + shouldInterceptRequest fires for main.shim.js
+        //     → Normal flow; blank page caused by something after JS loading
+        final String htmlDiagScript =
+                "(function() {" +
+                "  var html = document.documentElement ? document.documentElement.outerHTML : '';" +
+                "  var hasShimRef = html.indexOf('main.shim.js') !== -1;" +
+                "  var scriptSrcTags = document.querySelectorAll('script[src]');" +
+                "  var scriptSrcs = [];" +
+                "  for (var i = 0; i < scriptSrcTags.length && i < 10; i++) {" +
+                "    scriptSrcs.push(scriptSrcTags[i].getAttribute('src'));" +
+                "  }" +
+                "  return JSON.stringify({" +
+                "    htmlLen: html.length," +
+                "    hasShimRef: hasShimRef," +
+                "    scriptSrcCount: scriptSrcTags.length," +
+                "    scriptSrcs: scriptSrcs," +
+                "    docType: document.doctype ? document.doctype.name : 'none'," +
+                "    headChildCount: document.head ? document.head.childNodes.length : -1" +
+                "  });" +
+                "})()";
+
+        // Run HTML diagnostic only for ToU-related pages (myaccount URLs) to avoid noise.
+        if (url != null && url.toLowerCase(Locale.ROOT).contains("myaccount.")) {
+            view.evaluateJavascript(htmlDiagScript, new android.webkit.ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    Logger.info(TAG, "BROKER_HTML_DIAG for " + sanitizeUrlForLogging(url) + ": " + value);
+                    if (value != null && value.contains("\"hasShimRef\":false")) {
+                        Logger.error(TAG,
+                                "Chromium parser did NOT find main.shim.js <script> tag in the DOM. "
+                                        + "The HTML response may have been truncated, or the parser failed. "
+                                        + "Diagnostic: " + value, null);
+                        if (mUrlLoadTracker != null) {
+                            mUrlLoadTracker.updateLatestUrlStatus("TOU_HTML_TRUNCATED",
+                                    "Chromium DOM missing main.shim.js script reference. Diagnostic: " + value);
+                        }
+                    }
+                }
+            });
+
+            // Also run at 3s to catch late-parsed content.
+            // Guard: skip if page has navigated since this check was scheduled.
+            view.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (view.isAttachedToWindow() && url.equals(view.getUrl())) {
+                            view.evaluateJavascript(htmlDiagScript, new android.webkit.ValueCallback<String>() {
+                                @Override
+                                public void onReceiveValue(String value) {
+                                    Logger.info(TAG, "BROKER_HTML_DIAG (3s) for " + sanitizeUrlForLogging(url) + ": " + value);
+                                }
+                            });
+                        }
+                    } catch (final Exception e) {
+                        Logger.info(TAG, "HTML diagnostic (3s) skipped - WebView no longer available.");
+                    }
+                }
+            }, 3000);
+        }
+>>>>>>> Stashed changes
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -1298,7 +1387,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // The loading chain is: index.static.html -> main.shim.js -> main.<hash>.js -> React app -> API calls.
     // These patterns identify the critical resources whose failure causes blank ToU pages.
     private static final String TOU_RESOURCE_PATTERN_SHIM = "main.shim";
+<<<<<<< Updated upstream
     private static final String TOU_RESOURCE_PATTERN_MAIN_JS = "main.";
+=======
+    private static final String TOU_RESOURCE_PATTERN_MAIN_JS = "/bundle/main.";
+>>>>>>> Stashed changes
     private static final String TOU_RESOURCE_PATTERN_API = "/api/termsofuse/";
     private static final String TOU_RESOURCE_PATTERN_CONSENT = "/termsofuse/consent";
     private static final String TOU_RESOURCE_PATTERN_MYACCOUNT = "myaccount.";
@@ -1477,6 +1570,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         + ": " + sanitizeUrlForLogging(url));
             }
         }
+<<<<<<< Updated upstream
+=======
+        super.onReceivedHttpError(view, request, errorResponse);
+>>>>>>> Stashed changes
     }
 
     /**

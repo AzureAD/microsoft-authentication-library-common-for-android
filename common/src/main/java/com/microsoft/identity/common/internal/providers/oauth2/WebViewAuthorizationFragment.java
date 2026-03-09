@@ -36,6 +36,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -49,6 +50,8 @@ import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewRenderProcess;
+import android.webkit.WebViewRenderProcessClient;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -355,9 +358,48 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
+<<<<<<< Updated upstream
         // Allow mixed content (HTTPS pages loading HTTP sub-resources) for compatibility
         // with ToU/MFA pages that may load resources over HTTP.
         mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+=======
+
+        // Log the WebView/Chromium version for diagnostics.
+        // This is critical for correlating blank-page issues with known Chromium bugs.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            final PackageInfo webViewPackage = WebView.getCurrentWebViewPackage();
+            if (webViewPackage != null) {
+                Logger.info(methodTag, "WebView provider: " + webViewPackage.packageName
+                        + " version: " + webViewPackage.versionName);
+            } else {
+                Logger.warn(methodTag, "WebView provider package info unavailable.");
+            }
+        }
+
+        // Monitor the WebView render process for unresponsiveness.
+        // If Chromium's renderer stalls (e.g., parser hangs on truncated HTML),
+        // onRenderProcessUnresponsive fires — directly implicating Chromium.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mWebView.setWebViewRenderProcessClient(new WebViewRenderProcessClient() {
+                @Override
+                public void onRenderProcessUnresponsive(
+                        @NonNull final WebView view,
+                        @Nullable final WebViewRenderProcess renderer) {
+                    Logger.error(methodTag,
+                            "WebView render process UNRESPONSIVE — possible Chromium parser stall."
+                                    + " This may cause blank pages if the HTML parser is hung.", null);
+                }
+
+                @Override
+                public void onRenderProcessResponsive(
+                        @NonNull final WebView view,
+                        @Nullable final WebViewRenderProcess renderer) {
+                    Logger.info(methodTag,
+                            "WebView render process became responsive again.");
+                }
+            });
+        }
+>>>>>>> Stashed changes
 
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
