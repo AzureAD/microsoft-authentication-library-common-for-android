@@ -285,19 +285,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Delayed check (3 seconds) — gives deferred JS time to execute and React to mount.
         // Uses delayedRenderCheckCallback which also checks bodyTextLen for SPA blank pages.
-<<<<<<< Updated upstream
-=======
         // Guard: skip if page has navigated since this check was scheduled (url mismatch).
->>>>>>> Stashed changes
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
-<<<<<<< Updated upstream
-                    if (view.isAttachedToWindow()) {
-=======
                     if (view.isAttachedToWindow() && url.equals(view.getUrl())) {
->>>>>>> Stashed changes
                         Logger.info(TAG, "Delayed page render check (3s) for " + sanitizeUrlForLogging(url));
                         view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
                     }
@@ -309,19 +302,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // Extended delayed check (10 seconds) — catches slow-network scenarios (e.g., government
         // cloud endpoints, military networks with strict proxies) where SPA API calls take longer.
-<<<<<<< Updated upstream
-=======
         // Guard: skip if page has navigated since this check was scheduled (url mismatch).
->>>>>>> Stashed changes
         view.postDelayed(new Runnable() {
             @Override
             public void run() {
                 try {
-<<<<<<< Updated upstream
-                    if (view.isAttachedToWindow()) {
-=======
                     if (view.isAttachedToWindow() && url.equals(view.getUrl())) {
->>>>>>> Stashed changes
                         Logger.info(TAG, "Delayed page render check (10s) for " + sanitizeUrlForLogging(url));
                         view.evaluateJavascript(renderCheckScript, delayedRenderCheckCallback);
                     }
@@ -330,8 +316,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
         }, 10000);
-<<<<<<< Updated upstream
-=======
 
         // Chromium HTML parser diagnostic: reads back what the DOM parser actually constructed
         // from the server's HTTP response. This isolates Chromium from the server as the failure
@@ -402,7 +386,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }, 3000);
         }
->>>>>>> Stashed changes
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -1387,11 +1370,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // The loading chain is: index.static.html -> main.shim.js -> main.<hash>.js -> React app -> API calls.
     // These patterns identify the critical resources whose failure causes blank ToU pages.
     private static final String TOU_RESOURCE_PATTERN_SHIM = "main.shim";
-<<<<<<< Updated upstream
-    private static final String TOU_RESOURCE_PATTERN_MAIN_JS = "main.";
-=======
     private static final String TOU_RESOURCE_PATTERN_MAIN_JS = "/bundle/main.";
->>>>>>> Stashed changes
     private static final String TOU_RESOURCE_PATTERN_API = "/api/termsofuse/";
     private static final String TOU_RESOURCE_PATTERN_CONSENT = "/termsofuse/consent";
     private static final String TOU_RESOURCE_PATTERN_MYACCOUNT = "myaccount.";
@@ -1570,10 +1549,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         + ": " + sanitizeUrlForLogging(url));
             }
         }
-<<<<<<< Updated upstream
-=======
         super.onReceivedHttpError(view, request, errorResponse);
->>>>>>> Stashed changes
     }
 
     /**
