@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.apps
 
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
@@ -96,6 +97,12 @@ object AppRegistry {
         signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
     )
 
+    val MSAL_TEST_APP = App(
+        nickName = "MSAL Test App",
+        packageName = "com.msft.identity.client.sample.local",
+        signingCertificateThumbprint = AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -143,7 +150,7 @@ object AppRegistry {
         add(CHROME_DEV)
         add(CHROME_CANARY)
         if (BrokerData.getShouldTrustDebugBrokers()) {
-            add(BrokerData.debugBrokerHost)
+            add(MSAL_TEST_APP)
         }
     }
 }
