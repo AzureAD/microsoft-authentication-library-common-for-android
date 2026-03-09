@@ -1215,9 +1215,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processSSLProtectionCheck(@NonNull final WebView view,
                                            @NonNull final String url) {
         final String methodTag = TAG + ":processSSLProtectionCheck";
-        final String redactedUrl = removeQueryParametersOrRedact(url);
 
-        Logger.error(methodTag,"The webView was redirected to an unsafe URL: " + url, null);
+        Logger.error(methodTag,"The webView was redirected to an unsafe URL: " + removeQueryParametersOrRedact(url), null);
         returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
         view.stopLoading();
     }
@@ -1374,21 +1373,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TOU_RESOURCE_PATTERN_API = "/api/termsofuse/";
     private static final String TOU_RESOURCE_PATTERN_CONSENT = "/termsofuse/consent";
     private static final String TOU_RESOURCE_PATTERN_MYACCOUNT = "myaccount.";
-
-    /**
-     * Checks if a URL is a ToU-critical resource (CDN JS bundle or API call).
-     * Failure of these resources causes the ToU consent page to appear blank.
-     */
-    private static boolean isToUCriticalResource(@NonNull final String url) {
-        final String lower = url.toLowerCase(Locale.ROOT);
-        if (!lower.contains(TOU_RESOURCE_PATTERN_MYACCOUNT)) {
-            return false;
-        }
-        return lower.contains(TOU_RESOURCE_PATTERN_SHIM)
-                || (lower.contains(TOU_RESOURCE_PATTERN_MAIN_JS) && lower.endsWith(".js"))
-                || lower.contains(TOU_RESOURCE_PATTERN_API)
-                || lower.contains(TOU_RESOURCE_PATTERN_CONSENT);
-    }
+    private static final String LOG_SEPARATOR_BRACKET_COLON = "]: ";
+    private static final String LOG_URL_EQUALS = " url=";
 
     /**
      * Returns a classification label for a ToU-critical resource, or null if not ToU-related.
@@ -1425,9 +1411,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (touClass != null) {
                 // Elevated logging for ToU-critical resources: CDN JS bundles and backend API calls.
                 // Failure of these causes blank ToU consent pages.
-                Logger.info(TAG, "SubResource [" + method + "] [" + touClass + "]: " + sanitizeUrlForLogging(url));
+                Logger.info(TAG, "SubResource [" + method + "] [" + touClass + LOG_SEPARATOR_BRACKET_COLON + sanitizeUrlForLogging(url));
             } else {
-                Logger.info(TAG, "SubResource [" + method + "]: " + sanitizeUrlForLogging(url));
+                Logger.info(TAG, "SubResource [" + method + LOG_SEPARATOR_BRACKET_COLON + sanitizeUrlForLogging(url));
             }
         }
         return super.shouldInterceptRequest(view, request);
@@ -1493,17 +1479,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // ToU-critical resource failed to load. This is a likely root cause for blank ToU pages.
                 // CDN shim/main.js failure = React never boots. API failure = page renders but has no data.
                 Logger.error(TAG, "ToU CRITICAL SubResource ERROR [" + touClass + "] ["
-                        + error.getErrorCode() + "]: " + error.getDescription()
-                        + " url=" + sanitizeUrlForLogging(url), null);
+                        + error.getErrorCode() + LOG_SEPARATOR_BRACKET_COLON + error.getDescription()
+                        + LOG_URL_EQUALS + sanitizeUrlForLogging(url), null);
                 if (mUrlLoadTracker != null) {
                     mUrlLoadTracker.updateLatestUrlStatus("TOU_RESOURCE_FAILED",
                             touClass + " failed to load: error=" + error.getErrorCode()
                                     + " desc=" + error.getDescription()
-                                    + " url=" + sanitizeUrlForLogging(url));
+                                    + LOG_URL_EQUALS + sanitizeUrlForLogging(url));
                 }
             } else {
-                Logger.warn(TAG, "SubResource ERROR [" + error.getErrorCode() + "]: "
-                        + error.getDescription() + " url=" + sanitizeUrlForLogging(url));
+                Logger.warn(TAG, "SubResource ERROR [" + error.getErrorCode() + LOG_SEPARATOR_BRACKET_COLON
+                        + error.getDescription() + LOG_URL_EQUALS + sanitizeUrlForLogging(url));
             }
         }
         super.onReceivedError(view, request, error);
@@ -1538,11 +1524,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // 404 on main.<hash>.js = CDN hash mismatch during deployment.
                 // 4xx/5xx on /api/termsofuse/ = backend failure, ToU data unavailable.
                 Logger.error(TAG, "ToU CRITICAL SubResource HTTP " + errorResponse.getStatusCode()
-                        + " [" + touClass + "]: " + sanitizeUrlForLogging(url), null);
+                        + " [" + touClass + LOG_SEPARATOR_BRACKET_COLON + sanitizeUrlForLogging(url), null);
                 if (mUrlLoadTracker != null) {
                     mUrlLoadTracker.updateLatestUrlStatus("TOU_RESOURCE_HTTP_ERROR",
                             touClass + " HTTP " + errorResponse.getStatusCode()
-                                    + " url=" + sanitizeUrlForLogging(url));
+                                    + LOG_URL_EQUALS + sanitizeUrlForLogging(url));
                 }
             } else {
                 Logger.warn(TAG, "SubResource HTTP " + errorResponse.getStatusCode()
