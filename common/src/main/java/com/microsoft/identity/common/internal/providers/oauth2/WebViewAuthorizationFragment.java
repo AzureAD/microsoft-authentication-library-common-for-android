@@ -358,11 +358,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
-<<<<<<< Updated upstream
         // Allow mixed content (HTTPS pages loading HTTP sub-resources) for compatibility
         // with ToU/MFA pages that may load resources over HTTP.
         mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-=======
 
         // Log the WebView/Chromium version for diagnostics.
         // This is critical for correlating blank-page issues with known Chromium bugs.
@@ -399,7 +397,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
             });
         }
->>>>>>> Stashed changes
 
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
