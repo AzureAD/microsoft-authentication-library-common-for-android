@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
+import static com.microsoft.identity.common.java.util.StringUtil.isNullOrEmpty;
+
 import com.google.gson.annotations.SerializedName;
 
 import lombok.EqualsAndHashCode;
@@ -69,9 +71,17 @@ public class WebAppsPopAuthenticationSchemeInternal
      * Constructs a new WebAppsPopAuthenticationSchemeInternal.
      *
      * @param requestConfirmation The pre-generated request confirmation (req_cnf) value.
+     * @throws IllegalArgumentException if requestConfirmation is null or empty.
      */
     public WebAppsPopAuthenticationSchemeInternal(@NonNull final String requestConfirmation) {
         super(SCHEME_POP_PREGENERATED);
+
+        if (isNullOrEmpty(requestConfirmation)) {
+            throw new IllegalArgumentException(
+                    "requestConfirmation (req_cnf) cannot be null or empty for WebAppsPopAuthenticationSchemeInternal"
+            );
+        }
+
         mRequestConfirmation = requestConfirmation;
     }
 

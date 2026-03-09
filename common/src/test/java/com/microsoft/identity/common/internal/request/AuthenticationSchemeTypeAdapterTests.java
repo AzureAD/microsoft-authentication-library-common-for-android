@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import org.junit.Assert;
@@ -77,6 +78,17 @@ public class AuthenticationSchemeTypeAdapterTests {
     }
 
     @Test
+    public void testSerialize_WebAppsPopAuthenticationSchemeInternal() throws MalformedURLException, IllegalArgumentException {
+        final String expectedJson =
+                "{\"req_cnf\":\"test_req_cnf\",\"name\":\"PoP_Pregenerated\"}";
+        final WebAppsPopAuthenticationSchemeInternal scheme =
+                new WebAppsPopAuthenticationSchemeInternal("test_req_cnf");
+
+        final String json = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(scheme);
+        Assert.assertEquals(expectedJson, json);
+    }
+
+    @Test
     public void testDeserialize_BearerAuthenticationSchemeInternal() {
         final String json = "{\"name\":\"Bearer\"}";
         final AbstractAuthenticationScheme authenticationScheme =
@@ -102,5 +114,15 @@ public class AuthenticationSchemeTypeAdapterTests {
                 AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(json, AbstractAuthenticationScheme.class);
 
         Assert.assertTrue(authenticationScheme instanceof PopAuthenticationSchemeWithClientKeyInternal);
+    }
+
+    @Test
+    public void testDeserialize_WebAppsPopAuthenticationSchemeInternal() {
+        final String json =
+                "{\"http_method\":\"GET\",\"url\":\"https://xyz.com\",\"nonce\":\"nonce_test\",\"client_claims\":\"clientClaims_test\",\"req_cnf\":\"test_req_cnf\",\"name\":\"PoP_Pregenerated\"}";
+        final AbstractAuthenticationScheme authenticationScheme =
+                AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(json, AbstractAuthenticationScheme.class);
+
+        Assert.assertTrue(authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal);
     }
 }

@@ -359,6 +359,7 @@ public class MicrosoftStsAccountCredentialAdapter
         } else if (authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
             // For WebApps PoP, we use a pre-generated req_cnf; no device key/kid is associated.
             accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+            accessTokenRecord.setKid(((WebAppsPopAuthenticationSchemeInternal) authenticationScheme).getRequestConfirmation());
         } else {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         }
