@@ -400,6 +400,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     // Flight is off; should not reach here, but guard anyway.
                     return false;
                 }
+                if (resultMsg.obj == null) {
+                    Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
+                    return false;
+                }
                 // Handles target="_blank" links by opening them in the device's default browser
                 // instead of silently dropping the navigation.
                 final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
@@ -432,11 +436,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             return true;
                         }
                     });
-                    if (resultMsg.obj == null) {
-                        Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
-                        span.setStatus(StatusCode.ERROR, "resultMsg.obj is null");
-                        return false;
-                    }
                     final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
