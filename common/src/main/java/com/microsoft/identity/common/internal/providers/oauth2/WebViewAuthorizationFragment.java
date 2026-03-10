@@ -40,6 +40,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -393,7 +394,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
             @Override
             public boolean onCreateWindow(final WebView view, boolean isDialog,
-                                          boolean isUserGesture, final android.os.Message resultMsg) {
+                                          boolean isUserGesture, final Message resultMsg) {
                 if (!multipleWindowsEnabled) {
                     // Flight is off; should not reach here, but guard anyway.
                     return false;
@@ -404,31 +405,42 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
                 final Span span = OTelUtility.createSpanFromParent(
                         SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                boolean windowHandled = false;
                 try (final Scope scope = span.makeCurrent()) {
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
-                    final WebView tempWebView = new WebView(view.getContext());
-                    tempWebView.setWebViewClient(new WebViewClient() {
+                    final WebView interceptorWebView = new WebView(view.getContext());
+                    interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            final String url = request.getUrl().toString();
-                            Logger.info(methodTag, "onCreateWindow: opening target=_blank URL in external browser.");
-                            span.setAttribute("target_blank_url", url);
-                            final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                            view.getContext().startActivity(browserIntent);
+                            try {
+                                final String url = request.getUrl().toString();
+                                Logger.info(methodTag, "onCreateWindow: opening target=_blank URL in external browser.");
+                                span.setAttribute("target_blank_url", url);
+                                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                                view.getContext().startActivity(browserIntent);
+                            } catch (final Exception e) {
+                                Logger.error(methodTag, "Error opening target=_blank URL in external browser.", e);
+                            }
                             return true;
                         }
                     });
+                    if (resultMsg.obj == null) {
+                        Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
+                        span.setStatus(StatusCode.ERROR, "resultMsg.obj is null");
+                        return false;
+                    }
                     final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
-                    transport.setWebView(tempWebView);
+                    transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
                     span.setStatus(StatusCode.OK);
-                } catch (final Exception e) {
+                    windowHandled = true;
+                } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
-                    span.setStatus(StatusCode.ERROR, e.getMessage());
+                    span.setStatus(StatusCode.ERROR, e.getMessage() != null ? e.getMessage() : "Unknown error");
                 } finally {
                     span.end();
                 }
-                return true;
+                return windowHandled;
             }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
