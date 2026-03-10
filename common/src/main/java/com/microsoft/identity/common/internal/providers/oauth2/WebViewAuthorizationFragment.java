@@ -91,6 +91,7 @@ import java.util.Map;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
 import io.opentelemetry.api.trace.Span;
@@ -406,7 +407,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 final Span span = OTelUtility.createSpanFromParent(
                         SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
                 boolean windowHandled = false;
-                try (final Scope scope = span.makeCurrent()) {
+                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
                     final WebView interceptorWebView = new WebView(view.getContext());
                     interceptorWebView.setWebViewClient(new WebViewClient() {
@@ -414,12 +415,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
                             try {
                                 final String url = request.getUrl().toString();
+                                final String scheme = request.getUrl().getScheme();
+                                if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
+                                    Logger.warn(methodTag, "onCreateWindow: ignoring non-http(s) scheme: " + scheme);
+                                    return true;
+                                }
                                 Logger.info(methodTag, "onCreateWindow: opening target=_blank URL in external browser.");
-                                span.setAttribute("target_blank_url", url);
                                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                                 view.getContext().startActivity(browserIntent);
                             } catch (final Exception e) {
                                 Logger.error(methodTag, "Error opening target=_blank URL in external browser.", e);
+                            } finally {
+                                // Destroy the interceptor WebView after it has served its purpose
+                                v.post(() -> v.destroy());
                             }
                             return true;
                         }
@@ -436,7 +444,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     windowHandled = true;
                 } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
-                    span.setStatus(StatusCode.ERROR, e.getMessage() != null ? e.getMessage() : "Unknown error");
+                    span.recordException(e);
+                    span.setStatus(StatusCode.ERROR);
                 } finally {
                     span.end();
                 }
