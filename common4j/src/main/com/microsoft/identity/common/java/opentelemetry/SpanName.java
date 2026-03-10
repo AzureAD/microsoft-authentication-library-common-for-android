@@ -97,5 +97,9 @@ public enum SpanName {
     /**
      * Span name for secret key retrieval operations.
      */
-    SecretKeyRetrieval
+    SecretKeyRetrieval,
+    /**
+     * Span name for WebView target="_blank" navigation interception.
+     */
+    WebViewTargetBlankNavigation
 }

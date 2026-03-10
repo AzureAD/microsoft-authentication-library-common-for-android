@@ -46,8 +46,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -87,8 +89,13 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * Authorization fragment with embedded webview.
@@ -352,6 +359,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
+
+        // Enable multiple windows so that target="_blank" links trigger onCreateWindow
+        // instead of being silently dropped by the WebView - controlled by flight.
+        final boolean multipleWindowsEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS);
+        mWebView.getSettings().setSupportMultipleWindows(multipleWindowsEnabled);
+
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
@@ -375,6 +389,46 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // This method allows the ChromeClient to provide that default image.
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+            }
+
+            @Override
+            public boolean onCreateWindow(final WebView view, boolean isDialog,
+                                          boolean isUserGesture, final android.os.Message resultMsg) {
+                if (!multipleWindowsEnabled) {
+                    // Flight is off; should not reach here, but guard anyway.
+                    return false;
+                }
+                // Handles target="_blank" links by opening them in the device's default browser
+                // instead of silently dropping the navigation.
+                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+                final Span span = OTelUtility.createSpanFromParent(
+                        SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                try (final Scope scope = span.makeCurrent()) {
+                    Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
+                    final WebView tempWebView = new WebView(view.getContext());
+                    tempWebView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
+                            final String url = request.getUrl().toString();
+                            Logger.info(methodTag, "onCreateWindow: opening target=_blank URL in external browser.");
+                            span.setAttribute("target_blank_url", url);
+                            final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            view.getContext().startActivity(browserIntent);
+                            return true;
+                        }
+                    });
+                    final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                    transport.setWebView(tempWebView);
+                    resultMsg.sendToTarget();
+                    span.setStatus(StatusCode.OK);
+                } catch (final Exception e) {
+                    Logger.error(methodTag, "Error handling target=_blank navigation.", e);
+                    span.setStatus(StatusCode.ERROR, e.getMessage());
+                } finally {
+                    span.end();
+                }
+                return true;
             }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
