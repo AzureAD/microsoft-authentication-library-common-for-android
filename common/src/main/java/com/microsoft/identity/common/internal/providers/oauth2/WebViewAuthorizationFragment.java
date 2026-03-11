@@ -273,6 +273,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
+
+                        // Dynamically toggle multiple-windows support so that target="_blank"
+                        // interception is active ONLY on the TLR start page. On all other
+                        // pages the WebView behaves exactly as before (target="_blank" links
+                        // navigate inline, triggering the normal WebViewClient callbacks).
+                        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
+                            final boolean isTlrPage = url != null && url.contains("/tlr/start");
+                            mWebView.getSettings().setSupportMultipleWindows(isTlrPage);
+                        }
                     }
                 },
                 mRedirectUri,
@@ -362,11 +372,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
 
-        // Enable multiple windows so that target="_blank" links trigger onCreateWindow
-        // instead of being silently dropped by the WebView - controlled by flight.
+        // Multiple windows support is toggled dynamically in onPageLoaded based on
+        // the current URL. It is enabled only on /tlr/start pages so that target="_blank"
+        // links open in an external browser there. On all other pages, the WebView retains
+        // its original behavior (target="_blank" navigates inline through the normal
+        // WebViewClient, preserving redirect-URI detection, PKeyAuth, etc.).
         final boolean multipleWindowsEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS);
-        mWebView.getSettings().setSupportMultipleWindows(multipleWindowsEnabled);
 
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
@@ -400,12 +412,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     // Flight is off; should not reach here, but guard anyway.
                     return false;
                 }
+
                 if (resultMsg.obj == null) {
                     Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
                     return false;
                 }
-                // Handles target="_blank" links by opening them in the device's default browser
-                // instead of silently dropping the navigation.
+
+                // Handles target="_blank" links by opening them in the device's default browser.
+                // This callback is only reached when setSupportMultipleWindows is true, which
+                // is dynamically enabled only on /tlr/start pages (see onPageLoaded).
                 final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
                         ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
                 final Span span = OTelUtility.createSpanFromParent(
