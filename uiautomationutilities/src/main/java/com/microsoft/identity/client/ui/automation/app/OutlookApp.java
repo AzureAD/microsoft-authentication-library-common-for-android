@@ -191,6 +191,20 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     /**
+     * Click the SIGN IN button shown through snackbar after a token expires, without handling the prompt that follows.
+     *
+     * @param username username to be signed in
+     * @param password password to be used
+     */
+    public void signInThroughSnackBarWithoutPrompt(@NonNull final String username,
+                                      @NonNull final String password) {
+        handleIntroDialogueAfterSignIn();
+
+        // Click SIGN IN Button in snackBar
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/snackbar_action");
+    }
+
+    /**
      * Check to see if the sign in snackbar is present in outlook
      * @return whether or not snackbar is present
      */
