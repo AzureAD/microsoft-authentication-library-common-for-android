@@ -516,6 +516,18 @@ public enum AttributeName {
     is_redirect_url_opened_in_browser,
 
     /**
+     * Number of PRT accounts for which SSO token generation succeeded in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_success_count,
+
+    /**
+     * Number of PRT accounts for which SSO token generation failed in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_failure_count,
+
+    /**
      * Indicates the number of retry attempts made in DRS discovery when the retry policy is enabled.
      */
     drs_discovery_retry_number,
