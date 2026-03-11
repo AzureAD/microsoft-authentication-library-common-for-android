@@ -174,16 +174,14 @@ object AppRegistry {
      * Debug apps (mock brokers, broker host) are included when debug broker trust is enabled.
      */
     @JvmField
-    val FORCE_BROKER_DISCOVERY_ALLOW_LIST = if (BrokerData.getShouldTrustDebugBrokers()) {
-        buildSet {
-            add(INTUNE_CE_PROD)
+    val FORCE_BROKER_DISCOVERY_ALLOW_LIST = buildSet {
+        add(INTUNE_CE_PROD)
+        if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_CE_DEBUG)
             add(BrokerData.debugMockLtw)
             add(BrokerData.debugMockCp)
             add(BrokerData.debugMockAuthApp)
             add(BrokerData.debugBrokerHost)
         }
-    } else {
-        setOf(INTUNE_CE_PROD)
     }
 }
