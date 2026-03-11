@@ -168,4 +168,22 @@ object AppRegistry {
             add(MSAL_TEST_APP)
         }
     }
+
+    /**
+     * Apps authorized to trigger force broker discovery.
+     * Debug apps (mock brokers, broker host) are included when debug broker trust is enabled.
+     */
+    @JvmField
+    val FORCE_BROKER_DISCOVERY_ALLOW_LIST = if (BrokerData.getShouldTrustDebugBrokers()) {
+        buildSet {
+            add(INTUNE_CE_PROD)
+            add(INTUNE_CE_DEBUG)
+            add(BrokerData.debugMockLtw)
+            add(BrokerData.debugMockCp)
+            add(BrokerData.debugMockAuthApp)
+            add(BrokerData.debugBrokerHost)
+        }
+    } else {
+        setOf(INTUNE_CE_PROD)
+    }
 }
