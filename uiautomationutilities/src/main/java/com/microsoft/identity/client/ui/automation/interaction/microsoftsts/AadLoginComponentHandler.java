@@ -278,7 +278,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     @Override
-    public void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl) {
+    public void handleSignInFromOtherDevice() {
         this.handleSignInOptions();
         UiAutomatorUtils.handleButtonClickForObjectWithText(SIGN_IN_FROM_OTHER_DEVICE);
 
