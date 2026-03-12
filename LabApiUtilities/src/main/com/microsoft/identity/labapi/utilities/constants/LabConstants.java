@@ -38,6 +38,7 @@ public class LabConstants {
         public static final String MSA = "msa";
         public static final String MDM_CA = "mdm_ca";
         public static final String MAM_CA = "mam_ca";
+        public static final String MAM_ON_SPO = "mam_on_spo";
         public static final String TP_CA = "tpca";
         public static final String TRUE_MAM_CA = "true_mam_ca";
         public static final String WP = "wp";
@@ -63,6 +64,7 @@ public class LabConstants {
         public static final String ONPREM = "onprem";
         public static final String GUEST = "guest";
         public static final String B2C = "b2c";
+        public static final String CIAM = "ciam";
     }
 
     static final class UserRole {
@@ -87,6 +89,7 @@ public class LabConstants {
         public static final String TRUE_MAM_CA = "truemamca";
         public static final String MAM_SPO = "mamspo";
         public static final String BLOCKED = "blocked";
+        public static final String GLOBAL_MFA = "globalmfa";
     }
 
     static final class HomeDomain {

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.apps
 
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
@@ -72,6 +73,36 @@ object AppRegistry {
         signingCertificateThumbprint = INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
     )
 
+    val CHROME = App(
+        nickName = "Google Chrome",
+        packageName = "com.android.chrome",
+        signingCertificateThumbprint = "7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg=="
+    )
+
+    val CHROME_BETA = App(
+        nickName = "Google Chrome Beta",
+        packageName = "com.chrome.beta",
+        signingCertificateThumbprint = "ZZTQrvpldI8bmSdc8TKK3KISErF8zy+nMp269KAuPxyvVz7BqgczKtS90pKGEPV8eVOIRqFDaRe4aDie4lCTpw=="
+    )
+
+    val CHROME_DEV = App(
+        nickName = "Google Chrome Dev",
+        packageName = "com.chrome.dev",
+        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7GvHpHu6QOz+XIaXybtzL7A=="
+    )
+
+    val CHROME_CANARY = App(
+        nickName = "Google Chrome Canary",
+        packageName = "com.chrome.canary",
+        signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
+    )
+
+    val MSAL_TEST_APP = App(
+        nickName = "MSAL Test App",
+        packageName = "com.msft.identity.client.sample.local",
+        signingCertificateThumbprint = AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -105,6 +136,21 @@ object AppRegistry {
             add(BrokerData.debugMicrosoftAuthenticator)
             add(BrokerData.debugCompanyPortal)
             add(BrokerData.debugIntuneCE)
+        }
+    }
+
+    /**
+     * Apps authorized to request Browser SSO headers (PRT credentials).
+     * Currently limited to Chrome browser variants.
+     */
+    @JvmField
+    val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
+        add(CHROME)
+        add(CHROME_BETA)
+        add(CHROME_DEV)
+        add(CHROME_CANARY)
+        if (BrokerData.getShouldTrustDebugBrokers()) {
+            add(MSAL_TEST_APP)
         }
     }
 }

@@ -211,7 +211,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access", mFindLoginUiElementTimeout);
         final UiObject enrollmentHeader2 = UiAutomatorUtils.obtainUiObjectWithText("Register or enroll your device", mFindLoginUiElementTimeout);
         final UiObject enrollmentHeader3 = UiAutomatorUtils.obtainUiObjectWithText("We need to update your device registration", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists() || enrollmentHeader2.exists() || enrollmentHeader3.exists());
+        Assert.assertTrue("Enroll Page did not appear...", enrollmentHeader.exists() || enrollmentHeader2.exists() || enrollmentHeader3.exists());
     }
 
     @Override
@@ -230,7 +230,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleRegistration() {
         Logger.i(TAG, "Handle Registration Page Received..");
         final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Register page appears.", registerBtn.exists());
+        Assert.assertTrue("Register page did not appear...", registerBtn.exists());
 
         handleRegistrationButton();
     }
@@ -239,7 +239,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleGetTheAppPage() {
         Logger.i(TAG, "Handle Get the app page..");
         final UiObject getAppBtn = UiAutomatorUtils.obtainUiObjectWithText("Get the app", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Get the app page appears.", getAppBtn.exists());
+        Assert.assertTrue("Get the app page did not appear...", getAppBtn.exists());
 
         handleNextButton();
     }

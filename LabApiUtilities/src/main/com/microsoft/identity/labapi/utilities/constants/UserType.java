@@ -29,6 +29,7 @@ public enum UserType {
     MSA(LabConstants.UserType.MSA),
     MDM_CA(LabConstants.UserType.MDM_CA),
     MAM_CA(LabConstants.UserType.MAM_CA),
+    MAM_ON_SPO(LabConstants.UserType.MAM_ON_SPO),
     TRUE_MAM_CA(LabConstants.UserType.TRUE_MAM_CA),
     WP(LabConstants.UserType.WP),
     FEDERATED(LabConstants.UserType.FEDERATED),
@@ -52,6 +53,7 @@ public enum UserType {
     TP_CA(LabConstants.UserType.TP_CA),
     CLOUD(LabConstants.UserType.CLOUD),
     B2C(LabConstants.UserType.B2C),
+    CIAM(LabConstants.UserType.CIAM),
     GUEST(LabConstants.UserType.GUEST),
     ONPREM(LabConstants.UserType.ONPREM);
 

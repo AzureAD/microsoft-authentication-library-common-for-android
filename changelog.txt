@@ -1,10 +1,16 @@
 vNext
 ----------
-
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
+- [MINOR] Edge TB: Claims (#2925)
+- [PATCH] Update Moshi to 1.15.2 to resolve okio CVE-2023-3635 vulnerability (#3005)
+
+Version 24.0.1
+----------
+- [PATCH] Allow apps to setShouldTrustDebugBrokers (#2932)
 
 Version 24.0.0
 ----------
+- [MINOR] Add Telemetry Constants for browser sso (#2904)
 - [MINOR] Add tracking for urls loaded by our webview (#2892)
 - [MINOR] Rework OpenTelemetry spans for secret key generation and retrieval operations (#2869)
 - [MAJOR] add isBrokerProcess to IPlatformUtil (#2882)

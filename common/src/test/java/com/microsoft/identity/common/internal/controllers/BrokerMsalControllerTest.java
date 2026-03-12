@@ -334,6 +334,7 @@ public class BrokerMsalControllerTest {
                 null,
                 null,
                 false,
+                null,
                 null
         );
 
@@ -359,7 +360,8 @@ public class BrokerMsalControllerTest {
                 null,                // state
                 null,                // loginHint
                 false,               // instanceAware
-                null                 // extraParameters
+                null,                 // extraParameters
+                null                  // claims
         );
 
         WebAppsGetTokenSubOperationEnvelope envelope =
