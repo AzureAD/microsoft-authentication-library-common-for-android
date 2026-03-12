@@ -338,6 +338,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAmazonAppRedirect(formattedURL)) {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
+            } else if (isOpenIdVcUrl(formattedURL)) {
+                Logger.info(methodTag, "It is an OpenID Verifiable Credentials request.");
+                processOpenIdVcRequest(view, url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
@@ -494,6 +497,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isAmazonAppRedirect(@NonNull final String url) {
         return url.startsWith(AMAZON_APP_REDIRECT_PREFIX);
+    }
+
+    /**
+     * Checks if the URL uses the openid-vc:// custom scheme.
+     * This scheme is used by OpenID Verifiable Credentials flows and must be
+     * intercepted so a registered wallet app can handle it.
+     *
+     * @param url The lowercase URL to check.
+     * @return true if the URL starts with the openid-vc:// scheme.
+     */
+    private boolean isOpenIdVcUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX);
     }
 
     private boolean isWebCpEnrollmentUrl(@NonNull final String url) {
@@ -899,6 +914,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         getActivity().startActivity(intent);
         Logger.info(methodTag, "Sent Intent to launch Amazon app");
+    }
+
+    /**
+     * Handles an openid-vc:// URL by stopping the WebView and launching an
+     * {@link Intent#ACTION_VIEW} intent so the system can route it to the
+     * registered wallet application.
+     *
+     * @param view The WebView that intercepted the navigation.
+     * @param url  The original (non-lowercased) openid-vc:// URL.
+     */
+    private void processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processOpenIdVcRequest";
+        view.stopLoading();
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                getActivity().startActivity(intent);
+                Logger.info(methodTag, "Launched external handler for OpenID VC request.");
+            } else {
+                Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
+                returnError(ErrorStrings.UNEXPECTED_ERROR, "No application found to handle the OpenID Verifiable Credentials request.");
+            }
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, "Failed to launch handler for the OpenID Verifiable Credentials request.");
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
