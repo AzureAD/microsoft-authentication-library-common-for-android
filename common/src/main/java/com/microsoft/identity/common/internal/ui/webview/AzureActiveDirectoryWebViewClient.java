@@ -935,11 +935,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
             } else {
                 Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
-                returnError(ErrorStrings.UNEXPECTED_ERROR, "No application found to handle the OpenID Verifiable Credentials request.");
+                returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No application found to handle the OpenID Verifiable Credentials request.");
             }
         } catch (final ActivityNotFoundException e) {
             Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
-            returnError(ErrorStrings.UNEXPECTED_ERROR, "Failed to launch handler for the OpenID Verifiable Credentials request.");
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "Failed to launch handler for the OpenID Verifiable Credentials request.");
         }
     }
 
