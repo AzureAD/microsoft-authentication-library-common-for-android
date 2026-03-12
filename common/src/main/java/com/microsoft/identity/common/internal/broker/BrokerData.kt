@@ -89,14 +89,10 @@ data class BrokerData(
         @JvmStatic
         fun setShouldTrustDebugBrokers(value: Boolean) {
             val methodTag = "$TAG:setShouldTrustDebugBrokers"
-            if (BuildConfig.DEBUG) {
-                sShouldTrustDebugBrokers = value
-                Logger.info(methodTag, "Setting shouldTrustDebugBrokers to $value." +
-                        " This should only be used for testing purposes.")
-            } else {
-                Logger.warn(methodTag, "Attempting to set shouldTrustDebugBrokers to $value. " +
-                        "This change will be ignored since the current build is not a debug build.")
+            if (!BuildConfig.DEBUG && value) {
+                Logger.warn(methodTag, "You are forcing to trust debug brokers in non-debug builds.")
             }
+            sShouldTrustDebugBrokers = value
         }
 
         @JvmStatic
@@ -173,20 +169,6 @@ data class BrokerData(
             AuthenticationConstants.Broker.LTW_APP_SHA512_DEBUG_SIGNATURE,
             "debugLTW"
 
-        )
-
-        @JvmStatic
-        val debugIntuneCE = BrokerData(
-            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE,
-            "debugIntuneCE"
-        )
-
-        @JvmStatic
-        val prodIntuneCE = BrokerData(
-            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
-            AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE,
-            "prodIntuneCE"
         )
 
         @JvmStatic
