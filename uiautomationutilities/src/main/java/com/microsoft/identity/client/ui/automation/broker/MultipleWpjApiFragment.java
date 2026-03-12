@@ -184,6 +184,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         launch();
         selectDeviceRegistrationRecord(identifier);
         clickButton(UNREGISTER_BUTTON_ID);
+        ThreadUtils.sleepSafely(6000, "unregister", "Interrupted");
         dismissDialogBoxAndAssertContainsText("Removed");
     }
 
