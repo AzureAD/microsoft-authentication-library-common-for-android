@@ -88,7 +88,9 @@ public class ClientInfo implements Serializable {
 
         mUid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
         mUtid = clientInfoItems.get(ClientInfo.UNIQUE_TENANT_IDENTIFIER);
-        SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), mUtid);
+        if (!StringUtil.isNullOrEmpty(mUtid)) {
+            SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), mUtid);
+        }
         mTdbrClaim = clientInfoItems.get(ClientInfo.TDBR_CLAIM);
         mRawClientInfo = rawClientInfo;
     }

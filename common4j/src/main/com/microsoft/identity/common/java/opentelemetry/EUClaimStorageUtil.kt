@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry
 
-import com.microsoft.identity.common.java.flighting.CommonFlight
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo
@@ -39,6 +37,7 @@ class EUClaimStorageUtil {
         /**
          * Store telemetry region by tenant.
          *
+         * @param supplier the storage supplier to access unencrypted name value store
          * @param clientInfo the client info containing tenant information and tdbr claim
          */
         @JvmStatic
@@ -62,7 +61,7 @@ class EUClaimStorageUtil {
             if (StringUtil.isNullOrEmpty(tdbrClaim)) {
                 Logger.warn(
                     methodTag,
-                    "Received no tdbr claim, not storing anything in shared preferences.."
+                    "Received no tdbr claim, not storing anything in shared preferences..."
                 )
                 return
             }
@@ -70,7 +69,7 @@ class EUClaimStorageUtil {
             // Store the tdbr claim for a specific tenant ID
             Logger.info(
                 methodTag,
-                "Storing telemetry region by tenant: $tenantId, TDBR Claim: $tdbrClaim"
+                "Storing telemetry region TDBR Claim: $tdbrClaim"
             )
             val tdbrValueStore = supplier.getUnencryptedNameValueStore(
                 ClientInfo.TDBR_CLAIM,
