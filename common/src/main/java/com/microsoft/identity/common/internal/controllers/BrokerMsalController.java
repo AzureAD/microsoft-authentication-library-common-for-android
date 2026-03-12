@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_INTERACTIVE_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_MAX_PROTOCOL_VERSION;
@@ -65,6 +66,8 @@ import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccoun
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.WebAppsAdditionalRequiredParameters;
+import com.microsoft.identity.common.internal.util.WebAppsUtil;
 import com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
@@ -112,6 +115,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -120,8 +124,6 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.sharedwithoneauth.OneAuthSharedFunctions;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -349,21 +351,52 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        final String methodTag = TAG + ":acquireToken";
+        final AcquireTokenResult result;
+        try {
+            //Get the broker interactive parameters intent
+            final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
+            final Bundle resultBundle = acquireTokenInternal(parameters, interactiveRequestIntent);
+            final String negotiatedBrokerProtocolVersion = resultBundle.getString(NEGOTIATED_BP_VERSION_KEY);
+            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
+            // MSAL needs to save this account locally for future token calls.
+            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
+            // If the request is from MSALCPP , OAuth2TokenCache will be null.
+            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+            }
 
+            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
+            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+        } catch (final BaseException | ExecutionException e) {
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(e)
+                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+            );
+            throw e;
+        }
+
+        Telemetry.emit(
+                new ApiEndEvent()
+                        .putResult(result)
+                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
+        );
+
+        return result;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected Bundle acquireTokenInternal(final @Nullable InteractiveTokenCommandParameters parameters, final @NonNull Intent interactiveRequestIntent) throws BaseException, InterruptedException, ExecutionException {
+        final String methodTag = TAG + ":acquireTokenInternal";
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
-
-        //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
+        //Create BrokerResultFuture to block on response from the broker...
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
         mBrokerResultFuture = new ResultFuture<>();
-
-        //Get the broker interactive parameters intent
-        final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
 
         Activity activity = null;
         if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
@@ -417,39 +450,10 @@ public class BrokerMsalController extends BaseController {
             // Start the BrokerActivity using our existing Activity
             activity.startActivity(brokerActivityIntent);
         }
-
-        final AcquireTokenResult result;
-        try {
-            //Wait to be notified of the result being returned... we could add a timeout here if we want to
-            final Bundle resultBundle = mBrokerResultFuture.get();
-
-            final String negotiatedBrokerProtocolVersion = interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
-            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-            // MSAL needs to save this account locally for future token calls.
-            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-            // If the request is from MSALCPP , OAuth2TokenCache will be null.
-            if (parameters.getOAuth2TokenCache() != null && !BrokerProtocolVersionUtil.canSupportMsaAccountsInBroker(negotiatedBrokerProtocolVersion)) {
-                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-            }
-
-            verifyBrokerVersionIsSupported(resultBundle, parameters.getRequiredBrokerProtocolVersion());
-            result = mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
-        } catch (final BaseException | ExecutionException e) {
-            Telemetry.emit(
-                    new ApiEndEvent()
-                            .putException(e)
-                            .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-            );
-            throw e;
-        }
-
-        Telemetry.emit(
-                new ApiEndEvent()
-                        .putResult(result)
-                        .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
-        );
-
-        return result;
+        //Wait to be notified of the result being returned... we could add a timeout here if we want to
+        final Bundle resultBundle = mBrokerResultFuture.get();
+        resultBundle.putString(NEGOTIATED_BP_VERSION_KEY, interactiveRequestIntent.getStringExtra(NEGOTIATED_BP_VERSION_KEY));
+        return resultBundle;
     }
 
     @Override
@@ -1363,6 +1367,146 @@ public class BrokerMsalController extends BaseController {
                                                @NonNull final AadDeviceIdRecord result) {
             }
         });
+    }
+
+    /**
+     * Get supported web app contracts from broker.
+     *
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @throws BaseException
+     */
+    public String getSupportedWebAppContracts(@NonNull final String minBrokerProtocolVersion) throws BaseException {
+        return getBrokerOperationExecutor().execute(null,
+                new BrokerOperation<String>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                    }
+
+                    @NonNull
+                    @Override
+                    public BrokerOperationBundle getBundle() throws ClientException {
+                        return new BrokerOperationBundle(
+                                BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_GET_SUPPORTED_WEB_APPS_CONTRACTS,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForGetSupportedWebAppContracts(negotiatedBrokerProtocolVersion, minBrokerProtocolVersion)
+                        );
+                    }
+
+                    @NonNull
+                    @Override
+                    public String extractResultBundle(
+                            @Nullable final Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                        return mResultAdapter.getSupportedWebAppsContractFromBundle(resultBundle);
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getMethodName() {
+                        return ":getSupportedWebAppContracts";
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                       @NonNull final String result) {
+                    }
+                });
+    }
+
+    /**
+     * Execute web app request in broker.
+     *
+     * @param request request string.
+     * @param minBrokerProtocolVersion minimum broker protocol version the caller requires.
+     * @param additionalRequiredParams additional required parameters for web app request.
+     * @throws BaseException
+     */
+    public String executeWebAppRequest(@NonNull final String request,
+                                       @NonNull final String minBrokerProtocolVersion,
+                                       @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
+        try {
+            return getBrokerOperationExecutor().execute(null,
+                    new BrokerOperation<String>() {
+                        private String negotiatedBrokerProtocolVersion;
+
+                        @Override
+                        public void performPrerequisites(@NonNull final IIpcStrategy strategy) throws BaseException {
+                            negotiatedBrokerProtocolVersion = hello(strategy, minBrokerProtocolVersion);
+                        }
+
+                        @NonNull
+                        @Override
+                        public BrokerOperationBundle getBundle() throws ClientException {
+                            final String additionalParamsString =  ObjectMapper.serializeObjectToJsonString(additionalRequiredParams);
+                            return new BrokerOperationBundle(
+                                    BrokerOperationBundle.Operation.BROKER_WEBAPPS_API_EXECUTE_WEB_APPS_REQUEST,
+                                    mActiveBrokerPackageName,
+                                    mRequestAdapter.getRequestBundleForExecuteWebAppRequest(
+                                            request,
+                                            negotiatedBrokerProtocolVersion,
+                                            minBrokerProtocolVersion,
+                                            additionalParamsString
+                                    )
+                            );
+                        }
+
+                        @NonNull
+                        @Override
+                        public String extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                            if (resultBundle == null) {
+                                throw mResultAdapter.getExceptionForEmptyResultBundle();
+                            }
+                            verifyBrokerVersionIsSupported(resultBundle, minBrokerProtocolVersion);
+                            if (resultBundle.containsKey(BROKER_WEB_APPS_INTERACTIVE_INTENT)) {
+                                final Intent interactiveIntent = resultBundle.getParcelable(BROKER_WEB_APPS_INTERACTIVE_INTENT);
+                                if (interactiveIntent != null) {
+                                    try {
+                                        final Bundle interactiveGetTokenBundle = acquireTokenInternal(null, interactiveIntent);
+                                        return mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
+                                    } catch (final Throwable t) {
+                                        return WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request process");
+                                    }
+                                }
+                            }
+                            return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                        }
+
+                        @NonNull
+                        @Override
+                        public String getMethodName() {
+                            return ":executeWebAppRequest";
+                        }
+
+                        @Nullable
+                        @Override
+                        public String getTelemetryApiId() {
+                            return null;
+                        }
+
+                        @Override
+                        public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                                           @NonNull final String result) {
+                        }
+                    });
+        } catch (final UnsupportedBrokerException ex) {
+            // We want to throw this exception to keep it in line with the other APIs.
+            throw ex;
+        }
+        catch (final Exception ex) {
+            return WebAppsUtil.createErrorResponseString(ex, "Unexpected error occurred");
+        }
     }
 
     /**

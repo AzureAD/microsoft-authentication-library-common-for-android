@@ -20,15 +20,9 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
 import com.microsoft.identity.internal.test.labapi.ProgressResponseBody;
-
 import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-
-
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +36,7 @@ public class CreateTempUserApi {
         this(Configuration.getDefaultApiClient());
     }
 
-    public CreateTempUserApi(ApiClient apiClient) {
+    public CreateTempUserApi(final ApiClient apiClient) {
         this.apiClient = apiClient;
     }
 

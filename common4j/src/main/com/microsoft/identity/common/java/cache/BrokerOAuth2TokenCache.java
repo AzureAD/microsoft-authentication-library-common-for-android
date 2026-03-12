@@ -24,8 +24,13 @@ package com.microsoft.identity.common.java.cache;
 
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
@@ -48,7 +53,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -100,6 +107,37 @@ public class BrokerOAuth2TokenCache
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
+
+    /**
+     * Static map of locks for ensuring atomicity of compound save/update/load operations.
+     * Since each thread creates a new BrokerOAuth2TokenCache instance, we need locks
+     * shared across all instances to prevent race conditions when multiple instances
+     * access the same underlying storage (FOCI cache or UID-specific cache).
+     * <p>
+     * Keys are cache identifiers:
+     * <ul>
+     *   <li>"FOCI" - for Family of Client IDs cache (shared by all FOCI apps)</li>
+     *   <li>"UID_<uid>" - for process UID-specific caches (one per UID)</li>
+     * </ul>
+     * This ensures that operations on the same logical cache are serialized, even
+     * when invoked through different BrokerOAuth2TokenCache instances.
+     */
+    private static final ConcurrentHashMap<String, Object> CACHE_OPERATION_LOCKS = new ConcurrentHashMap<>();
+
+    /**
+     * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
+     * storage (SharedPreferences) name.
+     * <p>
+     * Populated lazily via computeIfAbsent in getCacheToBeUsed(...). Allows multiple
+     * BrokerOAuth2TokenCache instances to reuse the same in-memory layer for the same underlying
+     * encrypted name-value store, reducing disk I/O and serialization overhead.
+     * <p>
+     * Thread-safety: ConcurrentHashMap ensures safe concurrent access and publication.
+     * Lifecycle: Entries are never removed for the lifetime of the process.
+     */
+    private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
+            inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
+
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
@@ -172,78 +210,6 @@ public class BrokerOAuth2TokenCache
     /**
      * Broker-only API to persist WPJ's Accounts and their associated credentials.
      *
-     * @param accountRecord     The {@link AccountRecord} to store.
-     * @param idTokenRecord     The {@link IdTokenRecord} to store.
-     * @param accessTokenRecord The {@link AccessTokenRecord} to store.
-     * @param familyId          The family_id or null, if not applicable.
-     * @return The {@link ICacheRecord} result of this save action.
-     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
-     */
-    @Deprecated
-    public ICacheRecord save(final @NonNull AccountRecord accountRecord,
-                             final @NonNull IdTokenRecord idTokenRecord,
-                             final @NonNull AccessTokenRecord accessTokenRecord,
-                             final @Nullable String familyId) throws ClientException {
-        final String methodName = ":save (4 args)";
-
-        final ICacheRecord result;
-
-        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
-
-        Logger.info(
-                TAG + methodName,
-                "Saving to FOCI cache? ["
-                        + isFoci
-                        + "]"
-        );
-
-        if (isFoci) {
-            // Save to the foci cache....
-            result = mFociCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
-        } else {
-            // Save to the processUid cache... or create a new one
-            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
-                    idTokenRecord.getClientId(),
-                    idTokenRecord.getEnvironment(),
-                    mUid
-            );
-
-            if (null == targetCache) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
-
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
-            }
-
-            result = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord
-            );
-        }
-
-        updateApplicationMetadataCache(
-                result.getAccessToken().getClientId(),
-                result.getAccessToken().getEnvironment(),
-                familyId,
-                mUid
-        );
-
-        return result;
-    }
-
-    /**
-     * Broker-only API to persist WPJ's Accounts and their associated credentials.
-     *
      * @param accountRecord      The {@link AccountRecord} to store.
      * @param idTokenRecord      The {@link IdTokenRecord} to store.
      * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
@@ -258,6 +224,7 @@ public class BrokerOAuth2TokenCache
                              @Nullable RefreshTokenRecord refreshTokenRecord,
                              @Nullable String familyId) throws ClientException {
         final String methodName = ":save (5 args)";
+        final long saveStartTime = System.currentTimeMillis();
 
         final ICacheRecord result;
 
@@ -299,36 +266,34 @@ public class BrokerOAuth2TokenCache
                 familyId,
                 mUid
         );
-
+        OTelUtility.recordElapsedTime(AttributeName.elapsed_time_save_aggregated_account_data.name(), saveStartTime);
         return result;
     }
 
-    @Deprecated
-    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
-            @NonNull final AccountRecord accountRecord,
-            @NonNull final IdTokenRecord idTokenRecord,
-            @NonNull final AccessTokenRecord accessTokenRecord,
-            @Nullable final String familyId,
-            @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
-        synchronized (this) {
-            final ICacheRecord cacheRecord = save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    familyId
-            );
-
-            return loadAggregatedAccountData(authScheme, cacheRecord);
-        }
-    }
-
-    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
+    public List<ICacheRecord> saveAndLoadAggregatedAccountData(
             final @NonNull AccountRecord accountRecord,
             final @NonNull IdTokenRecord idTokenRecord,
             final @NonNull AccessTokenRecord accessTokenRecord,
             final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final boolean shouldSkipAccountAggregation) throws ClientException {
+        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
+        SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
+                shouldSkipAccountAggregation);
+
+        if (isFlightEnabled) {
+            return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord,
+                    familyId,
+                    authScheme,
+                    shouldSkipAccountAggregation);
+        }
+
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
                     accountRecord,
@@ -338,7 +303,12 @@ public class BrokerOAuth2TokenCache
                     familyId
             );
 
-            return loadAggregatedAccountData(authScheme, cacheRecord);
+            if (!shouldSkipAccountAggregation) {
+                return loadAggregatedAccountData(authScheme, cacheRecord);
+            } else {
+                // return a list with only the cacheRecord associated with the request
+                return Collections.singletonList(cacheRecord);
+            }
         }
     }
 
@@ -346,7 +316,7 @@ public class BrokerOAuth2TokenCache
     private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
         final String methodName = ":loadAggregatedAccountData";
-
+        final long loadStartTimeInNanos = System.nanoTime();
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
@@ -366,7 +336,7 @@ public class BrokerOAuth2TokenCache
             return null;
         }
 
-        return cache.loadWithAggregatedAccountData(
+        List<ICacheRecord> cacheRecordList =  cache.loadWithAggregatedAccountData(
                 clientId,
                 applicationIdentifier,
                 mamEnrollmentIdentifier,
@@ -374,6 +344,9 @@ public class BrokerOAuth2TokenCache
                 cacheRecord.getAccount(),
                 authScheme
         );
+        OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_load_aggregated_account_data.name(),
+                loadStartTimeInNanos);
+        return cacheRecordList;
     }
 
     @Override
@@ -1333,6 +1306,7 @@ public class BrokerOAuth2TokenCache
 
         this.mFociCache.clearAll();
         this.mApplicationMetadataCache.clear();
+        inMemoryCacheMapByStorage.clear();
     }
 
     /**
@@ -1607,14 +1581,10 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(components, uid);
         }
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache
-                                .getBrokerUidSequesteredFilename(uid),
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache
+                .getBrokerUidSequesteredFilename(uid);
 
-        return getTokenCache(components, sharedPreferencesFileManager, false);
+        return getTokenCache(components, storeName, false);
     }
 
     private static MicrosoftFamilyOAuth2TokenCache initializeFociCache(@NonNull final IPlatformComponents components) {
@@ -1624,25 +1594,16 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final INameValueStorage<String> sharedPreferencesFileManager =
-                components.getStorageSupplier().getEncryptedNameValueStore(
-                        SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        String.class
-                );
+        final String storeName = SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 
-        return getTokenCache(components, sharedPreferencesFileManager, true);
+        return getTokenCache(components, storeName, true);
     }
 
     @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final IPlatformComponents components,
-                                                                    @NonNull final INameValueStorage<String> spfm,
+                                                                    String storeName,
                                                                     boolean isFoci) {
-        final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final IAccountCredentialCache accountCredentialCache =
-                new SharedPreferencesAccountCredentialCache(
-                        cacheKeyValueDelegate,
-                        spfm
-                );
+        final IAccountCredentialCache accountCredentialCache = getCacheToBeUsed(components, storeName);
         final MicrosoftStsAccountCredentialAdapter accountCredentialAdapter =
                 new MicrosoftStsAccountCredentialAdapter();
 
@@ -1660,6 +1621,54 @@ public class BrokerOAuth2TokenCache
                                 accountCredentialAdapter
                         )
                 );
+    }
+
+
+    /**
+     * Determines which cache implementation to use based on flighting.
+     * <p>
+     * When the flight {@code USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS} is enabled,
+     * returns a shared, cached instance of {@link SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * for the given storage, improving performance by reusing the in-memory cache layer across cache instances.
+     * When disabled, returns a new {@link SharedPreferencesAccountCredentialCache} instance.
+     * <p>
+     * Critical behavior: When flight is enabled, the same {@code SharedPreferencesAccountCredentialCacheWithMemoryCache}
+     * instance is returned for the same {@code spfm} reference, meaning the cache is shared across multiple
+     * {@code BrokerOAuth2TokenCache} instances.
+     * <p>
+     * Thread-safety: This method is thread-safe via {@code ConcurrentHashMap.computeIfAbsent}.
+     * <p>
+     * Lifecycle: Returned cached instances are never removed from the static map.
+     *
+     * @return A cached shared in-memory cache instance (flight enabled) or a new
+     *         non-cached instance (flight disabled).
+     */
+    public static IAccountCredentialCache getCacheToBeUsed(@NonNull final IPlatformComponents components,
+                                                           final String storeName) {
+        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS);
+        SpanExtension.current().setAttribute(AttributeName.in_memory_cache_used_for_accounts_and_credentials.name(), isFlightEnabled);
+        if (isFlightEnabled) {
+            return inMemoryCacheMapByStorage.computeIfAbsent(storeName, s ->
+                    new SharedPreferencesAccountCredentialCacheWithMemoryCache(
+                            new CacheKeyValueDelegate(),
+                            components.getStorageSupplier().getEncryptedNameValueStore(
+                                    storeName,
+                                    String.class
+                    ))
+            );
+        } else {
+            final INameValueStorage<String> sharedPreferencesFileManager =
+                    components.getStorageSupplier().getEncryptedNameValueStore(
+                            storeName,
+                            String.class
+                    );
+            return new SharedPreferencesAccountCredentialCache(
+                    new CacheKeyValueDelegate(),
+                    sharedPreferencesFileManager
+            );
+        }
     }
 
     @Nullable
@@ -1722,51 +1731,119 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Sets the SSO state for the supplied Account, relative to the provided uid.
+     * Synchronized version of save and load aggregated account data that resolves the target cache
+     * only once, improving performance by avoiding redundant cache lookups.
+     * <p>
+     * This method saves the provided account and credential records to the appropriate cache
+     * (FOCI or process UID cache based on familyId), then loads and returns aggregated account
+     * data including any guest tenant credentials.
+     * <p>
+     * <b>Optimization:</b> Unlike the original implementation which called
+     * {@code getTokenCacheForClient} twice (once during save, once during load), this method
+     * determines the target cache once and reuses it for both operations, reducing overhead.
+     * <p>
+     * This method is synchronized to ensure thread safety for save and load operations.
+     * <p>
+     * The caller should inspect the result carefully. See {@link #loadWithAggregatedAccountData}
+     * for details on interpreting the returned ICacheRecord list.
      *
-     * @param uidStr       The uid of the app whose SSO token is being inserted.
-     * @param account      The account for which the supplied token is being inserted.
-     * @param refreshToken The token to insert.
+     * @param accountRecord        The AccountRecord to save. Must not be null.
+     * @param idTokenRecord        The IdTokenRecord to save. Must not be null.
+     * @param accessTokenRecord    The AccessTokenRecord to save. Must not be null.
+     * @param refreshTokenRecord   The RefreshTokenRecord to save. May be null.
+     * @param familyId             The family ID for FOCI apps. If non-null and non-empty, saves to
+     *                             FOCI cache; otherwise saves to process UID cache.
+     * @param authScheme           The authentication scheme to use when loading credentials.
+     *                             Must not be null.
+     * @return A List of ICacheRecords containing the saved account and all associated credentials
+     *         across tenants (home + guest). May include multiple records if guest tenant tokens exist.
+     * @throws ClientException If an error occurs during save or load operations.
      */
-    public void setSingleSignOnState(@NonNull final String uidStr,
-                                     @NonNull final GenericAccount account,
-                                     @NonNull final GenericRefreshToken refreshToken) {
-        final String methodName = ":setSingleSignOnState";
+    private List<ICacheRecord> saveAndLoadAggregatedAccountDataOptimized(
+            final @NonNull AccountRecord accountRecord,
+            final @NonNull IdTokenRecord idTokenRecord,
+            final @NonNull AccessTokenRecord accessTokenRecord,
+            final @Nullable RefreshTokenRecord refreshTokenRecord,
+            final @Nullable String familyId,
+            final @NonNull AbstractAuthenticationScheme authScheme,
+            final boolean shouldSkipAccountAggregation
+    ) throws ClientException{
+        final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
+                "refreshTokenRecord, familyId, authScheme)";
 
-        final boolean isFrt = refreshToken.getIsFamilyRefreshToken();
+        final ICacheRecord cacheRecord;
+        final long saveAndLoadStartTime = System.currentTimeMillis();
 
-        MsalOAuth2TokenCache targetCache;
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
+        // Determine lock key based on which cache we're operating on
+        final String lockKey = isFoci ? "FOCI" : "UID_" + mUid;
+        final Object lock = CACHE_OPERATION_LOCKS.computeIfAbsent(lockKey, k -> new Object());
 
-        final int uid = Integer.parseInt(uidStr);
+        synchronized (lock) {
+            final MsalOAuth2TokenCache targetCache;
 
-        if (isFrt) {
-            Logger.verbose(TAG + methodName, "Saving tokens to foci cache.");
+            if (isFoci) {
+                // Save to the foci cache....
+                targetCache = mFociCache;
+                Logger.info(TAG + methodName, "Saving data to FOCI cache");
+            } else {
+                // Save to the processUid cache... or create a new one
+                targetCache = initializeProcessUidCache(
+                        getComponents(),
+                        mUid
+                );
+                Logger.info(TAG + methodName, "Saving data to Process Uid cache");
+            }
 
-            targetCache = mFociCache;
-        } else {
-            // If there is an existing cache for this client id, use it. Otherwise, create a new
-            // one based on the supplied uid.
-            targetCache = initializeProcessUidCache(getComponents(), uid);
-        }
-        try {
-            targetCacheSetSingleSignOnState(account, refreshToken, targetCache);
+            cacheRecord = targetCache.save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord
+            );
+            Logger.info(TAG + methodName, "Account data saved to cache");
+
+            AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
+            if (cachedAccessTokenRecord == null) {
+                throw new ClientException("Access token is null in cache record");
+            }
+            final String clientId = cachedAccessTokenRecord.getClientId();
+            final String environment = cachedAccessTokenRecord.getEnvironment();
+            final String target = cachedAccessTokenRecord.getTarget();
+            final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
+            final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
+
+            if (clientId == null) {
+                throw new ClientException("Access token in cache record has null clientId");
+            }
+            if (environment == null) {
+                throw new ClientException("Access token in cache record has null environment");
+            }
             updateApplicationMetadataCache(
-                    refreshToken.getClientId(),
-                    refreshToken.getEnvironment(),
-                    refreshToken.getFamilyId(),
-                    uid
+                    clientId,
+                    environment,
+                    familyId,
+                    mUid
             );
-        } catch (ClientException e) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Failed to save account/refresh token. Skipping."
-            );
-        }
-    }
 
-    // Suppressing unchecked warning as the generic type was not provided for targetCache
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private void targetCacheSetSingleSignOnState(@NonNull GenericAccount account, @NonNull GenericRefreshToken refreshToken, MsalOAuth2TokenCache targetCache) throws ClientException {
-        targetCache.setSingleSignOnState(account, refreshToken);
+            if(!shouldSkipAccountAggregation) {
+                Logger.info(TAG + methodName, "Starting to load aggregated account data..");
+                List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        target,
+                        cacheRecord.getAccount(),
+                        authScheme
+                );
+                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
+                        saveAndLoadStartTime);
+                return cacheRecordList;
+            } else {
+                // return a list with only the cacheRecord associated with the request
+                Logger.info(TAG, methodName, "Skipping account aggregation.");
+                return Collections.singletonList(cacheRecord);
+            }
+        }
     }
 }

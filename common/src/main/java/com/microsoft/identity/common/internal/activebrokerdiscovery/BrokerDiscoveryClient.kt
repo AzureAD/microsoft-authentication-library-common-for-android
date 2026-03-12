@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 
 import android.content.Context
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.exception.BrokerCommunicationException
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.internal.broker.BrokerValidator
@@ -206,6 +207,21 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         }
     }
 
+    data class CachedBrokerData (
+        val brokerData: BrokerData?
+    )
+
+    /**
+     * In-memory cache for the active broker data.
+     * There are 3 possible states:
+     * 1. null: the cache hasn't been initialized (needs to read from storage or query from broker first).
+     * 2. CachedBrokerData with null brokerData: no active broker found.
+     * 3. CachedBrokerData with non-null brokerData: found an active broker.
+     **/
+    @Volatile
+    @VisibleForTesting
+    var cachedData: CachedBrokerData? = null
+
     constructor(context: Context,
                 components: IPlatformComponents,
                 cache: IClientActiveBrokerCache) : this(
@@ -273,83 +289,149 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         }
     }
 
-    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
+    override fun getActiveBrokerWithInMemoryCache(telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
+        cachedData?.let {
+            if (it.brokerData == null) {
+                return null
+            }
+            if (validateInMemoryCacheValue(it.brokerData, telemetryCallback)){
+                return it.brokerData
+            }
+
+            // Even if the value is not valid, we don't modify (invalidate) the class variable here since we're not in the lock.
+            // The variable will be updated in the block below.
+        }
+
         return runBlocking {
-            return@runBlocking getActiveBrokerAsync(shouldSkipCache)
+            val timeStartAcquiringLock = System.nanoTime()
+            classLevelLock.withLock {
+                telemetryCallback?.onLockAcquired(System.nanoTime() - timeStartAcquiringLock)
+
+                // just in case the value is already populated while waiting for the lock.
+                cachedData?.let {
+                    if (it.brokerData == null) {
+                        return@runBlocking null
+                    }
+                    if (validateInMemoryCacheValue(it.brokerData, telemetryCallback)){
+                        return@runBlocking it.brokerData
+                    }
+                }
+
+                val brokerData = getActiveBrokerAsync(shouldSkipCache = false, telemetryCallback)
+                cachedData = CachedBrokerData(brokerData)
+                return@runBlocking brokerData
+            }
         }
     }
 
-    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean): BrokerData?{
-        val methodTag = "$TAG:getActiveBrokerAsync"
-        classLevelLock.withLock {
-            if (!shouldSkipCache) {
-                if (cache.shouldUseAccountManager()) {
-                    return getActiveBrokerFromAccountManager()
-                }
-                cache.getCachedActiveBroker()?.let {
-                    if (!isPackageInstalled(it)) {
-                        Logger.info(
-                            methodTag,
-                            "There is a cached broker: $it, but the app is no longer installed."
-                        )
-                        cache.clearCachedActiveBroker()
-                        return@let
-                    }
+    /**
+     * Make sure the [BrokerData] that stays in the memory cache (if any) is valid.
+     **/
+    private fun validateInMemoryCacheValue(
+        data: BrokerData,
+        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?,
+    ): Boolean {
+        val timeStartIsValidBroker = System.nanoTime()
+        val isValidBroker = isValidBroker(data)
+        telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
+        return isValidBroker
+    }
 
-                    if (!isValidBroker(it)) {
-                        Logger.info(
-                            methodTag,
-                            "Clearing cache as the installed app does not have a matching signature hash."
-                        )
-                        cache.clearCachedActiveBroker()
-                        return@let
-                    }
-
-                    if(!ipcStrategy.isSupportedByTargetedBroker(it.packageName)){
-                        Logger.info(
-                            methodTag,
-                            "Clearing cache as the installed app does not provide any IPC mechanism to communicate to. (e.g. the broker code isn't shipped with this apk)"
-                        )
-                        cache.clearCachedActiveBroker()
-                        return@let
-                    }
-
-                    Logger.info(methodTag, "Returning cached broker: $it")
-                    return it
-                }
+    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
+        return runBlocking {
+            classLevelLock.withLock {
+                return@runBlocking getActiveBrokerAsync(shouldSkipCache, null)
             }
-
-            val brokerData = queryFromBroker(
-                brokerCandidates = brokerCandidates,
-                ipcStrategy = ipcStrategy,
-                isPackageInstalled = isPackageInstalled,
-                isValidBroker = isValidBroker
-            )
-
-            if (brokerData != null) {
-                cache.setCachedActiveBroker(brokerData)
-                return brokerData
-            }
-
-            Logger.info(
-                methodTag,
-                "Will skip broker discovery via IPC and fall back to AccountManager " +
-                        "for the next 60 minutes."
-            )
-            cache.clearCachedActiveBroker()
-            cache.setShouldUseAccountManagerForTheNextMilliseconds(
-                TimeUnit.MINUTES.toMillis(
-                    60
-                )
-            )
-
-            val accountManagerResult = getActiveBrokerFromAccountManager()
-            Logger.info(
-                methodTag, "Tried getting active broker from account manager, " +
-                        "get ${accountManagerResult?.packageName}."
-            )
-
-            return accountManagerResult
         }
+    }
+
+    override fun getActiveBroker(
+        shouldSkipCache: Boolean,
+        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback
+    ): BrokerData? {
+        return runBlocking {
+            val timeStartAcquiringLock = System.nanoTime()
+            classLevelLock.withLock {
+                telemetryCallback.onLockAcquired(System.nanoTime() - timeStartAcquiringLock)
+                return@runBlocking getActiveBrokerAsync(shouldSkipCache, telemetryCallback)
+            }
+        }
+    }
+
+    private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean,
+                                             telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
+        val methodTag = "$TAG:getActiveBrokerAsync"
+        if (!shouldSkipCache) {
+            if (cache.shouldUseAccountManager()) {
+                telemetryCallback?.onUseAccountManager()
+                return getActiveBrokerFromAccountManager()
+            }
+            val timeStartReadingFromCache = System.nanoTime()
+            cache.getCachedActiveBroker()?.let {
+                telemetryCallback?.onReadFromCache(System.nanoTime() - timeStartReadingFromCache)
+
+                val timeStartIsPackageInstalled = System.nanoTime()
+                val isPackageInstalled = isPackageInstalled(it)
+                telemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - timeStartIsPackageInstalled)
+                if (!isPackageInstalled) {
+                    Logger.info(
+                        methodTag,
+                        "There is a cached broker: $it, but the app is no longer installed."
+                    )
+                    cache.clearCachedActiveBroker()
+                    return@let
+                }
+
+                val timeStartIsValidBroker = System.nanoTime()
+                val isValidBroker = isValidBroker(it)
+                telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
+                if (!isValidBroker) {
+                    Logger.info(
+                        methodTag,
+                        "Clearing cache as the installed app does not have a matching signature hash."
+                    )
+                    cache.clearCachedActiveBroker()
+                    return@let
+                }
+
+                Logger.info(methodTag, "Returning cached broker: $it")
+                return it
+            }
+        }
+
+        val timeStartQueryFromBroker = System.nanoTime()
+        val brokerData = queryFromBroker(
+            brokerCandidates = brokerCandidates,
+            ipcStrategy = ipcStrategy,
+            isPackageInstalled = isPackageInstalled,
+            isValidBroker = isValidBroker
+        )
+        telemetryCallback?.onFinishQueryingResultFromBroker(System.nanoTime() - timeStartQueryFromBroker)
+
+        if (brokerData != null) {
+            cache.setCachedActiveBroker(brokerData)
+            return brokerData
+        }
+
+        Logger.info(
+            methodTag,
+            "Will skip broker discovery via IPC and fall back to AccountManager " +
+                    "for the next 60 minutes."
+        )
+        cache.clearCachedActiveBroker()
+        cache.setShouldUseAccountManagerForTheNextMilliseconds(
+            TimeUnit.MINUTES.toMillis(
+                60
+            )
+        )
+
+        telemetryCallback?.onUseAccountManager()
+        val accountManagerResult = getActiveBrokerFromAccountManager()
+        Logger.info(
+            methodTag, "Tried getting active broker from account manager, " +
+                    "get ${accountManagerResult?.packageName}."
+        )
+
+        return accountManagerResult
     }
 }

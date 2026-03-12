@@ -24,10 +24,9 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
-import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 /**
  * Utilities to interact with Lab {@link DeleteDeviceApi}.
@@ -45,20 +44,21 @@ public class LabDeviceHelper {
      */
     public static boolean deleteDevice(final String upn, final String deviceId) throws LabApiException {
         INSTANCE.setupApiClientWithAccessToken();
-        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
-
         try {
-            final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
+            final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
+            final String successResponse;
+            successResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
 
-            if (customSuccessResponse == null) {
+            if (successResponse == null) {
                 return false;
             }
 
-            final String expectedResult = "Device removed Successfully.";
-            return expectedResult.equalsIgnoreCase(customSuccessResponse.getMessage());
+            final String expectedResult = String.format(
+                    "Device : %s, successfully deleted from AAD.", deviceId
+            );
+            return expectedResult.equalsIgnoreCase(successResponse);
         } catch (final ApiException e) {
-            throw new LabApiException(e);
+            throw new LabApiException(LabError.FAILED_TO_DELETE_DEVICE);
         }
     }
 }

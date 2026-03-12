@@ -10,7 +10,7 @@
 parameters:
 - name: project
 - name: envVstsMvnAt
-  default: 'ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN'
+  default: 'ENV_VSTS_MVN_CRED_ACCESSTOKEN'
 - name: variant
   default: ''
 - name: buildArguments
@@ -25,14 +25,13 @@ steps:
   clean: true
   submodules: recursive
   persistCredentials: True
-- task: CmdLine@1
-  displayName: Set MVN Access Token in Environment
-  inputs:
-    filename: echo
-    arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAt }}]$(System.AccessToken)'
+- bash: |
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+    echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+  displayName: 'Set VSTS Fields in Environment'
 - template: ../automation-cert.yml
   parameters:
-    envVstsMvnAt: ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
+    envVstsMvnAt: ENV_VSTS_MVN_CRED_ACCESSTOKEN
 - task: Gradle@2
   displayName: Assemble ${{ parameters.project }} ${{ parameters.variant }}
   inputs:

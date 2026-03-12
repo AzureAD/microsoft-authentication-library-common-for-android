@@ -26,6 +26,10 @@
 -keep class * extends com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme { *; }
 -keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *; }
 
+# Keep WebView JS bridge methods annotated with @JavascriptInterface
+-keepclassmembers class com.microsoft.identity.** {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
 #For Android Credential Manager: https://developer.android.com/training/sign-in/passkeys#proguard
 -if class androidx.credentials.CredentialManager
@@ -71,10 +75,6 @@
 -keep class * implements com.google.gson.JsonDeserializer
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken { *; }
-
-##---------------Begin: proguard configuration for OpenTelemetry  --------
-# keep everything in this package from being removed or renamed
--keep class io.opentelemetry.** { *; }
 
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers class com.microsoft.identity.** {

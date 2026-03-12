@@ -20,22 +20,28 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.activebrokerdiscovery
+package com.microsoft.identity.common.java.broker;
 
-import android.content.Context
-import com.microsoft.identity.common.internal.broker.BrokerData
+import javax.annotation.Nullable;
 
 /**
- * An [IBrokerDiscoveryClient] which is based on AccountManager.
- **/
-class LegacyBrokerDiscoveryClient(val context: Context): IBrokerDiscoveryClient {
+ * Interface to provide broker app information.
+ */
+public interface IBrokerInfoProvider {
+    /**
+     * Gets the broker app version.
+     * Response can be null if broker app response did not contain version info.
+     *
+     * @return The broker app version.
+     */
+    @Nullable
+    String getBrokerAppVersion();
 
-    override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
-        return AccountManagerBrokerDiscoveryUtil(context)
-            .getActiveBrokerFromAccountManager()
-    }
-
-    override fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData {
-        throw UnsupportedOperationException("LegacyBrokerDiscoveryClient does not support forceBrokerRediscovery.")
-    }
+    /**
+     * Gets the broker app package name.
+     * Response can be null if broker app response did not contain package name info.
+     * @return
+     */
+    @Nullable
+    String getBrokerAppPackageName();
 }

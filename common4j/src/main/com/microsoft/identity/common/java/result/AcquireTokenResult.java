@@ -23,11 +23,15 @@
 package com.microsoft.identity.common.java.result;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.broker.IBrokerInfoProvider;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
 
-public class AcquireTokenResult {
+import javax.annotation.Nullable;
+
+public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
@@ -36,6 +40,14 @@ public class AcquireTokenResult {
     private AuthorizationResult mAuthorizationResult;
 
     private Boolean mSucceeded = false;
+
+    @Nullable
+    private String mBrokerAppVersion;
+
+    @Nullable
+    private String mBrokerAppPackageName;
+
+    private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
@@ -54,6 +66,15 @@ public class AcquireTokenResult {
         this.mTokenResult = tokenResult;
     }
 
+    public void setBrokerPerformanceMetrics(BrokerPerformanceMetrics brokerPerformanceMetrics) {
+        this.mBrokerPerformanceMetrics = brokerPerformanceMetrics;
+    }
+
+    @Override
+    public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
+        return this.mBrokerPerformanceMetrics;
+    }
+
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
     @SuppressWarnings(WarningType.rawtype_warning)
     public AuthorizationResult getAuthorizationResult() {
@@ -68,4 +89,21 @@ public class AcquireTokenResult {
         return mSucceeded;
     }
 
+    public void setBrokerAppVersion(final String brokerVersion) {
+        this.mBrokerAppVersion = brokerVersion;
+    }
+
+    public void setBrokerAppPackageName(final String brokerPackageName) {
+        this.mBrokerAppPackageName = brokerPackageName;
+    }
+
+    @Override
+    public String getBrokerAppVersion() {
+        return mBrokerAppVersion;
+    }
+
+    @Override
+    public String getBrokerAppPackageName() {
+        return mBrokerAppPackageName;
+    }
 }

@@ -20,53 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.eststelemetry;
+package com.microsoft.identity.common.java.commands.webapps
 
-import com.microsoft.identity.common.java.commands.ICommand;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import java.io.Serializable
 
-import lombok.Builder;
-import lombok.NonNull;
-
-@Builder
-public class MockCommand implements ICommand<Boolean> {
-
-    private String correlationId;
-
-    @Builder.Default
-    private Boolean result = true;
-
-    @Builder.Default
-    private Boolean isEligibleForEstsTelemetry = true;
-
-    @Builder.Default
-    private Boolean isEligibleForCaching = true;
-
-    @Builder.Default
-    private Boolean willReachTokenEndpoint = true;
-
-    @Override
-    public Boolean execute() throws Exception {
-        return false;
+/**
+ * Supported contracts for Web Apps Sub Operations
+ */
+data class WebAppsSupportedContracts(
+    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
+) : Serializable {
+    companion object {
+        const val GET_TOKEN = "GetToken"
+        const val SIGN_OUT = "SignOut"
+        const val GET_COOKIES = "GetCookies"
     }
 
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return result;
-    }
-
-    @Override
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    @Override
-    public boolean isEligibleForCaching() {
-        return isEligibleForCaching;
-    }
-
-    @Override
-    public boolean willReachTokenEndpoint() {
-        return willReachTokenEndpoint;
+    override fun toString(): String {
+        return contracts.joinToString(
+            separator = ", ",
+            prefix = "[",
+            postfix = "]")
     }
 }

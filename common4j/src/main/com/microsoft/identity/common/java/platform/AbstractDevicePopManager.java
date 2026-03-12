@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_CRYPTO_ERROR;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
@@ -58,6 +59,10 @@ import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.nimbusds.jose.JOSEException;
@@ -103,6 +108,9 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import lombok.NonNull;
 
 public abstract class AbstractDevicePopManager implements IDevicePopManager {
@@ -196,7 +204,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     /**
      * Properties embedded in the SignedHttpRequest.
-     * Roughly conforms to: https://tools.ietf.org/html/draft-ietf-oauth-signed-http-request-03
+     * Roughly conforms to: <a href="https://tools.ietf.org/html/draft-ietf-oauth-signed-http-request-03">...</a>
      */
     private static final class SignedHttpRequestJwtClaims {
 
@@ -583,10 +591,10 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
-        String errCode;
-        Exception exception;
         final String methodTag = TAG + ":encrypt";
-        try {
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopCryptoOperation.name());
+        span.setAttribute(AttributeName.crypto_operation.name(), "encrypt");
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
@@ -601,46 +609,52 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                 input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
             }
 
-            return input.doFinal(plaintext);
-        } catch (final InvalidKeyException e) {
-            errCode = INVALID_KEY;
-            exception = e;
-        } catch (final UnrecoverableEntryException e) {
-            errCode = INVALID_PROTECTION_PARAMS;
-            exception = e;
-        } catch (final NoSuchAlgorithmException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final KeyStoreException e) {
-            errCode = KEYSTORE_NOT_INITIALIZED;
-            exception = e;
-        } catch (final NoSuchPaddingException e) {
-            errCode = NO_SUCH_PADDING;
-            exception = e;
-        } catch (final InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
-            exception = e;
-        } catch (final BadPaddingException e) {
-            errCode = BAD_PADDING;
-            exception = e;
-        } catch (final IllegalBlockSizeException e) {
-            errCode = INVALID_BLOCK_SIZE;
-            exception = e;
+            final byte[] result = input.doFinal(plaintext);
+            span.setStatus(StatusCode.OK);
+            return result;
+        } catch (final InvalidKeyException | UnrecoverableEntryException | NoSuchAlgorithmException |
+                       KeyStoreException | NoSuchPaddingException | InvalidAlgorithmParameterException |
+                       BadPaddingException | IllegalBlockSizeException e) {
+            final String errCode = mapCryptoExceptionToErrorCode(e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+
+            final ClientException clientException = new ClientException(errCode, e.getMessage(), e);
+            Logger.error(methodTag, errCode, e);
+            throw clientException;
+        } finally {
+            span.end();
         }
+    }
 
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                methodTag,
-                errCode,
-                exception
-        );
-
-        throw clientException;
+    /**
+     * Maps cryptographic exceptions to corresponding ClientException error code constants.
+     * This helper method is used by both encrypt and decrypt operations to provide consistent
+     * error code mappings for various cryptographic failure scenarios.
+     *
+     * @param e The exception to map to an error code. Must be non-null.
+     * @return The corresponding ClientException error code constant.
+     * Note : Returns {@link ClientException#UNKNOWN_CRYPTO_ERROR} as the default fallback when the exception type doesn't match any known types.
+     */
+    private String mapCryptoExceptionToErrorCode(@NonNull final Exception e) {
+        if (e instanceof NoSuchAlgorithmException) {
+            return NO_SUCH_ALGORITHM;
+        } else if (e instanceof NoSuchPaddingException) {
+            return NO_SUCH_PADDING;
+        } else if (e instanceof InvalidKeyException) {
+            return INVALID_KEY;
+        } else if (e instanceof UnrecoverableEntryException) {
+            return INVALID_PROTECTION_PARAMS;
+        } else if (e instanceof KeyStoreException) {
+            return KEYSTORE_NOT_INITIALIZED;
+        } else if (e instanceof BadPaddingException) {
+            return BAD_PADDING;
+        } else if (e instanceof IllegalBlockSizeException) {
+            return INVALID_BLOCK_SIZE;
+        } else if (e instanceof InvalidAlgorithmParameterException) {
+            return INVALID_ALG_PARAMETER;
+        }
+        return UNKNOWN_CRYPTO_ERROR; // default fallback
     }
 
     @Override
@@ -651,10 +665,10 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
 
     @Override
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
-        String errCode;
-        Exception exception;
         final String methodTag = TAG + ":decrypt";
-        try {
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopCryptoOperation.name());
+        span.setAttribute(AttributeName.crypto_operation.name(), "decrypt");
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
@@ -670,46 +684,22 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
             } else {
                 outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
             }
-            return outputCipher.doFinal(ciphertext);
-        } catch (final NoSuchAlgorithmException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final InvalidKeyException e) {
-            errCode = INVALID_KEY;
-            exception = e;
-        } catch (final UnrecoverableEntryException e) {
-            errCode = INVALID_PROTECTION_PARAMS;
-            exception = e;
-        } catch (final NoSuchPaddingException e) {
-            errCode = NO_SUCH_ALGORITHM;
-            exception = e;
-        } catch (final KeyStoreException e) {
-            errCode = KEYSTORE_NOT_INITIALIZED;
-            exception = e;
-        } catch (final BadPaddingException e) {
-            errCode = BAD_PADDING;
-            exception = e;
-        } catch (final IllegalBlockSizeException e) {
-            errCode = INVALID_BLOCK_SIZE;
-            exception = e;
-        } catch (final InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
-            exception = e;
+            final byte[] result = outputCipher.doFinal(ciphertext);
+            span.setStatus(StatusCode.OK);
+            return result;
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+                       UnrecoverableEntryException | KeyStoreException | BadPaddingException |
+                       IllegalBlockSizeException | InvalidAlgorithmParameterException e) {
+            final String errCode = mapCryptoExceptionToErrorCode(e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+
+            final ClientException clientException = new ClientException(errCode, e.getMessage(), e);
+            Logger.error(methodTag, errCode, e);
+            throw clientException;
+        } finally {
+            span.end();
         }
-
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                methodTag,
-                errCode,
-                exception
-        );
-
-        throw clientException;
     }
 
     @Override
@@ -877,14 +867,25 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
                                         @NonNull final String accessToken,
                                         @Nullable final String nonce,
                                         @Nullable final String clientClaims) throws ClientException {
-        return mintSignedHttpRequestInternal(
-                httpMethod,
-                timestamp,
-                requestUrl,
-                accessToken,
-                nonce,
-                clientClaims
-        );
+        final Span span = OTelUtility.createSpan(SpanName.DevicePopMintSignedAccessToken.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            final String signedAccessToken = mintSignedHttpRequestInternal(
+                    httpMethod,
+                    timestamp,
+                    requestUrl,
+                    accessToken,
+                    nonce,
+                    clientClaims
+            );
+            span.setStatus(StatusCode.OK);
+            return signedAccessToken;
+        } catch (final Exception exception) {
+            span.recordException(exception);
+            span.setStatus(StatusCode.ERROR);
+            throw exception;
+        } finally {
+            span.end();
+        }
     }
 
     @Override

@@ -20,29 +20,13 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.broker;
-
-import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.util.Map;
-
-import lombok.NonNull;
+package com.microsoft.identity.common.java.broker
 
 /**
- * An interface that throws an exception if the caller is not acceptable given a UID.
+ * Holds broker performance metrics derived from timestamps in authentication flows.
+ * Calculates processing and latency durations at construction time.
+ * Mainly used to pass metrics between broker and client.
  */
-public interface ICallValidator {
-    /**
-     * Throws a ClientException if the caller cannot be validated or is unauthorized.  In android,
-     * this will end up taking a map of package name to string of signatures.  In Linux, this is
-     * probably a list of client ids.
-     * @param methodName the method name for logging purposes.
-     * @param callingUid the identifier for the caller, platform dependent.
-     * @param allowedApplications A map of name to iterable of verification string for calling apps.
-     * @throws ClientException if the caller cannot be validated.
-     */
-    void throwIfNotInvokedByAcceptableApp(@NonNull String methodName,
-                                          int callingUid,
-                                          @NonNull Map<String, Iterable<String>> allowedApplications)
-            throws ClientException;
+interface IBrokerPerformanceMetricsProvider {
+    val brokerPerformanceMetrics: BrokerPerformanceMetrics?
 }

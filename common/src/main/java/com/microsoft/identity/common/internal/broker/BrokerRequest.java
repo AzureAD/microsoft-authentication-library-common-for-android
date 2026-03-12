@@ -63,6 +63,7 @@ public class BrokerRequest implements Serializable {
         final static String LOCAL_ACCOUNT_ID = "local_account_id";
         final static String USERNAME = "username";
         final static String EXTRA_QUERY_STRING_PARAMETER = "extra_query_param";
+        final static String REQUEST_HEADERS = "request_headers";
         final static String CORRELATION_ID = "correlation_id";
         final static String PROMPT = "prompt";
         final static String CLAIMS = "claims";
@@ -84,6 +85,8 @@ public class BrokerRequest implements Serializable {
         final static String SIGN_IN_WITH_GOOGLE_CREDENTIAL = "sign_in_with_google_credential";
 
         final static String TENANT_ID = "tenant_id";
+        final static String REQUEST_TYPE = "request_type";
+        final static String WEB_APPS_STATE = "web_apps_state";
     }
 
     /**
@@ -139,6 +142,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.EXTRA_QUERY_STRING_PARAMETER)
     private String mExtraQueryStringParameter;
+
+    /**
+     * Additional request headers for the request. These values should not be logged anywhere, they may contain sentitive information.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.REQUEST_HEADERS)
+    private String mRequestHeaders;
 
     /**
      * Extra options flags for the request.
@@ -281,4 +291,8 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.TENANT_ID)
     private String mTenantId;
+
+    @Nullable
+    @SerializedName(SerializedNames.REQUEST_TYPE)
+    private String mRequestType;
 }

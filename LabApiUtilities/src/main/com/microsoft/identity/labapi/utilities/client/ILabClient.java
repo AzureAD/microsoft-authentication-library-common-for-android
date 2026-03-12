@@ -23,9 +23,11 @@
 package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -89,14 +91,30 @@ public interface ILabClient {
     String getPasswordForGuestUser(final LabGuestAccount guestUser) throws LabApiException;
 
     /**
-     * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
-     * accounts but may also be used for any other secret that the Lab has stored in their KeyVault.
+     * Get a secret from the MSIDLABS KeyVault
      *
      * @param secretName the name (identifier) of the secret that should be loaded
      * @return a String containing the value of the secret
      * @throws LabApiException if an error occurs while trying to load secret from lab
      */
-    String getSecret(String secretName) throws LabApiException;
+    String getPasswordSecretFromLabsKeyVault(String secretName) throws LabApiException;
+
+    /**
+     * Get the account UPN JSON from the Mobile Build Key Vault.
+     *
+     * @return a Map containing the account information entries
+     * @throws LabApiException if an error occurs while trying to load the UPN JSON string
+     */
+    Map<String, LabJsonStringAccountEntry> getAccountMapJsonFromMobileBuildKeyVault() throws LabApiException;
+
+    /**
+     * Get the account from the Mobile Build Key Vault based on the user type.
+     *
+     * @param userType the user type (key) of the desired account
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to load the account
+     */
+    ILabAccount getAccountFromLabJsonStringInMobileBuildVault(UserType userType) throws LabApiException;
 
     /**
      * Reset the password for the username given, then reset it back to the original password.

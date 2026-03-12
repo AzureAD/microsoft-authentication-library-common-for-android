@@ -27,11 +27,15 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
 import android.webkit.ClientCertRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -51,6 +55,7 @@ import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -94,6 +99,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import android.webkit.WebResourceError;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AMAZON_APP_REDIRECT_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -135,20 +142,45 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
-
+    private boolean mAuthUxJavaScriptInterfaceAdded = false;
+    // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
+    private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
+    private final SpanContext mSpanContext;
     private final String mUtid;
+
+    private String mPasskeyRegistrationScript;
+
+    /**
+     * Callback for tracking URL load events.
+     */
+    private final IUrlLoadTracker mUrlLoadTracker;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
                                              @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
-                                             @Nullable final String utid) {
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
         mUtid = utid;
+        mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
+        mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
+        mUrlLoadTracker = urlLoadTracker;
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -249,7 +281,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PASSKEY_FEATURE) && isPasskeyUrl(formattedURL)) {
+            } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
                 final Activity currentActivity = getActivity();
@@ -598,6 +630,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void handleBrowserRedirect(@NonNull final String methodTag, @NonNull final String url) {
         Logger.info(methodTag, "Not a device CA request. Redirecting to browser.");
+        SpanExtension.current().setAttribute(AttributeName.is_redirect_url_opened_in_browser.name(), true);
         openLinkInBrowser(url);
         final RawAuthorizationResult.ResultCode resultCode = mInWebCpFlow
                 ? RawAuthorizationResult.ResultCode.MDM_FLOW
@@ -704,9 +737,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":isWebCpInWebviewFeatureEnabled";
         try {
             if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                // Enabling webcp in webview feature for brokered flows only for now.
-                Logger.info(methodTag, "Not running on AuthService, skipping WebCP in WebView feature check.");
-                return false;
+                mInWebCpFlow = mIsWebViewWebCpEnabledInBrokerlessCase;
+                Logger.info(methodTag, "Not running on AuthService, WebCP in WebView feature enabled? "+ mIsWebViewWebCpEnabledInBrokerlessCase);
+                return mInWebCpFlow;
             }
 
             final String homeTenantId = !StringUtil.isNullOrEmpty(mUtid)? mUtid : getHomeTenantIdFromUrl(originalUrl);
@@ -1011,9 +1044,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 AttributeName.is_sso_nonce_found_in_ests_request.name(), nonceQueryParam != null
         );
         if (nonceQueryParam != null) {
-            final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-            final Span span = spanContext != null ?
-                    OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessNonceFromEstsRedirect.name());
+            final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), mSpanContext);
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
                 final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span);
                 nonceRedirect.processChallenge(new URL(url));
@@ -1052,9 +1083,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processCrossCloudRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processCrossCloudRedirect";
 
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), spanContext) : OTelUtility.createSpan(SpanName.ProcessCrossCloudRedirect.name());
+        final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
@@ -1134,6 +1163,69 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         });
     }
 
+    @Override
+    public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        // Track URL load started
+        if (mUrlLoadTracker != null) {
+            // Initially track as in-progress (success will be updated in onPageFinished or error methods)
+            mUrlLoadTracker.trackNewUrlStatus(url, null,null);
+        }
+        // Evaluate JavaScript for Passkey Registration if script is set and origin is allowed.
+        if (mPasskeyRegistrationScript != null && PasskeyOriginRulesManager.isAllowedOrigin(url)) {
+            Logger.verbose(TAG, "Executing onPageStarted PasskeyRegistration script for URL: " + url);
+            view.evaluateJavascript(mPasskeyRegistrationScript, null);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onReceivedError(final WebView view,
+                                final int errorCode,
+                                final String description,
+                                final String failingUrl) {
+        // Track error from server side
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus( "Code:" + errorCode + ", " + description, null);
+        }
+        super.onReceivedError(view, errorCode, description, failingUrl);
+    }
+
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onReceivedError(@NonNull final WebView view,
+                                @NonNull final WebResourceRequest request,
+                                @NonNull final WebResourceError error) {
+        // Track error from server-side for main frame requests, as onReceivedError can be called for both main frame and sub resource requests,
+        // we only want to track for main frame requests to avoid noise in telemetry.
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.updateLatestUrlStatus("Code:" + error.getErrorCode() + ", " + error.getDescription(), null);
+        }
+        super.onReceivedError(view, request, error);
+    }
+
+    @Override
+    public void onReceivedSslError(final WebView view,
+                                   final SslErrorHandler handler,
+                                   final SslError error) {
+        // Track SSL error for the URL
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus(error.toString(), null);
+        }
+
+        super.onReceivedSslError(view, handler, error);
+    }
+
+    @Override
+    public void onReceivedHttpError(final WebView view,
+                                    final WebResourceRequest request,
+                                    final WebResourceResponse errorResponse) {
+        // Track HTTP error for the URL
+        if (mUrlLoadTracker != null && request.isForMainFrame()) {
+            mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
+        }
+    }
+
     /**
      * Cleanup to be done when host activity is being destroyed.
      */
@@ -1189,9 +1281,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return Created {@link Span}
      */
     private Span createSpanWithAttributesFromParent(@NonNull final String spanName) {
-        final SpanContext spanContext = getActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
-        final Span span = spanContext != null ?
-                OTelUtility.createSpanFromParent(spanName, spanContext) : OTelUtility.createSpan(spanName);
+        final Span span = OTelUtility.createSpanFromParent(spanName, mSpanContext);
         if (mUtid != null) {
             span.setAttribute(AttributeName.tenant_id.name(), mUtid);
         }
@@ -1211,5 +1301,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         }
         return span;
+    }
+
+    /**
+     * Add a JavaScript to be executed in onPageStarted.
+     * The script will be executed only for URLs that are allowed by {@link PasskeyOriginRulesManager}.
+     * @param script JavaScript code to be executed.
+     */
+    public void addPasskeyRegistrationJsScript(@NonNull final String script) {
+        this.mPasskeyRegistrationScript = script;
     }
 }

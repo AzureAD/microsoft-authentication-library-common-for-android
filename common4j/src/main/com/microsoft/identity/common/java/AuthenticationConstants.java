@@ -522,6 +522,21 @@ public class AuthenticationConstants {
     public static final class Broker {
 
         /**
+         * Azure Authenticator app package name.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
+
+        /**
+         * Company Portal app package name.
+         */
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Package name of the Link To Windows app.
+         */
+        public static final String LTW_APP_PACKAGE_NAME = "com.microsoft.appmanager";
+
+        /**
          * Default timeout for broker tasks/futures.
          */
         public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
@@ -568,7 +583,47 @@ public class AuthenticationConstants {
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
+        /**
+         * Timestamp when the broker received the authentication request.
+         */
+        public static final String BROKER_REQUEST_RECEIVED_TIMESTAMP = "broker_request_received_timestamp";
 
+        /**
+         * Timestamp when the broker generated the authentication response.
+         */
+        public static final String BROKER_RESPONSE_GENERATION_TIMESTAMP = "broker_response_generation_timestamp";
+
+        /**
+         * Key for the silent executor pool size in broker response bundles.
+         * Used by clients (e.g., OneAuth) to recreate BrokerPerformanceMetrics.
+         */
+        public static final String BROKER_SILENT_EXECUTOR_POOL_SIZE = "broker_silent_executor_pool_size";
+
+        /**
+         * Broker application version name.
+         */
+        public static final String BROKER_VERSION = "broker_version";
+
+        /**
+         * Active broker package name.
+         */
+        public static final String BROKER_PACKAGE_NAME = "broker_package_name";
+        /**
+         * Key which ESTS sends for nativebroker extra query param.
+         */
+        public static final String NATIVEBROKER_KEY = "nativebroker";
+        /**
+         * Value which ESTS sends for nativebroker extra query param.
+         */
+        public static final String NATIVEBROKER_VALUE = "1";
+        /**
+         * Key for nativebroker mode sent in the extra query param by ESTS.
+         */
+        public static final String NATIVEBROKER_MODE_KEY = "nativebroker_mode";
+        /**
+         * Value for nativebroker mode sent in the extra query param by ESTS when the request is from lookup.
+         */
+        public static final String LOOKUP_MODE_VALUE = "Lookup";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

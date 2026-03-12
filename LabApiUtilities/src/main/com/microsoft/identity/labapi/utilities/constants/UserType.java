@@ -25,11 +25,34 @@ package com.microsoft.identity.labapi.utilities.constants;
 import lombok.NonNull;
 
 public enum UserType {
+    BASIC(LabConstants.UserType.BASIC),
+    MSA(LabConstants.UserType.MSA),
+    MDM_CA(LabConstants.UserType.MDM_CA),
+    MAM_CA(LabConstants.UserType.MAM_CA),
+    TRUE_MAM_CA(LabConstants.UserType.TRUE_MAM_CA),
+    WP(LabConstants.UserType.WP),
+    FEDERATED(LabConstants.UserType.FEDERATED),
+    DEVICE_ADMIN(LabConstants.UserType.DEVICE_ADMIN),
+    USGOV(LabConstants.UserType.USGOV),
+    USGOV_GUEST(LabConstants.UserType.USGOV_GUEST),
+    CHINA(LabConstants.UserType.CHINA),
+    QR_PIN(LabConstants.UserType.QR_PIN),
+    TOKEN_BINDING(LabConstants.UserType.TOKEN_BINDING),
+    CBA(LabConstants.UserType.CBA),
+    RESOURCE_ACCOUNT_1(LabConstants.UserType.RESOURCE_ACCOUNT_1),
+    RESOURCE_ACCOUNT_2(LabConstants.UserType.RESOURCE_ACCOUNT_2),
+    DUNA_BASIC_1(LabConstants.UserType.DUNA_BASIC_1),
+    DUNA_BASIC_2(LabConstants.UserType.DUNA_BASIC_2),
+    DUNA_MAM_CA_1(LabConstants.UserType.DUNA_MAM_CA_1),
+    DUNA_MAM_CA_2(LabConstants.UserType.DUNA_MAM_CA_2),
+    DUNA_MDM_CA_1(LabConstants.UserType.DUNA_MDM_CA_1),
+    DUNA_MDM_CA_2(LabConstants.UserType.DUNA_MDM_CA_2),
+    DUNA_MFA_1(LabConstants.UserType.DUNA_MFA_1),
+    DUNA_MFA_2(LabConstants.UserType.DUNA_MFA_2),
+    TP_CA(LabConstants.UserType.TP_CA),
     CLOUD(LabConstants.UserType.CLOUD),
     B2C(LabConstants.UserType.B2C),
-    FEDERATED(LabConstants.UserType.FEDERATED),
     GUEST(LabConstants.UserType.GUEST),
-    MSA(LabConstants.UserType.MSA),
     ONPREM(LabConstants.UserType.ONPREM);
 
     final String value;

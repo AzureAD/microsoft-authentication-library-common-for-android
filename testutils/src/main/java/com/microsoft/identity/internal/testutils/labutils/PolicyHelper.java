@@ -27,10 +27,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
-import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 import org.junit.Assert;
 
@@ -55,8 +52,9 @@ public class PolicyHelper {
     public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
 
-        final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
+            final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
+
             final CustomSuccessResponse enablePolicyResult = enablePolicyApi.apiEnablePolicyPut(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(enablePolicyResult);
@@ -78,8 +76,8 @@ public class PolicyHelper {
     public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
         instance.setupApiClientWithAccessToken();
 
-        final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
+            final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
             final CustomSuccessResponse disablePolicyResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
             Assert.assertNotNull(disablePolicyResponse);

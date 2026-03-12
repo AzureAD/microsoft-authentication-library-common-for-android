@@ -27,17 +27,13 @@ import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.AppApi;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
-import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.AppInfo;
 import com.microsoft.identity.internal.test.labapi.model.ConfigInfo;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
-import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.internal.test.labapi.model.UserInfo;
-import com.microsoft.identity.labapi.utilities.client.LabClient;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
-import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -252,12 +248,15 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
 
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
-
         TempUser tempUser;
 
         try {
+            final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+            createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
+
+
+
             tempUser = createTempUserApi.apiCreateTempUserPost(userType);
             final String password = LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
             LabConfig labConfig = new LabConfig(tempUser, password);
@@ -271,10 +270,10 @@ public class LabUserHelper {
 
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
-        CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
-
         try {
+            final CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+
+            createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
             return createTempUserApi.apiCreateTempUserPost(userType);
         } catch (ApiException e) {
             throw new RuntimeException("Error retrieving lab user", e);
@@ -330,15 +329,14 @@ public class LabUserHelper {
         }
     }
 
-    public static void resetPassword(final String upn) {
+    public static void resetPassword(final String upn) throws LabApiException {
         instance.setupApiClientWithAccessToken();
-
-        ResetApi resetApi = new ResetApi();
         try {
+            ResetApi resetApi = new ResetApi();
+
             resetApi.apiResetPut(upn, "Password");
         } catch (ApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
         }
     }
-
 }

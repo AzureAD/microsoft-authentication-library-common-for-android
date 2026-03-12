@@ -75,7 +75,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     @Override
-    public void setupApiClientWithAccessToken(final String accessToken) {
+    public void setupApiClientWithAccessToken(final String accessToken, final String keyVaultAccessToken) {
         Configuration.getBuildAutomationVaultApiClient().setAccessToken(accessToken);
     }
 

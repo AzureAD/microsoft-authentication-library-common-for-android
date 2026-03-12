@@ -642,7 +642,7 @@ public final class AuthenticationConstants {
          *
          * @see <a href="https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Broker%20API/broker_protocol_versions.md">Android Auth Broker Protocol Versions</a>
          */
-        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "19.0";
+        public static final String LATEST_MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "20.0";
 
         /**
          * The maximum msal-to-broker protocol version known by clients such as MSAL Android.
@@ -1062,6 +1062,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * OneAuth Test App package name.
+         */
+        public static final String ONEAUTH_TEST_APP_PACKAGE_NAME = "com.msft.oneauth.testapp";
+
+        /**
          * Mock AuthApp package name.
          */
         public static final String MOCK_AUTH_APP_PACKAGE_NAME = "com.microsoft.mockauthapp";
@@ -1124,11 +1129,46 @@ public final class AuthenticationConstants {
          */
         public static final String COMPANY_PORTAL_APP_DEBUG_SIGNATURE_SHA512 = "oIuNoUwMsxC10VneTQXnt/GXN+Pjqd6mpOKEMF/cH3i06K93TZMBWq+fHN/zt4zUe/W6zGj6YLymd1/tGuypNQ==";
 
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Intune Company portal app.
+         * Generated with SHA-512.
+         */
+        public static final String SHARED_INTUNE_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+
         /**
          * Signing certificate thumbprint of the PROD-signed Intune Company portal app.
          * Generated with SHA-512.
          */
-        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE_SHA512 = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the PROD-signed Intune AOSP Agent app.
+         * Generated with SHA-512.
+         */
+        public static final String INTUNE_AOSP_AGENT_RELEASE_SIGNATURE = SHARED_INTUNE_RELEASE_SIGNATURE_SHA512;
+
+        /**
+         * Signing certificate thumbprint of the DEBUG-signed Intune AOSP Agent app.
+         */
+        public static final String INTUNE_AOSP_AGENT_DEBUG_SIGNATURE = "P+9aBy/EDfZVqtyeHWaLWpyklznLb4FkhAbjPHe/pHLa084vhjZdGEb9z7Fef9OghQqYmMfg3T8QqW8gMHfGyA==";
+
+        /**
+         * Signing certificate thumbprint of the edge apps.
+         */
+        public static final String SHARED_EDGE_SIGNATURE = "Ivy+Rk6ztai/IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy/M5mOPpfjZrd3vOx3t+cA6fVQ==";
+
+        /**
+         * Signing certificate thumbprint of the PROD-signed Microsoft Edge app.
+         * Generated with SHA-512.
+         */
+        public static final String  ONE_AUTH_TEST_APP_SIGNATURE = "3V1mY6V7xXG5h0jz6KX1K5e4Z1k3q5V7y8Z9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5a6b7c8d9e0f1";
 
         /**
          * Signing certificate thumbprint of the PROD-signed Microsoft Authenticator app.
@@ -1147,6 +1187,12 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String BROKER_HOST_APP_SIGNATURE_SHA512 = "xxAk8S05zu0Nkce+X2J6IKJ2e7YE4F9ZorZj0YnYUQ2vw8vLc8VGGOqJdTnVySbbcy9VY8UDbOfeOETSErYllw==";
+
+        /**
+         * Signing certificate thumbprint of the OneAuth Test App.
+         * Generated with SHA-512.
+         */
+        public static final String ONEAUTH_TEST_APP_SIGNATURE_SHA512 = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA==";
 
         /**
          * Package name of the Link To Windows app.
@@ -1170,12 +1216,6 @@ public final class AuthenticationConstants {
          * Generated with SHA-512.
          */
         public static final String INTUNE_APP_SHA512_DEBUG_SIGNATURE = "F+Tat7A/mlOJCzRYEmj9DgLRHU2Nb0VSQjgZEyAehqW9+cOT0oYjkT/fa33hYcVMwUzaSy0hUOVt9KQtyFRnVQ==";
-
-        /**
-         * Signing certificate thumbprint of the RELEASE-signed Microsoft Intune app.
-         * Generated with SHA-512.
-         */
-        public static final String INTUNE_APP_SHA512_RELEASE_SIGNATURE = "jPpMoaNvcxSLMX4yG4C3Gf86rtTqh33SqpuRKg4WOP+MnnpA52zZgvKLW76U4Cqqf68iaBk9W7k/jhciiSAtgQ==";
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
@@ -1241,6 +1281,11 @@ public final class AuthenticationConstants {
          * Suffix for Intune MDM urls
          */
         public static final String AAD_INTUNE_MDM_URL_HOST_SUFFIX = ".microsoft.com";
+
+        /**
+         * Suffix for MSA urls
+         */
+        public static final String MSA_URL_HOST_SUFFIX = ".live.com";
 
         /**
          * Encoded delimiter for redirect.
@@ -1375,6 +1420,41 @@ public final class AuthenticationConstants {
          * String for all SSO tokens result.
          */
         public static final String BROKER_GENERATE_ALL_SSO_TOKENS_RESULT = "broker_generate_all_sso_tokens";
+
+        /**
+         * String for broker webapps get contracts result.
+         */
+        public static final String BROKER_WEBAPPS_GET_CONTRACTS_RESULT = "web_apps_contracts";
+
+        /**
+         * String for broker webapps request.
+         */
+        public static final String BROKER_WEB_APPS_EXECUTE_REQUEST = "web_apps_execute_request";
+
+        /**
+         * String for broker webapps additional required params.
+         */
+        public static final String BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS = "additional_required_params";
+
+        /**
+         * String for broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT = "web_app_successful_result";
+
+        /**
+         * String for compressed broker webapps response.
+         */
+        public static final String BROKER_WEB_APPS_SUCCESSFUL_RESULT_COMPRESSED = "web_app_successful_result_compressed";
+
+        /**
+         * String for broker webapps interactive intent.
+         */
+        public static final String BROKER_WEB_APPS_INTERACTIVE_INTENT = "web_apps_interactive_intent";
+
+        /**
+         * String for broker webapps error result.
+         */
+        public static final String BROKER_WEB_APPS_ERROR_RESULT = "web_apps_error_result";
 
         /**
          * String for generate shr result.
@@ -2054,6 +2134,8 @@ public final class AuthenticationConstants {
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
 
+        public static final String WEB_VIEW_WEB_CP_ENABLED = "com.microsoft.identity.web.view.web.cp.enabled";
+
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";
 
         public static final String WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = "com.microsoft.identity.web.view.silent.authorization.flow.timeout";
@@ -2120,4 +2202,3 @@ public final class AuthenticationConstants {
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
 }
-

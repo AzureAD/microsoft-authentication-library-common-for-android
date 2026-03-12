@@ -37,6 +37,20 @@ interface IBrokerDiscoveryClient {
      * **/
     fun getActiveBroker(shouldSkipCache: Boolean = false) : BrokerData?
 
+
+    /**
+     * Performs a discovery to figure out which broker app the SDK (MSAL/OneAuth)
+     * has to send its request to.
+     *
+     * @param shouldSkipCache       If true, this will skip cached value (if any)
+     *                              and always query the broker for the result.
+     * @param telemetryCallback     callback with telemetry data.
+     * @return BrokerData package name and signature hash of the targeted app.
+     * **/
+    fun getActiveBroker(shouldSkipCache: Boolean = false,
+                        telemetryCallback: IBrokerDiscoveryClientTelemetryCallback) : BrokerData?
+
+
     /**
      * Force a broker app to figure out which broker app the SDK (MSAL/OneAuth)
      * has to send its request to.
@@ -51,4 +65,15 @@ interface IBrokerDiscoveryClient {
      * **/
     @kotlin.jvm.Throws(ClientException::class)
     fun forceBrokerRediscovery(brokerCandidate: BrokerData): BrokerData
+
+    /**
+     * This method will return the cached [BrokerData] in the memory (if any).
+     * If the cached value is invalid, it will then proceed with the regular [getActiveBroker] flow.
+     *
+     * The cached value in memory will remain the same during the app process lifetime.
+     *
+     * @param telemetryCallback     callback with telemetry data.
+     * @return BrokerData package name and signature hash of the targeted app.
+     * */
+    fun getActiveBrokerWithInMemoryCache(telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?
 }

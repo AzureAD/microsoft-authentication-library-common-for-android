@@ -24,19 +24,27 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -92,6 +100,7 @@ public class AndroidDevicePoPManagerEncryptionTests {
     @After
     public void tearDown() {
         devicePopManager.clearAsymmetricKey();
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
@@ -101,5 +110,47 @@ public class AndroidDevicePoPManagerEncryptionTests {
 
         Assert.assertEquals(DATA_TO_ENCRYPT, decryptedValue);
         Assert.assertNotEquals(DATA_TO_ENCRYPT, cipherText);
+    }
+
+    @Test
+    public void testEncryption_Disabled() throws ClientException, CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        Mockito.when(mockFlightsProvider.isFlightEnabled(CommonFlight.DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER))
+                .thenReturn(true);
+        // Create anonymous IFlightsManager
+        IFlightsManager anonymousFlightsManager = new IFlightsManager() {
+            @Override
+            public @NotNull IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId, long waitForConfigsWithTimeoutInMs) {
+                return mockFlightsProvider;
+            }
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+                return mockFlightsProvider;
+            }
+            @NonNull
+            @Override
+            public IFlightsProvider getFlightsProvider() {
+                return mockFlightsProvider;
+            }
+        };
+
+        // Initialize CommonFlightsManager with the anonymous implementation
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(anonymousFlightsManager);
+        IDevicePopManager devicePopManager = new AndroidDevicePopManager(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
+        try {
+            final String cipherText = devicePopManager.encrypt(cipher, DATA_TO_ENCRYPT);
+            devicePopManager.decrypt(cipher, cipherText);
+        } catch (Exception exception) {
+            Assert.assertTrue(exception instanceof ClientException);
+            Assert.assertTrue(exception.getCause().getCause().getMessage().contains("Incompatible purpose"));
+            return;
+        }
+        Assert.fail();
+
     }
 }

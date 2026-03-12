@@ -70,6 +70,8 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
+    private final List<Map.Entry<String, String>> extraQueryStringParametersForWebApps;
+
     @Expose()
     private final List<String> extraScopesToConsent;
 
@@ -89,6 +91,10 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
+    }
+
+    public List<Map.Entry<String, String>> getExtraQueryStringParametersForWebApps() {
+        return this.extraQueryStringParametersForWebApps == null ? null : new ArrayList<>(this.extraQueryStringParametersForWebApps);
     }
 
     public List<String> getExtraScopesToConsent() {

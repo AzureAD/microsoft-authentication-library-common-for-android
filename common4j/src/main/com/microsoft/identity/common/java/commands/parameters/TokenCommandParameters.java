@@ -22,14 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_VALUE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_MODE_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.NATIVEBROKER_VALUE;
+
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -69,17 +75,26 @@ public class TokenCommandParameters extends CommandParameters {
 
     private final String loginHint;
 
+    private final String domainHint;
+
     private final List<Map.Entry<String, String>> extraOptions;
+
+    // Only put in the token request body
+    private final List<Map.Entry<String, String>> extraTokenBodyParameters;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);
+    }
+
+    public List<Map.Entry<String, String>> getExtraTokenBodyParameters() {
+        return this.extraTokenBodyParameters == null ? null : new ArrayList<>(this.extraTokenBodyParameters);
     }
 
     public String getMamEnrollmentId(){
         return mamEnrollmentId;
     }
 
-    public void validate() throws ArgumentException {
+    public void validate() throws ArgumentException, ClientException {
         final String methodName = ":validate";
 
         Logger.verbose(
@@ -146,5 +161,31 @@ public class TokenCommandParameters extends CommandParameters {
                 );
             }
         }
+    }
+
+    /**
+     * Checks if the request is for ESTS' lookup mode.
+     * In lookup mode, access token, id token, and scope are all set to "none".
+     * This is a special response from ESTS when extra token body parameters are sent to indicate a token lookup request.
+     *
+     * @return true if in lookup mode, false otherwise
+     */
+    public boolean isLookupMode() {
+        if (extraTokenBodyParameters == null) return false;
+        boolean hasNativeBrokerIndicator = false;
+        boolean hasLookupModeIndicator = false;
+        for (final Map.Entry<String, String> entry : extraTokenBodyParameters) {
+            if (NATIVEBROKER_KEY.equals(entry.getKey())
+                    && NATIVEBROKER_VALUE.equals(entry.getValue())) {
+                hasNativeBrokerIndicator = true;
+            }
+            if (NATIVEBROKER_MODE_KEY.equals(entry.getKey())
+                    && LOOKUP_MODE_VALUE.equals(entry.getValue())) {
+                hasLookupModeIndicator = true;
+            }
+        }
+
+        return hasNativeBrokerIndicator
+                && hasLookupModeIndicator;
     }
 }

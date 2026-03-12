@@ -30,10 +30,10 @@ import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 /**
  * An [IActiveBrokerCache] which stores values in-memory.
  **/
-class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
+open class InMemoryActiveBrokerCache: IClientActiveBrokerCache {
 
-    private var activeBroker: BrokerData? = null
-    private var shouldUseAccountManagerUntil: Long? = null
+    var activeBroker: BrokerData? = null
+    var shouldUseAccountManagerUntil: Long? = null
 
     @Synchronized
     override fun getCachedActiveBroker(): BrokerData? {

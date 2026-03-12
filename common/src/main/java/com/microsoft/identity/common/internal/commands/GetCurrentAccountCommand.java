@@ -73,9 +73,4 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
         return result;
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
 }

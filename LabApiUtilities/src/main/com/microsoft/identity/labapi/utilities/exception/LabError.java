@@ -27,6 +27,7 @@ package com.microsoft.identity.labapi.utilities.exception;
  * the lab api as well as flows to obtain an account via the Lab Api.
  */
 public enum LabError {
+    ACCOUNT_NOT_FOUND_IN_MOBILE_BUILD_KEYVAULT_JSON,
     FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET,
     FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE,
     FAILED_TO_GET_SECRET_FROM_KEYVAULT,

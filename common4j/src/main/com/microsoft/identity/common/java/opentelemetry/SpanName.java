@@ -64,12 +64,42 @@ public enum SpanName {
     ProcessCrossCloudRedirect,
     SwitchBrowserResume,
     SwitchBrowserProcess,
-    SecretKeyWrapping,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
     ProcessWebCpEnrollmentRedirect,
-    ProcessWebCpAuthorizeUrlRedirect
+    ProcessWebCpAuthorizeUrlRedirect,
+    PasskeyWebListener,
+    InstallCertOnWpj,
+    /**
+     * Span name for fetching initial ECS flight configurations.
+     */
+    EcsFlightsFetchConfigs,
+    DevicePopMintSignedAccessToken,
+    /**
+     * Span name for DRS (Device Registration Service) nonce request operations.
+     */
+    DRSNonceRequest,
+    /**
+     * Span name for Device POP crypto operations.
+     */
+    DevicePopCryptoOperation,
+    /**
+     * Span name for web apps API execute requests.
+     */
+    ExecuteWebAppsRequest,
+    /**
+     * Span name for the Browser SSO header generation operation.
+     */
+    GetBrowserSsoHeaders,
+    /**
+     * Span name for secret key generation operations.
+     */
+    SecretKeyGeneration,
+    /**
+     * Span name for secret key retrieval operations.
+     */
+    SecretKeyRetrieval
 }

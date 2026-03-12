@@ -41,6 +41,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.net.http.SslError;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -62,6 +65,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.shadows.ShadowProcessUtil;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -148,7 +152,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 },
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId");
+                "homeTenantId",
+                false);
         HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
@@ -156,6 +161,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         if (!AzureActiveDirectory.isInitialized()) {
             AzureActiveDirectory.performCloudDiscovery();
         }
+    }
+
+    @After
+    public void cleanUp(){
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -374,6 +384,46 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testLoadDeviceCaUrlInWebviewInBrokelessFlow() {
+        // Mocks
+        final WebView mockWebview = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient mockWebViewClient  = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                new IAuthorizationCompletionCallback() {
+                    @Override
+                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+
+                    }
+
+                    @Override
+                    public void setPKeyAuthStatus(boolean status) {
+                        return;
+                    }
+                },
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                        return;
+                    }
+                },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                true);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        // Actual call
+        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        // Verify
+        Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
+        Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
     public void testProcessCloudRedirectAndPrtHeaderInternalSuccess() {
         ReAttachPrtHeaderHandler mockCrossCloudChallengeHandler = Mockito.mock(ReAttachPrtHeaderHandler.class);
         try {
@@ -431,7 +481,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                     },
                     TEST_REDIRECT_URI,
                     Mockito.mock(SwitchBrowserRequestHandler.class),
-                    "homeTenantId");
+                    "homeTenantId",
+                    false);
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
         } catch (ClassCastException e) {
             Assert.fail("Failure is not expected. The class checks should have prevented this." + e);
@@ -447,13 +498,19 @@ public class AzureActiveDirectoryWebViewClientTest {
         final SslError mockError = Mockito.mock(android.net.http.SslError.class);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
         when(mockError.getUrl()).thenReturn("https://example.com");
+        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(false);
+        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
         final AzureActiveDirectoryWebViewClient mockWebViewClient = new AzureActiveDirectoryWebViewClient(
                 mActivity,
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId");
+                "homeTenantId",
+                false);
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
 
@@ -481,7 +538,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId"
+                "homeTenantId",
+                false
         );
         final WebView mockWebView = new WebView(mContext);
         mockWebView.setWebViewClient(mockWebViewClient);
@@ -522,7 +580,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId"
+                "homeTenantId",
+                false
         ));
         final WebView mockWebView = Mockito.mock(WebView.class);
 
@@ -549,7 +608,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId"
+                "homeTenantId",
+                false
         ));
         final WebView mockWebView = Mockito.mock(WebView.class);
 
@@ -581,7 +641,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId"
+                "homeTenantId",
+                false
         );
         final WebView mockWebView = Mockito.mock(WebView.class);
 
@@ -620,7 +681,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 url -> {},
                 TEST_REDIRECT_URI,
                 Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId"
+                "homeTenantId",
+                false
         ));
         final WebView mockWebView = Mockito.mock(WebView.class);
 
@@ -645,5 +707,142 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Verify that the error message is about browser not found
         assertTrue("Expected error message about browser not found",
                 capturedResult.getException().getMessage().contains("No browser found to open the link"));
+    }
+
+    // -----------------------------------------------------------------------
+    // URL tracking tests (IUrlLoadTracker integration)
+    // -----------------------------------------------------------------------
+
+    private AzureActiveDirectoryWebViewClient createWebViewClientWithTracker(
+            final IUrlLoadTracker tracker) throws ClientException {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                Mockito.mock(IAuthorizationCompletionCallback.class),
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false,
+                tracker);
+    }
+
+    @Test
+    public void testUrlTracker_onPageStarted_callsTrackNewUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+        final String url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+
+        client.onPageStarted(mMockWebView, url, null);
+
+        Mockito.verify(mockTracker).trackNewUrlStatus(url, null, null);
+    }
+
+    @Test
+    public void testUrlTracker_onPageStarted_nullTracker_noException() throws ClientException {
+        // Uses constructor without IUrlLoadTracker; should not throw
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                Mockito.mock(IAuthorizationCompletionCallback.class),
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false);
+
+        // Should complete without NullPointerException
+        client.onPageStarted(mMockWebView, "https://login.microsoftonline.com/common/oauth2/v2.0/authorize", null);
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedError_deprecated_callsUpdateLatestUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+        final int errorCode = -2;
+        final String description = "net::ERR_NAME_NOT_RESOLVED";
+
+        client.onReceivedError(mMockWebView, errorCode, description,
+                "https://login.microsoftonline.com/common/oauth2/v2.0/authorize");
+
+        Mockito.verify(mockTracker).updateLatestUrlStatus("Code:" + errorCode + ", " + description, null);
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedError_mainFrame_callsUpdateLatestUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceError mockError = Mockito.mock(WebResourceError.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(true);
+        Mockito.when(mockError.getErrorCode()).thenReturn(-2);
+        Mockito.when(mockError.getDescription()).thenReturn("net::ERR_NAME_NOT_RESOLVED");
+
+        client.onReceivedError(mMockWebView, mockRequest, mockError);
+
+        Mockito.verify(mockTracker).updateLatestUrlStatus("Code:-2, net::ERR_NAME_NOT_RESOLVED", null);
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedError_subResource_doesNotCallUpdateLatestUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceError mockError = Mockito.mock(WebResourceError.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(false);
+
+        client.onReceivedError(mMockWebView, mockRequest, mockError);
+
+        Mockito.verify(mockTracker, never()).updateLatestUrlStatus(any(), any());
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedSslError_callsUpdateLatestUrlStatus() throws ClientException {
+        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.SHOULD_PRESERVE_WEBVIEW_FLOW_ON_SSL_ERROR))).thenReturn(false);
+        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final SslError mockError = Mockito.mock(SslError.class);
+        final SslErrorHandler mockHandler = Mockito.mock(SslErrorHandler.class);
+        Mockito.when(mockError.toString()).thenReturn("SslError(SSL_EXPIRED)");
+
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+
+        client.onReceivedSslError(new WebView(mContext), mockHandler, mockError);
+
+        Mockito.verify(mockTracker).updateLatestUrlStatus("SslError(SSL_EXPIRED)", null);
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedHttpError_mainFrame_callsUpdateLatestUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(true);
+        Mockito.when(mockErrorResponse.getStatusCode()).thenReturn(403);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        Mockito.verify(mockTracker).updateLatestUrlStatus("HTTP Error Code: 403", null);
+    }
+
+    @Test
+    public void testUrlTracker_onReceivedHttpError_subResource_doesNotCallUpdateLatestUrlStatus() throws ClientException {
+        final IUrlLoadTracker mockTracker = Mockito.mock(IUrlLoadTracker.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithTracker(mockTracker);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(false);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        Mockito.verify(mockTracker, never()).updateLatestUrlStatus(any(), any());
     }
 }

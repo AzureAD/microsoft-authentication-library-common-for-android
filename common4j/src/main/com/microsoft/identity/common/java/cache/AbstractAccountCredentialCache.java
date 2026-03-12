@@ -113,23 +113,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final List<AccountRecord> matchingAccounts = new ArrayList<>();
 
         for (final AccountRecord account : allAccounts) {
-            boolean matches = true;
+            if (mustMatchOnHomeAccountId && !StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId())) continue;
+            if (mustMatchOnEnvironment && !StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment())) continue;
+            if (mustMatchOnRealm && !StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm())) continue;
 
-            if (mustMatchOnHomeAccountId) {
-                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
-            }
-
-            if (mustMatchOnEnvironment) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
-            }
-
-            if (mustMatchOnRealm) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm());
-            }
-
-            if (matches) {
-                matchingAccounts.add(account);
-            }
+            matchingAccounts.add(account);
         }
 
         Logger.verbose(
@@ -191,28 +179,18 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final List<Credential> matchingCredentials = new ArrayList<>();
 
         for (final Credential credential : allCredentials) {
-            boolean matches = true;
+            if (mustMatchOnHomeAccountId && !StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId())) continue;
 
-            if (mustMatchOnHomeAccountId) {
-                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
-            }
+            if (mustMatchOnEnvironment && !StringUtil.equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment())) continue;
 
-            if (mustMatchOnEnvironment) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
-            }
+            if (mustMatchOnCredentialType && !StringUtil.equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType())) continue;
 
-            if (mustMatchOnCredentialType) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
-            }
-
-            if (mustMatchOnClientId) {
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
-            }
+            if (mustMatchOnClientId && !StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId())) continue;
 
             if (mustMatchOnApplicationIdentifier) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, accessToken.getApplicationIdentifier());
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(applicationIdentifier, accessToken.getApplicationIdentifier())) continue;
                 } else {
                     Logger.verbose(TAG, "Query specified applicationIdentifier match, but credential type does not have application identifier");
                 }
@@ -221,29 +199,32 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnMamEnrollmentIdentifier) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(mamEnrollmentIdentifier, accessToken.getMamEnrollmentIdentifier());
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(mamEnrollmentIdentifier, accessToken.getMamEnrollmentIdentifier())) continue;
                 } else {
                     Logger.verbose(TAG, "Query specified mamEnrollmentIdentifier match, but credential type does not have MAM enrollment identifier");
                 }
             }
 
-            if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
-            }
-
-            if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
-                final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, idToken.getRealm());
+            if (mustMatchOnRealm) {
+                String tokenRecordRealm = "";
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    tokenRecordRealm = accessToken.getRealm();
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(realm, tokenRecordRealm)) continue;
+                } else if (credential instanceof IdTokenRecord) {
+                    final IdTokenRecord idToken = (IdTokenRecord) credential;
+                    tokenRecordRealm = idToken.getRealm();
+                    if(!StringUtil.equalsIgnoreCaseTrimBoth(realm, tokenRecordRealm)) continue;
+                }
             }
 
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, accessToken.getTarget(), true);
+                    if(!targetsIntersect(target, accessToken.getTarget(), true)) continue;
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, refreshToken.getTarget(), true);
+                    if(!targetsIntersect(target, refreshToken.getTarget(), true)) continue;
                 } else {
                     Logger.verbose(TAG, "Query specified target-match, but no target to match.");
                 }
@@ -252,40 +233,35 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                 String atType = accessToken.getAccessTokenType();
-
                 if (null != atType) {
                     atType = atType.trim();
                 }
 
                 if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
-                    matches = matches && (
-                            authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
-                                    || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
-                    );
-                } else {
-                    matches = matches && authScheme.equalsIgnoreCase(atType);
-                }
+                    if (!(authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
+                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP))) {
+                        continue;
+                    }
+                } else if (!authScheme.equalsIgnoreCase(atType)) continue;
             }
 
             if(mustMatchOnKid && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && kid.equalsIgnoreCase(accessToken.getKid());
+                if (!kid.equalsIgnoreCase(accessToken.getKid())) continue;
             }
 
             if (mustMatchOnRequestedClaims || mustMatchExactClaims) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
                     if(!(mustMatchExactClaims && StringUtil.isNullOrEmpty(requestedClaims) && StringUtil.isNullOrEmpty(accessToken.getRequestedClaims()))) {
-                        matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                        if(!StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims())) continue;
                     }
                 } else {
                     Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }
             }
 
-            if (matches) {
-                matchingCredentials.add(credential);
-            }
+            matchingCredentials.add(credential);
         }
 
         return matchingCredentials;

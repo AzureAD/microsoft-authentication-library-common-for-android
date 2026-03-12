@@ -1,4 +1,4 @@
-// Variables for entire project
+// Variables for entire project.
 // Taken from android-complete.
 ext {
     // SDK
@@ -47,8 +47,8 @@ ext {
     daggerVersion = "2.31.2"
     daggerCompilerVersion = "2.31.2"
     msal4jVersion = "1.20.1"
-    moshiVersion = "1.14.0"
-    moshiAdaptersVersion = "1.14.0"
+    moshiVersion = "1.15.2"
+    moshiAdaptersVersion = "1.15.2"
     openpojoVersion = "0.9.1"
     equalsVerifierVersion = "3.6.1"
     jsonGeneratorVersion = "0.4.7"
@@ -80,6 +80,7 @@ ext {
     AndroidCredentialsVersion="1.2.2"
     LegacyFidoApiVersion="20.1.0"
     GoogleIdVersion="1.1.0"
+    webkitVersion="1.14.0"
 
     // microsoft-diagnostics-uploader app versions
     powerliftVersion = "0.14.7"

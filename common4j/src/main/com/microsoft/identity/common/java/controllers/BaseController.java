@@ -366,6 +366,7 @@ public abstract class BaseController {
             final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
             msBuilder
                     .setLoginHint(interactiveTokenCommandParameters.getLoginHint())
+                    .setDomainHint(interactiveTokenCommandParameters.getDomainHint())
                     .setPrompt(interactiveTokenCommandParameters.getPrompt().toString())
                     .setPreferredAuthMethod(interactiveTokenCommandParameters.getPreferredAuthMethod());
             final String installedCompanyPortalVersion =

@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands;
 
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
@@ -150,12 +151,11 @@ public class SilentTokenCommand extends TokenCommand {
 
     @Override
     public boolean isEligibleForCaching() {
+        if (BuildConfig.SHOULD_SKIP_SILENT_TOKEN_COMMAND_CACHE_FOR_STRESS_TEST) {
+            // by disabling this, MSAL/Broker will allow similar request to be executed
+            // as opposed to being handled by cache.
+            return false;
+        }
         return true;
     }
-
-    @Override
-    public boolean isEligibleForEstsTelemetry() {
-        return true;
-    }
-
 }

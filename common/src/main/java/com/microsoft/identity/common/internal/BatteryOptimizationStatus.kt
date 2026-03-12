@@ -20,24 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.internal
 
-package com.microsoft.identity.common.internal.util;
+/**
+ * Enum representing the battery optimization status of the application.
+ */
+enum class BatteryOptimizationStatus {
+    /** The application has opted out of battery optimization. */
+    OptOut,
 
-import android.util.Base64;
+    /** The application has not opted out of battery optimization. */
+    NotOptOut,
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.robolectric.RobolectricTestRunner;
+    /** Unable to retrieve the PowerManager service to determine battery optimization status. */
+    CannotRetrievePowerManager,
 
-@RunWith(RobolectricTestRunner.class)
-public class PackageUtilTest {
-
-    @Test
-    public void testHexStringConversion() {
-        String string = PackageUtils.convertToBase64("DE:AD:BE:EF");
-        Assert.assertEquals(Base64.encodeToString(new byte[]{(byte) (0xde & 0xff), (byte) (0xad &0xff), (byte) (0xbe & 0xff), (byte) (0xef & 0xff)}, Base64.NO_WRAP),
-                string);
-    }
+    /** An unknown error occurred while checking battery optimization status. */
+    UnknownError
 }

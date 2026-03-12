@@ -39,6 +39,7 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
@@ -50,9 +51,7 @@ import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -89,6 +88,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -98,8 +99,16 @@ import lombok.NonNull;
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE = 12;
+    private static final int LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    // CPU core count is used as a reference for sizing SilentRequestThreadPool.
+    private static final int CPU_CORE_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int DCF_REQUEST_THREAD_POOL_SIZE = 5;
+    private static final int EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS = 500;
+    private static final int EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS = 1000;
+    // Cache the pool size for the session
+    //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static final int SILENT_REQUEST_THREAD_POOL_SIZE = computeSilentRequestThreadPoolSize();
     private static ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
     private static ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final ExecutorService sDCFExecutor = Executors.newFixedThreadPool(DCF_REQUEST_THREAD_POOL_SIZE);
@@ -109,10 +118,100 @@ public class CommandDispatcher {
 
     private static final Object mapAccessLock = new Object();
 
+    /**
+     * Enum representing the possible outcomes of silent executor termination during reset.
+     */
+    private enum ExecutorTerminationOutcome {
+        /** Executor terminated successfully within graceful timeout. */
+        GRACEFUL,
+        /** Executor required forced shutdown but eventually terminated. */
+        FORCED,
+        /** Executor did not fully terminate even after forced shutdown. */
+        FAILED
+    }
+
     //@GuardedBy("mapAccessLock")
     //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+
+    /**
+     * Enum representing the lifecycle states of a request for timeout classification.
+     * This enables precise tracking of where a timeout occurred in the request processing pipeline.
+     */
+    private enum RequestState {
+        /** Request is waiting to acquire the mapAccessLock (lock contention) */
+        WAITING_FOR_LOCK,
+        /** Request has been queued in the thread pool executor (thread pool contention) */
+        QUEUED,
+        /** Request is actively being executed by a worker thread (slow execution) */
+        EXECUTING
+    }
+
+    // Track request state per request for timeout classification
+    // Maps correlation ID to its current state in the request lifecycle
+    private static final ConcurrentMap<String, RequestState> sRequestStateMap =
+        new ConcurrentHashMap<>();
+
+    // Timeout diagnostic message templates
+    private static final String TIMEOUT_MSG_LOCK_CONTENTION = 
+        "Lock contention detected. Request timed out waiting to acquire mapAccessLock.";
+    private static final String TIMEOUT_MSG_THREAD_POOL_SATURATED = 
+        "Thread pool saturated. All %d threads busy, %d requests queued.";
+    private static final String TIMEOUT_MSG_THREAD_POOL_CONTENTION = 
+        "Thread pool contention. Request queued but not picked up in time.";
+    private static final String TIMEOUT_MSG_EXECUTION_SLOW = 
+        "Slow execution. Request was executing but didn't complete in time.";
+    private static final String TIMEOUT_MSG_UNKNOWN_STATE = 
+        "Unknown state '%s'.";
+
+    // Compute the thread pool size based on flight configuration
+    private static int computeSilentRequestThreadPoolSize() {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider() != null) {
+            boolean useIncreasedPoolSize = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .getBooleanValue(CommonFlight.USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE);
+            return useIncreasedPoolSize ? DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE
+                    : LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
+        }
+        return LEGACY_SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
+    /**
+     * Returns the cached thread pool size for silent requests.
+     * This value is computed once during class initialization based on flight configuration.
+     *
+     * @return the cached pool size for the session
+     */
+    private static int getSilentRequestThreadPoolSize() {
+        return SILENT_REQUEST_THREAD_POOL_SIZE;
+    }
+
+    /**
+     * Returns the approximate number of threads that are actively
+     * executing tasks in the silent request thread pool.
+     */
+    public static int getSilentRequestActiveCount(){
+        return ((ThreadPoolExecutor)sSilentExecutor).getActiveCount();
+    }
+
+    /**
+     * Returns the core pool size of the silent request thread pool.
+     *
+     * @return the core pool size of the silent executor
+     */
+    public static int getSilentExecutorPoolSize() {
+        return ((ThreadPoolExecutor) sSilentExecutor).getCorePoolSize();
+    }
+
+    /**
+     * Returns the default silent request thread pool size.
+     * Used as default value when pool size is not available from broker response.
+     *
+     * @return the default pool size constant
+     */
+    public static int getDefaultSilentExecutorPoolSize() {
+        return getSilentRequestThreadPoolSize();
+    }
 
     /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
@@ -158,17 +257,108 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             sExecutingCommandMap.clear();
         }
+        // Clear timeout tracking map
+        sRequestStateMap.clear();
+        
         sSilentExecutor.shutdownNow();
         sInteractiveExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
         f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.set(null, Executors.newFixedThreadPool(getSilentRequestThreadPoolSize()));
         f.setAccessible(false);
 
         f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
         f.setAccessible(true);
         f.set(null, Executors.newSingleThreadExecutor());
         f.setAccessible(false);
+    }
+
+    /**
+     * Builds a consistent diagnostic message for timeout exceptions.
+     *
+     * @param location The method where timeout occurred
+     * @param message The specific timeout reason message
+     * @param activeThreads Number of active threads in the pool
+     * @param queueSize Number of requests waiting in the queue
+     * @return Formatted diagnostic message
+     */
+    private static String buildTimeoutDiagnosticMessage(
+            @NonNull final String location,
+            @NonNull final String message,
+            final int activeThreads,
+            final int queueSize) {
+        return String.format(
+            "Timeout in %s: %s [ActiveThreads=%d, QueueSize=%d, PoolSize=%d]",
+            location, message, activeThreads, queueSize, getSilentRequestThreadPoolSize());
+    }
+
+    /**
+     * Creates a ClientException with a specific timeout error code based on the request state.
+     * This enables definitive classification of timeout root causes for telemetry and diagnostics.
+     *
+     * Classification logic:
+     * - WAITING_FOR_LOCK: Timeout while waiting for mapAccessLock (lock contention)
+     * - QUEUED + pool saturated: All threads busy AND queue has waiting requests (severe saturation)
+     * - QUEUED + not saturated: Threads busy but queue not fully saturated (moderate contention)
+     * - EXECUTING: Request was picked up but didn't complete (slow execution)
+     * - null/unknown: Fallback to generic timeout
+     *
+     * @param timeoutLocation The method where timeout occurred
+     * @param correlationId The correlation ID of the request
+     * @param state The request state at timeout (WAITING_FOR_LOCK, QUEUED, EXECUTING, or null)
+     * @param activeThreads Number of active threads in the pool
+     * @param queueSize Number of requests waiting in the queue
+     * @param cause The original TimeoutException
+     * @return ClientException with classified error code and diagnostic message
+     */
+    private static ClientException createTimeoutException(
+            @NonNull final String timeoutLocation,
+            @NonNull final String correlationId,
+            @Nullable final RequestState state,
+            final int activeThreads,
+            final int queueSize,
+            @NonNull final TimeoutException cause) {
+        final String errorCode;
+        final String reasonMessage;
+        
+        if (state == null) {
+            errorCode = ClientException.TIMED_OUT;
+            reasonMessage = String.format(TIMEOUT_MSG_UNKNOWN_STATE, "null");
+        } else {
+            switch (state) {
+                case WAITING_FOR_LOCK:
+                    errorCode = ClientException.TIMED_OUT_LOCK_CONTENTION;
+                    reasonMessage = TIMEOUT_MSG_LOCK_CONTENTION;
+                    break;
+                case QUEUED:
+                    // All threads busy AND requests queued = Pool completely saturated
+                    if (activeThreads >= getSilentRequestThreadPoolSize() && queueSize > 0) {
+                        errorCode = ClientException.TIMED_OUT_THREAD_POOL_SATURATED;
+                        reasonMessage = String.format(TIMEOUT_MSG_THREAD_POOL_SATURATED, activeThreads, queueSize);
+                    } else {
+                        // Threads busy but pool not saturated = Temporary contention
+                        errorCode = ClientException.TIMED_OUT_THREAD_POOL_CONTENTION;
+                        reasonMessage = TIMEOUT_MSG_THREAD_POOL_CONTENTION;
+                    }
+                    break;
+                case EXECUTING:
+                    errorCode = ClientException.TIMED_OUT_EXECUTION;
+                    reasonMessage = TIMEOUT_MSG_EXECUTION_SLOW;
+                    break;
+                default:
+                    errorCode = ClientException.TIMED_OUT;
+                    reasonMessage = String.format(TIMEOUT_MSG_UNKNOWN_STATE, state.name());
+                    break;
+            }
+        }
+        
+        final String diagnosticMessage = buildTimeoutDiagnosticMessage(
+            timeoutLocation, reasonMessage, activeThreads, queueSize);
+        Logger.error(TAG, diagnosticMessage, cause);
+
+        final ClientException exception = new ClientException(errorCode, diagnosticMessage, cause);
+        exception.setCorrelationId(correlationId);
+        return exception;
     }
 
     /**
@@ -247,15 +437,36 @@ public class CommandDispatcher {
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
         final CommandResult commandResult;
+        // Initialize to null, will be set after submitSilentReturningFuture returns
+        // when it's guaranteed to be initialized on the parameters
+        String correlationId = null;
+
         try {
+            final FinalizableResultFuture<CommandResult> future = submitSilentReturningFuture(command);
+            correlationId = command.getParameters().getCorrelationId();
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
-                commandResult = submitSilentReturningFuture(command).get();
+                commandResult = future.get();
             } else {
                 final int silentTokenTimeOutMs = CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS);
-                commandResult = submitSilentReturningFuture(command).get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
+                commandResult = future.get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
-        } catch (final InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (final TimeoutException e) {
+            // Classify timeout based on request state using correlation ID
+            final String effectiveCorrelationId = correlationId != null ? correlationId : "unknown";
+            throw createTimeoutException(
+                    "submitAcquireTokenSilentSync",
+                    effectiveCorrelationId,
+                    correlationId != null ? sRequestStateMap.get(correlationId) : null,
+                    getSilentRequestActiveCount(),
+                    ((ThreadPoolExecutor) sSilentExecutor).getQueue().size(),
+                    e);
+        } catch (final InterruptedException | ExecutionException e) {
             throw ExceptionAdapter.baseExceptionFromException(e);
+        } finally {
+            // Only clean up if correlationId was initialized
+            if (correlationId != null) {
+                sRequestStateMap.remove(correlationId);
+            }
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED){
@@ -305,7 +516,19 @@ public class CommandDispatcher {
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
+        // Track state BEFORE entering synchronized block using correlation ID
+        // This enables detection of lock contention timeouts
+        // Only track state for non-DCF requests
+        if (!isDeviceCodeFlowRequest) {
+            sRequestStateMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
+        }
+
         synchronized (mapAccessLock) {
+            // Update state: lock acquired, now queued for thread pool, only track non-DCF requests
+            if (!isDeviceCodeFlowRequest) {
+                sRequestStateMap.put(correlationId, RequestState.QUEUED);
+            }
+
             final FinalizableResultFuture<CommandResult> finalFuture;
             if (command.isEligibleForCaching()) {
                 FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
@@ -320,10 +543,20 @@ public class CommandDispatcher {
                     } else {
                         // Our value was not inserted, grab the one that was and hang a new listener off it
                         putValue.whenComplete(getCommandResultConsumer(command));
+                        // This request is sharing another request's future - it's effectively EXECUTING
+                        // Update state to prevent incorrect timeout classification as QUEUED
+                        if (!isDeviceCodeFlowRequest) {
+                            sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                        }
                         return putValue;
                     }
                 } else {
                     future.whenComplete(getCommandResultConsumer(command));
+                    // This request is sharing another request's future - it's effectively EXECUTING
+                    // Update state to prevent incorrect timeout classification as QUEUED
+                    if (!isDeviceCodeFlowRequest) {
+                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                    }
                     return future;
                 }
 
@@ -337,10 +570,26 @@ public class CommandDispatcher {
                     AttributeName.num_concurrent_silent_requests.name(),
                     sExecutingCommandMap.size()
             );
+            int queueSize = ((ThreadPoolExecutor)sSilentExecutor).getQueue().size();
+            SpanExtension.current().setAttribute(
+                    AttributeName.silent_requests_queue_size.name(),
+                    queueSize
+            );
+            // Report the actual pool size being used
+            SpanExtension.current().setAttribute(
+                    AttributeName.silent_executor_pool_size.name(),
+                    getSilentExecutorPoolSize()
+            );
 
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    // Update state: thread has picked up the request, now executing
+                    // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
+                    if (!isDeviceCodeFlowRequest) {
+                        sRequestStateMap.put(correlationId, RequestState.EXECUTING);
+                    }
+
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_EXECUTOR_START : ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         //initializing again since the request is transferred to a different thread pool
@@ -348,16 +597,7 @@ public class CommandDispatcher {
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        initTelemetryForCommand(command);
-
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
                         CommandResult<?> commandResult = null;
-
-                        //Log operation parameters
-                        if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                            EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
-                        }
 
                         codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_COMMAND_EXECUTION_START : ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
                         try {
@@ -369,7 +609,6 @@ public class CommandDispatcher {
                                 + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
-                        EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
@@ -434,14 +673,11 @@ public class CommandDispatcher {
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                         CommandResult commandResult = executeCommand(command);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
                                 + " is cacheable : " + command.isEligibleForCaching());
-                        EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
@@ -454,12 +690,6 @@ public class CommandDispatcher {
             }));
             return finalFuture;
         }
-    }
-
-    private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
-        EstsTelemetry.getInstance().setUp(
-                command.getParameters().getPlatformComponents());
-        EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
@@ -745,10 +975,6 @@ public class CommandDispatcher {
 
                             logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                            initTelemetryForCommand(command);
-
-                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
                             final BaseException[] receiverException = new BaseException[1];
 
                             final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
@@ -785,7 +1011,6 @@ public class CommandDispatcher {
                                     "Completed interactive request for correlation id : **" + correlationId +
                                             statusMsg(commandResult.getStatus().getLogStatus()));
 
-                            EstsTelemetry.getInstance().flush(command, commandResult);
                             returnCommandResult(command, commandResult);
                         } finally {
                             DiagnosticContext.INSTANCE.clear();
@@ -874,15 +1099,164 @@ public class CommandDispatcher {
             sSilentExecutor.shutdownNow();
         }
     }
+
+    /**
+     * Checks if the given package name belongs to a Broker application.
+     *
+     * @param packageName the package name to check
+     * @return true if the package name is a Broker app, false otherwise
+     */
+    private static boolean isBrokerPackageName(@Nullable final String packageName) {
+        if (StringUtil.isNullOrEmpty(packageName)) {
+            return false;
+        }
+        return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(packageName) ||
+                AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME.equals(packageName);
+    }
+
+    /**
+     * Initializes the silent executor with expanded thread pool size based on Processor count.
+     * <p>
+     * This method should ONLY be called by Broker during its initialization phase
+     * when the flight check determines that expanded pool is enabled.
+     * MSAL client apps should NOT call this method - they will use the default pool size.
+     * </p>
+     * <p>
+     * This enables Broker to handle more concurrent silent token requests (12 vs CPU count based on flight)
+     * without affecting MSAL client apps which run in separate processes.
+     * </p>
+     *
+     * @param callingPackageName the package name of the calling application for validation
+     * @throws ClientException if called from a non-Broker application
+     */
+    public static void initializeSilentExecutorWithExpandedPool(@NonNull final String callingPackageName) throws ClientException {
+        final String methodTag = TAG + ":initializeSilentExecutorWithExpandedPool";
+
+        // Validate caller is a Broker application
+        if (!isBrokerPackageName(callingPackageName)) {
+            Logger.error(methodTag, "Method called from non-Broker application: " + callingPackageName, null);
+            throw new ClientException(
+                    ErrorStrings.BROKER_ONLY_OPERATION,
+                    "This operation is only available for Broker applications."
+            );
+        }
+
+        Logger.info(methodTag, "Expanding silent thread pool size for Broker to core pool size " + CPU_CORE_COUNT + ", based on processor count.");
+        resetSilentRequestExecutorWithSize(CPU_CORE_COUNT);
+    }
+
+
+    /**
+     * Resets the SilentRequestsExecutor with a custom thread pool size.
+     * <p>
+     * This gracefully shuts down the existing executor before creating a new one.
+     * </p>
+     * <p>
+     * <strong>IMPORTANT:</strong> This method should ONLY be called during Broker initialization
+     * or after global signout in Shared Device Mode when no silent requests are active.
+     * </p>
+     *
+     * @param poolSize the desired thread pool size. Must be positive non-zero integer.
+     */
+    private static void resetSilentRequestExecutorWithSize(final int poolSize) {
+        final String methodTag = TAG + ":resetSilentRequestExecutorWithSize";
+
+        final int effectivePoolSize;
+        if (poolSize <= 0) {
+            final int defaultPoolSize = getSilentRequestThreadPoolSize();
+            Logger.error(methodTag, "Invalid poolSize: " + poolSize + ". Using default: " + defaultPoolSize, null);
+            effectivePoolSize = defaultPoolSize;
+        } else {
+            effectivePoolSize = poolSize;
+        }
+
+        Logger.info(methodTag, "Resetting silent Executor with pool size: " + effectivePoolSize);
+
+        // Step 1: Atomically swap executor while holding lock (minimal lock duration)
+        // This ensures new submissions go to the new executor immediately
+        final ExecutorService oldExecutor;
+        synchronized (mapAccessLock) {
+            oldExecutor = sSilentExecutor;
+            sSilentExecutor = new ThreadPoolExecutor(
+                    effectivePoolSize, // core pool size
+                    effectivePoolSize*2, // max pool size
+                    30L, // keep-alive time for idle threads above core pool size
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<Runnable>(effectivePoolSize));
+            Logger.info(methodTag, "Swapped to new executor with " + effectivePoolSize + " threads");
+            sExecutingCommandMap.clear();
+        }
+
+        // Step 2: Shutdown old executor OUTSIDE the lock to avoid deadlock
+        // Workers can now complete their finally blocks (which need mapAccessLock)
+        shutdownOldExecutor(oldExecutor, methodTag);
+    }
+
+    /**
+     * Gracefully shuts down an old executor service.
+     * <p>
+     * <strong>IMPORTANT:</strong> Must be called WITHOUT holding mapAccessLock to avoid deadlock.
+     * Worker tasks in their finally blocks need mapAccessLock to complete cleanup.
+     * </p>
+     *
+     * @param executor  the old executor to shutdown
+     * @param methodTag tag for logging
+     */
+    private static void shutdownOldExecutor(@NonNull final ExecutorService executor,
+                                            @NonNull final String methodTag) {
+        ExecutorTerminationOutcome terminationOutcome = ExecutorTerminationOutcome.FAILED;
+
+        try {
+            // Gracefully shutdown old executor
+            executor.shutdown();
+
+            // Wait for graceful completion
+            if (executor.awaitTermination(EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                terminationOutcome = ExecutorTerminationOutcome.GRACEFUL;
+            } else {
+                Logger.warn(methodTag, "Executor did not terminate gracefully within " +
+                        EXECUTOR_GRACEFUL_TERMINATION_TIMEOUT_MS + "ms, forcing shutdown");
+
+                final List<Runnable> droppedTasks = executor.shutdownNow();
+
+                if (!droppedTasks.isEmpty()) {
+                    Logger.warn(methodTag, "Forced shutdown dropped " + droppedTasks.size() +
+                            " tasks (expected during reset after signout)");
+                }
+
+                // Wait for forced termination to complete
+                if (executor.awaitTermination(EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    terminationOutcome = ExecutorTerminationOutcome.FORCED;
+                } else {
+                    Logger.error(methodTag, "Executor did not terminate after forced shutdown within " +
+                            EXECUTOR_FORCED_TERMINATION_TIMEOUT_MS + "ms", null);
+                }
+            }
+        } catch (final InterruptedException e) {
+            Logger.warn(methodTag, "Interrupted while waiting for executor shutdown");
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        } catch (final RuntimeException e) {
+            Logger.error(methodTag, "Unexpected exception during executor shutdown: " + e.getMessage(), e);
+            try {
+                executor.shutdownNow();
+            } catch (final RuntimeException ignored) {
+                Logger.error(methodTag, "Failed to force shutdown executor", ignored);
+            }
+        }
+
+        Logger.info(methodTag, "Old executor shutdown complete: " + terminationOutcome.name());
+    }
+
     /***
-     * Resets the SilentRequestsExecutor.
-     * This creates a new Executor for the silent request.
+     * Resets the SilentRequestsExecutor with the default thread pool size.
+     * This creates a new Executor for silent requests.
      * This is expected to be called after global signout is performed in Shared Device mode.
      * This should be called if previously the Executor was stopped using 'stopSilentRequestExecutor'
      */
     public static void resetSilentRequestExecutor() {
-        Logger.info(TAG + ":resetSilentRequestExecutor", "Resetting silent Executor");
-        sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+        resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
 

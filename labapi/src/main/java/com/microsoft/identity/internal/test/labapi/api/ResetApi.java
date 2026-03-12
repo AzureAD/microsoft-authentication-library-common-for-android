@@ -20,15 +20,9 @@ import com.microsoft.identity.internal.test.labapi.Configuration;
 import com.microsoft.identity.internal.test.labapi.Pair;
 import com.microsoft.identity.internal.test.labapi.ProgressRequestBody;
 import com.microsoft.identity.internal.test.labapi.ProgressResponseBody;
-
 import com.google.gson.reflect.TypeToken;
-
 import java.io.IOException;
-
-
-import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,7 +99,7 @@ public class ResetApi {
         }
 
         String[] localVarAuthNames = new String[] {  };
-        return apiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
+        return apiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams, localVarAuthNames, progressRequestListener);
     }
 
     @SuppressWarnings("rawtypes")

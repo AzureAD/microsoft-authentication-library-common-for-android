@@ -134,6 +134,16 @@ public class ClientException extends BaseException {
     public static final String UNSUPPORTED_ENCODING = "unsupported_encoding";
 
     /**
+     * The operation is not supported.
+     */
+    public static final String UNSUPPORTED_OPERATION = "unsupported_operation";
+
+    /**
+     * The request is already in progress.
+     */
+    public static final String REQUEST_IN_PROGRESS = "request_in_progress";
+
+    /**
      * The designated crypto alg is not supported.
      */
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
@@ -440,6 +450,32 @@ public class ClientException extends BaseException {
      * A blocking operation has timed out.
      */
     public static final String TIMED_OUT = "timed_out";
+
+    /**
+     * Timeout occurred while waiting to acquire a synchronization lock.
+     * Indicates high lock contention - many operations competing for the same lock.
+     */
+    public static final String TIMED_OUT_LOCK_CONTENTION = "timed_out_lock_contention";
+
+    /**
+     * Timeout occurred while waiting for an available worker thread.
+     * All thread pool threads are busy AND requests are queued.
+     * Indicates severe thread pool saturation.
+     */
+    public static final String TIMED_OUT_THREAD_POOL_SATURATED = "timed_out_thread_pool_saturated";
+
+    /**
+     * Timeout occurred while waiting for thread pool resources.
+     * Threads are busy but pool is not fully saturated.
+     * Indicates moderate thread pool contention.
+     */
+    public static final String TIMED_OUT_THREAD_POOL_CONTENTION = "timed_out_thread_pool_contention";
+
+    /**
+     * Timeout occurred during operation execution (network, processing, etc.).
+     * Operation was started but didn't complete within the allowed time.
+     */
+    public static final String TIMED_OUT_EXECUTION = "timed_out_execution";
 
     /**
      * A NullPointerException was thrown.

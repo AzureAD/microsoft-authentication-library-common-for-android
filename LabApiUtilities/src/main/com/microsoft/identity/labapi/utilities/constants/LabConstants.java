@@ -32,12 +32,36 @@ public class LabConstants {
     public static final String MSID_LAB3 = "https://login.microsoftonline.com/msidlab3.com";
     public static final String MSID_LAB4 = "https://login.microsoftonline.com/msidlab4.com";
 
+    // TODO, REMOVE LEGACY UserTypes WHEN WE REMOVE LAB QUERY USAGE
     static final class UserType {
-        public static final String CLOUD = "cloud";
+        public static final String BASIC = "basic";
+        public static final String MSA = "msa";
+        public static final String MDM_CA = "mdm_ca";
+        public static final String MAM_CA = "mam_ca";
+        public static final String TP_CA = "tpca";
+        public static final String TRUE_MAM_CA = "true_mam_ca";
+        public static final String WP = "wp";
         public static final String FEDERATED = "federated";
+        public static final String DEVICE_ADMIN = "device_admin";
+        public static final String USGOV = "usgov";
+        public static final String USGOV_GUEST = "usgov_guest";
+        public static final String CHINA = "china";
+        public static final String QR_PIN = "qr_pin";
+        public static final String TOKEN_BINDING = "token_binding";
+        public static final String CBA = "cba";
+        public static final String RESOURCE_ACCOUNT_1 = "resource_account_1";
+        public static final String RESOURCE_ACCOUNT_2 = "resource_account_2";
+        public static final String DUNA_BASIC_1 = "duna_basic_1";
+        public static final String DUNA_BASIC_2 = "duna_basic_2";
+        public static final String DUNA_MAM_CA_1 = "duna_mam_ca_1";
+        public static final String DUNA_MAM_CA_2 = "duna_mam_ca_2";
+        public static final String DUNA_MDM_CA_1 = "duna_mdm_ca_1";
+        public static final String DUNA_MDM_CA_2 = "duna_mdm_ca_2";
+        public static final String DUNA_MFA_1 = "duna_mfa_1";
+        public static final String DUNA_MFA_2 = "duna_mfa_2";
+        public static final String CLOUD = "cloud";
         public static final String ONPREM = "onprem";
         public static final String GUEST = "guest";
-        public static final String MSA = "msa";
         public static final String B2C = "b2c";
     }
 
@@ -163,8 +187,8 @@ public class LabConstants {
     }
 
     static final class ResetOperation {
-        public static final String MFA = "MFA";
-        public static final String PASSWORD = "Password";
+        public static final String MFA = "mfa";
+        public static final String PASSWORD = "password";
     }
 
     static final class HasAltId {

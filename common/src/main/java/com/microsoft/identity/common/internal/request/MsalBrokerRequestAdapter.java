@@ -29,6 +29,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_WEB_APPS_EXECUTE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CAN_FOCI_APPS_CONSTRUCT_ACCOUNTS_FROM_PRT_ID_TOKEN_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
@@ -55,6 +57,8 @@ import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory
 import com.microsoft.identity.common.java.authscheme.INameable;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
@@ -75,6 +79,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.QueryParamsAdapter;
+import com.microsoft.identity.common.java.util.RequestHeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -95,6 +100,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
+        final String requestHeaders = parameters.getRequestHeaders() != null ?
+                RequestHeaderSerializationUtil.toJson(parameters.getRequestHeaders()) : null;
+
         final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
@@ -105,6 +113,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .userName(parameters.getLoginHint())
                 .extraQueryStringParameter(extraQueryStringParameter)
                 .extraOptions(extraOptions)
+                .requestHeaders(requestHeaders)
                 .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
@@ -135,6 +144,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
             final AndroidInteractiveTokenCommandParameters androidInteractiveTokenCommandParameters = (AndroidInteractiveTokenCommandParameters) parameters;
             brokerRequestBuilder.signInWithGoogleCredential(androidInteractiveTokenCommandParameters.getSignInWithGoogleCredential());
+        }
+
+        if (parameters instanceof BrokerInteractiveTokenCommandParameters) {
+            brokerRequestBuilder.requestType(((BrokerInteractiveTokenCommandParameters) parameters).getRequestType().name());
         }
 
         return brokerRequestBuilder.build();
@@ -177,7 +190,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = BrokerRequest.builder()
+        final BrokerRequest.BrokerRequestBuilder brokerRequestBuilder = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(parameters.getRedirectUri())
@@ -204,10 +217,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         .spanId(SpanExtension.current().getSpanContext().getSpanId())
                         .traceFlags(SpanExtension.current().getSpanContext().getTraceFlags().asByte())
                         .build()
-                )
-                .build();
+                );
 
-        return brokerRequest;
+        if (parameters instanceof BrokerSilentTokenCommandParameters) {
+            brokerRequestBuilder.requestType(((BrokerSilentTokenCommandParameters) parameters).getRequestType().name());
+        }
+
+        return brokerRequestBuilder.build();
     }
 
     public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,
@@ -578,6 +594,40 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 negotiatedBrokerProtocolVersion,
                 parameters.getRequiredBrokerProtocolVersion()
         );
+    }
+
+    /**
+     * Method to construct a request bundle for broker getSupportedWebAppContracts request.
+     *
+     * @return request Bundle
+     */
+    public @NonNull Bundle getRequestBundleForGetSupportedWebAppContracts(@NonNull final String negotiatedBrokerProtocolVersion,
+                                                                          @NonNull final String requiredBrokerProtocolVersion) {
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        addRequiredBrokerProtocolVersionToRequestBundle(requestBundle, requiredBrokerProtocolVersion);
+        return requestBundle;
+    }
+
+    /**
+     * Method to construct a request bundle for broker executeWebAppRequest request.
+     *
+     * @param request input request
+     * @param negotiatedBrokerProtocolVersion protocol version returned by broker hello.
+     * @param requiredBrokerProtocolVersion protocol version required by the client.
+     * @param additionalRequiredParams extra required arguments to be sent to broker.
+     * @return request Bundle
+     */
+    public Bundle getRequestBundleForExecuteWebAppRequest(@NonNull final String request,
+                                                          @NonNull final String negotiatedBrokerProtocolVersion,
+                                                          @NonNull final String requiredBrokerProtocolVersion,
+                                                          @NonNull final String additionalRequiredParams) {
+        final Bundle bundle = new Bundle();
+        bundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+        bundle.putString(BROKER_WEB_APPS_EXECUTE_REQUEST, request);
+        bundle.putString(BROKER_WEB_APPS_ADDITIONAL_REQUIRED_PARAMS, additionalRequiredParams);
+        addRequiredBrokerProtocolVersionToRequestBundle(bundle, requiredBrokerProtocolVersion);
+        return bundle;
     }
 
     private boolean getMultipleCloudsSupported(@NonNull final TokenCommandParameters parameters) {
