@@ -82,6 +82,7 @@ import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -156,6 +157,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
+
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             mFidoLauncher = registerForActivityResult(
@@ -273,6 +275,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
+
+                        // Dynamically toggle multiple-windows support so that target="_blank"
+                        // interception is active ONLY on the TLR start page. On all other
+                        // pages the WebView behaves exactly as before.
+                        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
+                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
+                        }
                     }
                 },
                 mRedirectUri,
@@ -362,12 +372,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
 
-        // Enable multiple windows so that target="_blank" links trigger onCreateWindow
-        // instead of being silently dropped by the WebView - controlled by flight.
-        final boolean multipleWindowsEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS);
-        mWebView.getSettings().setSupportMultipleWindows(multipleWindowsEnabled);
-
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
@@ -396,16 +400,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @Override
             public boolean onCreateWindow(final WebView view, boolean isDialog,
                                           boolean isUserGesture, final Message resultMsg) {
-                if (!multipleWindowsEnabled) {
-                    // Flight is off; should not reach here, but guard anyway.
-                    return false;
-                }
                 if (resultMsg.obj == null) {
                     Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
                     return false;
                 }
-                // Handles target="_blank" links by opening them in the device's default browser
-                // instead of silently dropping the navigation.
+
                 final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
                         ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
                 final Span span = OTelUtility.createSpanFromParent(
@@ -417,41 +416,93 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            try {
-                                final String url = request.getUrl().toString();
-                                final String scheme = request.getUrl().getScheme();
-                                if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
-                                    Logger.warn(methodTag, "onCreateWindow: ignoring non-http(s) scheme: " + scheme);
-                                    return true;
-                                }
-                                Logger.info(methodTag, "onCreateWindow: opening target=_blank URL in external browser.");
-                                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                view.getContext().startActivity(browserIntent);
-                            } catch (final Exception e) {
-                                Logger.error(methodTag, "Error opening target=_blank URL in external browser.", e);
-                            } finally {
-                                // Destroy the interceptor WebView after it has served its purpose
-                                v.post(() -> v.destroy());
-                            }
+                            handleInterceptedUrlFromNewWindow(view, v, request, span);
                             return true;
                         }
                     });
                     final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
-                    span.setStatus(StatusCode.OK);
+                    // Span status and end are handled in handleInterceptedUrlFromNewWindow,
+                    // which fires asynchronously when shouldOverrideUrlLoading is called.
                     windowHandled = true;
                 } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
                     span.recordException(e);
                     span.setStatus(StatusCode.ERROR);
-                } finally {
                     span.end();
                 }
                 return windowHandled;
             }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
+    }
+
+    /**
+     * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
+     * Routes the URL based on whether the main WebView is currently on a TLR page:
+     * - TLR page: opens the URL in an external browser.
+     * - Non-TLR page: loads the URL inline in the main WebView.
+     *
+     * @param mainWebView        The main authentication WebView.
+     * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
+     * @param request            The intercepted URL request.
+     * @param span               The telemetry span to record which routing path is taken.
+     */
+    private void handleInterceptedUrlFromNewWindow(@NonNull final WebView mainWebView,
+                                                   @NonNull final WebView interceptorWebView,
+                                                   @NonNull final WebResourceRequest request,
+                                                   @NonNull final Span span) {
+        final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
+        try {
+            final String targetUrl = request.getUrl().toString();
+            final String currentPageUrl = mainWebView.getUrl();
+
+            if (targetUrl == null) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
+                Logger.warn(methodTag, "onCreateWindow: target URL is null, ignoring.");
+            } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+                // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
+                Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
+            } else if (!isTlrUrl(currentPageUrl)) {
+                // Non-TLR page: load inline, same as WebView default behavior.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR);
+                Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
+                mainWebView.loadUrl(targetUrl);
+            } else {
+                // TLR page: delegate to system browser so user can view terms externally.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
+                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                mainWebView.getContext().startActivity(browserIntent);
+            }
+            span.setStatus(StatusCode.OK);
+        } catch (final Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            Logger.error(methodTag, "Error handling target=_blank URL.", e);
+        } finally {
+            span.end();
+            // Destroy the interceptor WebView after it has served its purpose
+            interceptorWebView.post(interceptorWebView::destroy);
+        }
+    }
+
+    /**
+     * Checks whether the given URL corresponds to a TLR (Terms, License, and Restrictions)
+     * start page.
+     *
+     * @param url The URL to check.
+     * @return {@code true} if the URL is a TLR start page, {@code false} otherwise.
+     */
+    private boolean isTlrUrl(@Nullable final String url) {
+        if (url == null) {
+            return false;
+        }
+        final String lowerUrl = url.toLowerCase();
+        return lowerUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)
+                && lowerUrl.contains(AuthenticationConstants.Broker.TLR_START_PATH);
     }
 
     /**
