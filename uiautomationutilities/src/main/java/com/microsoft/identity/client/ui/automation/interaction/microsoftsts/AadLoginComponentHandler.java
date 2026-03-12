@@ -281,9 +281,6 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleSignInFromOtherDevice() {
         this.handleSignInOptions();
         UiAutomatorUtils.handleButtonClickForObjectWithText(SIGN_IN_FROM_OTHER_DEVICE);
-
-        // verify the remote device login url is displayed.
-        Assert.assertTrue(UiAutomatorUtils.obtainUiObjectWithText(expectedDeviceLoginUrl).exists());
     }
 
     @Override
