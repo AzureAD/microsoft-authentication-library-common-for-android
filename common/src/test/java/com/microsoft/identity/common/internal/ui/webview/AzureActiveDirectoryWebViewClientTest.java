@@ -126,6 +126,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
+    private static final String TEST_OPENID_VC_URL = "openid-vc://credential-offer?credential_issuer=https%3A%2F%2Fexample.com&credential_configuration_ids=VerifiedEmployee";
+
     @Before
     public void setup() throws ClientException {
         mContext = ApplicationProvider.getApplicationContext();
@@ -188,6 +190,44 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEBSITE_REQUEST_URL));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesOpenIdVcUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL));
+    }
+
+    @Test
+    public void testOpenIdVcUrl_StopsWebViewAndReturnsError_WhenNoHandlerFound() {
+        // Arrange
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false
+        );
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Act - Robolectric has no handler registered for openid-vc://, so the no-handler path executes
+        final boolean result = webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_OPENID_VC_URL);
+
+        // Assert
+        assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        Mockito.verify(mockWebView).stopLoading();
+
+        // Verify the callback received an error result
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        final RawAuthorizationResult capturedResult = resultCaptor.getValue();
+        assertEquals("Expected UNEXPECTED_ERROR error code",
+                ErrorStrings.UNEXPECTED_ERROR,
+                ((ClientException) capturedResult.getException()).getErrorCode());
+        assertTrue("Expected error message about no application found",
+                capturedResult.getException().getMessage().contains("No application found"));
     }
 
     @Test
