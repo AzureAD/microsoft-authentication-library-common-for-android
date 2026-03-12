@@ -146,11 +146,6 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
     /**
-     * Flight to enable using the new EU TDBR Claim sent through ClientInfo
-     */
-    ENABLE_USING_TDBR_CLAIM_FOR_EU_ROUTING("EnableUsingTdbrClaimForEuRouting", true),
-
-    /**
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),

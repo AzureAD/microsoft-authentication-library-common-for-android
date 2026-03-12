@@ -41,16 +41,12 @@ class EUClaimStorageUtil {
          *
          * @param clientInfo the client info containing tenant information and tdbr claim
          */
+        @JvmStatic
         fun storeTelemetryRegionByTenant(
             supplier: IStorageSupplier,
             clientInfo: ClientInfo
         ) {
             val methodTag = "$TAG:storeTelemetryRegionByTenant"
-
-            if (!getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_USING_TDBR_CLAIM_FOR_EU_ROUTING)) {
-                // If flight is not enabled, just return, don't store anything
-                return;
-            }
 
             val tenantId = clientInfo.utid
             val tdbrClaim = clientInfo.tdbrClaim
