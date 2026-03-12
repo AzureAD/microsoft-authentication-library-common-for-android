@@ -339,6 +339,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
             } else if (isOpenIdVcUrl(formattedURL)) {
+                // TO-DO : Decide whether flight is needed in this case. https://identitydivision.visualstudio.com/Engineering/_workitems/edit/3541420
                 Logger.info(methodTag, "It is an OpenID Verifiable Credentials request.");
                 processOpenIdVcRequest(view, url);
             } else if (isInvalidRedirectUri(url)) {
