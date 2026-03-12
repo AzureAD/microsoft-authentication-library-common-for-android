@@ -180,6 +180,13 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         }
     }
 
+    public void unregister(@NonNull final String identifier) {
+        launch();
+        selectDeviceRegistrationRecord(identifier);
+        clickButton(UNREGISTER_BUTTON_ID);
+        dismissDialogBoxAndAssertContainsText("Removed");
+    }
+
     public String getDeviceState(@NonNull final String identifier) {
         launch();
         selectDeviceRegistrationRecord(identifier);
