@@ -23,7 +23,7 @@
 #
 # Investigates CI failures on Copilot coding agent PRs and posts @copilot comments with specific errors so the agent can self-correct.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"b6427f61d4390f0b8be52c5027f9d2c9eddd9e2df202daf1d783ec33e09ad955","compiler_version":"v0.58.0","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"e52e9b9b6eedd6ac9bbab945962371ac5a5ae397bd74756c281002dca086107b","compiler_version":"v0.58.0","strict":true}
 
 name: "Copilot CI Feedback"
 "on":
@@ -294,7 +294,7 @@ jobs:
           INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
         id: verify
         name: Verify Copilot agent PR
-        run: "if [ \"$EVENT_NAME\" = \"workflow_dispatch\" ]; then\n  PR_NUMBER=\"$INPUT_PR_NUMBER\"\nelse\n  PR_NUMBER=$(gh pr list --head \"$CHECK_SUITE_BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\nfi\nif [ -z \"$PR_NUMBER\" ]; then\n  echo \"No PR found. Exiting.\"\n  exit 1\nfi\nAUTHOR=$(gh pr view \"$PR_NUMBER\" --json author --jq '.author.login' 2>/dev/null || echo \"\")\nif [ \"$AUTHOR\" != \"app/copilot-swe-agent\" ] && [ \"$AUTHOR\" != \"copilot-swe-agent[bot]\" ]; then\n  echo \"PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent. Exiting.\"\n  exit 1\nfi\necho \"PR #$PR_NUMBER is by Copilot agent. Proceeding.\"\necho \"pr_number=$PR_NUMBER\" >> $GITHUB_OUTPUT\n"
+        run: "if [ \"$EVENT_NAME\" = \"workflow_dispatch\" ]; then\n  PR_NUMBER=\"$INPUT_PR_NUMBER\"\nelse\n  PR_NUMBER=$(gh pr list --head \"$CHECK_SUITE_BRANCH\" --state open --json number --jq '.[0].number // empty' 2>/dev/null || echo \"\")\nfi\nif [ -z \"$PR_NUMBER\" ]; then\n  echo \"No PR found. Exiting.\"\n  exit 1\nfi\nAUTHOR=$(gh pr view \"$PR_NUMBER\" --json author --jq '.author.login' 2>/dev/null || echo \"\")\nif [ \"$AUTHOR\" != \"copilot-swe-agent[bot]\" ]; then\n  echo \"PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent[bot]. Exiting.\"\n  exit 1\nfi\necho \"PR #$PR_NUMBER is by Copilot agent. Proceeding.\"\necho \"pr_number=$PR_NUMBER\" >> $GITHUB_OUTPUT\n"
 
       - name: Configure Git credentials
         env:
