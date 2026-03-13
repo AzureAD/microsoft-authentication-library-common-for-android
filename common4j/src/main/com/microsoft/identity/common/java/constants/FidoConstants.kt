@@ -161,5 +161,28 @@ class FidoConstants {
          * JSON key value of id in response of Webauthn JSON object.
          */
         const val WEBAUTHN_RESPONSE_ID_JSON_KEY = "id"
+
+        /**
+         * JSON key value of attestationObject in WebAuthn registration response JSON object.
+         */
+        const val WEBAUTHN_REGISTRATION_ATTESTATION_OBJECT_JSON_KEY = "attestationObject"
+
+        /**
+         * JSON key value of origin in WebAuthn registration response JSON object.
+         */
+        const val WEBAUTHN_REGISTRATION_ORIGIN_JSON_KEY = "origin"
+
+        /**
+         * Byte offset of the AAGUID within the authenticator data (authData) of a WebAuthn
+         * attestation object, as defined by the WebAuthn spec
+         * (https://www.w3.org/TR/webauthn-2/#sctn-authenticator-data).
+         */
+        const val WEBAUTHN_AUTHDATA_AAGUID_OFFSET = 37
+
+        /**
+         * Length in bytes of the AAGUID field within the authenticator data (authData),
+         * as defined by the WebAuthn spec.
+         */
+        const val WEBAUTHN_AUTHDATA_AAGUID_LENGTH = 16
     }
 }

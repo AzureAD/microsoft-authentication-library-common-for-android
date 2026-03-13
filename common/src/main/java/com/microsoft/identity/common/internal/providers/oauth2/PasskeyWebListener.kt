@@ -49,7 +49,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Intercepts postMessage() calls from JavaScript to handle credential creation and retrieval
  * using the Android Credential Manager API. Only accepts requests from allowed origins.
  *
- * @property coroutineScope Scope for launching credential operations.
+ * ## Threading model
+ * - [onPostMessage] is always invoked on the **main thread** by the WebView framework.
+ * - Credential operations ([handleCreateFlow], [handleGetFlow]) are launched as coroutines on
+ *   [kotlinx.coroutines.Dispatchers.Main] because [androidx.credentials.CredentialManager]
+ *   must be called from the main thread in order to display its system UI.
+ * - The [coroutineScope] supplied at construction time **must** therefore be bound to
+ *   [kotlinx.coroutines.Dispatchers.Main] (see [hook] for the canonical way to create an instance).
+ *
+ * @property coroutineScope Scope for launching credential operations (must use [kotlinx.coroutines.Dispatchers.Main]).
  * @property credentialManagerHandler Handles passkey creation and retrieval.
  */
 class PasskeyWebListener(
@@ -329,7 +337,9 @@ class PasskeyWebListener(
                     INTERFACE_NAME,
                     PasskeyOriginRulesManager.getAllowedOriginRules(),
                     PasskeyWebListener(
-                        coroutineScope = CoroutineScope(Dispatchers.Default),
+                        // CredentialManager must be called on the main thread (it shows system UI),
+                        // so the coroutine scope must use Dispatchers.Main.
+                        coroutineScope = CoroutineScope(Dispatchers.Main),
                         credentialManagerHandler = CredentialManagerHandler(activity)
                     )
                 )

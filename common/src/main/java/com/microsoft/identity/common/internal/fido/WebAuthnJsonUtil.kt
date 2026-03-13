@@ -24,119 +24,248 @@ package com.microsoft.identity.common.internal.fido
 
 import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
-import com.microsoft.identity.common.java.constants.FidoConstants
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_LENGTH
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_OFFSET
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_REGISTRATION_ATTESTATION_OBJECT_JSON_KEY
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_REGISTRATION_ORIGIN_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_ID_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
 import com.microsoft.identity.common.logging.Logger
+import okio.ByteString.Companion.decodeBase64
 import org.json.JSONException
 import org.json.JSONObject
+import java.nio.ByteBuffer
+import java.util.UUID
+import kotlin.text.toByteArray
 
 /**
  * A utility class to help convert to and from strings in WebAuthn json format.
  */
-class WebAuthnJsonUtil {
-        companion object {
+object WebAuthnJsonUtil {
 
-            private val TAG = WebAuthnJsonUtil::class.simpleName.toString()
+    private val TAG = WebAuthnJsonUtil::class.simpleName.toString()
 
-        /**
-         * Takes applicable parameters and creates a string representation of
-         *  PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
-         * @param challenge challenge string
-         * @param relyingPartyIdentifier rpId string
-         * @param allowedCredentials allowedCredentials string
-         * @param userVerificationPolicy yserVerificationPolicy string
-         * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
-         */
-        fun createJsonAuthRequest(challenge: String,
-                                  relyingPartyIdentifier: String,
-                                  allowedCredentials: List<String>?,
-                                  userVerificationPolicy: String): String {
-            //Create classes
-            val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
-            allowedCredentials?.let {
-                for (id in allowedCredentials) {
-                    publicKeyCredentialDescriptorList.add(
-                        PublicKeyCredentialDescriptor("public-key", id)
-                    )
-                }
-            }
-            val options = PublicKeyCredentialRequestOptions(
-                challenge.base64UrlEncoded(),
-                relyingPartyIdentifier,
-                publicKeyCredentialDescriptorList,
-                userVerificationPolicy
-            )
-            return CommonMoshiJsonAdapter().toJson(options)
-        }
-
-        /**
-         * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
-         * @param fullResponseJson AuthenticationResponse Json string.
-         * @throws JSONException if a value is not present that should be.
-         */
-        fun extractAuthenticatorAssertionResponseJson(fullResponseJson : String): String {
-            val methodTag = "$TAG:extractAuthenticatorAssertionResponseJson"
-            val fullResponseJsonObject = JSONObject(fullResponseJson);
-            val authResponseJsonObject = fullResponseJsonObject
-                .getJSONObject(FidoConstants.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
-            // ESTS expects a custom object with clientDataJSON, authenticatorData, signature, userHandle, and id.
-            val assertionResult = JSONObject();
-            assertionResult.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(
-                WEBAUTHN_RESPONSE_ID_JSON_KEY))
-            assertionResult.put(WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authResponseJsonObject.get(
-                WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY))
-            assertionResult.put(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, authResponseJsonObject.get(
-                WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY))
-            assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, authResponseJsonObject.get(
-                WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY))
-            // UserHandle is optional if allowCredentials was provided in the request (username flow).
-            if (authResponseJsonObject.isNull(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY)) {
-                Logger.info(methodTag, "UserHandle not found in assertion response.")
-            } else {
-                Logger.info(methodTag, "UserHandle was included in assertion response.")
-                assertionResult.put(
-                    WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
-                        WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
-                    )
+    /**
+     * Takes applicable parameters and creates a string representation of
+     *  PublicKeyCredentialRequestOptionsJSON (https://w3c.github.io/webauthn/#dictdef-publickeycredentialrequestoptionsjson)
+     * @param challenge challenge string
+     * @param relyingPartyIdentifier rpId string
+     * @param allowedCredentials allowedCredentials string
+     * @param userVerificationPolicy yserVerificationPolicy string
+     * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
+     */
+    fun createJsonAuthRequest(
+        challenge: String,
+        relyingPartyIdentifier: String,
+        allowedCredentials: List<String>?,
+        userVerificationPolicy: String
+    ): String {
+        //Create classes
+        val publicKeyCredentialDescriptorList = ArrayList<PublicKeyCredentialDescriptor>()
+        allowedCredentials?.let {
+            for (id in allowedCredentials) {
+                publicKeyCredentialDescriptorList.add(
+                    PublicKeyCredentialDescriptor("public-key", id)
                 )
             }
-            return assertionResult.toString()
         }
+        val options = PublicKeyCredentialRequestOptions(
+            challenge.base64UrlEncoded(),
+            relyingPartyIdentifier,
+            publicKeyCredentialDescriptorList,
+            userVerificationPolicy
+        )
+        return CommonMoshiJsonAdapter().toJson(options)
+    }
 
-        /**
-         * Given WebAuthn response values, create a string representation of the JSON assertion response that ESTS is expecting.
-         * @clientDataJson clientDataJson string
-         * @authenticatorData authenticatorData string
-         * @signature signature string
-         * @userHandle userHandle string
-         * @id id string
-         */
-        @JvmStatic
-        fun createAssertionString(clientDataJson: String,
-                                  authenticatorData: String,
-                                  signature: String,
-                                  userHandle: String,
-                                  id: String): String {
-            val assertionResult = JSONObject();
-            assertionResult.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, id)
-            assertionResult.put(WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authenticatorData)
-            assertionResult.put(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, clientDataJson)
-            assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, signature)
-            assertionResult.put(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, userHandle)
-            return assertionResult.toString()
+    /**
+     * Extracts the AuthenticatorAssertionResponse from the overall AuthenticationResponse string received from the authenticator.
+     * @param fullResponseJson AuthenticationResponse Json string.
+     * @throws JSONException if a value is not present that should be.
+     */
+    fun extractAuthenticatorAssertionResponseJson(fullResponseJson: String): String {
+        val methodTag = "$TAG:extractAuthenticatorAssertionResponseJson"
+        val fullResponseJsonObject = JSONObject(fullResponseJson)
+        val authResponseJsonObject = fullResponseJsonObject
+            .getJSONObject(WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+        // ESTS expects a custom object with clientDataJSON, authenticatorData, signature, userHandle, and id.
+        val assertionResult = JSONObject()
+        assertionResult.put(
+            WEBAUTHN_RESPONSE_ID_JSON_KEY, fullResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_ID_JSON_KEY
+            )
+        )
+        assertionResult.put(
+            WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY
+            )
+        )
+        assertionResult.put(
+            WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY
+            )
+        )
+        assertionResult.put(
+            WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, authResponseJsonObject.get(
+                WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY
+            )
+        )
+        // UserHandle is optional if allowCredentials was provided in the request (username flow).
+        if (authResponseJsonObject.isNull(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY)) {
+            Logger.info(methodTag, "UserHandle not found in assertion response.")
+        } else {
+            Logger.info(methodTag, "UserHandle was included in assertion response.")
+            assertionResult.put(
+                WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, authResponseJsonObject.get(
+                    WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY
+                )
+            )
         }
+        return assertionResult.toString()
+    }
 
-        /**
-         * Returns a base64URL encoding of the string.
-         * @return String
-         */
-        fun String.base64UrlEncoded(): String {
-            val data: ByteArray = this.toByteArray(Charsets.UTF_8)
-            return Base64.encodeToString(data, (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
+    /**
+     * Given WebAuthn response values, create a string representation of the JSON assertion response that ESTS is expecting.
+     * @clientDataJson clientDataJson string
+     * @authenticatorData authenticatorData string
+     * @signature signature string
+     * @userHandle userHandle string
+     * @id id string
+     */
+    @JvmStatic
+    fun createAssertionString(
+        clientDataJson: String,
+        authenticatorData: String,
+        signature: String,
+        userHandle: String,
+        id: String
+    ): String {
+        val assertionResult = JSONObject()
+        assertionResult.put(WEBAUTHN_RESPONSE_ID_JSON_KEY, id)
+        assertionResult.put(WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY, authenticatorData)
+        assertionResult.put(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY, clientDataJson)
+        assertionResult.put(WEBAUTHN_RESPONSE_SIGNATURE_JSON_KEY, signature)
+        assertionResult.put(WEBAUTHN_RESPONSE_USER_HANDLE_JSON_KEY, userHandle)
+        return assertionResult.toString()
+    }
+
+    /**
+     * Returns a base64URL encoding of the string.
+     * @return String
+     */
+    fun String.base64UrlEncoded(): String {
+        val data: ByteArray = this.toByteArray(Charsets.UTF_8)
+        return Base64.encodeToString(
+            data,
+            (Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+        )
+    }
+
+    /**
+     * Extracts the origin from a WebAuthn passkey registration response JSON.
+     *
+     * Intended for use with the `registrationResponseJson` returned by
+     * `CredentialManagerHandler.createPasskey()`. Navigates to `response.clientDataJSON`,
+     * base64url-decodes it, parses it as JSON, and returns the `"origin"` field.
+     *
+     * @param registrationResponseJson The `registrationResponseJson` string from
+     *   `CreatePublicKeyCredentialResponse`.
+     * @return The origin string, or null if extraction fails.
+     */
+    fun extractOriginFromRegistrationResponse(registrationResponseJson: String): String? {
+        return try {
+            val responseObj = JSONObject(registrationResponseJson)
+                .getJSONObject(WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+            val clientDataB64 = responseObj
+                .getString(WEBAUTHN_RESPONSE_CLIENT_DATA_JSON_KEY)
+            val decodedClientDataBytes = Base64.decode(clientDataB64, Base64.URL_SAFE)
+            val jsonString = String(decodedClientDataBytes, Charsets.UTF_8)
+            JSONObject(jsonString).getString(WEBAUTHN_REGISTRATION_ORIGIN_JSON_KEY)
+        } catch (e: Exception) {
+            Logger.warn(TAG, "Failed to extract origin from passkey registration response: ${e.message}")
+            null
         }
     }
+
+    /**
+     * Extracts the AAGUID from a WebAuthn passkey registration response JSON.
+     *
+     * Intended for use with the `registrationResponseJson` returned by
+     * `CredentialManagerHandler.createPasskey()`. Navigates to `response.attestationObject`,
+     * base64url-decodes it, parses the CBOR-encoded authenticator data, and returns the AAGUID
+     * as a formatted UUID string.
+     *
+     * @param registrationResponseJson The `registrationResponseJson` string from
+     *   `CreatePublicKeyCredentialResponse`.
+     * @return The AAGUID as a UUID string, or null if extraction fails.
+     */
+    fun extractAaguidFromRegistrationResponse(registrationResponseJson: String): String? {
+        return try {
+            val responseObj = JSONObject(registrationResponseJson)
+                .getJSONObject(WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY)
+            val attestationObject = responseObj
+                .getString(WEBAUTHN_REGISTRATION_ATTESTATION_OBJECT_JSON_KEY)
+            extractAaguidFromAttestationObject(attestationObject)
+        } catch (e: Exception) {
+            Logger.warn(TAG, "Failed to extract AAGUID from passkey registration response: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Parses a base64url-encoded CBOR attestation object and extracts the AAGUID.
+     *
+     * The AAGUID is located at byte offset 37 within the authenticator data (authData) field
+     * of the attestation object, and is 16 bytes long. It is returned as a formatted UUID string.
+     *
+     * @param attestationObjectB64 Base64url-encoded CBOR attestation object.
+     * @return The AAGUID as a UUID string.
+     * @throws Exception if the attestation object cannot be decoded or authData is not found.
+     */
+    fun extractAaguidFromAttestationObject(attestationObjectB64: String): String {
+        // 1. Decode Base64URL
+        val decoded = attestationObjectB64.decodeBase64()?.toByteArray()
+            ?: throw Exception("Failed to decode attestation object from Base64URL")
+        // 2. Find the "authData" key in the CBOR map
+        // The key "authData" is hex: 68 61 75 74 68 44 61 74 61
+        val authDataKey = "authData".toByteArray()
+        val keyIndex = indexOf(decoded, authDataKey)
+        if (keyIndex == -1) throw Exception("authData not found")
+
+        // 3. Skip the key and the CBOR byte string header
+        // In your string, it's followed by 0x58 (header) and 0x55 (length 85)
+        // So we skip the key length + 2 bytes for the CBOR header
+        val authDataStart = keyIndex + authDataKey.size + 2
+
+        // 4. AAGUID is at offset 37 within authData
+        val aaguidStart = authDataStart + WEBAUTHN_AUTHDATA_AAGUID_OFFSET
+        val aaguidBytes = decoded.copyOfRange(aaguidStart, aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH)
+
+        // 5. Convert to formatted UUID
+        return formatToUUID(aaguidBytes)
+    }
+
+    /**
+     * Returns the starting index of the first occurrence of [target] within [outer],
+     * or -1 if not found.
+     */
+    private fun indexOf(outer: ByteArray, target: ByteArray): Int {
+        for (i in 0 until outer.size - target.size + 1) {
+            if (outer.sliceArray(i until i + target.size).contentEquals(target)) return i
+        }
+        return -1
+    }
+
+    /**
+     * Converts a 16-byte AAGUID byte array into a formatted UUID string (e.g. "550e8400-e29b-41d4-a716-446655440000").
+     */
+    private fun formatToUUID(bytes: ByteArray): String {
+        val bb = ByteBuffer.wrap(bytes)
+        return UUID(bb.long, bb.long).toString()
+    }
+
 }
