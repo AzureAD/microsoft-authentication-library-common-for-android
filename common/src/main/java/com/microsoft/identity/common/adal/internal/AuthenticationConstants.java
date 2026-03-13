@@ -1489,6 +1489,36 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
         /**
+         * Path segment for the TLR (Total loss recovery) start page.
+         */
+        public static final String TLR_START_PATH = "/tlr/start";
+
+        /**
+         * WebView routing value when the target URL from a target=_blank navigation is null.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL = "null_url";
+
+        /**
+         * WebView routing value when the target URL is not SSL-protected.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL = "non_ssl";
+
+        /**
+         * WebView routing value when the target URL is loaded inline (non-TLR page).
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR = "non_tlr_flow";
+
+        /**
+         * WebView routing value when the target URL is delegated to the system browser (TLR page).
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_TLR = "tlr_flow";
+
+        /**
+         * WebView routing value when the popup was not initiated by a user gesture.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE = "no_user_gesture";
+
+        /**
          * Prefix in the redirect for PlayStore.
          */
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";

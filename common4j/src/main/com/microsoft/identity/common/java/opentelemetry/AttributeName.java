@@ -614,4 +614,14 @@ public enum AttributeName {
     is_openid_vc_handler_found,
     
     //endregion
+
+    //region WebView target=_blank navigation
+
+    /**
+     * Indicates which routing path was taken for a target=_blank URL intercepted
+     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     */
+    target_blank_navigation_route,
+
+    //endregion
 }
