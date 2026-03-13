@@ -450,7 +450,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param span               The telemetry span to record which routing path is taken.
      * @param isUserGesture      Whether the popup was initiated by a user gesture (e.g. a click).
      */
-    private void handleInterceptedUrlFromNewWindow(@NonNull final WebView mainWebView,
+    @VisibleForTesting
+    void handleInterceptedUrlFromNewWindow(@NonNull final WebView mainWebView,
                                                    @NonNull final WebView interceptorWebView,
                                                    @NonNull final WebResourceRequest request,
                                                    @NonNull final Span span,
@@ -504,7 +505,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param url The URL to check.
      * @return {@code true} if the URL is a TLR start page, {@code false} otherwise.
      */
-    private boolean isTlrUrl(@Nullable final String url) {
+    @VisibleForTesting
+    boolean isTlrUrl(@Nullable final String url) {
         if (url == null) {
             return false;
         }
