@@ -54,18 +54,15 @@ steps:
         PR_NUMBER=$(gh pr list --head "$CHECK_SUITE_BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
       fi
       if [ -z "$PR_NUMBER" ]; then
-        echo "No PR found. Skipping."
-        echo "activated=false" >> $GITHUB_OUTPUT
-        exit 0
+        echo "No PR found. Exiting."
+        exit 1
       fi
       AUTHOR=$(gh pr view "$PR_NUMBER" --json author --jq '.author.login' 2>/dev/null || echo "")
       if [ "$AUTHOR" != "app/copilot-swe-agent" ] && [ "$AUTHOR" != "copilot-swe-agent[bot]" ]; then
-        echo "PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent. Skipping."
-        echo "activated=false" >> $GITHUB_OUTPUT
-        exit 0
+        echo "PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent. Exiting."
+        exit 1
       fi
       echo "PR #$PR_NUMBER is by Copilot agent. Proceeding."
-      echo "activated=true" >> $GITHUB_OUTPUT
       echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
 tools:
