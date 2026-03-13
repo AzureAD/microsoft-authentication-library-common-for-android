@@ -23,7 +23,7 @@
 #
 # Investigates CI failures on Copilot coding agent PRs and posts @copilot comments with specific errors so the agent can self-correct.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"eed88d61768626ea449698052912d3802c928fd907fd671fc5bb08c27fc848a9","compiler_version":"v0.58.0","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"deb5f57ad12407792807c1eda79fdb841399143fb819ba05f087b6fcf60e39f5","compiler_version":"v0.58.0","strict":true}
 
 name: "Copilot CI Feedback"
 "on":
@@ -32,7 +32,6 @@ name: "Copilot CI Feedback"
     - completed
   # skip-bots: # Skip-bots processed as bot check in pre-activation job
   # - github-actions # Skip-bots processed as bot check in pre-activation job
-  # - copilot # Skip-bots processed as bot check in pre-activation job
   workflow_dispatch:
 
 permissions: {}
@@ -619,7 +618,7 @@ jobs:
                 "entrypointArgs": [
                   "npx",
                   "-y",
-                  "@azure-devops/mcp",
+                  "@azure-devops/mcp@2.4.0",
                   "IdentityDivision",
                   "-d",
                   "pipelines"
@@ -1108,7 +1107,7 @@ jobs:
         id: check_skip_bots
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          GH_AW_SKIP_BOTS: github-actions,copilot
+          GH_AW_SKIP_BOTS: github-actions
           GH_AW_WORKFLOW_NAME: "Copilot CI Feedback"
         with:
           script: |

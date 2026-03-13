@@ -4,7 +4,7 @@ on:
   check_suite:
     types: [completed]
   workflow_dispatch:
-  skip-bots: [github-actions, copilot]
+  skip-bots: [github-actions]
 
 if: >
   github.event_name == 'workflow_dispatch' ||
@@ -27,7 +27,7 @@ safe-outputs:
 mcp-servers:
   ado:
     command: "npx"
-    args: ["-y", "@azure-devops/mcp", "IdentityDivision", "-d", "pipelines"]
+    args: ["-y", "@azure-devops/mcp@2.4.0", "IdentityDivision", "-d", "pipelines"]
     allowed:
       - "get_build_status"
       - "get_build_log"
@@ -51,7 +51,7 @@ messages so the coding agent can fix them.
 Only act when ALL of these are true:
 1. The `check_suite` completed with `failure` conclusion
 2. The PR branch starts with `copilot/`
-3. The PR author is `copilot-swe-agent[bot]` or `app/copilot-swe-agent`
+3. The PR author is `copilot-swe-agent[bot]`
 4. No feedback comment was already posted in the last 15 minutes (avoid spam)
 
 If any condition is not met, exit without posting.
@@ -85,7 +85,7 @@ List all check runs on the PR. For each failed check:
 
 Group errors into categories:
 - **Compilation errors**: Type mismatches, unresolved references, missing imports
-- **Missing changelog**: The `changelog.txt` or `changes.txt` wasn't updated
+- **Missing changelog**: The `changelog.txt` wasn't updated
 - **Lint/SpotBugs**: Static analysis findings
 - **Test failures**: Unit or integration test failures
 - **Consumer build failures**: Downstream repos (MSAL, Broker) can't compile against changes
