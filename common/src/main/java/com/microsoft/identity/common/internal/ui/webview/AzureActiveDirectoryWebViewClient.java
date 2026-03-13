@@ -928,19 +928,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processOpenIdVcRequest";
         view.stopLoading();
-        try {
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
+                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
+                span.setStatus(StatusCode.OK);
             } else {
                 Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
+                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
+                span.setStatus(StatusCode.ERROR, "No handler found for openid-vc:// URI");
                 returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No application found to handle the OpenID Verifiable Credentials request.");
             }
         } catch (final ActivityNotFoundException e) {
             Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
+            span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
             returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "Failed to launch handler for the OpenID Verifiable Credentials request.");
+        } finally {
+            span.end();
         }
     }
 

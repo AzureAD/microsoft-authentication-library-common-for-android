@@ -223,8 +223,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Verify the callback received an error result
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
         final RawAuthorizationResult capturedResult = resultCaptor.getValue();
-        assertEquals("Expected UNEXPECTED_ERROR error code",
-                ErrorStrings.UNEXPECTED_ERROR,
+        assertEquals("Expected ACTIVITY_NOT_FOUND error code",
+                ErrorStrings.ACTIVITY_NOT_FOUND,
                 ((ClientException) capturedResult.getException()).getErrorCode());
         assertTrue("Expected error message about no application found",
                 capturedResult.getException().getMessage().contains("No application found"));
