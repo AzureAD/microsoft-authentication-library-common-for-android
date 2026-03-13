@@ -6,6 +6,11 @@ on:
   workflow_dispatch:
   skip-bots: [github-actions, copilot]
 
+if: >
+  github.event_name == 'workflow_dispatch' ||
+  (github.event.check_suite.conclusion == 'failure' &&
+   startsWith(github.event.check_suite.head_branch, 'copilot/'))
+
 engine: copilot
 
 permissions:
@@ -17,12 +22,17 @@ permissions:
 safe-outputs:
   add-comment:
     pull-requests: true
+    discussions: false
 
 mcp-servers:
   ado:
     command: "npx"
     args: ["-y", "@azure-devops/mcp", "IdentityDivision", "-d", "pipelines"]
-    allowed: ["*"]
+    allowed:
+      - "get_build_status"
+      - "get_build_log"
+      - "get_build_log_by_id"
+      - "get_builds"
 
 tools:
   github:
