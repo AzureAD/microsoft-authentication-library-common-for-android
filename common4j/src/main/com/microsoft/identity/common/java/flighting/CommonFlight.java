@@ -214,10 +214,17 @@ public enum CommonFlight implements IFlightConfig {
     USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
 
     /**
+    /**
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
      * to be intercepted via onCreateWindow and opened in an external browser.
      */
-    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false);
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
+
+    /**
+     * Flight to enable file upload support in the embedded WebView.
+     * When enabled, the WebView will handle file chooser requests from web pages.
+     */
+    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", true);
 
     private String key;
     private Object defaultValue;

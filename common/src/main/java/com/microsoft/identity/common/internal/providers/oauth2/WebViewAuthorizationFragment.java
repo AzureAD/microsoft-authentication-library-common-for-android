@@ -46,6 +46,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -54,6 +55,7 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -139,6 +141,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
+    /**
+     * Callback for file chooser requests from the WebView.
+     * This is set when {@link WebChromeClient#onShowFileChooser} is invoked and
+     * must be called back with the selected file URI(s) or null if cancelled.
+     */
+    private ValueCallback<Uri[]> mFileUploadCallback;
+
+    /**
+     * Launcher for the file chooser activity, registered in {@link #onCreate}.
+     * Handles the result of the file selection and passes it back to the WebView.
+     */
+    private ActivityResultLauncher<Intent> mFileChooserLauncher;
+
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
@@ -158,6 +173,39 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
         }
 
+        // Register file chooser launcher for WebView file upload support.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
+            mFileChooserLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (mFileUploadCallback == null) {
+                            Logger.warn(methodTag, "File upload callback is null, ignoring result.");
+                            return;
+                        }
+                        Uri[] resultUris = null;
+                        if (result.getResultCode() == FragmentActivity.RESULT_OK && result.getData() != null) {
+                            final Intent data = result.getData();
+                            if (data.getClipData() != null) {
+                                // Multiple files selected
+                                final int count = data.getClipData().getItemCount();
+                                resultUris = new Uri[count];
+                                for (int i = 0; i < count; i++) {
+                                    resultUris[i] = data.getClipData().getItemAt(i).getUri();
+                                }
+                            } else if (data.getData() != null) {
+                                // Single file selected
+                                resultUris = new Uri[]{data.getData()};
+                            }
+                            Logger.info(methodTag, "File chooser returned "
+                                    + (resultUris != null ? resultUris.length : 0) + " file(s).");
+                        } else {
+                            Logger.info(methodTag, "File chooser cancelled or returned no data.");
+                        }
+                        mFileUploadCallback.onReceiveValue(resultUris);
+                        mFileUploadCallback = null;
+                    }
+            );
+        }
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             mFidoLauncher = registerForActivityResult(
@@ -388,6 +436,37 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             @Override
+            public boolean onShowFileChooser(
+                    final WebView webView,
+                    final ValueCallback<Uri[]> filePathCallback,
+                    final FileChooserParams fileChooserParams) {
+                if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
+                    Logger.warn(methodTag, "File upload is not enabled. Ignoring file chooser request.");
+                    filePathCallback.onReceiveValue(null);
+                    return true;
+                }
+
+                // Cancel any existing callback to avoid a dangling reference.
+                if (mFileUploadCallback != null) {
+                    mFileUploadCallback.onReceiveValue(null);
+                }
+                mFileUploadCallback = filePathCallback;
+
+                try {
+                    final Intent intent = fileChooserParams.createIntent();
+                    Logger.info(methodTag, "Launching file chooser for WebView file upload.");
+                    mFileChooserLauncher.launch(intent);
+                } catch (final Exception e) {
+                    Logger.error(methodTag, "Failed to launch file chooser.", e);
+                    mFileUploadCallback.onReceiveValue(null);
+                    mFileUploadCallback = null;
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
             public Bitmap getDefaultVideoPoster() {
                 // When not playing, video elements are represented by a 'poster' image.
                 // The image to use can be specified by the poster attribute of the video tag in HTML.
@@ -556,6 +635,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // Note: mFidoLauncher shouldn't be null (based on the OS version check),
             // but we should still have a check here just to be safe.
             mFidoLauncher.unregister();
+        }
+        // Clean up file upload callback to prevent memory leaks.
+        if (mFileUploadCallback != null) {
+            mFileUploadCallback.onReceiveValue(null);
+            mFileUploadCallback = null;
+        }
+        if (mFileChooserLauncher != null) {
+            mFileChooserLauncher.unregister();
         }
     }
 
