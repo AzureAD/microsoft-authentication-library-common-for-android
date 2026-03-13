@@ -4,6 +4,10 @@ on:
   check_suite:
     types: [completed]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to investigate (for manual testing)"
+        required: false
   skip-bots: [github-actions]
 
 if: >
@@ -48,20 +52,28 @@ messages so the coding agent can fix them.
 
 ## When to Act
 
-Only act when ALL of these are true:
+**For `check_suite` trigger**: Only act when ALL of these are true:
 1. The `check_suite` completed with `failure` conclusion
 2. The PR branch starts with `copilot/`
-3. The PR author is `copilot-swe-agent[bot]`
+3. The PR author is `copilot-swe-agent[bot]` — verify this in Step 1 after finding the PR
 4. No feedback comment was already posted in the last 15 minutes (avoid spam)
 
 If any condition is not met, exit without posting.
 
+**For `workflow_dispatch` trigger**: Use the `pr_number` input to specify which PR to investigate.
+If no `pr_number` is provided, exit without posting.
+
 ## Investigation Process
 
-### Step 1: Find the PR
+### Step 1: Find the PR and Verify Author
 
+**For `check_suite` events**:
 Use the GitHub tools to find the open PR associated with the failing check suite's
-head branch.
+head branch. Then verify the PR author is `copilot-swe-agent[bot]`. If the author is
+anyone else, exit immediately — this workflow only acts on Copilot agent PRs.
+
+**For `workflow_dispatch` events**:
+Use the `pr_number` input (${{ github.event.inputs.pr_number }}) to look up the PR directly.
 
 ### Step 2: Identify Failing Checks
 
@@ -97,7 +109,11 @@ For each error, include:
 
 ### Step 5: Post Comment
 
-Post a single comment on the PR with this format:
+Post a single comment on the PR. **You MUST specify the PR number explicitly** using the
+`item_number` parameter when calling the comment tool — the `check_suite` trigger does not
+automatically provide PR context.
+
+Use the PR number resolved in Step 1. Format:
 
 ```
 @copilot CI checks failed on this PR. Please fix the following issues and push an update.

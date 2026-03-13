@@ -23,7 +23,7 @@
 #
 # Investigates CI failures on Copilot coding agent PRs and posts @copilot comments with specific errors so the agent can self-correct.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"deb5f57ad12407792807c1eda79fdb841399143fb819ba05f087b6fcf60e39f5","compiler_version":"v0.58.0","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"a5d82d5e7adc8f44bf4d9c6a5a286d85aa2743f50aa95d8b2eee79061ff38e6d","compiler_version":"v0.58.0","strict":true}
 
 name: "Copilot CI Feedback"
 "on":
@@ -33,6 +33,10 @@ name: "Copilot CI Feedback"
   # skip-bots: # Skip-bots processed as bot check in pre-activation job
   # - github-actions # Skip-bots processed as bot check in pre-activation job
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to investigate (for manual testing)
+        required: false
 
 permissions: {}
 
@@ -115,6 +119,7 @@ jobs:
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
+          GH_AW_GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
           GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
           GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
@@ -174,6 +179,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
+          GH_AW_GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
         with:
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
@@ -187,6 +193,7 @@ jobs:
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
+          GH_AW_GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
           GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
           GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
@@ -207,6 +214,7 @@ jobs:
                 GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
                 GH_AW_GITHUB_EVENT_COMMENT_ID: process.env.GH_AW_GITHUB_EVENT_COMMENT_ID,
                 GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: process.env.GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER,
+                GH_AW_GITHUB_EVENT_INPUTS_PR_NUMBER: process.env.GH_AW_GITHUB_EVENT_INPUTS_PR_NUMBER,
                 GH_AW_GITHUB_EVENT_ISSUE_NUMBER: process.env.GH_AW_GITHUB_EVENT_ISSUE_NUMBER,
                 GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: process.env.GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
