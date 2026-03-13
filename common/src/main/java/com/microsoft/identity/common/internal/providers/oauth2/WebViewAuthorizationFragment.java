@@ -416,7 +416,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            handleInterceptedUrlFromNewWindow(view, v, request, span);
+                            handleInterceptedUrlFromNewWindow(view, v, request, span, isUserGesture);
                             return true;
                         }
                     });
@@ -448,11 +448,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
      * @param request            The intercepted URL request.
      * @param span               The telemetry span to record which routing path is taken.
+     * @param isUserGesture      Whether the popup was initiated by a user gesture (e.g. a click).
      */
     private void handleInterceptedUrlFromNewWindow(@NonNull final WebView mainWebView,
                                                    @NonNull final WebView interceptorWebView,
                                                    @NonNull final WebResourceRequest request,
-                                                   @NonNull final Span span) {
+                                                   @NonNull final Span span,
+                                                   final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
         try {
             final String targetUrl = request.getUrl().toString();
@@ -461,6 +463,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             if (targetUrl == null) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
                 Logger.warn(methodTag, "onCreateWindow: target URL is null, ignoring.");
+            } else if (!isUserGesture) {
+                // Not initiated by user gesture: load inline as a safe fallback instead of
+                // opening an external browser, to prevent programmatic/scripted popups.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
+                mainWebView.loadUrl(targetUrl);
             } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);

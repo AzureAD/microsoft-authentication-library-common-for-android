@@ -1507,6 +1507,11 @@ public final class AuthenticationConstants {
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_TLR = "tlr_flow";
 
         /**
+         * WebView routing value when the popup was not initiated by a user gesture.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE = "no_user_gesture";
+
+        /**
          * Prefix in the redirect for PlayStore.
          */
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
