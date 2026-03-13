@@ -6,12 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "PR number to investigate (for manual testing)"
-        required: false
+        description: "PR number to investigate (required for manual testing)"
+        required: true
   skip-bots: [github-actions]
 
 if: >
-  github.event_name == 'workflow_dispatch' ||
+  (github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number != '') ||
   (github.event.check_suite.conclusion == 'failure' &&
    startsWith(github.event.check_suite.head_branch, 'copilot/'))
 
@@ -21,6 +21,7 @@ permissions:
   contents: read
   checks: read
   actions: read
+  issues: read
   pull-requests: read
 
 safe-outputs:
@@ -38,10 +39,38 @@ mcp-servers:
       - "get_build_log_by_id"
       - "get_builds"
 
+steps:
+  - name: Verify Copilot agent PR
+    id: verify
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+      CHECK_SUITE_BRANCH: ${{ github.event.check_suite.head_branch }}
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+        PR_NUMBER="$INPUT_PR_NUMBER"
+      else
+        PR_NUMBER=$(gh pr list --head "$CHECK_SUITE_BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+      fi
+      if [ -z "$PR_NUMBER" ]; then
+        echo "No PR found. Skipping."
+        echo "activated=false" >> $GITHUB_OUTPUT
+        exit 0
+      fi
+      AUTHOR=$(gh pr view "$PR_NUMBER" --json author --jq '.author.login' 2>/dev/null || echo "")
+      if [ "$AUTHOR" != "app/copilot-swe-agent" ] && [ "$AUTHOR" != "copilot-swe-agent[bot]" ]; then
+        echo "PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent. Skipping."
+        echo "activated=false" >> $GITHUB_OUTPUT
+        exit 0
+      fi
+      echo "PR #$PR_NUMBER is by Copilot agent. Proceeding."
+      echo "activated=true" >> $GITHUB_OUTPUT
+      echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
 tools:
   github:
     toolsets: [pull_requests]
-  bash: ["curl", "jq"]
 ---
 
 # Copilot CI Feedback

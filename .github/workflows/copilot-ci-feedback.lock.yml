@@ -23,7 +23,7 @@
 #
 # Investigates CI failures on Copilot coding agent PRs and posts @copilot comments with specific errors so the agent can self-correct.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"a5d82d5e7adc8f44bf4d9c6a5a286d85aa2743f50aa95d8b2eee79061ff38e6d","compiler_version":"v0.58.0","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"333142823bdac43590f423e471ffdb5155aed166792dd4ee67faedbdd947f8b7","compiler_version":"v0.58.0","strict":true}
 
 name: "Copilot CI Feedback"
 "on":
@@ -35,8 +35,8 @@ name: "Copilot CI Feedback"
   workflow_dispatch:
     inputs:
       pr_number:
-        description: PR number to investigate (for manual testing)
-        required: false
+        description: PR number to investigate (required for manual testing)
+        required: true
 
 permissions: {}
 
@@ -49,7 +49,7 @@ jobs:
   activation:
     needs: pre_activation
     if: >
-      (needs.pre_activation.outputs.activated == 'true') && (github.event_name == 'workflow_dispatch' || (github.event.check_suite.conclusion == 'failure' &&
+      (needs.pre_activation.outputs.activated == 'true') && ((github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number != '') || (github.event.check_suite.conclusion == 'failure' &&
       startsWith(github.event.check_suite.head_branch, 'copilot/')))
     runs-on: ubuntu-slim
     permissions:
@@ -248,6 +248,7 @@ jobs:
       actions: read
       checks: read
       contents: read
+      issues: read
       pull-requests: read
     concurrency:
       group: "gh-aw-copilot-${{ github.workflow }}"
@@ -286,6 +287,15 @@ jobs:
           package-manager-cache: false
       - name: Create gh-aw temp directory
         run: bash /opt/gh-aw/actions/create_gh_aw_tmp_dir.sh
+      - env:
+          CHECK_SUITE_BRANCH: ${{ github.event.check_suite.head_branch }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+        id: verify
+        name: Verify Copilot agent PR
+        run: "if [ \"$EVENT_NAME\" = \"workflow_dispatch\" ]; then\n  PR_NUMBER=\"$INPUT_PR_NUMBER\"\nelse\n  PR_NUMBER=$(gh pr list --head \"$CHECK_SUITE_BRANCH\" --state open --json number --jq '.[0].number' 2>/dev/null || echo \"\")\nfi\nif [ -z \"$PR_NUMBER\" ]; then\n  echo \"No PR found. Skipping.\"\n  echo \"activated=false\" >> $GITHUB_OUTPUT\n  exit 0\nfi\nAUTHOR=$(gh pr view \"$PR_NUMBER\" --json author --jq '.author.login' 2>/dev/null || echo \"\")\nif [ \"$AUTHOR\" != \"app/copilot-swe-agent\" ] && [ \"$AUTHOR\" != \"copilot-swe-agent[bot]\" ]; then\n  echo \"PR #$PR_NUMBER author is '$AUTHOR', not copilot-swe-agent. Skipping.\"\n  echo \"activated=false\" >> $GITHUB_OUTPUT\n  exit 0\nfi\necho \"PR #$PR_NUMBER is by Copilot agent. Proceeding.\"\necho \"activated=true\" >> $GITHUB_OUTPUT\necho \"pr_number=$PR_NUMBER\" >> $GITHUB_OUTPUT\n"
+
       - name: Configure Git credentials
         env:
           REPO_NAME: ${{ github.repository }}
@@ -674,35 +684,13 @@ jobs:
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
         # Copilot CLI tool arguments (sorted):
-        # --allow-tool ado
-        # --allow-tool ado(get_build_log)
-        # --allow-tool ado(get_build_log_by_id)
-        # --allow-tool ado(get_build_status)
-        # --allow-tool ado(get_builds)
-        # --allow-tool github
-        # --allow-tool safeoutputs
-        # --allow-tool shell(cat)
-        # --allow-tool shell(curl)
-        # --allow-tool shell(date)
-        # --allow-tool shell(echo)
-        # --allow-tool shell(grep)
-        # --allow-tool shell(head)
-        # --allow-tool shell(jq)
-        # --allow-tool shell(ls)
-        # --allow-tool shell(pwd)
-        # --allow-tool shell(sort)
-        # --allow-tool shell(tail)
-        # --allow-tool shell(uniq)
-        # --allow-tool shell(wc)
-        # --allow-tool shell(yq)
-        # --allow-tool write
         timeout-minutes: 20
         run: |
           set -o pipefail
           touch /tmp/gh-aw/agent-step-summary.md
           # shellcheck disable=SC1003
           sudo -E awf --env-all --container-workdir "${GITHUB_WORKSPACE}" --allow-domains "api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,github.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com" --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --enable-host-access --image-tag 0.23.0 --skip-pull --enable-api-proxy \
-            -- /bin/bash -c '/usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --add-dir "${GITHUB_WORKSPACE}" --disable-builtin-mcps --allow-tool ado --allow-tool '\''ado(get_build_log)'\'' --allow-tool '\''ado(get_build_log_by_id)'\'' --allow-tool '\''ado(get_build_status)'\'' --allow-tool '\''ado(get_builds)'\'' --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(curl)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(jq)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --prompt "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
+            -- /bin/bash -c '/usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --add-dir "${GITHUB_WORKSPACE}" --disable-builtin-mcps --allow-all-tools --allow-all-paths --prompt "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -1088,7 +1076,7 @@ jobs:
 
   pre_activation:
     if: >
-      github.event_name == 'workflow_dispatch' || (github.event.check_suite.conclusion == 'failure' &&
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number != '') || (github.event.check_suite.conclusion == 'failure' &&
       startsWith(github.event.check_suite.head_branch, 'copilot/'))
     runs-on: ubuntu-slim
     outputs:
