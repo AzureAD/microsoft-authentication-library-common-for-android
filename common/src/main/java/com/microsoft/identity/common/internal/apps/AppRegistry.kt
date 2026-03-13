@@ -26,6 +26,9 @@ package com.microsoft.identity.common.internal.apps
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_AOSP_AGENT_RELEASE_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -97,6 +100,18 @@ object AppRegistry {
         signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
     )
 
+    val INTUNE_CE_PROD = App(
+        nickName = "Intune Company Portal (prod)",
+        packageName = INTUNE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = INTUNE_APP_SHA512_RELEASE_SIGNATURE
+    )
+
+    val INTUNE_CE_DEBUG = App(
+        nickName = "Intune Company Portal (debug)",
+        packageName = INTUNE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = INTUNE_APP_SHA512_DEBUG_SIGNATURE
+    )
+
     val MSAL_TEST_APP = App(
         nickName = "MSAL Test App",
         packageName = "com.msft.identity.client.sample.local",
@@ -128,14 +143,14 @@ object AppRegistry {
     val DEVICE_REGISTRATION_AUTHORIZED_APPS = buildSet {
         add(BrokerData.prodMicrosoftAuthenticator)
         add(BrokerData.prodCompanyPortal)
-        add(BrokerData.prodIntuneCE)
+        add(INTUNE_CE_PROD)
         add(INTUNE_AOSP_AGENT_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(BrokerData.debugCompanyPortal)
-            add(BrokerData.debugIntuneCE)
+            add(INTUNE_CE_DEBUG)
         }
     }
 
@@ -151,6 +166,22 @@ object AppRegistry {
         add(CHROME_CANARY)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
+        }
+    }
+
+    /**
+     * Apps authorized to trigger force broker discovery.
+     * Debug apps (mock brokers, broker host) are included when debug broker trust is enabled.
+     */
+    @JvmField
+    val FORCE_BROKER_DISCOVERY_ALLOW_LIST = buildSet {
+        add(INTUNE_CE_PROD)
+        if (BrokerData.getShouldTrustDebugBrokers()) {
+            add(INTUNE_CE_DEBUG)
+            add(BrokerData.debugMockLtw)
+            add(BrokerData.debugMockCp)
+            add(BrokerData.debugMockAuthApp)
+            add(BrokerData.debugBrokerHost)
         }
     }
 }
