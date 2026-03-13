@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Move debugIntuneCE and prodIntuneCE from BrokerData to AppRegistry as App instances (#3012)
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
 - [MINOR] Edge TB: Claims (#2925)
 - [PATCH] Update Moshi to 1.15.2 to resolve okio CVE-2023-3635 vulnerability (#3005)
