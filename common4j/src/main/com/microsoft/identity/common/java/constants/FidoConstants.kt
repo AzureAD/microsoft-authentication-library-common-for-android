@@ -173,6 +173,16 @@ class FidoConstants {
         const val WEBAUTHN_REGISTRATION_ORIGIN_JSON_KEY = "origin"
 
         /**
+         * Byte offset of the flags byte within authenticator data (`authData`) as defined by WebAuthn.
+         */
+        const val WEBAUTHN_AUTHDATA_FLAGS_OFFSET = 32
+
+        /**
+         * Bit mask for the attested credential data flag (AT) in the authenticator data flags byte.
+         */
+        const val WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG = 0x40
+
+        /**
          * Byte offset of the AAGUID within the authenticator data (authData) of a WebAuthn
          * attestation object, as defined by the WebAuthn spec
          * (https://www.w3.org/TR/webauthn-2/#sctn-authenticator-data).

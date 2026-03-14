@@ -27,6 +27,8 @@ import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_LENGTH
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_OFFSET
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG
+import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_FLAGS_OFFSET
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_REGISTRATION_ATTESTATION_OBJECT_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_REGISTRATION_ORIGIN_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_RESPONSE_AUTHENTICATOR_DATA_JSON_KEY
@@ -219,34 +221,60 @@ object WebAuthnJsonUtil {
     /**
      * Parses a base64url-encoded CBOR attestation object and extracts the AAGUID.
      *
-     * The AAGUID is located at byte offset 37 within the authenticator data (authData) field
-     * of the attestation object, and is 16 bytes long. It is returned as a formatted UUID string.
+     * The AAGUID is read from the attested credential data section of `authData`.
+     * This method first verifies the attested credential data flag at
+     * [WEBAUTHN_AUTHDATA_FLAGS_OFFSET], then reads the AAGUID from
+     * [WEBAUTHN_AUTHDATA_AAGUID_OFFSET] for [WEBAUTHN_AUTHDATA_AAGUID_LENGTH] bytes.
      *
-     * @param attestationObjectB64 Base64url-encoded CBOR attestation object.
-     * @return The AAGUID as a UUID string.
-     * @throws Exception if the attestation object cannot be decoded or authData is not found.
+     * @param attestationString String representation of the attestation object, as received in the WebAuthn registration response JSON.
+     * @return The AAGUID as a UUID string, or null if attested credential data is missing or the payload is truncated.
+     * @throws Exception if the attestation object cannot be decoded.
      */
-    fun extractAaguidFromAttestationObject(attestationObjectB64: String): String {
-        // 1. Decode Base64URL
-        val decoded = attestationObjectB64.decodeBase64()?.toByteArray()
+    fun extractAaguidFromAttestationObject(attestationString: String): String? {
+        // 1. Decode Base64URL.
+        val attestationObject = attestationString.decodeBase64()?.toByteArray()
             ?: throw Exception("Failed to decode attestation object from Base64URL")
-        // 2. Find the "authData" key in the CBOR map
-        // The key "authData" is hex: 68 61 75 74 68 44 61 74 61
-        val authDataKey = "authData".toByteArray()
-        val keyIndex = indexOf(decoded, authDataKey)
-        if (keyIndex == -1) throw Exception("authData not found")
+        val key = "authData".toByteArray(Charsets.UTF_8)
+        val keyIndex = indexOf(attestationObject, key)
+        if (keyIndex == -1) return null
 
-        // 3. Skip the key and the CBOR byte string header
-        // In your string, it's followed by 0x58 (header) and 0x55 (length 85)
-        // So we skip the key length + 2 bytes for the CBOR header
-        val authDataStart = keyIndex + authDataKey.size + 2
+        // 2. Determine where the authData byte string starts.
+        // CBOR uses the low 5 bits of the initial byte to describe how the byte-string length is encoded:
+        // 0..23 = inline length, 24 = next 1 byte, 25 = next 2 bytes, 26 = next 4 bytes.
+        val pointer = keyIndex + key.size
+        if (pointer >= attestationObject.size) return null
 
-        // 4. AAGUID is at offset 37 within authData
+        val initialByte = attestationObject[pointer].toInt() and 0xFF
+        val headerSize = when (initialByte and 0x1F) {
+            in 0..23 -> 1
+            24 -> 2
+            25 -> 3
+            26 -> 5
+            else -> return null
+        }
+
+        val authDataStart = pointer + headerSize
+
+        // 3. Check the WebAuthn flags byte to confirm attested credential data is present.
+        val flagsByteIndex = authDataStart + WEBAUTHN_AUTHDATA_FLAGS_OFFSET
+        if (flagsByteIndex >= attestationObject.size) return null
+
+        val flags = attestationObject[flagsByteIndex].toInt()
+        val hasAttestedCredentialData =
+            (flags and WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG) != 0
+        if (!hasAttestedCredentialData) {
+            return null
+        }
+
+        // 4. Extract the fixed-length AAGUID from authData.
         val aaguidStart = authDataStart + WEBAUTHN_AUTHDATA_AAGUID_OFFSET
-        val aaguidBytes = decoded.copyOfRange(aaguidStart, aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH)
+        if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > attestationObject.size) return null
 
-        // 5. Convert to formatted UUID
-        return formatToUUID(aaguidBytes)
+        val aaguidBytes = attestationObject.copyOfRange(
+            aaguidStart,
+            aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH
+        )
+        return formatToUuid(aaguidBytes)
     }
 
     /**
@@ -263,9 +291,8 @@ object WebAuthnJsonUtil {
     /**
      * Converts a 16-byte AAGUID byte array into a formatted UUID string (e.g. "550e8400-e29b-41d4-a716-446655440000").
      */
-    private fun formatToUUID(bytes: ByteArray): String {
+    private fun formatToUuid(bytes: ByteArray): String {
         val bb = ByteBuffer.wrap(bytes)
         return UUID(bb.long, bb.long).toString()
     }
-
 }

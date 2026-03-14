@@ -42,8 +42,11 @@ import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import org.json.JSONObject
 
 
@@ -154,51 +157,74 @@ class PasskeyReplyChannel(
      * @param json JSON string containing the credential response.
      */
     @SuppressLint("RequiresFeature", "Only called when feature is available")
-     fun postSuccess(json: String) {
+    fun postSuccess(json: String) {
         val methodTag = "$TAG:postSuccess"
         val span = OTelUtility.createSpanFromParent(
             SpanName.PasskeyWebListener.name,
             spanContext
         )
+        // We use a flag or a structured try-catch to ensure span.end()
+        // is called exactly once.
+        var handedOffToBackground = false
+
         try {
-            // Send the reply to JS immediately — callers are not blocked after this point.
+            // 1. Immediate Work
             val successMessage = ReplyMessage.Success(json, requestType).toString()
             replyProxy.postMessage(successMessage)
-            Logger.info(methodTag, "RequestType: $requestType was successful.")
-        } catch (throwable: Throwable) {
-            span.setStatus(StatusCode.ERROR)
+
+            span.setStatus(StatusCode.OK)
             span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            val otelContext = Context.current().with(span)
+
+            // 2. Hand off post-success telemetry to background worker
+            telemetryScope.launch(otelContext.asContextElement()) {
+                recordPostSuccessTelemetry(span, json)
+            }
+            handedOffToBackground = true
+
+        } catch (throwable: Throwable) {
+            // 3. Error Path: If postMessage fails OR launch fails
             span.recordException(throwable)
-            span.end()
-            Logger.error(methodTag, "Reply message failed", throwable)
+            span.setStatus(StatusCode.ERROR)
+            Logger.error(methodTag, "Immediate execution failed", throwable)
             throw throwable
-        }
-
-        // Record telemetry in a background thread so we don't delay the response to the caller.
-        // We inspect the result JSON here to attach richer span attributes.
-        telemetryScope.launch {
-            try {
-                SpanExtension.makeCurrentSpan(span).use {
-                    span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
-
-                    if (requestType == PasskeyWebListener.CREATE_UNIQUE_KEY) {
-                        WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(json)?.let {
-                            span.setAttribute(AttributeName.passkey_aaguid.name, it)
-                        }
-                        WebAuthnJsonUtil.extractOriginFromRegistrationResponse(json)?.let {
-                            span.setAttribute(AttributeName.passkey_origin.name, it)
-                        }
-                    }
-
-                    span.setStatus(StatusCode.OK)
-                }
-            } catch (throwable: Throwable) {
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(throwable)
-                Logger.error(methodTag, "Background telemetry recording failed", throwable)
-            } finally {
+        } finally {
+            // 4. Lifecycle Guard: Only end here if we didn't successfully
+            // start the background task.
+            if (!handedOffToBackground) {
                 span.end()
             }
+        }
+    }
+
+    /**
+     * Records additional post-success telemetry on a background thread.
+     *
+     * This method is invoked only after the success reply has already been posted to JavaScript.
+     * It must remain non-blocking for the caller path and should never prevent a successful
+     * response from being returned.
+     *
+     * @param span The span created in [postSuccess], owned by the background task lifecycle.
+     * @param json JSON payload returned from WebAuthn operation.
+     */
+    private fun recordPostSuccessTelemetry(span: Span, json: String) {
+        try {
+            SpanExtension.current().makeCurrent().use {
+                if (requestType == PasskeyWebListener.CREATE_UNIQUE_KEY) {
+                    WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(json)?.let {
+                        span.setAttribute(AttributeName.passkey_aaguid.name, it)
+                    }
+                    WebAuthnJsonUtil.extractOriginFromRegistrationResponse(json)?.let {
+                        span.setAttribute(AttributeName.passkey_origin.name, it)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            span.recordException(e)
+            span.setStatus(StatusCode.ERROR)
+        } finally {
+            // The background worker owns span completion for the success path.
+            span.end()
         }
     }
 
