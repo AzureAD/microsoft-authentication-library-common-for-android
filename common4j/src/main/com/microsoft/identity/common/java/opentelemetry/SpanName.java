@@ -71,6 +71,7 @@ public enum SpanName {
     GetAllSsoTokens,
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
+    ProcessOpenIdVcRequest,
     PasskeyWebListener,
     InstallCertOnWpj,
     /**

@@ -1313,6 +1313,13 @@ public final class AuthenticationConstants {
         public static final String AMAZON_APP_REDIRECT_PREFIX = "aea://";
 
         /**
+         * Custom URI scheme prefix for OpenID Verifiable Credentials.
+         * WebView cannot load this scheme natively; it must be intercepted and
+         * forwarded to an external handler (wallet app) via an ACTION_VIEW intent.
+         */
+        public static final String OPENID_VC_SCHEME_PREFIX = "openid-vc://";
+
+        /**
          * Prefix for the Authenticator MFA linking.
          */
         public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
