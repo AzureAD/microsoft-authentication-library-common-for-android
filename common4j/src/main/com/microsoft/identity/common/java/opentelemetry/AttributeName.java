@@ -617,6 +617,11 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates if an external handler was found to handle the openid-vc:// URI.
+     */
+    is_openid_vc_handler_found,
     
     //endregion
 
