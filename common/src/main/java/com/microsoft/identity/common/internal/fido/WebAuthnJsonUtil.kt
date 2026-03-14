@@ -230,19 +230,21 @@ object WebAuthnJsonUtil {
      * @return The AAGUID as a UUID string, or null if attested credential data is missing or the payload is truncated.
      * @throws Exception if the attestation object cannot be decoded.
      */
-    fun extractAaguidFromAttestationObject(attestationString: String): String? {
+    fun extractAaguidFromAttestationObject(attestationString: String): String {
         // 1. Decode Base64URL.
         val attestationObject = attestationString.decodeBase64()?.toByteArray()
-            ?: throw Exception("Failed to decode attestation object from Base64URL")
+            ?: throw Exception("Failed to base64url-decode the attestation object.")
         val key = "authData".toByteArray(Charsets.UTF_8)
         val keyIndex = indexOf(attestationObject, key)
-        if (keyIndex == -1) return null
+        if (keyIndex == -1) throw Exception("'authData' key not found in attestation object (size: ${attestationObject.size} bytes).")
 
         // 2. Determine where the authData byte string starts.
         // CBOR uses the low 5 bits of the initial byte to describe how the byte-string length is encoded:
         // 0..23 = inline length, 24 = next 1 byte, 25 = next 2 bytes, 26 = next 4 bytes.
         val pointer = keyIndex + key.size
-        if (pointer >= attestationObject.size) return null
+        if (pointer >= attestationObject.size) {
+            throw Exception("Attestation object truncated after 'authData' key (offset: $keyIndex, size: ${attestationObject.size} bytes).")
+        }
 
         val initialByte = attestationObject[pointer].toInt() and 0xFF
         val headerSize = when (initialByte and 0x1F) {
@@ -250,25 +252,30 @@ object WebAuthnJsonUtil {
             24 -> 2
             25 -> 3
             26 -> 5
-            else -> return null
+            else -> throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $pointer.")
         }
 
         val authDataStart = pointer + headerSize
 
         // 3. Check the WebAuthn flags byte to confirm attested credential data is present.
         val flagsByteIndex = authDataStart + WEBAUTHN_AUTHDATA_FLAGS_OFFSET
-        if (flagsByteIndex >= attestationObject.size) return null
+        if (flagsByteIndex >= attestationObject.size)
+        {
+            throw Exception("Attestation object truncated: flags byte missing at offset $flagsByteIndex (size: ${attestationObject.size} bytes).")
+        }
 
         val flags = attestationObject[flagsByteIndex].toInt()
         val hasAttestedCredentialData =
             (flags and WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG) != 0
         if (!hasAttestedCredentialData) {
-            return null
+            throw Exception("AT flag not set in authData flags, attested credential data is absent, AAGUID cannot be extracted.")
         }
 
         // 4. Extract the fixed-length AAGUID from authData.
         val aaguidStart = authDataStart + WEBAUTHN_AUTHDATA_AAGUID_OFFSET
-        if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > attestationObject.size) return null
+        if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > attestationObject.size) {
+            throw Exception("Attestation object truncated: expected $WEBAUTHN_AUTHDATA_AAGUID_LENGTH AAGUID bytes at offset $aaguidStart (size: ${attestationObject.size} bytes).")
+        }
 
         val aaguidBytes = attestationObject.copyOfRange(
             aaguidStart,

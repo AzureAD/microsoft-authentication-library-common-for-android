@@ -221,7 +221,6 @@ class PasskeyReplyChannel(
             }
         } catch (e: Exception) {
             span.recordException(e)
-            span.setStatus(StatusCode.ERROR)
         } finally {
             // The background worker owns span completion for the success path.
             span.end()
