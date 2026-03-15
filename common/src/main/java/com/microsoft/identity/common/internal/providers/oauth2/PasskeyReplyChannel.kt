@@ -225,8 +225,7 @@ class PasskeyReplyChannel(
         } catch (e: Exception) {
             Logger.warn(
                 TAG,
-                "Failed to record post-success passkey telemetry for requestType: $requestType",
-                e
+                "Failed to record post-success passkey telemetry for requestType: $requestType"
             )
         } finally {
             // The background worker owns span completion for the success path.
