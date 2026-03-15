@@ -177,8 +177,11 @@ class PasskeyReplyChannel(
             val otelContext = Context.current().with(span)
 
             // 2. Hand off post-success telemetry to background worker
-            telemetryScope.launch(otelContext.asContextElement()) {
+            val job = telemetryScope.launch(otelContext.asContextElement()) {
                 recordPostSuccessTelemetry(span, json)
+            }
+            job.invokeOnCompletion {
+                span.end()
             }
             handedOffToBackground = true
 
@@ -209,7 +212,7 @@ class PasskeyReplyChannel(
      */
     private fun recordPostSuccessTelemetry(span: Span, json: String) {
         try {
-            SpanExtension.current().makeCurrent().use {
+            SpanExtension.makeCurrentSpan(span).use {
                 if (requestType == PasskeyWebListener.CREATE_UNIQUE_KEY) {
                     WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(json)?.let {
                         span.setAttribute(AttributeName.passkey_aaguid.name, it)
@@ -220,7 +223,11 @@ class PasskeyReplyChannel(
                 }
             }
         } catch (e: Exception) {
-            span.recordException(e)
+            Logger.warn(
+                TAG,
+                "Failed to record post-success passkey telemetry for requestType: $requestType",
+                e
+            )
         } finally {
             // The background worker owns span completion for the success path.
             span.end()

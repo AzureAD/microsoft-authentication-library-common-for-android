@@ -57,7 +57,7 @@ object WebAuthnJsonUtil {
      * @param challenge challenge string
      * @param relyingPartyIdentifier rpId string
      * @param allowedCredentials allowedCredentials string
-     * @param userVerificationPolicy yserVerificationPolicy string
+     * @param userVerificationPolicy userVerificationPolicy string
      * @return a string representation of PublicKeyCredentialRequestOptionsJSON.
      */
     fun createJsonAuthRequest(
@@ -227,8 +227,8 @@ object WebAuthnJsonUtil {
      * [WEBAUTHN_AUTHDATA_AAGUID_OFFSET] for [WEBAUTHN_AUTHDATA_AAGUID_LENGTH] bytes.
      *
      * @param attestationString String representation of the attestation object, as received in the WebAuthn registration response JSON.
-     * @return The AAGUID as a UUID string, or null if attested credential data is missing or the payload is truncated.
-     * @throws Exception if the attestation object cannot be decoded.
+     * @return The AAGUID as a UUID string.
+     * @throws Exception if the attestation object is malformed or cannot be decoded.
      */
     fun extractAaguidFromAttestationObject(attestationString: String): String {
         // 1. Decode Base64URL.
@@ -247,21 +247,69 @@ object WebAuthnJsonUtil {
         }
 
         val initialByte = attestationObject[pointer].toInt() and 0xFF
-        val headerSize = when (initialByte and 0x1F) {
-            in 0..23 -> 1
-            24 -> 2
-            25 -> 3
-            26 -> 5
-            else -> throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $pointer.")
+        val majorType = (initialByte shr 5) and 0x07
+        if (majorType != 2) {
+            throw Exception("Invalid CBOR major type for 'authData': expected byte string (major type 2) but found $majorType at offset $pointer.")
+        }
+
+        val additionalInfo = initialByte and 0x1F
+        val (headerSize, authDataLength) = when (additionalInfo) {
+            in 0..23 -> {
+                // Length is encoded directly in the additional info.
+                1 to additionalInfo
+            }
+            24 -> {
+                // Next 1 byte is the length.
+                val lengthIndex = pointer + 1
+                if (lengthIndex >= attestationObject.size) {
+                    throw Exception("Attestation object truncated while reading 'authData' length (need 1 byte at offset $lengthIndex, size: ${attestationObject.size} bytes).")
+                }
+                2 to (attestationObject[lengthIndex].toInt() and 0xFF)
+            }
+            25 -> {
+                // Next 2 bytes are the length (big endian).
+                val lengthIndex = pointer + 1
+                val endIndex = lengthIndex + 1
+                if (endIndex >= attestationObject.size) {
+                    throw Exception("Attestation object truncated while reading 'authData' length (need 2 bytes starting at offset $lengthIndex, size: ${attestationObject.size} bytes).")
+                }
+                val length = ((attestationObject[lengthIndex].toInt() and 0xFF) shl 8) or
+                    (attestationObject[endIndex].toInt() and 0xFF)
+                3 to length
+            }
+            26 -> {
+                // Next 4 bytes are the length (big endian).
+                val lengthIndex = pointer + 1
+                val endIndex = lengthIndex + 3
+                if (endIndex >= attestationObject.size) {
+                    throw Exception("Attestation object truncated while reading 'authData' length (need 4 bytes starting at offset $lengthIndex, size: ${attestationObject.size} bytes).")
+                }
+                val length =
+                    ((attestationObject[lengthIndex].toInt() and 0xFF) shl 24) or
+                        ((attestationObject[lengthIndex + 1].toInt() and 0xFF) shl 16) or
+                        ((attestationObject[lengthIndex + 2].toInt() and 0xFF) shl 8) or
+                        (attestationObject[lengthIndex + 3].toInt() and 0xFF)
+                5 to length
+            }
+            else -> {
+                throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $pointer.")
+            }
+        }
+
+        if (authDataLength < 0) {
+            throw Exception("Invalid negative 'authData' length: $authDataLength.")
         }
 
         val authDataStart = pointer + headerSize
+        val authDataEnd = authDataStart + authDataLength
+        if (authDataEnd > attestationObject.size) {
+            throw Exception("Attestation object truncated: declared 'authData' length $authDataLength at offset $authDataStart exceeds buffer size ${attestationObject.size} bytes.")
+        }
 
         // 3. Check the WebAuthn flags byte to confirm attested credential data is present.
         val flagsByteIndex = authDataStart + WEBAUTHN_AUTHDATA_FLAGS_OFFSET
-        if (flagsByteIndex >= attestationObject.size)
-        {
-            throw Exception("Attestation object truncated: flags byte missing at offset $flagsByteIndex (size: ${attestationObject.size} bytes).")
+        if (flagsByteIndex >= authDataEnd) {
+            throw Exception("authData truncated: flags byte missing at offset $flagsByteIndex (authData length: $authDataLength bytes).")
         }
 
         val flags = attestationObject[flagsByteIndex].toInt()
@@ -273,8 +321,8 @@ object WebAuthnJsonUtil {
 
         // 4. Extract the fixed-length AAGUID from authData.
         val aaguidStart = authDataStart + WEBAUTHN_AUTHDATA_AAGUID_OFFSET
-        if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > attestationObject.size) {
-            throw Exception("Attestation object truncated: expected $WEBAUTHN_AUTHDATA_AAGUID_LENGTH AAGUID bytes at offset $aaguidStart (size: ${attestationObject.size} bytes).")
+        if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > authDataEnd) {
+            throw Exception("authData truncated: expected $WEBAUTHN_AUTHDATA_AAGUID_LENGTH AAGUID bytes at offset $aaguidStart (authData length: $authDataLength bytes).")
         }
 
         val aaguidBytes = attestationObject.copyOfRange(
