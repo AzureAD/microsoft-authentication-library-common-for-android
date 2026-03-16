@@ -550,6 +550,16 @@ public class UiAutomatorUtils {
         }
     }
 
+    public static void handleButtonClickForObjectWithTextSafely(@NonNull final String text, final long existsTimeout) {
+        final UiObject button = obtainUiObjectWithText(text, existsTimeout);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            Logger.w(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
+        }
+    }
+
     /**
      * Clicks the button element that contains text matching the supplied regex
      */

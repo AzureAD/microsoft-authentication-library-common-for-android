@@ -371,6 +371,7 @@ public class LabClient implements ILabClient {
                 .userType(userType)
                 .homeTenantId(accountEntry.getHomeTenantId())
                 .homeObjectId(accountEntry.getHomeObjectId())
+                .guestTenantId(accountEntry.getGuestTenantId())
                 .associatedClientId(accountEntry.getAssociatedClientId())
                 .azureEnvironment(accountEntry.getAzureEnvironment())
                 .cloudUrl(accountEntry.getCloudUrl())

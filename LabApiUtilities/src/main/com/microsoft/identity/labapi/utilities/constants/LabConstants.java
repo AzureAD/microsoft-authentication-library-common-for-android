@@ -29,8 +29,8 @@ public class LabConstants {
     public static final String DEFAULT_LAB_SCOPE = "https://request.msidlab.com/.default";
     public static final String KEYVAULT_SCOPE = "https://vault.azure.net/.default";
     public static final String DEFAULT_LAB_CERT_ALIAS = "LabAuth.MSIDLab.com";
-    public static final String MSID_LAB3 = "https://login.microsoftonline.com/msidlab3.com";
-    public static final String MSID_LAB4 = "https://login.microsoftonline.com/msidlab4.com";
+    public static final String ID4SLAB2 = "https://login.microsoftonline.com/id4slab2.onmicrosoft.com";
+    public static final String ID4SLAB1 = "https://login.microsoftonline.com/id4slab1.onmicrosoft.com";
 
     // TODO, REMOVE LEGACY UserTypes WHEN WE REMOVE LAB QUERY USAGE
     static final class UserType {
@@ -47,6 +47,7 @@ public class LabConstants {
         public static final String USGOV = "usgov";
         public static final String USGOV_GUEST = "usgov_guest";
         public static final String CHINA = "china";
+        public static final String CHINA_GUEST = "china_guest";
         public static final String QR_PIN = "qr_pin";
         public static final String TOKEN_BINDING = "token_binding";
         public static final String CBA = "cba";
