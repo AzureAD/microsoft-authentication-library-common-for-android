@@ -516,6 +516,18 @@ public enum AttributeName {
     is_redirect_url_opened_in_browser,
 
     /**
+     * Number of PRT accounts for which SSO token generation succeeded in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_success_count,
+
+    /**
+     * Number of PRT accounts for which SSO token generation failed in a Browser SSO request.
+     * DataClassification: SystemMetadata.
+     */
+    browser_sso_failure_count,
+
+    /**
      * Indicates the number of retry attempts made in DRS discovery when the retry policy is enabled.
      */
     drs_discovery_retry_number,
@@ -595,6 +607,11 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates if an external handler was found to handle the openid-vc:// URI.
+     */
+    is_openid_vc_handler_found,
     
     //endregion
 
@@ -619,6 +636,16 @@ public enum AttributeName {
      * Indicates the name of the device registration protocol being executed.
      */
     device_registration_protocol_name,
+
+    //endregion
+
+    //region WebView target=_blank navigation
+
+    /**
+     * Indicates which routing path was taken for a target=_blank URL intercepted
+     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     */
+    target_blank_navigation_route,
 
     //endregion
 }

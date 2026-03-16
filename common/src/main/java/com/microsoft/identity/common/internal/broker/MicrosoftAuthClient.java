@@ -75,7 +75,8 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
     }
 
     @Override
-    @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
+    @Nullable
+    protected Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
                                               @NonNull final IMicrosoftAuthService microsoftAuthService)
             throws RemoteException, BrokerCommunicationException {
 
@@ -129,7 +130,7 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
     }
 
     @Override
-    @NonNull IMicrosoftAuthService getInterfaceFromIBinder(@NonNull IBinder binder) {
+    @NonNull protected IMicrosoftAuthService getInterfaceFromIBinder(@NonNull IBinder binder) {
         final IMicrosoftAuthService service = IMicrosoftAuthService.Stub.asInterface(binder);
         if (service == null) {
             throw new IllegalStateException("Failed to extract IMicrosoftAuthService from IBinder.", null);
