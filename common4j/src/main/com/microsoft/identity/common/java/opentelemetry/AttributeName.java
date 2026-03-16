@@ -625,6 +625,30 @@ public enum AttributeName {
     
     //endregion
 
+    //region Device Registration IPC Attributes
+
+    /**
+     * Indicates the status of content provider IPC strategy for device registration.
+     */
+    content_provider_status,
+
+    /**
+     * Indicates the status of bound service IPC strategy for device registration.
+     */
+    bound_service_status,
+
+    /**
+     * Indicates the status of Legacy Account Manager IPC strategy for device registration.
+     */
+    legacy_account_manager_status,
+
+    /**
+     * Indicates the name of the device registration protocol being executed.
+     */
+    device_registration_protocol_name,
+
+    //endregion
+
     //region WebView target=_blank navigation
 
     /**
