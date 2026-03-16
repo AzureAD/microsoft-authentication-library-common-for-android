@@ -607,6 +607,21 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates if an external handler was found to handle the openid-vc:// URI.
+     */
+    is_openid_vc_handler_found,
     
+    //endregion
+
+    //region WebView target=_blank navigation
+
+    /**
+     * Indicates which routing path was taken for a target=_blank URL intercepted
+     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     */
+    target_blank_navigation_route,
+
     //endregion
 }
