@@ -38,10 +38,12 @@ import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.BaggageExtension
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
@@ -57,7 +59,7 @@ import org.json.JSONObject
  *
  * @property replyProxy Proxy for sending messages to JavaScript.
  * @property requestType Type of WebAuthn request (e.g., "create", "get"). Defaults to "unknown".
- * @property spanContext Parent span context for OpenTelemetry tracing.
+ * @property Context for OpenTelemetry span creation. Optional; if not provided, telemetry will be skipped with a warning.
  * @property telemetryScope Coroutine scope used to record additional telemetry in a background
  *   thread after the reply has already been posted, so callers are not blocked by telemetry work.
  *   Defaults to a new [CoroutineScope] backed by [Dispatchers.IO].
@@ -65,7 +67,7 @@ import org.json.JSONObject
 class PasskeyReplyChannel(
     private val replyProxy: JavaScriptReplyProxy,
     private val requestType: String = "unknown",
-    private val spanContext: SpanContext? = null,
+    private val otelContext: Context? = null,
     private val telemetryScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     companion object {
@@ -89,6 +91,13 @@ class PasskeyReplyChannel(
         const val DOM_EXCEPTION_ABORT_ERROR = "AbortError"
         const val DOM_EXCEPTION_NOT_SUPPORTED_ERROR = "NotSupportedError"
         const val DOM_EXCEPTION_UNKNOWN_ERROR = "UnknownError"
+
+        private val parentAttributeNames = arrayListOf(
+            AttributeName.correlation_id,
+            AttributeName.tenant_id,
+            AttributeName.account_type,
+            AttributeName.calling_package_name
+        )
     }
 
     /**
@@ -148,6 +157,23 @@ class PasskeyReplyChannel(
     }
 
     /**
+     * Resolves the parent [SpanContext] from the provided [otelContext].
+     *
+     * Returns `null` and emits a warning if no OTel context was supplied, so callers can still
+     * create a root span rather than failing outright.
+     *
+     * @param methodTag Logging tag of the calling method, included in the warning message.
+     * @return The [SpanContext] extracted from [otelContext], or `null`.
+     */
+    private fun resolveParentSpanContext(methodTag: String): SpanContext? =
+        if (otelContext == null) {
+            Logger.warn(methodTag, "No OpenTelemetry context provided. Telemetry will not be recorded for this operation.")
+            null
+        } else {
+            SpanExtension.fromContext(otelContext).spanContext
+        }
+
+    /**
      * Posts a success message with credential data and returns immediately.
      *
      * The reply is sent to JavaScript right away. Additional telemetry attributes that require
@@ -161,7 +187,7 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:postSuccess"
         val span = OTelUtility.createSpanFromParent(
             SpanName.PasskeyWebListener.name,
-            spanContext
+            resolveParentSpanContext(methodTag)
         )
         // We use a flag or a structured try-catch to ensure span.end()
         // is called exactly once.
@@ -175,10 +201,11 @@ class PasskeyReplyChannel(
             span.setStatus(StatusCode.OK)
             span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
             val otelContext = Context.current().with(span)
+            val baggage = BaggageExtension.fromContext(otelContext)
 
             // 2. Hand off post-success telemetry to background worker
             val job = telemetryScope.launch(otelContext.asContextElement()) {
-                recordPostSuccessTelemetry(span, json)
+                recordPostSuccessTelemetry(span, json, baggage)
             }
             job.invokeOnCompletion {
                 span.end()
@@ -210,9 +237,15 @@ class PasskeyReplyChannel(
      * @param span The span created in [postSuccess], owned by the background task lifecycle.
      * @param json JSON payload returned from WebAuthn operation.
      */
-    private fun recordPostSuccessTelemetry(span: Span, json: String) {
+    private fun recordPostSuccessTelemetry(span: Span, json: String, baggage: Baggage? = null) {
         try {
             SpanExtension.makeCurrentSpan(span).use {
+                parentAttributeNames.forEach { attributeName ->
+                    baggage?.getEntryValue(attributeName.name)?.let { value ->
+                        span.setAttribute(attributeName.name, value)
+                    }
+                }
+
                 if (requestType == PasskeyWebListener.CREATE_UNIQUE_KEY) {
                     WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(json)?.let {
                         span.setAttribute(AttributeName.passkey_aaguid.name, it)
@@ -222,10 +255,10 @@ class PasskeyReplyChannel(
                     }
                 }
             }
-        } catch (e: Exception) {
+        } catch (exception: Exception) {
             Logger.warn(
                 TAG,
-                "Failed to record post-success passkey telemetry for requestType: $requestType"
+                "Failed to record post-success passkey telemetry for requestType: $requestType, ${exception.message}"
             )
         } finally {
             // The background worker owns span completion for the success path.
@@ -245,7 +278,7 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:postError"
         val span = OTelUtility.createSpanFromParent(
             SpanName.PasskeyWebListener.name,
-            spanContext
+            resolveParentSpanContext(methodTag)
         )
 
         try {

@@ -34,6 +34,7 @@ import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.BuildConfig
+import com.microsoft.identity.common.internal.providers.oauth2.PasskeyWebListener.Companion.hook
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.logging.Logger
@@ -63,6 +64,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class PasskeyWebListener(
     private val coroutineScope: CoroutineScope,
     private val credentialManagerHandler: CredentialManagerHandler,
+    private val otelContext: io.opentelemetry.context.Context? = null
 ) : WebViewCompat.WebMessageListener {
 
     /** Tracks if a WebAuthN request is currently pending. Only one request is allowed at a time. */
@@ -114,7 +116,11 @@ class PasskeyWebListener(
             methodTag,
             "Received WebAuthN request of type: ${webAuthNMessage.type} from origin: $sourceOrigin"
         )
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy, webAuthNMessage.type)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            requestType = webAuthNMessage.type,
+            otelContext = otelContext
+        )
 
         // Only allow one request at a time.
         if (havePendingRequest.get()) {
@@ -236,7 +242,10 @@ class PasskeyWebListener(
         messageData: String?,
         javaScriptReplyProxy: JavaScriptReplyProxy
     ): WebAuthNMessage? {
-        val passkeyReplyChannel = PasskeyReplyChannel(javaScriptReplyProxy)
+        val passkeyReplyChannel = PasskeyReplyChannel(
+            replyProxy = javaScriptReplyProxy,
+            otelContext = otelContext
+        )
         return runCatching {
             if (messageData.isNullOrBlank()) {
                 throw ClientException(ClientException.MISSING_PARAMETER, "Message data is null or blank")
@@ -340,7 +349,8 @@ class PasskeyWebListener(
                         // CredentialManager must be called on the main thread (it shows system UI),
                         // so the coroutine scope must use Dispatchers.Main.
                         coroutineScope = CoroutineScope(Dispatchers.Main),
-                        credentialManagerHandler = CredentialManagerHandler(activity)
+                        credentialManagerHandler = CredentialManagerHandler(activity),
+                        otelContext = (activity as? AuthorizationActivity)?.otelContext
                     )
                 )
 

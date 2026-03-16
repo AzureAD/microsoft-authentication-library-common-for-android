@@ -231,105 +231,91 @@ object WebAuthnJsonUtil {
      * @throws Exception if the attestation object is malformed or cannot be decoded.
      */
     fun extractAaguidFromAttestationObject(attestationString: String): String {
-        // 1. Decode Base64URL.
+        // 1. Base64URL-decode the attestation object.
         val attestationObject = attestationString.decodeBase64()?.toByteArray()
             ?: throw Exception("Failed to base64url-decode the attestation object.")
+
+        // 2. Locate the 'authData' CBOR key and read its byte-string payload.
         val key = "authData".toByteArray(Charsets.UTF_8)
         val keyIndex = indexOf(attestationObject, key)
         if (keyIndex == -1) throw Exception("'authData' key not found in attestation object (size: ${attestationObject.size} bytes).")
 
-        // 2. Determine where the authData byte string starts.
-        // CBOR uses the low 5 bits of the initial byte to describe how the byte-string length is encoded:
-        // 0..23 = inline length, 24 = next 1 byte, 25 = next 2 bytes, 26 = next 4 bytes.
-        val pointer = keyIndex + key.size
-        if (pointer >= attestationObject.size) {
+        val valueOffset = keyIndex + key.size
+        if (valueOffset >= attestationObject.size) {
             throw Exception("Attestation object truncated after 'authData' key (offset: $keyIndex, size: ${attestationObject.size} bytes).")
         }
 
-        val initialByte = attestationObject[pointer].toInt() and 0xFF
+        val initialByte = attestationObject[valueOffset].toInt() and 0xFF
         val majorType = (initialByte shr 5) and 0x07
         if (majorType != 2) {
-            throw Exception("Invalid CBOR major type for 'authData': expected byte string (major type 2) but found $majorType at offset $pointer.")
+            throw Exception("Invalid CBOR major type for 'authData': expected byte string (major type 2) but found $majorType at offset $valueOffset.")
         }
 
-        val additionalInfo = initialByte and 0x1F
-        val (headerSize, authDataLength) = when (additionalInfo) {
-            in 0..23 -> {
-                // Length is encoded directly in the additional info.
-                1 to additionalInfo
-            }
-            24 -> {
-                // Next 1 byte is the length.
-                val lengthIndex = pointer + 1
-                if (lengthIndex >= attestationObject.size) {
-                    throw Exception("Attestation object truncated while reading 'authData' length (need 1 byte at offset $lengthIndex, size: ${attestationObject.size} bytes).")
-                }
-                2 to (attestationObject[lengthIndex].toInt() and 0xFF)
-            }
-            25 -> {
-                // Next 2 bytes are the length (big endian).
-                val lengthIndex = pointer + 1
-                val endIndex = lengthIndex + 1
-                if (endIndex >= attestationObject.size) {
-                    throw Exception("Attestation object truncated while reading 'authData' length (need 2 bytes starting at offset $lengthIndex, size: ${attestationObject.size} bytes).")
-                }
-                val length = ((attestationObject[lengthIndex].toInt() and 0xFF) shl 8) or
-                    (attestationObject[endIndex].toInt() and 0xFF)
-                3 to length
-            }
-            26 -> {
-                // Next 4 bytes are the length (big endian).
-                val lengthIndex = pointer + 1
-                val endIndex = lengthIndex + 3
-                if (endIndex >= attestationObject.size) {
-                    throw Exception("Attestation object truncated while reading 'authData' length (need 4 bytes starting at offset $lengthIndex, size: ${attestationObject.size} bytes).")
-                }
-                val length =
-                    ((attestationObject[lengthIndex].toInt() and 0xFF) shl 24) or
-                        ((attestationObject[lengthIndex + 1].toInt() and 0xFF) shl 16) or
-                        ((attestationObject[lengthIndex + 2].toInt() and 0xFF) shl 8) or
-                        (attestationObject[lengthIndex + 3].toInt() and 0xFF)
-                5 to length
-            }
-            else -> {
-                throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $pointer.")
-            }
-        }
-
-        if (authDataLength < 0) {
-            throw Exception("Invalid negative 'authData' length: $authDataLength.")
-        }
-
-        val authDataStart = pointer + headerSize
+        val (headerSize, authDataLength) = parseCborByteStringHeader(attestationObject, valueOffset, initialByte)
+        val authDataStart = valueOffset + headerSize
         val authDataEnd = authDataStart + authDataLength
         if (authDataEnd > attestationObject.size) {
             throw Exception("Attestation object truncated: declared 'authData' length $authDataLength at offset $authDataStart exceeds buffer size ${attestationObject.size} bytes.")
         }
 
-        // 3. Check the WebAuthn flags byte to confirm attested credential data is present.
+        // 3. Verify the AT flag — confirms attested credential data (and therefore AAGUID) is present.
         val flagsByteIndex = authDataStart + WEBAUTHN_AUTHDATA_FLAGS_OFFSET
         if (flagsByteIndex >= authDataEnd) {
             throw Exception("authData truncated: flags byte missing at offset $flagsByteIndex (authData length: $authDataLength bytes).")
         }
-
-        val flags = attestationObject[flagsByteIndex].toInt()
-        val hasAttestedCredentialData =
-            (flags and WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG) != 0
-        if (!hasAttestedCredentialData) {
+        if ((attestationObject[flagsByteIndex].toInt() and WEBAUTHN_AUTHDATA_ATTESTED_CREDENTIAL_DATA_FLAG) == 0) {
             throw Exception("AT flag not set in authData flags, attested credential data is absent, AAGUID cannot be extracted.")
         }
 
-        // 4. Extract the fixed-length AAGUID from authData.
+        // 4. Extract the fixed-length AAGUID.
         val aaguidStart = authDataStart + WEBAUTHN_AUTHDATA_AAGUID_OFFSET
         if (aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH > authDataEnd) {
             throw Exception("authData truncated: expected $WEBAUTHN_AUTHDATA_AAGUID_LENGTH AAGUID bytes at offset $aaguidStart (authData length: $authDataLength bytes).")
         }
+        return formatToUuid(attestationObject.copyOfRange(aaguidStart, aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH))
+    }
 
-        val aaguidBytes = attestationObject.copyOfRange(
-            aaguidStart,
-            aaguidStart + WEBAUTHN_AUTHDATA_AAGUID_LENGTH
-        )
-        return formatToUuid(aaguidBytes)
+    /**
+     * Reads the CBOR byte-string length starting at [offset] in [buf].
+     *
+     * CBOR encodes the length in the low 5 bits of the initial byte:
+     * - 0–23  → length is the value itself (1-byte header)
+     * - 24    → next 1 byte holds the length (2-byte header)
+     * - 25    → next 2 bytes hold the length, big-endian (3-byte header)
+     * - 26    → next 4 bytes hold the length, big-endian (5-byte header)
+     *
+     * @param buf         The raw bytes of the attestation object.
+     * @param offset      Index of the initial CBOR byte (already verified to be major type 2).
+     * @param initialByte The byte at [offset], pre-read by the caller.
+     * @return Pair of (headerSize, byteStringLength).
+     * @throws Exception if the buffer is truncated or the length encoding is unsupported.
+     */
+    private fun parseCborByteStringHeader(buf: ByteArray, offset: Int, initialByte: Int): Pair<Int, Int> {
+        val additionalInfo = initialByte and 0x1F
+        return when (additionalInfo) {
+            in 0..23 -> 1 to additionalInfo
+            24 -> {
+                val li = offset + 1
+                if (li >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 1 byte at offset $li, size: ${buf.size} bytes).")
+                2 to (buf[li].toInt() and 0xFF)
+            }
+            25 -> {
+                val li = offset + 1
+                if (li + 1 >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 2 bytes starting at offset $li, size: ${buf.size} bytes).")
+                val length = ((buf[li].toInt() and 0xFF) shl 8) or (buf[li + 1].toInt() and 0xFF)
+                3 to length
+            }
+            26 -> {
+                val li = offset + 1
+                if (li + 3 >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 4 bytes starting at offset $li, size: ${buf.size} bytes).")
+                val length = ((buf[li].toInt() and 0xFF) shl 24) or
+                    ((buf[li + 1].toInt() and 0xFF) shl 16) or
+                    ((buf[li + 2].toInt() and 0xFF) shl 8) or
+                    (buf[li + 3].toInt() and 0xFF)
+                5 to length
+            }
+            else -> throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $offset.")
+        }
     }
 
     /**
