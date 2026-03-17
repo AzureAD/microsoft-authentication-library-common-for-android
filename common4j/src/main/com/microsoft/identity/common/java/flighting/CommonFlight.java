@@ -224,7 +224,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable file upload support in the embedded WebView.
      * When enabled, the WebView will handle file chooser requests from web pages.
      */
-    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", true);
+    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false);
 
     private String key;
     private Object defaultValue;
