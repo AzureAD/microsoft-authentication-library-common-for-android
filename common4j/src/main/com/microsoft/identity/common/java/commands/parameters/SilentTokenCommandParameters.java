@@ -42,8 +42,6 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
 
     private static final String TAG = SilentTokenCommandParameters.class.getSimpleName();
 
-    private static final Object sLock = new Object();
-
     @Override
     public void validate() throws ArgumentException, ClientException {
         super.validate();
@@ -82,9 +80,7 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
         final String errorCode;
 
         try {
-            if (!AzureActiveDirectory.isInitialized()) {
-                performCloudDiscovery();
-            }
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(getAuthority());
             final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
         } catch (final ClientException e) {
@@ -100,17 +96,5 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
                 "Unable to perform cloud discovery in order to validate request authority",
                 cause,
                 errorCode);
-    }
-
-    private static void performCloudDiscovery()
-            throws ClientException {
-        final String methodName = ":performCloudDiscovery";
-        Logger.verbose(
-                TAG + methodName,
-                "Performing cloud discovery..."
-        );
-        synchronized (sLock) {
-            AzureActiveDirectory.performCloudDiscovery();
-        }
     }
 }

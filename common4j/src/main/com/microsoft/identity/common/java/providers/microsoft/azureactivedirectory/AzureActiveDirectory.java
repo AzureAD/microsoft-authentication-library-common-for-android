@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.exception.ServiceException.OPEN
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -53,7 +54,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,6 +67,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import lombok.NonNull;
+
+import javax.annotation.Nullable;
 
 /**
  * Implements the IdentityProvider base class...
@@ -79,12 +85,45 @@ public class AzureActiveDirectory
     private static final String API_VERSION = "api-version";
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
-    private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
-    private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+
+    // Sovereign cloud hosts that have their own instance discovery endpoints.
+    // These hosts serve discovery metadata directly instead of going through
+    // the default global endpoint (login.microsoftonline.com).
+    private static final Set<String> SOV_CLOUD_DISCOVERY_HOSTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            AzureActiveDirectoryCloud.BLEU.getPreferredNetworkHostName(),
+            AzureActiveDirectoryCloud.DELOS.getPreferredNetworkHostName(),
+            AzureActiveDirectoryCloud.SOVSG.getPreferredNetworkHostName()
+    )));
+
+    static {
+        // Pre-seed sAadClouds with sovereign cloud metadata so they are recognized
+        // without a network call to the global instance discovery endpoint.
+        for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
+                AzureActiveDirectoryCloud.BLEU,
+                AzureActiveDirectoryCloud.DELOS,
+                AzureActiveDirectoryCloud.SOVSG
+        }) {
+            sAadClouds.put(
+                    cloud.getPreferredNetworkHostName().toLowerCase(Locale.US),
+                    cloud
+            );
+        }
+    }
+
+    /**
+     * Returns true if the given host is a sovereign cloud host that has its own
+     * instance discovery endpoint.
+     *
+     * @param host The hostname to check.
+     * @return true if the host is in the sovereign cloud discovery hosts list.
+     */
+    public static boolean isSovCloudDiscoveryHost(@NonNull final String host) {
+        return SOV_CLOUD_DISCOVERY_HOSTS.contains(host.toLowerCase(Locale.US));
+    }
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
@@ -104,18 +143,10 @@ public class AzureActiveDirectory
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
-    public static synchronized boolean isInitialized() {
-        return sIsInitialized;
-    }
-
     public static synchronized void setEnvironment(@NonNull final Environment environment) {
         if (environment != sEnvironment) {
-            // Environment changed, so mark sIsInitialized to false
-            // to make a instance discovery network request for this environment.
-            sIsInitialized = false;
             sEnvironment = environment;
         }
-
     }
 
     public static synchronized Environment getEnvironment() {
@@ -188,8 +219,6 @@ public class AzureActiveDirectory
                 sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
             }
         }
-
-        sIsInitialized = true;
     }
 
     public static synchronized String getDefaultCloudUrl() {
@@ -204,12 +233,23 @@ public class AzureActiveDirectory
 
     public static synchronized void performCloudDiscovery()
             throws ClientException {
-        final String methodName = ":performCloudDiscovery";
+        performCloudDiscoveryForCloudUrl(getDefaultCloudUrl());
+    }
+
+    /**
+     * Performs instance discovery using the specified cloud URL as the discovery endpoint host.
+     *
+     * @param cloudUrl The base cloud URL to use for the discovery request
+     *                 (e.g. "https://login.sovcloud-identity.fr").
+     */
+        public static synchronized void performCloudDiscoveryForCloudUrl(@NonNull final String cloudUrl)
+            throws ClientException {
+        final String methodName = ":performCloudDiscoveryForCloudUrl";
         final URI instanceDiscoveryRequestUri;
         try {
-            instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+            instanceDiscoveryRequestUri = new CommonURIBuilder(cloudUrl + AAD_INSTANCE_DISCOVERY_ENDPOINT)
                     .setParameter(API_VERSION, API_VERSION_VALUE)
-                    .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+                    .setParameter(AUTHORIZATION_ENDPOINT, cloudUrl + "/common/oauth2/v2.0/authorize")
                     .build();
         } catch (URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
@@ -220,7 +260,7 @@ public class AzureActiveDirectory
                 new HashMap<>());
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            Logger.warn(TAG + methodName, "Error getting cloud information");
+            Logger.warn(TAG + methodName, "Error getting cloud information from " + cloudUrl);
         } else {
             // Our request was successful. Flush the HTTP cache to disk. Should only happen once
             // per app launch. Instance Discovery Metadata will be cached in-memory
@@ -242,18 +282,80 @@ public class AzureActiveDirectory
                     sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
                 }
             }
-
-            sIsInitialized = true;
         }
     }
 
     /**
-     * Ensures that cloud discovery has been completed. If not, it will perform cloud discovery.
+     * Returns the host portion of the default cloud URL for the current environment.
+     */
+    private static String getDefaultCloudHost() {
+        return URI.create(getDefaultCloudUrl()).getHost().toLowerCase(Locale.US);
+    }
+
+    /**
+     * Ensures that cloud discovery has been completed using the default global endpoint.
+     * Delegates to {@link #ensureCloudDiscoveryForAuthority(URL)} with the default cloud URL.
      */
     public static synchronized void ensureCloudDiscoveryComplete() throws ClientException {
-        final String methodTag = TAG + ":ensureCloudDiscoveryComplete";
-        if (!sIsInitialized) {
-            Logger.info(methodTag, "Cloud metadata is not initialized. Performing cloud discovery.");
+        try {
+            ensureCloudDiscoveryForAuthority(new URL(getDefaultCloudUrl()));
+        } catch (final MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Ensures that cloud discovery has been completed for the given authority.
+     * Extracts the authority URL and delegates to {@link #ensureCloudDiscoveryForAuthority(URL)}.
+     * If authority is null or has no URL, falls back to the default global endpoint.
+     *
+     * @param authority The authority whose URL determines the discovery endpoint, or null to use the default.
+     */
+    public static synchronized void ensureCloudDiscoveryForAuthority(@Nullable final Authority authority)
+            throws ClientException {
+        ensureCloudDiscoveryForAuthority(
+                authority != null ? authority.getAuthorityURL() : null
+        );
+    }
+
+    /**
+     * Ensures that cloud discovery has been completed for the given authority URL.
+     * If authorityUrl is null, falls back to the default global endpoint.
+     * If the authority's host is already present in the cloud metadata cache, this is a no-op.
+     * For unknown hosts that route to the global endpoint, if the global default host
+     * is already cached then global discovery has already been performed — also a no-op.
+     * Otherwise, performs discovery using the appropriate endpoint:
+     * <ul>
+     *   <li>For sovereign cloud hosts — queries the cloud's own discovery endpoint.</li>
+     *   <li>For all other hosts — queries the default global discovery endpoint.</li>
+     * </ul>
+     *
+     * @param authorityUrl The authority URL whose host determines the discovery endpoint, or null to use the default.
+     */
+    public static synchronized void ensureCloudDiscoveryForAuthority(@Nullable final URL authorityUrl)
+            throws ClientException {
+        if (authorityUrl == null) {
+            ensureCloudDiscoveryComplete();
+            return;
+        }
+        final String host = authorityUrl.getHost();
+        if (host == null) {
+            return;
+        }
+        final String hostLower = host.toLowerCase(Locale.US);
+        // Already in cache — no discovery needed.
+        if (sAadClouds.containsKey(hostLower)) {
+            return;
+        }
+        if (isSovCloudDiscoveryHost(hostLower)) {
+            // Sovereign cloud host not yet in cache — discover from its own endpoint.
+            performCloudDiscoveryForCloudUrl(authorityUrl.getProtocol() + "://" + host);
+        } else {
+            // not a sovereign cloud host — keep existing behavior would route to global
+            // Check if global is already cached.
+            if (sAadClouds.containsKey(getDefaultCloudHost())) {
+                return;
+            }
             performCloudDiscovery();
         }
     }
@@ -335,9 +437,9 @@ public class AzureActiveDirectory
             }
 
             final URI normalized = new URI(scheme + "://" + host + "/common");
-
-            ensureCloudDiscoveryComplete();
             final URL authorityUrl = normalized.toURL();
+
+            ensureCloudDiscoveryForAuthority(authorityUrl);
 
             if (!hasCloudHost(authorityUrl)) {
                 Logger.warn(methodTag, "Host not found in known AAD clouds: " + host);

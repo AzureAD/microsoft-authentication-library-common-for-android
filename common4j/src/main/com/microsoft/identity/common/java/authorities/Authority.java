@@ -223,14 +223,16 @@ public abstract class Authority {
 
             // Iterate over all of the developer trusted authorities and check if the authorities
             // are the same...
-            for (final Authority currentAuthority : knownAuthorities) {
-                if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrlString)) {
-                    final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
-                    final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
+            synchronized (sLock) {
+                for (final Authority currentAuthority : knownAuthorities) {
+                    if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrlString)) {
+                        final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
+                        final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
 
-                    if (httpAuthority.equalsIgnoreCase(currentHttpAuthority)) {
-                        result = currentAuthority;
-                        break;
+                        if (httpAuthority.equalsIgnoreCase(currentHttpAuthority)) {
+                            result = currentAuthority;
+                            break;
+                        }
                     }
                 }
             }
@@ -309,22 +311,6 @@ public abstract class Authority {
     private static final List<Authority> knownAuthorities = new ArrayList<>();
     private static final Object sLock = new Object();
 
-    private static void performCloudDiscovery()
-            throws ClientException {
-        final String methodName = ":performCloudDiscovery";
-        Logger.verbose(
-                TAG + methodName,
-                "Performing cloud discovery..."
-        );
-        synchronized (sLock) {
-            if (!AzureActiveDirectory.isInitialized()) {
-                Logger.verbose(TAG + methodName, "Not initialized. Starting request.");
-                AzureActiveDirectory.performCloudDiscovery();
-                Logger.info(TAG + methodName, "Loaded cloud metadata.");
-            }
-        }
-    }
-
     public static void addKnownAuthorities(List<Authority> authorities) {
         synchronized (sLock) {
             knownAuthorities.addAll(authorities);
@@ -356,17 +342,19 @@ public abstract class Authority {
         }
 
         //Check if authority was added to configuration
-        for (final Authority currentAuthority : knownAuthorities) {
-            if (currentAuthority.mAuthorityUrlString != null &&
-                    authority.getAuthorityURL() != null &&
-                    authority.getAuthorityURL().getAuthority() != null &&
-                    currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                            authority
-                                    .getAuthorityURL()
-                                    .getAuthority()
-                                    .toLowerCase(Locale.ROOT))) {
-                knownToDeveloper = true;
-                break;
+        synchronized (sLock) {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (currentAuthority.mAuthorityUrlString != null &&
+                        authority.getAuthorityURL() != null &&
+                        authority.getAuthorityURL().getAuthority() != null &&
+                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                                authority
+                                        .getAuthorityURL()
+                                        .getAuthority()
+                                        .toLowerCase(Locale.ROOT))) {
+                    knownToDeveloper = true;
+                    break;
+                }
             }
         }
 
@@ -399,23 +387,26 @@ public abstract class Authority {
         boolean known = false;
 
         try {
-            performCloudDiscovery();
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority);
         } catch (final ClientException ex) {
-            clientException = ex;
+            // Cloud discovery failed (e.g. network error).
+            // Log but continue — the authority may still be known via hardcoded
+            // metadata or developer configuration.
+            Logger.warn(TAG + methodName,
+                    "Cloud discovery failed, will check hardcoded/configured authorities. Error: "
+                            + ex.getErrorCode());
         }
 
         Logger.info(TAG + methodName, "Cloud discovery complete.");
 
-        if (clientException == null) {
-            if (!isKnownAuthority(authority)) {
-                clientException = new ClientException(
-                        ClientException.UNKNOWN_AUTHORITY,
-                        "Provided authority is not known.  MSAL will only make requests to known authorities"
-                );
-            } else {
-                Logger.info(TAG + methodName, "Cloud is known.");
-                known = true;
-            }
+        if (!isKnownAuthority(authority)) {
+            clientException = new ClientException(
+                    ClientException.UNKNOWN_AUTHORITY,
+                    "Provided authority is not known.  MSAL will only make requests to known authorities"
+            );
+        } else {
+            Logger.info(TAG + methodName, "Cloud is known.");
+            known = true;
         }
 
         return new KnownAuthorityResult(known, clientException);
