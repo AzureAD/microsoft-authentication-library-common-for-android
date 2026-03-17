@@ -648,4 +648,18 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     //endregion
+
+    //region WebView file upload
+
+    /**
+     * The number of files selected by the user in the file chooser.
+     */
+    file_upload_file_count,
+
+    /**
+     * Indicates whether the file chooser was cancelled by the user.
+     */
+    is_file_upload_cancelled,
+
+    //endregion
 }

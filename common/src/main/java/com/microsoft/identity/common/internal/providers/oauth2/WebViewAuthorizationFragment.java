@@ -440,30 +440,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     final WebView webView,
                     final ValueCallback<Uri[]> filePathCallback,
                     final FileChooserParams fileChooserParams) {
-                if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
-                    Logger.warn(methodTag, "File upload is not enabled. Ignoring file chooser request.");
-                    filePathCallback.onReceiveValue(null);
-                    return true;
-                }
-
-                // Cancel any existing callback to avoid a dangling reference.
-                if (mFileUploadCallback != null) {
-                    mFileUploadCallback.onReceiveValue(null);
-                }
-                mFileUploadCallback = filePathCallback;
-
-                try {
-                    final Intent intent = fileChooserParams.createIntent();
-                    Logger.info(methodTag, "Launching file chooser for WebView file upload.");
-                    mFileChooserLauncher.launch(intent);
-                } catch (final Exception e) {
-                    Logger.error(methodTag, "Failed to launch file chooser.", e);
-                    mFileUploadCallback.onReceiveValue(null);
-                    mFileUploadCallback = null;
-                    return false;
-                }
-                return true;
+                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+                return handleFileUploadRequest(filePathCallback, fileChooserParams, parentSpanContext);
             }
 
             @Override
@@ -592,6 +571,70 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String lowerUrl = url.toLowerCase();
         return lowerUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)
                 && lowerUrl.contains(AuthenticationConstants.Broker.TLR_START_PATH);
+    }
+
+    /**
+     * Handles a file chooser request from the WebView. Creates a telemetry span,
+     * manages the file upload callback, and launches the system file picker.
+     *
+     * @param filePathCallback  The callback to deliver file selection results to the WebView.
+     * @param fileChooserParams Parameters describing the file chooser request.
+     * @param parentSpanContext The parent span context for telemetry, or null.
+     * @return {@code true} if the file chooser was launched, {@code false} otherwise.
+     */
+    @VisibleForTesting
+    boolean handleFileUploadRequest(
+            @NonNull final ValueCallback<Uri[]> filePathCallback,
+            @NonNull final WebChromeClient.FileChooserParams fileChooserParams,
+            @Nullable final SpanContext parentSpanContext) {
+        final String methodTag = TAG + ":handleFileUploadRequest";
+
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
+            Logger.info(methodTag, "ENABLE_WEBVIEW_FILE_UPLOAD flight is disabled.");
+            return false;
+        }
+
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.WebViewFileUpload.name(), parentSpanContext);
+
+        // Cancel any existing callback to avoid a dangling reference.
+        if (mFileUploadCallback != null) {
+            mFileUploadCallback.onReceiveValue(null);
+        }
+        mFileUploadCallback = filePathCallback;
+
+        try {
+            final Intent intent = fileChooserParams.createIntent();
+            Logger.info(methodTag, "Launching file chooser for WebView file upload.");
+            mFileChooserLauncher.launch(intent);
+            span.setStatus(StatusCode.OK);
+        } catch (final Exception e) {
+            Logger.error(methodTag, "Failed to launch file chooser.", e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            mFileUploadCallback.onReceiveValue(null);
+            mFileUploadCallback = null;
+            return false;
+        } finally {
+            span.end();
+        }
+        return true;
+    }
+
+    @VisibleForTesting
+    void setFileUploadCallback(@Nullable final ValueCallback<Uri[]> callback) {
+        mFileUploadCallback = callback;
+    }
+
+    @VisibleForTesting
+    ValueCallback<Uri[]> getFileUploadCallback() {
+        return mFileUploadCallback;
+    }
+
+    @VisibleForTesting
+    void setFileChooserLauncher(@Nullable final ActivityResultLauncher<Intent> launcher) {
+        mFileChooserLauncher = launcher;
     }
 
     /**
