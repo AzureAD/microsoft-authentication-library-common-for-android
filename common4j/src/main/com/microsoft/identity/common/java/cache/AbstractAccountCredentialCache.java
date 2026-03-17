@@ -239,9 +239,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 }
 
                 if (TokenRequest.TokenType.POP.equalsIgnoreCase(atType)) {
-                    if (!(authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
-                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP)
-                            || authScheme.equalsIgnoreCase(WebAppsPopAuthenticationSchemeInternal.SCHEME_POP_PREGENERATED))) {
+                    if (authScheme.equalsIgnoreCase(WebAppsPopAuthenticationSchemeInternal.SCHEME_POP_PREGENERATED)) {
+                        final String credKid = ((AccessTokenRecord)credential).getKid();
+                        if (!(credKid != null && credKid.equals(kid))) {
+                             continue;
+                        }
+                    } else if (!(authScheme.equalsIgnoreCase(PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY)
+                            || authScheme.equalsIgnoreCase(PopAuthenticationSchemeInternal.SCHEME_POP))) {
                         continue;
                     }
                 } else if (!authScheme.equalsIgnoreCase(atType)) continue;

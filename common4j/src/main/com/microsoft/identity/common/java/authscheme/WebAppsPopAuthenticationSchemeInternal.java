@@ -22,9 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.KID;
 import static com.microsoft.identity.common.java.util.StringUtil.isNullOrEmpty;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.base64.Base64Util;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,7 +47,7 @@ import lombok.experimental.Accessors;
 public class WebAppsPopAuthenticationSchemeInternal
         extends TokenAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {
-
+    private static final String TAG = WebAppsPopAuthenticationSchemeInternal.class.getSimpleName();
     private static final long serialVersionUID = 1L;
 
     /**
@@ -56,6 +61,9 @@ public class WebAppsPopAuthenticationSchemeInternal
 
     @SerializedName(SerializedNames.REQUEST_CONFIRMATION)
     private String mRequestConfirmation;
+
+    @SerializedName(KID)
+    private String mKid;
 
     /**
      * Constructor for gson use. Package-private to restrict direct instantiation
@@ -83,6 +91,15 @@ public class WebAppsPopAuthenticationSchemeInternal
         }
 
         mRequestConfirmation = requestConfirmation;
+        try {
+            final String reqCnfJson = Base64Util.decodeUrlSafeStringToString(requestConfirmation);
+            final JsonObject jsonObject = JsonParser.parseString(reqCnfJson).getAsJsonObject();
+            if (jsonObject != null && jsonObject.has(KID)) {
+                mKid = jsonObject.get(KID).getAsString();
+            }
+        } catch (Exception e) {
+            Logger.warn(TAG, "Failed to parse kid from reqCnf. Exception type and message: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     /**

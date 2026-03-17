@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
@@ -357,9 +359,8 @@ public class MicrosoftStsAccountCredentialAdapter
             accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
             accessTokenRecord.setKid(((PopAuthenticationSchemeWithClientKeyInternal) authenticationScheme).getKid());
         } else if (authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
-            // For WebApps PoP, we use a pre-generated req_cnf; no device key/kid is associated.
             accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
-            accessTokenRecord.setKid(((WebAppsPopAuthenticationSchemeInternal) authenticationScheme).getRequestConfirmation());
+            accessTokenRecord.setKid(((WebAppsPopAuthenticationSchemeInternal) authenticationScheme).getKid());
         } else {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         }

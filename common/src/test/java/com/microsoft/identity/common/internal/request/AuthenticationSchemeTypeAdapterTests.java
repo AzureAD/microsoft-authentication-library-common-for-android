@@ -80,9 +80,9 @@ public class AuthenticationSchemeTypeAdapterTests {
     @Test
     public void testSerialize_WebAppsPopAuthenticationSchemeInternal() throws MalformedURLException, IllegalArgumentException {
         final String expectedJson =
-                "{\"req_cnf\":\"test_req_cnf\",\"name\":\"PoP_Pregenerated\"}";
+                "{\"req_cnf\":\"eyJraWQiOiJteS1rZXktaWQifQ\",\"kid\":\"my-key-id\",\"name\":\"PoP_Pregenerated\"}";
         final WebAppsPopAuthenticationSchemeInternal scheme =
-                new WebAppsPopAuthenticationSchemeInternal("test_req_cnf");
+                new WebAppsPopAuthenticationSchemeInternal("eyJraWQiOiJteS1rZXktaWQifQ");
 
         final String json = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(scheme);
         Assert.assertEquals(expectedJson, json);
@@ -119,7 +119,7 @@ public class AuthenticationSchemeTypeAdapterTests {
     @Test
     public void testDeserialize_WebAppsPopAuthenticationSchemeInternal() {
         final String json =
-                "{\"http_method\":\"GET\",\"url\":\"https://xyz.com\",\"nonce\":\"nonce_test\",\"client_claims\":\"clientClaims_test\",\"req_cnf\":\"test_req_cnf\",\"name\":\"PoP_Pregenerated\"}";
+                "{\"http_method\":\"GET\",\"url\":\"https://xyz.com\",\"nonce\":\"nonce_test\",\"client_claims\":\"clientClaims_test\",\"req_cnf\":\"eyJraWQiOiJteS1rZXktaWQifQ\",\"name\":\"PoP_Pregenerated\"}";
         final AbstractAuthenticationScheme authenticationScheme =
                 AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(json, AbstractAuthenticationScheme.class);
 
