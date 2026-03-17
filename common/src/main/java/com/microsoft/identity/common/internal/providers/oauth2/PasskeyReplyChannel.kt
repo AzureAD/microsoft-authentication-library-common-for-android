@@ -200,11 +200,11 @@ class PasskeyReplyChannel(
 
             span.setStatus(StatusCode.OK)
             span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
-            val otelContext = Context.current().with(span)
+            val otelContextCurrentSpan = Context.current().with(span)
             val baggage = BaggageExtension.fromContext(otelContext)
 
             // 2. Hand off post-success telemetry to background worker
-            val job = telemetryScope.launch(otelContext.asContextElement()) {
+            val job = telemetryScope.launch(otelContextCurrentSpan.asContextElement()) {
                 recordPostSuccessTelemetry(span, json, baggage)
             }
             job.invokeOnCompletion {
