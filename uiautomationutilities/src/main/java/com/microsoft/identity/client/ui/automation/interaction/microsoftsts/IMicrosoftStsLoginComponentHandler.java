@@ -87,10 +87,8 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
 
     /**
      * Handle interaction for "Sign in from other device".
-     * @param expectedDeviceLoginUrl the expected remote login url when "Sign in from other device" option is
-     *                               exercised.
      */
-    void handleSignInFromOtherDevice(@NonNull final String expectedDeviceLoginUrl);
+    void handleSignInFromOtherDevice();
 
     /**
      * Handle interaction with "Sign in options".
