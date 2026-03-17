@@ -538,6 +538,11 @@ public class ClientException extends BaseException {
     public static final String DEVICE_NOT_SUPPORT_HARDWARE_WRAPPED_KEY_IMPORT = "device_not_supported_hardware_wrapped_key_import";
 
     /**
+     * Emitted when a function that must not run on the main (UI) thread is called from the main thread.
+     */
+    public static final String CALLED_ON_MAIN_THREAD = "called_on_main_thread";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

@@ -67,14 +67,14 @@ public abstract class BoundServiceClient<T extends IInterface> {
     /**
      * Perform the given operation with the given .aidl {@link IInterface}
      */
-    abstract @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
-                                                       @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
+    protected abstract @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
+                                                                 @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
 
     /**
      * Extracts {@link IInterface} from a given {@link IBinder}
      * i.e. T.Stub.asInterface(binder), where T is an .aidl {@link IInterface}.
      */
-    abstract @NonNull T getInterfaceFromIBinder(@NonNull final IBinder binder);
+    protected abstract @NonNull T getInterfaceFromIBinder(@NonNull final IBinder binder);
 
     /**
      * BoundServiceClient's constructor.
