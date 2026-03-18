@@ -208,6 +208,31 @@ class Base64Util {
             }
         }
 
+        /**
+         * Decodes a base64url-encoded string (URL-safe, no padding, no wrap).
+         *
+         * @param input The base64url-encoded string
+         * @return The decoded byte array
+         */
+        @JvmStatic
+        fun decodeUrlSafeString(input: String): ByteArray {
+            return decode(
+                input,
+                Base64Flags.URL_SAFE, Base64Flags.NO_PADDING, Base64Flags.NO_WRAP
+            )
+        }
+
+        /**
+         * Decodes a base64url-encoded string and returns it as a UTF-8 string.
+         *
+         * @param input The base64url-encoded string
+         * @return The decoded string
+         */
+        @JvmStatic
+        fun decodeUrlSafeStringToString(input: String): String {
+            return String(decodeUrlSafeString(input), StandardCharsets.UTF_8)
+        }
+
 //endregion
     }
 }
