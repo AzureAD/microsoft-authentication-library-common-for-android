@@ -8,6 +8,7 @@ vNext
 - [MINOR] Edge TB: PoP support (#3006)
 - [MINOR] Handle target="_blank" links in authorization WebView (#3010)
 - [MINOR] Handle openid-vc urls in webview (#3013)
+- [MINOR] Add WebView file upload support (#3022)
 
 Version 24.0.1
 ----------
