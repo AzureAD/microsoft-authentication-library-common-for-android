@@ -26,7 +26,6 @@ import static com.microsoft.identity.common.java.exception.ServiceException.OPEN
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.BLEU_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.DELOS_CLOUD_HOST;
-import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.GERMANY_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PPE_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST;
@@ -103,7 +102,6 @@ public class AzureActiveDirectory
             PUBLIC_CLOUD_HOST,
             PPE_CLOUD_HOST,
             CHINA_CLOUD_HOST,
-            GERMANY_CLOUD_HOST,
             US_GOV_CLOUD_HOST,
             BLEU_CLOUD_HOST,
             DELOS_CLOUD_HOST,

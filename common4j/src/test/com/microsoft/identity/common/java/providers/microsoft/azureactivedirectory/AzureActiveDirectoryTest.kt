@@ -72,7 +72,6 @@ class AzureActiveDirectoryTest {
     @Test
     fun testIsKnownCloudDiscoveryHost_nationalClouds() {
         assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.partner.microsoftonline.cn"))
-        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.microsoftonline.de"))
         assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.microsoftonline.us"))
     }
 
