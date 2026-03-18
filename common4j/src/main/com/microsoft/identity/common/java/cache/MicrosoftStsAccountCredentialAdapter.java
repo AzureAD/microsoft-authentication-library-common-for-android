@@ -24,10 +24,13 @@ package com.microsoft.identity.common.java.cache;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -355,6 +358,9 @@ public class MicrosoftStsAccountCredentialAdapter
         } else if (authenticationScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
             accessTokenRecord.setKid(((PopAuthenticationSchemeWithClientKeyInternal) authenticationScheme).getKid());
+        } else if (authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
+            accessTokenRecord.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+            accessTokenRecord.setKid(((WebAppsPopAuthenticationSchemeInternal) authenticationScheme).getKid());
         } else {
             accessTokenRecord.setCredentialType(CredentialType.AccessToken.name());
         }

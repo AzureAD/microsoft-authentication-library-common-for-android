@@ -8,6 +8,7 @@ vNext
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
 - [MINOR] Edge TB: Claims (#2925)
 - [PATCH] Update Moshi to 1.15.2 to resolve okio CVE-2023-3635 vulnerability (#3005)
+- [MINOR] Edge TB: PoP support (#3006)
 - [MINOR] Handle target="_blank" links in authorization WebView (#3010)
 - [MINOR] Handle openid-vc urls in webview (#3013)
 
