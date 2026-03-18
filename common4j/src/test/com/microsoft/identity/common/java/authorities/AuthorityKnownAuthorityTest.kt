@@ -20,48 +20,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.authorities;
+package com.microsoft.identity.common.java.authorities
 
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-
-import org.junit.Assert;
-import org.junit.Test;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
+import org.junit.Assert.*
+import org.junit.Test
 
 /**
- * Tests for {@link Authority#isKnownAuthority} and {@link Authority#getKnownAuthorityResult}
+ * Tests for [Authority.isKnownAuthority] and [Authority.getKnownAuthorityResult]
  * focusing on sovereign cloud recognition via pre-seeded cloud metadata.
  */
-public class AuthorityKnownAuthorityTest {
+class AuthorityKnownAuthorityTest {
 
     /**
      * Verifies that a sovereign cloud authority (Bleu) is recognized as known
      * through the pre-seeded cloud metadata, without requiring a network call.
      */
     @Test
-    public void testIsKnownAuthority_bleuSovereignCloud() {
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                "https://" + AzureActiveDirectoryCloud.BLEU_CLOUD_HOST + "/common");
-        Assert.assertTrue(Authority.isKnownAuthority(authority));
+    fun testIsKnownAuthority_bleuSovereignCloud() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.BLEU_CLOUD_HOST}/common"
+        )
+        assertTrue(Authority.isKnownAuthority(authority))
     }
 
     /**
      * Verifies that a sovereign cloud authority (Delos) is recognized as known.
      */
     @Test
-    public void testIsKnownAuthority_delosSovereignCloud() {
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                "https://" + AzureActiveDirectoryCloud.DELOS_CLOUD_HOST + "/common");
-        Assert.assertTrue(Authority.isKnownAuthority(authority));
+    fun testIsKnownAuthority_delosSovereignCloud() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.DELOS_CLOUD_HOST}/common"
+        )
+        assertTrue(Authority.isKnownAuthority(authority))
     }
 
     /**
      * Verifies that a sovereign cloud authority (SovSG) is recognized as known.
      */
     @Test
-    public void testIsKnownAuthority_sovsgSovereignCloud() {
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                "https://" + AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST + "/common");
-        Assert.assertTrue(Authority.isKnownAuthority(authority));
+    fun testIsKnownAuthority_sovsgSovereignCloud() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST}/common"
+        )
+        assertTrue(Authority.isKnownAuthority(authority))
     }
 
     /**
@@ -71,11 +73,12 @@ public class AuthorityKnownAuthorityTest {
      * still recognized as known.
      */
     @Test
-    public void testGetKnownAuthorityResult_bleuSovereignCloud_isKnown() {
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                "https://" + AzureActiveDirectoryCloud.BLEU_CLOUD_HOST + "/common");
-        final Authority.KnownAuthorityResult result = Authority.getKnownAuthorityResult(authority);
-        Assert.assertTrue(result.getKnown());
+    fun testGetKnownAuthorityResult_bleuSovereignCloud_isKnown() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.BLEU_CLOUD_HOST}/common"
+        )
+        val result = Authority.getKnownAuthorityResult(authority)
+        assertTrue(result.known)
     }
 
     /**
@@ -83,9 +86,10 @@ public class AuthorityKnownAuthorityTest {
      * (assumes no developer-configured knownAuthorities match).
      */
     @Test
-    public void testIsKnownAuthority_unknownAuthority() {
-        final Authority authority = Authority.getAuthorityFromAuthorityUrl(
-                "https://login.unknown-test.example/common");
-        Assert.assertFalse(Authority.isKnownAuthority(authority));
+    fun testIsKnownAuthority_unknownAuthority() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.unknown-test.example/common"
+        )
+        assertFalse(Authority.isKnownAuthority(authority))
     }
 }

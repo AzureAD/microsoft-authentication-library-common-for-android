@@ -352,10 +352,6 @@ public class AzureActiveDirectory
             performCloudDiscoveryForCloudUrl(authorityUrl.getProtocol() + "://" + host);
         } else {
             // not a sovereign cloud host — keep existing behavior would route to global
-            // Check if global is already cached.
-            if (sAadClouds.containsKey(getDefaultCloudHost())) {
-                return;
-            }
             performCloudDiscovery();
         }
     }
