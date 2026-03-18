@@ -440,8 +440,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     final WebView webView,
                     final ValueCallback<Uri[]> filePathCallback,
                     final FileChooserParams fileChooserParams) {
-                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
-                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+                final FragmentActivity host = getActivity();
+                final SpanContext parentSpanContext = host instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) host).getSpanContext() : null;
                 return handleFileUploadRequest(filePathCallback, fileChooserParams, parentSpanContext);
             }
 
@@ -598,28 +599,45 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final Span span = OTelUtility.createSpanFromParent(
                 SpanName.WebViewFileUpload.name(), parentSpanContext);
 
-        // Cancel any existing callback to avoid a dangling reference.
-        if (mFileUploadCallback != null) {
-            mFileUploadCallback.onReceiveValue(null);
-        }
-        mFileUploadCallback = filePathCallback;
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            // Cancel any existing callback to avoid a dangling reference.
+            if (mFileUploadCallback != null) {
+                mFileUploadCallback.onReceiveValue(null);
+            }
+            // Clear any previous callback reference before handling the new request.
+            mFileUploadCallback = null;
 
-        try {
+            // Ensure the file chooser launcher is initialized before attempting to launch.
+            if (mFileChooserLauncher == null) {
+                Logger.error(methodTag,
+                        "File chooser launcher is not initialized. Cannot handle file upload request.",
+                        null);
+                // Notify the caller that no file was selected/returned.
+                filePathCallback.onReceiveValue(null);
+                span.setStatus(StatusCode.ERROR);
+                return false;
+            }
+
+            // At this point we have a valid launcher; store the callback for the result.
+            mFileUploadCallback = filePathCallback;
+
             final Intent intent = fileChooserParams.createIntent();
             Logger.info(methodTag, "Launching file chooser for WebView file upload.");
             mFileChooserLauncher.launch(intent);
             span.setStatus(StatusCode.OK);
+            return true;
         } catch (final Exception e) {
             Logger.error(methodTag, "Failed to launch file chooser.", e);
             span.recordException(e);
             span.setStatus(StatusCode.ERROR);
-            mFileUploadCallback.onReceiveValue(null);
-            mFileUploadCallback = null;
+            if (mFileUploadCallback != null) {
+                mFileUploadCallback.onReceiveValue(null);
+                mFileUploadCallback = null;
+            }
             return false;
         } finally {
             span.end();
         }
-        return true;
     }
 
     @VisibleForTesting
