@@ -23,6 +23,13 @@
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
 import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.BLEU_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.DELOS_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PPE_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -90,18 +97,21 @@ public class AzureActiveDirectory
     private static Environment sEnvironment = Environment.Production;
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
-    // Sovereign cloud hosts that have their own instance discovery endpoints.
-    // These hosts serve discovery metadata directly instead of going through
-    // the default global endpoint (login.microsoftonline.com).
-    private static final Set<String> SOV_CLOUD_DISCOVERY_HOSTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            AzureActiveDirectoryCloud.BLEU.getPreferredNetworkHostName(),
-            AzureActiveDirectoryCloud.DELOS.getPreferredNetworkHostName(),
-            AzureActiveDirectoryCloud.SOVSG.getPreferredNetworkHostName()
+    // Known cloud hosts that can be used to perform instance discovery.
+    private static final Set<String> KNOWN_CLOUD_DISCOVERY_HOSTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            PUBLIC_CLOUD_HOST,
+            PPE_CLOUD_HOST,
+            CHINA_CLOUD_HOST,
+            US_GOV_CLOUD_HOST,
+            BLEU_CLOUD_HOST,
+            DELOS_CLOUD_HOST,
+            SOVSG_CLOUD_HOST
     )));
 
     static {
         // Pre-seed sAadClouds with sovereign cloud metadata so they are recognized
-        // without a network call to the global instance discovery endpoint.
+        // without a network call. This is needed because discovery respponse
+        // does not contain these new clouds yet.
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
                 AzureActiveDirectoryCloud.BLEU,
                 AzureActiveDirectoryCloud.DELOS,
@@ -115,14 +125,14 @@ public class AzureActiveDirectory
     }
 
     /**
-     * Returns true if the given host is a sovereign cloud host that has its own
+     * Returns true if the given host is a known cloud host that has its own
      * instance discovery endpoint.
      *
      * @param host The hostname to check.
-     * @return true if the host is in the sovereign cloud discovery hosts list.
+     * @return true if the host is in the known cloud discovery hosts list.
      */
-    public static boolean isSovCloudDiscoveryHost(@NonNull final String host) {
-        return SOV_CLOUD_DISCOVERY_HOSTS.contains(host.toLowerCase(Locale.US));
+    public static boolean isKnownCloudDiscoveryHost(@NonNull final String host) {
+        return KNOWN_CLOUD_DISCOVERY_HOSTS.contains(host.toLowerCase(Locale.US));
     }
 
     @Override
@@ -289,7 +299,11 @@ public class AzureActiveDirectory
      * Returns the host portion of the default cloud URL for the current environment.
      */
     private static String getDefaultCloudHost() {
-        return URI.create(getDefaultCloudUrl()).getHost().toLowerCase(Locale.US);
+        if (sEnvironment == Environment.PreProduction) {
+            return PPE_CLOUD_HOST;
+        } else {
+            return PUBLIC_CLOUD_HOST;
+        }
     }
 
     /**
@@ -322,12 +336,10 @@ public class AzureActiveDirectory
      * Ensures that cloud discovery has been completed for the given authority URL.
      * If authorityUrl is null, falls back to the default global endpoint.
      * If the authority's host is already present in the cloud metadata cache, this is a no-op.
-     * For unknown hosts that route to the global endpoint, if the global default host
-     * is already cached then global discovery has already been performed — also a no-op.
      * Otherwise, performs discovery using the appropriate endpoint:
      * <ul>
-     *   <li>For sovereign cloud hosts — queries the cloud's own discovery endpoint.</li>
-     *   <li>For all other hosts — queries the default global discovery endpoint.</li>
+     *   <li>For known cloud hosts — queries that cloud's own discovery endpoint.</li>
+     *   <li>For unknown hosts — falls back to the default global discovery endpoint.</li>
      * </ul>
      *
      * @param authorityUrl The authority URL whose host determines the discovery endpoint, or null to use the default.
@@ -347,11 +359,11 @@ public class AzureActiveDirectory
         if (sAadClouds.containsKey(hostLower)) {
             return;
         }
-        if (isSovCloudDiscoveryHost(hostLower)) {
-            // Sovereign cloud host not yet in cache — discover from its own endpoint.
+        if (isKnownCloudDiscoveryHost(hostLower)) {
+            // Known cloud host not yet in cache — discover from its own endpoint.
             performCloudDiscoveryForCloudUrl(authorityUrl.getProtocol() + "://" + host);
         } else {
-            // not a sovereign cloud host — keep existing behavior would route to global
+            // Unknown host — fall back to global discovery.
             performCloudDiscovery();
         }
     }

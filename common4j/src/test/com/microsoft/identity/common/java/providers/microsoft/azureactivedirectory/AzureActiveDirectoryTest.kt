@@ -32,7 +32,7 @@ import java.net.URL
 
 /**
  * Tests for sovereign cloud discovery support in [AzureActiveDirectory].
- * Focuses on pre-seeding, isSovCloudDiscoveryHost, cache-based discovery gating,
+ * Focuses on pre-seeding, isKnownCloudDiscoveryHost, cache-based discovery gating,
  * and environment changes.
  */
 class AzureActiveDirectoryTest {
@@ -47,34 +47,44 @@ class AzureActiveDirectoryTest {
         AzureActiveDirectory.setEnvironment(Environment.Production)
     }
 
-    // --- isSovCloudDiscoveryHost tests ---
+    // --- isKnownCloudDiscoveryHost tests ---
 
     @Test
-    fun testIsSovCloudDiscoveryHost_bleu() {
-        assertTrue(AzureActiveDirectory.isSovCloudDiscoveryHost("login.sovcloud-identity.fr"))
+    fun testIsKnownCloudDiscoveryHost_bleu() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.sovcloud-identity.fr"))
     }
 
     @Test
-    fun testIsSovCloudDiscoveryHost_delos() {
-        assertTrue(AzureActiveDirectory.isSovCloudDiscoveryHost("login.sovcloud-identity.de"))
+    fun testIsKnownCloudDiscoveryHost_delos() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.sovcloud-identity.de"))
     }
 
     @Test
-    fun testIsSovCloudDiscoveryHost_sovsg() {
-        assertTrue(AzureActiveDirectory.isSovCloudDiscoveryHost("login.sovcloud-identity.sg"))
+    fun testIsKnownCloudDiscoveryHost_sovsg() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.sovcloud-identity.sg"))
     }
 
     @Test
-    fun testIsSovCloudDiscoveryHost_caseInsensitive() {
-        assertTrue(AzureActiveDirectory.isSovCloudDiscoveryHost("LOGIN.SOVCLOUD-IDENTITY.FR"))
-        assertTrue(AzureActiveDirectory.isSovCloudDiscoveryHost("Login.SovCloud-Identity.De"))
+    fun testIsKnownCloudDiscoveryHost_publicCloud() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.microsoftonline.com"))
     }
 
     @Test
-    fun testIsSovCloudDiscoveryHost_nonSovCloud() {
-        assertFalse(AzureActiveDirectory.isSovCloudDiscoveryHost("login.microsoftonline.com"))
-        assertFalse(AzureActiveDirectory.isSovCloudDiscoveryHost("login.chinacloudapi.cn"))
-        assertFalse(AzureActiveDirectory.isSovCloudDiscoveryHost("example.com"))
+    fun testIsKnownCloudDiscoveryHost_nationalClouds() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.partner.microsoftonline.cn"))
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.microsoftonline.us"))
+    }
+
+    @Test
+    fun testIsKnownCloudDiscoveryHost_caseInsensitive() {
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("LOGIN.SOVCLOUD-IDENTITY.FR"))
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("Login.Microsoftonline.Com"))
+    }
+
+    @Test
+    fun testIsKnownCloudDiscoveryHost_unknownHost() {
+        assertFalse(AzureActiveDirectory.isKnownCloudDiscoveryHost("example.com"))
+        assertFalse(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.unknown.com"))
     }
 
     // --- Pre-seeding tests ---
