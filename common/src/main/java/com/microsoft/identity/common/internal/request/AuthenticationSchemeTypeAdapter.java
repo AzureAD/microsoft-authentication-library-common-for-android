@@ -26,7 +26,6 @@ import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticati
 import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY;
-import static com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal.SCHEME_POP_PREGENERATED;
 
 import androidx.annotation.NonNull;
 
@@ -43,7 +42,6 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
-import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -87,9 +85,6 @@ public class AuthenticationSchemeTypeAdapter implements
             case SCHEME_POP_WITH_CLIENT_KEY:
                 return context.deserialize(json, PopAuthenticationSchemeWithClientKeyInternal.class);
 
-            case SCHEME_POP_PREGENERATED:
-                return context.deserialize(json, WebAppsPopAuthenticationSchemeInternal.class);
-
             default:
                 Logger.warn(
                         methodTag,
@@ -115,9 +110,6 @@ public class AuthenticationSchemeTypeAdapter implements
 
             case SCHEME_POP_WITH_CLIENT_KEY:
                 return context.serialize(src, PopAuthenticationSchemeWithClientKeyInternal.class);
-
-            case SCHEME_POP_PREGENERATED:
-                return context.serialize(src, WebAppsPopAuthenticationSchemeInternal.class);
 
             default:
                 Logger.warn(

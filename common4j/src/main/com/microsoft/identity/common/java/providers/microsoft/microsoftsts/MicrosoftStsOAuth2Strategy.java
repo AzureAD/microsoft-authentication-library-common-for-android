@@ -35,7 +35,6 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 import com.microsoft.identity.common.java.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
-import com.microsoft.identity.common.java.authscheme.WebAppsPopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
@@ -428,9 +427,6 @@ public class MicrosoftStsOAuth2Strategy
         } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
             tokenRequest.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
-        } else if (authScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
-            tokenRequest.setTokenType(TokenRequest.TokenType.POP);
-            tokenRequest.setRequestConfirmation(((WebAppsPopAuthenticationSchemeInternal) authScheme).getRequestConfirmation());
         }
 
         return tokenRequest;
@@ -480,9 +476,6 @@ public class MicrosoftStsOAuth2Strategy
         } else if (authScheme instanceof PopAuthenticationSchemeWithClientKeyInternal) {
             request.setTokenType(TokenRequest.TokenType.POP);
             request.setRequestConfirmation(((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getRequestConfirmation());
-        } else if (authScheme instanceof WebAppsPopAuthenticationSchemeInternal) {
-            request.setTokenType(TokenRequest.TokenType.POP);
-            request.setRequestConfirmation(((WebAppsPopAuthenticationSchemeInternal) authScheme).getRequestConfirmation());
         }
 
         return request;

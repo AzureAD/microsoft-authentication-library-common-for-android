@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
@@ -115,4 +116,30 @@ public class AzureActiveDirectoryCloud {
     void setIsValidated(final boolean isValidated) {
         mIsValidated = isValidated;
     }
+
+    // Sovereign cloud host name constants
+    public static final String BLEU_CLOUD_HOST = "login.sovcloud-identity.fr";
+    public static final String DELOS_CLOUD_HOST = "login.sovcloud-identity.de";
+    public static final String SOVSG_CLOUD_HOST = "login.sovcloud-identity.sg";
+
+    /** Bleu sovereign cloud (France). */
+    public static final AzureActiveDirectoryCloud BLEU = new AzureActiveDirectoryCloud(
+            BLEU_CLOUD_HOST,
+            BLEU_CLOUD_HOST,
+            Collections.singletonList(BLEU_CLOUD_HOST)
+    );
+
+    /** Delos sovereign cloud (Germany). */
+    public static final AzureActiveDirectoryCloud DELOS = new AzureActiveDirectoryCloud(
+            DELOS_CLOUD_HOST,
+            DELOS_CLOUD_HOST,
+            Collections.singletonList(DELOS_CLOUD_HOST)
+    );
+
+    /** SovSG sovereign cloud (Singapore). */
+    public static final AzureActiveDirectoryCloud SOVSG = new AzureActiveDirectoryCloud(
+            SOVSG_CLOUD_HOST,
+            SOVSG_CLOUD_HOST,
+            Collections.singletonList(SOVSG_CLOUD_HOST)
+    );
 }

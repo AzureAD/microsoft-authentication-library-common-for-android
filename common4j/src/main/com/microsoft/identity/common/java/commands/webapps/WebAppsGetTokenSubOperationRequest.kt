@@ -77,23 +77,13 @@ data class WebAppsGetTokenSubOperationRequest(
     val instanceAware : Boolean = false,
 
     // Optional; additional extra query parameters to include in the token request.
-    // Note: PoP token parameters may come through here as a fallback if not set at the top level.
+    // Note: PoP token parameters will come through here.
     @SerializedName(FIELD_EXTRA_PARAMETERS)
     val extraParameters: Map<String, String>? = null,
 
     // Optional.
     @SerializedName(FIELD_CLAIMS)
-    val claims: String? = null,
-
-    // Optional; token type for PoP support. Values: "pop" or "bearer" (case-insensitive).
-    // Top-level value takes priority over extraParameters.
-    @SerializedName(FIELD_TOKEN_TYPE)
-    val tokenType: String? = null,
-
-    // Optional; request confirmation value for PoP support.
-    // Top-level value takes priority over extraParameters.
-    @SerializedName(FIELD_REQ_CNF)
-    val reqCnf: String? = null
+    val claims: String? = null
 ) {
     companion object {
         const val FIELD_HOME_ACCOUNT_ID = "accountId"
@@ -111,7 +101,5 @@ data class WebAppsGetTokenSubOperationRequest(
         const val FIELD_EXTRA_PARAMETERS = "extraParameters"
         const val DEFAULT_AUTHORITY = "https://login.microsoftonline.com/common"
         const val FIELD_CLAIMS = "claims"
-        const val FIELD_TOKEN_TYPE = "tokenType"
-        const val FIELD_REQ_CNF = "reqCnf"
     }
 }
