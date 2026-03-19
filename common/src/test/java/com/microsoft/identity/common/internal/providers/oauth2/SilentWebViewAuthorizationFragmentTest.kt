@@ -22,16 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.content.Intent
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
-import com.microsoft.identity.common.java.ui.AuthorizationAgent
+import android.view.View
+import androidx.activity.OnBackPressedDispatcher
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
 /**
@@ -49,35 +52,32 @@ class SilentWebViewAuthorizationFragmentTest {
      */
     @Test
     fun onViewCreated_doesNotRegisterOnBackPressedCallback() {
-        val intent = Intent().apply {
-            putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW)
-            putExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, 5000L)
-            putExtra(REDIRECT_URI, "msauth://com.test.package/redirect")
-            putExtra(REQUEST_URL, "https://login.microsoftonline.com/common/oauth2/v2.0/authorize")
+        // Real dispatcher to track callback registration.
+        val dispatcher = OnBackPressedDispatcher()
+
+        // Mock activity that returns our dispatcher.
+        val mockActivity = mock<FragmentActivity> {
+            on { onBackPressedDispatcher } doReturn dispatcher
         }
 
-        val activity = Robolectric.buildActivity(SilentAuthorizationActivity::class.java, intent)
-            .create()
-            .start()
-            .resume()
-            .get()
+        // Mock lifecycle owner in RESUMED state for lifecycleScope.launch.
+        val lifecycleOwner = mock<LifecycleOwner>()
+        val lifecycleRegistry = LifecycleRegistry.createUnsafe(lifecycleOwner)
+        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+        whenever(lifecycleOwner.lifecycle).thenReturn(lifecycleRegistry)
 
-        // Confirm the SilentWebViewAuthorizationFragment was actually added to the activity and
-        // that onViewCreated() was called, so the assertion below is meaningful.
-        val fragment = activity.supportFragmentManager.fragments
-            .filterIsInstance<SilentWebViewAuthorizationFragment>()
-            .firstOrNull()
-        assert(fragment != null) {
-            "SilentWebViewAuthorizationFragment was not added to the activity; cannot verify back-press behavior."
-        }
-        assert(fragment?.view != null) {
-            "SilentWebViewAuthorizationFragment view is null; onViewCreated() may not have been called."
-        }
+        // Spy the fragment and stub only what onViewCreated needs.
+        val fragment = spy(SilentWebViewAuthorizationFragment())
+        doReturn(mockActivity).whenever(fragment).requireActivity()
+        doReturn(lifecycleOwner).whenever(fragment).viewLifecycleOwner
+
+        // Call onViewCreated directly with a mock view.
+        fragment.onViewCreated(mock<View>(), null)
 
         // No back-pressed callback should have been registered by the silent fragment.
         assertFalse(
             "SilentWebViewAuthorizationFragment must not register an OnBackPressedCallback",
-            activity.onBackPressedDispatcher.hasEnabledCallbacks()
+            dispatcher.hasEnabledCallbacks()
         )
     }
 }
