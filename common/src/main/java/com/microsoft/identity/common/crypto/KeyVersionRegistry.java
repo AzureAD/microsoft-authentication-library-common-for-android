@@ -332,11 +332,10 @@ public class KeyVersionRegistry {
     /**
      * Removes key entries (metadata and wrapped key files) for keys that are no longer needed.
      *
-     * <p>A key is eligible for pruning when it is deprecated <em>and</em> its total age
-     * from creation exceeds {@link #MAX_KEY_AGE_MILLIS} + {@link #GRACE_PERIOD_MILLIS}.
-     * Because {@link KeyMetadata} does not carry a separate deprecation timestamp,
-     * the combined threshold is measured from {@code createdAtMillis}; keys that are
-     * newly deprecated but already old are therefore pruned after the full combined window.
+     * <p>A key is eligible for pruning when its total age from creation exceeds
+     * {@link #MAX_KEY_AGE_MILLIS} + {@link #GRACE_PERIOD_MILLIS}, regardless of whether it
+     * has been explicitly deprecated. This ensures that stale keys are cleaned up even if
+     * deprecation was never called on them.
      *
      * <p>The active key is never pruned.
      *
@@ -350,9 +349,8 @@ public class KeyVersionRegistry {
         final List<KeyMetadata> toKeep = new ArrayList<>();
         for (final KeyMetadata km : state.keys) {
             final boolean isActive = km.getVersionId().equals(state.activeVersion);
-            // A deprecated key is prunable once its total age exceeds MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS.
-            final boolean isPrunable = km.isDeprecated()
-                    && (now - km.getCreatedAtMillis()) > (MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS);
+            // Any non-active key whose total age exceeds MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS is prunable.
+            final boolean isPrunable = (now - km.getCreatedAtMillis()) > (MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS);
 
             if (!isActive && isPrunable) {
                 Logger.info(methodTag, "Pruning expired key: " + km.getVersionId());
