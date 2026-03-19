@@ -388,6 +388,7 @@ public abstract class Authority {
 
         try {
             AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority);
+            Logger.info(TAG + methodName, "Cloud discovery complete.");
         } catch (final ClientException ex) {
             // Cloud discovery failed (e.g. network error).
             // Log but continue — the authority may still be known via hardcoded
@@ -396,8 +397,6 @@ public abstract class Authority {
                     "Cloud discovery failed, will check hardcoded/configured authorities. Error: "
                             + ex.getErrorCode());
         }
-
-        Logger.info(TAG + methodName, "Cloud discovery complete.");
 
         if (!isKnownAuthority(authority)) {
             clientException = new ClientException(

@@ -110,7 +110,7 @@ public class AzureActiveDirectory
 
     static {
         // Pre-seed sAadClouds with sovereign cloud metadata so they are recognized
-        // without a network call. This is needed because discovery respponse
+        // without a network call. This is needed because discovery response
         // does not contain these new clouds yet.
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
                 AzureActiveDirectoryCloud.BLEU,
@@ -292,17 +292,6 @@ public class AzureActiveDirectory
                     sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
                 }
             }
-        }
-    }
-
-    /**
-     * Returns the host portion of the default cloud URL for the current environment.
-     */
-    private static String getDefaultCloudHost() {
-        if (sEnvironment == Environment.PreProduction) {
-            return PPE_CLOUD_HOST;
-        } else {
-            return PUBLIC_CLOUD_HOST;
         }
     }
 

@@ -1,8 +1,7 @@
 vNext
 ----------
-- [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API
-- [PATCH] Fix bug in Authority.getKnownAuthorityResult where cloud discovery failure would skip knownAuthorities check
-- [PATCH] Fix thread safety in Authority.isKnownAuthority and getEquivalentConfiguredAuthority with synchronized block
+- [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API (#3027)
+- [PATCH] Fix bug in Authority.getKnownAuthorityResult where cloud discovery failure would skip knownAuthorities check and fix thread safety in Authority.isKnownAuthority and getEquivalentConfiguredAuthority with synchronized block (#3027)
 - [MINOR] Add AIDL interface for device registration service.(#2926)
 - [MINOR] Move debugIntuneCE and prodIntuneCE from BrokerData to AppRegistry as App instances (#3012)
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
