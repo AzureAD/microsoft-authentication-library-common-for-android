@@ -27,8 +27,8 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
 import com.microsoft.identity.common.java.crypto.KeyMetadata
-import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.FileUtil
+import io.mockk.*
 import org.json.JSONArray
 import org.junit.After
 import org.junit.Assert
@@ -38,6 +38,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
+import java.security.KeyPair
+import java.security.KeyPairGenerator
 import java.util.Locale
 
 /**
@@ -46,6 +48,12 @@ import java.util.Locale
  * Covers key generation, version ID assignment, active key management, deprecation,
  * secret key loading, metadata persistence, pruning, and edge cases.
  * Uses Robolectric to provide an Android context without a physical device or emulator.
+ *
+ * AndroidKeyStore operations ([AndroidKeyStoreUtil.readKey], [AndroidKeyStoreUtil.deleteKey]) are
+ * stubbed via [mockkStatic] because Robolectric's shadow for [java.security.KeyPairGenerator] with
+ * the "AndroidKeyStore" provider is unreliable across test orderings. The [AndroidKeyStoreUtil.wrap]
+ * and [AndroidKeyStoreUtil.unwrap] calls use [callOriginal] so real JCE cipher operations are
+ * exercised with a standard JVM RSA key pair.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -57,9 +65,36 @@ class KeyVersionRegistryTest {
     private lateinit var context: Context
     private lateinit var registry: KeyVersionRegistry
 
+    companion object {
+        /**
+         * A standard JVM RSA key pair used to simulate the AndroidKeyStore wrapping key pair.
+         * Generated once per test class to keep test execution fast.
+         * Uses the default SecureRandom provider — sufficient for test purposes; production code
+         * should always use an explicit SecureRandom instance.
+         */
+        private val fakeWrappingKeyPair: KeyPair by lazy {
+            val kpg = KeyPairGenerator.getInstance("RSA")
+            kpg.initialize(2048)
+            kpg.generateKeyPair()
+        }
+    }
+
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
+
+        // Stub AndroidKeyStore-backed operations so these tests run reliably in Robolectric.
+        // readKey  → returns the JVM RSA key pair (simulates a persisted wrapping key).
+        // deleteKey → no-op (no real KeyStore state to clean up in the JVM test environment).
+        // wrap/unwrap → delegate to the real JCE implementation; cipher ops work with any RSA key.
+        mockkStatic(AndroidKeyStoreUtil::class)
+        // KeyVersionRegistry uses a single wrapping-key alias (WRAPPING_KEY_ALIAS); returning
+        // the same fakeWrappingKeyPair for any alias keeps wrap/unwrap consistent across calls.
+        every { AndroidKeyStoreUtil.readKey(any()) } returns fakeWrappingKeyPair
+        every { AndroidKeyStoreUtil.deleteKey(any()) } just Runs
+        every { AndroidKeyStoreUtil.wrap(any(), any(), any(), anyOrNull()) } answers { callOriginal() }
+        every { AndroidKeyStoreUtil.unwrap(any(), any(), any(), any(), anyOrNull()) } answers { callOriginal() }
+
         registry = KeyVersionRegistry(context)
         cleanUp()
     }
@@ -67,6 +102,8 @@ class KeyVersionRegistryTest {
     @After
     fun tearDown() {
         cleanUp()
+        // Unmock only what this test class mocked to avoid interfering with other test suites.
+        unmockkStatic(AndroidKeyStoreUtil::class)
     }
 
     // -------------------------------------------------------------------------
