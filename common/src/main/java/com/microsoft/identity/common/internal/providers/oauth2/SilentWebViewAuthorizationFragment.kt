@@ -63,7 +63,10 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        // Do not call super.onViewCreated() here. The parent AuthorizationFragment.onViewCreated()
+        // registers an OnBackPressedCallback that would intercept device back button presses.
+        // SilentWebViewAuthorizationFragment is designed for silent, invisible flows and must not
+        // intercept back button events so that host app navigation is unaffected.
         cancelAuthorizationOnTimeOut(webViewSilentAuthorizationFlowTimeOut)
     }
 
