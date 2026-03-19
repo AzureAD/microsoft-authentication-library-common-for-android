@@ -110,6 +110,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
 
 import io.opentelemetry.api.baggage.Baggage;
@@ -338,8 +339,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAmazonAppRedirect(formattedURL)) {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
-            } else if (isOpenIdVcUrl(formattedURL)) {
-                // TO-DO : Decide whether flight is needed in this case. https://identitydivision.visualstudio.com/Engineering/_workitems/edit/3541420
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_REDIRECT) && isOpenIdVcUrl(formattedURL)) {
                 Logger.info(methodTag, "It is an OpenID Verifiable Credentials request.");
                 processOpenIdVcRequest(view, url);
             } else if (isInvalidRedirectUri(url)) {
