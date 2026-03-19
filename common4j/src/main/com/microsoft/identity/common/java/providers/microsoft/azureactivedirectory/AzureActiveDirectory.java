@@ -109,9 +109,15 @@ public class AzureActiveDirectory
     )));
 
     static {
-        // Pre-seed sAadClouds with sovereign cloud metadata so they are recognized
-        // without a network call. This is needed because discovery response
-        // does not contain these new clouds yet.
+        preSeedSovereignClouds();
+    }
+
+    /**
+     * Pre-seeds the cloud cache with sovereign cloud metadata so they are
+     * recognized without a network call. Called at class init and after
+     * environment changes that clear the cache.
+     */
+    private static void preSeedSovereignClouds() {
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
                 AzureActiveDirectoryCloud.BLEU,
                 AzureActiveDirectoryCloud.DELOS,
@@ -156,6 +162,10 @@ public class AzureActiveDirectory
     public static synchronized void setEnvironment(@NonNull final Environment environment) {
         if (environment != sEnvironment) {
             sEnvironment = environment;
+            // Cached discovery results came from the previous environment's endpoint.
+            // Clear and re-seed sovereign clouds so the next discovery call uses the new environment.
+            sAadClouds.clear();
+            preSeedSovereignClouds();
         }
     }
 
