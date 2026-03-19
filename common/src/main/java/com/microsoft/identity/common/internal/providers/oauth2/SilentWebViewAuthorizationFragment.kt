@@ -26,6 +26,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.lifecycleScope
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
@@ -87,7 +88,8 @@ class SilentWebViewAuthorizationFragment : WebViewAuthorizationFragment() {
      *
      * @param timeOutInMs The timeout duration in milliseconds.
      */
-    private fun cancelAuthorizationOnTimeOut(timeOutInMs : Long) = viewLifecycleOwner.lifecycleScope.launch{
+    @VisibleForTesting
+    internal fun cancelAuthorizationOnTimeOut(timeOutInMs : Long) = viewLifecycleOwner.lifecycleScope.launch{
         val methodTag = "$TAG:cancelAuthorizationOnTimeOut"
         delay(timeOutInMs)
         Logger.info(methodTag, "Received Authorization flow cancel request from SDK")

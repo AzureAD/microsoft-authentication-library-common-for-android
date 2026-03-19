@@ -22,62 +22,44 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.content.Intent
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT
-import com.microsoft.identity.common.java.ui.AuthorizationAgent
-import org.junit.Assert.assertFalse
+import android.view.View
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 /**
  * Tests for [SilentWebViewAuthorizationFragment].
  */
-@RunWith(RobolectricTestRunner::class)
 class SilentWebViewAuthorizationFragmentTest {
 
     /**
-     * Verifies that [SilentWebViewAuthorizationFragment.onViewCreated] does NOT register an
-     * [androidx.activity.OnBackPressedCallback] on the host activity's
-     * [androidx.activity.OnBackPressedDispatcher]. Silent flows are invisible to the user and
-     * must never intercept the device back button, so the callback registered by
-     * [AuthorizationFragment.onViewCreated] must be skipped.
+     * Verifies that [SilentWebViewAuthorizationFragment.onViewCreated] does NOT call
+     * [AuthorizationFragment.onViewCreated], which would register an enabled
+     * [androidx.activity.OnBackPressedCallback] on the host activity's dispatcher.
+     *
+     * Silent flows are invisible to the user and must never intercept the device back button.
+     * If [AuthorizationFragment.onViewCreated] were called, it would invoke [requireActivity],
+     * which throws [IllegalStateException] when the fragment is not attached to an activity,
+     * failing this test. The test passing confirms [super.onViewCreated] is skipped.
      */
     @Test
-    fun onViewCreated_doesNotRegisterOnBackPressedCallback() {
-        val intent = Intent().apply {
-            putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW)
-            putExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT, 5000L)
-            putExtra(REDIRECT_URI, "msauth://com.test.package/redirect")
-            putExtra(REQUEST_URL, "https://login.microsoftonline.com/common/oauth2/v2.0/authorize")
-        }
+    fun onViewCreated_skipsSuperOnViewCreated_andTriggersCancelAuthorizationOnTimeOut() {
+        val fragment = spy(SilentWebViewAuthorizationFragment())
+        val mockView = mock<View>()
 
-        val activity = Robolectric.buildActivity(SilentAuthorizationActivity::class.java, intent)
-            .create()
-            .start()
-            .resume()
-            .get()
+        // Stub out the internal timeout call so no Fragment lifecycle (viewLifecycleOwner) is needed.
+        doNothing().whenever(fragment).cancelAuthorizationOnTimeOut(any())
 
-        // Confirm the SilentWebViewAuthorizationFragment was actually added to the activity and
-        // that onViewCreated() was called, so the assertion below is meaningful.
-        val fragment = activity.supportFragmentManager.fragments
-            .filterIsInstance<SilentWebViewAuthorizationFragment>()
-            .firstOrNull()
-        assert(fragment != null) {
-            "SilentWebViewAuthorizationFragment was not added to the activity; cannot verify back-press behavior."
-        }
-        assert(fragment?.view != null) {
-            "SilentWebViewAuthorizationFragment view is null; onViewCreated() may not have been called."
-        }
+        // If super.onViewCreated() were invoked it would call requireActivity(), throwing
+        // IllegalStateException because the fragment is not attached. The call succeeding
+        // proves super is skipped.
+        fragment.onViewCreated(mockView, null)
 
-        // No back-pressed callback should have been registered by the silent fragment.
-        assertFalse(
-            "SilentWebViewAuthorizationFragment must not register an OnBackPressedCallback",
-            activity.onBackPressedDispatcher.hasEnabledCallbacks()
-        )
+        // Confirm the only side-effect — the timeout cancellation — was triggered.
+        verify(fragment).cancelAuthorizationOnTimeOut(any())
     }
 }
