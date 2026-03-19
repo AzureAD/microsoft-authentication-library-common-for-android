@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
@@ -95,18 +96,39 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
 
     private final Map<String, String> mRedirectsMap;
 
+    @Nullable
+    private final Authority mAuthorityForInstanceDiscovery;
+
     /**
      * Constructs a new AdalMigrationAdapter.
      *
-     * @param context Context used to track migration state.
-     * @param force   Force migration to occur, even if it has run before.
+     * @param context   Context used to track migration state.
+     * @param redirects Redirect URI map.
+     * @param force     Force migration to occur, even if it has run before.
      */
     public AdalMigrationAdapter(final Context context,
                                 final Map<String, String> redirects,
                                 final boolean force) {
+        this(context, redirects, force, null);
+    }
+
+    /**
+     * Constructs a new AdalMigrationAdapter with an authority for discovery routing.
+     *
+     * @param context   Context used to track migration state.
+     * @param redirects Redirect URI map.
+     * @param force     Force migration to occur, even if it has run before.
+     * @param discoveryAuthority The configured authority, used to route instance discovery
+     *                            to the correct endpoint. May be null to use the global default.
+     */
+    public AdalMigrationAdapter(final Context context,
+                                final Map<String, String> redirects,
+                                final boolean force,
+                                @Nullable final Authority discoveryAuthority) {
         mSharedPrefs = context.getSharedPreferences(MIGRATION_STATUS_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         mRedirectsMap = redirects;
         mForceMigration = force;
+        mAuthorityForInstanceDiscovery = discoveryAuthority;
     }
 
     @Override
@@ -118,7 +140,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
 
             if (!hasMigrated && !mForceMigration) {
                 // Initialize the InstanceDiscoveryMetadata so we know about all the clouds and possible /common endpoints
-                final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
+                final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata(mAuthorityForInstanceDiscovery);
 
                 if (cloudMetadataLoaded) {
                     // Convert the JSON to native ADALTokenCacheItem representation, original keys used to key the Map
@@ -230,15 +252,27 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
     }
 
     /**
-     * Loads the InstanceDiscoveryMetadata.
+     * Loads the InstanceDiscoveryMetadata using the global default endpoint.
      *
      * @return True, if the metadata loads successfully. False otherwise.
      */
     public static boolean loadCloudDiscoveryMetadata() {
+        return loadCloudDiscoveryMetadata(null);
+    }
+
+    /**
+     * Loads the InstanceDiscoveryMetadata, routing discovery to the endpoint
+     * appropriate for the given authority. If authority is null, falls back to
+     * the global default endpoint.
+     *
+     * @param authority The configured authority for discovery routing, or null.
+     * @return True, if the metadata loads successfully. False otherwise.
+     */
+    public static boolean loadCloudDiscoveryMetadata(@Nullable final Authority authority) {
         final String methodTag = TAG + ":loadCloudDiscoveryMetadata";
 
         try {
-            AzureActiveDirectory.ensureCloudDiscoveryComplete();
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority);
             return true;
         } catch (final ClientException e) {
             Logger.error(
