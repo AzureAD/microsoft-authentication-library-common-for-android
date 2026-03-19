@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.fido
 
 import android.util.Base64
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
+import com.microsoft.identity.common.java.constants.CborConstants
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHENTICATION_ASSERTION_RESPONSE_JSON_KEY
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_LENGTH
 import com.microsoft.identity.common.java.constants.FidoConstants.Companion.WEBAUTHN_AUTHDATA_AAGUID_OFFSET
@@ -245,10 +246,10 @@ object WebAuthnJsonUtil {
             throw Exception("Attestation object truncated after 'authData' key (offset: $keyIndex, size: ${attestationObject.size} bytes).")
         }
 
-        val initialByte = attestationObject[valueOffset].toInt() and 0xFF
-        val majorType = (initialByte shr 5) and 0x07
-        if (majorType != 2) {
-            throw Exception("Invalid CBOR major type for 'authData': expected byte string (major type 2) but found $majorType at offset $valueOffset.")
+        val initialByte = attestationObject[valueOffset].toInt() and CborConstants.BYTE_UNSIGNED_MASK
+        val majorType = (initialByte shr 5) and CborConstants.MAJOR_TYPE_MASK
+        if (majorType != CborConstants.MAJOR_TYPE_BYTE_STRING) {
+            throw Exception("Invalid CBOR major type for 'authData': expected byte string (major type ${CborConstants.MAJOR_TYPE_BYTE_STRING}) but found $majorType at offset $valueOffset.")
         }
 
         val (headerSize, authDataLength) = parseCborByteStringHeader(attestationObject, valueOffset, initialByte)
@@ -291,27 +292,26 @@ object WebAuthnJsonUtil {
      * @throws Exception if the buffer is truncated or the length encoding is unsupported.
      */
     private fun parseCborByteStringHeader(buf: ByteArray, offset: Int, initialByte: Int): Pair<Int, Int> {
-        val additionalInfo = initialByte and 0x1F
-        return when (additionalInfo) {
+        return when (val additionalInfo = initialByte and CborConstants.ADDITIONAL_INFO_MASK) {
             in 0..23 -> 1 to additionalInfo
-            24 -> {
+            CborConstants.ADDITIONAL_INFO_ONE_BYTE_LENGTH -> {
                 val li = offset + 1
                 if (li >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 1 byte at offset $li, size: ${buf.size} bytes).")
-                2 to (buf[li].toInt() and 0xFF)
+                2 to (buf[li].toInt() and CborConstants.BYTE_UNSIGNED_MASK)
             }
-            25 -> {
+            CborConstants.ADDITIONAL_INFO_TWO_BYTE_LENGTH -> {
                 val li = offset + 1
                 if (li + 1 >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 2 bytes starting at offset $li, size: ${buf.size} bytes).")
-                val length = ((buf[li].toInt() and 0xFF) shl 8) or (buf[li + 1].toInt() and 0xFF)
+                val length = ((buf[li].toInt() and CborConstants.BYTE_UNSIGNED_MASK) shl 8) or (buf[li + 1].toInt() and CborConstants.BYTE_UNSIGNED_MASK)
                 3 to length
             }
-            26 -> {
+            CborConstants.ADDITIONAL_INFO_FOUR_BYTE_LENGTH -> {
                 val li = offset + 1
                 if (li + 3 >= buf.size) throw Exception("Attestation object truncated while reading 'authData' length (need 4 bytes starting at offset $li, size: ${buf.size} bytes).")
-                val length = ((buf[li].toInt() and 0xFF) shl 24) or
-                    ((buf[li + 1].toInt() and 0xFF) shl 16) or
-                    ((buf[li + 2].toInt() and 0xFF) shl 8) or
-                    (buf[li + 3].toInt() and 0xFF)
+                val length = ((buf[li].toInt() and CborConstants.BYTE_UNSIGNED_MASK) shl 24) or
+                    ((buf[li + 1].toInt() and CborConstants.BYTE_UNSIGNED_MASK) shl 16) or
+                    ((buf[li + 2].toInt() and CborConstants.BYTE_UNSIGNED_MASK) shl 8) or
+                    (buf[li + 3].toInt() and CborConstants.BYTE_UNSIGNED_MASK)
                 5 to length
             }
             else -> throw Exception("Unsupported CBOR length encoding for 'authData': initial byte 0x${initialByte.toString(16).uppercase()} at offset $offset.")
