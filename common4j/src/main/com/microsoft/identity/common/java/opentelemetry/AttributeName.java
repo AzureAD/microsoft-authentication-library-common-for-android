@@ -607,6 +607,45 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates if an external handler was found to handle the openid-vc:// URI.
+     */
+    is_openid_vc_handler_found,
     
+    //endregion
+
+    //region Device Registration IPC Attributes
+
+    /**
+     * Indicates the status of content provider IPC strategy for device registration.
+     */
+    content_provider_status,
+
+    /**
+     * Indicates the status of bound service IPC strategy for device registration.
+     */
+    bound_service_status,
+
+    /**
+     * Indicates the status of Legacy Account Manager IPC strategy for device registration.
+     */
+    legacy_account_manager_status,
+
+    /**
+     * Indicates the name of the device registration protocol being executed.
+     */
+    device_registration_protocol_name,
+
+    //endregion
+
+    //region WebView target=_blank navigation
+
+    /**
+     * Indicates which routing path was taken for a target=_blank URL intercepted
+     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     */
+    target_blank_navigation_route,
+
     //endregion
 }

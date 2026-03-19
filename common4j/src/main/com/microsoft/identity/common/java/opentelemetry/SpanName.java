@@ -37,6 +37,7 @@ public enum SpanName {
     CertBasedAuth,
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
+    DeviceRegistrationIpc,
     WorkplaceJoinApi,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
@@ -71,6 +72,7 @@ public enum SpanName {
     GetAllSsoTokens,
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
+    ProcessOpenIdVcRequest,
     PasskeyWebListener,
     InstallCertOnWpj,
     /**
@@ -101,5 +103,13 @@ public enum SpanName {
     /**
      * Span name for secret key retrieval operations.
      */
-    SecretKeyRetrieval
+    SecretKeyRetrieval,
+    /**
+     * Span name for WebView target="_blank" navigation interception.
+     */
+    WebViewTargetBlankNavigation,
+    /**
+     * Span name for WebView file upload (onShowFileChooser) operations.
+     */
+    WebViewFileUpload
 }
