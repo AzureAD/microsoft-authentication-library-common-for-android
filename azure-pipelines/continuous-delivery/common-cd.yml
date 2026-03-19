@@ -15,7 +15,7 @@ variables:
     versionNumber: ${{ variables.customVersion }}
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'windows-2022'
 jobs:
 # Key Vault
 - job: keyvault_phase
