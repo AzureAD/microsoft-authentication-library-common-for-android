@@ -442,7 +442,7 @@ public class LabClient implements ILabClient {
                     // Restore the interrupted status so the calling thread can react properly.
                     Thread.currentThread().interrupt();
                     throw new LabApiException(LabError.FAILED_TO_DELETE_DEVICE,
-                            "deleteDevice retry sleep interrupted");
+                            ": deleteDevice retry sleep interrupted", e);
                 }
                 // Exponential back-off: double the wait for the next iteration, capped at 30 seconds.
                 currentWait = Math.min(currentWait * 2, TimeUnit.SECONDS.toMillis(30));
