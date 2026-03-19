@@ -119,6 +119,8 @@ public class BrokerHost extends AbstractTestBroker {
                 getDefaultBrokerPromptHandlerParameters(username),
                 isFederatedUser
         );
+        final String joinedUpn = multipleWpjApiFragment.getRecordByUpn(username).get("Upn");
+        Assert.assertTrue("Assert that the joined account is the expected account", username.equalsIgnoreCase(joinedUpn));
     }
 
     @Override
