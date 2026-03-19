@@ -51,7 +51,7 @@ public class AuthorizationActivity extends DualScreenActivity {
     @Accessors(prefix = "m")
     private SpanContext mSpanContext;
 
-    @Getter
+
     @Accessors(prefix = "m")
     private Context mOtelContext;
 
@@ -97,5 +97,14 @@ public class AuthorizationActivity extends DualScreenActivity {
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
         setFragment(mFragment);
+    }
+
+    /**
+     * Returns the OpenTelemetry Context extracted from the Intent extras,
+     * or null if it was not provided or an error occurred during extraction.
+     * @return the OpenTelemetry Context, or null if not available.
+     */
+    public final Context getOtelContext() {
+        return mOtelContext;
     }
 }
