@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.crypto;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
@@ -34,6 +36,8 @@ import lombok.NonNull;
  * encryption managers to select the active key or fall back to deprecated keys for
  * decryption only.</p>
  */
+@Getter
+@Builder
 public final class KeyMetadata {
 
     /** Default symmetric encryption algorithm. */
@@ -51,83 +55,53 @@ public final class KeyMetadata {
     /**
      * Key identifier, e.g. {@code "K001"}, {@code "K002"}.
      */
-    private final String mVersionId;
+    private final String versionId;
 
     /**
      * Unix timestamp (milliseconds) at which this key was created.
      */
-    private final long mCreatedAtMillis;
+    private final long createdAtMillis;
 
     /**
-     * Encryption algorithm associated with this key (e.g. {@code "AES/CBC/PKCS5Padding"}).
+     * Encryption algorithm for this key (e.g. {@code "AES/CBC/PKCS5Padding"}).
+     * Defaults to {@link #DEFAULT_ALGORITHM}.
      */
-    private final String mAlgorithm;
+    @Builder.Default
+    private final String algorithm = DEFAULT_ALGORITHM;
 
     /**
      * Key size in bits (e.g. {@code 256}).
+     * Defaults to {@link #DEFAULT_KEY_SIZE}.
      */
-    private final int mKeySize;
+    @Builder.Default
+    private final int keySize = DEFAULT_KEY_SIZE;
 
     /**
      * When {@code true} the key may only be used for decryption; new encryptions must use
      * a non-deprecated key.
      */
-    private final boolean mIsDeprecated;
-
-    private KeyMetadata(@NonNull final Builder builder) {
-        mVersionId = builder.mVersionId;
-        mCreatedAtMillis = builder.mCreatedAtMillis;
-        mAlgorithm = builder.mAlgorithm;
-        mKeySize = builder.mKeySize;
-        mIsDeprecated = builder.mIsDeprecated;
-    }
+    @Builder.Default
+    private final boolean deprecated = false;
 
     /**
-     * Returns the key version identifier.
+     * All-args constructor called by the Lombok-generated builder; validates required fields.
      *
-     * @return non-null version id string.
+     * @throws IllegalStateException     if {@code versionId} is null or blank.
+     * @throws IllegalArgumentException  if {@code keySize} is not positive.
      */
-    @NonNull
-    public String getVersionId() {
-        return mVersionId;
-    }
-
-    /**
-     * Returns the Unix timestamp (milliseconds) at which this key was created.
-     *
-     * @return creation time in epoch milliseconds.
-     */
-    public long getCreatedAtMillis() {
-        return mCreatedAtMillis;
-    }
-
-    /**
-     * Returns the encryption algorithm string for this key.
-     *
-     * @return non-null algorithm string.
-     */
-    @NonNull
-    public String getAlgorithm() {
-        return mAlgorithm;
-    }
-
-    /**
-     * Returns the key size in bits.
-     *
-     * @return key size in bits.
-     */
-    public int getKeySize() {
-        return mKeySize;
-    }
-
-    /**
-     * Returns whether this key is deprecated. A deprecated key may only be used for
-     * decryption; new data must be encrypted with a non-deprecated key.
-     *
-     * @return {@code true} if the key is deprecated.
-     */
-    public boolean isDeprecated() {
-        return mIsDeprecated;
+    private KeyMetadata(final String versionId, final long createdAtMillis,
+                        final String algorithm, final int keySize, final boolean deprecated) {
+        if (versionId == null || versionId.trim().isEmpty()) {
+            throw new IllegalStateException("versionId must be a non-blank string.");
+        }
+        if (keySize <= 0) {
+            throw new IllegalArgumentException("keySize must be a positive value.");
+        }
+        this.versionId = versionId;
+        this.createdAtMillis = createdAtMillis;
+        this.algorithm = algorithm;
+        this.keySize = keySize;
+        this.deprecated = deprecated;
     }
 
     /**
@@ -139,120 +113,35 @@ public final class KeyMetadata {
     @NonNull
     public String toJson() throws JSONException {
         final JSONObject json = new JSONObject();
-        json.put(FIELD_VERSION_ID, mVersionId);
-        json.put(FIELD_CREATED_AT_MILLIS, mCreatedAtMillis);
-        json.put(FIELD_ALGORITHM, mAlgorithm);
-        json.put(FIELD_KEY_SIZE, mKeySize);
-        json.put(FIELD_IS_DEPRECATED, mIsDeprecated);
+        json.put(FIELD_VERSION_ID, versionId);
+        json.put(FIELD_CREATED_AT_MILLIS, createdAtMillis);
+        json.put(FIELD_ALGORITHM, algorithm);
+        json.put(FIELD_KEY_SIZE, keySize);
+        json.put(FIELD_IS_DEPRECATED, deprecated);
         return json.toString();
     }
 
     /**
      * Deserializes a {@link KeyMetadata} instance from a JSON string.
      *
+     * <p>{@code algorithm}, {@code keySize}, and {@code deprecated} are optional in the JSON;
+     * missing fields fall back to their defaults ({@link #DEFAULT_ALGORITHM},
+     * {@link #DEFAULT_KEY_SIZE}, and {@code false} respectively). Only {@code versionId} and
+     * {@code createdAtMillis} are required.</p>
+     *
      * @param json the JSON string produced by {@link #toJson()}.
      * @return a reconstructed {@link KeyMetadata} instance.
-     * @throws JSONException if {@code json} is malformed or is missing required fields.
+     * @throws JSONException if {@code json} is malformed or missing required fields.
      */
     @NonNull
     public static KeyMetadata fromJson(@NonNull final String json) throws JSONException {
-        final JSONObject jsonObject = new JSONObject(json);
-        return new Builder()
-                .versionId(jsonObject.getString(FIELD_VERSION_ID))
-                .createdAtMillis(jsonObject.getLong(FIELD_CREATED_AT_MILLIS))
-                .algorithm(jsonObject.getString(FIELD_ALGORITHM))
-                .keySize(jsonObject.getInt(FIELD_KEY_SIZE))
-                .isDeprecated(jsonObject.getBoolean(FIELD_IS_DEPRECATED))
+        final JSONObject obj = new JSONObject(json);
+        return KeyMetadata.builder()
+                .versionId(obj.getString(FIELD_VERSION_ID))
+                .createdAtMillis(obj.getLong(FIELD_CREATED_AT_MILLIS))
+                .algorithm(obj.optString(FIELD_ALGORITHM, DEFAULT_ALGORITHM))
+                .keySize(obj.optInt(FIELD_KEY_SIZE, DEFAULT_KEY_SIZE))
+                .deprecated(obj.optBoolean(FIELD_IS_DEPRECATED, false))
                 .build();
-    }
-
-    /**
-     * Builder for constructing {@link KeyMetadata} instances.
-     */
-    public static final class Builder {
-
-        private String mVersionId;
-        private long mCreatedAtMillis;
-        private String mAlgorithm = DEFAULT_ALGORITHM;
-        private int mKeySize = DEFAULT_KEY_SIZE;
-        private boolean mIsDeprecated = false;
-
-        /**
-         * Sets the key version identifier.
-         *
-         * @param versionId non-null version id, e.g. {@code "K001"}.
-         * @return this builder.
-         */
-        @NonNull
-        public Builder versionId(@NonNull final String versionId) {
-            mVersionId = versionId;
-            return this;
-        }
-
-        /**
-         * Sets the creation timestamp.
-         *
-         * @param createdAtMillis Unix timestamp in milliseconds.
-         * @return this builder.
-         */
-        @NonNull
-        public Builder createdAtMillis(final long createdAtMillis) {
-            mCreatedAtMillis = createdAtMillis;
-            return this;
-        }
-
-        /**
-         * Sets the encryption algorithm. Defaults to {@link #DEFAULT_ALGORITHM}.
-         *
-         * @param algorithm non-null algorithm string.
-         * @return this builder.
-         */
-        @NonNull
-        public Builder algorithm(@NonNull final String algorithm) {
-            mAlgorithm = algorithm;
-            return this;
-        }
-
-        /**
-         * Sets the key size in bits. Defaults to {@link #DEFAULT_KEY_SIZE}.
-         *
-         * @param keySize key size in bits; must be positive.
-         * @return this builder.
-         * @throws IllegalArgumentException if {@code keySize} is not positive.
-         */
-        @NonNull
-        public Builder keySize(final int keySize) {
-            if (keySize <= 0) {
-                throw new IllegalArgumentException("keySize must be a positive value.");
-            }
-            mKeySize = keySize;
-            return this;
-        }
-
-        /**
-         * Sets whether the key is deprecated.
-         *
-         * @param isDeprecated {@code true} if this key should only be used for decryption.
-         * @return this builder.
-         */
-        @NonNull
-        public Builder isDeprecated(final boolean isDeprecated) {
-            mIsDeprecated = isDeprecated;
-            return this;
-        }
-
-        /**
-         * Builds a new {@link KeyMetadata} instance.
-         *
-         * @return a new {@link KeyMetadata}.
-         * @throws IllegalStateException if {@code versionId} has not been set.
-         */
-        @NonNull
-        public KeyMetadata build() {
-            if (mVersionId == null || mVersionId.isEmpty()) {
-                throw new IllegalStateException("versionId must be set before calling build().");
-            }
-            return new KeyMetadata(this);
-        }
     }
 }

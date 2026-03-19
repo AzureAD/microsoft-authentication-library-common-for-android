@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,12 +36,12 @@ public class KeyMetadataTest {
 
     @Test
     public void testBuilder_setsAllFields() {
-        final KeyMetadata metadata = new KeyMetadata.Builder()
+        final KeyMetadata metadata = KeyMetadata.builder()
                 .versionId(VERSION_ID)
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .algorithm(ALGORITHM)
                 .keySize(KEY_SIZE)
-                .isDeprecated(false)
+                .deprecated(false)
                 .build();
 
         Assert.assertEquals(VERSION_ID, metadata.getVersionId());
@@ -52,7 +53,7 @@ public class KeyMetadataTest {
 
     @Test
     public void testBuilder_defaultValues() {
-        final KeyMetadata metadata = new KeyMetadata.Builder()
+        final KeyMetadata metadata = KeyMetadata.builder()
                 .versionId(VERSION_ID)
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .build();
@@ -64,14 +65,14 @@ public class KeyMetadataTest {
 
     @Test(expected = IllegalStateException.class)
     public void testBuilder_throwsWhenVersionIdMissing() {
-        new KeyMetadata.Builder()
+        KeyMetadata.builder()
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testBuilder_throwsWhenVersionIdEmpty() {
-        new KeyMetadata.Builder()
+        KeyMetadata.builder()
                 .versionId("")
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .build();
@@ -79,35 +80,33 @@ public class KeyMetadataTest {
 
     @Test
     public void testToJson_producesValidJson() throws JSONException {
-        final KeyMetadata metadata = new KeyMetadata.Builder()
+        final KeyMetadata metadata = KeyMetadata.builder()
                 .versionId(VERSION_ID)
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .algorithm(ALGORITHM)
                 .keySize(KEY_SIZE)
-                .isDeprecated(true)
+                .deprecated(true)
                 .build();
 
-        final String json = metadata.toJson();
-        Assert.assertNotNull(json);
-        Assert.assertTrue(json.contains(VERSION_ID));
-        Assert.assertTrue(json.contains(String.valueOf(CREATED_AT_MILLIS)));
-        Assert.assertTrue(json.contains(ALGORITHM));
-        Assert.assertTrue(json.contains(String.valueOf(KEY_SIZE)));
-        Assert.assertTrue(json.contains("true")); // isDeprecated
+        final JSONObject json = new JSONObject(metadata.toJson());
+        Assert.assertEquals(VERSION_ID, json.getString("versionId"));
+        Assert.assertEquals(CREATED_AT_MILLIS, json.getLong("createdAtMillis"));
+        Assert.assertEquals(ALGORITHM, json.getString("algorithm"));
+        Assert.assertEquals(KEY_SIZE, json.getInt("keySize"));
+        Assert.assertTrue(json.getBoolean("isDeprecated"));
     }
 
     @Test
     public void testFromJson_reconstructsObject() throws JSONException {
-        final KeyMetadata original = new KeyMetadata.Builder()
+        final KeyMetadata original = KeyMetadata.builder()
                 .versionId(VERSION_ID)
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .algorithm(ALGORITHM)
                 .keySize(KEY_SIZE)
-                .isDeprecated(false)
+                .deprecated(false)
                 .build();
 
-        final String json = original.toJson();
-        final KeyMetadata reconstructed = KeyMetadata.fromJson(json);
+        final KeyMetadata reconstructed = KeyMetadata.fromJson(original.toJson());
 
         Assert.assertEquals(original.getVersionId(), reconstructed.getVersionId());
         Assert.assertEquals(original.getCreatedAtMillis(), reconstructed.getCreatedAtMillis());
@@ -118,16 +117,28 @@ public class KeyMetadataTest {
 
     @Test
     public void testFromJson_reconstructsDeprecatedKey() throws JSONException {
-        final KeyMetadata original = new KeyMetadata.Builder()
+        final KeyMetadata original = KeyMetadata.builder()
                 .versionId("K002")
                 .createdAtMillis(CREATED_AT_MILLIS)
-                .isDeprecated(true)
+                .deprecated(true)
                 .build();
 
         final KeyMetadata reconstructed = KeyMetadata.fromJson(original.toJson());
 
         Assert.assertEquals("K002", reconstructed.getVersionId());
         Assert.assertTrue(reconstructed.isDeprecated());
+    }
+
+    @Test
+    public void testFromJson_usesDefaultsForOptionalFields() throws JSONException {
+        // JSON with only required fields
+        final String minimalJson = "{\"versionId\":\"K003\",\"createdAtMillis\":1700000000000}";
+        final KeyMetadata metadata = KeyMetadata.fromJson(minimalJson);
+
+        Assert.assertEquals("K003", metadata.getVersionId());
+        Assert.assertEquals(KeyMetadata.DEFAULT_ALGORITHM, metadata.getAlgorithm());
+        Assert.assertEquals(KeyMetadata.DEFAULT_KEY_SIZE, metadata.getKeySize());
+        Assert.assertFalse(metadata.isDeprecated());
     }
 
     @Test(expected = JSONException.class)
@@ -137,7 +148,7 @@ public class KeyMetadataTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testBuilder_throwsOnInvalidKeySize() {
-        new KeyMetadata.Builder()
+        KeyMetadata.builder()
                 .versionId(VERSION_ID)
                 .createdAtMillis(CREATED_AT_MILLIS)
                 .keySize(0)
