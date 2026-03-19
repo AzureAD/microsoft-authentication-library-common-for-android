@@ -149,7 +149,19 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public String obtainDeviceId() {
         multipleWpjApiFragment.launch();
-        return multipleWpjApiFragment.getAllRecords().get(0).get("DeviceId");
+        final List<?> records = multipleWpjApiFragment.getAllRecords();
+        if (records == null || records.isEmpty()) {
+            // No WPJ records are available; honor the @Nullable contract.
+            return null;
+        }
+
+        Assert.assertTrue(
+                "Expected exactly one WPJ record when obtaining device id, but found: " + records.size(),
+                records.size() == 1
+        );
+
+        // Safe to access the first record now that we have asserted the size.
+        return (String) ((java.util.Map<?, ?>) records.get(0)).get("DeviceId");
     }
 
     @Override
