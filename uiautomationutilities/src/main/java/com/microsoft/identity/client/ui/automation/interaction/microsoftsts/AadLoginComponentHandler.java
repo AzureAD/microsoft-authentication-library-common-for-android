@@ -208,10 +208,9 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmEnrollPageReceived() {
-        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access", mFindLoginUiElementTimeout);
-        final UiObject enrollmentHeader2 = UiAutomatorUtils.obtainUiObjectWithText("Register your device", mFindLoginUiElementTimeout);
-        final UiObject enrollmentHeader3 = UiAutomatorUtils.obtainUiObjectWithText("New sign-in required", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists() || enrollmentHeader2.exists() || enrollmentHeader3.exists());
+        Assert.assertTrue("Enroll Page appears.",
+                UiAutomatorUtils.obtainUiObjectWithRegex("Set up your device to get access|Register your device|New sign-in required", mFindLoginUiElementTimeout)
+                        .exists());
     }
 
     @Override
