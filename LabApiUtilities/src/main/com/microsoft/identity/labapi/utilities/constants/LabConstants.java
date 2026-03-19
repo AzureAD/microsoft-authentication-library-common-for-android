@@ -91,6 +91,8 @@ public class LabConstants {
         public static final String MAM_SPO = "mamspo";
         public static final String BLOCKED = "blocked";
         public static final String GLOBAL_MFA = "globalmfa";
+        public static final String AUTHAPP_LBAC = "authapplbac";
+        public static final String AUTHAPP_RICH_CONTEXT = "authapprichcontext";
     }
 
     static final class HomeDomain {
@@ -180,6 +182,8 @@ public class LabConstants {
         public static final String MFAONEXO = "MFAONEXO";
         public static final String MAMCA = "MAMCA";
         public static final String MDMCA = "MDMCA";
+        public static final String AUTHAPP_LBAC = "AuthappLBAC";
+        public static final String AUTHAPP_RICH_CONTEXT = "AuthappRichContext";
     }
 
     static final class TempUserPolicy {
@@ -188,6 +192,8 @@ public class LabConstants {
         public static final String MFAONEXO = TempUserType.MFAONEXO;
         public static final String MAMCA = TempUserType.MAMCA;
         public static final String MDMCA = TempUserType.MDMCA;
+        public static final String AUTHAPP_LBAC = TempUserType.AUTHAPP_LBAC;
+        public static final String AUTHAPP_RICH_CONTEXT = TempUserType.AUTHAPP_RICH_CONTEXT;
     }
 
     static final class ResetOperation {
