@@ -307,11 +307,15 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         promptHandler.handlePrompt(username, password);
         ThreadUtils.sleepSafely(1000,"performDeviceRegistrationInternal", "Waiting for result to be returned from the broker");
         if (shouldValidate) {
-            dismissDialogBoxAndAssertContainsText("SUCCESS");
+            final String dialogText = dismissDialogBoxAndGetText();
+            Assert.assertTrue(
+                    "Expected dialog text to contain 'SUCCESS' but was: " + dialogText,
+                    !StringUtil.isNullOrEmpty(dialogText) && dialogText.contains("SUCCESS")
+            );
+            return dialogText;
         } else {
             return dismissDialogBoxAndGetText();
         }
-        return null;
     }
 
 }
