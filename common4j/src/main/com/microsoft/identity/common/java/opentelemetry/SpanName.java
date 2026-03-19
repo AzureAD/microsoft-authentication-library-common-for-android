@@ -37,6 +37,7 @@ public enum SpanName {
     CertBasedAuth,
     MSAL_PerformIpcStrategy,
     DeviceRegistrationApi,
+    DeviceRegistrationIpc,
     WorkplaceJoinApi,
     AcquireTokenDcf,
     AcquireTokenDcfAuthRequest,
@@ -106,5 +107,9 @@ public enum SpanName {
     /**
      * Span name for WebView target="_blank" navigation interception.
      */
-    WebViewTargetBlankNavigation
+    WebViewTargetBlankNavigation,
+    /**
+     * Span name for WebView file upload (onShowFileChooser) operations.
+     */
+    WebViewFileUpload
 }
