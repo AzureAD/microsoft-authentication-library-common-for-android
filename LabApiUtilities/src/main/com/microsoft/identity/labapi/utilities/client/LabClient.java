@@ -377,22 +377,22 @@ public class LabClient implements ILabClient {
         final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         try {
-            final String successResponse = deleteDeviceApi.apiDeleteDeviceDelete(
-                    upn, deviceId
-            );
+            final String successResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
 
             if (successResponse == null) {
                 return false;
             }
 
-            // we probably need a more sophisticated logger integrated into LabApi
-            // for now this is fine
-            System.out.println(successResponse);
-
-            final String expectedResult = String.format(
-                    "Device : %s, successfully deleted from AAD.", deviceId
-            );
-            return expectedResult.equalsIgnoreCase(successResponse);
+            // Use tolerant substring match (case-insensitive) rather than exact equality so that
+            // minor backend formatting variations do not cause false failures.
+            final boolean deleted = successResponse.toLowerCase(Locale.ENGLISH)
+                    .contains("successfully deleted");
+            if (deleted) {
+                System.out.println("deleteDevice succeeded: " + successResponse);
+            } else {
+                System.out.println("deleteDevice returned unexpected response: " + successResponse);
+            }
+            return deleted;
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(
                     LabError.FAILED_TO_DELETE_DEVICE, ex,
@@ -406,41 +406,51 @@ public class LabClient implements ILabClient {
                                 @NonNull final String deviceId,
                                 final int numDeleteAttemptsRemaining,
                                 final long waitTimeBeforeEachDeleteAttempt) throws LabApiException {
-        System.out.printf(Locale.ENGLISH, "Delete device attempt remaining #%d%n", (numDeleteAttemptsRemaining));
-        if (numDeleteAttemptsRemaining == 0) {
-            return false; // tried all attempts and failed to delete device
+        if (numDeleteAttemptsRemaining <= 0) {
+            return false; // caller requested zero attempts
         }
 
-        try {
-            if (deleteDevice(upn, deviceId)) {
-                return true;
+        long currentWait = waitTimeBeforeEachDeleteAttempt;
+
+        for (int attemptsLeft = numDeleteAttemptsRemaining; attemptsLeft > 0; attemptsLeft--) {
+            System.out.printf(Locale.ENGLISH, "deleteDevice: attempt %d of %d for deviceId=%s%n",
+                    (numDeleteAttemptsRemaining - attemptsLeft + 1), numDeleteAttemptsRemaining, deviceId);
+
+            try {
+                if (deleteDevice(upn, deviceId)) {
+                    return true;
+                }
+                // API returned false (non-null but unrecognised response) - treat as transient and retry.
+                System.out.printf(Locale.ENGLISH,
+                        "deleteDevice: attempt did not confirm deletion, will retry if attempts remain.%n");
+            } catch (final LabApiException labApiException) {
+                System.out.printf(Locale.ENGLISH,
+                        "deleteDevice: attempt failed with error: %s%n", labApiException.getMessage());
+                if (attemptsLeft == 1) {
+                    // No more retries - surface the exception to the caller.
+                    throw labApiException;
+                }
             }
-        } catch (final LabApiException labApiException) {
-            // if not the last attempt, then just print the error to console
-            if (numDeleteAttemptsRemaining > 1) {
-                System.out.printf(
-                        Locale.ENGLISH,
-                        "Delete device attempt #%d%n failed: %s", (numDeleteAttemptsRemaining),
-                        labApiException
-                );
-            } else {
-                // last attempt, just throw the exception back
-                throw labApiException;
+
+            if (attemptsLeft > 1) {
+                // Add ±20% jitter to avoid thundering-herd when tests run in parallel.
+                final long jitter = (long) (currentWait * 0.2 * (Math.random() * 2 - 1));
+                final long sleepTime = Math.max(0, currentWait + jitter);
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (final InterruptedException e) {
+                    // Restore the interrupted status so the calling thread can react properly.
+                    Thread.currentThread().interrupt();
+                    throw new LabApiException(LabError.FAILED_TO_DELETE_DEVICE,
+                            "deleteDevice retry sleep interrupted");
+                }
+                // Exponential back-off: double the wait for the next iteration, capped at 30 seconds.
+                currentWait = Math.min(currentWait * 2, TimeUnit.SECONDS.toMillis(30));
             }
         }
 
-        try {
-            Thread.sleep(waitTimeBeforeEachDeleteAttempt);
-        } catch (final InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return deleteDevice(
-                upn,
-                deviceId,
-                numDeleteAttemptsRemaining - 1,
-                waitTimeBeforeEachDeleteAttempt * 2
-        );
+        // All attempts exhausted without success and without a terminal exception.
+        return false;
     }
 
     private String getPassword(@NonNull final ConfigInfo configInfo) throws LabApiException {
