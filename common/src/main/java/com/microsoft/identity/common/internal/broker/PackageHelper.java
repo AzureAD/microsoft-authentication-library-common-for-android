@@ -41,6 +41,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -162,18 +164,59 @@ public class PackageHelper {
      */
     public boolean isPackageInstalledAndEnabled(final String packageName) {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
-        boolean enabled = false;
+        // Check 1: getApplicationInfo() says whether package exists and its resolved enabled state.
+        boolean isInstalledByApplicationInfo = false;
+        boolean isEnabledByApplicationInfo = false;
+
         try {
-            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            final ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
             if (applicationInfo != null) {
-                enabled = applicationInfo.enabled;
+                isInstalledByApplicationInfo = true;
+                isEnabledByApplicationInfo = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
             Logger.verbose(methodTag, packageName + " is not found");
         }
 
-        Logger.verbose(methodTag, packageName + " is installed. enabled? [" + enabled + "]");
-        return enabled;
+        // Check 2: getPackageInfo() independently verifies install presence.
+        boolean isInstalledByPackageInfo;
+        try {
+            isInstalledByPackageInfo = getPackageInfo(mPackageManager, packageName) != null;
+        } catch (final NameNotFoundException e) {
+            isInstalledByPackageInfo = false;
+        }
+
+        // Check 3: getApplicationEnabledSetting() reflects explicit PM enabled/disabled state.
+        int enabledSettingRaw = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
+        boolean isEnabledByEnabledSetting = isEnabledByApplicationInfo;
+        try {
+            enabledSettingRaw = mPackageManager.getApplicationEnabledSetting(packageName);
+            isEnabledByEnabledSetting = isEnabledForSetting(enabledSettingRaw, isEnabledByApplicationInfo);
+        } catch (final IllegalArgumentException e) {
+            Logger.verbose(methodTag, "Unable to read enabled setting for package: " + packageName);
+        }
+
+        SpanExtension.current().setAttribute(AttributeName.is_installed_by_application_info.name(), isInstalledByApplicationInfo);
+        SpanExtension.current().setAttribute(AttributeName.is_enabled_by_application_info.name(), isEnabledByApplicationInfo);
+        SpanExtension.current().setAttribute(AttributeName.is_installed_by_package_info.name(), isInstalledByPackageInfo);
+        SpanExtension.current().setAttribute(AttributeName.is_enabled_by_enabled_setting.name(), isEnabledByEnabledSetting);
+
+        return isEnabledByApplicationInfo;
+    }
+
+    private static boolean isEnabledForSetting(final int enabledSetting,
+                                               final boolean fallbackEnabledValue) {
+        switch (enabledSetting) {
+            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                return true;
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                return false;
+            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+            default:
+                return fallbackEnabledValue;
+        }
     }
 
     /**

@@ -665,4 +665,47 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     //endregion
+
+    //region Package install/enabled state
+
+    /**
+     * Indicates if the package is installed according to ApplicationInfo.
+     */
+    is_installed_by_application_info,
+
+    /**
+     * Indicates if the package is enabled according to ApplicationInfo.
+     */
+    is_enabled_by_application_info,
+
+    /**
+     * Indicates if the package is installed according to PackageInfo.
+     */
+    is_installed_by_package_info,
+
+    /**
+     * Indicates if the package is enabled according to the enabled setting.
+     */
+    is_enabled_by_enabled_setting,
+
+    //endregion
+
+    //region Broker discovery
+
+    /**
+     * The number of broker candidates that are installed and have valid signatures.
+     */
+    broker_discovery_installed_candidate_count,
+
+    /**
+     * Comma-separated active broker package names returned by each responding candidate.
+     */
+    broker_discovery_reported_active_brokers,
+
+    /**
+     * The discovery path taken: "cache", "ipc", "account_manager", or "account_manager_fallback".
+     */
+    broker_discovery_path,
+
+    //endregion
 }

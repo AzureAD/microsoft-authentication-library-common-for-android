@@ -37,6 +37,8 @@ import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -100,6 +102,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
+        const val ACCOUNT_MANAGER = "ACCOUNT_MANAGER"
+        const val CACHE = "CACHE"
+        const val IPC = "IPC"
+        const val ACCOUNT_MANAGER_FALLBACK = "ACCOUNT_MANAGER_FALLBACK"
+
         /**
          * Per-process Thread-safe, coroutine-safe Mutex of this class.
          * This is to prevent the IPC mechanism from being unnecessarily triggered due to race condition.
@@ -123,15 +130,44 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             isPackageInstalled: (BrokerData) -> Boolean,
             isValidBroker: (BrokerData) -> Boolean
         ): BrokerData? {
+            val methodTag = "$TAG:queryFromBroker"
             return coroutineScope {
                 val installedCandidates =
                     brokerCandidates.filter(isPackageInstalled).filter(isValidBroker)
+
+                val span = SpanExtension.current()
+                span.setAttribute(
+                    AttributeName.broker_discovery_installed_candidate_count.name,
+                    installedCandidates.size.toLong()
+                )
+
                 val deferredResults = installedCandidates.map { candidate ->
                     async(dispatcher) {
-                        return@async makeRequest(candidate, ipcStrategy)
+                        return@async candidate to makeRequest(candidate, ipcStrategy)
                     }
                 }
-                return@coroutineScope deferredResults.awaitAll().filterNotNull().firstOrNull()
+
+                val results = deferredResults.awaitAll()
+                val respondingResults = results.filter { it.second != null }
+
+                if (respondingResults.isNotEmpty()) {
+                    val reportedActiveBrokers = respondingResults.joinToString(",") {
+                        it.second!!.packageName
+                    }
+                    span.setAttribute(
+                        AttributeName.broker_discovery_reported_active_brokers.name,
+                        reportedActiveBrokers
+                    )
+
+                    if (respondingResults.map { it.second!!.packageName }.distinct().size > 1) {
+                        Logger.warn(
+                            methodTag,
+                            "Multiple broker candidates returned conflicting active broker results: $reportedActiveBrokers"
+                        )
+                    }
+                }
+
+                return@coroutineScope respondingResults.firstOrNull()?.second
             }
         }
 
@@ -361,8 +397,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
     private suspend fun getActiveBrokerAsync(shouldSkipCache:Boolean,
                                              telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?): BrokerData?{
         val methodTag = "$TAG:getActiveBrokerAsync"
+        val span = SpanExtension.current()
+
         if (!shouldSkipCache) {
             if (cache.shouldUseAccountManager()) {
+                span.setAttribute(AttributeName.broker_discovery_path.name, ACCOUNT_MANAGER)
                 telemetryCallback?.onUseAccountManager()
                 return getActiveBrokerFromAccountManager()
             }
@@ -395,6 +434,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                 }
 
                 Logger.info(methodTag, "Returning cached broker: $it")
+                span.setAttribute(AttributeName.broker_discovery_path.name, CACHE)
                 return it
             }
         }
@@ -409,6 +449,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         telemetryCallback?.onFinishQueryingResultFromBroker(System.nanoTime() - timeStartQueryFromBroker)
 
         if (brokerData != null) {
+            span.setAttribute(AttributeName.broker_discovery_path.name, IPC)
             cache.setCachedActiveBroker(brokerData)
             return brokerData
         }
@@ -425,6 +466,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
             )
         )
 
+        span.setAttribute(AttributeName.broker_discovery_path.name, ACCOUNT_MANAGER_FALLBACK)
         telemetryCallback?.onUseAccountManager()
         val accountManagerResult = getActiveBrokerFromAccountManager()
         Logger.info(
