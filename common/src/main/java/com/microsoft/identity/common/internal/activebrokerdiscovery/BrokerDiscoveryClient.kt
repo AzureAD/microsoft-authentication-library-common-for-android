@@ -102,10 +102,10 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
         const val ERROR_BUNDLE_KEY = "ERROR_BUNDLE_KEY"
 
-        const val ACCOUNT_MANAGER = "ACCOUNT_MANAGER"
-        const val CACHE = "CACHE"
-        const val IPC = "IPC"
-        const val ACCOUNT_MANAGER_FALLBACK = "ACCOUNT_MANAGER_FALLBACK"
+        const val ACCOUNT_MANAGER = "account_manager"
+        const val CACHE = "cache"
+        const val IPC = "ipc"
+        const val ACCOUNT_MANAGER_FALLBACK = "account_manager_fallback"
 
         /**
          * Per-process Thread-safe, coroutine-safe Mutex of this class.
