@@ -24,6 +24,10 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.annotation.SuppressLint
 import androidx.credentials.exceptions.CreateCredentialCancellationException
+import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.credentials.exceptions.CreateCredentialInterruptedException
 import androidx.credentials.exceptions.CreateCredentialProviderConfigurationException
 import androidx.credentials.exceptions.CreateCredentialUnknownException
@@ -34,12 +38,17 @@ import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.webkit.JavaScriptReplyProxy
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.BaggageExtension
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.baggage.Baggage
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import org.json.JSONObject
 
 
@@ -50,11 +59,16 @@ import org.json.JSONObject
  *
  * @property replyProxy Proxy for sending messages to JavaScript.
  * @property requestType Type of WebAuthn request (e.g., "create", "get"). Defaults to "unknown".
+ * @property Context for OpenTelemetry span creation. Optional; if not provided, telemetry will be skipped with a warning.
+ * @property telemetryScope Coroutine scope used to record additional telemetry in a background
+ *   thread after the reply has already been posted, so callers are not blocked by telemetry work.
+ *   Defaults to a new [CoroutineScope] backed by [Dispatchers.IO].
  */
 class PasskeyReplyChannel(
     private val replyProxy: JavaScriptReplyProxy,
     private val requestType: String = "unknown",
-    private val spanContext: SpanContext? = null
+    private val otelContext: Context? = null,
+    private val telemetryScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     companion object {
         const val TAG = "PasskeyReplyChannel"
@@ -78,6 +92,12 @@ class PasskeyReplyChannel(
         const val DOM_EXCEPTION_NOT_SUPPORTED_ERROR = "NotSupportedError"
         const val DOM_EXCEPTION_UNKNOWN_ERROR = "UnknownError"
 
+        private val parentAttributeNames = arrayListOf(
+            AttributeName.correlation_id,
+            AttributeName.tenant_id,
+            AttributeName.account_type,
+            AttributeName.calling_package_name
+        )
     }
 
     /**
@@ -137,7 +157,28 @@ class PasskeyReplyChannel(
     }
 
     /**
-     * Posts a success message with credential data.
+     * Resolves the parent [SpanContext] from the provided [otelContext].
+     *
+     * Returns `null` and emits a warning if no OTel context was supplied, so callers can still
+     * create a root span rather than failing outright.
+     *
+     * @param methodTag Logging tag of the calling method, included in the warning message.
+     * @return The [SpanContext] extracted from [otelContext], or `null`.
+     */
+    private fun resolveParentSpanContext(methodTag: String): SpanContext? =
+        if (otelContext == null) {
+            Logger.warn(methodTag, "No OpenTelemetry context provided. Telemetry will not be recorded for this operation.")
+            null
+        } else {
+            SpanExtension.fromContext(otelContext).spanContext
+        }
+
+    /**
+     * Posts a success message with credential data and returns immediately.
+     *
+     * The reply is sent to JavaScript right away. Additional telemetry attributes that require
+     * inspecting the response (e.g. passkey_origin) are recorded asynchronously
+     * on [telemetryScope] so that the caller is never blocked by telemetry work.
      *
      * @param json JSON string containing the credential response.
      */
@@ -146,30 +187,84 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:postSuccess"
         val span = OTelUtility.createSpanFromParent(
             SpanName.PasskeyWebListener.name,
-            spanContext
+            resolveParentSpanContext(methodTag)
         )
+        // We use a flag or a structured try-catch to ensure span.end()
+        // is called exactly once.
+        var handedOffToBackground = false
 
         try {
-            SpanExtension.makeCurrentSpan(span).use {
-                val successMessage = ReplyMessage.Success(json, requestType).toString()
-                replyProxy.postMessage(successMessage)
-                Logger.info(methodTag, "RequestType: $requestType was successful.")
-                span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
-                span.setStatus(StatusCode.OK)
-            }
-        } catch (throwable: Throwable) {
-            span.setStatus(StatusCode.ERROR)
+            // 1. Immediate Work
+            val successMessage = ReplyMessage.Success(json, requestType).toString()
+            replyProxy.postMessage(successMessage)
+
+            span.setStatus(StatusCode.OK)
             span.setAttribute(AttributeName.passkey_operation_type.name, requestType)
+            val otelContextCurrentSpan = Context.current().with(span)
+            val baggage = BaggageExtension.fromContext(otelContext)
+
+            // 2. Hand off post-success telemetry to background worker
+            val job = telemetryScope.launch(otelContextCurrentSpan.asContextElement()) {
+                recordPostSuccessTelemetry(span, json, baggage)
+            }
+            job.invokeOnCompletion {
+                span.end()
+            }
+            handedOffToBackground = true
+
+        } catch (throwable: Throwable) {
+            // 3. Error Path: If postMessage fails OR launch fails
             span.recordException(throwable)
-            Logger.error(methodTag, "Reply message failed", throwable)
+            span.setStatus(StatusCode.ERROR)
+            Logger.error(methodTag, "Immediate execution failed", throwable)
             throw throwable
         } finally {
-            span.end()
+            // 4. Lifecycle Guard: Only end here if we didn't successfully
+            // start the background task.
+            if (!handedOffToBackground) {
+                span.end()
+            }
         }
     }
 
+    /**
+     * Records additional post-success telemetry on a background thread.
+     *
+     * This method is invoked only after the success reply has already been posted to JavaScript.
+     * It must remain non-blocking for the caller path and should never prevent a successful
+     * response from being returned.
+     *
+     * @param span The span created in [postSuccess], owned by the background task lifecycle.
+     * @param json JSON payload returned from WebAuthn operation.
+     */
+    private fun recordPostSuccessTelemetry(span: Span, json: String, baggage: Baggage? = null) {
+        try {
+            SpanExtension.makeCurrentSpan(span).use {
+                parentAttributeNames.forEach { attributeName ->
+                    baggage?.getEntryValue(attributeName.name)?.let { value ->
+                        span.setAttribute(attributeName.name, value)
+                    }
+                }
 
-
+                if (requestType == PasskeyWebListener.CREATE_UNIQUE_KEY) {
+                    WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(json)?.let {
+                        span.setAttribute(AttributeName.passkey_aaguid.name, it)
+                    }
+                    WebAuthnJsonUtil.extractOriginFromRegistrationResponse(json)?.let {
+                        span.setAttribute(AttributeName.passkey_origin.name, it)
+                    }
+                }
+            }
+        } catch (exception: Exception) {
+            Logger.warn(
+                TAG,
+                "Failed to record post-success passkey telemetry for requestType: $requestType, ${exception.message}"
+            )
+        } finally {
+            // The background worker owns span completion for the success path.
+            span.end()
+        }
+    }
 
     /**
      * Posts an error message based on a thrown exception.
@@ -183,7 +278,7 @@ class PasskeyReplyChannel(
         val methodTag = "$TAG:postError"
         val span = OTelUtility.createSpanFromParent(
             SpanName.PasskeyWebListener.name,
-            spanContext
+            resolveParentSpanContext(methodTag)
         )
 
         try {
