@@ -223,7 +223,14 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable file upload support in the embedded WebView.
      * When enabled, the WebView will handle file chooser requests from web pages.
      */
-    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false);
+    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false),
+
+    /**
+     * Maximum key age in days before rotation is required.
+     * Default: 1095 (3 years per SDL maximum lifetime requirement).
+     * When running in broker, BrokerFlight overrides this default via ECS.
+     */
+    SYMMETRIC_KEY_MAX_AGE_DAYS("SymmetricKeyMaxAgeDays", 1095);
 
     private String key;
     private Object defaultValue;
