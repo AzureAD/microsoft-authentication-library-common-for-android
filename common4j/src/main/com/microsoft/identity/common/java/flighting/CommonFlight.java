@@ -228,7 +228,15 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable open-id vc redirect handling in webview.
      */
-    ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true);
+    ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
+
+    /**
+     * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
+     * in PackageHelper.isPackageInstalledAndEnabled().
+     * This provides a more granular enabled check that distinguishes
+     * DISABLED_USER, DISABLED_UNTIL_USED, etc.
+     */
+    USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false);
 
     private String key;
     private Object defaultValue;

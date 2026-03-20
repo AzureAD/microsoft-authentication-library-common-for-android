@@ -41,6 +41,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -164,8 +166,19 @@ public class PackageHelper {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
         try {
-            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
-            if (applicationInfo != null) {
+            final ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
+                    CommonFlight.USE_ENABLED_SETTING_FOR_PACKAGE_CHECK)) {
+                try {
+                    enabled = isEnabledForSetting(
+                            mPackageManager.getApplicationEnabledSetting(packageName),
+                            applicationInfo.enabled
+                    );
+                } catch (final IllegalArgumentException e) {
+                    Logger.verbose(methodTag, "Unable to read enabled setting for package: " + packageName);
+                    enabled = applicationInfo.enabled;
+                }
+            } else {
                 enabled = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
