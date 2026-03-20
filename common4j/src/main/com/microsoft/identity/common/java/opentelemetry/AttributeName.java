@@ -122,6 +122,13 @@ public enum AttributeName {
     correlation_id,
 
     /**
+     * The correlation id sent from client app.
+     * This is a second attribute name to denote EUDB compliance.
+     * We will only emit this value when we have a tenant id, or when we are in unauthenticated scenarios.
+     */
+    correlation_id_v2,
+
+    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache,

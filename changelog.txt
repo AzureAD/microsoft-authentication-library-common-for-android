@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Use tdbr claim to route telemetry traffic to EU region (#2679)
 - [PATCH] Remove back button interception from SilentWebViewAuthorizationFragment (#3030)
 - [MINOR] Add AIDL interface for device registration service.(#2926)
 - [MINOR] Move debugIntuneCE and prodIntuneCE from BrokerData to AppRegistry as App instances (#3012)
