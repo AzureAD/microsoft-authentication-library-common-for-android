@@ -279,8 +279,10 @@ public class KeyVersionRegistryTest {
     @Test
     public void pruneExpiredKeys_keepsKeyJustUnderThreshold() throws ClientException {
         registry.generateNewKey();
+        // Use a 1-second margin so the test is immune to the few ms that elapse between
+        // computing the timestamp here and pruneExpiredKeys() sampling System.currentTimeMillis().
         long justUnderThreshold = System.currentTimeMillis() -
-                (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1;
+                (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
         registry.pruneExpiredKeys();
         assertNotNull("Key just under pruning threshold should not be pruned", registry.getKeyByVersion("K001"));
