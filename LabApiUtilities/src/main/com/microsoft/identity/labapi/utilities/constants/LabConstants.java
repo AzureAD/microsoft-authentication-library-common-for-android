@@ -38,7 +38,6 @@ public class LabConstants {
         public static final String MSA = "msa";
         public static final String MDM_CA = "mdm_ca";
         public static final String MAM_CA = "mam_ca";
-        public static final String TP_CA = "tpca";
         public static final String TRUE_MAM_CA = "true_mam_ca";
         public static final String WP = "wp";
         public static final String FEDERATED = "federated";
