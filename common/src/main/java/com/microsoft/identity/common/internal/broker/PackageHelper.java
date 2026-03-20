@@ -194,14 +194,14 @@ public class PackageHelper {
      * checking via multiple PackageManager APIs.
      *
      * @param packageName the package name to look up.
-     * @return a string like "appInfo=true,appEnabled=true,pkgInfo=true,enabledSetting=true"
+     * @return a string like "appInfo=true,appEnabled=true,pkgInfo=true,enabledSetting=ENABLED"
      */
     @NonNull
     public String getPackageInstallStateSummary(@NonNull final String packageName) {
         boolean isInstalledByAppInfo = false;
         boolean isEnabledByAppInfo = false;
         boolean isInstalledByPkgInfo = false;
-        boolean isEnabledBySetting = false;
+        String enabledSettingName = "UNKNOWN";
 
         try {
             final ApplicationInfo appInfo = mPackageManager.getApplicationInfo(packageName, 0);
@@ -216,30 +216,46 @@ public class PackageHelper {
         } catch (final NameNotFoundException ignored) { }
 
         try {
-            isEnabledBySetting = isEnabledForSetting(
-                    mPackageManager.getApplicationEnabledSetting(packageName),
-                    isEnabledByAppInfo
+            enabledSettingName = getEnabledSettingName(
+                    mPackageManager.getApplicationEnabledSetting(packageName)
             );
         } catch (final IllegalArgumentException ignored) { }
 
         return "appInfo=" + isInstalledByAppInfo
                 + ",appEnabled=" + isEnabledByAppInfo
                 + ",pkgInfo=" + isInstalledByPkgInfo
-                + ",enabledSetting=" + isEnabledBySetting;
+                + ",enabledSetting=" + enabledSettingName;
     }
 
     private static boolean isEnabledForSetting(final int enabledSetting,
                                                final boolean fallbackEnabledValue) {
         switch (enabledSetting) {
             case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
                 return true;
             case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
             case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
-            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
                 return false;
             case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
             default:
                 return fallbackEnabledValue;
+        }
+    }
+
+    private static String getEnabledSettingName(final int enabledSetting) {
+        switch (enabledSetting) {
+            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                return "ENABLED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+                return "DISABLED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                return "DISABLED_USER";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                return "DISABLED_UNTIL_USED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+                return "DEFAULT";
+            default:
+                return "UNKNOWN(" + enabledSetting + ")";
         }
     }
 
