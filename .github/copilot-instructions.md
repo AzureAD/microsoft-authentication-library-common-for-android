@@ -554,6 +554,11 @@ See [changelog.txt](../changelog.txt) for the changelog format.
 
 ## 11. Dependencies & Versioning
 
+When any change is made to a `build.gradle` or `versions.gradle` file that adds a new dependency or changes a dependency version, always display the following warning message:
+> ⚠️ **Warning:** Changes detected ⚠️
+>
+> Please follow the recommendations in [Adding or Updating Gradle Dependencies](https://eng.ms/docs/microsoft-security/identity/entra-developer-application-platform/auth-client/authn-sdk-msal-android/android-auth-libraries/how-tos/adding-or-updating-gradle-dependencies).
+
 Flag:
 - Security library downgrade.
 - Major upgrade without referenced release notes.
