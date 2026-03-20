@@ -94,7 +94,7 @@ public class AzureActiveDirectory
     private static final String API_VERSION = "api-version";
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
-    private static final String AUTHORIZE_ENDPOINT_SUFFIX = "/common/oauth2/v2.0/authorize";
+    private static final String AUTHORIZE_ENDPOINT_PATH = "/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
 
@@ -311,7 +311,7 @@ public class AzureActiveDirectory
         try {
             instanceDiscoveryRequestUri = new CommonURIBuilder(cloudUrl + AAD_INSTANCE_DISCOVERY_ENDPOINT)
                     .setParameter(API_VERSION, API_VERSION_VALUE)
-                    .setParameter(AUTHORIZATION_ENDPOINT, cloudUrl + AUTHORIZE_ENDPOINT_SUFFIX)
+                    .setParameter(AUTHORIZATION_ENDPOINT, cloudUrl + AUTHORIZE_ENDPOINT_PATH)
                     .build();
         } catch (URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);

@@ -378,9 +378,9 @@ public abstract class Authority {
     }
 
     public static KnownAuthorityResult getKnownAuthorityResult(Authority authority) {
-        final String methodName = ":getKnownAuthorityResult";
+        final String methodTag = TAG + ":getKnownAuthorityResult";
         Logger.verbose(
-                TAG + methodName,
+                methodTag,
                 "Getting known authority result..."
         );
         ClientException clientException = null;
@@ -388,12 +388,12 @@ public abstract class Authority {
 
         try {
             AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority);
-            Logger.info(TAG + methodName, "Cloud discovery complete.");
+            Logger.info(methodTag, "Cloud discovery complete.");
         } catch (final ClientException ex) {
             // Cloud discovery failed (e.g. network error).
             // Log but continue — the authority may still be known via hardcoded
             // metadata or developer configuration.
-            Logger.warn(TAG + methodName,
+            Logger.warn(methodTag,
                     "Cloud discovery failed, will check hardcoded/configured authorities. Error: "
                             + ex.getErrorCode());
         }
@@ -404,7 +404,7 @@ public abstract class Authority {
                     "Provided authority is not known.  MSAL will only make requests to known authorities"
             );
         } else {
-            Logger.info(TAG + methodName, "Cloud is known.");
+            Logger.info(methodTag, "Cloud is known.");
             known = true;
         }
 
