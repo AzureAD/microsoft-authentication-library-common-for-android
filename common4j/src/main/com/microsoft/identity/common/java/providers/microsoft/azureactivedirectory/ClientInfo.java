@@ -28,6 +28,8 @@ import com.microsoft.identity.common.java.base64.Base64Flags;
 import com.microsoft.identity.common.java.base64.Base64Util;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.JsonUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -44,6 +46,7 @@ public class ClientInfo implements Serializable {
 
     private static final String UNIQUE_IDENTIFIER = "uid";
     private static final String UNIQUE_TENANT_IDENTIFIER = "utid";
+    public static final String TDBR_CLAIM = "xms_tdbr";
     private static final long serialVersionUID = 3326461566190095403L;
 
     /**
@@ -55,6 +58,11 @@ public class ClientInfo implements Serializable {
      * Unique identifier for a tenant.
      */
     private String mUtid;
+
+    /**
+     * TDBR Claim, denotes what region the user belongs to.
+     */
+    private String mTdbrClaim;
 
     private String mRawClientInfo;
 
@@ -80,6 +88,10 @@ public class ClientInfo implements Serializable {
 
         mUid = clientInfoItems.get(ClientInfo.UNIQUE_IDENTIFIER);
         mUtid = clientInfoItems.get(ClientInfo.UNIQUE_TENANT_IDENTIFIER);
+        if (!StringUtil.isNullOrEmpty(mUtid)) {
+            SpanExtension.current().setAttribute(AttributeName.tenant_id.name(), mUtid);
+        }
+        mTdbrClaim = clientInfoItems.get(ClientInfo.TDBR_CLAIM);
         mRawClientInfo = rawClientInfo;
     }
 
@@ -99,6 +111,15 @@ public class ClientInfo implements Serializable {
      */
     public String getUtid() {
         return mUtid;
+    }
+
+    /**
+     * Gets the TDBR claim.
+     *
+     * @return The TDBR claim to get.
+     */
+    public String getTdbrClaim() {
+        return mTdbrClaim;
     }
 
     /**
