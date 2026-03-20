@@ -106,6 +106,7 @@ public class AuthenticationSchemeFactory {
      * @return boolean indicating if the the authentication scheme is a PoP authentication scheme
      */
     public static boolean isPopAuthenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
-        return authenticationScheme instanceof IPoPAuthenticationSchemeParams;
+        return authenticationScheme instanceof IPoPAuthenticationSchemeParams
+                || authenticationScheme instanceof WebAppsPopAuthenticationSchemeInternal;
     }
 }

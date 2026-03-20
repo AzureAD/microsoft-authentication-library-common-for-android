@@ -503,6 +503,16 @@ public enum AttributeName {
     passkey_dom_exception_name,
 
     /**
+     * Origin extracted from the WebAuthn clientDataJSON response.
+     */
+    passkey_origin,
+
+    /**
+     * AAGUID of the authenticator, extracted from the attestation authenticatorData (create flow only).
+     */
+    passkey_aaguid,
+
+    /**
      *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
      */
     elapsed_time_save_aggregated_account_data,
@@ -614,7 +624,36 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates if an external handler was found to handle the openid-vc:// URI.
+     */
+    is_openid_vc_handler_found,
     
+    //endregion
+
+    //region Device Registration IPC Attributes
+
+    /**
+     * Indicates the status of content provider IPC strategy for device registration.
+     */
+    content_provider_status,
+
+    /**
+     * Indicates the status of bound service IPC strategy for device registration.
+     */
+    bound_service_status,
+
+    /**
+     * Indicates the status of Legacy Account Manager IPC strategy for device registration.
+     */
+    legacy_account_manager_status,
+
+    /**
+     * Indicates the name of the device registration protocol being executed.
+     */
+    device_registration_protocol_name,
+
     //endregion
 
     //region WebView target=_blank navigation
