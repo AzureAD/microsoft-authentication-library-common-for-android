@@ -117,6 +117,8 @@ public class AzureActiveDirectory
      * Pre-seeds the cloud cache with sovereign cloud metadata so they are
      * recognized without a network call. Called at class init and after
      * environment changes that clear the cache.
+     * Refer https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=/%5BAndroid%5D%20Bleu%20Cloud%20Support/bleu-cloud-support.md&_a=preview
+     * for more details.
      */
     private static void preSeedSovereignClouds() {
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
