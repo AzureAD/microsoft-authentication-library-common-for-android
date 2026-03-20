@@ -122,6 +122,13 @@ public enum AttributeName {
     correlation_id,
 
     /**
+     * The correlation id sent from client app.
+     * This is a second attribute name to denote EUDB compliance.
+     * We will only emit this value when we have a tenant id, or when we are in unauthenticated scenarios.
+     */
+    correlation_id_v2,
+
+    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache,
@@ -494,6 +501,16 @@ public enum AttributeName {
      * Passkey DOM exception name (if any).
      */
     passkey_dom_exception_name,
+
+    /**
+     * Origin extracted from the WebAuthn clientDataJSON response.
+     */
+    passkey_origin,
+
+    /**
+     * AAGUID of the authenticator, extracted from the attestation authenticatorData (create flow only).
+     */
+    passkey_aaguid,
 
     /**
      *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
