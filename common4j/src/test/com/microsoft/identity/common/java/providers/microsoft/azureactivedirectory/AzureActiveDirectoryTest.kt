@@ -24,6 +24,10 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 
 import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.authorities.Environment
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.MockFlightsManager
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -45,6 +49,7 @@ class AzureActiveDirectoryTest {
     @After
     fun tearDown() {
         AzureActiveDirectory.setEnvironment(Environment.Production)
+        CommonFlightsManager.resetFlightsManager()
     }
 
     // --- isKnownCloudDiscoveryHost tests ---
@@ -239,5 +244,46 @@ class AzureActiveDirectoryTest {
         assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.fr/common")))
         assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.de/common")))
         assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.sg/common")))
+    }
+
+    // --- Flight-gated sovereign discovery routing tests ---
+
+    private fun setSovereignCloudInstanceDiscoveryFlightEnabled(enabled: Boolean) {
+        val provider = MockFlightsProvider()
+        provider.addFlight(
+            CommonFlight.ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY.key,
+            enabled.toString()
+        )
+        val manager = MockFlightsManager()
+        manager.setMockBrokerFlightsProvider(provider)
+        CommonFlightsManager.initializeCommonFlightsManager(manager)
+    }
+
+    @Test
+    fun testFlightOn_sovCloudPreSeeded_andIsKnownHost() {
+        setSovereignCloudInstanceDiscoveryFlightEnabled(true)
+        // Sovereign clouds are always pre-seeded (not gated by flight)
+        assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.fr/common")))
+        // Known host check is not flight-gated
+        assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.sovcloud-identity.fr"))
+    }
+
+    @Test
+    fun testFlightOff_sovCloudsStillPreSeeded() {
+        setSovereignCloudInstanceDiscoveryFlightEnabled(false)
+        // Pre-seeding is NOT gated by the flight — sovereign hosts should still be in cache
+        assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.fr/common")))
+        assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.de/common")))
+        assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://login.sovcloud-identity.sg/common")))
+    }
+
+    @Test
+    fun testFlightOn_ensureDiscoveryForSovAuthority_sovCloudCached_isNoOp() {
+        setSovereignCloudInstanceDiscoveryFlightEnabled(true)
+        val bleuUrl = URL("https://login.sovcloud-identity.fr/common")
+        // Sovereign cloud is pre-seeded, so this should be a no-op (no network call)
+        AzureActiveDirectory.ensureCloudDiscoveryForAuthority(bleuUrl)
+        assertTrue(AzureActiveDirectory.hasCloudHost(bleuUrl))
+        assertTrue(AzureActiveDirectory.isValidCloudHost(bleuUrl))
     }
 }
