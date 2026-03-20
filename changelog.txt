@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Remove back button interception from SilentWebViewAuthorizationFragment (#3030)
 - [MINOR] Add AIDL interface for device registration service.(#2926)
 - [MINOR] Move debugIntuneCE and prodIntuneCE from BrokerData to AppRegistry as App instances (#3012)
 - [MINOR] Remove LruCache from SharedPreferencesFileManager (#2910)
@@ -9,6 +10,7 @@ vNext
 - [MINOR] Handle target="_blank" links in authorization WebView (#3010)
 - [MINOR] Handle openid-vc urls in webview (#3013)
 - [MINOR] Add WebView file upload support (#3022)
+- [MINOR] Enhance WebAuthn telemetry for passkey registration (#3018)
 
 Version 24.0.1
 ----------

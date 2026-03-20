@@ -496,6 +496,16 @@ public enum AttributeName {
     passkey_dom_exception_name,
 
     /**
+     * Origin extracted from the WebAuthn clientDataJSON response.
+     */
+    passkey_origin,
+
+    /**
+     * AAGUID of the authenticator, extracted from the attestation authenticatorData (create flow only).
+     */
+    passkey_aaguid,
+
+    /**
      *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
      */
     elapsed_time_save_aggregated_account_data,
