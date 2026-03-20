@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.util.FileUtil
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import java.io.File
 import java.security.KeyPair
@@ -277,26 +278,27 @@ class KeyStoreBackedSecretKeyProvider(
             SpanName.SecretKeyRetrieval.name,
             SpanExtension.current().spanContext
         )
-        SpanExtension.makeCurrentSpan(span).use { _ ->
-            try {
+        try {
+            SpanExtension.makeCurrentSpan(span).use { _ ->
                 val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
                 recordSecretKey(wrappedSecretKey)
                 val secretKey = unwrapSecretKey(wrappedSecretKey, keyPair)
                 span.setStatus(StatusCode.OK)
                 return secretKey
-            } catch (exception: Exception) {
-                Logger.error(
-                    methodTag,
-                    "Failed to deserialize and unwrap secret key",
-                    exception
-                )
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(exception)
-                throw exception
-            } finally {
-                span.end()
             }
+        } catch (exception: Exception) {
+            Logger.error(
+                methodTag,
+                "Failed to deserialize and unwrap secret key",
+                exception
+            )
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(exception)
+            throw exception
+        } finally {
+            span.end()
         }
+
     }
 
     /**
@@ -439,16 +441,16 @@ class KeyStoreBackedSecretKeyProvider(
             SpanName.KeyPairGeneration.name,
             SpanExtension.current().spanContext
         )
-        SpanExtension.makeCurrentSpan(span).use { _ ->
-            try {
+        try {
+            SpanExtension.makeCurrentSpan(span).use { _ ->
                 for ((index, spec) in specs.withIndex()) {
                     Logger.verbose(
                         methodTag,
                         "Attempting key generation with spec ${index + 1}: $spec"
                     )
-                    attemptKeyGeneration(spec)
+                    attemptKeyGeneration(span, spec)
                         .onSuccess { keyPair ->
-                            recordKeyPairGenSuccess(spec, failures)
+                            recordKeyPairGenSuccess(span, spec, failures)
                             Logger.info(
                                 methodTag,
                                 "Key pair generated successfully with spec: $spec"
@@ -463,14 +465,14 @@ class KeyStoreBackedSecretKeyProvider(
                             failures[spec] = throwable
                         }
                 }
-                handleAllFailures(failures)
-            } catch (e: ClientException) {
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(e)
-                throw e
-            } finally {
-                span.end()
             }
+            handleAllFailures(span, failures)
+        } catch (e: ClientException) {
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(e)
+            throw e
+        } finally {
+            span.end()
         }
     }
 
@@ -483,7 +485,7 @@ class KeyStoreBackedSecretKeyProvider(
      * @param spec The key generation specification to attempt
      * @return [Result] containing generated KeyPair or captured exception
      */
-    private fun attemptKeyGeneration(spec: IKeyGenSpec): Result<KeyPair> {
+    private fun attemptKeyGeneration(span: Span, spec: IKeyGenSpec): Result<KeyPair> {
         return runCatching {
             val startTime = System.nanoTime()
             val keyPair = AndroidKeyStoreUtil.generateKeyPair(
@@ -491,7 +493,7 @@ class KeyStoreBackedSecretKeyProvider(
                 spec.algorithmParameterSpec
             )
             val elapsedTime = System.nanoTime() - startTime
-            SpanExtension.current().setAttribute(
+            span.setAttribute(
                 AttributeName.key_pair_gen_elapsed_time.name,
                 elapsedTime
             )
@@ -509,10 +511,11 @@ class KeyStoreBackedSecretKeyProvider(
      * @param failures Map of previously failed key generation attempts
      */
     private fun recordKeyPairGenSuccess(
+        span: Span,
         spec: IKeyGenSpec,
         failures: Map<IKeyGenSpec, Throwable>
     ) {
-        SpanExtension.current().apply {
+        span.apply {
             setAttribute(
                 AttributeName.key_pair_gen_description.name,
                 spec.description
@@ -541,11 +544,15 @@ class KeyStoreBackedSecretKeyProvider(
      * @param failures List of exceptions encountered during key generation attempts
      * @throws ClientException Always throws after processing all failures
      */
-    private fun handleAllFailures(failures: Map<IKeyGenSpec, Throwable>): Nothing {
+    private fun handleAllFailures(span: Span, failures: Map<IKeyGenSpec, Throwable>): Nothing {
         val methodTag = "$TAG:handleAllFailures"
         require(failures.isNotEmpty()) {
             "No failures encountered, but no key pair generated. This should not happen."
         }
+        span.setAttribute(
+            AttributeName.key_pair_gen_failure_history.name,
+            formatFailureHistory(failures)
+        )
         val lastFailure = failures.values.last()
         val finalError = ClientException(
             ClientException.UNKNOWN_CRYPTO_ERROR,
