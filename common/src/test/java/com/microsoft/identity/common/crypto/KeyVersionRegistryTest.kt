@@ -92,8 +92,8 @@ class KeyVersionRegistryTest {
         // the same fakeWrappingKeyPair for any alias keeps wrap/unwrap consistent across calls.
         every { AndroidKeyStoreUtil.readKey(any()) } returns fakeWrappingKeyPair
         every { AndroidKeyStoreUtil.deleteKey(any()) } just Runs
-        every { AndroidKeyStoreUtil.wrap(any(), any(), any(), anyOrNull()) } answers { callOriginal() }
-        every { AndroidKeyStoreUtil.unwrap(any(), any(), any(), any(), anyOrNull()) } answers { callOriginal() }
+        every { AndroidKeyStoreUtil.wrap(any(), any(), any(), null) } answers { callOriginal() }
+        every { AndroidKeyStoreUtil.unwrap(any(), any(), any(), any(), null) } answers { callOriginal() }
 
         registry = KeyVersionRegistry(context)
         cleanUp()
