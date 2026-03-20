@@ -230,14 +230,7 @@ public enum CommonFlight implements IFlightConfig {
      * Default: 1095 (3 years per SDL maximum lifetime requirement).
      * When running in broker, BrokerFlight overrides this default via ECS.
      */
-    SYMMETRIC_KEY_MAX_AGE_DAYS("SymmetricKeyMaxAgeDays", 1095),
-
-    /**
-     * Recommended key age in days before rotation is triggered.
-     * Default: 365 (1 year per SDL recommendation).
-     * When running in broker, BrokerFlight overrides this default via ECS.
-     */
-    SYMMETRIC_KEY_RECOMMENDED_AGE_DAYS("SymmetricKeyRecommendedAgeDays", 365);
+    SYMMETRIC_KEY_MAX_AGE_DAYS("SymmetricKeyMaxAgeDays", 1095);
 
     private String key;
     private Object defaultValue;
