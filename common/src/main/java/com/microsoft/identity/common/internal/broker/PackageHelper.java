@@ -187,11 +187,12 @@ public class PackageHelper {
         }
 
         // Check 3: getApplicationEnabledSetting() reflects explicit PM enabled/disabled state.
-        int enabledSettingRaw = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
         boolean isEnabledByEnabledSetting = isEnabledByApplicationInfo;
         try {
-            enabledSettingRaw = mPackageManager.getApplicationEnabledSetting(packageName);
-            isEnabledByEnabledSetting = isEnabledForSetting(enabledSettingRaw, isEnabledByApplicationInfo);
+            isEnabledByEnabledSetting = isEnabledForSetting(
+                    mPackageManager.getApplicationEnabledSetting(packageName),
+                    isEnabledByApplicationInfo
+            );
         } catch (final IllegalArgumentException e) {
             Logger.verbose(methodTag, "Unable to read enabled setting for package: " + packageName);
         }
