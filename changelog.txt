@@ -14,6 +14,7 @@ vNext
 - [MINOR] Handle openid-vc urls in webview (#3013)
 - [MINOR] Add WebView file upload support (#3022)
 - [MINOR] Enhance WebAuthn telemetry for passkey registration (#3018)
+- [MINOR] Enabled opening of TLR URLs in browser by default by enabling the flight ENABLE_WEBVIEW_MULTIPLE_WINDOWS (#3042)
 
 Version 24.0.1
 ----------
