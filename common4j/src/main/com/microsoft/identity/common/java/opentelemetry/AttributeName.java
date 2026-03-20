@@ -658,4 +658,14 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     //endregion
+
+    //region Mobile Onboarding Telemetry
+
+    /**
+     * The session-scoped correlation ID grouping multiple auth attempts into one onboarding session.
+     * NOTE: Any changes to this enum should also be made in the corresponding enum in Broker.
+     */
+    session_correlation_id,
+
+    //endregion
 }
