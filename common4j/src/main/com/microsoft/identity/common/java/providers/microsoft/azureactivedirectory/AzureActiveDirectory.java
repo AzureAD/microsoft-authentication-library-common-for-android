@@ -92,6 +92,7 @@ public class AzureActiveDirectory
     private static final String API_VERSION = "api-version";
     private static final String API_VERSION_VALUE = "1.1";
     private static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
+    private static final String AUTHORIZE_ENDPOINT_SUFFIX = "/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
     private static Environment sEnvironment = Environment.Production;
@@ -269,7 +270,7 @@ public class AzureActiveDirectory
         try {
             instanceDiscoveryRequestUri = new CommonURIBuilder(cloudUrl + AAD_INSTANCE_DISCOVERY_ENDPOINT)
                     .setParameter(API_VERSION, API_VERSION_VALUE)
-                    .setParameter(AUTHORIZATION_ENDPOINT, cloudUrl + "/common/oauth2/v2.0/authorize")
+                    .setParameter(AUTHORIZATION_ENDPOINT, cloudUrl + AUTHORIZE_ENDPOINT_SUFFIX)
                     .build();
         } catch (URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
@@ -307,11 +308,14 @@ public class AzureActiveDirectory
 
     /**
      * Ensures that cloud discovery has been completed using the default global endpoint.
-     * Delegates to {@link #ensureCloudDiscoveryForAuthority(URL)} with the default cloud URL.
+     * If the default cloud host is already cached, this is a no-op.
      */
-    public static synchronized void ensureCloudDiscoveryComplete() throws ClientException {
+    public static synchronized void ensureCloudDiscovery() throws ClientException {
         try {
-            ensureCloudDiscoveryForAuthority(new URL(getDefaultCloudUrl()));
+            final String defaultHost = new URL(getDefaultCloudUrl()).getHost().toLowerCase(Locale.US);
+            if (!sAadClouds.containsKey(defaultHost)) {
+                performCloudDiscovery();
+            }
         } catch (final MalformedURLException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
         }
@@ -346,7 +350,7 @@ public class AzureActiveDirectory
     public static synchronized void ensureCloudDiscoveryForAuthority(@Nullable final URL authorityUrl)
             throws ClientException {
         if (authorityUrl == null) {
-            ensureCloudDiscoveryComplete();
+            ensureCloudDiscovery();
             return;
         }
         final String host = authorityUrl.getHost();

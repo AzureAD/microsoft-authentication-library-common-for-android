@@ -160,7 +160,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
         mWebViewClient.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
-        AzureActiveDirectory.ensureCloudDiscoveryComplete();
+        AzureActiveDirectory.ensureCloudDiscovery();
     }
 
     @After
