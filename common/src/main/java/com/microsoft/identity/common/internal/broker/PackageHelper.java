@@ -177,6 +177,60 @@ public class PackageHelper {
     }
 
     /**
+     * Returns a summary of the install/enabled state for a given package,
+     * checking via multiple PackageManager APIs.
+     *
+     * @param packageName the package name to look up.
+     * @return a string like "appInfo=true,appEnabled=true,pkgInfo=true,enabledSetting=true"
+     */
+    @NonNull
+    public String getPackageInstallStateSummary(@NonNull final String packageName) {
+        boolean isInstalledByAppInfo = false;
+        boolean isEnabledByAppInfo = false;
+        boolean isInstalledByPkgInfo = false;
+        boolean isEnabledBySetting = false;
+
+        try {
+            final ApplicationInfo appInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            if (appInfo != null) {
+                isInstalledByAppInfo = true;
+                isEnabledByAppInfo = appInfo.enabled;
+            }
+        } catch (final NameNotFoundException ignored) { }
+
+        try {
+            isInstalledByPkgInfo = getPackageInfo(mPackageManager, packageName) != null;
+        } catch (final NameNotFoundException ignored) { }
+
+        try {
+            isEnabledBySetting = isEnabledForSetting(
+                    mPackageManager.getApplicationEnabledSetting(packageName),
+                    isEnabledByAppInfo
+            );
+        } catch (final IllegalArgumentException ignored) { }
+
+        return "appInfo=" + isInstalledByAppInfo
+                + ",appEnabled=" + isEnabledByAppInfo
+                + ",pkgInfo=" + isInstalledByPkgInfo
+                + ",enabledSetting=" + isEnabledBySetting;
+    }
+
+    private static boolean isEnabledForSetting(final int enabledSetting,
+                                               final boolean fallbackEnabledValue) {
+        switch (enabledSetting) {
+            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                return true;
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                return false;
+            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+            default:
+                return fallbackEnabledValue;
+        }
+    }
+
+    /**
      * Helper method to get Broker Redirect Uri
      *
      * @param context
