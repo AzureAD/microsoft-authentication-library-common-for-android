@@ -38,6 +38,8 @@ import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.KeyMetadata;
 import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
@@ -79,7 +81,8 @@ import lombok.NonNull;
  * <p>Old keys are retained for decryption until they become pruneable:
  * a deprecated key may be removed after it has been deprecated for longer
  * than {@link #GRACE_PERIOD_MILLIS} <em>and</em> the key itself is older
- * than {@link #MAX_KEY_AGE_MILLIS}.
+ * than the value returned by {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}
+ * (default: 1095 days / 3 years).
  */
 public class KeyVersionRegistry {
 
@@ -114,6 +117,8 @@ public class KeyVersionRegistry {
 
     /**
      * Maximum age of a key before it is eligible for pruning (3 years in milliseconds).
+     * This value reflects the default for {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}.
+     * At runtime the flight value is read dynamically in {@link #pruneExpiredKeys()}.
      */
     @VisibleForTesting
     /* package */ static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
@@ -332,10 +337,10 @@ public class KeyVersionRegistry {
     /**
      * Removes key entries (metadata and wrapped key files) for keys that are no longer needed.
      *
-     * <p>A key is eligible for pruning when its total age from creation exceeds
-     * {@link #MAX_KEY_AGE_MILLIS} + {@link #GRACE_PERIOD_MILLIS}, regardless of whether it
-     * has been explicitly deprecated. This ensures that stale keys are cleaned up even if
-     * deprecation was never called on them.
+     * <p>A key is eligible for pruning when its total age from creation exceeds the value of
+     * {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS} (in milliseconds) + {@link #GRACE_PERIOD_MILLIS},
+     * regardless of whether it has been explicitly deprecated. This ensures that stale keys are
+     * cleaned up even if deprecation was never called on them.
      *
      * <p>The active key is never pruned.
      *
@@ -346,11 +351,20 @@ public class KeyVersionRegistry {
         final RegistryState state = loadState();
         final long now = System.currentTimeMillis();
 
+        int maxAgeDays = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS);
+        if (maxAgeDays <= 0) {
+            Logger.warn(methodTag, "SYMMETRIC_KEY_MAX_AGE_DAYS flight returned invalid value: "
+                    + maxAgeDays + ". Falling back to default.");
+            maxAgeDays = (int) CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS.getDefaultValue();
+        }
+        final long maxAgeMillis = (long) maxAgeDays * 24 * 60 * 60 * 1000;
+
         final List<KeyMetadata> toKeep = new ArrayList<>();
         for (final KeyMetadata km : state.keys) {
             final boolean isActive = km.getVersionId().equals(state.activeVersion);
-            // Any non-active key whose total age exceeds MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS is prunable.
-            final boolean isPrunable = (now - km.getCreatedAtMillis()) > (MAX_KEY_AGE_MILLIS + GRACE_PERIOD_MILLIS);
+            // Any non-active key whose total age exceeds maxAgeMillis + GRACE_PERIOD_MILLIS is prunable.
+            final boolean isPrunable = (now - km.getCreatedAtMillis()) > (maxAgeMillis + GRACE_PERIOD_MILLIS);
 
             if (!isActive && isPrunable) {
                 Logger.info(methodTag, "Pruning expired key: " + km.getVersionId());
