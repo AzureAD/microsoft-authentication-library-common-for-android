@@ -231,6 +231,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
 
     /**
+     * Flight to enable sovereign cloud instance discovery routing.
+     * When enabled, discovery requests for known sovereign cloud hosts are routed
+     * through host of passed in authority if part of known cloud list.
+     * Turn off to fall back to global-only discovery, previous behavior.
+     */
+    ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY("EnableSovereignCloudInstanceDiscovery", true),
+
+    /**
      * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
      * in PackageHelper.isPackageInstalledAndEnabled().
      * This provides a more granular enabled check that distinguishes

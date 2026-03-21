@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
@@ -115,4 +116,35 @@ public class AzureActiveDirectoryCloud {
     void setIsValidated(final boolean isValidated) {
         mIsValidated = isValidated;
     }
+
+    // Public and Sov cloud host name constants
+    public static final String PUBLIC_CLOUD_HOST = "login.microsoftonline.com";
+    public static final String PPE_CLOUD_HOST = "login.windows-ppe.net";
+    public static final String CHINA_CLOUD_HOST = "login.partner.microsoftonline.cn";
+    public static final String US_GOV_CLOUD_HOST = "login.microsoftonline.us";
+    public static final String BLEU_CLOUD_HOST = "login.sovcloud-identity.fr";
+    public static final String DELOS_CLOUD_HOST = "login.sovcloud-identity.de";
+    public static final String SOVSG_CLOUD_HOST = "login.sovcloud-identity.sg";
+
+    // These are added without network calls because they are not part of instance discovery yet.
+    /** Bleu sovereign cloud (France). */
+    public static final AzureActiveDirectoryCloud BLEU = new AzureActiveDirectoryCloud(
+            BLEU_CLOUD_HOST,
+            BLEU_CLOUD_HOST,
+            Collections.singletonList(BLEU_CLOUD_HOST)
+    );
+
+    /** Delos sovereign cloud (Germany). */
+    public static final AzureActiveDirectoryCloud DELOS = new AzureActiveDirectoryCloud(
+            DELOS_CLOUD_HOST,
+            DELOS_CLOUD_HOST,
+            Collections.singletonList(DELOS_CLOUD_HOST)
+    );
+
+    /** SovSG sovereign cloud (Singapore). */
+    public static final AzureActiveDirectoryCloud SOVSG = new AzureActiveDirectoryCloud(
+            SOVSG_CLOUD_HOST,
+            SOVSG_CLOUD_HOST,
+            Collections.singletonList(SOVSG_CLOUD_HOST)
+    );
 }

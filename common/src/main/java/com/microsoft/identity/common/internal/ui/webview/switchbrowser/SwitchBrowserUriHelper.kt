@@ -232,24 +232,19 @@ object SwitchBrowserUriHelper {
      * @throws ClientException with error code [ClientException.MALFORMED_URL] if the URI string is malformed
      * @throws ClientException with error code [ClientException.UNKNOWN_AUTHORITY] if the URI host is not a valid AAD authority
      *
-     * @see AzureActiveDirectory.performCloudDiscovery
+     * @see AzureActiveDirectory.ensureCloudDiscoveryForAuthority
      * @see AzureActiveDirectory.isValidCloudHost
      */
     private fun validateActionUri(actionUriString: String) {
         val methodTag = "$TAG:validateActionUri"
-        // Check if AzureActiveDirectory is initialized, if not, perform cloud discovery.
-        if (!AzureActiveDirectory.isInitialized()) {
-            Logger.warn(
-                methodTag,
-                "AzureActiveDirectory is not initialized. Performing cloud discovery."
-            )
-            try {
-                AzureActiveDirectory.performCloudDiscovery()
-            } catch (e: Exception) {
-                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
-                Logger.error(methodTag, errorMessage, e)
-                throw ClientException(ClientException.IO_ERROR, errorMessage, e)
-            }
+        // Ensure cloud discovery is complete for this authority.
+        try {
+            val actionUrlForDiscovery = URL(actionUriString)
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(actionUrlForDiscovery)
+        } catch (e: Exception) {
+            val errorMessage = "Failed to perform cloud discovery for AAD authorities."
+            Logger.error(methodTag, errorMessage, e)
+            throw ClientException(ClientException.IO_ERROR, errorMessage, e)
         }
         // Validate the action uri is not null or empty.
         val actionUrl: URL

@@ -62,4 +62,8 @@ public class MockFlightsManager implements IFlightsManager {
             return mMockBrokerFlightsProviderForTenant;
         }
     }
+
+    public void setMockBrokerFlightsProvider(@NotNull final MockFlightsProvider mockFlightsProvider) {
+        mMockBrokerFlightsProvider = mockFlightsProvider;
+    }
 }
