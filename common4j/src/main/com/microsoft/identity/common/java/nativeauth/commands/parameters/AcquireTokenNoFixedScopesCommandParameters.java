@@ -47,8 +47,6 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
 
     private static final String TAG = AcquireTokenNoFixedScopesCommandParameters.class.getSimpleName();
 
-    private static final Object sLock = new Object();
-
     private final IAccountRecord account;
 
     @NonNull
@@ -100,50 +98,6 @@ public class AcquireTokenNoFixedScopesCommandParameters extends BaseNativeAuthCo
             // if the authority is B2C, then we do not need check if matches with the account environment
             // as B2C only exists in one cloud and can use custom domains
             // This logic should also apply to CIAM authorities
-        }
-    }
-
-    /**
-     * Note - this method may throw a variety of RuntimeException if we cannot perform cloud
-     * discovery to determine the set of cloud aliases.
-     * @return true if the authority matches the cloud environment that the account is homed in.
-     */
-    private boolean authorityMatchesAccountEnvironment() {
-        final String methodName = ":authorityMatchesAccountEnvironment";
-
-        final Exception cause;
-        final String errorCode;
-
-        try {
-            if (!AzureActiveDirectory.isInitialized()) {
-                performCloudDiscovery();
-            }
-            final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
-            return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
-        } catch (final ClientException e) {
-            cause = e;
-            errorCode = e.getErrorCode();
-        }
-
-        Logger.error(
-                TAG + methodName,
-                "Unable to perform cloud discovery",
-                cause);
-        throw new TerminalException(
-                "Unable to perform cloud discovery in order to validate request authority",
-                cause,
-                errorCode);
-    }
-
-    private static void performCloudDiscovery()
-            throws ClientException {
-        final String methodName = ":performCloudDiscovery";
-        Logger.verbose(
-                TAG + methodName,
-                "Performing cloud discovery..."
-        );
-        synchronized (sLock) {
-            AzureActiveDirectory.performCloudDiscovery();
         }
     }
 }

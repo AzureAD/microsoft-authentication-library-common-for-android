@@ -41,6 +41,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -164,8 +166,19 @@ public class PackageHelper {
         final String methodTag = TAG + ":isPackageInstalledAndEnabled";
         boolean enabled = false;
         try {
-            ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
-            if (applicationInfo != null) {
+            final ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
+                    CommonFlight.USE_ENABLED_SETTING_FOR_PACKAGE_CHECK)) {
+                try {
+                    enabled = isEnabledForSetting(
+                            mPackageManager.getApplicationEnabledSetting(packageName),
+                            applicationInfo.enabled
+                    );
+                } catch (final IllegalArgumentException e) {
+                    Logger.verbose(methodTag, "Unable to read enabled setting for package: " + packageName);
+                    enabled = applicationInfo.enabled;
+                }
+            } else {
                 enabled = applicationInfo.enabled;
             }
         } catch (NameNotFoundException e) {
@@ -174,6 +187,76 @@ public class PackageHelper {
 
         Logger.verbose(methodTag, packageName + " is installed. enabled? [" + enabled + "]");
         return enabled;
+    }
+
+    /**
+     * Returns a summary of the install/enabled state for a given package,
+     * checking via multiple PackageManager APIs.
+     *
+     * @param packageName the package name to look up.
+     * @return a string like "appInfo=true,appEnabled=true,pkgInfo=true,enabledSetting=ENABLED"
+     */
+    @NonNull
+    public String getPackageInstallStateSummary(@NonNull final String packageName) {
+        boolean isInstalledByAppInfo = false;
+        boolean isEnabledByAppInfo = false;
+        boolean isInstalledByPkgInfo = false;
+        String enabledSettingName = "UNKNOWN";
+
+        try {
+            final ApplicationInfo appInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            if (appInfo != null) {
+                isInstalledByAppInfo = true;
+                isEnabledByAppInfo = appInfo.enabled;
+            }
+        } catch (final NameNotFoundException ignored) { }
+
+        try {
+            isInstalledByPkgInfo = getPackageInfo(mPackageManager, packageName) != null;
+        } catch (final NameNotFoundException ignored) { }
+
+        try {
+            enabledSettingName = getEnabledSettingName(
+                    mPackageManager.getApplicationEnabledSetting(packageName)
+            );
+        } catch (final IllegalArgumentException ignored) { }
+
+        return "appInfo=" + isInstalledByAppInfo
+                + ",appEnabled=" + isEnabledByAppInfo
+                + ",pkgInfo=" + isInstalledByPkgInfo
+                + ",enabledSetting=" + enabledSettingName;
+    }
+
+    private static boolean isEnabledForSetting(final int enabledSetting,
+                                               final boolean fallbackEnabledValue) {
+        switch (enabledSetting) {
+            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                return true;
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                return false;
+            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+            default:
+                return fallbackEnabledValue;
+        }
+    }
+
+    private static String getEnabledSettingName(final int enabledSetting) {
+        switch (enabledSetting) {
+            case PackageManager.COMPONENT_ENABLED_STATE_ENABLED:
+                return "ENABLED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED:
+                return "DISABLED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                return "DISABLED_USER";
+            case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                return "DISABLED_UNTIL_USED";
+            case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+                return "DEFAULT";
+            default:
+                return "UNKNOWN(" + enabledSetting + ")";
+        }
     }
 
     /**
