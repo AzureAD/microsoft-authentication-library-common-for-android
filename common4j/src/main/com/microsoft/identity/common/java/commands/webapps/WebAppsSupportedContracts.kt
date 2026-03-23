@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.webapps
 
+import com.microsoft.identity.common.java.util.ObjectMapper
 import java.io.Serializable
 
 /**
@@ -37,10 +38,6 @@ data class WebAppsSupportedContracts(
     }
 
     override fun toString(): String {
-        return contracts.joinToString(
-            separator = ", ",
-            prefix = "[",
-            postfix = "]",
-            transform = { "\"$it\"" })
+        return ObjectMapper.serializeObjectToJsonString(contracts)
     }
 }
