@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.crypto;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -37,7 +36,6 @@ import lombok.NonNull;
  * decryption only.</p>
  */
 @Getter
-@Builder
 public final class KeyMetadata {
 
     /** Default symmetric encryption algorithm. */
@@ -66,25 +64,22 @@ public final class KeyMetadata {
      * Encryption algorithm for this key (e.g. {@code "AES/CBC/PKCS5Padding"}).
      * Defaults to {@link #DEFAULT_ALGORITHM}.
      */
-    @Builder.Default
-    private final String algorithm = DEFAULT_ALGORITHM;
+    private final String algorithm;
 
     /**
      * Key size in bits (e.g. {@code 256}).
      * Defaults to {@link #DEFAULT_KEY_SIZE}.
      */
-    @Builder.Default
-    private final int keySize = DEFAULT_KEY_SIZE;
+    private final int keySize;
 
     /**
      * When {@code true} the key may only be used for decryption; new encryptions must use
      * a non-deprecated key.
      */
-    @Builder.Default
-    private final boolean deprecated = false;
+    private final boolean deprecated;
 
     /**
-     * All-args constructor called by the Lombok-generated builder; validates required fields.
+     * All-args constructor called by the builder; validates required fields.
      *
      * @throws IllegalStateException     if {@code versionId} is null or blank.
      * @throws IllegalArgumentException  if {@code keySize} is not positive.
@@ -102,6 +97,106 @@ public final class KeyMetadata {
         this.algorithm = algorithm;
         this.keySize = keySize;
         this.deprecated = deprecated;
+    }
+
+    /**
+     * Returns a new {@link Builder} for constructing a {@link KeyMetadata} instance.
+     *
+     * @return a new {@link Builder}.
+     */
+    @NonNull
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder for {@link KeyMetadata}.
+     *
+     * <p>{@code algorithm}, {@code keySize}, and {@code deprecated} are optional and fall back
+     * to {@link #DEFAULT_ALGORITHM}, {@link #DEFAULT_KEY_SIZE}, and {@code false}
+     * respectively. {@code versionId} and {@code createdAtMillis} are required.</p>
+     */
+    public static final class Builder {
+
+        private String versionId;
+        private long createdAtMillis;
+        private String algorithm = DEFAULT_ALGORITHM;
+        private int keySize = DEFAULT_KEY_SIZE;
+        private boolean deprecated = false;
+
+        private Builder() {}
+
+        /**
+         * Sets the key version identifier (required).
+         *
+         * @param versionId a non-blank key identifier, e.g. {@code "K001"}.
+         * @return this builder.
+         */
+        @NonNull
+        public Builder versionId(@NonNull final String versionId) {
+            this.versionId = versionId;
+            return this;
+        }
+
+        /**
+         * Sets the Unix timestamp (milliseconds) at which this key was created (required).
+         *
+         * @param createdAtMillis creation timestamp in milliseconds.
+         * @return this builder.
+         */
+        @NonNull
+        public Builder createdAtMillis(final long createdAtMillis) {
+            this.createdAtMillis = createdAtMillis;
+            return this;
+        }
+
+        /**
+         * Sets the encryption algorithm (optional; defaults to {@link #DEFAULT_ALGORITHM}).
+         *
+         * @param algorithm the algorithm string, e.g. {@code "AES/CBC/PKCS5Padding"}.
+         * @return this builder.
+         */
+        @NonNull
+        public Builder algorithm(@NonNull final String algorithm) {
+            this.algorithm = algorithm;
+            return this;
+        }
+
+        /**
+         * Sets the key size in bits (optional; defaults to {@link #DEFAULT_KEY_SIZE}).
+         *
+         * @param keySize a positive key size, e.g. {@code 256}.
+         * @return this builder.
+         */
+        @NonNull
+        public Builder keySize(final int keySize) {
+            this.keySize = keySize;
+            return this;
+        }
+
+        /**
+         * Marks the key as deprecated (optional; defaults to {@code false}).
+         *
+         * @param deprecated {@code true} if the key should only be used for decryption.
+         * @return this builder.
+         */
+        @NonNull
+        public Builder deprecated(final boolean deprecated) {
+            this.deprecated = deprecated;
+            return this;
+        }
+
+        /**
+         * Builds and validates a {@link KeyMetadata} instance.
+         *
+         * @return a new {@link KeyMetadata}.
+         * @throws IllegalStateException    if {@code versionId} is null or blank.
+         * @throws IllegalArgumentException if {@code keySize} is not positive.
+         */
+        @NonNull
+        public KeyMetadata build() {
+            return new KeyMetadata(versionId, createdAtMillis, algorithm, keySize, deprecated);
+        }
     }
 
     /**
