@@ -40,6 +40,7 @@ data class WebAppsSupportedContracts(
         return contracts.joinToString(
             separator = ", ",
             prefix = "[",
-            postfix = "]")
+            postfix = "]",
+            transform = { "\"$it\"" })
     }
 }
