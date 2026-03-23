@@ -115,5 +115,13 @@ public enum SpanName {
     /**
      * Span name for KeyVersionRegistry key generation operations.
      */
-    KeyVersionRegistryGenerateKey
+    KeyVersionRegistryGenerateKey,
+    /**
+     * Span name for symmetric key rotation check on broker startup.
+     */
+    SymmetricKeyRotationCheck,
+    /**
+     * Span name for symmetric key rotation execution.
+     */
+    SymmetricKeyRotation
 }
