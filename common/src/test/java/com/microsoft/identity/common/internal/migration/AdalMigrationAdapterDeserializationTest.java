@@ -29,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.java.authorities.Authority;
 
 
 import org.junit.After;
@@ -55,23 +56,40 @@ public class AdalMigrationAdapterDeserializationTest {
         void onDeserializationFinished(Map<String, ADALTokenCacheItem> result);
     }
 
+    private static final String BLEU_AUTHORITY = "https://login.sovcloud-identity.fr/common";
+
     private AdalMigrationAdapter mMigrationAdapter;
 
     private Map<String, String> mDeserializationInput;
     private DeserializationValidator mValidator;
+    private final Authority mAuthority;
 
     @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
     public static Iterable<Object[]> testParams() {
         return Arrays.asList(
                 new Object[]{
-                        "Single Item Valid Input Test",
+                        "Single Item Valid Input Test (null authority)",
                         getAdalCacheItemInput(),
-                        getDeserializationValidator()
+                        getDeserializationValidator(),
+                        null
                 },
                 new Object[]{
-                        "Multi-Item Input Test with Malformed JSON",
+                        "Single Item Valid Input Test (sovereign authority)",
+                        getAdalCacheItemInput(),
+                        getDeserializationValidator(),
+                        Authority.getAuthorityFromAuthorityUrl(BLEU_AUTHORITY)
+                },
+                new Object[]{
+                        "Multi-Item Input Test with Malformed JSON (null authority)",
                         getMalformedCacheItemInput(),
-                        getDeserializationValidator()
+                        getDeserializationValidator(),
+                        null
+                },
+                new Object[]{
+                        "Multi-Item Input Test with Malformed JSON (sovereign authority)",
+                        getMalformedCacheItemInput(),
+                        getDeserializationValidator(),
+                        Authority.getAuthorityFromAuthorityUrl(BLEU_AUTHORITY)
                 }
         );
     }
@@ -79,15 +97,17 @@ public class AdalMigrationAdapterDeserializationTest {
     @SuppressWarnings("unused")
     public AdalMigrationAdapterDeserializationTest(@NonNull final String testName,
                                                    @NonNull final Map<String, String> deserializationInput,
-                                                   @NonNull final DeserializationValidator validator) {
+                                                   @NonNull final DeserializationValidator validator,
+                                                   final Authority authority) {
         mDeserializationInput = deserializationInput;
         mValidator = validator;
+        mAuthority = authority;
     }
 
     @Before
     public void setUp() {
         final Context context = ApplicationProvider.getApplicationContext();
-        mMigrationAdapter = new AdalMigrationAdapter(context, null, true);
+        mMigrationAdapter = new AdalMigrationAdapter(context, null, true, mAuthority);
     }
 
     @After

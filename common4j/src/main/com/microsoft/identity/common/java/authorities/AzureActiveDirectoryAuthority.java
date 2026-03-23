@@ -177,10 +177,8 @@ public class AzureActiveDirectoryAuthority extends Authority {
     //@WorkerThread
     public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck)
             throws ClientException {
-        if (!AzureActiveDirectory.isInitialized()) {
-            // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
-            AzureActiveDirectory.performCloudDiscovery();
-        }
+        // Cloud discovery is needed to make sure that we have preferred_network_host_name to cloud aliases mappings
+        AzureActiveDirectory.ensureCloudDiscoveryForAuthority(this);
 
         final AzureActiveDirectoryCloud cloudOfThisAuthority = getAzureActiveDirectoryCloud(mAudience);
         final AzureActiveDirectoryCloud cloudOfAuthorityToCheck = getAzureActiveDirectoryCloud(authorityToCheck.getAudience());
