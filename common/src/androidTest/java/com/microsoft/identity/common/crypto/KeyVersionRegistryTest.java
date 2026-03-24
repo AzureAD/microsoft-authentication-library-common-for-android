@@ -62,6 +62,8 @@ public class KeyVersionRegistryTest {
     private Context mContext;
     private KeyVersionRegistry mRegistry;
 
+    static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
+
     @BeforeClass
     public static void classSetUp() {
         Logger.setAndroidLogger();
@@ -317,7 +319,7 @@ public class KeyVersionRegistryTest {
         // 1s younger than the exact pruning threshold — key age is (MAX + GRACE - 1), which is
         // NOT strictly greater than (MAX + GRACE), so the key must be kept.
         final long justUnderThreshold = System.currentTimeMillis()
-                - (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
+                - (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
 
         mRegistry.pruneExpiredKeys();
@@ -335,7 +337,7 @@ public class KeyVersionRegistryTest {
      */
     private long expiredTimestamp() {
         return System.currentTimeMillis()
-                - (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1_000);
+                - (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1_000);
     }
 
     /**

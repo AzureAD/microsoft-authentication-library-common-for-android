@@ -116,14 +116,6 @@ public class KeyVersionRegistry {
     private static final String WRAP_KEY_ALGORITHM = "RSA";
 
     /**
-     * Maximum age of a key before it is eligible for pruning (3 years in milliseconds).
-     * This value reflects the default for {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}.
-     * At runtime the flight value is read dynamically in {@link #pruneExpiredKeys()}.
-     */
-    @VisibleForTesting
-    /* package */ static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
-
-    /**
      * Grace period after deprecation before a key may be pruned (90 days in milliseconds).
      */
     @VisibleForTesting

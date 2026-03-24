@@ -26,11 +26,13 @@ package com.microsoft.identity.common.crypto;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.KeyMetadata;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.util.FileUtil;
 
 import org.json.JSONArray;
@@ -60,6 +62,8 @@ public class KeyVersionRegistryTest {
     private KeyVersionRegistry registry;
     private static KeyPair fakeWrappingKeyPair;
     private MockedStatic<AndroidKeyStoreUtil> androidKeyStoreUtilMock;
+
+    static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -282,7 +286,7 @@ public class KeyVersionRegistryTest {
         // Use a 1-second margin so the test is immune to the few ms that elapse between
         // computing the timestamp here and pruneExpiredKeys() sampling System.currentTimeMillis().
         long justUnderThreshold = System.currentTimeMillis() -
-                (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
+                (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
         registry.pruneExpiredKeys();
         assertNotNull("Key just under pruning threshold should not be pruned", registry.getKeyByVersion("K001"));
@@ -308,7 +312,7 @@ public class KeyVersionRegistryTest {
 
     private long expiredTimestamp() {
         return System.currentTimeMillis() -
-                (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1000);
+                (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1000);
     }
 
     private File getKeyFile(String versionId) {
