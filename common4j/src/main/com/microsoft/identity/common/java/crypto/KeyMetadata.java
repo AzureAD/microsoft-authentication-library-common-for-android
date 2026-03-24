@@ -239,7 +239,7 @@ public final class KeyMetadata {
                     .keySize(obj.optInt(FIELD_KEY_SIZE, DEFAULT_KEY_SIZE))
                     .deprecated(obj.optBoolean(FIELD_IS_DEPRECATED, false))
                     .build();
-        } catch (final IllegalArgumentException | final IllegalStateException e) {
+        } catch (final IllegalArgumentException | IllegalStateException e) {
             throw new JSONException("Invalid key metadata JSON: " + e.getMessage());
         }
     }
