@@ -33,9 +33,14 @@ import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.KeyMetadata;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightConfig;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.util.FileUtil;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
@@ -93,6 +98,7 @@ public class KeyVersionRegistryTest {
     public void tearDown() {
         cleanUp();
         androidKeyStoreUtilMock.close();
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
@@ -308,6 +314,30 @@ public class KeyVersionRegistryTest {
         assertEquals("K002 should be the active key", "K002", active.getVersionId());
     }
 
+    @Test
+    public void pruneExpiredKeys_usesDefaultWhenFlightReturnsZero() throws ClientException {
+        // Generate a recently-created key; with the default 1095-day max age it should survive pruning.
+        registry.generateNewKey();
+        // Inject a flights provider that returns 0 for SYMMETRIC_KEY_MAX_AGE_DAYS.
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(buildFlightsManagerWithMaxAgeDays(0));
+        registry.pruneExpiredKeys();
+        // The key must still exist – the fallback to default (1095 days) should prevent it from being pruned.
+        assertNotNull("Key should not be pruned when flight returns 0; default should be used",
+                registry.getKeyByVersion("K001"));
+    }
+
+    @Test
+    public void pruneExpiredKeys_usesDefaultWhenFlightReturnsNegative() throws ClientException {
+        // Generate a recently-created key; with the default 1095-day max age it should survive pruning.
+        registry.generateNewKey();
+        // Inject a flights provider that returns -1 for SYMMETRIC_KEY_MAX_AGE_DAYS.
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(buildFlightsManagerWithMaxAgeDays(-1));
+        registry.pruneExpiredKeys();
+        // The key must still exist – the fallback to default (1095 days) should prevent it from being pruned.
+        assertNotNull("Key should not be pruned when flight returns -1; default should be used",
+                registry.getKeyByVersion("K001"));
+    }
+
     // Helpers
 
     private long expiredTimestamp() {
@@ -362,5 +392,58 @@ public class KeyVersionRegistryTest {
         for (int i = 1; i <= 10; i++) {
             FileUtil.deleteFile(getKeyFile(String.format(Locale.ROOT, "K%03d", i)));
         }
+    }
+
+    /**
+     * Creates an {@link IFlightsManager} whose provider returns {@code maxAgeDays} for
+     * {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS} and the flight's own default for everything else.
+     */
+    private IFlightsManager buildFlightsManagerWithMaxAgeDays(final int maxAgeDays) {
+        final IFlightsProvider provider = new IFlightsProvider() {
+            @Override
+            public boolean isFlightEnabled(IFlightConfig flightConfig) {
+                return (boolean) flightConfig.getDefaultValue();
+            }
+
+            @Override
+            public boolean getBooleanValue(IFlightConfig flightConfig) {
+                return (boolean) flightConfig.getDefaultValue();
+            }
+
+            @Override
+            public int getIntValue(IFlightConfig flightConfig) {
+                if (flightConfig == CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS) {
+                    return maxAgeDays;
+                }
+                return (int) flightConfig.getDefaultValue();
+            }
+
+            @Override
+            public double getDoubleValue(IFlightConfig flightConfig) {
+                return (double) flightConfig.getDefaultValue();
+            }
+
+            @Override
+            public String getStringValue(IFlightConfig flightConfig) {
+                return (String) flightConfig.getDefaultValue();
+            }
+
+            @Override
+            public JSONObject getJsonValue(IFlightConfig flightConfig) {
+                return (JSONObject) flightConfig.getDefaultValue();
+            }
+        };
+
+        return new IFlightsManager() {
+            @Override
+            public IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
+                return provider;
+            }
+
+            @Override
+            public IFlightsProvider getFlightsProviderForTenant(String tenantId, long waitForConfigsWithTimeoutInMs) {
+                return provider;
+            }
+        };
     }
 }
