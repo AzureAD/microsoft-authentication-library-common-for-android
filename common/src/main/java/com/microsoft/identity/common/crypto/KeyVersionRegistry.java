@@ -84,7 +84,6 @@ import lombok.NonNull;
  * (default: 1095 days / 3 years) and {@link #GRACE_PERIOD_MILLIS}.
  */
 public class KeyVersionRegistry {
-public class KeyVersionRegistry {
 
     private static final String TAG = KeyVersionRegistry.class.getSimpleName();
 
@@ -555,14 +554,9 @@ public class KeyVersionRegistry {
      */
     @NonNull
     private KeyPair generateNewWrappingKeyPair() throws ClientException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return generateWrappingKeyPairModernApi();
-        } else {
-            return generateWrappingKeyPairLegacyApi();
-        }
+        return generateWrappingKeyPairModernApi();
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @NonNull
     private KeyPair generateWrappingKeyPairModernApi() throws ClientException {
         final AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
@@ -571,27 +565,6 @@ public class KeyVersionRegistry {
                 .setKeySize(2048)
                 .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-                .build();
-        return AndroidKeyStoreUtil.generateKeyPair(WRAP_KEY_ALGORITHM, spec);
-    }
-
-    @NonNull
-    private KeyPair generateWrappingKeyPairLegacyApi() throws ClientException {
-        final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
-                WRAPPING_KEY_ALIAS,
-                mContext.getPackageName());
-
-        final Calendar start = Calendar.getInstance();
-        final Calendar end = Calendar.getInstance();
-        end.add(Calendar.YEAR, 100);
-
-        @SuppressWarnings("deprecation")
-        final AlgorithmParameterSpec spec = new KeyPairGeneratorSpec.Builder(mContext)
-                .setAlias(WRAPPING_KEY_ALIAS)
-                .setSubject(new X500Principal(certInfo))
-                .setSerialNumber(BigInteger.ONE)
-                .setStartDate(start.getTime())
-                .setEndDate(end.getTime())
                 .build();
         return AndroidKeyStoreUtil.generateKeyPair(WRAP_KEY_ALGORITHM, spec);
     }
