@@ -97,6 +97,14 @@ public final class KeyMetadata {
             throw new IllegalArgumentException("keySize must be a positive value.");
         }
 
+        this.versionId = versionId;
+        this.createdAtMillis = createdAtMillis;
+        this.algorithm = getNormalizedAlgorithm(algorithm);
+        this.keySize = keySize;
+        this.deprecated = deprecated;
+    }
+
+    private static String getNormalizedAlgorithm(String algorithm) {
         String normalizedAlgorithm = algorithm;
         if (normalizedAlgorithm == null) {
             normalizedAlgorithm = DEFAULT_ALGORITHM;
@@ -109,12 +117,7 @@ public final class KeyMetadata {
                 normalizedAlgorithm = trimmed;
             }
         }
-
-        this.versionId = versionId;
-        this.createdAtMillis = createdAtMillis;
-        this.algorithm = normalizedAlgorithm;
-        this.keySize = keySize;
-        this.deprecated = deprecated;
+        return normalizedAlgorithm;
     }
 
     /**
