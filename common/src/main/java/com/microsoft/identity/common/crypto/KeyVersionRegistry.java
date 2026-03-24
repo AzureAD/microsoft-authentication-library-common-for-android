@@ -78,12 +78,12 @@ import lombok.NonNull;
  * <p>Keys are wrapped with an RSA key pair held in the AndroidKeyStore.
  * The RSA key pair alias is {@value #WRAPPING_KEY_ALIAS}.
  *
- * <p>Old keys are retained for decryption until they become pruneable:
- * a deprecated key may be removed after it has been deprecated for longer
- * than {@link #GRACE_PERIOD_MILLIS} <em>and</em> the key itself is older
- * than the value returned by {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}
- * (default: 1095 days / 3 years).
+ * <p>Old keys are retained for decryption until they become pruneable based on
+ * their total age: a key may be removed when the time since its creation
+ * exceeds the sum of {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}
+ * (default: 1095 days / 3 years) and {@link #GRACE_PERIOD_MILLIS}.
  */
+public class KeyVersionRegistry {
 public class KeyVersionRegistry {
 
     private static final String TAG = KeyVersionRegistry.class.getSimpleName();
