@@ -26,7 +26,7 @@ package com.microsoft.identity.common.crypto;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.util.FileUtil;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.*;
@@ -435,13 +436,27 @@ public class KeyVersionRegistryTest {
         };
 
         return new IFlightsManager() {
+            @NonNull
             @Override
             public IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
                 return provider;
             }
 
+            @NonNull
             @Override
             public IFlightsProvider getFlightsProviderForTenant(String tenantId, long waitForConfigsWithTimeoutInMs) {
+                return provider;
+            }
+
+
+            @Override
+            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
+                return provider;
+            }
+
+            @NonNull
+            @Override
+            public IFlightsProvider getFlightsProvider() {
                 return provider;
             }
         };
