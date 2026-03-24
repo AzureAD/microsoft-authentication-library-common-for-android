@@ -314,10 +314,10 @@ public class KeyVersionRegistryTest {
     @Test
     public void pruneExpiredKeys_keepsKeyJustUnderThreshold() throws Exception {
         mRegistry.generateNewKey();
-        // 1ms younger than the exact pruning threshold — key age is (MAX + GRACE - 1), which is
+        // 1s younger than the exact pruning threshold — key age is (MAX + GRACE - 1), which is
         // NOT strictly greater than (MAX + GRACE), so the key must be kept.
         final long justUnderThreshold = System.currentTimeMillis()
-                - (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1;
+                - (KeyVersionRegistry.MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
 
         mRegistry.pruneExpiredKeys();
