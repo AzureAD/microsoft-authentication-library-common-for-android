@@ -167,6 +167,10 @@ public class PackageHelper {
         boolean enabled = false;
         try {
             final ApplicationInfo applicationInfo = mPackageManager.getApplicationInfo(packageName, 0);
+            if (applicationInfo == null) {
+                Logger.verbose(methodTag, packageName + " applicationInfo is null");
+                return false;
+            }
             if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
                     CommonFlight.USE_ENABLED_SETTING_FOR_PACKAGE_CHECK)) {
                 try {
@@ -183,6 +187,7 @@ public class PackageHelper {
             }
         } catch (NameNotFoundException e) {
             Logger.verbose(methodTag, packageName + " is not found");
+            return false;
         }
 
         Logger.verbose(methodTag, packageName + " is installed. enabled? [" + enabled + "]");
