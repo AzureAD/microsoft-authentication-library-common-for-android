@@ -82,19 +82,37 @@ public final class KeyMetadata {
      * All-args constructor called by the builder; validates required fields.
      *
      * @throws IllegalStateException     if {@code versionId} is null or blank.
-     * @throws IllegalArgumentException  if {@code keySize} is not positive.
+     * @throws IllegalArgumentException  if {@code createdAtMillis} is not positive or
+     *                                   if {@code keySize} is not positive.
      */
     private KeyMetadata(final String versionId, final long createdAtMillis,
                         final String algorithm, final int keySize, final boolean deprecated) {
         if (versionId == null || versionId.trim().isEmpty()) {
             throw new IllegalStateException("versionId must be a non-blank string.");
         }
+        if (createdAtMillis <= 0) {
+            throw new IllegalArgumentException("createdAtMillis must be a positive value.");
+        }
         if (keySize <= 0) {
             throw new IllegalArgumentException("keySize must be a positive value.");
         }
+
+        String normalizedAlgorithm = algorithm;
+        if (normalizedAlgorithm == null) {
+            normalizedAlgorithm = DEFAULT_ALGORITHM;
+        } else {
+            final String trimmed = normalizedAlgorithm.trim();
+            if (trimmed.isEmpty() || "null".equalsIgnoreCase(trimmed)) {
+                normalizedAlgorithm = DEFAULT_ALGORITHM;
+            } else if (normalizedAlgorithm != trimmed) {
+                // Use trimmed value to avoid stray whitespace affecting algorithm identity.
+                normalizedAlgorithm = trimmed;
+            }
+        }
+
         this.versionId = versionId;
         this.createdAtMillis = createdAtMillis;
-        this.algorithm = algorithm;
+        this.algorithm = normalizedAlgorithm;
         this.keySize = keySize;
         this.deprecated = deprecated;
     }
