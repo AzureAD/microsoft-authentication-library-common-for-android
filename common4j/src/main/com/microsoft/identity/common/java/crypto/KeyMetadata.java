@@ -231,12 +231,16 @@ public final class KeyMetadata {
     @NonNull
     public static KeyMetadata fromJson(@NonNull final String json) throws JSONException {
         final JSONObject obj = new JSONObject(json);
-        return KeyMetadata.builder()
-                .versionId(obj.getString(FIELD_VERSION_ID))
-                .createdAtMillis(obj.getLong(FIELD_CREATED_AT_MILLIS))
-                .algorithm(obj.optString(FIELD_ALGORITHM, DEFAULT_ALGORITHM))
-                .keySize(obj.optInt(FIELD_KEY_SIZE, DEFAULT_KEY_SIZE))
-                .deprecated(obj.optBoolean(FIELD_IS_DEPRECATED, false))
-                .build();
+        try {
+            return KeyMetadata.builder()
+                    .versionId(obj.getString(FIELD_VERSION_ID))
+                    .createdAtMillis(obj.getLong(FIELD_CREATED_AT_MILLIS))
+                    .algorithm(obj.optString(FIELD_ALGORITHM, DEFAULT_ALGORITHM))
+                    .keySize(obj.optInt(FIELD_KEY_SIZE, DEFAULT_KEY_SIZE))
+                    .deprecated(obj.optBoolean(FIELD_IS_DEPRECATED, false))
+                    .build();
+        } catch (final IllegalArgumentException | final IllegalStateException e) {
+            throw new JSONException("Invalid key metadata JSON: " + e.getMessage());
+        }
     }
 }
