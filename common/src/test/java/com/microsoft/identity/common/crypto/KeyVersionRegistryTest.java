@@ -69,7 +69,8 @@ public class KeyVersionRegistryTest {
     private static KeyPair fakeWrappingKeyPair;
     private MockedStatic<AndroidKeyStoreUtil> androidKeyStoreUtilMock;
 
-    static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
+    private final long MAX_KEY_AGE_MILLIS = (long) CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS) * 24 * 60 * 60 * 1000;
 
     @BeforeClass
     public static void beforeClass() throws Exception {

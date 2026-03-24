@@ -31,6 +31,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.KeyMetadata;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -62,7 +65,8 @@ public class KeyVersionRegistryTest {
     private Context mContext;
     private KeyVersionRegistry mRegistry;
 
-    static final long MAX_KEY_AGE_MILLIS = 3L * 365 * 24 * 60 * 60 * 1000;
+    private final long MAX_KEY_AGE_MILLIS = (long) CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS) * 24 * 60 * 60 * 1000;
 
     @BeforeClass
     public static void classSetUp() {
