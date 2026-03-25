@@ -33,7 +33,7 @@ import com.google.android.gms.fido.Fido
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorAssertionResponse
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential
-import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil.Companion.createAssertionString
+import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil.createAssertionString
 import com.microsoft.identity.common.java.util.StringUtil
 import com.microsoft.identity.common.logging.Logger
 

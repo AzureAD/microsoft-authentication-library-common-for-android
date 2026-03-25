@@ -217,13 +217,34 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
      * to be intercepted via onCreateWindow and opened in an external browser.
      */
-    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", false),
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
 
     /**
      * Flight to enable file upload support in the embedded WebView.
      * When enabled, the WebView will handle file chooser requests from web pages.
      */
-    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false);
+    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false),
+
+    /**
+     * Flight to enable open-id vc redirect handling in webview.
+     */
+    ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
+
+    /**
+     * Flight to enable sovereign cloud instance discovery routing.
+     * When enabled, discovery requests for known sovereign cloud hosts are routed
+     * through host of passed in authority if part of known cloud list.
+     * Turn off to fall back to global-only discovery, previous behavior.
+     */
+    ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY("EnableSovereignCloudInstanceDiscovery", true),
+
+    /**
+     * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
+     * in PackageHelper.isPackageInstalledAndEnabled().
+     * This provides a more granular enabled check that distinguishes
+     * DISABLED_USER, DISABLED_UNTIL_USED, etc.
+     */
+    USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false);
 
     private String key;
     private Object defaultValue;
