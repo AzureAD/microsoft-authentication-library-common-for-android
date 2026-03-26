@@ -58,6 +58,12 @@ public final class HttpConstants {
          * Header to track if Cached Credential Service (CCS) request sequence
          */
         public static final String XMS_CCS_REQUEST_SEQUENCE = "x-ms-srs";
+
+        /**
+         * Header carrying server-side telemetry data (error codes, account type, cloud instance,
+         * data boundary) returned by eSTS and MSA on /token responses.
+         */
+        public static final String X_MS_CLIENTDATA = "x-ms-clientdata";
     }
 
     /**

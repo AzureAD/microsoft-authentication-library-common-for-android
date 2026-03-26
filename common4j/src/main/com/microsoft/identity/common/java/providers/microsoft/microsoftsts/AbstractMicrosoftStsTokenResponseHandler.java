@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLIENTDATA;
 
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -38,6 +39,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.ITokenResponseHandler;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
@@ -103,6 +105,14 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
                     tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
                     tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+                }
+            }
+
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
+                final ClientDataInfo clientDataInfo = ClientDataInfo.fromJson(clientDataHeader);
+                if (null != clientDataInfo) {
+                    clientDataInfo.emitToSpan();
                 }
             }
 
