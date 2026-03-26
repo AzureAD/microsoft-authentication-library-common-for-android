@@ -665,4 +665,32 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     //endregion
+
+    //region Server client data telemetry (x-ms-clientdata header / clientdata redirect param)
+
+    /**
+     * The server-reported error code from the x-ms-clientdata header or clientdata redirect param.
+     * NOTE: This attribute must also be added to the Broker repo's AttributeName enum.
+     */
+    server_client_data_error,
+
+    /**
+     * The server-reported sub-error code from the x-ms-clientdata header or clientdata redirect param.
+     * NOTE: This attribute must also be added to the Broker repo's AttributeName enum.
+     */
+    server_client_data_sub_error,
+
+    /**
+     * The SPE ring value from the x-ms-clientdata header or clientdata redirect param.
+     * NOTE: This attribute must also be added to the Broker repo's AttributeName enum.
+     */
+    server_client_data_spe_ring,
+
+    /**
+     * The token age value from the x-ms-clientdata header or clientdata redirect param.
+     * NOTE: This attribute must also be added to the Broker repo's AttributeName enum.
+     */
+    server_client_data_token_age,
+
+    //endregion
 }

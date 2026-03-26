@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -99,6 +101,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     public void tearDown() {
         Device.clearDeviceMetadata();
         Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     static URL getValidRequestUrl() throws MalformedURLException {
@@ -417,5 +420,52 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue(actualCodeRequestUrl.contains("switch_browser=1"));
+    }
+
+    /**
+     * When ENABLE_SERVER_CLIENT_DATA_TELEMETRY is enabled, the authorize URL should contain
+     * the clidata=1 query parameter.
+     */
+    @Test
+    public void testGetAuthorizationUri_flightEnabled_containsClidata() throws ClientException, MalformedURLException {
+        enableClientDataFlight();
+
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .build();
+
+        final String url = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("URL should contain clidata=1 when flight is enabled", url.contains("clidata=1"));
+    }
+
+    /**
+     * When ENABLE_SERVER_CLIENT_DATA_TELEMETRY is disabled (default), the authorize URL should
+     * NOT contain clidata.
+     */
+    @Test
+    public void testGetAuthorizationUri_flightDisabled_doesNotContainClidata() throws ClientException, MalformedURLException {
+        // Flight is off by default; no explicit setup needed.
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .build();
+
+        final String url = request.getAuthorizationRequestAsHttpRequest().toString();
+        Assert.assertFalse("URL should NOT contain clidata when flight is disabled", url.contains("clidata"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private void enableClientDataFlight() {
+        final MockFlightsProvider mockFlightsProvider = new MockFlightsProvider();
+        mockFlightsProvider.addFlight(
+                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+        mockFlightsProvider.addFlight(
+                CommonFlight.ENABLE_AM_API_WORKPROFILE_EXTRA_QUERY_PARAMETERS.getKey(), "true");
+
+        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
+        mockFlightsManager.setMockBrokerFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
     }
 }

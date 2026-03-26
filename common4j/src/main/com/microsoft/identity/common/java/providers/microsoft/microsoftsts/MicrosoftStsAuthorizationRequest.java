@@ -27,6 +27,8 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
@@ -157,6 +159,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
     /**
+     * Query parameter that signals to the server to include client data telemetry in the
+     * authorize redirect. A value of "1" opts in.
+     */
+    static final String CLIDATA_QUERY_PARAMETER = "clidata";
+
+    /**
      * Store the openIdConfiguration passed as part of the builder.
      * This will be used to fetch the authorization endpoint from OpenID Configuration rather than
      * generating a default endpoint.
@@ -284,6 +292,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         // hsu = HideSwitchUser
         if (!StringUtil.isNullOrEmpty(getLoginHint())) {
             builder.addParameterIfAbsent(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
+        }
+
+        // Signal to the server to include client data telemetry in the redirect.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            builder.addParameterIfAbsent(CLIDATA_QUERY_PARAMETER, "1");
         }
 
         try {

@@ -24,6 +24,10 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
@@ -31,6 +35,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +67,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
@@ -278,5 +288,74 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertEquals(errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
         assertEquals(errorResponse.getErrorDescription(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+    }
+
+    /**
+     * When the flight is enabled and the redirect contains a valid clientdata param, no crash
+     * should occur and the result should still be parsed correctly.
+     */
+    @Test
+    public void testRedirectWithClientDataParam_flightEnabled_doesNotCrash() {
+        enableClientDataFlight();
+
+        final String redirectUri = MOCK_REDIRECT_URI
+                + "?code=authorization_code&state=" + MOCK_STATE_ENCODED
+                + "&clientdata=m%7C50058%7Cbasic_action%7Cring1%7C100";
+
+        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                RawAuthorizationResult.fromRedirectUri(redirectUri), getMstsAuthorizationRequest());
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+        assertNotNull(result.getAuthorizationResponse());
+    }
+
+    /**
+     * When the flight is disabled, a redirect containing a clientdata param should be handled the
+     * same as one without it (the parameter is ignored).
+     */
+    @Test
+    public void testRedirectWithClientDataParam_flightDisabled_clientDataIgnored() {
+        // Flight is disabled by default.
+        final String redirectUri = MOCK_REDIRECT_URI
+                + "?code=authorization_code&state=" + MOCK_STATE_ENCODED
+                + "&clientdata=m%7C50058%7Cbasic_action";
+
+        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                RawAuthorizationResult.fromRedirectUri(redirectUri), getMstsAuthorizationRequest());
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+    }
+
+    /**
+     * When the flight is enabled but no clientdata param is present, no crash should occur.
+     */
+    @Test
+    public void testRedirectWithoutClientDataParam_flightEnabled_doesNotCrash() {
+        enableClientDataFlight();
+
+        final String redirectUri = MOCK_REDIRECT_URI
+                + "?code=authorization_code&state=" + MOCK_STATE_ENCODED;
+
+        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                RawAuthorizationResult.fromRedirectUri(redirectUri), getMstsAuthorizationRequest());
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private void enableClientDataFlight() {
+        final MockFlightsProvider mockFlightsProvider = new MockFlightsProvider();
+        mockFlightsProvider.addFlight(
+                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+
+        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
+        mockFlightsManager.setMockBrokerFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
     }
 }
