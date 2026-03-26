@@ -159,6 +159,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
     /**
+     * When clidata=1 is passed, eSTS/MSA includes a {@code clientdata} query parameter in the
+     * authorize redirect URI containing server-side telemetry (error, sub-error, account type,
+     * cloud instance, data boundary).
+     */
+    public static final String CLIDATA_QUERY_PARAMETER = "clidata";
+
+    /**
      * Store the openIdConfiguration passed as part of the builder.
      * This will be used to fetch the authorization endpoint from OpenID Configuration rather than
      * generating a default endpoint.
@@ -290,7 +297,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
 
         // Request server-side telemetry in the clientdata redirect query parameter when flight is enabled.
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-            builder.addParameterIfAbsent("clidata", "1");
+            builder.addParameterIfAbsent(CLIDATA_QUERY_PARAMETER, "1");
         }
 
         try {
