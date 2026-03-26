@@ -29,8 +29,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.Setter;
