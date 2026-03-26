@@ -49,7 +49,7 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
      * <p>Uses {@link CopyOnWriteArrayList} because:</p>
      * <ul>
      *   <li>Writes ({@link #addCancellationSignal}) are rare — typically 1-2 per command lifetime</li>
-     *   <li>Reads ({@link #cancelAll} iteration) happen once on timeout</li>
+     *   <li>Reads ({@link #cancelAllSignals()} iteration) happen once on timeout</li>
      *   <li>No external synchronization needed for iteration — avoids
      *       {@code ConcurrentModificationException} that {@code Collections.synchronizedList}
      *       would require manual synchronization to prevent</li>

@@ -454,7 +454,7 @@ public class CommandDispatcher {
             }
         } catch (final TimeoutException e) {
             // Signal the worker thread to disconnect the active HTTP connection.
-            // cancelAll() iterates ALL signals on this future, including the
+            // cancelAllSignals() iterates ALL signals on this future, including the
             // worker's signal (which has the HttpURLConnection registered).
             // Flight-gated for safe rollout — when false, behavior is identical to current code.
             if (future != null
@@ -639,7 +639,7 @@ public class CommandDispatcher {
                                 + ", activeCount=" + getSilentRequestActiveCount()
                                 + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
                             finalFuture.setException(new ExecutionException(
-                                new ClientException(ClientException.TIMED_OUT,
+                                new ClientException(ClientException.REQUEST_CANCELLED_BY_COMMAND_TIMEOUT,
                                     "Request cancelled before execution due to command-level timeout")));
                             return;
                         }
