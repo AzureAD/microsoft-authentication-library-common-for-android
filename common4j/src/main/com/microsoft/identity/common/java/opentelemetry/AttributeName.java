@@ -665,4 +665,28 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     //endregion
+
+    //region Server client-data telemetry (x-ms-clientdata / clientdata)
+
+    /**
+     * Server-side error code from x-ms-clientdata telemetry.
+     */
+    server_error,
+
+    /**
+     * Server-side sub-error code from x-ms-clientdata telemetry.
+     */
+    server_sub_error,
+
+    /**
+     * Server-side cloud instance from x-ms-clientdata telemetry.
+     */
+    server_cloud_instance,
+
+    /**
+     * Server-side caller data boundary from x-ms-clientdata telemetry.
+     */
+    server_caller_data_boundary,
+
+    //endregion
 }

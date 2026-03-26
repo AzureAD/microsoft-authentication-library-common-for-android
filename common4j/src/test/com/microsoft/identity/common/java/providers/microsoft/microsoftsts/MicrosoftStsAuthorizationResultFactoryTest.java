@@ -24,6 +24,12 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
@@ -31,12 +37,17 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.MockedStatic;
 
+import java.net.URLEncoder;
+
+import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI;
@@ -53,6 +64,11 @@ import static com.microsoft.identity.common.java.providers.Constants.WPJ_REQUIRE
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnit4.class)
 public class MicrosoftStsAuthorizationResultFactoryTest {
@@ -62,6 +78,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
@@ -278,5 +299,84 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertEquals(errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
         assertEquals(errorResponse.getErrorDescription(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+    }
+
+    // -------------------------------------------------------------------------
+    // clientdata integration – flight gating
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void testRedirectWithClientDataParam_flightEnabled_attributesEmitted() throws Exception {
+        // Enable the flight
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        // account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String pipedValue = "e|50001|sub1|EU|login.microsoftonline.de";
+        final String encodedValue = URLEncoder.encode(pipedValue, "UTF-8");
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> spanExtensionMock = mockStatic(SpanExtension.class)) {
+            spanExtensionMock.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final String redirectUrl = MOCK_REDIRECT_URI
+                    + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                    + "&clientdata=" + encodedValue;
+            mAuthorizationResultFactory.createAuthorizationResult(
+                    RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "50001");
+            verify(mockSpan).setAttribute(AttributeName.server_sub_error.name(), "sub1");
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "AAD");
+        }
+    }
+
+    @Test
+    public void testRedirectWithoutClientDataParam_flightEnabled_noNullPointerException() {
+        // Enable the flight – but no clientdata param
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        // Valid redirect without clientdata – should not throw
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED;
+        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testRedirectWithClientDataParam_flightDisabled_attributesNotEmitted() throws Exception {
+        // Flight disabled by default
+
+        final String pipedValue = "e|50001|sub1|EU|login.microsoftonline.de";
+        final String encodedValue = URLEncoder.encode(pipedValue, "UTF-8");
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> spanExtensionMock = mockStatic(SpanExtension.class)) {
+            spanExtensionMock.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final String redirectUrl = MOCK_REDIRECT_URI
+                    + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                    + "&clientdata=" + encodedValue;
+            mAuthorizationResultFactory.createAuthorizationResult(
+                    RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            verify(mockSpan, never()).setAttribute(
+                    org.mockito.ArgumentMatchers.eq(AttributeName.server_error.name()),
+                    org.mockito.ArgumentMatchers.anyString());
+        }
     }
 }

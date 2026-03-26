@@ -58,6 +58,11 @@ public final class HttpConstants {
          * Header to track if Cached Credential Service (CCS) request sequence
          */
         public static final String XMS_CCS_REQUEST_SEQUENCE = "x-ms-srs";
+
+        /**
+         * Header containing server-side client telemetry data from the /token endpoint.
+         */
+        public static final String X_MS_CLIENTDATA = "x-ms-clientdata";
     }
 
     /**

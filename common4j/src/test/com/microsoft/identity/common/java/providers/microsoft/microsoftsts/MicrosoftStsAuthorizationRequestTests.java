@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -99,6 +101,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     public void tearDown() {
         Device.clearDeviceMetadata();
         Device.setIsInPersonalProfileButClouddpcWorkProfileAvailable(false);
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     static URL getValidRequestUrl() throws MalformedURLException {
@@ -417,5 +420,35 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue(actualCodeRequestUrl.contains("switch_browser=1"));
+    }
+
+    @Test
+    public void testAuthorizeUrl_flightEnabled_containsClidataParam() throws ClientException, MalformedURLException {
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .build();
+
+        final String actualUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertTrue("URL should contain clidata=1 when flight is enabled",
+                actualUrl.contains("clidata=1"));
+    }
+
+    @Test
+    public void testAuthorizeUrl_flightDisabled_doesNotContainClidataParam() throws ClientException, MalformedURLException {
+        // Flight is disabled by default – do not set any custom provider
+
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .build();
+
+        final String actualUrl = request.getAuthorizationRequestAsHttpRequest().toString();
+        Assert.assertFalse("URL should NOT contain clidata when flight is disabled",
+                actualUrl.contains("clidata"));
     }
 }

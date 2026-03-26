@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -284,6 +286,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         // hsu = HideSwitchUser
         if (!StringUtil.isNullOrEmpty(getLoginHint())) {
             builder.addParameterIfAbsent(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
+        }
+
+        // When server client-data telemetry is enabled, opt in to receiving clientdata
+        // in the /authorize redirect URL by appending clidata=1.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            builder.addParameterIfAbsent("clidata", "1");
         }
 
         try {
