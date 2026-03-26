@@ -667,6 +667,8 @@ public enum AttributeName {
     //endregion
 
     //region Server client-data telemetry (x-ms-clientdata / clientdata)
+    // NOTE: These attributes must also be added to the corresponding AttributeName enum in the
+    // Broker repo (AzureAD/ad-accounts-for-android) to maintain cross-repo consistency.
 
     /**
      * Server-side error code from x-ms-clientdata telemetry.

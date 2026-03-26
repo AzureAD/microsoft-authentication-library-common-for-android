@@ -32,7 +32,7 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
@@ -107,7 +107,7 @@ public class ClientDataInfo {
         }
 
         try {
-            final String decoded = URLDecoder.decode(urlEncodedJson, "UTF-8");
+            final String decoded = URLDecoder.decode(urlEncodedJson, StandardCharsets.UTF_8.name());
             final JSONObject json = new JSONObject(decoded);
 
             final ClientDataInfo info = new ClientDataInfo();
@@ -142,7 +142,7 @@ public class ClientDataInfo {
         }
 
         try {
-            final String decoded = URLDecoder.decode(urlEncodedValue, "UTF-8");
+            final String decoded = URLDecoder.decode(urlEncodedValue, StandardCharsets.UTF_8.name());
             final String[] segments = decoded.split("\\|", -1);
 
             if (segments.length < PIPE_MIN_SEGMENTS) {

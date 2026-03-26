@@ -60,7 +60,7 @@ public class ClientDataInfoTest {
         final String json = "{\"Error\":\"50001\",\"SubError\":\"sub1\","
                 + "\"AccountType\":\"e\",\"cloud_instance\":\"login.microsoftonline.de\","
                 + "\"caller_data_boundary\":\"EU\"}";
-        final String encoded = URLEncoder.encode(json, "UTF-8");
+        final String encoded = URLEncoder.encode(json, StandardCharsets.UTF_8.name());
 
         final ClientDataInfo info = ClientDataInfo.fromJson(encoded);
 
@@ -75,7 +75,7 @@ public class ClientDataInfoTest {
     @Test
     public void fromJson_partialJson_onlyPresentFieldsSet() throws Exception {
         final String json = "{\"Error\":\"65001\",\"AccountType\":\"m\"}";
-        final String encoded = URLEncoder.encode(json, "UTF-8");
+        final String encoded = URLEncoder.encode(json, StandardCharsets.UTF_8.name());
 
         final ClientDataInfo info = ClientDataInfo.fromJson(encoded);
 
@@ -128,7 +128,7 @@ public class ClientDataInfoTest {
     public void fromPipeDelimited_validFiveSegments_allFieldsParsed() throws Exception {
         // Format: account_type|error|sub_error|caller_data_boundary|cloud_instance
         final String value = "e|50001|sub1|EU|login.microsoftonline.de";
-        final String encoded = URLEncoder.encode(value, "UTF-8");
+        final String encoded = URLEncoder.encode(value, StandardCharsets.UTF_8.name());
 
         final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(encoded);
 
@@ -143,7 +143,7 @@ public class ClientDataInfoTest {
     @Test
     public void fromPipeDelimited_threeSegments_onlyFirstThreeFieldsSet() throws Exception {
         final String value = "m|65001|sub2";
-        final String encoded = URLEncoder.encode(value, "UTF-8");
+        final String encoded = URLEncoder.encode(value, StandardCharsets.UTF_8.name());
 
         final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(encoded);
 

@@ -46,6 +46,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.MockedStatic;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import io.opentelemetry.api.trace.Span;
 import lombok.NonNull;
@@ -316,7 +317,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
 
         // account_type|error|sub_error|caller_data_boundary|cloud_instance
         final String pipedValue = "e|50001|sub1|EU|login.microsoftonline.de";
-        final String encodedValue = URLEncoder.encode(pipedValue, "UTF-8");
+        final String encodedValue = URLEncoder.encode(pipedValue, StandardCharsets.UTF_8.name());
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(org.mockito.ArgumentMatchers.anyString(),
@@ -359,7 +360,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         // Flight disabled by default
 
         final String pipedValue = "e|50001|sub1|EU|login.microsoftonline.de";
-        final String encodedValue = URLEncoder.encode(pipedValue, "UTF-8");
+        final String encodedValue = URLEncoder.encode(pipedValue, StandardCharsets.UTF_8.name());
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(org.mockito.ArgumentMatchers.anyString(),

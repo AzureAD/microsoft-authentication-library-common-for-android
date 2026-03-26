@@ -41,6 +41,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.MockedStatic;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -122,7 +123,7 @@ public class MicrosoftStsTokenResponseHandlerTest {
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
 
         final String json = "{\"Error\":\"50001\",\"SubError\":\"sub1\",\"AccountType\":\"e\"}";
-        final String encodedHeader = URLEncoder.encode(json, "UTF-8");
+        final String encodedHeader = URLEncoder.encode(json, StandardCharsets.UTF_8.name());
 
         final HashMap<String, List<String>> headers = new HashMap<>();
         headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
@@ -170,7 +171,7 @@ public class MicrosoftStsTokenResponseHandlerTest {
         // Flight is disabled by default – no custom provider needed
 
         final String json = "{\"Error\":\"50001\"}";
-        final String encodedHeader = URLEncoder.encode(json, "UTF-8");
+        final String encodedHeader = URLEncoder.encode(json, StandardCharsets.UTF_8.name());
 
         final HashMap<String, List<String>> headers = new HashMap<>();
         headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
