@@ -226,8 +226,8 @@ public class OpenIdProviderConfigurationClient {
 
         // 2. Known Microsoft Cloud issuer validation
         try {
-            AzureActiveDirectory.ensureCloudDiscoveryComplete();
             final URL requestAuthorityUrl = new URL(requestAuthorityStr);
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(requestAuthorityUrl);
             final AzureActiveDirectoryCloud requestCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(requestAuthorityUrl);
             if (requestCloud != null && requestCloud.isValidated()) {
                 final AzureActiveDirectoryCloud issuerCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(issuerUrl);
