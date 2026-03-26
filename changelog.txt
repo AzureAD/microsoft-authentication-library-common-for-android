@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 24.1.0-RC4
+Version 24.1.0
 ----------
 - [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API (#3027)
 - [PATCH] Fix bug in Authority.getKnownAuthorityResult where cloud discovery failure would skip knownAuthorities check and fix thread safety in Authority.isKnownAuthority and getEquivalentConfiguredAuthority with synchronized block (#3027)
