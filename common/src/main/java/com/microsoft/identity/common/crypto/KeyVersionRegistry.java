@@ -26,12 +26,9 @@ import static com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGener
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
-import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
-import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
@@ -50,17 +47,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 import javax.crypto.SecretKey;
-import javax.security.auth.x500.X500Principal;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.trace.Span;
@@ -80,8 +74,7 @@ import lombok.NonNull;
  *
  * <p>Old keys are retained for decryption until they become pruneable based on
  * their total age: a key may be removed when the time since its creation
- * exceeds the sum of {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}
- * (default: 1095 days / 3 years) and {@link #GRACE_PERIOD_MILLIS}.
+ * exceeds the {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS}.
  */
 public class KeyVersionRegistry {
 
@@ -93,7 +86,7 @@ public class KeyVersionRegistry {
 
     /** Alias for the RSA wrapping key pair in the AndroidKeyStore. */
     @VisibleForTesting
-    /* package */ static final String WRAPPING_KEY_ALIAS = "brokerks_wrapping_key";
+    public static final String WRAPPING_KEY_ALIAS = "brokerks_wrapping_key";
 
     /** Prefix for wrapped key files. */
     @VisibleForTesting
@@ -113,12 +106,6 @@ public class KeyVersionRegistry {
 
     /** Algorithm for the RSA wrapping key itself. */
     private static final String WRAP_KEY_ALGORITHM = "RSA";
-
-    /**
-     * Grace period after deprecation before a key may be pruned (90 days in milliseconds).
-     */
-    @VisibleForTesting
-    /* package */ static final long GRACE_PERIOD_MILLIS = 90L * 24 * 60 * 60 * 1000;
 
     /** Expected max size (bytes) of a wrapped key blob when reading from file.
      * A 2048-bit RSA-wrapped AES-256 key produces ~256 bytes; 1024 bytes provides ample headroom. */
@@ -147,7 +134,7 @@ public class KeyVersionRegistry {
      */
     @Nullable
     public synchronized KeyMetadata getActiveKey() throws ClientException {
-        final RegistryState state = loadState();
+        final RegistryState state = loadKeyVersionRegistryState();
         if (state.activeVersion == null) {
             return null;
         }
@@ -164,7 +151,7 @@ public class KeyVersionRegistry {
     @Nullable
     public synchronized KeyMetadata getKeyByVersion(@NonNull final String versionId)
             throws ClientException {
-        return findKeyInState(loadState(), versionId);
+        return findKeyInState(loadKeyVersionRegistryState(), versionId);
     }
 
     /**
@@ -175,7 +162,7 @@ public class KeyVersionRegistry {
      */
     @NonNull
     public synchronized List<KeyMetadata> getDeprecatedKeys() throws ClientException {
-        final RegistryState state = loadState();
+        final RegistryState state = loadKeyVersionRegistryState();
         final List<KeyMetadata> deprecated = new ArrayList<>();
         for (final KeyMetadata km : state.keys) {
             if (km.isDeprecated()) {
@@ -206,7 +193,7 @@ public class KeyVersionRegistry {
                 SpanExtension.current().getSpanContext());
 
         try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
-            final RegistryState state = loadState();
+            final RegistryState state = loadKeyVersionRegistryState();
             final String newVersionId = nextVersionId(state);
 
             // Generate AES-256 key.
@@ -228,7 +215,7 @@ public class KeyVersionRegistry {
                     .build();
 
             state.keys.add(metadata);
-            saveState(state);
+            saveKeyVersionRegistryState(state);
 
             Logger.info(methodTag, "Generated new key with versionId: " + newVersionId);
             span.setStatus(StatusCode.OK);
@@ -253,7 +240,7 @@ public class KeyVersionRegistry {
      * @throws IllegalStateException if no key with {@code versionId} exists.
      */
     public synchronized void deprecateKey(@NonNull final String versionId) throws ClientException {
-        final RegistryState state = loadState();
+        final RegistryState state = loadKeyVersionRegistryState();
         final int index = indexOfKey(state, versionId);
         if (index < 0) {
             throw new IllegalStateException("Key not found: " + versionId);
@@ -267,7 +254,7 @@ public class KeyVersionRegistry {
                     .keySize(existing.getKeySize())
                     .deprecated(true)
                     .build());
-            saveState(state);
+            saveKeyVersionRegistryState(state);
         }
     }
 
@@ -279,12 +266,12 @@ public class KeyVersionRegistry {
      * @throws IllegalStateException if no key with {@code versionId} exists.
      */
     public synchronized void setActiveKey(@NonNull final String versionId) throws ClientException {
-        final RegistryState state = loadState();
+        final RegistryState state = loadKeyVersionRegistryState();
         if (indexOfKey(state, versionId) < 0) {
             throw new IllegalStateException("Key not found: " + versionId);
         }
         state.activeVersion = versionId;
-        saveState(state);
+        saveKeyVersionRegistryState(state);
     }
 
     /**
@@ -329,7 +316,7 @@ public class KeyVersionRegistry {
      * Removes key entries (metadata and wrapped key files) for keys that are no longer needed.
      *
      * <p>A key is eligible for pruning when its total age from creation exceeds the value of
-     * {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS} (in milliseconds) + {@link #GRACE_PERIOD_MILLIS},
+     * {@link CommonFlight#SYMMETRIC_KEY_MAX_AGE_DAYS} (in milliseconds),
      * regardless of whether it has been explicitly deprecated. This ensures that stale keys are
      * cleaned up even if deprecation was never called on them.
      *
@@ -339,7 +326,7 @@ public class KeyVersionRegistry {
      */
     public synchronized void pruneExpiredKeys() throws ClientException {
         final String methodTag = TAG + ":pruneExpiredKeys";
-        final RegistryState state = loadState();
+        final RegistryState state = loadKeyVersionRegistryState();
         final long now = System.currentTimeMillis();
 
         int maxAgeDays = CommonFlightsManager.INSTANCE.getFlightsProvider()
@@ -354,8 +341,8 @@ public class KeyVersionRegistry {
         final List<KeyMetadata> toKeep = new ArrayList<>();
         for (final KeyMetadata km : state.keys) {
             final boolean isActive = km.getVersionId().equals(state.activeVersion);
-            // Any non-active key whose total age exceeds maxAgeMillis + GRACE_PERIOD_MILLIS is prunable.
-            final boolean isPrunable = (now - km.getCreatedAtMillis()) > (maxAgeMillis + GRACE_PERIOD_MILLIS);
+            // Any non-active key whose total age exceeds maxAgeMillis is prunable.
+            final boolean isPrunable = (now - km.getCreatedAtMillis()) > (maxAgeMillis);
 
             if (!isActive && isPrunable) {
                 Logger.info(methodTag, "Pruning expired key: " + km.getVersionId());
@@ -367,7 +354,7 @@ public class KeyVersionRegistry {
 
         if (toKeep.size() != state.keys.size()) {
             state.keys = toKeep;
-            saveState(state);
+            saveKeyVersionRegistryState(state);
         }
     }
 
@@ -382,7 +369,7 @@ public class KeyVersionRegistry {
      * @throws ClientException if JSON parsing fails.
      */
     @NonNull
-    private RegistryState loadState() throws ClientException {
+    private RegistryState loadKeyVersionRegistryState() throws ClientException {
         final String methodTag = TAG + ":loadState";
         final SharedPreferences prefs = getSharedPreferences();
         final String json = prefs.getString(PREFS_KEY_KEYS, null);
@@ -415,7 +402,7 @@ public class KeyVersionRegistry {
      * @param state the state to save.
      * @throws ClientException if JSON serialization fails.
      */
-    private void saveState(@NonNull final RegistryState state) throws ClientException {
+    private void saveKeyVersionRegistryState(@NonNull final RegistryState state) throws ClientException {
         final String methodTag = TAG + ":saveState";
         try {
             final JSONArray array = new JSONArray();
@@ -490,6 +477,8 @@ public class KeyVersionRegistry {
                     }
                 } catch (final NumberFormatException ignored) {
                     // Skip non-numeric suffixes.
+                    Logger.warn(TAG, "Skipping key with non-numeric version ID suffix: " + vid
+                            + ", reason:" + ignored.getMessage());
                 }
             }
         }
@@ -554,11 +543,6 @@ public class KeyVersionRegistry {
      */
     @NonNull
     private KeyPair generateNewWrappingKeyPair() throws ClientException {
-        return generateWrappingKeyPairModernApi();
-    }
-
-    @NonNull
-    private KeyPair generateWrappingKeyPairModernApi() throws ClientException {
         final AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
                 WRAPPING_KEY_ALIAS,
                 KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)

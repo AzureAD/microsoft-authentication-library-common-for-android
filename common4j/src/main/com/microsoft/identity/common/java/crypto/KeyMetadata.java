@@ -104,7 +104,7 @@ public final class KeyMetadata {
         this.deprecated = deprecated;
     }
 
-    private static String getNormalizedAlgorithm(String algorithm) {
+    private static String getNormalizedAlgorithm(final String algorithm) {
         String normalizedAlgorithm = algorithm;
         if (normalizedAlgorithm == null) {
             normalizedAlgorithm = DEFAULT_ALGORITHM;
@@ -112,7 +112,7 @@ public final class KeyMetadata {
             final String trimmed = normalizedAlgorithm.trim();
             if (trimmed.isEmpty() || "null".equalsIgnoreCase(trimmed)) {
                 normalizedAlgorithm = DEFAULT_ALGORITHM;
-            } else if (normalizedAlgorithm != trimmed) {
+            } else if (!normalizedAlgorithm.equals(trimmed)) {
                 // Use trimmed value to avoid stray whitespace affecting algorithm identity.
                 normalizedAlgorithm = trimmed;
             }

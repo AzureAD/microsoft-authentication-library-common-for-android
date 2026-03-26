@@ -53,6 +53,7 @@ import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -69,8 +70,8 @@ public class KeyVersionRegistryTest {
     private static KeyPair fakeWrappingKeyPair;
     private MockedStatic<AndroidKeyStoreUtil> androidKeyStoreUtilMock;
 
-    private final long MAX_KEY_AGE_MILLIS = (long) CommonFlightsManager.INSTANCE.getFlightsProvider()
-            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS) * 24 * 60 * 60 * 1000;
+    private final long MAX_KEY_AGE_MILLIS = TimeUnit.DAYS.toMillis(CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS));
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -294,7 +295,7 @@ public class KeyVersionRegistryTest {
         // Use a 1-second margin so the test is immune to the few ms that elapse between
         // computing the timestamp here and pruneExpiredKeys() sampling System.currentTimeMillis().
         long justUnderThreshold = System.currentTimeMillis() -
-                (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
+                (MAX_KEY_AGE_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
         registry.pruneExpiredKeys();
         assertNotNull("Key just under pruning threshold should not be pruned", registry.getKeyByVersion("K001"));
@@ -344,7 +345,7 @@ public class KeyVersionRegistryTest {
 
     private long expiredTimestamp() {
         return System.currentTimeMillis() -
-                (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1000);
+                (MAX_KEY_AGE_MILLIS + 1000);
     }
 
     private File getKeyFile(String versionId) {

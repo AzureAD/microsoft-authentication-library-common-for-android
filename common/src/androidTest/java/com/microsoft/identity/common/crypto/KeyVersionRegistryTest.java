@@ -48,6 +48,7 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
@@ -65,8 +66,8 @@ public class KeyVersionRegistryTest {
     private Context mContext;
     private KeyVersionRegistry mRegistry;
 
-    private final long MAX_KEY_AGE_MILLIS = (long) CommonFlightsManager.INSTANCE.getFlightsProvider()
-            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS) * 24 * 60 * 60 * 1000;
+    private final long MAX_KEY_AGE_MILLIS = TimeUnit.DAYS.toMillis(CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .getIntValue(CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS));
 
     @BeforeClass
     public static void classSetUp() {
@@ -323,7 +324,7 @@ public class KeyVersionRegistryTest {
         // 1s younger than the exact pruning threshold — key age is (MAX + GRACE - 1), which is
         // NOT strictly greater than (MAX + GRACE), so the key must be kept.
         final long justUnderThreshold = System.currentTimeMillis()
-                - (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS) + 1_000;
+                - (MAX_KEY_AGE_MILLIS) + 1_000;
         overrideKeyCreationTimestamp("K001", justUnderThreshold);
 
         mRegistry.pruneExpiredKeys();
@@ -341,7 +342,7 @@ public class KeyVersionRegistryTest {
      */
     private long expiredTimestamp() {
         return System.currentTimeMillis()
-                - (MAX_KEY_AGE_MILLIS + KeyVersionRegistry.GRACE_PERIOD_MILLIS + 1_000);
+                - (MAX_KEY_AGE_MILLIS + 1_000);
     }
 
     /**
