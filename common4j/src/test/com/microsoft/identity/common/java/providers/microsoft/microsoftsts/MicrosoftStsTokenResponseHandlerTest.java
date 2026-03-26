@@ -22,20 +22,38 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import io.opentelemetry.api.trace.Span;
+
 import lombok.SneakyThrows;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link MicrosoftStsTokenResponseHandler}
@@ -52,6 +70,20 @@ public class MicrosoftStsTokenResponseHandlerTest {
             "\t\"id_token\": \"95608142-3a7a-4643-a543-6db44e403e97\",\n" +
             "\t\"client_info\": \"2245f73e-287a-41c4-ba87-560809ad06b9\"\n" +
             "}";
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    private void enableClientDataFlight() {
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(
+                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
+        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
+        mockFlightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+    }
 
     @SneakyThrows
     @Test
@@ -87,5 +119,78 @@ public class MicrosoftStsTokenResponseHandlerTest {
         final MicrosoftTokenErrorResponse errorResponse = (MicrosoftTokenErrorResponse) tokenResult.getErrorResponse();
         Assert.assertEquals(400, errorResponse.getStatusCode());
         Assert.assertEquals("Bad Request", errorResponse.getResponseBody());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testHandleTokenResponse_withClientDataHeader_flightEnabled_attributesEmitted() {
+        enableClientDataFlight();
+
+        final String rawJson = "{\"Error\":\"AADSTS50058\","
+                + "\"SubError\":\"login_required\","
+                + "\"AccountType\":\"e\","
+                + "\"cloud_instance\":\"public\","
+                + "\"caller_data_boundary\":\"us\"}";
+        final String encodedHeader = URLEncoder.encode(rawJson, StandardCharsets.UTF_8.name());
+
+        final HashMap<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
+        headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
+                Collections.singletonList(encodedHeader));
+
+        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+            Assert.assertNotNull(tokenResult);
+            Assert.assertTrue(tokenResult.getSuccess());
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "AAD");
+        }
+    }
+
+    @SneakyThrows
+    @Test
+    public void testHandleTokenResponse_noClientDataHeader_flightEnabled_doesNotCrash() {
+        enableClientDataFlight();
+
+        final HashMap<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
+
+        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+
+        final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+        Assert.assertNotNull(tokenResult);
+        Assert.assertTrue(tokenResult.getSuccess());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testHandleTokenResponse_withClientDataHeader_flightDisabled_headerIgnored() {
+        // Flight disabled by default – verify header is present but not parsed (no crash).
+        final String rawJson = "{\"Error\":\"AADSTS50058\",\"AccountType\":\"m\"}";
+        final String encodedHeader = URLEncoder.encode(rawJson, StandardCharsets.UTF_8.name());
+
+        final HashMap<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
+        headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
+                Collections.singletonList(encodedHeader));
+
+        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+
+        final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+        Assert.assertNotNull(tokenResult);
+        Assert.assertTrue(tokenResult.getSuccess());
     }
 }
