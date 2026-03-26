@@ -123,21 +123,23 @@ public class ClientDataInfo {
     }
 
     /**
-     * Parses a URL-encoded pipe-delimited clientdata query parameter value.
+     * Parses an already-decoded pipe-delimited clientdata query parameter value.
+     * The caller is responsible for URL-decoding before passing (e.g. values from
+     * {@link com.microsoft.identity.common.java.util.UrlUtil#getParameters} are
+     * already decoded). Decoding twice would corrupt values containing '+' or '%'.
      * Positional format: account_type|error|sub_error|caller_data_boundary|cloud_instance.
      * Requires at least 3 segments.
      *
-     * @param urlEncodedValue URL-encoded pipe-delimited string, may be null.
+     * @param decodedValue already-decoded pipe-delimited string, may be null.
      * @return parsed {@link ClientDataInfo}, or null on failure/empty input.
      */
     @Nullable
-    public static ClientDataInfo fromPipeDelimited(@Nullable final String urlEncodedValue) {
-        if (StringUtil.isNullOrEmpty(urlEncodedValue)) {
+    public static ClientDataInfo fromPipeDelimited(@Nullable final String decodedValue) {
+        if (StringUtil.isNullOrEmpty(decodedValue)) {
             return null;
         }
         try {
-            final String decoded = StringUtil.urlFormDecode(urlEncodedValue);
-            final String[] segments = decoded.split("\\|", -1);
+            final String[] segments = decodedValue.split("\\|", -1);
 
             if (segments.length < PIPE_MIN_SEGMENTS) {
                 Logger.warn(TAG, "clientdata pipe-delimited value has fewer than " + PIPE_MIN_SEGMENTS + " segments.");
