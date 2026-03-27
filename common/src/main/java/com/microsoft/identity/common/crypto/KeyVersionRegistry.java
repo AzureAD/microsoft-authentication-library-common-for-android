@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
@@ -336,7 +337,7 @@ public class KeyVersionRegistry {
                     + maxAgeDays + ". Falling back to default.");
             maxAgeDays = (int) CommonFlight.SYMMETRIC_KEY_MAX_AGE_DAYS.getDefaultValue();
         }
-        final long maxAgeMillis = (long) maxAgeDays * 24 * 60 * 60 * 1000;
+        final long maxAgeMillis =  TimeUnit.DAYS.toMillis(maxAgeDays);
 
         final List<KeyMetadata> toKeep = new ArrayList<>();
         for (final KeyMetadata km : state.keys) {
@@ -385,10 +386,17 @@ public class KeyVersionRegistry {
         try {
             final JSONArray array = new JSONArray(json);
             for (int i = 0; i < array.length(); i++) {
-                state.keys.add(KeyMetadata.fromJson(array.getString(i)));
+                try {
+                    state.keys.add(KeyMetadata.fromJson(array.getString(i)));
+                } catch (final JSONException e) {
+                    // Ran into a parsing error on an individual entry. Log and skip it, but continue parsing the rest of the array
+                    Logger.warn(methodTag, "Failed to parse individual key metadata JSON: " + e.getMessage());
+                    throw new ClientException(ClientException.JSON_PARSE_FAILURE,
+                            "Failed to parse key registry metadata", e);
+                }
             }
         } catch (final JSONException e) {
-            Logger.warn(methodTag, "Failed to parse key metadata JSON: " + e.getMessage());
+            Logger.error(methodTag, "Failed to parse key metadata JSON array", e);
             throw new ClientException(ClientException.JSON_PARSE_FAILURE,
                     "Failed to parse key registry metadata", e);
         }
