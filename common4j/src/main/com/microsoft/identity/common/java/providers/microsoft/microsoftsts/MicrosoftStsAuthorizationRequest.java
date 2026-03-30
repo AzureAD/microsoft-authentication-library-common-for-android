@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -295,10 +293,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             builder.addParameterIfAbsent(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
-        // Request server-side telemetry in the clientdata redirect query parameter when flight is enabled.
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-            builder.addParameterIfAbsent(CLIDATA_QUERY_PARAMETER, "1");
-        }
+        // Request server-side telemetry in the clientdata redirect query parameter.
+        builder.addParameterIfAbsent(CLIDATA_QUERY_PARAMETER, "1");
 
         try {
             return builder.build();

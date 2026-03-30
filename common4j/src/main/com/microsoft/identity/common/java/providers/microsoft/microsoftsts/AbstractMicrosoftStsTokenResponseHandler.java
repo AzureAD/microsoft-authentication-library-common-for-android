@@ -108,12 +108,10 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
                 }
             }
 
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-                final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
-                final ClientDataInfo clientDataInfo = ClientDataInfo.fromJson(clientDataHeader);
-                if (null != clientDataInfo) {
-                    clientDataInfo.emitToSpan();
-                }
+            final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
+            final ClientDataInfo clientDataInfo = ClientDataInfo.fromJson(clientDataHeader);
+            if (null != clientDataInfo) {
+                clientDataInfo.emitToSpan();
             }
 
             final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();

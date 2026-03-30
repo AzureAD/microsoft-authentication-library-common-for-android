@@ -26,8 +26,6 @@ import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -424,34 +422,14 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testCliDataParam_flightEnabled_urlContainsCliData()
+    public void testCliDataParam_urlContainsCliData()
             throws MalformedURLException, URISyntaxException, ClientException {
-        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
-        flightsProvider.addFlight(
-                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
-        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
-        mockFlightsManager.setMockBrokerFlightsProvider(flightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
-
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .build();
 
         final String url = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("URL should contain clidata=1 when flight is enabled",
+        assertTrue("URL should always contain clidata=1",
                 url.contains(MicrosoftStsAuthorizationRequest.CLIDATA_QUERY_PARAMETER + "=1"));
-    }
-
-    @Test
-    public void testCliDataParam_flightDisabled_urlDoesNotContainCliData()
-            throws MalformedURLException, URISyntaxException, ClientException {
-        // Flight is disabled by default; verify the parameter is absent.
-        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
-                .setAuthority(getValidRequestUrl())
-                .build();
-
-        final String url = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertFalse("URL should not contain clidata when flight is disabled",
-                url.contains(MicrosoftStsAuthorizationRequest.CLIDATA_QUERY_PARAMETER));
     }
 }

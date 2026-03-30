@@ -22,10 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -71,20 +67,6 @@ public class MicrosoftStsTokenResponseHandlerTest {
             "\t\"client_info\": \"2245f73e-287a-41c4-ba87-560809ad06b9\"\n" +
             "}";
 
-    @After
-    public void tearDown() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
-    private void enableClientDataFlight() {
-        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
-        flightsProvider.addFlight(
-                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
-        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
-        mockFlightsManager.setMockBrokerFlightsProvider(flightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
-    }
-
     @SneakyThrows
     @Test
     public void testHandleTokenResponse_Success() {
@@ -123,9 +105,7 @@ public class MicrosoftStsTokenResponseHandlerTest {
 
     @SneakyThrows
     @Test
-    public void testHandleTokenResponse_withClientDataHeader_flightEnabled_attributesEmitted() {
-        enableClientDataFlight();
-
+    public void testHandleTokenResponse_withClientDataHeader_attributesEmitted() {
         final String rawJson = "{\"Error\":\"AADSTS50058\","
                 + "\"SubError\":\"login_required\","
                 + "\"AccountType\":\"e\","
@@ -158,9 +138,7 @@ public class MicrosoftStsTokenResponseHandlerTest {
 
     @SneakyThrows
     @Test
-    public void testHandleTokenResponse_noClientDataHeader_flightEnabled_doesNotCrash() {
-        enableClientDataFlight();
-
+    public void testHandleTokenResponse_noClientDataHeader_doesNotCrash() {
         final HashMap<String, List<String>> headers = new HashMap<>();
         headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
 
@@ -173,44 +151,4 @@ public class MicrosoftStsTokenResponseHandlerTest {
         Assert.assertTrue(tokenResult.getSuccess());
     }
 
-    @SneakyThrows
-    @Test
-    public void testHandleTokenResponse_withClientDataHeader_flightDisabled_headerIgnored() {
-        // Flight disabled by default – verify header is present but no clientdata
-        // span attributes are emitted.
-        final String rawJson = "{\"Error\":\"AADSTS50058\",\"AccountType\":\"m\"}";
-        final String encodedHeader = URLEncoder.encode(rawJson, StandardCharsets.UTF_8.name());
-
-        final HashMap<String, List<String>> headers = new HashMap<>();
-        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
-        headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
-                Collections.singletonList(encodedHeader));
-
-        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
-        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
-
-        final Span mockSpan = mock(Span.class);
-        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
-
-        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
-            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
-
-            final TokenResult tokenResult = handler.handleTokenResponse(response);
-
-            Assert.assertNotNull(tokenResult);
-            Assert.assertTrue(tokenResult.getSuccess());
-
-            // No clientdata attributes should be emitted when the flight is disabled.
-            verify(mockSpan, Mockito.never()).setAttribute(
-                    Mockito.eq(AttributeName.server_error.name()), Mockito.anyString());
-            verify(mockSpan, Mockito.never()).setAttribute(
-                    Mockito.eq(AttributeName.account_type.name()), Mockito.anyString());
-            verify(mockSpan, Mockito.never()).setAttribute(
-                    Mockito.eq(AttributeName.server_sub_error.name()), Mockito.anyString());
-            verify(mockSpan, Mockito.never()).setAttribute(
-                    Mockito.eq(AttributeName.server_cloud_instance.name()), Mockito.anyString());
-            verify(mockSpan, Mockito.never()).setAttribute(
-                    Mockito.eq(AttributeName.server_caller_data_boundary.name()), Mockito.anyString());
-        }
-    }
 }

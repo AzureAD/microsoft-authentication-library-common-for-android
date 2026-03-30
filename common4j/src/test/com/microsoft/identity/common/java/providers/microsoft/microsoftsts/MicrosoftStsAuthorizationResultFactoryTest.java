@@ -24,10 +24,6 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -37,7 +33,6 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,20 +72,6 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
-    }
-
-    @After
-    public void tearDown() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
-    private void enableClientDataFlight() {
-        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
-        flightsProvider.addFlight(
-                CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "true");
-        final MockFlightsManager mockFlightsManager = new MockFlightsManager();
-        mockFlightsManager.setMockBrokerFlightsProvider(flightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
     }
 
     private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
@@ -310,9 +291,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
-    public void testClientDataParam_flightEnabled_attributesEmitted() {
-        enableClientDataFlight();
-
+    public void testClientDataParam_attributesEmitted() {
         // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
         final String redirectUrl = MOCK_REDIRECT_URI
                 + "?code=auth_code&state=" + MOCK_STATE_ENCODED
@@ -335,28 +314,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
-    public void testClientDataParam_flightEnabled_noClientDataParam_doesNotCrash() {
-        enableClientDataFlight();
-
+    public void testClientDataParam_noClientDataParam_doesNotCrash() {
         final String redirectUrl = MOCK_REDIRECT_URI
                 + "?code=auth_code&state=" + MOCK_STATE_ENCODED;
 
         // Verify no exception is thrown even when clientdata parameter is absent
-        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
-                RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
-
-        assertNotNull(result);
-        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
-    }
-
-    @Test
-    public void testClientDataParam_flightDisabled_paramIgnored() {
-        // Flight is disabled by default – ensure the redirect is processed normally
-        // with a clientdata param present but not parsed.
-        final String redirectUrl = MOCK_REDIRECT_URI
-                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
-                + "&clientdata=m%7CAADSTS50058%7Clogin_required";
-
         final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
 
