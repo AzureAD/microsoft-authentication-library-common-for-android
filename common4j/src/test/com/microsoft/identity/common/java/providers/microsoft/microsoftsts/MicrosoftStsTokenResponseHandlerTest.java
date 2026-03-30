@@ -176,7 +176,8 @@ public class MicrosoftStsTokenResponseHandlerTest {
     @SneakyThrows
     @Test
     public void testHandleTokenResponse_withClientDataHeader_flightDisabled_headerIgnored() {
-        // Flight disabled by default – verify header is present but not parsed (no crash).
+        // Flight disabled by default – verify header is present but no clientdata
+        // span attributes are emitted.
         final String rawJson = "{\"Error\":\"AADSTS50058\",\"AccountType\":\"m\"}";
         final String encodedHeader = URLEncoder.encode(rawJson, StandardCharsets.UTF_8.name());
 
@@ -188,9 +189,28 @@ public class MicrosoftStsTokenResponseHandlerTest {
         final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
         final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
 
-        final TokenResult tokenResult = handler.handleTokenResponse(response);
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
 
-        Assert.assertNotNull(tokenResult);
-        Assert.assertTrue(tokenResult.getSuccess());
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+            Assert.assertNotNull(tokenResult);
+            Assert.assertTrue(tokenResult.getSuccess());
+
+            // No clientdata attributes should be emitted when the flight is disabled.
+            verify(mockSpan, Mockito.never()).setAttribute(
+                    Mockito.eq(AttributeName.server_error.name()), Mockito.anyString());
+            verify(mockSpan, Mockito.never()).setAttribute(
+                    Mockito.eq(AttributeName.account_type.name()), Mockito.anyString());
+            verify(mockSpan, Mockito.never()).setAttribute(
+                    Mockito.eq(AttributeName.server_sub_error.name()), Mockito.anyString());
+            verify(mockSpan, Mockito.never()).setAttribute(
+                    Mockito.eq(AttributeName.server_cloud_instance.name()), Mockito.anyString());
+            verify(mockSpan, Mockito.never()).setAttribute(
+                    Mockito.eq(AttributeName.server_caller_data_boundary.name()), Mockito.anyString());
+        }
     }
 }
