@@ -90,8 +90,8 @@ class SwitchBrowserActivity : FragmentActivity() {
      * @param savedInstanceState Saved instance state bundle (unused in this implementation)
      */
     override fun onCreate(savedInstanceState: Bundle?) {
-        val methodTag = "$TAG:onCreate"
         super.onCreate(savedInstanceState)
+        val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
         launchBrowser()
     }
@@ -164,9 +164,9 @@ class SwitchBrowserActivity : FragmentActivity() {
      *
      * @param intent The intent containing the authentication result from the browser redirect
      */
-    override fun onNewIntent(intent: Intent) {
-        val methodTag = "$TAG:onNewIntent"
+    override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        val methodTag = "$TAG:onNewIntent"
         // Update the activity's intent with the new intent containing the auth result
         Logger.info(methodTag, "On new intent received.")
         setIntent(intent)
