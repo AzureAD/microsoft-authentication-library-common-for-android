@@ -164,7 +164,7 @@ class SwitchBrowserActivity : FragmentActivity() {
      *
      * @param intent The intent containing the authentication result from the browser redirect
      */
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val methodTag = "$TAG:onNewIntent"
         // Update the activity's intent with the new intent containing the auth result
