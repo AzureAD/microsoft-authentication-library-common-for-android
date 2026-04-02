@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit
  * Each test mirrors a real production scenario described in the proposal:
  * - Normal timeout (worker blocked on HTTP read)
  * - Pre-start cancellation (caller timed out before worker started)
- * - Dedup timeout (shared future with multiple callers)
+ * - Dedup timeout (shared future with multiple callers sharing one signal)
  */
 class CommandDispatcherCancellationTest {
 
@@ -56,15 +56,14 @@ class CommandDispatcherCancellationTest {
 
     /**
      * Simulates the normal timeout scenario:
-     * 1. Worker registers connection and blocks on HTTP read
-     * 2. Caller times out and calls cancelAllSignals()
+     * 1. Worker gets the future's signal and registers its connection
+     * 2. Caller times out and calls cancelSignal()
      * 3. Worker's connection is disconnected, worker unblocks immediately
      */
     @Test
     fun normalTimeout_cancelDisconnectsActiveConnection_workerUnblocks() {
         val future = FinalizableResultFuture<String>()
-        val signal = CancellationSignal()
-        future.addCancellationSignal(signal)
+        val signal = future.cancellationSignal
 
         val connection = mock(HttpURLConnection::class.java)
         val workerRegistered = CountDownLatch(1)
@@ -92,8 +91,8 @@ class CommandDispatcherCancellationTest {
             workerRegistered.await(5, TimeUnit.SECONDS)
         )
 
-        // Simulate: catch(TimeoutException) { future.cancelAllSignals(); }
-        future.cancelAllSignals()
+        // Simulate: catch(TimeoutException) { future.cancelSignal(); }
+        future.cancelSignal()
 
         // Worker should unblock and finish quickly
         assertTrue(
@@ -113,11 +112,10 @@ class CommandDispatcherCancellationTest {
     @Test
     fun preStartCancellation_workerSkipsExecution() {
         val future = FinalizableResultFuture<String>()
-        val signal = CancellationSignal()
-        future.addCancellationSignal(signal)
+        val signal = future.cancellationSignal
 
         // Caller times out BEFORE worker starts
-        future.cancelAllSignals()
+        future.cancelSignal()
         assertTrue("Signal should already be cancelled", signal.isCancelled)
 
         val commandExecuted = booleanArrayOf(false)
@@ -148,30 +146,29 @@ class CommandDispatcherCancellationTest {
 
     /**
      * Simulates dedup timeout:
-     * 1. Request A's worker has an active connection (signalA registered)
-     * 2. Request B is deduplicated — adds signalB to same future, no worker
-     * 3. Any caller times out — cancelAllSignals() disconnects the worker's connection
+     * 1. Request A and B share the same future (and its single signal)
+     * 2. Worker registers its connection on the shared signal
+     * 3. Any caller times out — cancelSignal() disconnects the worker's connection
      */
     @Test
     fun dedupTimeout_cancelsOriginalWorkerConnection() {
         val future = FinalizableResultFuture<String>()
 
-        // Request A: original — worker has an active connection
-        val signalA = CancellationSignal()
+        // Both callers share the same signal from the future
+        val signal = future.cancellationSignal
         val workerConnection = mock(HttpURLConnection::class.java)
-        future.addCancellationSignal(signalA)
 
         val workerRegistered = CountDownLatch(1)
         val workerFinished = CountDownLatch(1)
 
         executor.submit {
-            CancellationSignal.setForCurrentThread(signalA)
+            CancellationSignal.setForCurrentThread(signal)
             try {
-                signalA.registerConnection(workerConnection)
+                signal.registerConnection(workerConnection)
                 workerRegistered.countDown()
-                while (!signalA.isCancelled) Thread.sleep(10)
+                while (!signal.isCancelled) Thread.sleep(10)
             } finally {
-                signalA.unregisterConnection()
+                signal.unregisterConnection()
                 CancellationSignal.clearCurrentThread()
                 workerFinished.countDown()
             }
@@ -179,20 +176,15 @@ class CommandDispatcherCancellationTest {
 
         assertTrue(workerRegistered.await(5, TimeUnit.SECONDS))
 
-        // Request B: duplicate — adds signal to same future, no worker
-        val signalB = CancellationSignal()
-        future.addCancellationSignal(signalB)
-
-        // Request B's caller times out — cancelAllSignals()
-        future.cancelAllSignals()
+        // Any caller (A or B) times out — cancelSignal() on the shared future
+        future.cancelSignal()
 
         assertTrue(
             "Worker should finish within 2s after cancel",
             workerFinished.await(2, TimeUnit.SECONDS)
         )
 
-        assertTrue("SignalA (worker) should be cancelled", signalA.isCancelled)
-        assertTrue("SignalB (dedup) should be cancelled", signalB.isCancelled)
+        assertTrue("Signal should be cancelled", signal.isCancelled)
         verify(workerConnection).disconnect()
     }
 }

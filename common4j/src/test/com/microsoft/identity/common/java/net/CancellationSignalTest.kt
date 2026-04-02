@@ -78,7 +78,7 @@ class CancellationSignalTest {
     @Test
     fun close_aliasesCancel() {
         val signal = CancellationSignal()
-        signal.close()
+        signal.cancel()
         assertTrue(signal.isCancelled)
     }
 

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.result
 
 import com.microsoft.identity.common.java.net.CancellationSignal
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -32,61 +32,45 @@ import java.net.HttpURLConnection
 
 /**
  * Tests for cancellation signal support in [FinalizableResultFuture].
- * Validates [addCancellationSignal] and [cancelAllSignals] for both
- * single-request and deduplicated-request (shared future) scenarios.
+ * Validates single-signal-per-future design: [getCancellationSignal] and [cancelSignal].
  */
 class FinalizableResultFutureCancellationTest {
 
     @Test
-    fun cancelAllSignals_singleSignal_cancelsAndDisconnects() {
+    fun cancelSignal_cancelsAndDisconnectsWorkerConnection() {
         val future = FinalizableResultFuture<String>()
-        val signal = CancellationSignal()
+        val signal = future.cancellationSignal
         val connection = mock(HttpURLConnection::class.java)
 
-        future.addCancellationSignal(signal)
         signal.registerConnection(connection)
 
-        future.cancelAllSignals()
+        future.cancelSignal()
 
         assertTrue("Signal should be cancelled", signal.isCancelled)
         verify(connection).disconnect()
     }
 
     @Test
-    fun cancelAllSignals_dedupCase_cancelsAllSignalsAndDisconnectsWorkerConnection() {
+    fun cancelSignal_dedupCase_sharedSignalDisconnectsWorkerConnection() {
         val future = FinalizableResultFuture<String>()
 
-        // Signal A — original request's worker (has an active HTTP connection)
-        val signalA = CancellationSignal()
+        // Both callers share the same signal from the future
+        val signal = future.cancellationSignal
         val workerConnection = mock(HttpURLConnection::class.java)
-        future.addCancellationSignal(signalA)
-        signalA.registerConnection(workerConnection)
+        signal.registerConnection(workerConnection)
 
-        // Signal B — deduplicated request (no worker, no connection)
-        val signalB = CancellationSignal()
-        future.addCancellationSignal(signalB)
+        // Any caller times out → cancelSignal()
+        future.cancelSignal()
 
-        // Either caller times out → cancelAllSignals()
-        future.cancelAllSignals()
-
-        assertTrue("SignalA (worker) should be cancelled", signalA.isCancelled)
-        assertTrue("SignalB (dedup) should be cancelled", signalB.isCancelled)
+        assertTrue("Signal should be cancelled", signal.isCancelled)
         verify(workerConnection).disconnect()
     }
 
     @Test
-    fun addSignalAfterCancelAll_isNotRetroactivelyCancelled() {
+    fun getCancellationSignal_returnsSameInstance() {
         val future = FinalizableResultFuture<String>()
-        val signal1 = CancellationSignal()
-        future.addCancellationSignal(signal1)
-
-        future.cancelAllSignals()
-
-        // Late add — simulates a new dedup request arriving after cancel
-        val signal2 = CancellationSignal()
-        future.addCancellationSignal(signal2)
-
-        assertTrue("signal1 should be cancelled", signal1.isCancelled)
-        assertFalse("signal2 should NOT be cancelled (added after cancelAll)", signal2.isCancelled)
+        val signal1 = future.cancellationSignal
+        val signal2 = future.cancellationSignal
+        assertSame("Should return same signal instance", signal1, signal2)
     }
 }

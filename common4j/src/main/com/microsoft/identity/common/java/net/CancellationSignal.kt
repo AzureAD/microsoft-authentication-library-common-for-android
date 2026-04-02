@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.net
 
 import com.microsoft.identity.common.java.logging.Logger
-import java.io.Closeable
 import java.net.HttpURLConnection
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -40,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference
  * 4. UrlConnectionHttpClient registers/unregisters the active HttpURLConnection
  * 5. On [cancel], the registered connection is disconnected immediately
  */
-class CancellationSignal : Closeable {
+class CancellationSignal {
 
     private val mCancelled = AtomicBoolean(false)
     private val mActiveConnection = AtomicReference<HttpURLConnection>(null)
@@ -64,11 +63,6 @@ class CancellationSignal : Closeable {
             }
         }
     }
-
-    /**
-     * Alias for [cancel]. Enables try-with-resources / use {} blocks.
-     */
-    override fun close() = cancel()
 
     /**
      * Registers the active [HttpURLConnection] so it can be disconnected on cancellation.

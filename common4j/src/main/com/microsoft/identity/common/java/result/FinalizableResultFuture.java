@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.result;
 import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.util.ResultFuture;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 
 import lombok.NonNull;
@@ -40,22 +38,12 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
     private final CountDownLatch mFinalized = new CountDownLatch(1);
 
     /**
-     * All cancellation signals associated with this future.
-     * In the dedup case, multiple callers each contribute their own signal.
-     * The first caller's signal (the original worker) has the actual
-     * {@link java.net.HttpURLConnection} registered.
-     * Cancelling ALL signals ensures the worker's connection gets disconnected.
-     *
-     * <p>Uses {@link CopyOnWriteArrayList} because:</p>
-     * <ul>
-     *   <li>Writes ({@link #addCancellationSignal}) are rare — typically 1-2 per command lifetime</li>
-     *   <li>Reads ({@link #cancelAllSignals()} iteration) happen once on timeout</li>
-     *   <li>No external synchronization needed for iteration — avoids
-     *       {@code ConcurrentModificationException} that {@code Collections.synchronizedList}
-     *       would require manual synchronization to prevent</li>
-     * </ul>
+     * Cancellation signal owned by this future. Shared by all callers (original + dedup)
+     * and the worker thread. The worker registers its {@link java.net.HttpURLConnection}
+     * on this signal; on timeout, any caller can invoke {@link #cancelSignal()} to
+     * disconnect the worker's active connection.
      */
-    private final List<CancellationSignal> mCancellationSignals = new CopyOnWriteArrayList<>();
+    private final CancellationSignal mCancellationSignal = new CancellationSignal();
 
     /**
      * Set this future to be fully complete, including any cleanup tasks.
@@ -78,35 +66,27 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
     }
 
     /**
-     * Adds a cancellation signal for a caller of this future.
-     * Called once per caller (original + each duplicate).
-     * Thread-safe via CopyOnWriteArrayList.
+     * Returns the cancellation signal owned by this future.
+     * All callers (original + dedup) and the worker thread share this single signal.
+     * The worker registers its {@link java.net.HttpURLConnection} on it; any caller
+     * that times out calls {@link #cancelSignal()} to disconnect the worker's connection.
      *
-     * @param signal the cancellation signal for this caller
+     * @return the cancellation signal for this future
      */
-    public void addCancellationSignal(@NonNull final CancellationSignal signal) {
-        mCancellationSignals.add(signal);
+    @NonNull
+    public CancellationSignal getCancellationSignal() {
+        return mCancellationSignal;
     }
 
     /**
-     * Cancels all cancellation signals associated with this future.
-     * This ensures the worker thread's signal (which holds the HTTP connection
-     * reference) gets cancelled, regardless of which caller times out first.
+     * Cancels the cancellation signal, disconnecting any active HTTP connection
+     * registered by the worker thread.
      *
-     * <p>In the non-dedup case (single caller), the list has one entry.
-     * In the dedup case, iteration covers all signals including the worker's.</p>
-     *
-     * <p>Thread-safe: CopyOnWriteArrayList provides snapshot iteration —
-     * no ConcurrentModificationException even if addCancellationSignal()
-     * is called concurrently from a dedup request.</p>
-     *
-     * <p>Named {@code cancelAllSignals()} instead of {@code cancel()} to avoid
+     * <p>Named {@code cancelSignal()} instead of {@code cancel()} to avoid
      * confusion with {@link java.util.concurrent.Future#cancel(boolean)} inherited
      * from {@link com.microsoft.identity.common.java.util.ResultFuture}.</p>
      */
-    public void cancelAllSignals() {
-        for (final CancellationSignal signal : mCancellationSignals) {
-            signal.cancel();
-        }
+    public void cancelSignal() {
+        mCancellationSignal.cancel();
     }
 }

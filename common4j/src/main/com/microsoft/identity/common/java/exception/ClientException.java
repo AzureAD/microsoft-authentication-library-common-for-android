@@ -478,17 +478,6 @@ public class ClientException extends BaseException {
     public static final String TIMED_OUT_EXECUTION = "timed_out_execution";
 
     /**
-     * The HTTP request was cancelled because the command-level timeout fired
-     * and CancellationSignal.cancel() disconnected the active HttpURLConnection.
-     *
-     * This is distinct from IO_ERROR — it indicates an intentional cancellation,
-     * not a network failure. In the dedup case, a caller still waiting on the
-     * shared future will receive this error code instead of a generic IOException.
-     */
-    public static final String REQUEST_CANCELLED_BY_COMMAND_TIMEOUT =
-        "request_cancelled_by_command_timeout";
-
-    /**
      * A NullPointerException was thrown.
      */
     public static final String NULL_POINTER_ERROR = "null_pointer_error";

@@ -137,6 +137,18 @@ public class CommandDispatcher {
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
+     * Outcome of cancellation signal processing for a timed-out ATS request.
+     * Emitted as the {@link AttributeName#cancellation_outcome} span attribute
+     * to track cancellation effectiveness during flight rollout.
+     */
+    private enum CancellationOutcome {
+        /** Worker detected cancellation before executeCommand() — no work performed, thread slot freed immediately. */
+        skipped_before_execution,
+        /** Worker's HTTP connection was disconnected mid-I/O by CancellationSignal.cancel(). */
+        disconnected_during_execution
+    }
+
+    /**
      * Enum representing the lifecycle states of a request for timeout classification.
      * This enables precise tracking of where a timeout occurred in the request processing pipeline.
      */
@@ -454,15 +466,13 @@ public class CommandDispatcher {
             }
         } catch (final TimeoutException e) {
             // Signal the worker thread to disconnect the active HTTP connection.
-            // cancelAllSignals() iterates ALL signals on this future, including the
-            // worker's signal (which has the HttpURLConnection registered).
             // Flight-gated for safe rollout — when false, behavior is identical to current code.
             if (future != null
                     && CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .getBooleanValue(CommonFlight.ENABLE_HTTP_CANCELLATION_ON_TIMEOUT)) {
-                future.cancelAllSignals();
+                future.cancelSignal();
                 Logger.info(methodTag,
-                    "COMMAND_TIMEOUT_CANCELLATION: cancelAllSignals() invoked."
+                    "COMMAND_TIMEOUT_CANCELLATION: cancelSignal() invoked."
                     + " correlationId=" + (correlationId != null ? correlationId : "unknown")
                     + ", activeCount=" + getSilentRequestActiveCount()
                     + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
@@ -539,11 +549,6 @@ public class CommandDispatcher {
             sRequestStateMap.put(correlationId, RequestState.WAITING_FOR_LOCK);
         }
 
-        // Create cancellation signal BEFORE entering synchronized block.
-        // This ensures it's available even if the caller times out before
-        // the worker thread starts.
-        final CancellationSignal cancellationSignal = new CancellationSignal();
-
         synchronized (mapAccessLock) {
             // Update state: lock acquired, now queued for thread pool, only track non-DCF requests
             if (!isDeviceCodeFlowRequest) {
@@ -569,7 +574,6 @@ public class CommandDispatcher {
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                         }
-                        putValue.addCancellationSignal(cancellationSignal);
                         return putValue;
                     }
                 } else {
@@ -579,7 +583,6 @@ public class CommandDispatcher {
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                     }
-                    future.addCancellationSignal(cancellationSignal);
                     return future;
                 }
 
@@ -606,15 +609,12 @@ public class CommandDispatcher {
                     getSilentExecutorPoolSize()
             );
 
-            // Add cancellation signal to the future's list BEFORE returning to the caller.
-            // This guarantees the caller can cancel even if the worker hasn't started.
-            finalFuture.addCancellationSignal(cancellationSignal);
-
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
-                    // Set the cancellation signal on this worker thread so
-                    // UrlConnectionHttpClient can access it via ThreadLocal.
+                    // Get the cancellation signal owned by this future and set it on
+                    // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
+                    final CancellationSignal cancellationSignal = finalFuture.getCancellationSignal();
                     CancellationSignal.setForCurrentThread(cancellationSignal);
 
                     // Update state: thread has picked up the request, now executing
@@ -633,14 +633,17 @@ public class CommandDispatcher {
                         // Check cancellation before executing — the caller may have
                         // already timed out while this was queued in the thread pool.
                         if (cancellationSignal.isCancelled()) {
+                            SpanExtension.current().setAttribute(
+                                    AttributeName.cancellation_outcome.name(),
+                                    CancellationOutcome.skipped_before_execution.name());
                             Logger.info(TAG + methodName,
                                 "PRE_START_CANCELLATION: Worker skipped execution."
                                 + " correlationId=" + correlationId
                                 + ", activeCount=" + getSilentRequestActiveCount()
                                 + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
-                            finalFuture.setException(new ExecutionException(
-                                new ClientException(ClientException.REQUEST_CANCELLED_BY_COMMAND_TIMEOUT,
-                                    "Request cancelled before execution due to command-level timeout")));
+                            // Do not set exception on the future — the original caller already
+                            // received TimeoutException from future.get(). Setting an exception
+                            // here would prematurely fail dedup callers still within their timeout.
                             return;
                         }
 
@@ -658,8 +661,21 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                        finalFuture.setException(new ExecutionException(t));
+                        // If this exception was caused by cancellation (CancellationSignal.cancel()
+                        // disconnected the HttpURLConnection), suppress it — the original caller
+                        // already received TimeoutException from future.get(). Propagating this
+                        // would prematurely fail dedup callers still within their own timeout window.
+                        if (cancellationSignal.isCancelled()) {
+                            SpanExtension.current().setAttribute(
+                                    AttributeName.cancellation_outcome.name(),
+                                    CancellationOutcome.disconnected_during_execution.name());
+                            Logger.info(TAG + methodName,
+                                "CANCELLED_EXECUTION: Worker exception suppressed after cancellation."
+                                + " correlationId=" + correlationId);
+                        } else {
+                            Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                            finalFuture.setException(new ExecutionException(t));
+                        }
                     } finally {
                         // Clear ThreadLocal to prevent leaks — MUST be before mapAccessLock.
                         // Java guarantees the finally block executes even on early `return`

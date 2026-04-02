@@ -370,7 +370,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             // Emit HTTP end telemetry to match the HttpStartEvent — response is null (no I/O happened)
             completionCallback.accept(null);
             throw new ClientException(
-                ClientException.REQUEST_CANCELLED_BY_COMMAND_TIMEOUT,
+                ClientException.TIMED_OUT,
                 "Request cancelled before HTTP execution due to command-level timeout");
         }
 
@@ -384,7 +384,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 // Emit HTTP end telemetry to match the HttpStartEvent — response is null (cancelled mid-I/O)
                 completionCallback.accept(null);
                 throw new ClientException(
-                    ClientException.REQUEST_CANCELLED_BY_COMMAND_TIMEOUT,
+                    ClientException.TIMED_OUT,
                     "Request cancelled due to command-level timeout",
                     e);
             }
