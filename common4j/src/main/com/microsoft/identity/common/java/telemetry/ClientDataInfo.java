@@ -49,6 +49,13 @@ public class ClientDataInfo {
     /** Maximum length for any individual field when emitting to a span. */
     private static final int MAX_FIELD_LENGTH = 256;
 
+    /**
+     * The name of the {@code clientdata} query parameter added to /authorize redirect URIs
+     * by eSTS/MSA when {@code clidata=1} is included in the authorization request.
+     * Use this constant everywhere the parameter name is referenced to avoid typos.
+     */
+    public static final String CLIENTDATA_QUERY_PARAMETER = "clientdata";
+
     /** Account type value for MSA accounts. */
     private static final String ACCOUNT_TYPE_MSA_RAW = "m";
 

@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorRes
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -295,7 +296,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
         final String redirectUrl = MOCK_REDIRECT_URI
                 + "?code=auth_code&state=" + MOCK_STATE_ENCODED
-                + "&clientdata=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);

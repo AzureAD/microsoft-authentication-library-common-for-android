@@ -73,7 +73,7 @@ public class MicrosoftStsAuthorizationResultFactory
 
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
-        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get("clientdata"));
+        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
         if (null != clientDataInfo) {
             clientDataInfo.emitToSpan();
         }
