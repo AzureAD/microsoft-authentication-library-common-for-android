@@ -27,16 +27,16 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import org.json.JSONObject;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
+import io.opentelemetry.api.trace.Span;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
- * Model representing the x-ms-clientdata server telemetry header (from /token responses)
- * and the clientdata query parameter (from /authorize redirect URLs).
+ * Model representing server telemetry data from the x-ms-clientdata response header
+ * (/token responses) and the clientdata query parameter (/authorize redirect URLs).
+ * Both use a pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance.
  * Contains server-side error codes, account type, cloud instance, and data boundary info.
  */
 @Getter
@@ -48,21 +48,6 @@ public class ClientDataInfo {
 
     /** Maximum length for any individual field when emitting to a span. */
     private static final int MAX_FIELD_LENGTH = 256;
-
-    /** JSON key for server error code. */
-    private static final String JSON_KEY_ERROR = "Error";
-
-    /** JSON key for server sub-error code. */
-    private static final String JSON_KEY_SUB_ERROR = "SubError";
-
-    /** JSON key for account type. */
-    private static final String JSON_KEY_ACCOUNT_TYPE = "AccountType";
-
-    /** JSON key for cloud instance. */
-    private static final String JSON_KEY_CLOUD_INSTANCE = "cloud_instance";
-
-    /** JSON key for caller data boundary. */
-    private static final String JSON_KEY_CALLER_DATA_BOUNDARY = "caller_data_boundary";
 
     /** Account type value for MSA accounts. */
     private static final String ACCOUNT_TYPE_MSA_RAW = "m";
@@ -92,35 +77,6 @@ public class ClientDataInfo {
     private String mAccountType;
     private String mCloudInstance;
     private String mCallerDataBoundary;
-
-    /**
-     * Parses a URL-encoded JSON x-ms-clientdata value.
-     * Keys: Error, SubError, AccountType, cloud_instance, caller_data_boundary.
-     *
-     * @param urlEncodedJson URL-encoded JSON string, may be null.
-     * @return parsed {@link ClientDataInfo}, or null on failure/empty input.
-     */
-    @Nullable
-    public static ClientDataInfo fromJson(@Nullable final String urlEncodedJson) {
-        if (StringUtil.isNullOrEmpty(urlEncodedJson)) {
-            return null;
-        }
-        try {
-            final String decoded = StringUtil.urlFormDecode(urlEncodedJson);
-            final JSONObject json = new JSONObject(decoded);
-
-            final ClientDataInfo info = new ClientDataInfo();
-            info.mError = optString(json, JSON_KEY_ERROR);
-            info.mSubError = optString(json, JSON_KEY_SUB_ERROR);
-            info.mAccountType = optString(json, JSON_KEY_ACCOUNT_TYPE);
-            info.mCloudInstance = optString(json, JSON_KEY_CLOUD_INSTANCE);
-            info.mCallerDataBoundary = optString(json, JSON_KEY_CALLER_DATA_BOUNDARY);
-            return info;
-        } catch (final Exception e) {
-            Logger.warn(TAG, "Failed to parse x-ms-clientdata JSON: " + e.getMessage());
-            return null;
-        }
-    }
 
     /**
      * Parses an already-decoded pipe-delimited clientdata query parameter value.
@@ -167,27 +123,23 @@ public class ClientDataInfo {
      * Each field is truncated to {@value #MAX_FIELD_LENGTH} characters.
      */
     public void emitToSpan() {
+        final Span span = SpanExtension.current();
         if (mError != null) {
-            SpanExtension.current().setAttribute(
-                    AttributeName.server_error.name(), truncate(mError));
+            span.setAttribute(AttributeName.server_error.name(), truncate(mError));
         }
         if (mSubError != null) {
-            SpanExtension.current().setAttribute(
-                    AttributeName.server_sub_error.name(), truncate(mSubError));
+            span.setAttribute(AttributeName.server_sub_error.name(), truncate(mSubError));
         }
         if (mAccountType != null) {
             // account_type is an existing AttributeName; reuse it (m -> MSA, e -> AAD).
             final String mappedAccountType = mapAccountType(mAccountType);
-            SpanExtension.current().setAttribute(
-                    AttributeName.account_type.name(), truncate(mappedAccountType));
+            span.setAttribute(AttributeName.account_type.name(), truncate(mappedAccountType));
         }
         if (mCloudInstance != null) {
-            SpanExtension.current().setAttribute(
-                    AttributeName.server_cloud_instance.name(), truncate(mCloudInstance));
+            span.setAttribute(AttributeName.server_cloud_instance.name(), truncate(mCloudInstance));
         }
         if (mCallerDataBoundary != null) {
-            SpanExtension.current().setAttribute(
-                    AttributeName.server_caller_data_boundary.name(), truncate(mCallerDataBoundary));
+            span.setAttribute(AttributeName.server_caller_data_boundary.name(), truncate(mCallerDataBoundary));
         }
     }
 
@@ -206,15 +158,6 @@ public class ClientDataInfo {
             return value;
         }
         return value.substring(0, MAX_FIELD_LENGTH);
-    }
-
-    @Nullable
-    private static String optString(final JSONObject json, final String key) {
-        if (json.isNull(key)) {
-            return null;
-        }
-        final String value = json.optString(key, null);
-        return StringUtil.isNullOrEmpty(value) ? null : value;
     }
 
     @Nullable

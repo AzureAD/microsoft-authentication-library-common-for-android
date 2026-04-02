@@ -31,9 +31,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import io.opentelemetry.api.trace.Span;
 
 import static org.junit.Assert.assertEquals;
@@ -49,60 +46,6 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(JUnit4.class)
 public class ClientDataInfoTest {
-
-    // -------------------------------------------------------------------------
-    // fromJson() tests
-    // -------------------------------------------------------------------------
-
-    @Test
-    public void fromJson_validInput_allFieldsParsed() throws Exception {
-        final String raw = "{\"Error\":\"AADSTS50058\","
-                + "\"SubError\":\"login_required\","
-                + "\"AccountType\":\"m\","
-                + "\"cloud_instance\":\"public\","
-                + "\"caller_data_boundary\":\"us\"}";
-        final String encoded = URLEncoder.encode(raw, StandardCharsets.UTF_8.name());
-
-        final ClientDataInfo info = ClientDataInfo.fromJson(encoded);
-
-        assertNotNull(info);
-        assertEquals("AADSTS50058", info.getError());
-        assertEquals("login_required", info.getSubError());
-        assertEquals("m", info.getAccountType());
-        assertEquals("public", info.getCloudInstance());
-        assertEquals("us", info.getCallerDataBoundary());
-    }
-
-    @Test
-    public void fromJson_partialInput_onlyPresentFieldsSet() throws Exception {
-        final String raw = "{\"Error\":\"AADSTS65001\",\"AccountType\":\"e\"}";
-        final String encoded = URLEncoder.encode(raw, StandardCharsets.UTF_8.name());
-
-        final ClientDataInfo info = ClientDataInfo.fromJson(encoded);
-
-        assertNotNull(info);
-        assertEquals("AADSTS65001", info.getError());
-        assertEquals("e", info.getAccountType());
-        assertNull(info.getSubError());
-        assertNull(info.getCloudInstance());
-        assertNull(info.getCallerDataBoundary());
-    }
-
-    @Test
-    public void fromJson_malformedJson_returnsNull() throws Exception {
-        final String malformed = URLEncoder.encode("{not valid json}", StandardCharsets.UTF_8.name());
-        assertNull(ClientDataInfo.fromJson(malformed));
-    }
-
-    @Test
-    public void fromJson_nullInput_returnsNull() {
-        assertNull(ClientDataInfo.fromJson(null));
-    }
-
-    @Test
-    public void fromJson_emptyString_returnsNull() {
-        assertNull(ClientDataInfo.fromJson(""));
-    }
 
     // -------------------------------------------------------------------------
     // fromPipeDelimited() tests

@@ -109,7 +109,7 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
             }
 
             final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
-            final ClientDataInfo clientDataInfo = ClientDataInfo.fromJson(clientDataHeader);
+            final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(clientDataHeader);
             if (null != clientDataInfo) {
                 clientDataInfo.emitToSpan();
             }

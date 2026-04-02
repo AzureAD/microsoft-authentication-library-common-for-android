@@ -29,7 +29,6 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,8 +36,6 @@ import org.junit.runners.JUnit4;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -106,17 +103,13 @@ public class MicrosoftStsTokenResponseHandlerTest {
     @SneakyThrows
     @Test
     public void testHandleTokenResponse_withClientDataHeader_attributesEmitted() {
-        final String rawJson = "{\"Error\":\"AADSTS50058\","
-                + "\"SubError\":\"login_required\","
-                + "\"AccountType\":\"e\","
-                + "\"cloud_instance\":\"public\","
-                + "\"caller_data_boundary\":\"us\"}";
-        final String encodedHeader = URLEncoder.encode(rawJson, StandardCharsets.UTF_8.name());
+        // Header value is a pipe-delimited string: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String clientDataHeader = "e|AADSTS50058|login_required|us|public";
 
         final HashMap<String, List<String>> headers = new HashMap<>();
         headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
         headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
-                Collections.singletonList(encodedHeader));
+                Collections.singletonList(clientDataHeader));
 
         final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
         final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
