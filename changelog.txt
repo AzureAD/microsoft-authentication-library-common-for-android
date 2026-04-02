@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support.
 
 Version 24.1.0
 ----------
