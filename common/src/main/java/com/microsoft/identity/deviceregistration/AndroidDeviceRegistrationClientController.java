@@ -47,6 +47,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.IDevic
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
@@ -66,14 +67,6 @@ import io.opentelemetry.context.Scope;
  */
 public class AndroidDeviceRegistrationClientController implements IDeviceRegistrationClientController {
     private static final String TAG = AndroidDeviceRegistrationClientController.class.getSimpleName();
-
-    // OTel attribute name constants (mirrored from broker4j's AttributeName enum).
-    private static final String ATTR_DEVICE_REGISTRATION_PROTOCOL_NAME = "device_registration_protocol_name";
-    private static final String ATTR_CALLING_PACKAGE_NAME = "calling_package_name";
-    private static final String ATTR_ACTIVE_BROKER_PACKAGE_NAME = "active_broker_package_name";
-    private static final String ATTR_CONTENT_PROVIDER_STATUS = "content_provider_status";
-    private static final String ATTR_BOUND_SERVICE_STATUS = "bound_service_status";
-    private static final String ATTR_LEGACY_ACCOUNT_MANAGER_STATUS = "legacy_account_manager_status";
 
     @NonNull
     private final String mActiveBrokerPackageName;
@@ -145,9 +138,9 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
         final Queue<BrokerCommunicationException> communicationExceptionQueue = new LinkedList<>();
         final Span span = OTelUtility.createSpan(SpanName.DeviceRegistrationIpc.name());
         try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
-            span.setAttribute(ATTR_DEVICE_REGISTRATION_PROTOCOL_NAME, protocolParameters.getProtocolName());
-            span.setAttribute(ATTR_CALLING_PACKAGE_NAME, mCallerPackageName);
-            span.setAttribute(ATTR_ACTIVE_BROKER_PACKAGE_NAME, mActiveBrokerPackageName);
+            span.setAttribute(AttributeName.device_registration_protocol_name.name(), protocolParameters.getProtocolName());
+            span.setAttribute(AttributeName.calling_package_name.name(), mCallerPackageName);
+            span.setAttribute(AttributeName.active_broker_package_name.name(), mActiveBrokerPackageName);
             for (final IIpcStrategy strategy : mIpcStrategies) {
                 try {
                     byte[] protocolResult = communicateProtocolWithStrategy(protocolParameters, strategy);
@@ -200,7 +193,9 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
             Logger.error(methodTag, "Serialization error while packing the protocol", throwable);
             throw new DeviceRegistrationException(
                     DeviceRegistrationException.INTERNAL_ERROR_CODE,
-                    DeviceRegistrationException.SERIALIZATION_ERROR_MESSAGE);
+                    DeviceRegistrationException.SERIALIZATION_ERROR_MESSAGE,
+                    throwable
+            );
         }
         final Bundle protocolResultBundle = ipcStrategy.communicateToBroker(
                 new BrokerOperationBundle(
@@ -236,11 +231,11 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
         final String methodTag = TAG + ":setIpcStrategyTelemetryAttributes";
         final String attributeName;
         if (CONTENT_PROVIDER.equals(strategyType)) {
-            attributeName = ATTR_CONTENT_PROVIDER_STATUS;
+            attributeName = AttributeName.content_provider_status.name();
         } else if (BOUND_SERVICE.equals(strategyType)) {
-            attributeName = ATTR_BOUND_SERVICE_STATUS;
+            attributeName = AttributeName.bound_service_status.name();
         } else if (LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API.equals(strategyType)) {
-            attributeName = ATTR_LEGACY_ACCOUNT_MANAGER_STATUS;
+            attributeName = AttributeName.legacy_account_manager_status.name();
         } else {
             attributeName = null;
         }

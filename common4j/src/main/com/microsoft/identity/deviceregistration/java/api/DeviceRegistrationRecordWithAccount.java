@@ -52,13 +52,4 @@ public class DeviceRegistrationRecordWithAccount extends DeviceRegistrationRecor
         super(tenantId, upn, deviceId, sharedDevice, isRegisteredWithStrongKeys);
         mAccountName = accountName;
     }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "TenantId: " + getTenantId() + "\n" + "Upn:" + getUpn() + "\n" +
-                "DeviceId:" + getDeviceId() + "\n" + "isShared:" + isSharedDevice() + "\n" +
-                "isRegisteredWithStrongKeys:" + isRegisteredWithStrongKeys() + "\n" +
-                "Account Name:" + mAccountName;
-    }
 }

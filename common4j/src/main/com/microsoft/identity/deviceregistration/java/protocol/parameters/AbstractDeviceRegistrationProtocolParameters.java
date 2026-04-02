@@ -30,8 +30,6 @@ import lombok.experimental.Accessors;
 
 /**
  * Abstract base class for all IDeviceRegistrationProtocolParameters.
- * Every time a ProtocolParameters object is instantiated it will generate a correlation Id
- * that will be used for all the requests used by this protocol.
  */
 @Accessors(prefix = "m")
 public abstract class AbstractDeviceRegistrationProtocolParameters implements IDeviceRegistrationProtocolParameters {

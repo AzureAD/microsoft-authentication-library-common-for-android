@@ -70,11 +70,4 @@ public class DeviceRegistrationRecord implements IDeviceRegistrationRecord {
      */
     @Getter
     private final boolean mIsRegisteredWithStrongKeys;
-
-    @Override
-    public String toString() {
-        return "TenantId: " + mTenantId + "\n" + "Upn:" + mUpn + "\n" +
-                "DeviceId:" + mDeviceId + "\n" + "isShared:" + mSharedDevice + "\n" +
-                "isRegisteredWithStrongKeys:" + mIsRegisteredWithStrongKeys;
-    }
 }
