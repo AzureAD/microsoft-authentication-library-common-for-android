@@ -157,7 +157,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                             "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
                             "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER +
+                            "&clidata=1",
                     request.getAuthorizationRequestAsHttpRequest().toString());
         } else {
             Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
@@ -180,7 +181,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                             "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
                             "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER +
+                            "&clidata=1",
                     request.getAuthorizationRequestAsHttpRequest().toString());
         }
 
@@ -236,7 +238,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                             "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
                             "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER +
+                            "&clidata=1",
                     request.getAuthorizationRequestAsHttpRequest().toString());
         } else {
             Assert.assertEquals(DEFAULT_TEST_AUTHORIZATION_ENDPOINT +
@@ -259,7 +262,8 @@ public class MicrosoftStsAuthorizationRequestTests {
                             "&" + MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1 +
                             "&" + MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2 +
                             "&slice=" + DEFAULT_TEST_SLICE_PARAMETER +
-                            "&dc=" + DEFAULT_TEST_DATA_CENTER,
+                            "&dc=" + DEFAULT_TEST_DATA_CENTER +
+                            "&clidata=1",
                     request.getAuthorizationRequestAsHttpRequest().toString());
         }
 
