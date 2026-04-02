@@ -48,6 +48,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -112,7 +113,11 @@ class AndroidDeviceRegistrationClientControllerTest {
 
     private fun <T> runOnBackground(operation: () -> T): T {
         val future = backgroundExecutor.submit(operation)
-        return future.get(5, TimeUnit.SECONDS)
+        try {
+            return future.get(5, TimeUnit.SECONDS)
+        } catch (e: ExecutionException) {
+            throw e.cause ?: e
+        }
     }
 
     private fun successStrategy(responseBundle: Bundle): IIpcStrategy = mock {

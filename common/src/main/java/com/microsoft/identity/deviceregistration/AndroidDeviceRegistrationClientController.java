@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -208,6 +209,10 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
                         protocolParametersBundle
                 )
         );
+
+        if (protocolResultBundle == null) {
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
+        }
 
         mCacheUpdater.updateCachedActiveBrokerFromResultBundle(protocolResultBundle);
 
