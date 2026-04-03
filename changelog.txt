@@ -1,6 +1,7 @@
 vNext
 ----------
 - [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support (#3066)
+- [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
 
 Version 24.1.0
 ----------
