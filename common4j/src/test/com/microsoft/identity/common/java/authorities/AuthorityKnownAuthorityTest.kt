@@ -56,12 +56,12 @@ class AuthorityKnownAuthorityTest {
     }
 
     /**
-     * Verifies that a sovereign cloud authority (SovSG) is recognized as known.
+     * Verifies that a sovereign cloud authority (GovSG) is recognized as known.
      */
     @Test
-    fun testIsKnownAuthority_sovsgSovereignCloud() {
+    fun testIsKnownAuthority_govsgSovereignCloud() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
-            "https://${AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST}/common"
+            "https://${AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST}/common"
         )
         assertTrue(Authority.isKnownAuthority(authority))
     }
