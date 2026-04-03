@@ -38,8 +38,8 @@ class AzureActiveDirectoryCloudTest {
     }
 
     @Test
-    fun testSovsgCloudHostConstant() {
-        assertEquals("login.sovcloud-identity.sg", AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST)
+    fun testGovsgCloudHostConstant() {
+        assertEquals("login.sovcloud-identity.sg", AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST)
     }
 
     @Test
@@ -67,21 +67,21 @@ class AzureActiveDirectoryCloudTest {
     }
 
     @Test
-    fun testSovsgCloudInstance() {
-        val sovsg = AzureActiveDirectoryCloud.SOVSG
-        assertNotNull(sovsg)
-        assertEquals(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST, sovsg.preferredNetworkHostName)
-        assertEquals(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST, sovsg.preferredCacheHostName)
-        assertNotNull(sovsg.hostAliases)
-        assertEquals(1, sovsg.hostAliases.size)
-        assertEquals(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST, sovsg.hostAliases[0])
-        assertTrue(sovsg.isValidated)
+    fun testGovsgCloudInstance() {
+        val govsg = AzureActiveDirectoryCloud.GOVSG
+        assertNotNull(govsg)
+        assertEquals(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST, govsg.preferredNetworkHostName)
+        assertEquals(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST, govsg.preferredCacheHostName)
+        assertNotNull(govsg.hostAliases)
+        assertEquals(1, govsg.hostAliases.size)
+        assertEquals(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST, govsg.hostAliases[0])
+        assertTrue(govsg.isValidated)
     }
 
     @Test
     fun testSovereignCloudInstancesAreDistinct() {
         assertNotEquals(AzureActiveDirectoryCloud.BLEU, AzureActiveDirectoryCloud.DELOS)
-        assertNotEquals(AzureActiveDirectoryCloud.BLEU, AzureActiveDirectoryCloud.SOVSG)
-        assertNotEquals(AzureActiveDirectoryCloud.DELOS, AzureActiveDirectoryCloud.SOVSG)
+        assertNotEquals(AzureActiveDirectoryCloud.BLEU, AzureActiveDirectoryCloud.GOVSG)
+        assertNotEquals(AzureActiveDirectoryCloud.DELOS, AzureActiveDirectoryCloud.GOVSG)
     }
 }
