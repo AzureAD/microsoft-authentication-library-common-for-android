@@ -120,14 +120,17 @@ class AndroidDeviceRegistrationClientControllerTest {
         }
     }
 
-    private fun successStrategy(responseBundle: Bundle): IIpcStrategy = mock {
-        whenever(it.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
-        whenever(it.communicateToBroker(any())).thenReturn(responseBundle)
+    private fun successStrategy(responseBundle: Bundle): IIpcStrategy {
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenReturn(responseBundle)
+        return strategy
     }
 
-    private fun failingStrategy(): IIpcStrategy = mock {
-        whenever(it.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
-        whenever(it.communicateToBroker(any())).thenThrow(
+    private fun failingStrategy(): IIpcStrategy {
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenThrow(
             BrokerCommunicationException(
                 BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
                 IIpcStrategy.Type.CONTENT_PROVIDER,
@@ -135,6 +138,7 @@ class AndroidDeviceRegistrationClientControllerTest {
                 null
             )
         )
+        return strategy
     }
 
     @Test
