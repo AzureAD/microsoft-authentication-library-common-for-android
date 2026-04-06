@@ -128,16 +128,15 @@ class AndroidDeviceRegistrationClientControllerTest {
     }
 
     private fun failingStrategy(): IIpcStrategy {
+        val brokerCommunicationException = BrokerCommunicationException(
+            BrokerCommunicationException.Category.CONNECTION_ERROR,
+            IIpcStrategy.Type.CONTENT_PROVIDER,
+            "Failed to communicate with broker",
+            null
+        )
         val strategy: IIpcStrategy = mock()
         whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
-        whenever(strategy.communicateToBroker(any())).thenThrow(
-            BrokerCommunicationException(
-                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
-                IIpcStrategy.Type.CONTENT_PROVIDER,
-                null,
-                null
-            )
-        )
+        whenever(strategy.communicateToBroker(any())).thenThrow(brokerCommunicationException)
         return strategy
     }
 
