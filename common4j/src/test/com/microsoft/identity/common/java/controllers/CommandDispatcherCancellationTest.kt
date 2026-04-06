@@ -73,13 +73,13 @@ class CommandDispatcherCancellationTest {
         executor.submit {
             CancellationSignal.setForCurrentThread(signal)
             try {
-                signal.registerConnection(connection)
+                signal.registerOnCancel(Runnable { connection.disconnect() })
                 workerRegistered.countDown()
                 // Simulate blocked on HTTP read — spin until cancelled
                 while (!signal.isCancelled) Thread.sleep(10)
                 future.setResult("cancelled_by_signal")
             } finally {
-                signal.unregisterConnection()
+                signal.unregisterOnCancel()
                 CancellationSignal.clearCurrentThread()
                 workerFinished.countDown()
             }
@@ -164,11 +164,11 @@ class CommandDispatcherCancellationTest {
         executor.submit {
             CancellationSignal.setForCurrentThread(signal)
             try {
-                signal.registerConnection(workerConnection)
+                signal.registerOnCancel(Runnable { workerConnection.disconnect() })
                 workerRegistered.countDown()
                 while (!signal.isCancelled) Thread.sleep(10)
             } finally {
-                signal.unregisterConnection()
+                signal.unregisterOnCancel()
                 CancellationSignal.clearCurrentThread()
                 workerFinished.countDown()
             }

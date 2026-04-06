@@ -23,26 +23,25 @@
 package com.microsoft.identity.common.java.net
 
 import com.microsoft.identity.common.java.logging.Logger
-import java.net.HttpURLConnection
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Thread-safe cancellation signal shared between the command dispatcher (caller)
- * and the HTTP client (worker). When the command-level timeout fires, the caller
- * sets this signal to cancelled, which disconnects any registered [HttpURLConnection].
+ * and the worker thread. When the command-level timeout fires, the caller sets this
+ * signal to cancelled, which executes any registered cancel action (e.g., disconnecting
+ * an HTTP connection).
  *
  * Lifecycle:
- * 1. Created by CommandDispatcher BEFORE submitting to the thread pool
- * 2. Stored on FinalizableResultFuture so the caller can trigger cancellation
- * 3. Passed to the worker thread via ThreadLocal (set at start of run(), cleared in finally)
- * 4. UrlConnectionHttpClient registers/unregisters the active HttpURLConnection
- * 5. On [cancel], the registered connection is disconnected immediately
+ * 1. Created internally by FinalizableResultFuture
+ * 2. Passed to the worker thread via ThreadLocal (set at start of run(), cleared in finally)
+ * 3. Worker registers a cancel action via [registerOnCancel] (e.g., urlConnection::disconnect)
+ * 4. On [cancel], the registered action is executed immediately
  */
 class CancellationSignal {
 
     private val mCancelled = AtomicBoolean(false)
-    private val mActiveConnection = AtomicReference<HttpURLConnection>(null)
+    private val mOnCancelAction = AtomicReference<Runnable>(null)
 
     /**
      * Returns true if this signal has been cancelled.
@@ -51,55 +50,51 @@ class CancellationSignal {
         get() = mCancelled.get()
 
     /**
-     * Cancels the signal and disconnects any active HTTP connection.
+     * Cancels the signal and executes any registered cancel action.
      * Thread-safe — can be called from any thread (typically the caller thread).
      */
     fun cancel() {
         if (mCancelled.compareAndSet(false, true)) {
-            val connection = mActiveConnection.getAndSet(null)
-            if (connection != null) {
-                safeDisconnect(connection,
-                    "Disconnecting HTTP connection due to command-level timeout")
+            val action = mOnCancelAction.getAndSet(null)
+            if (action != null) {
+                safeRun(action, "Executing cancel action due to command-level timeout")
             }
         }
     }
 
     /**
-     * Registers the active [HttpURLConnection] so it can be disconnected on cancellation.
-     * If already cancelled, disconnects immediately and returns false.
+     * Registers an action to execute on cancellation (e.g., disconnecting an HTTP connection).
+     * If already cancelled, executes immediately and returns false.
      *
      * Uses a fast-path check before setting, plus a double-check after setting,
-     * to minimize unnecessary atomic operations in the already-cancelled case
-     * while still handling the race where [cancel] fires between set and check.
+     * to handle the race where [cancel] fires between set and check.
      *
-     * @param connection the connection to register
+     * @param action the action to execute on cancellation
      * @return true if registered successfully, false if already cancelled
      */
-    fun registerConnection(connection: HttpURLConnection): Boolean {
+    fun registerOnCancel(action: Runnable): Boolean {
         // Fast path: if already cancelled, don't even register
         if (mCancelled.get()) {
-            safeDisconnect(connection,
-                "Connection registered after cancellation — disconnecting immediately")
+            safeRun(action, "Action registered after cancellation — executing immediately")
             return false
         }
 
-        mActiveConnection.set(connection)
+        mOnCancelAction.set(action)
 
         // Double-check: cancel() may have fired between the fast-path check and set()
         if (mCancelled.get()) {
-            mActiveConnection.set(null)
-            safeDisconnect(connection,
-                "Cancel race detected in registerConnection — disconnecting")
+            mOnCancelAction.set(null)
+            safeRun(action, "Cancel race detected in registerOnCancel — executing")
             return false
         }
         return true
     }
 
     /**
-     * Unregisters the active connection (called after HTTP response is read).
+     * Unregisters the cancel action (called after the cancellable operation completes).
      */
-    fun unregisterConnection() {
-        mActiveConnection.set(null)
+    fun unregisterOnCancel() {
+        mOnCancelAction.set(null)
     }
 
     companion object {
@@ -131,15 +126,14 @@ class CancellationSignal {
         }
 
         /**
-         * Safely disconnects an [HttpURLConnection], swallowing any exceptions.
-         * [HttpURLConnection.disconnect] is idempotent — safe to call multiple times.
+         * Safely executes a cancel action, swallowing any exceptions.
          */
-        private fun safeDisconnect(connection: HttpURLConnection, reason: String) {
+        private fun safeRun(action: Runnable, reason: String) {
             try {
                 Logger.info(TAG, reason)
-                connection.disconnect()
+                action.run()
             } catch (e: Exception) {
-                Logger.warn(TAG, "Exception during disconnect ($reason): ${e.message}")
+                Logger.warn(TAG, "Exception during cancel action ($reason): ${e.message}")
             }
         }
     }

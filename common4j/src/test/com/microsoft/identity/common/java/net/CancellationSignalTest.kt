@@ -66,7 +66,7 @@ class CancellationSignalTest {
     fun cancel_isIdempotent_disconnectsOnlyOnce() {
         val signal = CancellationSignal()
         val connection = mock(HttpURLConnection::class.java)
-        signal.registerConnection(connection)
+        signal.registerOnCancel(Runnable { connection.disconnect() })
 
         signal.cancel()
         signal.cancel()
@@ -87,21 +87,21 @@ class CancellationSignalTest {
     // ========================================================================
 
     @Test
-    fun registerConnection_returnsFalseAndDisconnects_whenAlreadyCancelled() {
+    fun registerOnCancel_returnsFalseAndExecutes_whenAlreadyCancelled() {
         val signal = CancellationSignal()
         signal.cancel()
 
         val connection = mock(HttpURLConnection::class.java)
 
-        assertFalse(signal.registerConnection(connection))
+        assertFalse(signal.registerOnCancel(Runnable { connection.disconnect() }))
         verify(connection).disconnect()
     }
 
     @Test
-    fun cancel_disconnectsRegisteredConnection() {
+    fun cancel_executesRegisteredAction() {
         val signal = CancellationSignal()
         val connection = mock(HttpURLConnection::class.java)
-        signal.registerConnection(connection)
+        signal.registerOnCancel(Runnable { connection.disconnect() })
 
         signal.cancel()
 
@@ -109,17 +109,17 @@ class CancellationSignalTest {
     }
 
     @Test
-    fun unregister_then_reregister_cancelDisconnectsOnlyNewConnection() {
+    fun unregister_then_reregister_cancelExecutesOnlyNewAction() {
         val signal = CancellationSignal()
         val connection1 = mock(HttpURLConnection::class.java)
         val connection2 = mock(HttpURLConnection::class.java)
 
         // First attempt completes normally
-        signal.registerConnection(connection1)
-        signal.unregisterConnection()
+        signal.registerOnCancel(Runnable { connection1.disconnect() })
+        signal.unregisterOnCancel()
 
-        // Retry registers new connection
-        signal.registerConnection(connection2)
+        // Retry registers new action
+        signal.registerOnCancel(Runnable { connection2.disconnect() })
         signal.cancel()
 
         verify(connection1, never()).disconnect()
@@ -146,13 +146,13 @@ class CancellationSignalTest {
     // ========================================================================
 
     @Test
-    fun cancel_fromCallerThread_disconnectsWorkerConnection() {
+    fun cancel_fromCallerThread_executesWorkerAction() {
         val signal = CancellationSignal()
         val connection = mock(HttpURLConnection::class.java)
         val workerRegistered = CountDownLatch(1)
 
         executor.submit {
-            signal.registerConnection(connection)
+            signal.registerOnCancel(Runnable { connection.disconnect() })
             workerRegistered.countDown()
             // Simulate blocked HTTP read — spin until cancelled
             while (!signal.isCancelled) Thread.sleep(10)
@@ -176,7 +176,7 @@ class CancellationSignalTest {
         val workerDone = CountDownLatch(1)
 
         executor.submit {
-            result[0] = signal.registerConnection(connection)
+            result[0] = signal.registerOnCancel(Runnable { connection.disconnect() })
             workerDone.countDown()
         }
 

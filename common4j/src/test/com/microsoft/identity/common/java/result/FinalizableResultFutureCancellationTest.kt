@@ -42,7 +42,7 @@ class FinalizableResultFutureCancellationTest {
         val signal = future.cancellationSignal
         val connection = mock(HttpURLConnection::class.java)
 
-        signal.registerConnection(connection)
+        signal.registerOnCancel { connection.disconnect() }
 
         future.cancelSignal()
 
@@ -57,7 +57,7 @@ class FinalizableResultFutureCancellationTest {
         // Both callers share the same signal from the future
         val signal = future.cancellationSignal
         val workerConnection = mock(HttpURLConnection::class.java)
-        signal.registerConnection(workerConnection)
+        signal.registerOnCancel() { workerConnection.disconnect() }
 
         // Any caller times out → cancelSignal()
         future.cancelSignal()
