@@ -109,9 +109,11 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
             }
 
             final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
-            final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(clientDataHeader);
-            if (null != clientDataInfo) {
-                clientDataInfo.emitToSpan();
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(clientDataHeader);
+                if (null != clientDataInfo) {
+                    clientDataInfo.emitToSpan();
+                }
             }
 
             final Map<String, String> mapWithAdditionalEntry = new HashMap<String, String>();

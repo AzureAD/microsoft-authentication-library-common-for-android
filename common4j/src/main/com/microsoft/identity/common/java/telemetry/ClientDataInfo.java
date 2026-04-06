@@ -160,7 +160,8 @@ public class ClientDataInfo {
         return "UNKNOWN";
     }
 
-    private static String truncate(final String value) {
+    @Nullable
+    private static String truncate(@Nullable final String value) {
         if (value == null || value.length() <= MAX_FIELD_LENGTH) {
             return value;
         }

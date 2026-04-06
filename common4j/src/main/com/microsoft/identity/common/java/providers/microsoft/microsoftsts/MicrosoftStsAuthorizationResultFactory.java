@@ -27,6 +27,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
@@ -73,9 +75,11 @@ public class MicrosoftStsAuthorizationResultFactory
 
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
-        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
-        if (null != clientDataInfo) {
-            clientDataInfo.emitToSpan();
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
+            if (null != clientDataInfo) {
+                clientDataInfo.emitToSpan();
+            }
         }
 
         MicrosoftStsAuthorizationResult result;

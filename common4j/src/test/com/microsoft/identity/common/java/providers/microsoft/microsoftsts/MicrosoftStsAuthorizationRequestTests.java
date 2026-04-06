@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -434,6 +436,24 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         final String url = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("URL should always contain clidata=1",
+                url.contains(MicrosoftStsAuthorizationRequest.CLIDATA_QUERY_PARAMETER + "=1"));
+    }
+
+    @Test
+    public void testCliDataParam_flightDisabled_urlDoesNotContainCliData()
+            throws MalformedURLException, URISyntaxException, ClientException {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "false");
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
+                .setAuthority(getValidRequestUrl())
+                .build();
+
+        final String url = request.getAuthorizationRequestAsHttpRequest().toString();
+        assertFalse("URL should not contain clidata=1 when flight is disabled",
                 url.contains(MicrosoftStsAuthorizationRequest.CLIDATA_QUERY_PARAMETER + "=1"));
     }
 }

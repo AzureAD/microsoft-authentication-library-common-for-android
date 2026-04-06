@@ -24,6 +24,10 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -34,6 +38,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFa
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +78,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
@@ -325,5 +335,33 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
 
         assertNotNull(result);
         assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+    }
+
+    @Test
+    public void testClientDataParam_flightDisabled_attributesNotEmitted() {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "false");
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                    RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+            Mockito.verify(mockSpan, Mockito.never()).setAttribute(
+                    AttributeName.server_error.name(), "AADSTS50058");
+        }
     }
 }
