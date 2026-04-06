@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Upgrade compileSdkVersion to 36, buildToolsVersion to 36.0.0, and browserVersion to 1.9.0 to enable AuthTabIntent API (#3065)
+- [MINOR] Upgrade compileSdkVersion to 36 and buildToolsVersion to 36.0.0 (#3065)
 
 Version 24.1.0
 ----------
