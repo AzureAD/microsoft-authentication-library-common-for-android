@@ -157,6 +157,20 @@ data class BrokerData(
         )
 
         @JvmStatic
+        val prodIntuneCE = BrokerData(
+            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE,
+            "prodIntuneCE"
+        )
+
+        @JvmStatic
+        val debugIntuneCE = BrokerData(
+            AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME,
+            AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE,
+            "debugIntuneCE"
+        )
+
+        @JvmStatic
         val prodLTW = BrokerData(
             AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME,
             AuthenticationConstants.Broker.LTW_APP_SHA512_RELEASE_SIGNATURE,
