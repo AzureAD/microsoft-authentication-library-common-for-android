@@ -47,10 +47,16 @@ import org.robolectric.shadows.ShadowPackageManager
 @RunWith(RobolectricTestRunner::class)
 class BrowserRedirectValidatorTest {
 
+    companion object {
+        private const val COMPETING_PACKAGE = "com.example.otherapp"
+        private const val COMPETING_ACTIVITY = "com.example.otherapp.SomeActivity"
+    }
+
     private val context: Context = RuntimeEnvironment.getApplication()
     private val redirectUri = "msauth://com.example.myapp/redirect"
     private val appPackageName = context.packageName
 
+    // These must stay in sync with the private constants in BrowserRedirectValidator.
     private val browserTabActivityClass = "com.microsoft.identity.client.BrowserTabActivity"
     private val currentTaskBrowserTabActivityClass =
         "com.microsoft.identity.client.CurrentTaskBrowserTabActivity"
@@ -115,10 +121,7 @@ class BrowserRedirectValidatorTest {
 
     @Test
     fun `validateNoMultipleAppsListening throws when another app is registered`() {
-        val otherPackage = "com.example.otherapp"
-        val otherActivity = "com.example.otherapp.SomeActivity"
-
-        registerResolveInfoForRedirectUri(buildResolveInfo(otherPackage, otherActivity))
+        registerResolveInfoForRedirectUri(buildResolveInfo(COMPETING_PACKAGE, COMPETING_ACTIVITY))
 
         try {
             BrowserRedirectValidator.validateNoMultipleAppsListening(context, redirectUri, false)
@@ -134,17 +137,14 @@ class BrowserRedirectValidatorTest {
 
     @Test
     fun `validateNoMultipleAppsListening throws with correct error code containing other package name`() {
-        val otherPackage = "com.example.otherapp"
-        val otherActivity = "com.example.otherapp.SomeActivity"
-
-        registerResolveInfoForRedirectUri(buildResolveInfo(otherPackage, otherActivity))
+        registerResolveInfoForRedirectUri(buildResolveInfo(COMPETING_PACKAGE, COMPETING_ACTIVITY))
 
         try {
             BrowserRedirectValidator.validateNoMultipleAppsListening(context, redirectUri, false)
             fail("Expected ClientException to be thrown")
         } catch (e: ClientException) {
             assertNotNull(e.message)
-            assert(e.message!!.contains(otherPackage)) {
+            assert(e.message!!.contains(COMPETING_PACKAGE)) {
                 "Error message should contain the other app's package name"
             }
         }
@@ -156,9 +156,8 @@ class BrowserRedirectValidatorTest {
         registerResolveInfoForRedirectUri(
             buildResolveInfo(appPackageName, browserTabActivityClass)
         )
-        val otherPackage = "com.example.otherapp"
         registerResolveInfoForRedirectUri(
-            buildResolveInfo(otherPackage, "com.example.otherapp.SomeActivity")
+            buildResolveInfo(COMPETING_PACKAGE, COMPETING_ACTIVITY)
         )
 
         // Should throw because the other app is also registered.

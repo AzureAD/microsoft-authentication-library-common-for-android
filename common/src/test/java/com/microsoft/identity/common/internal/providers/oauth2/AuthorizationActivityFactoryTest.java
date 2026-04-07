@@ -73,6 +73,9 @@ import lombok.SneakyThrows;
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
 
+    private static final String COMPETING_APP_PACKAGE = "com.example.otherapp";
+    private static final String COMPETING_APP_ACTIVITY = "com.example.otherapp.SomeActivity";
+
     private final Context context = RuntimeEnvironment.getApplication();
     private final Intent authIntent = new Intent();
     private final String requestUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id=123&response_type=code&redirect_uri=msauth%3A%2F%2Fexample.com%2Fredirect";
@@ -276,7 +279,7 @@ public class AuthorizationActivityFactoryTest {
         // Register a competing app — if the validator ran for WebView, this would cause a throw.
         final ShadowPackageManager shadowPM = shadowOf(appContext.getPackageManager());
         final ResolveInfo competingResolveInfo = buildResolveInfo(
-                "com.example.otherapp", "com.example.otherapp.SomeActivity");
+                COMPETING_APP_PACKAGE, COMPETING_APP_ACTIVITY);
         shadowPM.addResolveInfoForIntent(
                 new Intent(Intent.ACTION_VIEW, Uri.parse(redirectUri)), competingResolveInfo);
 
@@ -303,7 +306,7 @@ public class AuthorizationActivityFactoryTest {
         // Register a competing app for the redirect URI scheme.
         final ShadowPackageManager shadowPM = shadowOf(appContext.getPackageManager());
         final ResolveInfo competingResolveInfo = buildResolveInfo(
-                "com.example.otherapp", "com.example.otherapp.SomeActivity");
+                COMPETING_APP_PACKAGE, COMPETING_APP_ACTIVITY);
         shadowPM.addResolveInfoForIntent(
                 new Intent(Intent.ACTION_VIEW, Uri.parse(redirectUri)), competingResolveInfo);
 

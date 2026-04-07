@@ -67,7 +67,7 @@ object BrowserRedirectValidator {
         val intent = Intent(Intent.ACTION_VIEW).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
             addCategory(Intent.CATEGORY_BROWSABLE)
-            setDataAndNormalize(Uri.parse(redirectUri))
+            data = Uri.parse(redirectUri)
         }
 
         val resolvedActivities = packageManager.queryIntentActivities(

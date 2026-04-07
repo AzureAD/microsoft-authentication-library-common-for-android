@@ -47,6 +47,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.java.util.CommonURIBuilder
+import com.microsoft.identity.common.logging.Logger
 import java.net.URISyntaxException
 
 
@@ -54,6 +55,8 @@ import java.net.URISyntaxException
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
  */
 object AuthorizationActivityFactory {
+
+    private const val TAG = "AuthorizationActivityFactory"
     /**
      * Return the correct authorization activity based on library configuration.
      *
@@ -183,6 +186,11 @@ object AuthorizationActivityFactory {
                             context,
                             redirectUri,
                             libraryConfig.isAuthorizationInCurrentTask
+                        )
+                    } else {
+                        Logger.warn(
+                            TAG,
+                            "Redirect URI is null in the intent; skipping multiple-app URL scheme validation."
                         )
                     }
                 }
