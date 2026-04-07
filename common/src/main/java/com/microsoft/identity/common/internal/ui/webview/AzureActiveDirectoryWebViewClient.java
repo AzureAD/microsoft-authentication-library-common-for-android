@@ -403,13 +403,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT)
-                    && isEstsCloudHost(url)) {
-                Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
-                processEstsHostRedirect(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT)
+                    && isEstsCloudHost(url)
+                    && hasPrtHeaderAttached()) {
+                Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
+                processEstsHostRedirect(view, url);
             } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
                 processWebCpEnrollmentUrl(view, url);
@@ -1283,6 +1284,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.warn(TAG, "Malformed URL in eSTS cloud host check.");
             return false;
         }
+    }
+
+    /**
+     * Returns true if the initial request headers already contained a PRT credential header,
+     * indicating that the original /authorize call was PRT-authenticated.
+     */
+    private boolean hasPrtHeaderAttached() {
+        return mRequestHeaders != null
+                && mRequestHeaders.containsKey(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER);
     }
 
     /**
