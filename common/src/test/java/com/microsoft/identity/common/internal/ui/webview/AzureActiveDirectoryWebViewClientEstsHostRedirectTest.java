@@ -60,7 +60,7 @@ import java.util.HashMap;
  * {@link AzureActiveDirectoryWebViewClient}.
  */
 @RunWith(RobolectricTestRunner.class)
-public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
+public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
 
     private static final String TEST_REDIRECT_URI = "abc12";
     private static final String TEST_ESTS_URL =
@@ -144,7 +144,7 @@ public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
     }
 
     @Test
-    public void handleUrl_whenFlightDisabled_andEstsHost_doesNotCallProcessEstsReturnRedirect() {
+    public void handleUrl_whenFlightDisabled_andEstsHost_doesNotCallProcessEstsHostRedirect() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
                 .thenReturn(false);
@@ -160,7 +160,7 @@ public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
     }
 
     @Test
-    public void handleUrl_whenFlightEnabled_andNonEstsHost_doesNotHandleAsEstsReturn() {
+    public void handleUrl_whenFlightEnabled_andNonEstsHost_doesNotHandleAsEstsHostRedirect() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
                 .thenReturn(true);
@@ -180,8 +180,8 @@ public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
     @Test
     public void setRequestUrl_extractsLoginHint_whenPresent() {
         // Verifies that setRequestUrl does not throw and populates mLoginHint by
-        // checking indirectly: when the flight is enabled and the redirect returns
-        // to an eSTS host, the handler is called (i.e., processEstsReturnRedirect
+        // checking indirectly: when the flight is enabled and the redirect goes to
+        // an eSTS host, the handler is called (i.e., processEstsHostRedirect
         // was triggered), meaning the URL was handled.
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
@@ -193,10 +193,10 @@ public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
         // Set request URL with login_hint — this also populates mLoginHint
         mWebViewClient.setRequestUrl(TEST_ESTS_URL_WITH_LOGIN_HINT);
 
-        // The redirect back to an eSTS host should be handled by the new code path
+        // The eSTS host redirect should be handled by the new code path
         final AzureActiveDirectoryWebViewClient spyClient = spy(mWebViewClient);
         final boolean result = spyClient.shouldOverrideUrlLoading(mMockWebView, TEST_ESTS_URL);
-        assertTrue("Expected eSTS redirect to be handled after login_hint extraction", result);
+        assertTrue("Expected eSTS host redirect to be handled after login_hint extraction", result);
     }
 
     @Test

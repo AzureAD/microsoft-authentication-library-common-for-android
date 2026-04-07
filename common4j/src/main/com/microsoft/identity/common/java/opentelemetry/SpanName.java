@@ -64,9 +64,9 @@ public enum SpanName {
     KeyPairGeneration,
     ProcessCrossCloudRedirect,
     /**
-     * Span name for PRT header re-attachment when WebView returns to an eSTS cloud host.
+     * Span name for PRT header re-attachment when WebView redirects to an eSTS cloud host.
      */
-    EstsReturnRedirectPrtAttach,
+    EstsHostRedirectPrtAttach,
     SwitchBrowserResume,
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,

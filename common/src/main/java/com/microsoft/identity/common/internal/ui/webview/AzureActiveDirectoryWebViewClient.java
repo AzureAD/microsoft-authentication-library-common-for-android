@@ -405,8 +405,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processHeaderForwardingRequiredUri(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT)
                     && isEstsCloudHost(url)) {
-                Logger.info(methodTag, "Navigation returns to eSTS cloud host, re-attaching PRT header.");
-                processEstsReturnRedirect(view, url);
+                Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
+                processEstsHostRedirect(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
@@ -1286,15 +1286,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Processes a return-to-eSTS redirect by generating a fresh PRT credential JWT and attaching it.
+     * Processes an eSTS host redirect by generating a fresh PRT credential JWT and attaching it.
      */
-    private void processEstsReturnRedirect(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processEstsReturnRedirect";
-        Logger.info(methodTag, "Processing return-to-eSTS redirect with PRT re-attachment.");
-        final Span span = createSpanWithAttributesFromParent(SpanName.EstsReturnRedirectPrtAttach.name());
+    private void processEstsHostRedirect(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processEstsHostRedirect";
+        Logger.info(methodTag, "Processing eSTS host redirect with PRT re-attachment.");
+        final Span span = createSpanWithAttributesFromParent(SpanName.EstsHostRedirectPrtAttach.name());
         try {
             final String host = new URL(url).getHost();
-            span.setAttribute(AttributeName.ests_return_host.name(), host);
+            span.setAttribute(AttributeName.ests_redirect_host.name(), host);
         } catch (final MalformedURLException e) {
             // Domain attribute is best-effort for telemetry
         }
