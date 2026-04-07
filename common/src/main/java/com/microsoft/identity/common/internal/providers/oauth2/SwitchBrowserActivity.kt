@@ -90,8 +90,8 @@ class SwitchBrowserActivity : FragmentActivity() {
      * @param savedInstanceState Saved instance state bundle (unused in this implementation)
      */
     override fun onCreate(savedInstanceState: Bundle?) {
-        val methodTag = "$TAG:onCreate"
         super.onCreate(savedInstanceState)
+        val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
         launchBrowser()
     }
@@ -164,33 +164,31 @@ class SwitchBrowserActivity : FragmentActivity() {
      *
      * @param intent The intent containing the authentication result from the browser redirect
      */
-    override fun onNewIntent(intent: Intent?) {
-        val methodTag = "$TAG:onNewIntent"
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        val methodTag = "$TAG:onNewIntent"
         // Update the activity's intent with the new intent containing the auth result
         Logger.info(methodTag, "On new intent received.")
         setIntent(intent)
 
-        if (intent != null) {
-            if (intent.hasExtra(PROCESS_URI)) {
-                // Handle scenario where a new browser switch request is received while one is already in progress
-                // This can occur when the user initiates another auth request before completing the first one.
-                Logger.warn(
-                    methodTag,
-                    "Received new switch browser request while one is already in progress" +
-                        " - Restarting browser switch flow"
-                )
-                // Launch the new browser request, which will reset cctLaunched and start fresh
-                launchBrowser()
-                return
-            }
-            if (intent.hasExtra(RESUME_REQUEST)) {
-                WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
-                // Clean up: finish this activity and remove it from task stack
-                Logger.info(methodTag, "Finishing activity and removing from task stack")
-                finishAndRemoveTask()
-                return
-            }
+        if (intent.hasExtra(PROCESS_URI)) {
+            // Handle scenario where a new browser switch request is received while one is already in progress
+            // This can occur when the user initiates another auth request before completing the first one.
+            Logger.warn(
+                methodTag,
+                "Received new switch browser request while one is already in progress" +
+                    " - Restarting browser switch flow"
+            )
+            // Launch the new browser request, which will reset cctLaunched and start fresh
+            launchBrowser()
+            return
+        }
+        if (intent.hasExtra(RESUME_REQUEST)) {
+            WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
+            // Clean up: finish this activity and remove it from task stack
+            Logger.info(methodTag, "Finishing activity and removing from task stack")
+            finishAndRemoveTask()
+            return
         }
         // Clean up: finish this activity and remove it from task stack
         Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
