@@ -88,7 +88,7 @@ public class AuthorizationActivity extends DualScreenActivity {
                 Logger.error(methodTag, "Exception thrown during extraction: " + e.getMessage(), e);
             }
         }
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent(), this);
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
             mFragment.setInstanceState(bundle);
