@@ -50,16 +50,15 @@ public class AndroidDeviceRegistrationProtocolPacker implements IDeviceRegistrat
 
     private static final String TAG = AndroidDeviceRegistrationProtocolPacker.class.getSimpleName();
 
-    // Bundle keys — must match the broker-side packer for wire compatibility.
-    public static final String PROTOCOL_DATA = "protocol.data";
-    public static final String PROTOCOL_NAME = "protocol.name";
-    public static final String CORRELATION_ID = "correlation.id";
-    public static final String PROTOCOL_EXCEPTION_ERROR_CODE = "protocol.exception.error.code";
-    public static final String PROTOCOL_EXCEPTION_ERROR_MESSAGE = "protocol.exception.error.message";
-    public static final String PROTOCOL_EXCEPTION_ERROR_CAUSE_MESSAGE = "protocol.exception.error.cause";
-    public static final String PROTOCOL_EXCEPTION_STACK_TRACE_STRING = "protocol.exception.stack.trace.string";
-    private static final String PROTOCOL_EXCEPTION_CALLING_PACKAGE_NAME = "protocol.exception.api.to.update";
-    private static final String PROTOCOL_EXCEPTION_BROKER_PACKAGE_NAME = "protocol.exception.broker.to.update";
+    static final String PROTOCOL_DATA = "protocol.data";
+    static final String PROTOCOL_NAME = "protocol.name";
+    static final String CORRELATION_ID = "correlation.id";
+    static final String PROTOCOL_EXCEPTION_ERROR_CODE = "protocol.exception.error.code";
+    static final String PROTOCOL_EXCEPTION_ERROR_MESSAGE = "protocol.exception.error.message";
+    static final String PROTOCOL_EXCEPTION_ERROR_CAUSE_MESSAGE = "protocol.exception.error.cause";
+    static final String PROTOCOL_EXCEPTION_STACK_TRACE_STRING = "protocol.exception.stack.trace.string";
+    static final String PROTOCOL_EXCEPTION_CALLING_PACKAGE_NAME = "protocol.exception.api.to.update";
+    static final String PROTOCOL_EXCEPTION_BROKER_PACKAGE_NAME = "protocol.exception.broker.to.update";
 
     @NonNull
     @Override
