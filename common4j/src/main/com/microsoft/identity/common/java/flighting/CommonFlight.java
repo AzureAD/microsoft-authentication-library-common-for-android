@@ -244,7 +244,14 @@ public enum CommonFlight implements IFlightConfig {
      * This provides a more granular enabled check that distinguishes
      * DISABLED_USER, DISABLED_UNTIL_USED, etc.
      */
-    USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false);
+    USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false),
+
+    /**
+     * Flight to enable server-side client data telemetry from the x-ms-clientdata response
+     * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
+     * Enabled by default; can be turned off via ECS if any issues arise in production.
+     */
+    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true);
 
     private String key;
     private Object defaultValue;
