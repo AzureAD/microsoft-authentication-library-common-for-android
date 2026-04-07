@@ -78,7 +78,7 @@ public abstract class AndroidAuthorizationStrategy<
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntentWithState(intent, intent.getExtras());
+            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntentWithState(intent, intent.getExtras(), getApplicationContext());
 
             final FragmentManager fragmentManager = fragment.getFragmentManager();
             if (fragmentManager == null) {

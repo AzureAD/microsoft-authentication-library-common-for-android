@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -152,10 +153,13 @@ object AuthorizationActivityFactory {
      * [CurrentTaskBrowserAuthorizationFragment]
      *
      * @param intent The intent used to start the authorization flow.
+     * @param context Optional Android context used to validate that no other app is listening on
+     *                the same custom URL scheme. When null, the validation is skipped.
      * @return returns an Fragment that's used as to authorize a token request.
      */
     @JvmStatic
-    fun getAuthorizationFragmentFromStartIntent(intent: Intent): Fragment {
+    @JvmOverloads
+    fun getAuthorizationFragmentFromStartIntent(intent: Intent, context: Context? = null): Fragment {
         val fragment: Fragment
         val authorizationAgent =
             intent.getSerializableExtra(AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT) as AuthorizationAgent?
@@ -170,6 +174,18 @@ object AuthorizationActivityFactory {
                     WebViewAuthorizationFragment()
                 }
             } else {
+                if (context != null) {
+                    val redirectUri = intent.getStringExtra(
+                        AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
+                    )
+                    if (redirectUri != null) {
+                        BrowserRedirectValidator.validateNoMultipleAppsListening(
+                            context,
+                            redirectUri,
+                            libraryConfig.isAuthorizationInCurrentTask
+                        )
+                    }
+                }
                 if (libraryConfig.isAuthorizationInCurrentTask) {
                     CurrentTaskBrowserAuthorizationFragment()
                 } else {
@@ -260,11 +276,14 @@ object AuthorizationActivityFactory {
      *
      * @param intent the intent to use to create the fragment.
      * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
+     * @param context Optional Android context used to validate that no other app is listening on
+     *                the same custom URL scheme. When null, the validation is skipped.
      * @return returns an Fragment that's used as to authorize a token request.
      */
     @JvmStatic
-    fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle): Fragment {
-        val fragment = getAuthorizationFragmentFromStartIntent(intent)
+    @JvmOverloads
+    fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle, context: Context? = null): Fragment {
+        val fragment = getAuthorizationFragmentFromStartIntent(intent, context)
         if (fragment is AuthorizationFragment) {
             fragment.setInstanceState(bundle)
         }
