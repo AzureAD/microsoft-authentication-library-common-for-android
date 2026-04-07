@@ -47,7 +47,6 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import com.microsoft.identity.common.java.util.CommonURIBuilder
-import com.microsoft.identity.common.logging.Logger
 import java.net.URISyntaxException
 
 
@@ -155,14 +154,16 @@ object AuthorizationActivityFactory {
      * [BrowserAuthorizationFragment]
      * [CurrentTaskBrowserAuthorizationFragment]
      *
+     * Note: multiple-app URL scheme validation is NOT performed here. It is performed upstream
+     * in [AndroidAuthorizationStrategy.launchIntent], where a checked [ClientException] can
+     * propagate correctly through the command pipeline. Callers should ensure validation has
+     * already been performed before invoking this factory method for browser flows.
+     *
      * @param intent The intent used to start the authorization flow.
-     * @param context Optional Android context used to validate that no other app is listening on
-     *                the same custom URL scheme. When null, the validation is skipped.
      * @return returns an Fragment that's used as to authorize a token request.
      */
     @JvmStatic
-    @JvmOverloads
-    fun getAuthorizationFragmentFromStartIntent(intent: Intent, context: Context? = null): Fragment {
+    fun getAuthorizationFragmentFromStartIntent(intent: Intent): Fragment {
         val fragment: Fragment
         val authorizationAgent =
             intent.getSerializableExtra(AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT) as AuthorizationAgent?
@@ -177,23 +178,6 @@ object AuthorizationActivityFactory {
                     WebViewAuthorizationFragment()
                 }
             } else {
-                if (context != null) {
-                    val redirectUri = intent.getStringExtra(
-                        AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
-                    )
-                    if (redirectUri != null) {
-                        BrowserRedirectValidator.validateNoMultipleAppsListening(
-                            context,
-                            redirectUri,
-                            libraryConfig.isAuthorizationInCurrentTask
-                        )
-                    } else {
-                        Logger.warn(
-                            TAG,
-                            "Redirect URI is null in the intent; skipping multiple-app URL scheme validation."
-                        )
-                    }
-                }
                 if (libraryConfig.isAuthorizationInCurrentTask) {
                     CurrentTaskBrowserAuthorizationFragment()
                 } else {
@@ -284,14 +268,11 @@ object AuthorizationActivityFactory {
      *
      * @param intent the intent to use to create the fragment.
      * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
-     * @param context Optional Android context used to validate that no other app is listening on
-     *                the same custom URL scheme. When null, the validation is skipped.
      * @return returns an Fragment that's used as to authorize a token request.
      */
     @JvmStatic
-    @JvmOverloads
-    fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle, context: Context? = null): Fragment {
-        val fragment = getAuthorizationFragmentFromStartIntent(intent, context)
+    fun getAuthorizationFragmentFromStartIntentWithState(intent: Intent, bundle: Bundle): Fragment {
+        val fragment = getAuthorizationFragmentFromStartIntent(intent)
         if (fragment is AuthorizationFragment) {
             fragment.setInstanceState(bundle)
         }

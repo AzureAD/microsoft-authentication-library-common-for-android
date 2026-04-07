@@ -38,22 +38,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 import org.junit.Test;
@@ -61,7 +55,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.shadows.ShadowPackageManager;
 
 import java.util.HashMap;
 
@@ -72,9 +65,6 @@ import lombok.SneakyThrows;
  */
 @RunWith(RobolectricTestRunner.class)
 public class AuthorizationActivityFactoryTest {
-
-    private static final String COMPETING_APP_PACKAGE = "com.example.otherapp";
-    private static final String COMPETING_APP_ACTIVITY = "com.example.otherapp.SomeActivity";
 
     private final Context context = RuntimeEnvironment.getApplication();
     private final Intent authIntent = new Intent();
@@ -268,91 +258,31 @@ public class AuthorizationActivityFactoryTest {
     }
 
     /**
-     * Verifies that the WebView authorization path does NOT trigger the
-     * {@link BrowserRedirectValidator}, even when another app is registered for the URL scheme.
+     * Verifies that the WebView authorization path returns a {@link WebViewAuthorizationFragment}.
+     * The factory is a pure fragment-creation utility; URL scheme validation is performed upstream
+     * in {@link AndroidAuthorizationStrategy#launchIntent}.
      */
     @Test
-    public void testGetAuthorizationFragmentFromStartIntentWebView_doesNotTriggerValidator() {
-        final String redirectUri = "msauth://org.robolectric.default/redirect";
-        final Context appContext = RuntimeEnvironment.getApplication();
-
-        // Register a competing app — if the validator ran for WebView, this would cause a throw.
-        final ShadowPackageManager shadowPM = shadowOf(appContext.getPackageManager());
-        final ResolveInfo competingResolveInfo = buildResolveInfo(
-                COMPETING_APP_PACKAGE, COMPETING_APP_ACTIVITY);
-        shadowPM.addResolveInfoForIntent(
-                new Intent(Intent.ACTION_VIEW, Uri.parse(redirectUri)), competingResolveInfo);
-
+    public void testGetAuthorizationFragmentFromStartIntentWebView_returnsWebViewFragment() {
         final Intent intent = new Intent();
         intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
-        intent.putExtra(REDIRECT_URI, redirectUri);
 
-        // No exception should be thrown — WebView path must not invoke the validator.
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent, appContext);
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
         assertEquals(WebViewAuthorizationFragment.class, fragment.getClass());
     }
 
     /**
-     * Verifies that the browser authorization path DOES trigger the
-     * {@link BrowserRedirectValidator} and throws {@link ClientException} when another app
-     * is registered for the same custom URL scheme.
+     * Verifies that the browser authorization path returns a {@link BrowserAuthorizationFragment}.
      */
     @Test
-    public void testGetAuthorizationFragmentFromStartIntentBrowser_triggersValidatorAndThrowsOnConflict() {
-        final String redirectUri = "msauth://org.robolectric.default/redirect";
-        final Context appContext = RuntimeEnvironment.getApplication();
-
-        // Register a competing app for the redirect URI scheme.
-        final ShadowPackageManager shadowPM = shadowOf(appContext.getPackageManager());
-        final ResolveInfo competingResolveInfo = buildResolveInfo(
-                COMPETING_APP_PACKAGE, COMPETING_APP_ACTIVITY);
-        shadowPM.addResolveInfoForIntent(
-                new Intent(Intent.ACTION_VIEW, Uri.parse(redirectUri)), competingResolveInfo);
-
+    public void testGetAuthorizationFragmentFromStartIntentBrowser_returnsBrowserFragment() {
         final Intent intent = new Intent();
         intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
-        intent.putExtra(REDIRECT_URI, redirectUri);
 
-        try {
-            AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent, appContext);
-            // If no exception is thrown, the test should fail.
-            org.junit.Assert.fail("Expected ClientException to be thrown");
-        } catch (final Exception e) {
-            assertNotNull(e);
-            org.junit.Assert.assertTrue(
-                    "Expected ClientException but got: " + e.getClass().getName(),
-                    e instanceof ClientException);
-            assertEquals(
-                    ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME,
-                    ((ClientException) e).getErrorCode());
-        }
-    }
-
-    /**
-     * Verifies that the browser authorization path passes validation when no competing apps exist.
-     */
-    @Test
-    public void testGetAuthorizationFragmentFromStartIntentBrowser_passesWhenNoConflict() {
-        final String redirectUri = "msauth://org.robolectric.default/redirect";
-        final Context appContext = RuntimeEnvironment.getApplication();
-
-        final Intent intent = new Intent();
-        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
-        intent.putExtra(REDIRECT_URI, redirectUri);
-
-        // No competing apps registered → no exception.
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent, appContext);
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
     }
-
-    // Helper to build a ResolveInfo for a given package and activity class name.
-    private static ResolveInfo buildResolveInfo(final String packageName, final String activityClassName) {
-        final ResolveInfo resolveInfo = new ResolveInfo();
-        resolveInfo.activityInfo = new ActivityInfo();
-        resolveInfo.activityInfo.packageName = packageName;
-        resolveInfo.activityInfo.name = activityClassName;
-        return resolveInfo;
-    }
 }
+
