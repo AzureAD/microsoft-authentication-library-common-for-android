@@ -295,7 +295,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             final Map<String, String> params = StringExtensions.getUrlParameters(requestUrl);
             mLoginHint = params.get("login_hint");
-        } catch (final Exception e) {
+        } catch (final RuntimeException e) {
             Logger.warn(TAG, "Failed to extract login_hint from request URL.");
         }
     }
@@ -1294,7 +1294,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Span span = createSpanWithAttributesFromParent(SpanName.EstsReturnRedirectPrtAttach.name());
         try {
             final String host = new URL(url).getHost();
-            span.setAttribute("ests_return_host", host);
+            span.setAttribute(AttributeName.ests_return_host.name(), host);
         } catch (final MalformedURLException e) {
             // Domain attribute is best-effort for telemetry
         }

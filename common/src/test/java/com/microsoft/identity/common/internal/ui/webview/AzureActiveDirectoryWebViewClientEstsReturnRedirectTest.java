@@ -179,29 +179,30 @@ public class AzureActiveDirectoryWebViewClientEstsReturnRedirectTest {
 
     @Test
     public void setRequestUrl_extractsLoginHint_whenPresent() {
-        // Create a fresh client so we control the initial URL
-        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
-                mActivity,
-                new IAuthorizationCompletionCallback() {
-                    @Override
-                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {}
-                    @Override
-                    public void setPKeyAuthStatus(boolean status) {}
-                },
-                url -> {},
-                TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
-                "homeTenantId",
-                false);
-        // Setting a URL with login_hint should not throw.
-        client.setRequestUrl(TEST_ESTS_URL_WITH_LOGIN_HINT);
-        // Verify no exception — the internal mLoginHint field is set (verified indirectly).
+        // Verifies that setRequestUrl does not throw and populates mLoginHint by
+        // checking indirectly: when the flight is enabled and the redirect returns
+        // to an eSTS host, the handler is called (i.e., processEstsReturnRedirect
+        // was triggered), meaning the URL was handled.
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        // Set request URL with login_hint — this also populates mLoginHint
+        mWebViewClient.setRequestUrl(TEST_ESTS_URL_WITH_LOGIN_HINT);
+
+        // The redirect back to an eSTS host should be handled by the new code path
+        final AzureActiveDirectoryWebViewClient spyClient = spy(mWebViewClient);
+        final boolean result = spyClient.shouldOverrideUrlLoading(mMockWebView, TEST_ESTS_URL);
+        assertTrue("Expected eSTS redirect to be handled after login_hint extraction", result);
     }
 
     @Test
     public void setRequestUrl_doesNotThrow_whenLoginHintAbsent() {
-        mWebViewClient.setRequestUrl(TEST_ESTS_URL);
         // No exception expected when login_hint is not present in the URL.
+        mWebViewClient.setRequestUrl(TEST_ESTS_URL);
     }
 
     @Test
