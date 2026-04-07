@@ -63,6 +63,10 @@ public enum SpanName {
     DataStoreCorruptionException,
     KeyPairGeneration,
     ProcessCrossCloudRedirect,
+    /**
+     * Span name for PRT header re-attachment when WebView returns to an eSTS cloud host.
+     */
+    EstsReturnRedirectPrtAttach,
     SwitchBrowserResume,
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,

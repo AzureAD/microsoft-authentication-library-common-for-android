@@ -150,6 +150,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mUtid;
 
     private String mPasskeyRegistrationScript;
+    private String mLoginHint;
 
     /**
      * Callback for tracking URL load events.
@@ -254,6 +255,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     public void setRequestUrl(final String requestUrl) {
         mRequestUrl = requestUrl;
+        try {
+            final Map<String, String> params = StringExtensions.getUrlParameters(requestUrl);
+            mLoginHint = params.get("login_hint");
+        } catch (final Exception e) {
+            Logger.warn(TAG, "Failed to extract login_hint from request URL.");
+        }
     }
 
     /**
@@ -356,6 +363,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processSSLProtectionCheck(view, url);
             } else if (isHeaderForwardingRequiredUri(url)) {
                 processHeaderForwardingRequiredUri(view, url);
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT)
+                    && isEstsCloudHost(url)) {
+                Logger.info(methodTag, "Navigation returns to eSTS cloud host, re-attaching PRT header.");
+                processEstsReturnRedirect(view, url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
@@ -1138,6 +1149,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessCrossCloudRedirect.name(), mSpanContext);
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler = new ReAttachPrtHeaderHandler(view, mRequestHeaders, span);
+        reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
+    }
+
+    /**
+     * Returns true if the given URL's host is a known eSTS cloud host.
+     */
+    @VisibleForTesting
+    boolean isEstsCloudHost(@NonNull final String url) {
+        try {
+            return AzureActiveDirectory.hasCloudHost(new URL(url));
+        } catch (final MalformedURLException e) {
+            Logger.warn(TAG, "Malformed URL in eSTS cloud host check.");
+            return false;
+        }
+    }
+
+    /**
+     * Processes a return-to-eSTS redirect by generating a fresh PRT credential JWT and attaching it.
+     */
+    private void processEstsReturnRedirect(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":processEstsReturnRedirect";
+        Logger.info(methodTag, "Processing return-to-eSTS redirect with PRT re-attachment.");
+        final Span span = createSpanWithAttributesFromParent(SpanName.EstsReturnRedirectPrtAttach.name());
+        try {
+            final String host = new URL(url).getHost();
+            span.setAttribute("ests_return_host", host);
+        } catch (final MalformedURLException e) {
+            // Domain attribute is best-effort for telemetry
+        }
+        final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
+                new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, mLoginHint);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
 
