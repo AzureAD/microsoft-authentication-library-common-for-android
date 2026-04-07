@@ -705,12 +705,12 @@ public enum AttributeName {
     target_blank_navigation_route,
 
     /**
-     * The hostname of the eSTS cloud host to which a WebView redirect returned,
-     * used for telemetry during PRT header re-attachment on eSTS return redirects.
+     * The hostname of the eSTS cloud host targeted by a WebView redirect,
+     * used for telemetry during PRT header re-attachment on eSTS host redirects.
      * Value: the URL host string (e.g. "login.microsoftonline.com").
      * NOTE: This attribute must also be added to the broker repo's AttributeName.java.
      */
-    ests_return_host,
+    ests_redirect_host,
 
     //endregion
 
