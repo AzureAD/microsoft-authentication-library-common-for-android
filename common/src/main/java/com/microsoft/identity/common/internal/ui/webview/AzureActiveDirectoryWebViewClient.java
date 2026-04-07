@@ -1111,7 +1111,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (nonceQueryParam != null) {
             final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), mSpanContext);
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-                final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span);
+                final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span, mLoginHint);
                 nonceRedirect.processChallenge(new URL(url));
                 span.setStatus(StatusCode.OK);
             } catch (MalformedURLException e) {

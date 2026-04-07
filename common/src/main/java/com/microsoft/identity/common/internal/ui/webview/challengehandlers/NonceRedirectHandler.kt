@@ -38,7 +38,8 @@ import java.net.URL
 class NonceRedirectHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
-    private val span : Span
+    private val span : Span,
+    private val fallbackUsername: String? = null
 ) : IChallengeHandler<URL, Void> {
     private val TAG = NonceRedirectHandler::class.java.simpleName
 
@@ -87,6 +88,6 @@ class NonceRedirectHandler(
 
     private fun getUserNameFromWebViewUrl(url: String): String? {
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
-        return parameters["login_hint"]
+        return parameters["login_hint"] ?: fallbackUsername
     }
 }
