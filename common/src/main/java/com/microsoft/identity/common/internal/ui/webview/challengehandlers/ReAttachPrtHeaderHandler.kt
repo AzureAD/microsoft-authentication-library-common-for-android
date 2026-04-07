@@ -36,7 +36,8 @@ import io.opentelemetry.api.trace.Span
 class ReAttachPrtHeaderHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
-    private val span : Span
+    private val span : Span,
+    private val fallbackUsername: String? = null
 ) : IChallengeHandler<String, Void> {
     private val TAG = ReAttachPrtHeaderHandler::class.java.simpleName
 
@@ -54,7 +55,7 @@ class ReAttachPrtHeaderHandler(
     ) {
         val methodTag = "$TAG:modifyHeadersWithRefreshTokenCredential"
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
-        val username = parameters["login_hint"]
+        val username = parameters["login_hint"] ?: fallbackUsername
         if (!username.isNullOrEmpty()) {
             val updatedRefreshTokenCredentialHeader =
                 CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(

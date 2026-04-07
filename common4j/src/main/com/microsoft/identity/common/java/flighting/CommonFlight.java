@@ -273,7 +273,14 @@ public enum CommonFlight implements IFlightConfig {
      * references first, then clones only the matching items — avoiding the cost of
      * cloning the entire cache when only a subset is needed.
      */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
+
+    /**
+     * Flight to enable PRT header re-attachment when WebView redirects back to an eSTS cloud host
+     * after visiting an external Entra service domain (e.g. mysignins.microsoft.com).
+     * When enabled, a fresh PRT credential JWT is generated and attached to the request.
+     */
+    ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT("EnablePrtHeaderForEstsReturnRedirect", false);
 
     private String key;
     private Object defaultValue;
