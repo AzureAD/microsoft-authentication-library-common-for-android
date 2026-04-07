@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
 
 Version 24.1.0
 ----------

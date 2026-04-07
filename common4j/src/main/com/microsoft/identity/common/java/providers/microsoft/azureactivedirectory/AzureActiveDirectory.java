@@ -28,7 +28,7 @@ import static com.microsoft.identity.common.java.providers.microsoft.azureactive
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.DELOS_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PPE_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
-import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
 import com.google.gson.Gson;
@@ -116,7 +116,7 @@ public class AzureActiveDirectory
             US_GOV_CLOUD_HOST,
             BLEU_CLOUD_HOST,
             DELOS_CLOUD_HOST,
-            SOVSG_CLOUD_HOST
+            GOVSG_CLOUD_HOST
     )));
 
     static {
@@ -134,7 +134,7 @@ public class AzureActiveDirectory
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
                 AzureActiveDirectoryCloud.BLEU,
                 AzureActiveDirectoryCloud.DELOS,
-                AzureActiveDirectoryCloud.SOVSG
+                AzureActiveDirectoryCloud.GOVSG
         }) {
             sAadClouds.put(
                     cloud.getPreferredNetworkHostName().toLowerCase(Locale.US),

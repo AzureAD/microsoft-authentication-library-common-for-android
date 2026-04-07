@@ -65,7 +65,7 @@ class AzureActiveDirectoryTest {
     }
 
     @Test
-    fun testIsKnownCloudDiscoveryHost_sovsg() {
+    fun testIsKnownCloudDiscoveryHost_govsg() {
         assertTrue(AzureActiveDirectory.isKnownCloudDiscoveryHost("login.sovcloud-identity.sg"))
     }
 
