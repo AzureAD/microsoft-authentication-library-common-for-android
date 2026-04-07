@@ -36,6 +36,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -99,6 +100,8 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
                 false);
         final HashMap<String, String> dummyHeaders = new HashMap<>();
         dummyHeaders.put("key", "value");
+        // Include PRT header so tests that verify re-attachment pass the hasPrtHeaderAttached() guard.
+        dummyHeaders.put(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER, "dummy-prt-value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
         mWebViewClient.setRequestUrl(TEST_ESTS_URL);
         AzureActiveDirectory.ensureCloudDiscovery();
@@ -172,6 +175,26 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
         // Non-eSTS HTTPS URL should not be caught by the new branch — it falls through
         // to the unrecognized-URL path and returns false.
         final boolean result = spyClient.shouldOverrideUrlLoading(mMockWebView, TEST_NON_ESTS_URL);
+        assertFalse(result);
+    }
+
+    @Test
+    public void handleUrl_whenFlightEnabled_andEstsHost_butNoPrtHeader_doesNotHandleAsEstsHostRedirect() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        // Remove PRT header from request headers to simulate a flow that was not PRT-authenticated.
+        final HashMap<String, String> headersWithoutPrt = new HashMap<>();
+        headersWithoutPrt.put("key", "value");
+        mWebViewClient.setRequestHeaders(headersWithoutPrt);
+
+        final AzureActiveDirectoryWebViewClient spyClient = spy(mWebViewClient);
+        // Without a PRT header in the initial request, the eSTS host redirect should fall through.
+        final boolean result = spyClient.shouldOverrideUrlLoading(mMockWebView, TEST_ESTS_URL);
         assertFalse(result);
     }
 
