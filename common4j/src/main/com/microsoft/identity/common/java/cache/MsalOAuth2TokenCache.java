@@ -45,6 +45,8 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -1675,6 +1677,7 @@ public class MsalOAuth2TokenCache
     private void deleteAccessTokensWithIntersectingScopes(
             final AccessTokenRecord referenceToken, boolean mustMatchExactClaims) {
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
+        final long startTimeNanos = System.nanoTime();
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
@@ -1705,6 +1708,11 @@ public class MsalOAuth2TokenCache
                 mAccountCredentialCache.removeCredential(accessToken);
             }
         }
+
+        OTelUtility.recordElapsedTimeFromNanos(
+                AttributeName.elapsed_time_cache_delete_access_tokens_with_intersecting_scopes.name(),
+                startTimeNanos
+        );
     }
 
     private boolean scopesIntersect(final AccessTokenRecord token1,

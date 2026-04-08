@@ -195,6 +195,11 @@ public enum AttributeName {
     elapsed_time_cache_save_and_load_aggregated_account_data,
 
     /**
+     * The time (in milliseconds) spent in executing the deleteAccessTokensWithIntersectingScopes method in MsalOAuth2TokenCache.
+     */
+    elapsed_time_cache_delete_access_tokens_with_intersecting_scopes,
+
+    /**
      * The time (in milliseconds) spent in executing the removeCredential method in OAuth2TokenCache.
      */
     elapsed_time_cache_remove_credential,
@@ -218,11 +223,6 @@ public enum AttributeName {
      * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
      */
     elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id,
-
-    /**
-     * The time (in milliseconds) spent in saving account data to Shared Preferences.
-     */
-    elapsed_time_save_account_shared_preferences,
 
     /**
      * The time (in milliseconds) spent in executing the getAccounts method in OAuth2TokenCache.

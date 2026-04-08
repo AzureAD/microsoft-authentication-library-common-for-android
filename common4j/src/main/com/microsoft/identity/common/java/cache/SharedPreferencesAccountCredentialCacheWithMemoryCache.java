@@ -141,9 +141,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             }
 
             final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
-            final long sharedPreferencesSaveStartTime = System.nanoTime();
             mSharedPreferencesFileManager.put(cacheKey, cacheValue);
-            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_save_account_shared_preferences.name(), sharedPreferencesSaveStartTime);
             mCachedAccountRecordsWithKeys.put(cacheKey, accountToSave);
         }
     }
@@ -642,8 +640,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         synchronized (mCacheLock) {
             waitForInitialLoad();
             boolean accountRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
-            {
+            // Use the in-memory map to check key existence instead of
+            // mSharedPreferencesFileManager.keySet() which triggers getAll()
+            // and decrypts every value in SharedPreferences just to check a key.
+            if (mCachedAccountRecordsWithKeys.containsKey(cacheKey)) {
                 mSharedPreferencesFileManager.remove(cacheKey);
                 accountRemoved = true;
             }
@@ -669,7 +669,10 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         synchronized (mCacheLock) {
             waitForInitialLoad();
             boolean credentialRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+            // Use the in-memory map to check key existence instead of
+            // mSharedPreferencesFileManager.keySet() which triggers getAll()
+            // and decrypts every value in SharedPreferences just to check a key.
+            if (mCachedCredentialsWithKeys.containsKey(cacheKey)) {
                 mSharedPreferencesFileManager.remove(cacheKey);
                 credentialRemoved = true;
             }
