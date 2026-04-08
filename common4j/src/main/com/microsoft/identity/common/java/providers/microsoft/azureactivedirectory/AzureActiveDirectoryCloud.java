@@ -124,7 +124,7 @@ public class AzureActiveDirectoryCloud {
     public static final String US_GOV_CLOUD_HOST = "login.microsoftonline.us";
     public static final String BLEU_CLOUD_HOST = "login.sovcloud-identity.fr";
     public static final String DELOS_CLOUD_HOST = "login.sovcloud-identity.de";
-    public static final String SOVSG_CLOUD_HOST = "login.sovcloud-identity.sg";
+    public static final String GOVSG_CLOUD_HOST = "login.sovcloud-identity.sg";
 
     // These are added without network calls because they are not part of instance discovery yet.
     /** Bleu sovereign cloud (France). */
@@ -141,10 +141,10 @@ public class AzureActiveDirectoryCloud {
             Collections.singletonList(DELOS_CLOUD_HOST)
     );
 
-    /** SovSG sovereign cloud (Singapore). */
-    public static final AzureActiveDirectoryCloud SOVSG = new AzureActiveDirectoryCloud(
-            SOVSG_CLOUD_HOST,
-            SOVSG_CLOUD_HOST,
-            Collections.singletonList(SOVSG_CLOUD_HOST)
+    /** GovSG sovereign cloud (Singapore). */
+    public static final AzureActiveDirectoryCloud GOVSG = new AzureActiveDirectoryCloud(
+            GOVSG_CLOUD_HOST,
+            GOVSG_CLOUD_HOST,
+            Collections.singletonList(GOVSG_CLOUD_HOST)
     );
 }

@@ -1,5 +1,11 @@
 vNext
 ----------
+- [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support (#3066)
+- [MINOR] Upgrade compileSdkVersion to 36 and buildToolsVersion to 36.0.0 (#3065)
+- [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
+
+Version 24.1.0
+----------
 - [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API (#3027)
 - [PATCH] Fix bug in Authority.getKnownAuthorityResult where cloud discovery failure would skip knownAuthorities check and fix thread safety in Authority.isKnownAuthority and getEquivalentConfiguredAuthority with synchronized block (#3027)
 - [MINOR] Add helper method in the PackageHelper class for BrokerDiscovery (#3044)

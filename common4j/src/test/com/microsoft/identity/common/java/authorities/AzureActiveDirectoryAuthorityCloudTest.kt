@@ -51,9 +51,9 @@ class AzureActiveDirectoryAuthorityCloudTest {
     }
 
     @Test
-    fun testIsSameCloudAsAuthority_bothSovsg_returnsTrue() {
-        val authority1 = createAuthority(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST)
-        val authority2 = createAuthority(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST)
+    fun testIsSameCloudAsAuthority_bothGovsg_returnsTrue() {
+        val authority1 = createAuthority(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST)
+        val authority2 = createAuthority(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST)
         assertTrue(authority1.isSameCloudAsAuthority(authority2))
     }
 
@@ -65,16 +65,16 @@ class AzureActiveDirectoryAuthorityCloudTest {
     }
 
     @Test
-    fun testIsSameCloudAsAuthority_bleuVsSovsg_returnsFalse() {
+    fun testIsSameCloudAsAuthority_bleuVsGovsg_returnsFalse() {
         val bleu = createAuthority(AzureActiveDirectoryCloud.BLEU_CLOUD_HOST)
-        val sovsg = createAuthority(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST)
-        assertFalse(bleu.isSameCloudAsAuthority(sovsg))
+        val govsg = createAuthority(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST)
+        assertFalse(bleu.isSameCloudAsAuthority(govsg))
     }
 
     @Test
-    fun testIsSameCloudAsAuthority_delosVsSovsg_returnsFalse() {
+    fun testIsSameCloudAsAuthority_delosVsGovsg_returnsFalse() {
         val delos = createAuthority(AzureActiveDirectoryCloud.DELOS_CLOUD_HOST)
-        val sovsg = createAuthority(AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST)
-        assertFalse(delos.isSameCloudAsAuthority(sovsg))
+        val govsg = createAuthority(AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST)
+        assertFalse(delos.isSameCloudAsAuthority(govsg))
     }
 }

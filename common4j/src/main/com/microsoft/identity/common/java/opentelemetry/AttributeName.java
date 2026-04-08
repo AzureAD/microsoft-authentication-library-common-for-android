@@ -147,6 +147,7 @@ public enum AttributeName {
      * The content type of the response returned by eSTS for the request.
      */
     response_content_type,
+
     /**
      * The http status code of the operation.
      */
@@ -669,6 +670,34 @@ public enum AttributeName {
      * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
      */
     target_blank_navigation_route,
+
+    //endregion
+
+    //region x-ms-clientdata server telemetry attributes
+
+    /**
+     * The server-side error code returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA.
+     */
+    server_error,
+
+    /**
+     * The server-side sub-error code returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA.
+     */
+    server_sub_error,
+
+    /**
+     * The cloud instance returned in the x-ms-clientdata header or clientdata query
+     * parameter from eSTS / MSA (e.g. "public", "usgov").
+     */
+    server_cloud_instance,
+
+    /**
+     * The caller data boundary returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA, indicating the data residency boundary.
+     */
+    server_caller_data_boundary,
 
     //endregion
 }

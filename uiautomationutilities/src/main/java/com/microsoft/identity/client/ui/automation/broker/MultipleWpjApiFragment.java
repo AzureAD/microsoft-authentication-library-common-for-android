@@ -27,6 +27,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -36,6 +37,7 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.interaction.IPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AdfsPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ThreadUtils;
@@ -215,10 +217,12 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      * @param password the password to be used for device registration
      */
     public String performDeviceRegistrationDontValidate(String username, String password) {
-        return performDeviceRegistrationInternal(
+        return performDeviceRegistration(
                 username,
                 password,
                 false,
+                false,
+                null,
                 false
         );
     }
@@ -230,11 +234,13 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      * @param password the password to be used for device registration
      */
     public void performDeviceRegistration(String username, String password) {
-        performDeviceRegistrationInternal(
+        performDeviceRegistration(
                 username,
                 password,
                 false,
-                true
+                true,
+                null,
+                false
         );
     }
 
@@ -245,11 +251,13 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      * @param password the password to be used for device registration
      */
     public void performSharedDeviceRegistration(String username, String password) {
-        performDeviceRegistrationInternal(
+        performDeviceRegistration(
                 username,
                 password,
                 true,
-                true
+                true,
+                null,
+                false
         );
     }
 
@@ -261,10 +269,13 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
      * @param password                      the password to be used for device registration
      * @param isSharedDevice                true if the device is a shared device
      */
-    private String performDeviceRegistrationInternal(@NonNull final String username,
-                                                     @NonNull final String password,
-                                                     final boolean isSharedDevice,
-                                                     final boolean shouldValidate) {
+    public String performDeviceRegistration(
+            @NonNull final String username,
+            @NonNull final String password,
+            final boolean isSharedDevice,
+            final boolean shouldValidate,
+            @Nullable final PromptHandlerParameters userPromptHandlerParameters,
+            final boolean isFederatedUser) {
         launch();
         fillTextBox(USERNAME_EDIT_TEXT, username);
 
@@ -274,26 +285,37 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
             clickButton(DEVICE_REGISTRATION_BUTTON_ID);
         }
 
-        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
-                .prompt(PromptParameter.LOGIN)
-                .broker(brokerHost)
-                .consentPageExpected(false)
-                .expectingBrokerAccountChooserActivity(false)
-                .expectingLoginPageAccountPicker(false)
-                .sessionExpected(false)
-                .loginHint(username)
-                .build();
+        final PromptHandlerParameters promptHandlerParameters;
+        if (userPromptHandlerParameters == null) {
+            promptHandlerParameters = PromptHandlerParameters.builder()
+                    .prompt(PromptParameter.LOGIN)
+                    .broker(brokerHost)
+                    .consentPageExpected(false)
+                    .expectingBrokerAccountChooserActivity(false)
+                    .expectingLoginPageAccountPicker(false)
+                    .sessionExpected(false)
+                    .loginHint(username)
+                    .build();
+        } else if (isFederatedUser) {
+            promptHandlerParameters = new AdfsPromptHandler(userPromptHandlerParameters).getParameters();
+        } else {
+            promptHandlerParameters = userPromptHandlerParameters;
+        }
 
 
         final IPromptHandler promptHandler = getPromptHandler(false, promptHandlerParameters);
         promptHandler.handlePrompt(username, password);
         ThreadUtils.sleepSafely(1000,"performDeviceRegistrationInternal", "Waiting for result to be returned from the broker");
         if (shouldValidate) {
-            dismissDialogBoxAndAssertContainsText("SUCCESS");
+            final String dialogText = dismissDialogBoxAndGetText();
+            Assert.assertTrue(
+                    "Expected dialog text to contain 'SUCCESS' but was: " + dialogText,
+                    !StringUtil.isNullOrEmpty(dialogText) && dialogText.contains("SUCCESS")
+            );
+            return dialogText;
         } else {
             return dismissDialogBoxAndGetText();
         }
-        return null;
     }
 
 }
