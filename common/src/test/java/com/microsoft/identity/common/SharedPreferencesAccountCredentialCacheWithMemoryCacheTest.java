@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.components.InMemoryStorageSupplier;
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
@@ -40,20 +41,28 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
@@ -61,7 +70,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
@@ -2514,5 +2526,228 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
         creds1.get(0).setCachedAt("banana");
         assertNotEquals(creds1.get(0), creds2.get(0));
+    }
+
+    // =====================================================================
+    // Flight-gated behavior tests for ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE
+    // =====================================================================
+
+    private void enableFilterThenCloneFlight() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+    }
+
+    private void resetFlight() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void getAccounts_flightDisabled_returnsMutableListOfClones() {
+        final AccountRecord account = buildDefaultAccountRecord();
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+        final List<AccountRecord> accounts1 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertEquals(1, accounts1.size());
+        final List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertEquals(1, accounts2.size());
+
+        // The list itself should be a new mutable list each time
+        assertNotSame(accounts1, accounts2);
+
+        // The returned objects should be clones, not the same references
+        assertNotSame(accounts1.get(0), accounts2.get(0));
+        assertEquals(accounts1.get(0), accounts2.get(0));
+
+        // Mutating a returned object should not affect subsequent retrievals
+        accounts1.get(0).setLocalAccountId("mutated");
+        final List<AccountRecord> accounts3 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertNotEquals("mutated", accounts3.get(0).getLocalAccountId());
+
+        // The returned list should be mutable (no exception thrown)
+        accounts1.add(new AccountRecord());
+    }
+
+    @Test
+    public void getAccounts_flightEnabled_returnsUnmodifiableListWithSharedReferences() {
+        enableFilterThenCloneFlight();
+        try {
+            final AccountRecord account = buildDefaultAccountRecord();
+            mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+            final List<AccountRecord> accounts1 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertEquals(1, accounts1.size());
+            final List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertEquals(1, accounts2.size());
+
+            // When flight is enabled, objects are shared references (not cloned)
+            assertSame(accounts1.get(0), accounts2.get(0));
+
+            // The returned list should be unmodifiable
+            try {
+                accounts1.add(new AccountRecord());
+                fail("Expected UnsupportedOperationException from unmodifiable list");
+            } catch (final UnsupportedOperationException e) {
+                // expected
+            }
+        } finally {
+            resetFlight();
+        }
+    }
+
+    @Test
+    public void getCredentials_flightDisabled_returnsMutableListOfClones() {
+        final RefreshTokenRecord rt = buildDefaultRefreshToken();
+        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+        final List<Credential> creds1 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertEquals(1, creds1.size());
+        final List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertEquals(1, creds2.size());
+
+        // The list itself should be a new mutable list each time
+        assertNotSame(creds1, creds2);
+
+        // The returned objects should be clones, not the same references
+        assertNotSame(creds1.get(0), creds2.get(0));
+        assertEquals(creds1.get(0), creds2.get(0));
+
+        // Mutating a returned object should not affect subsequent retrievals
+        creds1.get(0).setCachedAt("mutated");
+        final List<Credential> creds3 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertNotEquals("mutated", creds3.get(0).getCachedAt());
+
+        // The returned list should be mutable (no exception thrown)
+        creds1.add(new RefreshTokenRecord());
+    }
+
+    @Test
+    public void getCredentials_flightEnabled_returnsUnmodifiableListWithSharedReferences() {
+        enableFilterThenCloneFlight();
+        try {
+            final RefreshTokenRecord rt = buildDefaultRefreshToken();
+            mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+            final List<Credential> creds1 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertEquals(1, creds1.size());
+            final List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertEquals(1, creds2.size());
+
+            // When flight is enabled, objects are shared references (not cloned)
+            assertSame(creds1.get(0), creds2.get(0));
+
+            // The returned list should be unmodifiable
+            try {
+                creds1.add(new RefreshTokenRecord());
+                fail("Expected UnsupportedOperationException from unmodifiable list");
+            } catch (final UnsupportedOperationException e) {
+                // expected
+            }
+        } finally {
+            resetFlight();
+        }
+    }
+
+    // =====================================================================
+    // Tests verifying removeAccount/removeCredential do not call keySet()
+    // =====================================================================
+
+    /**
+     * A delegating INameValueStorage wrapper that counts calls to keySet() and getAll().
+     */
+    private static class KeySetTrackingStorage implements INameValueStorage<String> {
+        private final INameValueStorage<String> mDelegate;
+        final AtomicInteger keySetCallCount = new AtomicInteger(0);
+        final AtomicInteger getAllCallCount = new AtomicInteger(0);
+
+        KeySetTrackingStorage(final INameValueStorage<String> delegate) {
+            mDelegate = delegate;
+        }
+
+        @Override
+        public String get(final String name) {
+            return mDelegate.get(name);
+        }
+
+        @Override
+        public Map<String, String> getAll() {
+            getAllCallCount.incrementAndGet();
+            return mDelegate.getAll();
+        }
+
+        @Override
+        public void put(final String name, final String value) {
+            mDelegate.put(name, value);
+        }
+
+        @Override
+        public void remove(final String name) {
+            mDelegate.remove(name);
+        }
+
+        @Override
+        public void clear() {
+            mDelegate.clear();
+        }
+
+        @Override
+        public Set<String> keySet() {
+            keySetCallCount.incrementAndGet();
+            return mDelegate.keySet();
+        }
+
+        @Override
+        public Iterator<Map.Entry<String, String>> getAllFilteredByKey(final Predicate<String> keyFilter) {
+            return mDelegate.getAllFilteredByKey(keyFilter);
+        }
+    }
+
+    @Test
+    public void removeAccount_doesNotCallKeySetOrGetAll() throws Exception {
+        final INameValueStorage<String> baseStorage = new InMemoryStorageSupplier()
+                .getEncryptedNameValueStore(
+                        sAccountCredentialSharedPreferences + "_removeAccountTest",
+                        String.class);
+        final KeySetTrackingStorage trackingStorage = new KeySetTrackingStorage(baseStorage);
+        final SharedPreferencesAccountCredentialCacheWithMemoryCache cache =
+                new SharedPreferencesAccountCredentialCacheWithMemoryCache(mDelegate, trackingStorage);
+
+        final AccountRecord account = buildDefaultAccountRecord();
+        cache.saveAccount(account);
+
+        // Reset counters after initial load (which may call getAll/keySet for loading)
+        trackingStorage.keySetCallCount.set(0);
+        trackingStorage.getAllCallCount.set(0);
+
+        cache.removeAccount(account);
+
+        assertEquals("removeAccount() must not call keySet()", 0, trackingStorage.keySetCallCount.get());
+        assertEquals("removeAccount() must not call getAll()", 0, trackingStorage.getAllCallCount.get());
+    }
+
+    @Test
+    public void removeCredential_doesNotCallKeySetOrGetAll() throws Exception {
+        final INameValueStorage<String> baseStorage = new InMemoryStorageSupplier()
+                .getEncryptedNameValueStore(
+                        sAccountCredentialSharedPreferences + "_removeCredentialTest",
+                        String.class);
+        final KeySetTrackingStorage trackingStorage = new KeySetTrackingStorage(baseStorage);
+        final SharedPreferencesAccountCredentialCacheWithMemoryCache cache =
+                new SharedPreferencesAccountCredentialCacheWithMemoryCache(mDelegate, trackingStorage);
+
+        final RefreshTokenRecord rt = buildDefaultRefreshToken();
+        cache.saveCredential(rt);
+
+        // Reset counters after initial load (which may call getAll/keySet for loading)
+        trackingStorage.keySetCallCount.set(0);
+        trackingStorage.getAllCallCount.set(0);
+
+        cache.removeCredential(rt);
+
+        assertEquals("removeCredential() must not call keySet()", 0, trackingStorage.keySetCallCount.get());
+        assertEquals("removeCredential() must not call getAll()", 0, trackingStorage.getAllCallCount.get());
     }
 }
