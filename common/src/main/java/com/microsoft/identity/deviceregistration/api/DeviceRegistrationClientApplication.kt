@@ -20,7 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.deviceregistration
+
+package com.microsoft.identity.deviceregistration.api
 
 import android.app.Activity
 import android.content.Context
@@ -36,6 +37,8 @@ import com.microsoft.identity.common.java.exception.BaseException
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.logging.Logger
+import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationClientController
+import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.DrsDiscoveryEndpoint
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
@@ -64,11 +67,11 @@ import java.util.UUID
 /**
  * Performs device registration operations via IPC to the broker.
  *
- * Strategy construction is delegated to [DeviceRegistrationIpcStrategiesProvider].
+ * Strategy construction is delegated to [com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider].
  * Default provider supplies ContentProvider + BoundService.
  * Broker supplies its own provider that adds WpjLegacyAccountAuthenticatorStrategy.
  *
- * All public methods require a [UUID] correlationId for IPC request tracing.
+ * All public methods require a [java.util.UUID] correlationId for IPC request tracing.
  */
 class DeviceRegistrationClientApplication {
 
@@ -78,7 +81,7 @@ class DeviceRegistrationClientApplication {
      * Simple constructor — creates defaults from context.
      * Used by OneAuth consumers.
      *
-     * @throws ClientException if no valid broker is found.
+     * @throws com.microsoft.identity.common.java.exception.ClientException if no valid broker is found.
      */
     @Throws(ClientException::class)
     constructor(context: Context) {
@@ -86,7 +89,7 @@ class DeviceRegistrationClientApplication {
         mController = buildController(
             context,
             components,
-            BrokerDiscoveryClientFactory.getInstanceForClientSdk(context, components),
+            BrokerDiscoveryClientFactory.Companion.getInstanceForClientSdk(context, components),
             DeviceRegistrationIpcStrategiesProvider()
         )
     }
@@ -118,7 +121,7 @@ class DeviceRegistrationClientApplication {
         ): AndroidDeviceRegistrationClientController {
             val cacheUpdater = ActiveBrokerCacheUpdater(
                 context,
-                ClientActiveBrokerCache.getBrokerSdkCache(components.storageSupplier)
+                ClientActiveBrokerCache.Companion.getBrokerSdkCache(components.storageSupplier)
             )
             return AndroidDeviceRegistrationClientController(
                 context,
@@ -192,7 +195,12 @@ class DeviceRegistrationClientApplication {
     fun getPreProvisionedBlob(tenantId: String, correlationId: UUID): String {
         val methodTag = "$TAG:getPreProvisionedBlob"
         Logger.info(methodTag, "GetPreProvisionedBlob started. CorrelationId: $correlationId")
-        val responseSerialized = mController.execute(PreProvisionedBlobV0Parameters(correlationId, tenantId))
+        val responseSerialized = mController.execute(
+            PreProvisionedBlobV0Parameters(
+                correlationId,
+                tenantId
+            )
+        )
         val result = PreProvisionedBlobV0Response.create(responseSerialized).jws
         Logger.info(methodTag, "Blob returned successfully.")
         return result
@@ -203,7 +211,7 @@ class DeviceRegistrationClientApplication {
      *
      * @param deviceRegistrationRecord record to query state for.
      * @param correlationId            correlation ID for request tracing.
-     * @return [DeviceState] representing the device state.
+     * @return [com.microsoft.identity.deviceregistration.java.DeviceState] representing the device state.
      */
     @Throws(BaseException::class)
     fun getRegistrationState(
@@ -215,7 +223,7 @@ class DeviceRegistrationClientApplication {
         val responseSerialized = mController.execute(
             GetRegistrationStateV0Parameters(correlationId, deviceRegistrationRecord)
         )
-        val result = DeviceState.fromString(
+        val result = DeviceState.Companion.fromString(
             GetRegistrationStateV0Response.create(responseSerialized).deviceState
         )
         Logger.info(methodTag, "Get state ended successfully.")
@@ -334,7 +342,10 @@ class DeviceRegistrationClientApplication {
         Logger.info(methodTag, "InstallCert started. CorrelationId: $correlationId")
         try {
             val responseSerialized = mController.execute(
-                GetInstallWpjCertificateIntentRequestV0Parameters(correlationId, deviceRegistrationRecord)
+                GetInstallWpjCertificateIntentRequestV0Parameters(
+                    correlationId,
+                    deviceRegistrationRecord
+                )
             )
             val response = GetInstallWpjCertificateIntentRequestV0Response.create(responseSerialized)
             Logger.info(methodTag, "Response from broker received")
@@ -390,7 +401,11 @@ class DeviceRegistrationClientApplication {
     fun getAllEntries(correlationId: UUID): List<IDeviceRegistrationRecord> {
         val methodTag = "$TAG:getAllEntries"
         Logger.info(methodTag, "GetAllEntries started. CorrelationId: $correlationId")
-        val responseSerialized = mController.execute(GetDeviceRegistrationRecordsV0Parameters(correlationId))
+        val responseSerialized = mController.execute(
+            GetDeviceRegistrationRecordsV0Parameters(
+                correlationId
+            )
+        )
         Logger.info(methodTag, "Return all device registration records.")
         return GetDeviceRegistrationRecordsV0Response.create(responseSerialized)
             .deviceRegistrationRecords

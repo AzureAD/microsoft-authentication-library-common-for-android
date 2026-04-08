@@ -20,15 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.deviceregistration
+package com.microsoft.identity.deviceregistration.api
 
 import android.content.Context
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.internal.activebrokerdiscovery.IBrokerDiscoveryClient
 import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
+import com.microsoft.identity.common.java.interfaces.IStorageSupplier
+import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker
+import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
@@ -37,12 +41,11 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.GetDevic
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -67,7 +70,7 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     private fun createDrca(strategy: IIpcStrategy): DeviceRegistrationClientApplication {
-        val storageSupplier: com.microsoft.identity.common.java.interfaces.IStorageSupplier = mock(defaultAnswer = org.mockito.Mockito.RETURNS_DEEP_STUBS)
+        val storageSupplier: IStorageSupplier = mock(defaultAnswer = Mockito.RETURNS_DEEP_STUBS)
         val components: IPlatformComponents = mock {
             whenever(it.storageSupplier).thenReturn(storageSupplier)
         }
@@ -100,7 +103,7 @@ class DeviceRegistrationClientApplicationTest {
         val result = drca.getPreProvisionedBlob("test-tenant", UUID.randomUUID())
 
 
-        assertEquals(expectedJws, result)
+        Assert.assertEquals(expectedJws, result)
     }
 
     @Test
@@ -113,7 +116,7 @@ class DeviceRegistrationClientApplicationTest {
             UUID.randomUUID()
         )
 
-        assertEquals(DeviceState.DEVICE_VALID, result)
+        Assert.assertEquals(DeviceState.DEVICE_VALID, result)
     }
 
     @Test
@@ -126,22 +129,23 @@ class DeviceRegistrationClientApplicationTest {
             UUID.randomUUID()
         )
 
-        assertEquals(DeviceState.UNKNOWN, result)
+        Assert.assertEquals(DeviceState.UNKNOWN, result)
     }
 
     @Test
     fun getDeviceRegistrationRecord_returnsRecord() {
-        val record = DeviceRegistrationRecord("test-tenant", "user@test.com", "device-123", false, true)
+        val record =
+            DeviceRegistrationRecord("test-tenant", "user@test.com", "device-123", false, true)
         val response = GetDeviceRegistrationRecordV0Response(UUID.randomUUID(), record)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
         val result = drca.getDeviceRegistrationRecord("test-tenant", UUID.randomUUID())
 
 
-        assertNotNull(result)
-        assertEquals("test-tenant", result!!.tenantId)
-        assertEquals("user@test.com", result.upn)
-        assertEquals("device-123", result.deviceId)
+        Assert.assertNotNull(result)
+        Assert.assertEquals("test-tenant", result!!.tenantId)
+        Assert.assertEquals("user@test.com", result.upn)
+        Assert.assertEquals("device-123", result.deviceId)
     }
 
     @Test
@@ -152,7 +156,7 @@ class DeviceRegistrationClientApplicationTest {
         val result = drca.getDeviceRegistrationRecord("unknown-tenant", UUID.randomUUID())
 
 
-        assertNull(result)
+        Assert.assertNull(result)
     }
 
     @Test
@@ -167,9 +171,9 @@ class DeviceRegistrationClientApplicationTest {
         val result = drca.getAllEntries(UUID.randomUUID())
 
 
-        assertEquals(2, result.size)
-        assertEquals("tenant1", result[0].tenantId)
-        assertEquals("tenant2", result[1].tenantId)
+        Assert.assertEquals(2, result.size)
+        Assert.assertEquals("tenant1", result[0].tenantId)
+        Assert.assertEquals("tenant2", result[1].tenantId)
     }
 
     @Test
@@ -179,11 +183,11 @@ class DeviceRegistrationClientApplicationTest {
         val strategy: IIpcStrategy = mock()
         whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
         whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
-            val bundle = (invocation.arguments[0] as com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle).bundle
-            val protocolData = bundle?.getByteArray(AndroidDeviceRegistrationProtocolPacker.PROTOCOL_DATA)
-            assertNotNull(protocolData)
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
             val parameters = PreProvisionedBlobV0Parameters.create(protocolData)
-            assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals(correlationId, parameters.correlationId)
             // Return the packed response
             packer.pack(response)
         }

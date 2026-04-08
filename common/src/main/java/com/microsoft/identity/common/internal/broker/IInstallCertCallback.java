@@ -27,13 +27,14 @@ import android.app.Activity;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.deviceregistration.api.DeviceRegistrationClientApplication;
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord;
 
 import java.util.UUID;
 
 /**
  * Interface for the callback
- * {@link com.microsoft.identity.deviceregistration.DeviceRegistrationClientApplication#installCert(IDeviceRegistrationRecord, Activity, IInstallCertCallback, UUID)}
+ * {@link DeviceRegistrationClientApplication#installCert(IDeviceRegistrationRecord, Activity, IInstallCertCallback, UUID)}
  * If certificate is installed successfully, it will be returned through onSuccess.
  * Otherwise, a {@link BaseException} will be returned through onError.
  */
