@@ -32,8 +32,7 @@ interface IIpcStrategy {
     enum class Type(val value: String) {
         BOUND_SERVICE("bound_service"),
         ACCOUNT_MANAGER_ADD_ACCOUNT("account_manager_add_account"),
-        CONTENT_PROVIDER("content_provider"),
-        LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API("legacy_account_authenticator_for_wpj_api");
+        CONTENT_PROVIDER("content_provider");
 
         override fun toString(): String {
             return value

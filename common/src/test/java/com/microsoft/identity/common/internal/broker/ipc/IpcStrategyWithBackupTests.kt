@@ -77,7 +77,7 @@ class IpcStrategyWithBackupTests {
                     shouldThrowException = true),
                 MockIpc(type = IIpcStrategy.Type.BOUND_SERVICE,
                     shouldThrowException = true),
-                MockIpc(type = IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API,
+                MockIpc(type = IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT,
                     shouldThrowException = true),
             )
         )
@@ -93,7 +93,7 @@ class IpcStrategyWithBackupTests {
             backup = listOf(
                 MockIpc(type = IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT,
                     shouldThrowException = true),
-                MockIpc(type = IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API,
+                MockIpc(type = IIpcStrategy.Type.BOUND_SERVICE,
                     shouldThrowException = true),
             )
         )
@@ -111,7 +111,7 @@ class IpcStrategyWithBackupTests {
                 MockIpc(type = IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT,
                     shouldThrowException = true),
                 MockIpc(type = IIpcStrategy.Type.BOUND_SERVICE),
-                MockIpc(type = IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API),
+                MockIpc(type = IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT),
             )
         )
 
@@ -144,7 +144,7 @@ class IpcStrategyWithBackupTests {
                     shouldThrowException = true),
                 MockIpc(type = IIpcStrategy.Type.BOUND_SERVICE,
                     shouldThrowException = true),
-                MockIpc(type = IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API,
+                MockIpc(type = IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT,
                     shouldThrowException = true),
             )
         )

@@ -25,7 +25,6 @@ package com.microsoft.identity.deviceregistration;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.DEVICE_REGISTRATION_OPERATIONS;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
-import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
 
 import android.content.Context;
@@ -234,8 +233,6 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
             attributeName = AttributeName.content_provider_status.name();
         } else if (BOUND_SERVICE.equals(strategyType)) {
             attributeName = AttributeName.bound_service_status.name();
-        } else if (LEGACY_ACCOUNT_AUTHENTICATOR_FOR_WPJ_API.equals(strategyType)) {
-            attributeName = AttributeName.legacy_account_manager_status.name();
         } else {
             attributeName = null;
         }
