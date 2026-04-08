@@ -489,6 +489,12 @@ public enum AttributeName {
     in_memory_cache_used_for_accounts_and_credentials,
 
     /**
+     * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
+     * getCredentials()/getAccounts() operations.
+     */
+    is_filter_then_clone_enabled,
+
+    /**
      * Elapsed time (in milliseconds) spent in executing the load() method in BrokerOAuth2TokenCache for in memory cache.
      */
     elapsed_time_in_memory_cache_load,

@@ -29,15 +29,19 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -265,8 +269,17 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getAccounts";
         Logger.verbose(methodTag, "Loading Accounts...(no arg)");
 
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
         synchronized (mCacheLock) {
             waitForInitialLoad();
+            if (useFilterThenClone) {
+                Logger.info(methodTag, "Found [" + mCachedAccountRecordsWithKeys.size() + "] Accounts...");
+                return Collections.unmodifiableList(
+                        new ArrayList<>(mCachedAccountRecordsWithKeys.values()));
+            }
             final List<AccountRecord> accounts = new ArrayList<>();
             for (AccountRecord record : mCachedAccountRecordsWithKeys.values()) {
                 try {
@@ -351,8 +364,20 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getCredentials";
         Logger.verbose(methodTag, "Loading Credentials...");
 
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
         synchronized (mCacheLock) {
             waitForInitialLoad();
+            if (useFilterThenClone) {
+                // Return uncloned references in an unmodifiable list.
+                // All callers have been verified as read-only on the returned items.
+                return Collections.unmodifiableList(
+                        new ArrayList<>(mCachedCredentialsWithKeys.values()));
+            }
             ArrayList<Credential> credentials = new ArrayList<>();
             for (Credential credential : mCachedCredentialsWithKeys.values()) {
                 try {
