@@ -114,9 +114,10 @@ class CancellationSignalTest {
         val connection1 = mock(HttpURLConnection::class.java)
         val connection2 = mock(HttpURLConnection::class.java)
 
-        // First attempt completes normally
-        signal.registerOnCancel(Runnable { connection1.disconnect() })
-        signal.unregisterOnCancel()
+        // First attempt completes normally — store action for identity-based unregister
+        val action1 = Runnable { connection1.disconnect() }
+        signal.registerOnCancel(action1)
+        signal.unregisterOnCancel(action1)
 
         // Retry registers new action
         signal.registerOnCancel(Runnable { connection2.disconnect() })

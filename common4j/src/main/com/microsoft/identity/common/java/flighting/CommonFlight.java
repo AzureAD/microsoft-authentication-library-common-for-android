@@ -253,7 +253,7 @@ public enum CommonFlight implements IFlightConfig {
      *
      * Default: false (disabled for safe rollout).
      */
-    ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false);
+    ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
     
     /** 
      * Flight to enable server-side client data telemetry from the x-ms-clientdata response

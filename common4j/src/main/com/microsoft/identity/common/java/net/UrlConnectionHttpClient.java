@@ -363,10 +363,13 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         // This is set by CommandDispatcher before executeCommand() is called.
         final CancellationSignal cancellationSignal = CancellationSignal.getCurrentThreadSignal();
 
+        // Store the disconnect action so we can pass the same instance to unregisterOnCancel.
+        final Runnable disconnectAction = (cancellationSignal != null) ? urlConnection::disconnect : null;
+
         // Register the connection's disconnect as the cancel action for command-level timeout.
         // If already cancelled (caller timed out while we were queued), abort immediately.
         if (cancellationSignal != null
-                && !cancellationSignal.registerOnCancel(urlConnection::disconnect)) {
+                && !cancellationSignal.registerOnCancel(disconnectAction)) {
             // Emit HTTP end telemetry to match the HttpStartEvent — response is null (no I/O happened)
             completionCallback.accept(null);
             throw new ClientException(
@@ -393,7 +396,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             // Unregister cancel action — either we're done or an exception was thrown.
             // This prevents cancel() from disconnecting a potentially-reused connection.
             if (cancellationSignal != null) {
-                cancellationSignal.unregisterOnCancel();
+                cancellationSignal.unregisterOnCancel(disconnectAction);
             }
         }
     }

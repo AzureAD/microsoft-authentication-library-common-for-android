@@ -72,14 +72,15 @@ class CommandDispatcherCancellationTest {
         // Worker thread: mimics submitSilentReturningFuture's Runnable
         executor.submit {
             CancellationSignal.setForCurrentThread(signal)
+            val disconnectAction = Runnable { connection.disconnect() }
             try {
-                signal.registerOnCancel(Runnable { connection.disconnect() })
+                signal.registerOnCancel(disconnectAction)
                 workerRegistered.countDown()
                 // Simulate blocked on HTTP read — spin until cancelled
                 while (!signal.isCancelled) Thread.sleep(10)
                 future.setResult("cancelled_by_signal")
             } finally {
-                signal.unregisterOnCancel()
+                signal.unregisterOnCancel(disconnectAction)
                 CancellationSignal.clearCurrentThread()
                 workerFinished.countDown()
             }
@@ -163,12 +164,13 @@ class CommandDispatcherCancellationTest {
 
         executor.submit {
             CancellationSignal.setForCurrentThread(signal)
+            val disconnectAction = Runnable { workerConnection.disconnect() }
             try {
-                signal.registerOnCancel(Runnable { workerConnection.disconnect() })
+                signal.registerOnCancel(disconnectAction)
                 workerRegistered.countDown()
                 while (!signal.isCancelled) Thread.sleep(10)
             } finally {
-                signal.unregisterOnCancel()
+                signal.unregisterOnCancel(disconnectAction)
                 CancellationSignal.clearCurrentThread()
                 workerFinished.countDown()
             }

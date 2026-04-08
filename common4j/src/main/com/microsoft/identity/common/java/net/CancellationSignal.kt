@@ -23,25 +23,28 @@
 package com.microsoft.identity.common.java.net
 
 import com.microsoft.identity.common.java.logging.Logger
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Thread-safe cancellation signal shared between the command dispatcher (caller)
  * and the worker thread. When the command-level timeout fires, the caller sets this
- * signal to cancelled, which executes any registered cancel action (e.g., disconnecting
- * an HTTP connection).
+ * signal to cancelled, which executes all registered cancel actions (e.g., disconnecting
+ * HTTP connections).
+ *
+ * Multiple cancel actions can be registered additively via [registerOnCancel].
+ * On [cancel], all registered actions are executed and the list is cleared.
  *
  * Lifecycle:
  * 1. Created internally by FinalizableResultFuture
  * 2. Passed to the worker thread via ThreadLocal (set at start of run(), cleared in finally)
- * 3. Worker registers a cancel action via [registerOnCancel] (e.g., urlConnection::disconnect)
- * 4. On [cancel], the registered action is executed immediately
+ * 3. Worker registers cancel actions via [registerOnCancel] (e.g., urlConnection::disconnect)
+ * 4. On [cancel], all registered actions are executed immediately
  */
 class CancellationSignal {
 
     private val mCancelled = AtomicBoolean(false)
-    private val mOnCancelAction = AtomicReference<Runnable>(null)
+    private val mOnCancelActions = CopyOnWriteArrayList<Runnable>()
 
     /**
      * Returns true if this signal has been cancelled.
@@ -50,40 +53,38 @@ class CancellationSignal {
         get() = mCancelled.get()
 
     /**
-     * Cancels the signal and executes any registered cancel action.
+     * Cancels the signal and executes all registered cancel actions.
      * Thread-safe — can be called from any thread (typically the caller thread).
      */
     fun cancel() {
         if (mCancelled.compareAndSet(false, true)) {
-            val action = mOnCancelAction.getAndSet(null)
-            if (action != null) {
+            for (action in mOnCancelActions) {
                 safeRun(action, "Executing cancel action due to command-level timeout")
             }
+            mOnCancelActions.clear()
         }
     }
 
     /**
      * Registers an action to execute on cancellation (e.g., disconnecting an HTTP connection).
+     * Multiple actions can be registered — all will be executed when [cancel] is called.
      * If already cancelled, executes immediately and returns false.
-     *
-     * Uses a fast-path check before setting, plus a double-check after setting,
-     * to handle the race where [cancel] fires between set and check.
      *
      * @param action the action to execute on cancellation
      * @return true if registered successfully, false if already cancelled
      */
     fun registerOnCancel(action: Runnable): Boolean {
-        // Fast path: if already cancelled, don't even register
+        // Fast path: if already cancelled, execute immediately
         if (mCancelled.get()) {
             safeRun(action, "Action registered after cancellation — executing immediately")
             return false
         }
 
-        mOnCancelAction.set(action)
+        mOnCancelActions.add(action)
 
-        // Double-check: cancel() may have fired between the fast-path check and set()
+        // Double-check: cancel() may have fired between the fast-path check and add()
         if (mCancelled.get()) {
-            mOnCancelAction.set(null)
+            mOnCancelActions.remove(action)
             safeRun(action, "Cancel race detected in registerOnCancel — executing")
             return false
         }
@@ -91,10 +92,13 @@ class CancellationSignal {
     }
 
     /**
-     * Unregisters the cancel action (called after the cancellable operation completes).
+     * Unregisters a specific cancel action (called after the cancellable operation completes).
+     * The caller must pass the same [Runnable] instance that was registered.
+     *
+     * @param action the action to unregister
      */
-    fun unregisterOnCancel() {
-        mOnCancelAction.set(null)
+    fun unregisterOnCancel(action: Runnable) {
+        mOnCancelActions.remove(action)
     }
 
     companion object {
