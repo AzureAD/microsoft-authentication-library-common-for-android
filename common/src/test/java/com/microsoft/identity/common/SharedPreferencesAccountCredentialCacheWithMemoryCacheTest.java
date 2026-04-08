@@ -2533,6 +2533,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     // =====================================================================
 
     private void enableFilterThenCloneFlight() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
                 .thenReturn(true);
@@ -2656,12 +2657,15 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     // =====================================================================
 
     /**
-     * A delegating INameValueStorage wrapper that counts calls to keySet() and getAll().
+     * An {@link INameValueStorage} wrapper that counts calls to {@link #keySet()} and {@link #getAll()}.
+     * Used to verify that the {@code removeAccount()} and {@code removeCredential()} optimization
+     * avoids the expensive decrypt-all path by not calling these methods on the backing storage.
      */
     private static class KeySetTrackingStorage implements INameValueStorage<String> {
         private final INameValueStorage<String> mDelegate;
-        final AtomicInteger keySetCallCount = new AtomicInteger(0);
-        final AtomicInteger getAllCallCount = new AtomicInteger(0);
+        // AtomicInteger used because the cache performs its initial load on a background thread.
+        private final AtomicInteger mKeySetCallCount = new AtomicInteger(0);
+        private final AtomicInteger mGetAllCallCount = new AtomicInteger(0);
 
         KeySetTrackingStorage(final INameValueStorage<String> delegate) {
             mDelegate = delegate;
@@ -2674,7 +2678,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
         @Override
         public Map<String, String> getAll() {
-            getAllCallCount.incrementAndGet();
+            mGetAllCallCount.incrementAndGet();
             return mDelegate.getAll();
         }
 
@@ -2695,13 +2699,26 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
         @Override
         public Set<String> keySet() {
-            keySetCallCount.incrementAndGet();
+            mKeySetCallCount.incrementAndGet();
             return mDelegate.keySet();
         }
 
         @Override
         public Iterator<Map.Entry<String, String>> getAllFilteredByKey(final Predicate<String> keyFilter) {
             return mDelegate.getAllFilteredByKey(keyFilter);
+        }
+
+        int getKeySetCallCount() {
+            return mKeySetCallCount.get();
+        }
+
+        int getAllCallCount() {
+            return mGetAllCallCount.get();
+        }
+
+        void resetCallCounts() {
+            mKeySetCallCount.set(0);
+            mGetAllCallCount.set(0);
         }
     }
 
@@ -2719,13 +2736,12 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         cache.saveAccount(account);
 
         // Reset counters after initial load (which may call getAll/keySet for loading)
-        trackingStorage.keySetCallCount.set(0);
-        trackingStorage.getAllCallCount.set(0);
+        trackingStorage.resetCallCounts();
 
         cache.removeAccount(account);
 
-        assertEquals("removeAccount() must not call keySet()", 0, trackingStorage.keySetCallCount.get());
-        assertEquals("removeAccount() must not call getAll()", 0, trackingStorage.getAllCallCount.get());
+        assertEquals("removeAccount() must not call keySet()", 0, trackingStorage.getKeySetCallCount());
+        assertEquals("removeAccount() must not call getAll()", 0, trackingStorage.getAllCallCount());
     }
 
     @Test
@@ -2742,12 +2758,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         cache.saveCredential(rt);
 
         // Reset counters after initial load (which may call getAll/keySet for loading)
-        trackingStorage.keySetCallCount.set(0);
-        trackingStorage.getAllCallCount.set(0);
+        trackingStorage.resetCallCounts();
 
         cache.removeCredential(rt);
 
-        assertEquals("removeCredential() must not call keySet()", 0, trackingStorage.keySetCallCount.get());
-        assertEquals("removeCredential() must not call getAll()", 0, trackingStorage.getAllCallCount.get());
+        assertEquals("removeCredential() must not call keySet()", 0, trackingStorage.getKeySetCallCount());
+        assertEquals("removeCredential() must not call getAll()", 0, trackingStorage.getAllCallCount());
     }
 }
