@@ -251,7 +251,12 @@ public enum CommonFlight implements IFlightConfig {
      * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
      * Enabled by default; can be turned off via ECS if any issues arise in production.
      */
-    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true);
+    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true),
+
+    /**
+     * Flight to enable Auth Tab for the switch browser feature.
+     */
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false);
 
     private String key;
     private Object defaultValue;
