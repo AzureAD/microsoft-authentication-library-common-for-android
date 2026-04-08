@@ -24,7 +24,8 @@ package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -36,7 +37,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 /**
  * Implements a protocol parameters for provisioning a resource account.
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class ProvisionResourceAccountV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -50,6 +50,14 @@ public class ProvisionResourceAccountV0Parameters extends AbstractDeviceRegistra
      */
     public static ProvisionResourceAccountV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public ProvisionResourceAccountV0Parameters(@NonNull final UUID correlationId,
+                                                @NonNull final String tenantId,
+                                                @NonNull final String raObjectId) {
+        super(correlationId);
+        mTenantId = tenantId;
+        mRaObjectId = raObjectId;
     }
 
     @Getter

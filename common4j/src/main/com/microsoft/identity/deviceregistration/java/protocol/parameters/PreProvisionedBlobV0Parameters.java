@@ -24,7 +24,8 @@ package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -33,7 +34,6 @@ import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegi
 import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class PreProvisionedBlobV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -47,6 +47,12 @@ public class PreProvisionedBlobV0Parameters extends AbstractDeviceRegistrationPr
      */
     public static PreProvisionedBlobV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public PreProvisionedBlobV0Parameters(@NonNull final UUID correlationId,
+                                          @NonNull final String tenantId) {
+        super(correlationId);
+        mTenantId = tenantId;
     }
 
     @Getter

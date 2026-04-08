@@ -22,21 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
-import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
-import com.microsoft.identity.common.java.exception.ClientException;
-
 /**
  * Implements a protocol parameters for a device registration with tokens.
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class DeviceRegistrationWithTokensV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -50,6 +50,20 @@ public class DeviceRegistrationWithTokensV0Parameters extends AbstractDeviceRegi
      */
     public static DeviceRegistrationWithTokensV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public DeviceRegistrationWithTokensV0Parameters(@NonNull final UUID correlationId,
+                                                    @NonNull final String idToken,
+                                                    @NonNull final String accessToken,
+                                                    @NonNull final String refreshToken,
+                                                    final boolean registerAsSharedDevice,
+                                                    @Nullable final String discoveryEndpointName) {
+        super(correlationId);
+        mIdToken = idToken;
+        mAccessToken = accessToken;
+        mRefreshToken = refreshToken;
+        mRegisterAsSharedDevice = registerAsSharedDevice;
+        mDiscoveryEndpointName = discoveryEndpointName;
     }
 
     @Getter

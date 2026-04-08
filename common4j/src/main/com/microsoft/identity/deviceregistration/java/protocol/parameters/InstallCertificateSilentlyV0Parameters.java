@@ -25,7 +25,8 @@ package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -37,7 +38,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 /**
  * Implements a protocol parameters to install a certificate silently
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class InstallCertificateSilentlyV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -51,6 +51,12 @@ public class InstallCertificateSilentlyV0Parameters extends AbstractDeviceRegist
      */
     public static InstallCertificateSilentlyV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public InstallCertificateSilentlyV0Parameters(@NonNull final UUID correlationId,
+                                                  @NonNull final IDeviceRegistrationRecord deviceRegistrationRecord) {
+        super(correlationId);
+        mDeviceRegistrationRecord = deviceRegistrationRecord;
     }
 
     @Getter
