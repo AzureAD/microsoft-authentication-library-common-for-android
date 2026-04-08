@@ -41,7 +41,6 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -115,6 +114,26 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 Logger.error(methodTag, "Caught InterruptedException while waiting", e);
             }
         }
+    }
+
+    /**
+     * Clones each element of {@code items} and returns the cloned list.
+     * Used by filter-then-clone paths to defensively copy only matching items.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    private <T extends AccountCredentialBase> List<T> cloneItems(
+            @NonNull final List<T> items,
+            @NonNull final String methodTag) {
+        final List<T> cloned = new ArrayList<>(items.size());
+        for (final T item : items) {
+            try {
+                cloned.add((T) item.clone());
+            } catch (final CloneNotSupportedException e) {
+                Logger.error(methodTag, "Failed to clone " + item.getClass().getSimpleName(), e);
+            }
+        }
+        return cloned;
     }
 
     @Override
@@ -272,14 +291,11 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            if (useFilterThenClone) {
-                Logger.info(methodTag, "Found [" + mCachedAccountRecordsWithKeys.size() + "] Accounts...");
-                return Collections.unmodifiableList(
-                        new ArrayList<>(mCachedAccountRecordsWithKeys.values()));
-            }
             final List<AccountRecord> accounts = new ArrayList<>();
             for (AccountRecord record : mCachedAccountRecordsWithKeys.values()) {
                 try {
@@ -301,6 +317,23 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String realm) {
         final String methodTag = TAG + ":getAccountsFilteredBy";
         Logger.verbose(methodTag, "Loading Accounts...");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<AccountRecord> unclonedAccounts =
+                        new ArrayList<>(mCachedAccountRecordsWithKeys.values());
+                final List<AccountRecord> matchingUncloned = getAccountsFilteredByInternal(
+                        homeAccountId, environment, realm, unclonedAccounts);
+                final List<AccountRecord> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Accounts...");
+                return clonedMatches;
+            }
+        }
 
         final List<AccountRecord> allAccounts = getAccounts();
 
@@ -372,12 +405,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            if (useFilterThenClone) {
-                // Return uncloned references in an unmodifiable list.
-                // All callers have been verified as read-only on the returned items.
-                return Collections.unmodifiableList(
-                        new ArrayList<>(mCachedCredentialsWithKeys.values()));
-            }
             ArrayList<Credential> credentials = new ArrayList<>();
             for (Credential credential : mCachedCredentialsWithKeys.values()) {
                 try {
@@ -404,6 +431,36 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String authScheme) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
+                        unclonedCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        realm,
+                        target,
+                        authScheme,
+                        null,
+                        null,
+                        false
+                );
+                final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
+                return clonedMatches;
+            }
+        }
 
         final List<Credential> allCredentials = getCredentials();
 
@@ -479,6 +536,36 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String requestedClaims) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
+                        unclonedCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        realm,
+                        target,
+                        authScheme,
+                        requestedClaims,
+                        null,
+                        false
+                );
+                final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
+                return clonedMatches;
+            }
+        }
 
         final List<Credential> allCredentials = getCredentials();
 
@@ -591,6 +678,42 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                                                      @Nullable final String target,
                                                      @Nullable final String authScheme,
                                                      @Nullable final String requestedClaims) {
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> result = new ArrayList<>();
+                for (final CredentialType type : credentialTypes) {
+                    result.addAll(cloneItems(
+                            getCredentialsFilteredByInternal(
+                                    unclonedCredentials,
+                                    homeAccountId,
+                                    environment,
+                                    type,
+                                    clientId,
+                                    applicationIdentifier,
+                                    mamEnrollmentIdentifier,
+                                    realm,
+                                    target,
+                                    authScheme,
+                                    requestedClaims,
+                                    null,
+                                    false
+                            ),
+                            methodTag
+                    ));
+                }
+                return result;
+            }
+        }
+
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> result = new ArrayList<>();

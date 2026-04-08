@@ -490,7 +490,7 @@ public enum AttributeName {
 
     /**
      * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
-     * getCredentials()/getAccounts() operations.
+     * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
      */
     is_filter_then_clone_enabled,
 

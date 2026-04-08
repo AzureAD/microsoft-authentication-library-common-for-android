@@ -70,9 +70,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
@@ -2573,7 +2571,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     }
 
     @Test
-    public void getAccounts_flightEnabled_returnsUnmodifiableListWithSharedReferences() {
+    public void getAccounts_flightEnabled_stillReturnsMutableListOfClones() {
         enableFilterThenCloneFlight();
         try {
             final AccountRecord account = buildDefaultAccountRecord();
@@ -2584,16 +2582,17 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
             final List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
             assertEquals(1, accounts2.size());
 
-            // When flight is enabled, objects are shared references (not cloned)
-            assertSame(accounts1.get(0), accounts2.get(0));
+            // Even with flight enabled, getAccounts() still returns clones
+            assertNotSame(accounts1.get(0), accounts2.get(0));
+            assertEquals(accounts1.get(0), accounts2.get(0));
 
-            // The returned list should be unmodifiable
-            try {
-                accounts1.add(new AccountRecord());
-                fail("Expected UnsupportedOperationException from unmodifiable list");
-            } catch (final UnsupportedOperationException e) {
-                // expected
-            }
+            // Mutating a returned object should not affect subsequent retrievals
+            accounts1.get(0).setLocalAccountId("mutated");
+            final List<AccountRecord> accounts3 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertNotEquals("mutated", accounts3.get(0).getLocalAccountId());
+
+            // The returned list should be mutable (no exception thrown)
+            accounts1.add(new AccountRecord());
         } finally {
             resetFlight();
         }
@@ -2626,7 +2625,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     }
 
     @Test
-    public void getCredentials_flightEnabled_returnsUnmodifiableListWithSharedReferences() {
+    public void getCredentials_flightEnabled_stillReturnsMutableListOfClones() {
         enableFilterThenCloneFlight();
         try {
             final RefreshTokenRecord rt = buildDefaultRefreshToken();
@@ -2637,16 +2636,91 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
             final List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
             assertEquals(1, creds2.size());
 
-            // When flight is enabled, objects are shared references (not cloned)
-            assertSame(creds1.get(0), creds2.get(0));
+            // Even with flight enabled, getCredentials() still returns clones
+            assertNotSame(creds1.get(0), creds2.get(0));
+            assertEquals(creds1.get(0), creds2.get(0));
 
-            // The returned list should be unmodifiable
-            try {
-                creds1.add(new RefreshTokenRecord());
-                fail("Expected UnsupportedOperationException from unmodifiable list");
-            } catch (final UnsupportedOperationException e) {
-                // expected
-            }
+            // Mutating a returned object should not affect subsequent retrievals
+            creds1.get(0).setCachedAt("mutated");
+            final List<Credential> creds3 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertNotEquals("mutated", creds3.get(0).getCachedAt());
+
+            // The returned list should be mutable (no exception thrown)
+            creds1.add(new RefreshTokenRecord());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    // =====================================================================
+    // Tests verifying filter-then-clone optimization in FilteredBy methods
+    // =====================================================================
+
+    @Test
+    public void getAccountsFilteredBy_flightEnabled_returnsClonedMatches() {
+        enableFilterThenCloneFlight();
+        try {
+            final AccountRecord account = buildDefaultAccountRecord();
+            mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+            // Also save a non-matching account
+            final AccountRecord otherAccount = new AccountRecord();
+            otherAccount.setHomeAccountId("other-home-id");
+            otherAccount.setEnvironment("other.environment.com");
+            otherAccount.setRealm("other-realm");
+            otherAccount.setLocalAccountId("other-local-id");
+            otherAccount.setUsername("other-user");
+            otherAccount.setAuthorityType(AUTHORITY_TYPE);
+            mSharedPreferencesAccountCredentialCache.saveAccount(otherAccount);
+
+            // Filter by the default account's realm — should return only one match
+            final List<AccountRecord> filtered = mSharedPreferencesAccountCredentialCache
+                    .getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+            assertEquals(1, filtered.size());
+            assertEquals(HOME_ACCOUNT_ID, filtered.get(0).getHomeAccountId());
+
+            // Returned objects should be clones — mutating should not affect cache
+            filtered.get(0).setLocalAccountId("mutated");
+            final List<AccountRecord> filtered2 = mSharedPreferencesAccountCredentialCache
+                    .getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+            assertNotEquals("mutated", filtered2.get(0).getLocalAccountId());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    @Test
+    public void getCredentialsFilteredBy_flightEnabled_returnsClonedMatches() {
+        enableFilterThenCloneFlight();
+        try {
+            final RefreshTokenRecord rt = buildDefaultRefreshToken();
+            mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+            // Also save a non-matching credential
+            final RefreshTokenRecord otherRt = new RefreshTokenRecord();
+            otherRt.setCredentialType(CredentialType.RefreshToken.name());
+            otherRt.setHomeAccountId("other-home-id");
+            otherRt.setEnvironment("other.environment.com");
+            otherRt.setClientId("other-client-id");
+            otherRt.setCachedAt(CACHED_AT);
+            otherRt.setSecret(SECRET);
+            mSharedPreferencesAccountCredentialCache.saveCredential(otherRt);
+
+            // Filter by the default credential's attributes — should return only one match
+            final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.RefreshToken,
+                            CLIENT_ID, null, null, null, null, null);
+            assertEquals(1, filtered.size());
+            assertEquals(CLIENT_ID, filtered.get(0).getClientId());
+
+            // Returned objects should be clones — mutating should not affect cache
+            filtered.get(0).setCachedAt("mutated");
+            final List<Credential> filtered2 = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.RefreshToken,
+                            CLIENT_ID, null, null, null, null, null);
+            assertNotEquals("mutated", filtered2.get(0).getCachedAt());
         } finally {
             resetFlight();
         }
@@ -2735,7 +2809,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         final AccountRecord account = buildDefaultAccountRecord();
         cache.saveAccount(account);
 
-        // Reset counters after initial load (which may call getAll/keySet for loading)
+        // Force initial load to complete (getAccounts blocks on waitForInitialLoad),
+        // then reset counters so only removeAccount() calls are measured.
+        cache.getAccounts();
         trackingStorage.resetCallCounts();
 
         cache.removeAccount(account);
@@ -2757,7 +2833,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         final RefreshTokenRecord rt = buildDefaultRefreshToken();
         cache.saveCredential(rt);
 
-        // Reset counters after initial load (which may call getAll/keySet for loading)
+        // Force initial load to complete (getCredentials blocks on waitForInitialLoad),
+        // then reset counters so only removeCredential() calls are measured.
+        cache.getCredentials();
         trackingStorage.resetCallCounts();
 
         cache.removeCredential(rt);

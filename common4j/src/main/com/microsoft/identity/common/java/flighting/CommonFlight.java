@@ -255,8 +255,9 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
-     * When enabled, getCredentials()/getAccounts() returns uncloned references and
-     * getCredentialsFilteredBy()/getAccountsFilteredBy() filters first, then clones only matching items.
+     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
+     * references first, then clones only the matching items — avoiding the cost of
+     * cloning the entire cache when only a subset is needed.
      */
     ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
 
