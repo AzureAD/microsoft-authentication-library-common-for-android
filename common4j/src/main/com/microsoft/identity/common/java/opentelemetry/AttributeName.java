@@ -170,6 +170,12 @@ public enum AttributeName {
     silent_executor_pool_size,
 
     /**
+     * The outcome of cancellation signal processing for a timed-out ATS request.
+     * Only emitted when the cancellation flight is enabled and a timeout triggers cancellation.
+     */
+    cancellation_outcome,
+
+    /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */
     elapsed_time_cache_save,

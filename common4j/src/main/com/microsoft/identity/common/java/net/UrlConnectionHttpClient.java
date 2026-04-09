@@ -351,12 +351,53 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws ClientException {
+        final HttpURLConnection urlConnection;
         try {
-            final HttpURLConnection urlConnection = setupConnection(request);
+            urlConnection = setupConnection(request);
+        } catch (final IOException e) {
+            Logger.warn(TAG, "IOException occurred during setupConnection");
+            throw ConnectionError.getClientException(e);
+        }
+
+        // Get the cancellation signal for this worker thread (if any).
+        // This is set by CommandDispatcher before executeCommand() is called.
+        final CancellationSignal cancellationSignal = CancellationSignal.getCurrentThreadSignal();
+
+        // Store the disconnect action so we can pass the same instance to unregisterOnCancel.
+        final Runnable disconnectAction = (cancellationSignal != null) ? urlConnection::disconnect : null;
+
+        // Register the connection's disconnect as the cancel action for command-level timeout.
+        // If already cancelled (caller timed out while we were queued), abort immediately.
+        if (cancellationSignal != null
+                && !cancellationSignal.registerOnCancel(disconnectAction)) {
+            // Emit HTTP end telemetry to match the HttpStartEvent — response is null (no I/O happened)
+            completionCallback.accept(null);
+            throw new ClientException(
+                ClientException.TIMED_OUT,
+                "Request cancelled before HTTP execution due to command-level timeout");
+        }
+
+        try {
             sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
             return getHttpResponse(completionCallback, urlConnection);
-        }  catch (final IOException e) {
+        } catch (final IOException e) {
+            // Check if this IOException was caused by cancellation (disconnect()).
+            // HttpURLConnection.disconnect() causes SocketException on blocked I/O.
+            if (cancellationSignal != null && cancellationSignal.isCancelled()) {
+                // Emit HTTP end telemetry to match the HttpStartEvent — response is null (cancelled mid-I/O)
+                completionCallback.accept(null);
+                throw new ClientException(
+                    ClientException.TIMED_OUT,
+                    "Request cancelled due to command-level timeout",
+                    e);
+            }
             throw ConnectionError.getClientException(e);
+        } finally {
+            // Unregister cancel action — either we're done or an exception was thrown.
+            // This prevents cancel() from disconnecting a potentially-reused connection.
+            if (cancellationSignal != null) {
+                cancellationSignal.unregisterOnCancel(disconnectAction);
+            }
         }
     }
 

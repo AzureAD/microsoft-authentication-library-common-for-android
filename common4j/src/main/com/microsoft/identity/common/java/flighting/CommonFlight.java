@@ -247,6 +247,15 @@ public enum CommonFlight implements IFlightConfig {
     USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false),
 
     /**
+     * Enables HTTP cancellation on command-level timeout.
+     * When true, CommandDispatcher calls CancellationSignal.cancel() on TimeoutException,
+     * which disconnects the active HttpURLConnection on the worker thread.
+     *
+     * Default: false (disabled for safe rollout).
+     */
+    ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
+    
+    /** 
      * Flight to enable server-side client data telemetry from the x-ms-clientdata response
      * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
      * Enabled by default; can be turned off via ECS if any issues arise in production.
