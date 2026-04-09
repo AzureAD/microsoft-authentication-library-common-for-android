@@ -22,9 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.result;
 
+import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.util.ResultFuture;
 
 import java.util.concurrent.CountDownLatch;
+
+import lombok.NonNull;
 
 /**
  * A specialization of ResultFuture that can represent whether a task is not just complete,
@@ -33,6 +36,14 @@ import java.util.concurrent.CountDownLatch;
  */
 public class FinalizableResultFuture<T> extends ResultFuture<T> {
     private final CountDownLatch mFinalized = new CountDownLatch(1);
+
+    /**
+     * Cancellation signal owned by this future. Shared by all callers (original + dedup)
+     * and the worker thread. The worker registers its {@link java.net.HttpURLConnection}
+     * on this signal; on timeout, any caller can invoke {@link #cancelSignal()} to
+     * disconnect the worker's active connection.
+     */
+    private final CancellationSignal mCancellationSignal = new CancellationSignal();
 
     /**
      * Set this future to be fully complete, including any cleanup tasks.
@@ -52,5 +63,30 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
             Thread.currentThread().interrupt();
         }
         return true;
+    }
+
+    /**
+     * Returns the cancellation signal owned by this future.
+     * All callers (original + dedup) and the worker thread share this single signal.
+     * The worker registers its {@link java.net.HttpURLConnection} on it; any caller
+     * that times out calls {@link #cancelSignal()} to disconnect the worker's connection.
+     *
+     * @return the cancellation signal for this future
+     */
+    @NonNull
+    public CancellationSignal getCancellationSignal() {
+        return mCancellationSignal;
+    }
+
+    /**
+     * Cancels the cancellation signal, disconnecting any active HTTP connection
+     * registered by the worker thread.
+     *
+     * <p>Named {@code cancelSignal()} instead of {@code cancel()} to avoid
+     * confusion with {@link java.util.concurrent.Future#cancel(boolean)} inherited
+     * from {@link com.microsoft.identity.common.java.util.ResultFuture}.</p>
+     */
+    public void cancelSignal() {
+        mCancellationSignal.cancel();
     }
 }
