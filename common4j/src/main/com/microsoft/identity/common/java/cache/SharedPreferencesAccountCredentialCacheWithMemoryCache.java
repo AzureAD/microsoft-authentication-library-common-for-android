@@ -41,6 +41,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -123,7 +124,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     @SuppressWarnings("unchecked")
     @NonNull
     private <T extends AccountCredentialBase> List<T> cloneItems(
-            @NonNull final List<T> items,
+            @NonNull final Collection<T> items,
             @NonNull final String methodTag) {
         final List<T> cloned = new ArrayList<>(items.size());
         for (final T item : items) {
@@ -296,14 +297,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            final List<AccountRecord> accounts = new ArrayList<>();
-            for (AccountRecord record : mCachedAccountRecordsWithKeys.values()) {
-                try {
-                    accounts.add((AccountRecord) record.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone AccountRecord", e);
-                }
-            }
+            final List<AccountRecord> accounts = cloneItems(mCachedAccountRecordsWithKeys.values(), methodTag);
             Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
             return accounts;
         }
@@ -405,15 +399,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            ArrayList<Credential> credentials = new ArrayList<>();
-            for (Credential credential : mCachedCredentialsWithKeys.values()) {
-                try {
-                    credentials.add((Credential)credential.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone Credential", e);
-                }
-            }
-            return credentials;
+            return cloneItems(mCachedCredentialsWithKeys.values(), methodTag);
         }
     }
 
