@@ -501,6 +501,13 @@ public enum AttributeName {
     is_filter_then_clone_enabled,
 
     /**
+     * Indicates whether a desync was detected between the in-memory cache and SharedPreferences
+     * during removeCredential(). True means the key was found in SharedPreferences
+     * (via keySet()) but not in the in-memory map.
+     */
+    cache_key_in_storage_but_not_in_memory,
+
+    /**
      * Elapsed time (in milliseconds) spent in executing the load() method in BrokerOAuth2TokenCache for in memory cache.
      */
     elapsed_time_in_memory_cache_load,

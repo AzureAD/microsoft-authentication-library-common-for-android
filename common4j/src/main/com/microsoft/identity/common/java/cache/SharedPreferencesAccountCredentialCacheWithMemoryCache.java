@@ -289,12 +289,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getAccounts";
         Logger.verbose(methodTag, "Loading Accounts...(no arg)");
 
-        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
-        SpanExtension.current().setAttribute(
-                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
-
         synchronized (mCacheLock) {
             waitForInitialLoad();
             final List<AccountRecord> accounts = cloneItems(mCachedAccountRecordsWithKeys.values(), methodTag);
@@ -315,6 +309,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
 
         if (useFilterThenClone) {
             synchronized (mCacheLock) {
@@ -391,12 +388,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getCredentials";
         Logger.verbose(methodTag, "Loading Credentials...");
 
-        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
-        SpanExtension.current().setAttribute(
-                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
-
         synchronized (mCacheLock) {
             waitForInitialLoad();
             return cloneItems(mCachedCredentialsWithKeys.values(), methodTag);
@@ -421,6 +412,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
 
         if (useFilterThenClone) {
             synchronized (mCacheLock) {
@@ -526,6 +520,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
 
         if (useFilterThenClone) {
             synchronized (mCacheLock) {
@@ -670,6 +667,9 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
 
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
         if (useFilterThenClone) {
             synchronized (mCacheLock) {
                 waitForInitialLoad();
@@ -765,9 +765,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     public boolean removeAccount(@NonNull final AccountRecord accountToRemove) {
         final String methodTag = TAG + ":removeAccount";
         Logger.info(methodTag, "Removing Account...");
-        if (null == accountToRemove) {
-            throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
-        }
 
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToRemove);
 
@@ -778,6 +775,13 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             // mSharedPreferencesFileManager.keySet() which triggers getAll()
             // and decrypts every value in SharedPreferences just to check a key.
             if (mCachedAccountRecordsWithKeys.containsKey(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), false);
+                mSharedPreferencesFileManager.remove(cacheKey);
+                accountRemoved = true;
+            } else if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), true);
                 mSharedPreferencesFileManager.remove(cacheKey);
                 accountRemoved = true;
             }
@@ -794,10 +798,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":removeCredential";
         Logger.info(methodTag, "Removing Credential...");
 
-        if (null == credentialToRemove) {
-            throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
-        }
-
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
         synchronized (mCacheLock) {
@@ -807,6 +807,13 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             // mSharedPreferencesFileManager.keySet() which triggers getAll()
             // and decrypts every value in SharedPreferences just to check a key.
             if (mCachedCredentialsWithKeys.containsKey(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), false);
+                mSharedPreferencesFileManager.remove(cacheKey);
+                credentialRemoved = true;
+            } else if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), true);
                 mSharedPreferencesFileManager.remove(cacheKey);
                 credentialRemoved = true;
             }
