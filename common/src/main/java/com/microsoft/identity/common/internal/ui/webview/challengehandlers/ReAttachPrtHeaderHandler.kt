@@ -33,7 +33,7 @@ import io.opentelemetry.api.trace.Span
 /**
  * Handler for attaching prt credential header on web view in redirect scenarios.
  */
-class ReAttachPrtHeaderHandler(
+class ReAttachPrtHeaderHandler @JvmOverloads constructor(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span,
