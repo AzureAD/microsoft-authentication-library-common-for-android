@@ -260,7 +260,15 @@ public enum CommonFlight implements IFlightConfig {
      * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
      * Enabled by default; can be turned off via ECS if any issues arise in production.
      */
-    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true);
+    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true),
+
+    /**
+     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
+     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
+     * references first, then clones only the matching items — avoiding the cost of
+     * cloning the entire cache when only a subset is needed.
+     */
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
 
     private String key;
     private Object defaultValue;
