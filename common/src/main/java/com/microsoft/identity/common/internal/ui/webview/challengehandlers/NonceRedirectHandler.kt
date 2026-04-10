@@ -35,7 +35,7 @@ import java.net.URL
 /**
  * Handler for processing nonce from redirect and attaching new prt credential header on web view.
  */
-class NonceRedirectHandler(
+class NonceRedirectHandler @JvmOverloads constructor(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span,
