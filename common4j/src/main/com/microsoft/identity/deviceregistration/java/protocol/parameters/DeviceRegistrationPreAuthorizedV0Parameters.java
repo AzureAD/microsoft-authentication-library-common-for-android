@@ -24,8 +24,9 @@ package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
+import java.util.UUID;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -37,7 +38,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 /**
  * Implements a protocol parameters for a device registration with a pre authorized challenge.
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class DeviceRegistrationPreAuthorizedV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -51,6 +51,20 @@ public class DeviceRegistrationPreAuthorizedV0Parameters extends AbstractDeviceR
      */
     public static DeviceRegistrationPreAuthorizedV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public DeviceRegistrationPreAuthorizedV0Parameters(@NonNull final UUID correlationId,
+                                                       @NonNull final String tenantId,
+                                                       @NonNull final String preAuthorizedJoinChallenge,
+                                                       final boolean challengeEncrypted,
+                                                       final boolean registerAsSharedDevice,
+                                                       @Nullable final String discoveryEndpointName) {
+        super(correlationId);
+        mTenantId = tenantId;
+        mPreAuthorizedJoinChallenge = preAuthorizedJoinChallenge;
+        mChallengeEncrypted = challengeEncrypted;
+        mRegisterAsSharedDevice = registerAsSharedDevice;
+        mDiscoveryEndpointName = discoveryEndpointName;
     }
 
     /**

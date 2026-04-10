@@ -23,16 +23,15 @@
 package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
-
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
-
 import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
 import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-@NoArgsConstructor
+import java.util.UUID;
+
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 @Accessors(prefix = "m")
 public class GetDeviceRegistrationRecordsV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -46,6 +45,10 @@ public class GetDeviceRegistrationRecordsV0Parameters extends AbstractDeviceRegi
      */
     public static GetDeviceRegistrationRecordsV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public GetDeviceRegistrationRecordsV0Parameters(@NonNull final UUID correlationId) {
+        super(correlationId);
     }
 
     @Override

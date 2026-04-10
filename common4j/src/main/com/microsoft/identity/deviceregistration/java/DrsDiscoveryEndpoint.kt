@@ -20,25 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.deviceregistration.java.protocol.parameters;
-
-import java.util.UUID;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+package com.microsoft.identity.deviceregistration.java
 
 /**
- * Abstract base class for all IDeviceRegistrationProtocolParameters.
+ * Discovery endpoint flags to indicate the instance for device registration.
  */
-@Accessors(prefix = "m")
-public abstract class AbstractDeviceRegistrationProtocolParameters implements IDeviceRegistrationProtocolParameters {
+enum class DrsDiscoveryEndpoint {
+    /** Production instance. */
+    PROD,
+    /** PPE instance. */
+    PPE,
+    /** Int instance. */
+    INT;
 
-    @Getter
-    @NonNull
-    protected final UUID mCorrelationId;
-
-    protected AbstractDeviceRegistrationProtocolParameters(@NonNull final UUID correlationId) {
-        mCorrelationId = correlationId;
+    companion object {
+        /**
+         * Converts a string into [DrsDiscoveryEndpoint].
+         * Returns [PROD] by default if not recognizable.
+         */
+        @JvmStatic
+        fun fromString(value: String?): DrsDiscoveryEndpoint {
+            if (value.isNullOrEmpty()) return PROD
+            return try {
+                valueOf(value)
+            } catch (e: IllegalArgumentException) {
+                PROD
+            }
+        }
     }
 }
