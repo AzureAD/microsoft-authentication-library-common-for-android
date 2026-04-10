@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -55,7 +54,6 @@ import java.net.URISyntaxException
  */
 object AuthorizationActivityFactory {
 
-    private const val TAG = "AuthorizationActivityFactory"
     /**
      * Return the correct authorization activity based on library configuration.
      *
