@@ -26,7 +26,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import com.microsoft.identity.common.logging.Logger
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
 
@@ -35,8 +34,6 @@ import com.microsoft.identity.common.java.exception.ErrorStrings
  * used for the BrowserTabActivity redirect URI.
  */
 object BrowserRedirectValidator {
-
-    private const val TAG = "BrowserRedirectValidator"
 
     private const val BROWSER_TAB_ACTIVITY_CLASS =
         "com.microsoft.identity.client.BrowserTabActivity"
@@ -91,11 +88,6 @@ object BrowserRedirectValidator {
             }
             // Another application's activity is also listening on this URL scheme.
             val otherPackage = activityInfo.packageName
-            Logger.warn(
-                TAG,
-                "Multiple apps are listening for the URL scheme defined for BrowserTabActivity. " +
-                    "Other app package: $otherPackage"
-            )
             throw ClientException(
                 ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME,
                 "More than one app is listening for the URL scheme defined for BrowserTabActivity " +
