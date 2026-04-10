@@ -247,6 +247,15 @@ public enum CommonFlight implements IFlightConfig {
     USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false),
 
     /**
+     * Enables HTTP cancellation on command-level timeout.
+     * When true, CommandDispatcher calls CancellationSignal.cancel() on TimeoutException,
+     * which disconnects the active HttpURLConnection on the worker thread.
+     *
+     * Default: false (disabled for safe rollout).
+     */
+    ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
+    
+    /** 
      * Flight to enable server-side client data telemetry from the x-ms-clientdata response
      * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
      * Enabled by default; can be turned off via ECS if any issues arise in production.
@@ -256,7 +265,15 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false);
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    
+    /**
+     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
+     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
+     * references first, then clones only the matching items — avoiding the cost of
+     * cloning the entire cache when only a subset is needed.
+     */
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
 
     private String key;
     private Object defaultValue;

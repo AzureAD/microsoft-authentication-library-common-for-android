@@ -20,25 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.deviceregistration.java.protocol.parameters;
-
-import java.util.UUID;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+package com.microsoft.identity.deviceregistration.java
 
 /**
- * Abstract base class for all IDeviceRegistrationProtocolParameters.
+ * Represents the WPJ device state as queried from ADRS.
  */
-@Accessors(prefix = "m")
-public abstract class AbstractDeviceRegistrationProtocolParameters implements IDeviceRegistrationProtocolParameters {
+enum class DeviceState {
+    /** Device is found and valid. */
+    DEVICE_VALID,
+    /** Device was not found. */
+    DEVICE_NOT_FOUND,
+    /** Device was disabled (e.g. by the admin). */
+    DEVICE_DISABLED,
+    /** Unexpected state. */
+    UNKNOWN;
 
-    @Getter
-    @NonNull
-    protected final UUID mCorrelationId;
-
-    protected AbstractDeviceRegistrationProtocolParameters(@NonNull final UUID correlationId) {
-        mCorrelationId = correlationId;
+    companion object {
+        /**
+         * Converts a raw state string (from V0 protocol response) to a [DeviceState].
+         * Returns [UNKNOWN] if the string doesn't match any known state.
+         */
+        @JvmStatic
+        fun fromString(state: String): DeviceState {
+            return try {
+                valueOf(state)
+            } catch (e: IllegalArgumentException) {
+                UNKNOWN
+            }
+        }
     }
 }

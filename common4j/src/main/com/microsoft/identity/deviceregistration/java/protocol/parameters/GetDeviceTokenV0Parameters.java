@@ -28,7 +28,6 @@ import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistratio
 import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -37,9 +36,8 @@ import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegi
 import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-@AllArgsConstructor
 @Accessors(prefix = "m")
-public class GetDeviceTokenV0Parameters implements IDeviceRegistrationProtocolParameters {
+public class GetDeviceTokenV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
     private static final IDeviceRegistrationProtocolSerializer<GetDeviceTokenV0Parameters> serializer
             = new DeviceRegistrationProtocolMoshiSerializer<>(GetDeviceTokenV0Parameters.class);
@@ -53,15 +51,23 @@ public class GetDeviceTokenV0Parameters implements IDeviceRegistrationProtocolPa
         return serializer.deserialize(serializedData);
     }
 
+    public GetDeviceTokenV0Parameters(@NonNull final UUID correlationId,
+                                     @NonNull final IDeviceRegistrationRecord deviceRegistrationRecord,
+                                     @NonNull final String resources,
+                                     @Nullable final String scope) {
+        super(correlationId);
+        mDeviceRegistrationRecord = deviceRegistrationRecord;
+        mResources = resources;
+        mScope = scope;
+    }
+
     @Getter
     @NonNull
     private final IDeviceRegistrationRecord mDeviceRegistrationRecord;
     @Getter
     @NonNull
     private final String mResources;
-    @Getter
-    @NonNull
-    private final UUID mCorrelationId;
+
     @Getter
     @Nullable
     private final String mScope;
