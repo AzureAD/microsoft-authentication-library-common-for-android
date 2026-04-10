@@ -37,6 +37,7 @@ import org.junit.runners.Parameterized;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.SneakyThrows;
 
@@ -60,6 +61,7 @@ public class DeviceRegistrationProtocolSerializerParameterizedTest {
 
 
     private static final TestHappyPathV0Parameters TEST_PROTOCOL = new TestHappyPathV0Parameters(
+            UUID.randomUUID(),
             TEST_STRING_1,
             TEST_STRING_2,
             true,

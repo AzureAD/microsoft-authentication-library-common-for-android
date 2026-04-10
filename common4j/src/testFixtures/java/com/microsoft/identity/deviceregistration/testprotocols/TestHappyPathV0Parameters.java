@@ -28,15 +28,15 @@ import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceReg
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.AbstractDeviceRegistrationProtocolParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+import java.util.UUID;
+
 /**
  * Implements a protocol parameters, for testing.
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class TestHappyPathV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -50,6 +50,27 @@ public class TestHappyPathV0Parameters extends AbstractDeviceRegistrationProtoco
      */
     static public TestHappyPathV0Parameters create(byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public TestHappyPathV0Parameters(
+            @NonNull final UUID correlationId,
+            @NonNull final String string1,
+            @NonNull final String string2,
+            final boolean boolean1,
+            final boolean boolean2,
+            final float float1,
+            final float float2,
+            @NonNull final IDeviceRegistrationRecord record,
+            @NonNull final IDeviceRegistrationRecord recordWithAccount) {
+        super(correlationId);
+        mString1 = string1;
+        mString2 = string2;
+        mBoolean1 = boolean1;
+        mBoolean2 = boolean2;
+        mFloat1 = float1;
+        mFloat2 = float2;
+        mRecord = record;
+        mRecordWithAccount = recordWithAccount;
     }
 
     @Getter
