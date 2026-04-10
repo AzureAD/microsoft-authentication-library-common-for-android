@@ -263,6 +263,11 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true),
 
     /**
+     * Flight to enable Auth Tab for the switch browser feature.
+     */
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    
+    /**
      * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
      * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
      * references first, then clones only the matching items — avoiding the cost of

@@ -406,6 +406,26 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
+     * Records if the Auth Tab was used in the switch browser flow (boolean).
+     */
+    auth_tab_used,
+
+    /**
+     * Records the Android Activity result code returned by the Auth Tab in the switch browser flow (integer).
+     */
+    auth_tab_result_code,
+
+    /**
+     * Records if Auth Tab is supported for the switch browser flow (boolean).
+     */
+    is_auth_tab_supported,
+
+    /**
+     * Records if the Auth Tab fell back to custom tabs in the switch browser flow (boolean).
+     */
+    auth_tab_fallback_to_custom_tabs,
+
+    /**
      * The tenant id for the home tenant of the account for which PRT is required.
      */
     tenant_id,
