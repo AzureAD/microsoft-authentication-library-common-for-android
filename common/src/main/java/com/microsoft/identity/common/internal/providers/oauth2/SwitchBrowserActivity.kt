@@ -24,10 +24,12 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
-import com.microsoft.identity.common.logging.Logger
 import androidx.core.net.toUri
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import androidx.fragment.app.FragmentActivity
+import com.microsoft.identity.common.internal.ui.browser.AuthTabManager
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.logging.Logger
 
 
 /**
@@ -40,14 +42,14 @@ import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
  * **Flow Overview:**
  * 1. WebViewAuthorizationFragment receives a SwitchBrowser challenge
  * 2. This activity is launched with browser configuration parameters
- * 3. Activity launches the specified browser (Custom Tabs or standard browser)
+ * 3. Activity selects a [BrowserLaunchStrategy] (Auth Tab or Custom Tabs) and delegates to it
  * 4. User completes authentication in the external browser
- * 5. BrokerBrowserRedirectActivity is launched when the redirect URI is triggered.
- * 5. BrokerBrowserRedirectActivity redirects back to this activity via onNewIntent()
+ * 5. BrokerBrowserRedirectActivity is launched when the redirect URI is triggered (Custom Tabs path).
+ *    For Auth Tab, the result is returned directly via the activity-result callback.
  * 6. Activity passes the result back to WebViewAuthorizationFragment
  * 7. Activity finishes and removes itself from the task stack
  *
- * Activity back stack behavior:
+ * Activity back stack behavior (Custom Tabs path):
  * 1 BrokerAuthorizationActivity hosting WebViewAuthorizationFragment --launches--> SwitchBrowserActivity in a new task.
  * 2 SwitchBrowserActivity --launches--> 3rd Party Browser (Custom Tabs or standard browser) in current task.
  * 3 3rd Party Browser --redirects to--> BrokerBrowserRedirectActivity in a new task.
@@ -61,9 +63,7 @@ import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
  */
 class SwitchBrowserActivity : FragmentActivity() {
 
-    // Flag to track if a Custom Chrome Tab (CCT) has been launched
-    private var cctLaunched = false
-    private var customTabsManager = CustomTabsManager(this)
+    private lateinit var launchStrategy: BrowserLaunchStrategy
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -79,43 +79,52 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         /** Intent extra key indicating a resume request from the browser redirect */
         const val RESUME_REQUEST = "resume_request"
+
+        /**
+         * Optional intent extra: URI scheme used by the redirect URI so that Auth Tab can
+         * intercept the redirect (e.g. "msauth").  Required when Auth Tab is the active strategy.
+         */
+        const val REDIRECT_SCHEME = "redirect_scheme"
     }
 
     /**
-     * Initializes the activity and launches the appropriate browser for DUNA authentication.
-     *
-     * This method extracts the browser configuration from intent extras and launches either
-     * a Custom Tabs intent or a standard browser intent based on browser capabilities.
+     * Initializes the activity, selects the appropriate [BrowserLaunchStrategy], and launches
+     * the browser.
      *
      * @param savedInstanceState Saved instance state bundle (unused in this implementation)
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val methodTag = "$TAG:onCreate"
-        Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
+        Logger.info(methodTag, "SwitchBrowserActivity created - Selecting launch strategy")
+
+        val browserPackageName = intent?.extras?.getString(BROWSER_PACKAGE_NAME) ?: ""
+
+        launchStrategy = if (isAuthTabFlightEnabled() && AuthTabManager.isSupported(this, browserPackageName)) {
+            Logger.info(methodTag, "Auth Tab is supported and flight is enabled — using AuthTabLaunchStrategy")
+            AuthTabLaunchStrategy(this, ::handleSwitchBrowserResume)
+        } else {
+            Logger.info(methodTag, "Using CustomTabsLaunchStrategy")
+            CustomTabsLaunchStrategy(this)
+        }
+
         launchBrowser()
     }
-
 
     /**
      * Launches the specified browser for DUNA authentication based on intent extras.
      *
-     * This method reads the target browser package name, Custom Tabs support flag,
-     * and the process URI from the intent extras. It then constructs and launches
-     * either a Custom Tabs intent or a standard browser intent accordingly.
+     * This method reads the target browser package name and the process URI from the intent extras
+     * and delegates to the selected [BrowserLaunchStrategy].
      *
      * If required parameters are missing, it logs an error and finishes the activity.
      */
     private fun launchBrowser() {
         val methodTag = "$TAG:launchBrowser"
-        cctLaunched = false
-        // Extract configuration parameters from intent extras
-        val extras = this.intent.extras ?: Bundle()
+        val extras = this.intent?.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
-        val browserSupportsCustomTabs = extras.getBoolean(BROWSER_SUPPORTS_CUSTOM_TABS, false)
         val processUri = extras.getString(PROCESS_URI)
 
-        // Validate required parameters
         if (browserPackageName.isNullOrBlank()) {
             Logger.error(methodTag, "No browser package name found in extras - Cannot proceed with browser switch", null)
             finish()
@@ -127,118 +136,130 @@ class SwitchBrowserActivity : FragmentActivity() {
             return
         }
 
-        Logger.info(
-            methodTag,
-            "Launching switch browser request on browser: $browserPackageName, Custom Tabs supported: $browserSupportsCustomTabs"
-        )
-
-        // Create an intent to launch the browser
-        val browserIntent: Intent
-        if (browserSupportsCustomTabs) {
-            Logger.info(methodTag, "CustomTabsService is supported.")
-            //create customTabsIntent
-            if (!customTabsManager.bind(this, browserPackageName)) {
-                Logger.warn(methodTag, "Failed to bind CustomTabsService.")
-                browserIntent = Intent(Intent.ACTION_VIEW)
-            } else {
-                browserIntent = customTabsManager.customTabsIntent.intent
-            }
-        } else {
-            Logger.warn(methodTag, "CustomTabsService is NOT supported")
-            browserIntent = Intent(Intent.ACTION_VIEW)
-            browserIntent.setPackage(browserPackageName)
-        }
-        browserIntent.setData(processUri.toUri())
-        startActivity(browserIntent)
+        Logger.info(methodTag, "Launching switch browser request on browser: $browserPackageName")
+        launchStrategy.launch(processUri.toUri(), browserPackageName)
     }
 
     /**
-     * Handles the redirect back from the browser after DUNA authentication completion.
+     * Handles the result of the Auth Tab or Custom Tabs browser redirect.
      *
-     * This method is called when the browser redirects back to the app with the authentication
-     * result. The intent contains the authentication response which is passed back to the
-     * WebViewAuthorizationFragment for processing.
+     * For Auth Tab: called directly by [AuthTabLaunchStrategy] with the resume [Bundle] (on
+     * success) or `null` (on cancellation / verification failure).
      *
-     * **Important:** This method also finishes the activity and removes it from the task stack
-     * to prevent it from remaining in the back stack after the authentication flow completes.
+     * For Custom Tabs: called from [onNewIntent] when [BrokerBrowserRedirectActivity] delivers
+     * the redirect back to this activity.
      *
-     * @param intent The intent containing the authentication result from the browser redirect
+     * @param bundle The extras bundle to pass to [WebViewAuthorizationFragment], or `null` to
+     *               signal cancellation.
      */
-    override fun onNewIntent(intent: Intent) {
+    private fun handleSwitchBrowserResume(bundle: Bundle?) {
+        val methodTag = "$TAG:handleSwitchBrowserResume"
+        Logger.info(methodTag, "Handling switch browser resume, bundle present: ${bundle != null}")
+        WebViewAuthorizationFragment.setSwitchBrowserBundle(bundle)
+        finishAndRemoveTask()
+    }
+
+    /**
+     * Handles a new intent delivered to this activity (Custom Tabs path only).
+     *
+     * - If the intent carries a [PROCESS_URI] extra, a new browser-switch request has arrived
+     *   while one is already in progress — the browser is re-launched for the new request.
+     * - If the intent carries a [RESUME_REQUEST] extra, the authentication redirect has been
+     *   received and the result is forwarded to [WebViewAuthorizationFragment].
+     * - Otherwise the activity is finished.
+     *
+     * For the Auth Tab strategy, this method is a no-op because Auth Tab results are delivered
+     * via the activity-result callback instead.
+     *
+     * @param intent The new intent, or `null` (required by compileSdkVersion 36).
+     */
+    override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         val methodTag = "$TAG:onNewIntent"
-        // Update the activity's intent with the new intent containing the auth result
         Logger.info(methodTag, "On new intent received.")
+
+        // Auth Tab handles its own result via callback — no intent-based resume needed.
+        if (!launchStrategy.handlesCancellationOnResume()) {
+            return
+        }
+
+        if (intent == null) {
+            Logger.warn(methodTag, "Received null intent - Finishing activity")
+            finishAndRemoveTask()
+            return
+        }
+
         setIntent(intent)
 
         if (intent.hasExtra(PROCESS_URI)) {
-            // Handle scenario where a new browser switch request is received while one is already in progress
-            // This can occur when the user initiates another auth request before completing the first one.
+            // Handle scenario where a new browser switch request is received while one is already
+            // in progress.
             Logger.warn(
                 methodTag,
                 "Received new switch browser request while one is already in progress" +
                     " - Restarting browser switch flow"
             )
-            // Launch the new browser request, which will reset cctLaunched and start fresh
             launchBrowser()
             return
         }
         if (intent.hasExtra(RESUME_REQUEST)) {
-            WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
-            // Clean up: finish this activity and remove it from task stack
-            Logger.info(methodTag, "Finishing activity and removing from task stack")
-            finishAndRemoveTask()
+            handleSwitchBrowserResume(intent.extras)
             return
         }
-        // Clean up: finish this activity and remove it from task stack
         Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
         finishAndRemoveTask()
     }
 
     /**
-     * Handles the activity resume lifecycle event and manages Custom Chrome Tab (CCT) launch state.
+     * Manages the Custom Chrome Tab (CCT) cancellation heuristic.
      *
-     * This method implements a critical part of the browser switch flow by tracking whether a Custom Chrome Tab
-     * has been launched and handling the case where the user returns to this activity without completing
-     * the authentication flow in the browser.
+     * - First resume after [onCreate]: no action — the tab has just been launched.
+     * - Subsequent resumes: if the strategy uses the on-resume heuristic *and* the tab has
+     *   already been launched, the user has backed out — finish the activity.
      *
-     * **Behavior Logic:**
-     * - On first resume (after onCreate): Sets cctLaunched flag to true and continues normally
-     * - On subsequent resumes: If CCT was already launched, assumes user backed out of browser and finishes activity
-     *
-     * **Why This Logic is Needed:**
-     * When a Custom Chrome Tab is launched, this activity goes into the background. If the user presses the back
-     * button in the CCT or otherwise returns to this activity without completing authentication, we need to
-     * clean up and finish this activity to prevent it from remaining in the back stack.
-     *
-     * **Flow Scenarios:**
-     * 1. **Normal Flow**: onCreate → onResume (1st time) → CCT launched → user completes auth → onNewIntent → finish
-     * 2. **User Cancellation**: onCreate → onResume (1st time) → CCT launched → user backs out → onResume (2nd time) → finish
-     *
-     * **Important Notes:**
-     * - This prevents the activity from staying alive indefinitely if authentication is cancelled
-     * - Uses finishAndRemoveTask() to clean up the entire task stack, not just this activity
-     * - The cctLaunched flag is essential for distinguishing between the initial resume and subsequent resumes
+     * For Auth Tab, [BrowserLaunchStrategy.handlesCancellationOnResume] returns `false`, so the
+     * heuristic is skipped entirely.
      */
     override fun onResume() {
         super.onResume()
         val methodTag = "$TAG:onResume"
         Logger.info(methodTag, "onResume called - Managing CCT launch state")
 
-        if (cctLaunched) {
-            // User has returned to this activity after CCT was launched, likely due to backing out
+        if (!launchStrategy.handlesCancellationOnResume()) {
+            return
+        }
+
+        val cctStrategy = launchStrategy as? CustomTabsLaunchStrategy ?: return
+
+        if (cctStrategy.cctLaunched) {
             Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
             finishAndRemoveTask()
         } else {
-            // First resume after onCreate - mark CCT as launched for future reference
             Logger.info(methodTag, "First resume after onCreate - Marking CCT as launched")
         }
-
-        cctLaunched = true
+        cctStrategy.cctLaunched = true
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        customTabsManager.unbind()
+        launchStrategy.cleanup()
     }
+
+    // region private helpers
+
+    /**
+     * Returns `true` if the Auth Tab flight is enabled.  Returns `false` on any exception to
+     * ensure a safe fallback to Custom Tabs.
+     */
+    private fun isAuthTabFlightEnabled(): Boolean {
+        return try {
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER)
+        } catch (e: Exception) {
+            Logger.warn("$TAG:isAuthTabFlightEnabled", "Exception checking Auth Tab flight: ${e.message}")
+            false
+        }
+    }
+
+    // endregion
 }
