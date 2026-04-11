@@ -115,7 +115,7 @@ class AuthTabManager {
      * @throws IllegalStateException if [registerLauncher] has not been called.
      */
     fun launch(uri: Uri, redirectScheme: String) {
-        val activeLauncher = requireNotNull(launcher) {
+        val activeLauncher = checkNotNull(launcher) {
             "AuthTabManager.launch() called before registerLauncher()"
         }
         val authTabIntent = AuthTabIntent.Builder().build()

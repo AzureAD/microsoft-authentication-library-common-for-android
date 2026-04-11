@@ -94,8 +94,8 @@ class AuthTabManagerTest {
         val uri = Uri.parse("https://login.microsoft.com/auth")
         try {
             manager.launch(uri, "msauth")
-            fail("Expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
+            fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) {
             // Expected: "AuthTabManager.launch() called before registerLauncher()"
             assertTrue(e.message?.contains("registerLauncher") == true)
         }
@@ -110,7 +110,7 @@ class AuthTabManagerTest {
         try {
             manager.launch(Uri.parse("https://login.microsoft.com"), "msauth")
             fail("Expected exception after unregister")
-        } catch (e: IllegalArgumentException) {
+        } catch (e: IllegalStateException) {
             // Expected
         }
     }

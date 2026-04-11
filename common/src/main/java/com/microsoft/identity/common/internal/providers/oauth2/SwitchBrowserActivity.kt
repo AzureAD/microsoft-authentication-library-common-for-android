@@ -65,6 +65,13 @@ class SwitchBrowserActivity : FragmentActivity() {
 
     private lateinit var launchStrategy: BrowserLaunchStrategy
 
+    /**
+     * Flag used by the Custom Tabs cancellation heuristic.  Tracks whether the browser has been
+     * launched so that a subsequent [onResume] (after the browser closes) can be interpreted as
+     * cancellation.  Only meaningful when [launchStrategy] is [CustomTabsLaunchStrategy].
+     */
+    private var cctLaunched = false
+
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
@@ -98,6 +105,11 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Selecting launch strategy")
 
+        // Clean up any previous strategy (e.g. on activity re-creation after config change)
+        if (::launchStrategy.isInitialized) {
+            launchStrategy.cleanup()
+        }
+
         val browserPackageName = intent?.extras?.getString(BROWSER_PACKAGE_NAME) ?: ""
 
         launchStrategy = if (isAuthTabFlightEnabled() && AuthTabManager.isSupported(this, browserPackageName)) {
@@ -121,6 +133,7 @@ class SwitchBrowserActivity : FragmentActivity() {
      */
     private fun launchBrowser() {
         val methodTag = "$TAG:launchBrowser"
+        cctLaunched = false
         val extras = this.intent?.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
         val processUri = extras.getString(PROCESS_URI)
@@ -213,12 +226,12 @@ class SwitchBrowserActivity : FragmentActivity() {
     /**
      * Manages the Custom Chrome Tab (CCT) cancellation heuristic.
      *
-     * - First resume after [onCreate]: no action — the tab has just been launched.
-     * - Subsequent resumes: if the strategy uses the on-resume heuristic *and* the tab has
-     *   already been launched, the user has backed out — finish the activity.
+     * When [launchStrategy] uses the on-resume heuristic ([handlesCancellationOnResume] returns
+     * `true`):
+     * - First resume (after [onCreate]): [cctLaunched] is `false` — log and mark as launched.
+     * - Subsequent resumes: [cctLaunched] is `true` — assume user backed out, finish activity.
      *
-     * For Auth Tab, [BrowserLaunchStrategy.handlesCancellationOnResume] returns `false`, so the
-     * heuristic is skipped entirely.
+     * For Auth Tab, [handlesCancellationOnResume] returns `false`, so this heuristic is skipped.
      */
     override fun onResume() {
         super.onResume()
@@ -229,15 +242,13 @@ class SwitchBrowserActivity : FragmentActivity() {
             return
         }
 
-        val cctStrategy = launchStrategy as? CustomTabsLaunchStrategy ?: return
-
-        if (cctStrategy.cctLaunched) {
+        if (cctLaunched) {
             Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
             finishAndRemoveTask()
         } else {
             Logger.info(methodTag, "First resume after onCreate - Marking CCT as launched")
         }
-        cctStrategy.cctLaunched = true
+        cctLaunched = true
     }
 
     override fun onDestroy() {

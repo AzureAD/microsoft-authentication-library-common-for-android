@@ -62,9 +62,12 @@ class AuthTabLaunchStrategy(
 
     private val authTabManager = AuthTabManager()
 
-    private val span: Span by lazy {
-        OTelUtility.createSpan(SpanName.SwitchBrowserProcess.name)
-    }
+    /**
+     * Span created eagerly so that it captures the full Auth Tab flow from construction through
+     * result delivery.  The span is ended either in [handleSuccess]/[handleCanceledOrFailed] or
+     * in [cleanup] if the flow is interrupted before a result arrives.
+     */
+    private val span: Span = OTelUtility.createSpan(SpanName.SwitchBrowserProcess.name)
 
     init {
         authTabManager.registerLauncher(activity) { result ->
@@ -98,10 +101,16 @@ class AuthTabLaunchStrategy(
     override fun handlesCancellationOnResume(): Boolean = false
 
     /**
-     * Unregisters the [AuthTabManager] launcher and ends the telemetry span if still open.
+     * Unregisters the [AuthTabManager] launcher.  If the Auth Tab flow was interrupted before
+     * a result arrived (e.g. the activity was destroyed), the telemetry span is ended here to
+     * prevent resource leaks.
      */
     override fun cleanup() {
         authTabManager.unregister()
+        if (span.isRecording) {
+            span.setStatus(StatusCode.ERROR)
+            span.end()
+        }
     }
 
     // region private helpers

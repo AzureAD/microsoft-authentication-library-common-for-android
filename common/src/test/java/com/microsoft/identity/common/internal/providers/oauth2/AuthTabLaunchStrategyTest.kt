@@ -27,7 +27,6 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.internal.ui.browser.AuthTabManager
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -112,8 +111,8 @@ class AuthTabLaunchStrategyTest {
         simulateAuthTabResult(strategy, AuthTabManager.AuthTabResult.Success(resultUri))
 
         assert(onCompleteCalled) { "onComplete should have been called" }
-        // Bundle may be null or non-null depending on what getIntentToResumeWebViewAuth returns
-        // We only verify the callback was invoked
+        // The bundle may be null if getIntentToResumeWebViewAuth cannot parse the result URI in test
+        // environment — the important contract is that onComplete is always invoked on success.
     }
 
     @Test

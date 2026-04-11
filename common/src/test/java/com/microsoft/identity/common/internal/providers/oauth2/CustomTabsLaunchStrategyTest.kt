@@ -23,11 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import androidx.fragment.app.FragmentActivity
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
@@ -42,21 +40,6 @@ class CustomTabsLaunchStrategyTest {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         val strategy = CustomTabsLaunchStrategy(activity)
         assertTrue(strategy.handlesCancellationOnResume())
-    }
-
-    @Test
-    fun `cctLaunched starts as false`() {
-        val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
-        val strategy = CustomTabsLaunchStrategy(activity)
-        assertFalse(strategy.cctLaunched)
-    }
-
-    @Test
-    fun `cctLaunched can be set to true`() {
-        val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
-        val strategy = CustomTabsLaunchStrategy(activity)
-        strategy.cctLaunched = true
-        assertTrue(strategy.cctLaunched)
     }
 
     @Test

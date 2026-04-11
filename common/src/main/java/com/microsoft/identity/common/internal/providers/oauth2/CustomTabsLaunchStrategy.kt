@@ -50,13 +50,6 @@ class CustomTabsLaunchStrategy(
     private val customTabsManager = CustomTabsManager(activity)
 
     /**
-     * `true` after the first [android.app.Activity.onResume] following the browser launch.
-     * The hosting activity sets this to `true` after the initial resume so that a subsequent
-     * resume (indicating the user backed out of the browser) is treated as cancellation.
-     */
-    var cctLaunched: Boolean = false
-
-    /**
      * Launches Custom Tabs (or a plain browser intent if the service cannot be bound) for the
      * given [processUri].
      *
@@ -65,7 +58,6 @@ class CustomTabsLaunchStrategy(
      */
     override fun launch(processUri: Uri, browserPackageName: String) {
         val methodTag = "$TAG:launch"
-        cctLaunched = false
 
         val extras = activity.intent?.extras
         val browserSupportsCustomTabs = extras?.getBoolean(
