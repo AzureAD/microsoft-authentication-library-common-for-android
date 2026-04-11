@@ -190,12 +190,9 @@ class SwitchBrowserActivityTest {
     }
 
     // ---------------------------------------------------------------------------
-    // Helper: expose launchStrategy via reflection
+    // Helper: use the internal accessor instead of reflection
     // ---------------------------------------------------------------------------
 
-    private fun SwitchBrowserActivity.getLaunchStrategy(): BrowserLaunchStrategy {
-        val field = SwitchBrowserActivity::class.java.getDeclaredField("launchStrategy")
-        field.isAccessible = true
-        return field.get(this) as BrowserLaunchStrategy
-    }
+    private fun SwitchBrowserActivity.getLaunchStrategy(): BrowserLaunchStrategy =
+        getLaunchStrategyForTest()
 }

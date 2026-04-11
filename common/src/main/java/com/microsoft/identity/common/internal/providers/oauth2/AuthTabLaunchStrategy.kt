@@ -89,6 +89,9 @@ class AuthTabLaunchStrategy(
             Logger.warn(methodTag, "REDIRECT_SCHEME extra is missing; Auth Tab may not intercept the redirect correctly.")
         }
         Logger.info(methodTag, "Launching Auth Tab for URI: $processUri")
+        // NOTE: auth_tab_used, is_auth_tab_supported, and auth_tab_result_code attributes were
+        // added to common4j AttributeName.java. Ensure these are also mirrored in the
+        // corresponding AttributeName.java in the Broker repository (AzureAD/ad-accounts-for-android).
         span.setAttribute(AttributeName.auth_tab_used.name, true)
         span.setAttribute(AttributeName.is_auth_tab_supported.name, true)
         authTabManager.launch(processUri, redirectScheme)
@@ -124,6 +127,14 @@ class AuthTabLaunchStrategy(
             is AuthTabManager.AuthTabResult.VerificationFailed -> handleCanceledOrFailed("VERIFICATION_FAILED")
             is AuthTabManager.AuthTabResult.VerificationTimedOut -> handleCanceledOrFailed("VERIFICATION_TIMED_OUT")
         }
+    }
+
+    /**
+     * Exposed for unit tests to simulate an Auth Tab result without requiring an actual Auth Tab
+     * launch.  Do not call from production code.
+     */
+    internal fun simulateAuthTabResultForTest(result: AuthTabManager.AuthTabResult) {
+        onAuthTabResult(result)
     }
 
     private fun handleSuccess(resultUri: Uri) {

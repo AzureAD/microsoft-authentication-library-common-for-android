@@ -191,6 +191,12 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onNewIntent"
         Logger.info(methodTag, "On new intent received.")
 
+        // Guard: strategy may not be initialized if onCreate threw before reaching assignment.
+        if (!::launchStrategy.isInitialized) {
+            Logger.warn(methodTag, "launchStrategy not initialized - ignoring new intent")
+            return
+        }
+
         // Auth Tab handles its own result via callback — no intent-based resume needed.
         if (!launchStrategy.handlesCancellationOnResume()) {
             return
@@ -238,6 +244,11 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onResume"
         Logger.info(methodTag, "onResume called - Managing CCT launch state")
 
+        // Guard: strategy may not be initialized if onCreate threw before reaching assignment.
+        if (!::launchStrategy.isInitialized) {
+            return
+        }
+
         if (!launchStrategy.handlesCancellationOnResume()) {
             return
         }
@@ -253,7 +264,9 @@ class SwitchBrowserActivity : FragmentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        launchStrategy.cleanup()
+        if (::launchStrategy.isInitialized) {
+            launchStrategy.cleanup()
+        }
     }
 
     // region private helpers
@@ -271,6 +284,12 @@ class SwitchBrowserActivity : FragmentActivity() {
             false
         }
     }
+
+    /**
+     * Returns the currently active [BrowserLaunchStrategy].  Visible for unit tests only;
+     * do not call from production code.
+     */
+    internal fun getLaunchStrategyForTest(): BrowserLaunchStrategy = launchStrategy
 
     // endregion
 }

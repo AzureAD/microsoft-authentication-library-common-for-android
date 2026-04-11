@@ -79,40 +79,22 @@ class AuthTabLaunchStrategyTest {
     }
 
     // ---------------------------------------------------------------------------
-    // onAuthTabResult — via reflection to simulate result callbacks
+    // simulateAuthTabResultForTest — uses the internal test hook in AuthTabLaunchStrategy
     // ---------------------------------------------------------------------------
 
-    /**
-     * Directly invokes the private [onAuthTabResult] method via the [AuthTabManager] callback
-     * that was registered in the strategy's `init` block.  We expose the internal callback by
-     * subclassing [AuthTabManager] in-memory and capturing the lambda, then calling it.
-     */
-    private fun simulateAuthTabResult(
-        strategy: AuthTabLaunchStrategy,
-        result: AuthTabManager.AuthTabResult
-    ) {
-        // Use reflection to access the private onAuthTabResult method
-        val method = AuthTabLaunchStrategy::class.java.getDeclaredMethod(
-            "onAuthTabResult",
-            AuthTabManager.AuthTabResult::class.java
-        )
-        method.isAccessible = true
-        method.invoke(strategy, result)
-    }
-
     @Test
-    fun `onAuthTabResult Success calls onComplete with non-null bundle`() {
+    fun `onAuthTabResult Success calls onComplete`() {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         val strategy = buildStrategy(activity)
 
         val resultUri = Uri.parse(
             "msauth://com.test.app/switch_browser_resume?code=testCode&action_uri=https%3A%2F%2Flogin.microsoft.com%2Fauth"
         )
-        simulateAuthTabResult(strategy, AuthTabManager.AuthTabResult.Success(resultUri))
+        strategy.simulateAuthTabResultForTest(AuthTabManager.AuthTabResult.Success(resultUri))
 
         assert(onCompleteCalled) { "onComplete should have been called" }
-        // The bundle may be null if getIntentToResumeWebViewAuth cannot parse the result URI in test
-        // environment — the important contract is that onComplete is always invoked on success.
+        // The bundle may be null if getIntentToResumeWebViewAuth cannot parse the URI in test env.
+        // The important contract is that onComplete is always invoked when Auth Tab succeeds.
     }
 
     @Test
@@ -120,7 +102,7 @@ class AuthTabLaunchStrategyTest {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         val strategy = buildStrategy(activity)
 
-        simulateAuthTabResult(strategy, AuthTabManager.AuthTabResult.Canceled)
+        strategy.simulateAuthTabResultForTest(AuthTabManager.AuthTabResult.Canceled)
 
         assert(onCompleteCalled) { "onComplete should have been called" }
         assertNull("Bundle should be null for cancellation", capturedBundle)
@@ -131,7 +113,7 @@ class AuthTabLaunchStrategyTest {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         val strategy = buildStrategy(activity)
 
-        simulateAuthTabResult(strategy, AuthTabManager.AuthTabResult.VerificationFailed)
+        strategy.simulateAuthTabResultForTest(AuthTabManager.AuthTabResult.VerificationFailed)
 
         assert(onCompleteCalled) { "onComplete should have been called" }
         assertNull("Bundle should be null for verification failure", capturedBundle)
@@ -142,7 +124,7 @@ class AuthTabLaunchStrategyTest {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         val strategy = buildStrategy(activity)
 
-        simulateAuthTabResult(strategy, AuthTabManager.AuthTabResult.VerificationTimedOut)
+        strategy.simulateAuthTabResultForTest(AuthTabManager.AuthTabResult.VerificationTimedOut)
 
         assert(onCompleteCalled) { "onComplete should have been called" }
         assertNull("Bundle should be null for verification timeout", capturedBundle)
