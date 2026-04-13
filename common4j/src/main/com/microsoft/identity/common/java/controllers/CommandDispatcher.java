@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -134,6 +135,18 @@ public class CommandDispatcher {
     //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+
+    /**
+     * Outcome of cancellation signal processing for a timed-out ATS request.
+     * Emitted as the {@link AttributeName#cancellation_outcome} span attribute
+     * to track cancellation effectiveness during flight rollout.
+     */
+    private enum CancellationOutcome {
+        /** Worker detected cancellation before executeCommand() — no work performed, thread slot freed immediately. */
+        skipped_before_execution,
+        /** Worker's HTTP connection was disconnected mid-I/O by CancellationSignal.cancel(). */
+        disconnected_during_execution
+    }
 
     /**
      * Enum representing the lifecycle states of a request for timeout classification.
@@ -436,13 +449,14 @@ public class CommandDispatcher {
     //       currently, CommandResult from BaseCommand<AcquireTokenResult> stores "ILocalAuthenticationResult".
     public static ILocalAuthenticationResult submitAcquireTokenSilentSync(@NonNull final SilentTokenCommand command)
             throws BaseException {
+        final String methodTag = TAG +  ":submitAcquireTokenSilentSync";
         final CommandResult commandResult;
         // Initialize to null, will be set after submitSilentReturningFuture returns
         // when it's guaranteed to be initialized on the parameters
         String correlationId = null;
-
+        FinalizableResultFuture<CommandResult> future = null;
         try {
-            final FinalizableResultFuture<CommandResult> future = submitSilentReturningFuture(command);
+            future = submitSilentReturningFuture(command);
             correlationId = command.getParameters().getCorrelationId();
             if (BuildConfig.DISABLE_ACQUIRE_TOKEN_SILENT_TIMEOUT){
                 commandResult = future.get();
@@ -451,6 +465,18 @@ public class CommandDispatcher {
                 commandResult = future.get(silentTokenTimeOutMs, TimeUnit.MILLISECONDS);
             }
         } catch (final TimeoutException e) {
+            // Signal the worker thread to disconnect the active HTTP connection.
+            // Flight-gated for safe rollout — when false, behavior is identical to current code.
+            if (future != null
+                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .getBooleanValue(CommonFlight.ENABLE_HTTP_CANCELLATION_ON_TIMEOUT)) {
+                future.cancelSignal();
+                Logger.info(methodTag,
+                    "COMMAND_TIMEOUT_CANCELLATION: cancelSignal() invoked."
+                    + " correlationId=" + (correlationId != null ? correlationId : "unknown")
+                    + ", activeCount=" + getSilentRequestActiveCount()
+                    + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
+            }
             // Classify timeout based on request state using correlation ID
             final String effectiveCorrelationId = correlationId != null ? correlationId : "unknown";
             throw createTimeoutException(
@@ -575,6 +601,8 @@ public class CommandDispatcher {
                     AttributeName.silent_requests_queue_size.name(),
                     queueSize
             );
+
+
             // Report the actual pool size being used
             SpanExtension.current().setAttribute(
                     AttributeName.silent_executor_pool_size.name(),
@@ -584,6 +612,11 @@ public class CommandDispatcher {
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    // Get the cancellation signal owned by this future and set it on
+                    // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
+                    final CancellationSignal cancellationSignal = finalFuture.getCancellationSignal();
+                    CancellationSignal.setForCurrentThread(cancellationSignal);
+
                     // Update state: thread has picked up the request, now executing
                     // Only track non-DCF requests (timeout classification only in submitAcquireTokenSilentSync)
                     if (!isDeviceCodeFlowRequest) {
@@ -596,6 +629,23 @@ public class CommandDispatcher {
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
+
+                        // Check cancellation before executing — the caller may have
+                        // already timed out while this was queued in the thread pool.
+                        if (cancellationSignal.isCancelled()) {
+                            SpanExtension.current().setAttribute(
+                                    AttributeName.cancellation_outcome.name(),
+                                    CancellationOutcome.skipped_before_execution.name());
+                            Logger.info(TAG + methodName,
+                                "PRE_START_CANCELLATION: Worker skipped execution."
+                                + " correlationId=" + correlationId
+                                + ", activeCount=" + getSilentRequestActiveCount()
+                                + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
+                            // Do not set exception on the future — the original caller already
+                            // received TimeoutException from future.get(). Setting an exception
+                            // here would prematurely fail dedup callers still within their timeout.
+                            return;
+                        }
 
                         CommandResult<?> commandResult = null;
 
@@ -611,9 +661,27 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
-                        finalFuture.setException(new ExecutionException(t));
+                        // If this exception was caused by cancellation (CancellationSignal.cancel()
+                        // disconnected the HttpURLConnection), suppress it — the original caller
+                        // already received TimeoutException from future.get(). Propagating this
+                        // would prematurely fail dedup callers still within their own timeout window.
+                        if (cancellationSignal.isCancelled()) {
+                            SpanExtension.current().setAttribute(
+                                    AttributeName.cancellation_outcome.name(),
+                                    CancellationOutcome.disconnected_during_execution.name());
+                            Logger.info(TAG + methodName,
+                                "CANCELLED_EXECUTION: Worker exception suppressed after cancellation."
+                                + " correlationId=" + correlationId);
+                        } else {
+                            Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                            finalFuture.setException(new ExecutionException(t));
+                        }
                     } finally {
+                        // Clear ThreadLocal to prevent leaks — MUST be before mapAccessLock.
+                        // Java guarantees the finally block executes even on early `return`
+                        // from the pre-start cancellation check above.
+                        CancellationSignal.clearCurrentThread();
+
                         synchronized (mapAccessLock) {
                             if (command.isEligibleForCaching()) {
                                 final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
