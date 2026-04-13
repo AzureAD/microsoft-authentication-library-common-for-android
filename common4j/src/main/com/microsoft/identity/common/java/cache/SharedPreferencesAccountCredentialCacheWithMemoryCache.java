@@ -29,15 +29,19 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -113,6 +117,26 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         }
     }
 
+    /**
+     * Clones each element of {@code items} and returns the cloned list.
+     * Used by filter-then-clone paths to defensively copy only matching items.
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    private <T extends AccountCredentialBase> List<T> cloneItems(
+            @NonNull final Collection<T> items,
+            @NonNull final String methodTag) {
+        final List<T> cloned = new ArrayList<>(items.size());
+        for (final T item : items) {
+            try {
+                cloned.add((T) item.clone());
+            } catch (final CloneNotSupportedException e) {
+                Logger.error(methodTag, "Failed to clone " + item.getClass().getSimpleName(), e);
+            }
+        }
+        return cloned;
+    }
+
     @Override
     public void saveAccount(@NonNull final AccountRecord accountInput) {
         final String methodTag = TAG + ":saveAccount";
@@ -141,9 +165,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             }
 
             final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
-            final long sharedPreferencesSaveStartTime = System.nanoTime();
             mSharedPreferencesFileManager.put(cacheKey, cacheValue);
-            OTelUtility.recordElapsedTimeFromNanos(AttributeName.elapsed_time_save_account_shared_preferences.name(), sharedPreferencesSaveStartTime);
             mCachedAccountRecordsWithKeys.put(cacheKey, accountToSave);
         }
     }
@@ -269,14 +291,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            final List<AccountRecord> accounts = new ArrayList<>();
-            for (AccountRecord record : mCachedAccountRecordsWithKeys.values()) {
-                try {
-                    accounts.add((AccountRecord) record.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone AccountRecord", e);
-                }
-            }
+            final List<AccountRecord> accounts = cloneItems(mCachedAccountRecordsWithKeys.values(), methodTag);
             Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
             return accounts;
         }
@@ -290,6 +305,26 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String realm) {
         final String methodTag = TAG + ":getAccountsFilteredBy";
         Logger.verbose(methodTag, "Loading Accounts...");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<AccountRecord> unclonedAccounts =
+                        new ArrayList<>(mCachedAccountRecordsWithKeys.values());
+                final List<AccountRecord> matchingUncloned = getAccountsFilteredByInternal(
+                        homeAccountId, environment, realm, unclonedAccounts);
+                final List<AccountRecord> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Accounts...");
+                return clonedMatches;
+            }
+        }
 
         final List<AccountRecord> allAccounts = getAccounts();
 
@@ -355,15 +390,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
-            ArrayList<Credential> credentials = new ArrayList<>();
-            for (Credential credential : mCachedCredentialsWithKeys.values()) {
-                try {
-                    credentials.add((Credential)credential.clone());
-                } catch (final CloneNotSupportedException e) {
-                    Logger.error(methodTag, "Failed to clone Credential", e);
-                }
-            }
-            return credentials;
+            return cloneItems(mCachedCredentialsWithKeys.values(), methodTag);
         }
     }
 
@@ -381,6 +408,39 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String authScheme) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
+                        unclonedCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        realm,
+                        target,
+                        authScheme,
+                        null,
+                        null,
+                        false
+                );
+                final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
+                return clonedMatches;
+            }
+        }
 
         final List<Credential> allCredentials = getCredentials();
 
@@ -456,6 +516,39 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
             @Nullable final String requestedClaims) {
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy()");
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
+                        unclonedCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        realm,
+                        target,
+                        authScheme,
+                        requestedClaims,
+                        null,
+                        false
+                );
+                final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
+                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
+                return clonedMatches;
+            }
+        }
 
         final List<Credential> allCredentials = getCredentials();
 
@@ -568,6 +661,45 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
                                                      @Nullable final String target,
                                                      @Nullable final String authScheme,
                                                      @Nullable final String requestedClaims) {
+        final String methodTag = TAG + ":getCredentialsFilteredBy";
+
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        SpanExtension.current().setAttribute(
+                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
+
+        if (useFilterThenClone) {
+            synchronized (mCacheLock) {
+                waitForInitialLoad();
+                final List<Credential> unclonedCredentials =
+                        new ArrayList<>(mCachedCredentialsWithKeys.values());
+                final List<Credential> result = new ArrayList<>();
+                for (final CredentialType type : credentialTypes) {
+                    result.addAll(cloneItems(
+                            getCredentialsFilteredByInternal(
+                                    unclonedCredentials,
+                                    homeAccountId,
+                                    environment,
+                                    type,
+                                    clientId,
+                                    applicationIdentifier,
+                                    mamEnrollmentIdentifier,
+                                    realm,
+                                    target,
+                                    authScheme,
+                                    requestedClaims,
+                                    null,
+                                    false
+                            ),
+                            methodTag
+                    ));
+                }
+                return result;
+            }
+        }
+
         final List<Credential> allCredentials = getCredentials();
 
         final List<Credential> result = new ArrayList<>();
@@ -633,17 +765,23 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     public boolean removeAccount(@NonNull final AccountRecord accountToRemove) {
         final String methodTag = TAG + ":removeAccount";
         Logger.info(methodTag, "Removing Account...");
-        if (null == accountToRemove) {
-            throw new IllegalArgumentException("Param [accountToRemove] cannot be null.");
-        }
 
         final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToRemove);
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
             boolean accountRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey))
-            {
+            // Use the in-memory map to check key existence instead of
+            // mSharedPreferencesFileManager.keySet() which triggers getAll()
+            // and decrypts every value in SharedPreferences just to check a key.
+            if (mCachedAccountRecordsWithKeys.containsKey(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), false);
+                mSharedPreferencesFileManager.remove(cacheKey);
+                accountRemoved = true;
+            } else if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), true);
                 mSharedPreferencesFileManager.remove(cacheKey);
                 accountRemoved = true;
             }
@@ -660,16 +798,22 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":removeCredential";
         Logger.info(methodTag, "Removing Credential...");
 
-        if (null == credentialToRemove) {
-            throw new IllegalArgumentException("Param [credentialToRemove] cannot be null.");
-        }
-
         final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToRemove);
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
             boolean credentialRemoved = false;
-            if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+            // Use the in-memory map to check key existence instead of
+            // mSharedPreferencesFileManager.keySet() which triggers getAll()
+            // and decrypts every value in SharedPreferences just to check a key.
+            if (mCachedCredentialsWithKeys.containsKey(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), false);
+                mSharedPreferencesFileManager.remove(cacheKey);
+                credentialRemoved = true;
+            } else if (mSharedPreferencesFileManager.keySet().contains(cacheKey)) {
+                SpanExtension.current().setAttribute(
+                        AttributeName.cache_key_in_storage_but_not_in_memory.name(), true);
                 mSharedPreferencesFileManager.remove(cacheKey);
                 credentialRemoved = true;
             }
