@@ -60,6 +60,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String GET_DEVICE_STATE_BUTTON_ID = "button_mwpj_get_state";
     private static final String GET_DEVICE_TOKEN_BUTTON_ID = "button_mwpj_get_device_token";
     private static final String GET_BLOB_BUTTON_ID = "button_mwpj_get_blob";
+    private static final String NO_DEVICE_REGISTRATION_RECORDS_MESSAGE = "There are no device registration records.";
 
     private final BrokerHost brokerHost;
 
@@ -103,6 +104,9 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         final List<Map<String, String>> records = new ArrayList<>();
         clickButton(GET_ALL_RECORDS_BUTTON_ID);
         final String dialogBoxText = dismissDialogBoxAndGetText();
+        if (dialogBoxText.equals(NO_DEVICE_REGISTRATION_RECORDS_MESSAGE)) {
+            return records;
+        }
         final String dialogBoxTextNoBrackets = dialogBoxText
                 .replace("[", "")
                 .replace("]", "");
