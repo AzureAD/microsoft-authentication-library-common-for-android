@@ -406,9 +406,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
-                    && isEstsCloudHost(url)
-                    && hasPrtHeaderAttached()) {
+            } else if (shouldReAttachPrtForEstsHost(url)) {
                 Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
                 processEstsHostRedirect(view, url);
             } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
@@ -1293,6 +1291,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean hasPrtHeaderAttached() {
         return mRequestHeaders != null
                 && mRequestHeaders.containsKey(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER);
+    }
+
+    /**
+     * Returns true if PRT headers should be re-attached for an eSTS cloud host navigation.
+     * Checks that the flight is enabled, the URL is a known eSTS host, and PRT headers
+     * were present in the original request.
+     */
+    private boolean shouldReAttachPrtForEstsHost(@NonNull final String url) {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
+                && isEstsCloudHost(url)
+                && hasPrtHeaderAttached();
     }
 
     /**
