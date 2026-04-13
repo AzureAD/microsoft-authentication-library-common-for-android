@@ -134,7 +134,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     @Test
     public void handleUrl_whenFlightEnabled_andEstsHost_returnsTrue() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(true);
         // Keep other flights at default behaviour — not enabled
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
@@ -149,7 +149,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     @Test
     public void handleUrl_whenFlightDisabled_andEstsHost_doesNotCallProcessEstsHostRedirect() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(false);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
@@ -165,7 +165,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     @Test
     public void handleUrl_whenFlightEnabled_andNonEstsHost_doesNotHandleAsEstsHostRedirect() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(true);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
@@ -181,7 +181,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     @Test
     public void handleUrl_whenFlightEnabled_andEstsHost_butNoPrtHeader_doesNotHandleAsEstsHostRedirect() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(true);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
@@ -207,7 +207,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
         // an eSTS host, the handler is called (i.e., processEstsHostRedirect
         // was triggered), meaning the URL was handled.
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(true);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);

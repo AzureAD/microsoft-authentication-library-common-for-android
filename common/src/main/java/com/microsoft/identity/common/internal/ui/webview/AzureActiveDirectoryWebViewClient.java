@@ -366,7 +366,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD) && isCrossCloudRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_RETURN_REDIRECT)
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
                     && isEstsCloudHost(url)
                     && hasPrtHeaderAttached()) {
                 Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
