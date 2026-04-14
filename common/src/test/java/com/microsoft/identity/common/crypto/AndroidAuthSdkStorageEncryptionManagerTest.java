@@ -35,6 +35,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -82,7 +83,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
      * try getting a decryption key when a predefined key is NOT provided.
      */
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey() {
+    public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey() throws ClientException {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
 
@@ -96,7 +97,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
      * try getting a decryption key when a predefined key is provided.
      */
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey_PreDefinedKeyProvided() {
+    public void testGetDecryptionKey_ForDataEncryptedWithKeyStoreKey_PreDefinedKeyProvided() throws ClientException {
         AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
@@ -111,18 +112,19 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
      * try getting a decryption key when a predefined key is NOT provided.
      */
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey() {
+    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey() throws ClientException {
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         try {
             final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-        } catch (IllegalStateException ex) {
+            Assert.fail("Expected ClientException");
+        } catch (ClientException ex) {
             Assert.assertEquals(
                     "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyProvider is null.",
                     ex.getMessage());
         }
     }
 
-    public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyprovider() {
+    public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyprovider() throws ClientException {
         AuthenticationSettings.INSTANCE.setIgnoreKeyProviderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption("Unencrypted".getBytes(ENCODING_UTF8));
@@ -134,7 +136,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
      * try getting a decryption key when a predefined key is provided.
      */
     @Test
-    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PreDefinedKeyProvided() {
+    public void testGetDecryptionKey_ForDataEncryptedWithPreDefinedKey_PreDefinedKeyProvided() throws ClientException {
         AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
         final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
@@ -142,5 +144,83 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         Assert.assertEquals(1, keyproviderList.size());
         Assert.assertTrue(keyproviderList.get(0) instanceof PredefinedKeyProvider);
         Assert.assertEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(keyproviderList.get(0)));
+    }
+
+    // ==================== useKeystoreOnly=true tests ====================
+
+    /**
+     * In useKeystoreOnly mode, getKeyProviderForEncryption() should always return the
+     * KeyStore-backed key, even when a predefined key is set in AuthenticationSettings.
+     */
+    @Test
+    public void testKeystoreOnly_GetEncryptionKey_IgnoresPredefinedKey() {
+        AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
+        final AndroidAuthSdkStorageEncryptionManager manager =
+                new AndroidAuthSdkStorageEncryptionManager(context, true);
+
+        final ISecretKeyProvider provider = manager.getKeyProviderForEncryption();
+        Assert.assertTrue(provider instanceof KeyStoreBackedSecretKeyProvider);
+        Assert.assertNotEquals(KeyUtil.getKeyThumbPrint(secretKeyMock), KeyUtil.getKeyThumbPrint(provider));
+    }
+
+    /**
+     * In useKeystoreOnly mode, getKeyProviderForEncryption() should return the KeyStore-backed key
+     * when no predefined key is set (same as default mode).
+     */
+    @Test
+    public void testKeystoreOnly_GetEncryptionKey_NoPredefinedKey() {
+        final AndroidAuthSdkStorageEncryptionManager manager =
+                new AndroidAuthSdkStorageEncryptionManager(context, true);
+
+        final ISecretKeyProvider provider = manager.getKeyProviderForEncryption();
+        Assert.assertTrue(provider instanceof KeyStoreBackedSecretKeyProvider);
+    }
+
+    /**
+     * In useKeystoreOnly mode, when encountering data encrypted with a predefined key
+     * and the predefined key is NOT available, should throw ClientException
+     * (not IllegalStateException), so EncryptedNameValueStorage.get() can catch it.
+     */
+    @Test
+    public void testKeystoreOnly_GetDecryptionKey_PredefinedKeyData_NotAvailable() throws ClientException {
+        final AndroidAuthSdkStorageEncryptionManager manager =
+                new AndroidAuthSdkStorageEncryptionManager(context, true);
+        try {
+            manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+            Assert.fail("Expected ClientException");
+        } catch (ClientException ex) {
+            Assert.assertTrue(ex.getMessage().contains("mPredefinedKeyProvider is null"));
+        }
+    }
+
+    /**
+     * In useKeystoreOnly mode, even when a predefined key IS set in AuthenticationSettings,\n     * encountering U001-encrypted data should still throw ClientException
+     * because mPredefinedKeyProvider is always null in this mode.
+     */
+    @Test
+    public void testKeystoreOnly_GetDecryptionKey_PredefinedKeyData_Available_StillThrows() throws ClientException {
+        AuthenticationSettings.INSTANCE.setSecretKey(PREDEFINED_KEY);
+        final AndroidAuthSdkStorageEncryptionManager manager =
+                new AndroidAuthSdkStorageEncryptionManager(context, true);
+        try {
+            manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
+            Assert.fail("Expected ClientException");
+        } catch (ClientException ex) {
+            Assert.assertTrue(ex.getMessage().contains("mPredefinedKeyProvider is null"));
+        }
+    }
+
+    /**
+     * In useKeystoreOnly mode, data encrypted with the keystore key should decrypt normally.
+     */
+    @Test
+    public void testKeystoreOnly_GetDecryptionKey_ForDataEncryptedWithKeyStoreKey() throws ClientException {
+        final AndroidAuthSdkStorageEncryptionManager manager =
+                new AndroidAuthSdkStorageEncryptionManager(context, true);
+        final List<ISecretKeyProvider> keyproviderList =
+                manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_ANDROID_WRAPPED_KEY);
+
+        Assert.assertEquals(1, keyproviderList.size());
+        Assert.assertTrue(keyproviderList.get(0) instanceof KeyStoreBackedSecretKeyProvider);
     }
 }

@@ -28,6 +28,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
@@ -57,7 +59,21 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     private final ISecretKeyProvider mKeyStoreKeyProvider;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context) {
-        if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
+        this(context, false);
+    }
+
+    /**
+     * @param context        an application context.
+     * @param useKeystoreOnly if true, always use the KeyStore-backed key for encryption,
+     *                        ignoring any predefined key set via {@link AuthenticationSettings}.
+     *                        For decryption of data encrypted with a predefined key, the manager
+     *                        will attempt to use the predefined key if available (migration),
+     *                        or gracefully fall back to the keystore key (which will fail with
+     *                        a {@link com.microsoft.identity.common.java.exception.ClientException}.
+     */
+    public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context,
+                                                  final boolean useKeystoreOnly) {
+        if (useKeystoreOnly || AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
             mPredefinedKeyProvider = null;
         } else {
             mPredefinedKeyProvider = new PredefinedKeyProvider("USER_DEFINED_KEY",
@@ -83,7 +99,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     @NonNull
-    public List<ISecretKeyProvider> getKeyProviderForDecryption(byte[] cipherText) {
+    public List<ISecretKeyProvider> getKeyProviderForDecryption(byte[] cipherText) throws ClientException {
         final String methodTag = TAG + ":getKeyLoaderForDecryption";
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
@@ -91,7 +107,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
             if (mPredefinedKeyProvider != null) {
                 return Collections.singletonList(mPredefinedKeyProvider);
             } else {
-                throw new IllegalStateException(
+                throw new ClientException(ErrorStrings.DECRYPTION_FAILED,
                         "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
                                 "but mPredefinedKeyProvider is null.");
             }

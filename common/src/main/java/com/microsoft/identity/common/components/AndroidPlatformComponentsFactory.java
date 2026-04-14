@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateG
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
 import com.microsoft.identity.common.internal.util.WorkProfileUtil;
+import com.microsoft.identity.common.java.AuthenticationSettings;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -118,6 +119,29 @@ public class AndroidPlatformComponentsFactory {
 
         final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
         fillBuilderWithBasicImplementations(builder, context, activity, fragment);
+        return builder.build();
+    }
+
+    /**
+     * Creates an {@link IPlatformComponents} object from a {@link Context},
+     * with the storage encryption manager configured to always use the Android KeyStore
+     * for encryption, ignoring any predefined key set via {@link AuthenticationSettings}.
+     * <p>
+     * This is intended for components (e.g. Device Registration API, Broker API)
+     * that should not depend on the MSAL/ADAL predefined key lifecycle.
+     *
+     * @param context an application context.
+     **/
+    public static IPlatformComponents createFromContextWithKeystoreOnlyEncryption(
+            @NonNull final Context context) {
+        initializeGlobalStates(context);
+
+        final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
+        fillBuilderWithBasicImplementations(builder, context, null, null);
+
+        // Override the storage supplier with a keystore-only encryption manager.
+        builder.storageSupplier(new AndroidStorageSupplier(context,
+                new AndroidAuthSdkStorageEncryptionManager(context, true)));
         return builder.build();
     }
 
