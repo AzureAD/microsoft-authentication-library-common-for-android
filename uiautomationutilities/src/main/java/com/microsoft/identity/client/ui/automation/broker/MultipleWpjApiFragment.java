@@ -60,6 +60,10 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String GET_DEVICE_STATE_BUTTON_ID = "button_mwpj_get_state";
     private static final String GET_DEVICE_TOKEN_BUTTON_ID = "button_mwpj_get_device_token";
     private static final String GET_BLOB_BUTTON_ID = "button_mwpj_get_blob";
+
+    /**
+     * This must matches the message shown when getAllRecords is called but there are no device registration records in BrokerHost app.
+     */
     private static final String NO_DEVICE_REGISTRATION_RECORDS_MESSAGE = "There are no device registration records.";
 
     private final BrokerHost brokerHost;
