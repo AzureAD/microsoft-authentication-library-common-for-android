@@ -195,7 +195,8 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
     }
 
     /**
-     * In useKeystoreOnly mode, even when a predefined key IS set in AuthenticationSettings,\n     * encountering U001-encrypted data should still throw ClientException
+     * In useKeystoreOnly mode, even when a predefined key IS set in AuthenticationSettings,
+     * encountering U001-encrypted data should still throw ClientException
      * because mPredefinedKeyProvider is always null in this mode.
      */
     @Test
