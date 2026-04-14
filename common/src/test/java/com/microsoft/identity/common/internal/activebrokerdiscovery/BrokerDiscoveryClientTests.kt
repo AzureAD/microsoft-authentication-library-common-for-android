@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.activebrokerdiscovery
 
+import android.content.Context
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings
@@ -1033,6 +1034,13 @@ class BrokerDiscoveryClientTests {
     @Test
     fun testCacheDecryptionFailure_FallsBackToIpcDiscovery() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+
+        // Ensure test isolation: clear any leftover data in the broker SDK cache SharedPreferences
+        // and the SharedPreferencesFileManager singleton cache.
+        context.getSharedPreferences("BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE", Context.MODE_PRIVATE)
+            .edit().clear().commit()
+        SharedPreferencesFileManager.clearSingletonCache()
+        AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases()
 
         // A mock "keystore" key provider using a different key AND a different identifier than
         // the predefined one. PredefinedKeyProvider always uses "U001", so we need a custom

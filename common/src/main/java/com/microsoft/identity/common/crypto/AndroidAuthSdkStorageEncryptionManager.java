@@ -66,10 +66,12 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
      * @param context        an application context.
      * @param useKeystoreOnly if true, always use the KeyStore-backed key for encryption,
      *                        ignoring any predefined key set via {@link AuthenticationSettings}.
-     *                        For decryption of data encrypted with a predefined key, the manager
-     *                        will attempt to use the predefined key if available (migration),
-     *                        or gracefully fall back to the keystore key (which will fail with
-     *                        a {@link com.microsoft.identity.common.java.exception.ClientException}.
+     *                        The predefined key is never captured in this mode.
+     *                        Attempting to decrypt data that was encrypted with a predefined key
+     *                        (U001 identifier) will throw
+     *                        {@link com.microsoft.identity.common.java.exception.ClientException},
+     *                        allowing callers (e.g. {@code EncryptedNameValueStorage}) to treat it
+     *                        as a cache miss and self-heal.
      */
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context,
                                                   final boolean useKeystoreOnly) {
@@ -100,7 +102,7 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     @Override
     @NonNull
     public List<ISecretKeyProvider> getKeyProviderForDecryption(byte[] cipherText) throws ClientException {
-        final String methodTag = TAG + ":getKeyLoaderForDecryption";
+        final String methodTag = TAG + ":getKeyProviderForDecryption";
 
         final String keyIdentifier = getKeyIdentifierFromCipherText(cipherText);
         if (PredefinedKeyProvider.USER_PROVIDED_KEY_IDENTIFIER.equalsIgnoreCase(keyIdentifier)) {

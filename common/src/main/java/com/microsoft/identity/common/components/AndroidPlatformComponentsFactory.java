@@ -28,6 +28,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.platform.AndroidBroadcaster;
@@ -37,7 +38,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateG
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
 import com.microsoft.identity.common.internal.util.WorkProfileUtil;
-import com.microsoft.identity.common.java.AuthenticationSettings;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
@@ -125,7 +125,7 @@ public class AndroidPlatformComponentsFactory {
     /**
      * Creates an {@link IPlatformComponents} object from a {@link Context},
      * with the storage encryption manager configured to always use the Android KeyStore
-     * for encryption, ignoring any predefined key set via {@link AuthenticationSettings}.
+     * for encryption, ignoring any predefined key set via {@link AuthenticationSettings#setSecretKey(byte[])}.
      * <p>
      * This is intended for components (e.g. Device Registration API, Broker API)
      * that should not depend on the MSAL/ADAL predefined key lifecycle.

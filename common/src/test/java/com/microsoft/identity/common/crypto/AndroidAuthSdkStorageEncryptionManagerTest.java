@@ -124,6 +124,7 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
         }
     }
 
+    @Test
     public void testGetDecryptionKey_ForUnencryptedText_returns_empty_keyprovider() throws ClientException {
         AuthenticationSettings.INSTANCE.setIgnoreKeyProviderNotFoundError(false);
         final AndroidAuthSdkStorageEncryptionManager manager = new AndroidAuthSdkStorageEncryptionManager(context);
