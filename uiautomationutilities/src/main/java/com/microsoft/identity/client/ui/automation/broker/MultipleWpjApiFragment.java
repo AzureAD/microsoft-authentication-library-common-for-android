@@ -62,7 +62,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
     private static final String GET_BLOB_BUTTON_ID = "button_mwpj_get_blob";
 
     /**
-     * This must matches the message shown when getAllRecords is called but there are no device registration records in BrokerHost app.
+     * This must match the message shown when getAllRecords is called but there are no device registration records in BrokerHost app.
      */
     private static final String NO_DEVICE_REGISTRATION_RECORDS_MESSAGE = "There are no device registration records.";
 
@@ -108,7 +108,7 @@ public class MultipleWpjApiFragment extends AbstractBrokerHost {
         final List<Map<String, String>> records = new ArrayList<>();
         clickButton(GET_ALL_RECORDS_BUTTON_ID);
         final String dialogBoxText = dismissDialogBoxAndGetText();
-        if (dialogBoxText.equals(NO_DEVICE_REGISTRATION_RECORDS_MESSAGE)) {
+        if (NO_DEVICE_REGISTRATION_RECORDS_MESSAGE.equals(dialogBoxText)) {
             return records;
         }
         final String dialogBoxTextNoBrackets = dialogBoxText
