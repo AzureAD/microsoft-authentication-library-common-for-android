@@ -58,6 +58,14 @@ import java.util.concurrent.atomic.AtomicInteger
 @RunWith(RobolectricTestRunner::class)
 class BrokerDiscoveryClientTests {
 
+    companion object {
+        /**
+         * Mirrors ClientActiveBrokerCache.BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE_STORAGE_NAME
+         * (which is private). Centralized here to reduce drift if the production name changes.
+         */
+        private const val BROKER_SDK_CACHE_FILE_NAME = "BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE"
+    }
+
     /**
      * Happy scenario.
      * - First time querying (nothing in the cache).
@@ -1037,100 +1045,108 @@ class BrokerDiscoveryClientTests {
 
         // Ensure test isolation: clear any leftover data in the broker SDK cache SharedPreferences
         // and the SharedPreferencesFileManager singleton cache.
-        context.getSharedPreferences("BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE", Context.MODE_PRIVATE)
+        context.getSharedPreferences(BROKER_SDK_CACHE_FILE_NAME, Context.MODE_PRIVATE)
             .edit().clear().commit()
         SharedPreferencesFileManager.clearSingletonCache()
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases()
 
-        // A mock "keystore" key provider using a different key AND a different identifier than
-        // the predefined one. PredefinedKeyProvider always uses "U001", so we need a custom
-        // ISecretKeyProvider with a distinct identifier (e.g. "KS01") to simulate the real
-        // KeyStoreBackedSecretKeyProvider behavior.
-        val mockKeystoreKeyProvider = object : ISecretKeyProvider {
-            override val alias: String = "MOCK_KEYSTORE_KEY"
-            override val keyTypeIdentifier: String = "KS01"
-            override val key: javax.crypto.SecretKey = AES256SecretKeyGenerator.generateKeyFromRawBytes(MockData.ANOTHER_PREDEFINED_KEY)
-            override val cipherTransformation: String = "AES/CBC/PKCS5Padding"
-        }
-
-        // Step 1: Write cache data using the predefined key (simulates MSAL-initialized path).
-        AuthenticationSettings.INSTANCE.setSecretKey(MockData.PREDEFINED_KEY)
-        val writeEncryptionManager = AndroidAuthSdkStorageEncryptionManager(context)
-        val writeSupplier = AndroidStorageSupplier(context, writeEncryptionManager)
-        val writeCache = ClientActiveBrokerCache.getBrokerSdkCache(writeSupplier)
-        writeCache.setCachedActiveBroker(prodMicrosoftAuthenticator)
-
-        // Verify data was written successfully.
-        Assert.assertEquals(prodMicrosoftAuthenticator, writeCache.getCachedActiveBroker())
-
-        // Step 2: Clear the predefined key and SharedPreferencesFileManager cache
-        //         (simulates app restart where MSAL hasn't initialized).
-        AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases()
-        SharedPreferencesFileManager.clearSingletonCache()
-
-        // Step 3: Create a "keystore-only" encryption manager that uses the mock keystore key
-        //         and throws ClientException for U001-encrypted data (simulates the fix).
-        val readEncryptionManager = object : StorageEncryptionManager() {
-            override fun getKeyProviderForEncryption(): ISecretKeyProvider {
-                return mockKeystoreKeyProvider
+        try {
+            // A mock "keystore" key provider using a different key AND a different identifier than
+            // the predefined one. PredefinedKeyProvider always uses "U001", so we need a custom
+            // ISecretKeyProvider with a distinct identifier (e.g. "KS01") to simulate the real
+            // KeyStoreBackedSecretKeyProvider behavior.
+            val mockKeystoreKeyProvider = object : ISecretKeyProvider {
+                override val alias: String = "MOCK_KEYSTORE_KEY"
+                override val keyTypeIdentifier: String = "KS01"
+                override val key: javax.crypto.SecretKey = AES256SecretKeyGenerator.generateKeyFromRawBytes(MockData.ANOTHER_PREDEFINED_KEY)
+                override val cipherTransformation: String = "AES/CBC/PKCS5Padding"
             }
 
-            override fun getKeyProviderForDecryption(cipherText: ByteArray): List<ISecretKeyProvider> {
-                val keyIdentifier = getKeyIdentifierFromCipherText(cipherText)
-                if (PredefinedKeyProvider.USER_PROVIDED_KEY_IDENTIFIER.equals(keyIdentifier, ignoreCase = true)) {
-                    throw ClientException(
-                        ErrorStrings.DECRYPTION_FAILED,
-                        "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
-                                "but mPredefinedKeyProvider is null."
-                    )
+            // Step 1: Write cache data using the predefined key (simulates MSAL-initialized path).
+            AuthenticationSettings.INSTANCE.setSecretKey(MockData.PREDEFINED_KEY)
+            val writeEncryptionManager = AndroidAuthSdkStorageEncryptionManager(context)
+            val writeSupplier = AndroidStorageSupplier(context, writeEncryptionManager)
+            val writeCache = ClientActiveBrokerCache.getBrokerSdkCache(writeSupplier)
+            writeCache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+
+            // Verify data was written successfully.
+            Assert.assertEquals(prodMicrosoftAuthenticator, writeCache.getCachedActiveBroker())
+
+            // Step 2: Clear the predefined key and SharedPreferencesFileManager cache
+            //         (simulates app restart where MSAL hasn't initialized).
+            AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases()
+            SharedPreferencesFileManager.clearSingletonCache()
+
+            // Step 3: Create a "keystore-only" encryption manager that uses the mock keystore key
+            //         and throws ClientException for U001-encrypted data (simulates the fix).
+            val readEncryptionManager = object : StorageEncryptionManager() {
+                override fun getKeyProviderForEncryption(): ISecretKeyProvider {
+                    return mockKeystoreKeyProvider
                 }
-                // For data encrypted with the mock keystore key ("KS01"), return it.
-                return listOf(mockKeystoreKeyProvider)
+
+                override fun getKeyProviderForDecryption(cipherText: ByteArray): List<ISecretKeyProvider> {
+                    val keyIdentifier = getKeyIdentifierFromCipherText(cipherText)
+                    if (PredefinedKeyProvider.USER_PROVIDED_KEY_IDENTIFIER.equals(keyIdentifier, ignoreCase = true)) {
+                        throw ClientException(
+                            ErrorStrings.DECRYPTION_FAILED,
+                            "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, " +
+                                    "but mPredefinedKeyProvider is null."
+                        )
+                    }
+                    // For data encrypted with the mock keystore key ("KS01"), return it.
+                    return listOf(mockKeystoreKeyProvider)
+                }
             }
+            val readSupplier = AndroidStorageSupplier(context, readEncryptionManager)
+            val readCache = ClientActiveBrokerCache.getBrokerSdkCache(readSupplier)
+
+            // Step 4: Use this cache in BrokerDiscoveryClient — should fall back to IPC, not crash.
+            val client = BrokerDiscoveryClient(
+                brokerCandidates = setOf(
+                    prodMicrosoftAuthenticator, prodCompanyPortal
+                ),
+                getActiveBrokerFromAccountManager = {
+                    throw IllegalStateException("Should not fall back to AccountManager when IPC succeeds")
+                },
+                ipcStrategy = object : IIpcStrategy {
+                    override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+                    override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                        return true
+                    }
+                    override fun getType(): IIpcStrategy.Type {
+                        return IIpcStrategy.Type.CONTENT_PROVIDER
+                    }
+                },
+                cache = readCache,
+                isPackageInstalled = {
+                    it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+                },
+                isValidBroker = { true }
+            )
+
+            // Should NOT crash — should fall back to IPC and discover Company Portal.
+            val result = client.getActiveBroker()
+            Assert.assertEquals(prodCompanyPortal, result)
+
+            // After IPC re-populates the cache, it should be readable with the mock keystore key.
+            Assert.assertEquals(prodCompanyPortal, readCache.getCachedActiveBroker())
+        } finally {
+            // Restore global state to avoid leaking into other tests.
+            context.getSharedPreferences(BROKER_SDK_CACHE_FILE_NAME, Context.MODE_PRIVATE)
+                .edit().clear().commit()
+            SharedPreferencesFileManager.clearSingletonCache()
+            AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases()
         }
-        val readSupplier = AndroidStorageSupplier(context, readEncryptionManager)
-        val readCache = ClientActiveBrokerCache.getBrokerSdkCache(readSupplier)
-
-        // Step 4: Use this cache in BrokerDiscoveryClient — should fall back to IPC, not crash.
-        val client = BrokerDiscoveryClient(
-            brokerCandidates = setOf(
-                prodMicrosoftAuthenticator, prodCompanyPortal
-            ),
-            getActiveBrokerFromAccountManager = {
-                throw IllegalStateException("Should not fall back to AccountManager when IPC succeeds")
-            },
-            ipcStrategy = object : IIpcStrategy {
-                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
-                    val returnBundle = Bundle()
-                    returnBundle.putString(
-                        BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
-                        prodCompanyPortal.packageName
-                    )
-                    returnBundle.putString(
-                        BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
-                        prodCompanyPortal.signingCertificateThumbprint
-                    )
-                    return returnBundle
-                }
-                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
-                    return true
-                }
-                override fun getType(): IIpcStrategy.Type {
-                    return IIpcStrategy.Type.CONTENT_PROVIDER
-                }
-            },
-            cache = readCache,
-            isPackageInstalled = {
-                it == prodMicrosoftAuthenticator || it == prodCompanyPortal
-            },
-            isValidBroker = { true }
-        )
-
-        // Should NOT crash — should fall back to IPC and discover Company Portal.
-        val result = client.getActiveBroker()
-        Assert.assertEquals(prodCompanyPortal, result)
-
-        // After IPC re-populates the cache, it should be readable with the mock keystore key.
-        Assert.assertEquals(prodCompanyPortal, readCache.getCachedActiveBroker())
     }
 }
