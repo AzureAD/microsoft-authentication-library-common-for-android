@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -118,9 +119,8 @@ public class AndroidAuthSdkStorageEncryptionManagerTest {
             final List<ISecretKeyProvider> keyproviderList = manager.getKeyProviderForDecryption(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
             Assert.fail("Expected ClientException");
         } catch (ClientException ex) {
-            Assert.assertEquals(
-                    "Cipher Text is encrypted by USER_PROVIDED_KEY_IDENTIFIER, but mPredefinedKeyProvider is null.",
-                    ex.getMessage());
+            Assert.assertEquals(ErrorStrings.DECRYPTION_FAILED, ex.getErrorCode());
+            Assert.assertTrue(ex.getMessage().contains("mPredefinedKeyProvider is null"));
         }
     }
 
