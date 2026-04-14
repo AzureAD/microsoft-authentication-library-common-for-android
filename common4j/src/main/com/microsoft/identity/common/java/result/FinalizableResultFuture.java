@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.util.ResultFuture;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import lombok.NonNull;
 
@@ -36,6 +37,12 @@ import lombok.NonNull;
  */
 public class FinalizableResultFuture<T> extends ResultFuture<T> {
     private final CountDownLatch mFinalized = new CountDownLatch(1);
+
+    /**
+     * Monotonic timestamp (nanos) at which this future was created.
+     * Used to calculate elapsed time for stale-entry diagnostics.
+     */
+    private final long mCreatedAtNanos = System.nanoTime();
 
     /**
      * Cancellation signal owned by this future. Shared by all callers (original + dedup)
@@ -88,5 +95,15 @@ public class FinalizableResultFuture<T> extends ResultFuture<T> {
      */
     public void cancelSignal() {
         mCancellationSignal.cancel();
+    }
+
+    /**
+     * Returns the elapsed time in milliseconds since this future was created.
+     * Uses monotonic clock ({@link System#nanoTime()}) to avoid wall-clock drift.
+     *
+     * @return elapsed milliseconds since creation
+     */
+    public long getElapsedMillis() {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - mCreatedAtNanos);
     }
 }

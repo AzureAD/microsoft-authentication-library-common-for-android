@@ -254,7 +254,17 @@ public enum CommonFlight implements IFlightConfig {
      * Default: false (disabled for safe rollout).
      */
     ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
-    
+
+    /**
+     * Enables stale entry eviction from the command dedup map on timeout.
+     * When true, CommandDispatcher removes timed-out entries from sExecutingCommandMap
+     * so that subsequent requests spawn fresh workers instead of dedup'ing to stuck futures.
+     * Independent of {@link #ENABLE_HTTP_CANCELLATION_ON_TIMEOUT} for safe rollback.
+     *
+     * Default: false (disabled for safe rollout).
+     */
+    ENABLE_STALE_ENTRY_EVICTION_ON_TIMEOUT("EnableStaleEntryEvictionOnTimeout", false),
+
     /** 
      * Flight to enable server-side client data telemetry from the x-ms-clientdata response
      * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).

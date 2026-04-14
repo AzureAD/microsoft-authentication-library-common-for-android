@@ -176,6 +176,20 @@ public enum AttributeName {
     cancellation_outcome,
 
     /**
+     * The outcome of stale entry eviction from the command dedup map on timeout.
+     * Only emitted when the stale eviction flight is enabled and a timeout occurs.
+     * Values: "evicted", "skipped_already_replaced", "flight_disabled".
+     */
+    stale_entry_eviction_outcome,
+
+    /**
+     * The age (in milliseconds) of the existing future returned by the dedup branch.
+     * Helps differentiate fresh dedup (normal, age < timeout) from stale dedup
+     * (stuck worker, age >> timeout). Only emitted when a request is dedup'd.
+     */
+    dedup_future_age_ms,
+
+    /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
      */
     elapsed_time_cache_save,

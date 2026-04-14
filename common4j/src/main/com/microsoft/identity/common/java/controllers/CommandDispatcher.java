@@ -149,6 +149,18 @@ public class CommandDispatcher {
     }
 
     /**
+     * Outcome of stale entry eviction from the command dedup map on timeout.
+     * Emitted as the {@link AttributeName#stale_entry_eviction_outcome} span attribute
+     * to track eviction effectiveness during flight rollout.
+     */
+    private enum StaleEntryEvictionOutcome {
+        /** Stale entry was evicted from the map — new requests will spawn fresh workers. */
+        evicted,
+        /** Map entry was already replaced by a new future — eviction skipped. */
+        skipped_already_replaced
+    }
+
+    /**
      * Enum representing the lifecycle states of a request for timeout classification.
      * This enables precise tracking of where a timeout occurred in the request processing pipeline.
      */
@@ -477,6 +489,37 @@ public class CommandDispatcher {
                     + ", activeCount=" + getSilentRequestActiveCount()
                     + ", queueSize=" + ((ThreadPoolExecutor) sSilentExecutor).getQueue().size());
             }
+
+            // Evict stale entry from dedup map so subsequent requests spawn fresh workers.
+            // Flight-gated independently from cancellation for safe rollback.
+            if (future != null
+                    && command.isEligibleForCaching()
+                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .getBooleanValue(CommonFlight.ENABLE_STALE_ENTRY_EVICTION_ON_TIMEOUT)) {
+                synchronized (mapAccessLock) {
+                    // Ownership check: only evict if the map still holds THIS future.
+                    // A new request may have already replaced it with a fresh future.
+                    final FinalizableResultFuture<CommandResult> mapFuture = sExecutingCommandMap.get(command);
+                    if (mapFuture == future) {
+                        sExecutingCommandMap.remove(command);
+                        SpanExtension.current().setAttribute(
+                                AttributeName.stale_entry_eviction_outcome.name(),
+                                StaleEntryEvictionOutcome.evicted.name());
+                        Logger.info(methodTag,
+                            "STALE_ENTRY_EVICTION: Removed timed-out command from dedup map."
+                            + " correlationId=" + (correlationId != null ? correlationId : "unknown")
+                            + ", futureAge=" + future.getElapsedMillis() + "ms");
+                    } else {
+                        SpanExtension.current().setAttribute(
+                                AttributeName.stale_entry_eviction_outcome.name(),
+                                StaleEntryEvictionOutcome.skipped_already_replaced.name());
+                        Logger.info(methodTag,
+                            "STALE_ENTRY_EVICTION: Map entry already replaced, skipping eviction."
+                            + " correlationId=" + (correlationId != null ? correlationId : "unknown"));
+                    }
+                }
+            }
+
             // Classify timeout based on request state using correlation ID
             final String effectiveCorrelationId = correlationId != null ? correlationId : "unknown";
             throw createTimeoutException(
@@ -574,6 +617,12 @@ public class CommandDispatcher {
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                         }
+                        SpanExtension.current().setAttribute(
+                                AttributeName.dedup_future_age_ms.name(),
+                                putValue.getElapsedMillis());
+                        Logger.info(TAG + methodName,
+                            "DEDUP: Returning existing future, age=" + putValue.getElapsedMillis() + "ms"
+                            + ", correlationId=" + correlationId);
                         return putValue;
                     }
                 } else {
@@ -583,6 +632,12 @@ public class CommandDispatcher {
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                     }
+                    SpanExtension.current().setAttribute(
+                            AttributeName.dedup_future_age_ms.name(),
+                            future.getElapsedMillis());
+                    Logger.info(TAG + methodName,
+                        "DEDUP: Returning existing future, age=" + future.getElapsedMillis() + "ms"
+                        + ", correlationId=" + correlationId);
                     return future;
                 }
 
@@ -684,15 +739,23 @@ public class CommandDispatcher {
 
                         synchronized (mapAccessLock) {
                             if (command.isEligibleForCaching()) {
-                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
-                                if (mapFuture == null) {
-                                    // If this has happened, the command that we started with has mutated.  We will
-                                    // examine every entry in the map, find the one with the same object identity
-                                    // and remove it.
+                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.get(command);
+                                if (mapFuture == finalFuture) {
+                                    // Normal case: we own the map entry, remove it
+                                    sExecutingCommandMap.remove(command);
+                                } else if (mapFuture == null) {
+                                    // Entry was already evicted (stale eviction on timeout) or
+                                    // command mutated — use cleanMap fallback for mutation case.
                                     // ADO:TODO:1153495 - Rekey this map with stable string keys.
-                                    Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
-                                            + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                    Logger.info(TAG, "Map entry already removed for "
+                                            + command.getClass().getCanonicalName()
+                                            + " from " + command.getParameters().getApplicationName());
                                     cleanMap(command);
+                                } else {
+                                    // Entry exists but belongs to a REPLACEMENT future
+                                    // (inserted after stale eviction). Do NOT remove it.
+                                    Logger.info(TAG, "STALE_WORKER_CLEANUP: Map entry replaced by new future,"
+                                            + " skipping removal for " + command.getClass().getCanonicalName());
                                 }
                             }
                             finalFuture.setCleanedUp();
