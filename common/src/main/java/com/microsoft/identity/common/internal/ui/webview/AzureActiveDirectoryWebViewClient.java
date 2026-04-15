@@ -116,6 +116,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_CLIENT_ID;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
@@ -161,6 +162,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private String mPasskeyRegistrationScript;
     private String mLoginHint;
+    private String mClientId;
 
     /**
      * Optional onboarding telemetry recorder. Set via {@link #setOnboardingTelemetryRecorder}
@@ -292,12 +294,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     public void setRequestUrl(final String requestUrl) {
         mRequestUrl = requestUrl;
-        try {
-            final Map<String, String> params = StringExtensions.getUrlParameters(requestUrl);
-            mLoginHint = params.get("login_hint");
-        } catch (final RuntimeException e) {
-            Logger.warn(TAG, "Failed to extract login_hint from request URL.");
+    }
+
+    /**
+     * Extracts the login_hint from the initial authorization URL.
+     * Used as a fallback for PRT re-attachment when the redirect URL lacks login_hint.
+     */
+    private String getLoginHintFromRequestUrl() {
+        if (mLoginHint == null && mRequestUrl != null) {
+            try {
+                final Map<String, String> params = StringExtensions.getUrlParameters(mRequestUrl);
+                mLoginHint = params.get("login_hint");
+            } catch (@NonNull final Exception e) {
+                Logger.warn(TAG, "Failed to extract login_hint from request URL.");
+            }
         }
+        return mLoginHint;
+    }
+
+    /**
+     * Extracts the client_id from the initial authorization URL.
+     */
+    private String getClientIdFromRequestUrl() {
+        if (mClientId == null && mRequestUrl != null) {
+            try {
+                final Map<String, String> params = StringExtensions.getUrlParameters(mRequestUrl);
+                mClientId = params.get("client_id");
+            } catch (@NonNull final Exception e) {
+                Logger.warn(TAG, "Failed to extract client_id from request URL.");
+            }
+        }
+        return mClientId;
     }
 
     /**
@@ -1229,7 +1256,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (nonceQueryParam != null) {
             final Span span = OTelUtility.createSpanFromParent(SpanName.ProcessNonceFromEstsRedirect.name(), mSpanContext);
             try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-                final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span, mLoginHint);
+                final NonceRedirectHandler nonceRedirect = new NonceRedirectHandler(view, mRequestHeaders, span, getLoginHintFromRequestUrl());
                 nonceRedirect.processChallenge(new URL(url));
                 span.setStatus(StatusCode.OK);
             } catch (MalformedURLException e) {
@@ -1295,14 +1322,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * Returns true if PRT headers should be re-attached for an eSTS cloud host navigation.
-     * Checks that the flight is enabled, the URL is a known eSTS host, and PRT headers
-     * were present in the original request.
+     * Checks that the flight is enabled, the URL is a known eSTS host, PRT headers
+     * were present in the original request, and the redirect's client_id matches
+     * the original request's client_id.
      */
     private boolean shouldReAttachPrtForEstsHost(@NonNull final String url) {
         return CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
                 && isEstsCloudHost(url)
-                && hasPrtHeaderAttached();
+                && hasPrtHeaderAttached()
+                && (!url.contains("/authorize") || hasKnownClientId(url));
+    }
+
+    /**
+     * Returns true if the redirect URL's client_id is a known client: either the original
+     * request's client_id or the broker's client_id. If the redirect has no client_id,
+     * returns true to avoid blocking legitimate redirects.
+     */
+    private boolean hasKnownClientId(@NonNull final String url) {
+        try {
+            final Map<String, String> params = StringExtensions.getUrlParameters(url);
+            final String redirectClientId = params.get("client_id");
+            if (redirectClientId == null) {
+                return false;
+            }
+            final String originalClientId = getClientIdFromRequestUrl();
+            return redirectClientId.equalsIgnoreCase(originalClientId)
+                    || redirectClientId.equalsIgnoreCase(BROKER_CLIENT_ID);
+        } catch (@NonNull final Exception e) {
+            Logger.warn(TAG, "Failed to extract client_id from redirect URL.");
+            return true;
+        }
     }
 
     /**
@@ -1319,7 +1369,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // Domain attribute is best-effort for telemetry
         }
         final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
-                new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, mLoginHint);
+                new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, getLoginHintFromRequestUrl(), true);
         reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
 

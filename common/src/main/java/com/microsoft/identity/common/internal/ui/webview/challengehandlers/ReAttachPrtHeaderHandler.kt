@@ -37,7 +37,8 @@ class ReAttachPrtHeaderHandler @JvmOverloads constructor(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
     private val span : Span,
-    private val fallbackUsername: String? = null
+    private val fallbackUsername: String? = null,
+    private val withPurposeBroker: Boolean = false
 ) : IChallengeHandler<String, Void> {
     private val TAG = ReAttachPrtHeaderHandler::class.java.simpleName
 
@@ -57,12 +58,18 @@ class ReAttachPrtHeaderHandler @JvmOverloads constructor(
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
         val username = parameters["login_hint"] ?: fallbackUsername
         if (!username.isNullOrEmpty()) {
-            val updatedRefreshTokenCredentialHeader =
+            val updatedRefreshTokenCredentialHeader = if (withPurposeBroker) {
+                CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialWithBrokerPurpose(
+                    url, username
+                )
+            } else {
                 CommonRefreshTokenCredentialProvider.getRefreshTokenCredential(
                     url, username
                 )
+            }
             if (!updatedRefreshTokenCredentialHeader.isNullOrEmpty()) {
-                Logger.info(methodTag, "Attaching refresh token credential in headers.")
+                Logger.info(methodTag, "Attaching refresh token credential in headers." +
+                    if (withPurposeBroker) " (with purpose:broker)" else "")
                 span.setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
                 headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] =
                     updatedRefreshTokenCredentialHeader
