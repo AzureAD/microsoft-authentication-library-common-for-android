@@ -1,4 +1,8 @@
-vNext
+Version 24.1.1-RC1
+----------
+- [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
+
+Version 24.1.0
 ----------
 - [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API (#3027)
 - [PATCH] Fix bug in Authority.getKnownAuthorityResult where cloud discovery failure would skip knownAuthorities check and fix thread safety in Authority.isKnownAuthority and getEquivalentConfiguredAuthority with synchronized block (#3027)
