@@ -23,16 +23,26 @@
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory
 
 import com.microsoft.identity.common.java.authorities.Authority
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority
 import com.microsoft.identity.common.java.authorities.Environment
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.flighting.MockFlightsManager
 import com.microsoft.identity.common.java.flighting.MockFlightsProvider
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.net.URL
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Tests for sovereign cloud discovery support in [AzureActiveDirectory].
@@ -285,5 +295,243 @@ class AzureActiveDirectoryTest {
         AzureActiveDirectory.ensureCloudDiscoveryForAuthority(bleuUrl)
         assertTrue(AzureActiveDirectory.hasCloudHost(bleuUrl))
         assertTrue(AzureActiveDirectory.isValidCloudHost(bleuUrl))
+    }
+
+    // --- Concurrency tests ---
+    // Verify the fix for the ABBA deadlock between AzureActiveDirectory.class and
+    // AzureActiveDirectoryAuthority.class monitors, and the lock convoy where
+    // synchronized read-only methods blocked behind network I/O.
+
+    /**
+     * Regression test for the ABBA deadlock between AzureActiveDirectory.class and
+     * AzureActiveDirectoryAuthority.class monitors.
+     *
+     * Thread 1: isKnownAuthority → sLock → getAuthorityURL → AADAuthority.class → AAD.class
+     * Thread 2: ensureCloudDiscoveryForAuthority → AAD.class → getAuthorityURL → AADAuthority.class
+     *
+     * If the deadlock still existed, this test would hang and be killed by the timeout.
+     */
+    @Test(timeout = 10_000)
+    fun testNoDeadlock_isKnownAuthority_vs_ensureCloudDiscovery() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.microsoftonline.com/common"
+        ) as AzureActiveDirectoryAuthority
+
+        val barrier = CyclicBarrier(2)
+        val completedLatch = CountDownLatch(2)
+        val thread1Error = AtomicReference<Throwable?>(null)
+        val thread2Error = AtomicReference<Throwable?>(null)
+
+        val t1 = Thread {
+            try {
+                repeat(500) {
+                    if (it == 0) barrier.await(5, TimeUnit.SECONDS)
+                    Authority.isKnownAuthority(authority)
+                }
+            } catch (e: Throwable) {
+                thread1Error.set(e)
+            } finally {
+                completedLatch.countDown()
+            }
+        }
+
+        val t2 = Thread {
+            try {
+                repeat(500) {
+                    if (it == 0) barrier.await(5, TimeUnit.SECONDS)
+                    try {
+                        AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority)
+                    } catch (_: Exception) { }
+                }
+            } catch (e: Throwable) {
+                thread2Error.set(e)
+            } finally {
+                completedLatch.countDown()
+            }
+        }
+
+        t1.start()
+        t2.start()
+
+        assertTrue(
+            "Both threads should complete within timeout (deadlock detected if this fails)",
+            completedLatch.await(9, TimeUnit.SECONDS)
+        )
+        assertNull("Thread 1 should not throw", thread1Error.get())
+        assertNull("Thread 2 should not throw", thread2Error.get())
+    }
+
+    /**
+     * Verifies that concurrent reads to hasCloudHost / getAzureActiveDirectoryCloud
+     * do not block each other now that synchronized has been removed from read-only methods.
+     */
+    @Test(timeout = 10_000)
+    fun testConcurrentReads_doNotBlock() {
+        val threadCount = 8
+        val barrier = CyclicBarrier(threadCount)
+        val completedLatch = CountDownLatch(threadCount)
+        val anyError = AtomicBoolean(false)
+        val url = URL("https://login.microsoftonline.com/common")
+
+        val threads = (1..threadCount).map { index ->
+            Thread {
+                try {
+                    barrier.await(5, TimeUnit.SECONDS)
+                    repeat(1_000) {
+                        when (index % 4) {
+                            0 -> AzureActiveDirectory.hasCloudHost(url)
+                            1 -> AzureActiveDirectory.getAzureActiveDirectoryCloud(url)
+                            2 -> AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName("login.microsoftonline.com")
+                            3 -> AzureActiveDirectory.isValidCloudHost(url)
+                        }
+                    }
+                } catch (_: Throwable) {
+                    anyError.set(true)
+                } finally {
+                    completedLatch.countDown()
+                }
+            }
+        }
+
+        threads.forEach { it.start() }
+        assertTrue(
+            "All reader threads should complete quickly",
+            completedLatch.await(9, TimeUnit.SECONDS)
+        )
+        assertFalse("No reader should throw an exception", anyError.get())
+    }
+
+    /**
+     * Verifies that concurrent getAuthorityURL() calls on AzureActiveDirectoryAuthority
+     * do not deadlock or throw.
+     */
+    @Test(timeout = 10_000)
+    fun testConcurrentGetAuthorityURL_doesNotDeadlock() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.microsoftonline.com/common"
+        ) as AzureActiveDirectoryAuthority
+
+        val threadCount = 4
+        val barrier = CyclicBarrier(threadCount)
+        val completedLatch = CountDownLatch(threadCount)
+        val anyError = AtomicBoolean(false)
+
+        val threads = (1..threadCount).map {
+            Thread {
+                try {
+                    barrier.await(5, TimeUnit.SECONDS)
+                    repeat(1_000) {
+                        authority.authorityURL
+                    }
+                } catch (_: Throwable) {
+                    anyError.set(true)
+                } finally {
+                    completedLatch.countDown()
+                }
+            }
+        }
+
+        threads.forEach { it.start() }
+        assertTrue(
+            "All threads calling getAuthorityURL should complete",
+            completedLatch.await(9, TimeUnit.SECONDS)
+        )
+        assertFalse("No thread should throw", anyError.get())
+    }
+
+    /**
+     * Verifies that a writer (putCloud) and concurrent readers (hasCloudHost)
+     * can run simultaneously without errors, validating ConcurrentHashMap safety.
+     */
+    @Test(timeout = 10_000)
+    fun testConcurrentReadsAndWrites_noErrors() {
+        val completedLatch = CountDownLatch(2)
+        val anyError = AtomicBoolean(false)
+        val barrier = CyclicBarrier(2)
+
+        val writer = Thread {
+            try {
+                barrier.await(5, TimeUnit.SECONDS)
+                repeat(500) { i ->
+                    val host = "login.test$i.com"
+                    AzureActiveDirectory.putCloud(host, AzureActiveDirectoryCloud(host, host))
+                }
+            } catch (_: Throwable) {
+                anyError.set(true)
+            } finally {
+                completedLatch.countDown()
+            }
+        }
+
+        val reader = Thread {
+            try {
+                barrier.await(5, TimeUnit.SECONDS)
+                repeat(500) { i ->
+                    val host = "login.test$i.com"
+                    AzureActiveDirectory.hasCloudHost(URL("https://$host/common"))
+                    AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(host)
+                }
+            } catch (_: Throwable) {
+                anyError.set(true)
+            } finally {
+                completedLatch.countDown()
+            }
+        }
+
+        writer.start()
+        reader.start()
+        assertTrue(
+            "Reader and writer should both complete",
+            completedLatch.await(9, TimeUnit.SECONDS)
+        )
+        assertFalse("No exception should occur during concurrent read/write", anyError.get())
+    }
+
+    /**
+     * Stress test: simulates the ANR scenario where multiple apps call
+     * isKnownAuthority and ensureCloudDiscovery simultaneously on different authorities.
+     */
+    @Test(timeout = 15_000)
+    fun testHighConcurrency_multipleAuthorities_noDeadlock() {
+        val hosts = listOf(
+            "login.microsoftonline.com",
+            "login.sovcloud-identity.fr",
+            "login.sovcloud-identity.de",
+            "login.sovcloud-identity.sg"
+        )
+        val authorities = hosts.map { Authority.getAuthorityFromAuthorityUrl("https://$it/common") }
+        val threadCount = authorities.size * 2
+        val barrier = CyclicBarrier(threadCount)
+        val completedLatch = CountDownLatch(threadCount)
+        val anyError = AtomicBoolean(false)
+
+        val threads = authorities.flatMap { authority ->
+            listOf(
+                Thread {
+                    try {
+                        barrier.await(5, TimeUnit.SECONDS)
+                        repeat(200) { Authority.isKnownAuthority(authority) }
+                    } catch (_: Throwable) { anyError.set(true) }
+                    finally { completedLatch.countDown() }
+                },
+                Thread {
+                    try {
+                        barrier.await(5, TimeUnit.SECONDS)
+                        repeat(200) {
+                            try { AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority) }
+                            catch (_: Exception) { }
+                        }
+                    } catch (_: Throwable) { anyError.set(true) }
+                    finally { completedLatch.countDown() }
+                }
+            )
+        }
+
+        threads.forEach { it.start() }
+        assertTrue(
+            "All $threadCount threads should complete (deadlock detected if this fails)",
+            completedLatch.await(14, TimeUnit.SECONDS)
+        )
+        assertFalse("No thread should throw an unexpected exception", anyError.get())
     }
 }

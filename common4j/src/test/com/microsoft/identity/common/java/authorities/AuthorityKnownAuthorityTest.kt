@@ -22,20 +22,48 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities
 
+import com.google.gson.Gson
+import com.microsoft.identity.common.java.authorities.Environment
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
-import org.junit.Assert.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.unmockkAll
+import io.mockk.verify
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /**
- * Tests for [Authority.isKnownAuthority] and [Authority.getKnownAuthorityResult]
- * focusing on sovereign cloud recognition via pre-seeded cloud metadata.
+ * Tests for [Authority.isKnownAuthority] and [Authority.getKnownAuthorityResult].
  */
 class AuthorityKnownAuthorityTest {
 
-    /**
-     * Verifies that a sovereign cloud authority (Bleu) is recognized as known
-     * through the pre-seeded cloud metadata, without requiring a network call.
-     */
+    @Before
+    fun setUp() {
+        unmockkAll()
+        // Re-seed sovereign cloud metadata in case a previous test's mockkStatic
+        // on AzureActiveDirectory cleared the static map.
+        AzureActiveDirectory.setEnvironment(Environment.Production)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
+        AzureActiveDirectory.setEnvironment(Environment.Production)
+    }
+
+    // ---- isKnownAuthority tests ----
+
     @Test
     fun testIsKnownAuthority_bleuSovereignCloud() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
@@ -44,9 +72,6 @@ class AuthorityKnownAuthorityTest {
         assertTrue(Authority.isKnownAuthority(authority))
     }
 
-    /**
-     * Verifies that a sovereign cloud authority (Delos) is recognized as known.
-     */
     @Test
     fun testIsKnownAuthority_delosSovereignCloud() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
@@ -55,9 +80,6 @@ class AuthorityKnownAuthorityTest {
         assertTrue(Authority.isKnownAuthority(authority))
     }
 
-    /**
-     * Verifies that a sovereign cloud authority (GovSG) is recognized as known.
-     */
     @Test
     fun testIsKnownAuthority_govsgSovereignCloud() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
@@ -66,12 +88,25 @@ class AuthorityKnownAuthorityTest {
         assertTrue(Authority.isKnownAuthority(authority))
     }
 
-    /**
-     * Verifies getKnownAuthorityResult returns known=true for a sovereign cloud
-     * authority. This exercises the showstopper fix: even if cloud discovery
-     * throws (no network), the pre-seeded metadata ensures the authority is
-     * still recognized as known.
-     */
+    @Test
+    fun testIsKnownAuthority_unknownAuthority() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.unknown-test.example/common"
+        )
+        assertFalse(Authority.isKnownAuthority(authority))
+    }
+
+    @Test
+    fun testIsKnownAuthority_nullAuthorityUrl_returnsFalse() {
+        val authority = spyk(Authority.getAuthorityFromAuthorityUrl(
+            "https://login.microsoftonline.com/common"
+        ))
+        every { authority.authorityURL } returns null
+        assertFalse(Authority.isKnownAuthority(authority))
+    }
+
+    // ---- getKnownAuthorityResult tests ----
+
     @Test
     fun testGetKnownAuthorityResult_bleuSovereignCloud_isKnown() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
@@ -81,15 +116,167 @@ class AuthorityKnownAuthorityTest {
         assertTrue(result.known)
     }
 
+    @Test
+    fun testIsKnownAuthority_nullAuthority_returnsFalse() {
+        assertFalse(Authority.isKnownAuthority(null))
+    }
+
     /**
-     * A completely unknown authority should NOT be recognized as known
-     * (assumes no developer-configured knownAuthorities match).
+     * Developer-configured authority should be recognized even if discovery fails.
+     * Registers the authority in knownAuthorities so isKnownAuthority finds it.
      */
     @Test
-    fun testIsKnownAuthority_unknownAuthority() {
+    fun testGetKnownAuthorityResult_developerConfigured_discoveryFails_stillKnown() {
+        // Simulate a GSON-deserialized authority by constructing from JSON,
+        // which populates mAuthorityUrlString (used by isKnownAuthority matching).
+        val json = """{"type":"AAD","authority_url":"https://login.developer-configured.example/common"}"""
+        val configuredAuthority = Gson().fromJson(json, AzureActiveDirectoryAuthority::class.java)
+        Authority.addKnownAuthorities(listOf(configuredAuthority))
+
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.developer-configured.example/common"
+        )
+
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } throws ClientException(ClientException.IO_ERROR, "Network unavailable")
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns false
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertTrue(result.known)
+        assertNull(result.clientException)
+    }
+
+    /**
+     * When discovery fails and the authority is NOT known via any source,
+     * the original discovery exception should be propagated.
+     */
+    @Test
+    fun testGetKnownAuthorityResult_discoveryFails_unknownAuthority_propagatesDiscoveryError() {
         val authority = Authority.getAuthorityFromAuthorityUrl(
             "https://login.unknown-test.example/common"
         )
-        assertFalse(Authority.isKnownAuthority(authority))
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } throws ClientException(ClientException.IO_ERROR, "Network unavailable")
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns false
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertFalse(result.known)
+        assertNotNull(result.clientException)
+        assertEquals(
+            "Should propagate IO_ERROR, not UNKNOWN_AUTHORITY",
+            ClientException.IO_ERROR,
+            result.clientException.errorCode
+        )
+    }
+
+    /**
+     * When discovery succeeds but the authority is genuinely not known,
+     * should report UNKNOWN_AUTHORITY.
+     */
+    @Test
+    fun testGetKnownAuthorityResult_discoverySucceeds_unknownAuthority_reportsUnknownAuthority() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.unknown-test.example/common"
+        )
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } just Runs
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns false
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertFalse(result.known)
+        assertNotNull(result.clientException)
+        assertEquals(
+            ClientException.UNKNOWN_AUTHORITY,
+            result.clientException.errorCode
+        )
+    }
+
+    /**
+     * When discovery fails but the authority IS in pre-seeded metadata,
+     * it should still be known (isKnownAuthority falls back to cache).
+     */
+    @Test
+    fun testGetKnownAuthorityResult_discoveryFails_preSeededAuthority_stillKnown() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.BLEU_CLOUD_HOST}/common"
+        )
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } throws ClientException(ClientException.IO_ERROR, "Network unavailable")
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns true
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertTrue(result.known)
+        assertNull(result.clientException)
+    }
+
+    /**
+     * When discovery succeeds and the authority is known, result should be known.
+     */
+    @Test
+    fun testGetKnownAuthorityResult_discoverySucceeds_knownAuthority_isKnown() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://${AzureActiveDirectoryCloud.BLEU_CLOUD_HOST}/common"
+        )
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } just Runs
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns true
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertTrue(result.known)
+        assertNull(result.clientException)
+        // Verify discovery was called
+        verify(exactly = 1) {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        }
+    }
+
+    /**
+     * MALFORMED_URL error from discovery should be propagated as-is.
+     */
+    @Test
+    fun testGetKnownAuthorityResult_discoveryFails_malformedUrl_propagatesOriginalError() {
+        val authority = Authority.getAuthorityFromAuthorityUrl(
+            "https://login.unknown-test.example/common"
+        )
+        mockkStatic(AzureActiveDirectory::class)
+        every {
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(any<Authority>())
+        } throws ClientException(ClientException.MALFORMED_URL, "Bad URL")
+        every {
+            AzureActiveDirectory.hasCloudHost(any())
+        } returns false
+
+        val result = Authority.getKnownAuthorityResult(authority)
+
+        assertFalse(result.known)
+        assertEquals(
+            ClientException.MALFORMED_URL,
+            result.clientException.errorCode
+        )
     }
 }

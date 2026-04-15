@@ -71,7 +71,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     /** Gets {@link AzureActiveDirectoryCloud}, if the cloud metadata is already initialized. */
     @Nullable
-    private static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
+    private static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
             @NonNull final AzureActiveDirectoryAudience audience) {
         final String methodName = ":getAzureActiveDirectoryCloud";
 
