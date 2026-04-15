@@ -333,7 +333,7 @@ class AzureActiveDirectoryTest {
             } finally {
                 completedLatch.countDown()
             }
-        }
+        }.apply { isDaemon = true }
 
         val t2 = Thread {
             try {
@@ -348,7 +348,7 @@ class AzureActiveDirectoryTest {
             } finally {
                 completedLatch.countDown()
             }
-        }
+        }.apply { isDaemon = true }
 
         t1.start()
         t2.start()
@@ -390,7 +390,7 @@ class AzureActiveDirectoryTest {
                 } finally {
                     completedLatch.countDown()
                 }
-            }
+            }.apply { isDaemon = true }
         }
 
         threads.forEach { it.start() }
@@ -428,7 +428,7 @@ class AzureActiveDirectoryTest {
                 } finally {
                     completedLatch.countDown()
                 }
-            }
+            }.apply { isDaemon = true }
         }
 
         threads.forEach { it.start() }
@@ -461,7 +461,7 @@ class AzureActiveDirectoryTest {
             } finally {
                 completedLatch.countDown()
             }
-        }
+        }.apply { isDaemon = true }
 
         val reader = Thread {
             try {
@@ -476,7 +476,7 @@ class AzureActiveDirectoryTest {
             } finally {
                 completedLatch.countDown()
             }
-        }
+        }.apply { isDaemon = true }
 
         writer.start()
         reader.start()
@@ -513,7 +513,7 @@ class AzureActiveDirectoryTest {
                         repeat(200) { Authority.isKnownAuthority(authority) }
                     } catch (_: Throwable) { anyError.set(true) }
                     finally { completedLatch.countDown() }
-                },
+                }.apply { isDaemon = true },
                 Thread {
                     try {
                         barrier.await(5, TimeUnit.SECONDS)
@@ -523,7 +523,7 @@ class AzureActiveDirectoryTest {
                         }
                     } catch (_: Throwable) { anyError.set(true) }
                     finally { completedLatch.countDown() }
-                }
+                }.apply { isDaemon = true }
             )
         }
 

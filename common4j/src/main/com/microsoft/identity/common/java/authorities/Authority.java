@@ -318,6 +318,16 @@ public abstract class Authority {
     }
 
     /**
+     * Clears all known authorities. For test use only.
+     */
+    // Visible for testing
+    static void clearKnownAuthorities() {
+        synchronized (sLock) {
+            knownAuthorities.clear();
+        }
+    }
+
+    /**
      * Authorities are either known by the developer and communicated to the library via
      * configuration, or they are known to Microsoft based on the cloud discovery metadata cache.
      *
@@ -335,7 +345,7 @@ public abstract class Authority {
         }
 
         // Resolve the authority URL outside any lock to avoid calling a potentially-
-        // synchronized polymorphic method (e.g. AzureActiveDirectoryAuthority.getAuthorityUri())
+        // synchronized polymorphic method (e.g. AzureActiveDirectoryAuthority.getAuthorityURL())
         // while holding sLock, which could create a lock-ordering inversion.
         final URL authorityUrl = authority.getAuthorityURL();
 
@@ -402,7 +412,7 @@ public abstract class Authority {
 
         // Authority is not known via any source.
         if (discoveryException != null) {
-            // Discovery failed — propagate the original error (keeping the original behavior that was before PR#3027)
+            // Discovery failed — propagate the original error
             return new KnownAuthorityResult(false, discoveryException);
         } else {
             // Discovery succeeded but authority is not in any known list.

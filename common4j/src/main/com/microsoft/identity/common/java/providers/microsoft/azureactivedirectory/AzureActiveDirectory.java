@@ -169,7 +169,8 @@ public class AzureActiveDirectory
     }
 
     public static boolean isValidCloudHost(@NonNull final URL authorityUrl) {
-        return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
+        final AzureActiveDirectoryCloud cloud = getAzureActiveDirectoryCloud(authorityUrl);
+        return cloud != null && cloud.isValidated();
     }
 
     public static synchronized void setEnvironment(@NonNull final Environment environment) {

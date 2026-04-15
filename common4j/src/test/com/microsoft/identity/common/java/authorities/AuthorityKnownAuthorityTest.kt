@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.java.authorities
 
 import com.google.gson.Gson
-import com.microsoft.identity.common.java.authorities.Environment
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
@@ -60,6 +59,8 @@ class AuthorityKnownAuthorityTest {
     fun tearDown() {
         unmockkAll()
         AzureActiveDirectory.setEnvironment(Environment.Production)
+        // Clear any authorities added during tests to prevent leaking state.
+        Authority.clearKnownAuthorities()
     }
 
     // ---- isKnownAuthority tests ----
