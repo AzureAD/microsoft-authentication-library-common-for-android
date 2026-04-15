@@ -58,4 +58,13 @@ object CommonRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
         Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
         return null
     }
+
+    override fun getRefreshTokenCredentialWithBrokerPurpose(inputUrl : String, username : String) : String? {
+        val methodTag = "$TAG:getRefreshTokenCredentialWithBrokerPurpose"
+        if (mRefreshTokenCredentialProvider != null) {
+            return mRefreshTokenCredentialProvider?.getRefreshTokenCredentialWithBrokerPurpose(inputUrl, username)
+        }
+        Logger.warn(methodTag, "mRefreshTokenCredentialHolder is not initialized!")
+        return null
+    }
 }

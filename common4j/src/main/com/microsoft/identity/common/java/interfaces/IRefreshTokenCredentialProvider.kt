@@ -39,4 +39,13 @@ interface IRefreshTokenCredentialProvider {
      * Gets refresh token credential.
      */
     fun getRefreshTokenCredential(inputUrl : String, username : String) : String?
+
+    /**
+     * Gets refresh token credential with purpose:broker claim included in the JWT.
+     * Used when the broker needs to signal to eSTS that the request originates from the broker.
+     * Default implementation falls back to [getRefreshTokenCredential] (no purpose claim).
+     */
+    fun getRefreshTokenCredentialWithBrokerPurpose(inputUrl : String, username : String) : String? {
+        return getRefreshTokenCredential(inputUrl, username)
+    }
 }
