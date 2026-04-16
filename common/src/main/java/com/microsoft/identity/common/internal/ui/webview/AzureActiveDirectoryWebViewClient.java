@@ -1336,8 +1336,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * Returns true if the redirect URL's client_id is a known client: either the original
-     * request's client_id or the broker's client_id. If the redirect has no client_id,
-     * returns true to avoid blocking legitimate redirects.
+     * request's client_id or the broker's client_id. Returns false if the redirect has no
+     * client_id or if the URL cannot be parsed.
      */
     private boolean hasKnownClientId(@NonNull final String url) {
         try {
@@ -1351,7 +1351,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     || redirectClientId.equalsIgnoreCase(BROKER_CLIENT_ID);
         } catch (@NonNull final Exception e) {
             Logger.warn(TAG, "Failed to extract client_id from redirect URL.");
-            return true;
+            return false;
         }
     }
 
@@ -1361,16 +1361,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processEstsHostRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processEstsHostRedirect";
         Logger.info(methodTag, "Processing eSTS host redirect with PRT re-attachment.");
-        final Span span = createSpanWithAttributesFromParent(SpanName.EstsHostRedirectPrtAttach.name());
+        Span span = null;
         try {
+            span = createSpanWithAttributesFromParent(SpanName.EstsHostRedirectPrtAttach.name());
             final String host = new URL(url).getHost();
             span.setAttribute(AttributeName.ests_redirect_host.name(), host);
-        } catch (final MalformedURLException e) {
-            // Domain attribute is best-effort for telemetry
+            final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
+                    new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, getLoginHintFromRequestUrl(), true);
+            reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
+        } catch (final Throwable e) {
+            Logger.warn(methodTag, "Failed to process eSTS host redirect. Falling back to loading URL without PRT." + e);
+            if (span != null) {
+                span.recordException(e);
+                span.setStatus(StatusCode.ERROR);
+                span.end();
+            }
+            view.loadUrl(url);
         }
-        final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
-                new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, getLoginHintFromRequestUrl(), true);
-        reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
