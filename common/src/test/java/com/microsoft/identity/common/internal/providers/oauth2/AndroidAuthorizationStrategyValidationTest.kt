@@ -75,11 +75,13 @@ class AndroidAuthorizationStrategyValidationTest {
     private inner class TestAndroidAuthorizationStrategy(
         appContext: Context,
         act: Activity
-    ) : AndroidAuthorizationStrategy<OAuth2Strategy, AuthorizationRequest>(appContext, act, null) {
+    ) : AndroidAuthorizationStrategy<
+            OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
+            AuthorizationRequest<*>>(appContext, act, null) {
 
         override fun requestAuthorization(
-            authorizationRequest: AuthorizationRequest,
-            oAuth2Strategy: OAuth2Strategy
+            authorizationRequest: AuthorizationRequest<*>,
+            oAuth2Strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>
         ) = throw UnsupportedOperationException("not used in these tests")
 
         override fun completeAuthorization(requestCode: Int, data: com.microsoft.identity.common.java.providers.RawAuthorizationResult) =
