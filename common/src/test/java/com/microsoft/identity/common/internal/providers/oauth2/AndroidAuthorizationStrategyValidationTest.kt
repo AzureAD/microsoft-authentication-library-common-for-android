@@ -82,7 +82,7 @@ class AndroidAuthorizationStrategyValidationTest {
             oAuth2Strategy: OAuth2Strategy
         ) = throw UnsupportedOperationException("not used in these tests")
 
-        override fun completeAuthorization(requestCode: Int, data: com.microsoft.identity.common.java.util.ported.PropertyBag) =
+        override fun completeAuthorization(requestCode: Int, data: com.microsoft.identity.common.java.providers.RawAuthorizationResult) =
             Unit
 
         // Expose the protected method publicly for tests.
