@@ -35,11 +35,10 @@ import java.net.URL
 /**
  * Handler for processing nonce from redirect and attaching new prt credential header on web view.
  */
-class NonceRedirectHandler @JvmOverloads constructor(
+class NonceRedirectHandler(
     private val webView: WebView,
     private val headers: HashMap<String, String>,
-    private val span : Span,
-    private val fallbackUsername: String? = null
+    private val span : Span
 ) : IChallengeHandler<URL, Void> {
     private val TAG = NonceRedirectHandler::class.java.simpleName
 
@@ -88,6 +87,6 @@ class NonceRedirectHandler @JvmOverloads constructor(
 
     private fun getUserNameFromWebViewUrl(url: String): String? {
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
-        return parameters["login_hint"] ?: fallbackUsername
+        return parameters["login_hint"]
     }
 }
