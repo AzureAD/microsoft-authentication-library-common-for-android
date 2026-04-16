@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -78,7 +79,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     private WebView mMockWebView;
 
     @Before
-    public void setup() {
+    public void setup() throws ClientException {
         mContext = ApplicationProvider.getApplicationContext();
         mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();

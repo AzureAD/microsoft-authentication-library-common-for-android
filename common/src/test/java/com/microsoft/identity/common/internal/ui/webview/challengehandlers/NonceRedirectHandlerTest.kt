@@ -55,7 +55,6 @@ class NonceRedirectHandlerTest {
         private const val ESTS_URL_NO_NONCE =
             "https://login.microsoftonline.com/common/oauth2/authorize"
         private const val FRESH_CREDENTIAL = "freshPrtCredential"
-        private const val FALLBACK_USERNAME = "fallback@example.com"
     }
 
     @Before
@@ -89,23 +88,7 @@ class NonceRedirectHandlerTest {
     }
 
     @Test
-    fun `processChallenge uses fallbackUsername when login_hint absent from URL`() {
-        mockkObject(CommonRefreshTokenCredentialProvider)
-        every {
-            CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce(
-                ESTS_URL_WITH_NONCE_NO_HINT, FALLBACK_USERNAME, "testnonce"
-            )
-        } returns FRESH_CREDENTIAL
-
-        val handler = NonceRedirectHandler(webView, headers, span, fallbackUsername = FALLBACK_USERNAME)
-        handler.processChallenge(URL(ESTS_URL_WITH_NONCE_NO_HINT))
-
-        verify(span).setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
-        verify(webView).loadUrl(ESTS_URL_WITH_NONCE_NO_HINT, headers)
-    }
-
-    @Test
-    fun `processChallenge skips PRT attachment when login_hint absent and no fallback provided`() {
+    fun `processChallenge skips PRT attachment when login_hint absent`() {
         val handler = NonceRedirectHandler(webView, headers, span)
         handler.processChallenge(URL(ESTS_URL_WITH_NONCE_NO_HINT))
 
@@ -115,7 +98,7 @@ class NonceRedirectHandlerTest {
 
     @Test
     fun `processChallenge skips PRT attachment when no sso_nonce in URL`() {
-        val handler = NonceRedirectHandler(webView, headers, span, fallbackUsername = FALLBACK_USERNAME)
+        val handler = NonceRedirectHandler(webView, headers, span)
         handler.processChallenge(URL(ESTS_URL_NO_NONCE))
 
         verify(span, never()).setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
@@ -127,7 +110,7 @@ class NonceRedirectHandlerTest {
         val headersWithoutPrt = HashMap<String, String>()
         mockkObject(CommonRefreshTokenCredentialProvider)
 
-        val handler = NonceRedirectHandler(webView, headersWithoutPrt, span, fallbackUsername = FALLBACK_USERNAME)
+        val handler = NonceRedirectHandler(webView, headersWithoutPrt, span)
         handler.processChallenge(URL(ESTS_URL_WITH_NONCE_NO_HINT))
 
         verify(span, never()).setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
