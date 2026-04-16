@@ -1,4 +1,4 @@
-Version 24.1.1-RC3
+Version 24.1.1
 ----------
 - [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
 
