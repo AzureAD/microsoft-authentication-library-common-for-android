@@ -71,7 +71,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     /** Gets {@link AzureActiveDirectoryCloud}, if the cloud metadata is already initialized. */
     @Nullable
-    private static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
+    private static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(
             @NonNull final AzureActiveDirectoryAudience audience) {
         final String methodName = ":getAzureActiveDirectoryCloud";
 
@@ -175,7 +175,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
      * @return true if both authorities belong to same cloud, otherwise false.
      */
     //@WorkerThread
-    public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck)
+    public boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck)
             throws ClientException {
         // Cloud discovery is needed to make sure that we have preferred_network_host_name to cloud aliases mappings
         AzureActiveDirectory.ensureCloudDiscoveryForAuthority(this);
