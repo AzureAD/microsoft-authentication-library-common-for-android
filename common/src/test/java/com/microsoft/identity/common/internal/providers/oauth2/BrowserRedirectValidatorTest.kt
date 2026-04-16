@@ -87,7 +87,11 @@ class BrowserRedirectValidatorTest {
      * ACTION_VIEW intents targeting [redirectUri].
      */
     private fun registerResolveInfoForRedirectUri(resolveInfo: ResolveInfo) {
-        val matchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(redirectUri))
+        val matchIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse(redirectUri)
+            addCategory(Intent.CATEGORY_DEFAULT)
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
         getShadowPackageManager().addResolveInfoForIntent(matchIntent, resolveInfo)
     }
 

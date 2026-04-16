@@ -101,8 +101,13 @@ class AndroidAuthorizationStrategyValidationTest {
                 name = COMPETING_ACTIVITY
             }
         }
+        val competingRedirectIntent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse(REDIRECT_URI_VALUE)
+            addCategory(Intent.CATEGORY_DEFAULT)
+            addCategory(Intent.CATEGORY_BROWSABLE)
+        }
         shadowOf(context.packageManager).addResolveInfoForIntent(
-            Intent(Intent.ACTION_VIEW, Uri.parse(REDIRECT_URI_VALUE)), resolveInfo
+            competingRedirectIntent, resolveInfo
         )
     }
 
