@@ -257,32 +257,5 @@ public class AuthorizationActivityFactoryTest {
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
     }
 
-    /**
-     * Verifies that the WebView authorization path returns a {@link WebViewAuthorizationFragment}.
-     * The factory is a pure fragment-creation utility; URL scheme validation is performed upstream
-     * in {@link AndroidAuthorizationStrategy#launchIntent}.
-     */
-    @Test
-    public void testGetAuthorizationFragmentFromStartIntentWebView_returnsWebViewFragment() {
-        final Intent intent = new Intent();
-        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.WEBVIEW);
-
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
-
-        assertEquals(WebViewAuthorizationFragment.class, fragment.getClass());
-    }
-
-    /**
-     * Verifies that the browser authorization path returns a {@link BrowserAuthorizationFragment}.
-     */
-    @Test
-    public void testGetAuthorizationFragmentFromStartIntentBrowser_returnsBrowserFragment() {
-        final Intent intent = new Intent();
-        intent.putExtra(AUTHORIZATION_AGENT, AuthorizationAgent.BROWSER);
-
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
-
-        assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
-    }
 }
 
