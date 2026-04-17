@@ -31,6 +31,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.opentelemetry.api.trace.Span
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,6 +85,7 @@ class NonceRedirectHandlerTest {
         handler.processChallenge(URL(ESTS_URL_WITH_NONCE_AND_HINT))
 
         verify(span).setAttribute(AttributeName.is_new_refresh_token_cred_header_attached.name, true)
+        assertEquals(FRESH_CREDENTIAL, headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER])
         verify(webView).loadUrl(ESTS_URL_WITH_NONCE_AND_HINT, headers)
     }
 
