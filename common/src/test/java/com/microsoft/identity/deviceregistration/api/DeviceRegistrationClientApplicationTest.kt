@@ -41,6 +41,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.GetDevic
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.request.SdkType
@@ -220,5 +221,29 @@ class DeviceRegistrationClientApplicationTest {
         Assert.assertEquals("ra@test.com", result.username)
         Assert.assertEquals("login.microsoftonline.com", result.environment)
         Assert.assertEquals("utid", result.realm)
+    }
+
+    @Test
+    fun provisionResourceAccountCredentials_passesParamsToIpc() {
+        val correlationId = UUID.randomUUID()
+        val accountRecord = AccountRecord()
+        val response = ProvisionResourceAccountCredentialsV0Response(UUID.randomUUID(), accountRecord)
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
+            val parameters = ProvisionResourceAccountCredentialsV0Parameters.create(protocolData)
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("test-tenant", parameters.tenantId)
+            Assert.assertEquals("test-ra-oid", parameters.raObjectId)
+            Assert.assertEquals("MSAL", parameters.sdkType)
+            Assert.assertEquals("1.0.0", parameters.sdkVersion)
+            packer.pack(response)
+        }
+
+        val drca = createDrca(strategy)
+        drca.provisionResourceAccountCredentials("test-tenant", "test-ra-oid", correlationId, SdkType.MSAL, "1.0.0")
     }
 }

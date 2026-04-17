@@ -443,11 +443,10 @@ class DeviceRegistrationClientApplication {
      * @param tenantId      tenant ID for the resource account.
      * @param raObjectId    resource account object ID (user ID in home tenant).
      * @param correlationId correlation ID for request tracing.
-     * @param sdkType       optional SDK type of the caller.
-     * @param sdkVersion    optional SDK version of the caller.
+     * @param sdkType       SDK type of the caller (required).
+     * @param sdkVersion    SDK version of the caller (required).
      * @return [AccountRecord] representing the provisioned resource account credentials.
      */
-    @JvmOverloads
     @Throws(BaseException::class)
     fun provisionResourceAccountCredentials(
         tenantId: String,
@@ -459,7 +458,7 @@ class DeviceRegistrationClientApplication {
         val methodTag = "$TAG:provisionResourceAccountCredentials"
         Logger.info(methodTag, "ProvisionResourceAccountCredentials started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
-            ProvisionResourceAccountCredentialsV0Parameters(correlationId, tenantId, raObjectId, sdkType?.name, sdkVersion)
+            ProvisionResourceAccountCredentialsV0Parameters(correlationId, tenantId, raObjectId, sdkType.name, sdkVersion)
         )
         val response = ProvisionResourceAccountCredentialsV0Response.create(responseSerialized)
         val result = response.accountRecord
