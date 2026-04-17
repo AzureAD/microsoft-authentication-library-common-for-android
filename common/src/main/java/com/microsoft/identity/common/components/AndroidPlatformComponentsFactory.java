@@ -131,7 +131,7 @@ public class AndroidPlatformComponentsFactory {
      *
      * @param context an application context.
      **/
-    public static IPlatformComponents createFromContextWithKeystoreOnlyEncryption(
+    public static IPlatformComponents createFromContextWithKeystoreOnlyEncryptionForStorage(
             @NonNull final Context context) {
         initializeGlobalStates(context);
 
