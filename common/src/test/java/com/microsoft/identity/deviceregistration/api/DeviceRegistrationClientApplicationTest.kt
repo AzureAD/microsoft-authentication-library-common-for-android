@@ -41,6 +41,9 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.GetDevic
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
+import com.microsoft.identity.common.java.dto.AccountRecord
+import com.microsoft.identity.common.java.request.SdkType
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -196,5 +199,26 @@ class DeviceRegistrationClientApplicationTest {
 
         drca.getPreProvisionedBlob("test-tenant", correlationId)
         // If we get here without exception, the correlationId was accepted and the flow completed
+    }
+
+    @Test
+    fun provisionResourceAccountCredentials_returnsAccountRecord() {
+        val accountRecord = AccountRecord()
+        accountRecord.homeAccountId = "uid.utid"
+        accountRecord.localAccountId = "uid"
+        accountRecord.username = "ra@test.com"
+        accountRecord.environment = "login.microsoftonline.com"
+        accountRecord.realm = "utid"
+        val response = ProvisionResourceAccountCredentialsV0Response(UUID.randomUUID(), accountRecord)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.provisionResourceAccountCredentials("utid", "uid", UUID.randomUUID(), SdkType.MSAL, "1.0.0")
+
+        Assert.assertNotNull(result)
+        Assert.assertEquals("uid.utid", result.homeAccountId)
+        Assert.assertEquals("uid", result.localAccountId)
+        Assert.assertEquals("ra@test.com", result.username)
+        Assert.assertEquals("login.microsoftonline.com", result.environment)
+        Assert.assertEquals("utid", result.realm)
     }
 }
