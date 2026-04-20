@@ -263,7 +263,7 @@ public enum CommonFlight implements IFlightConfig {
      *
      * Default: false (disabled for safe rollout).
      */
-    ENABLE_STALE_ENTRY_EVICTION_ON_TIMEOUT("EnableStaleEntryEvictionOnTimeout", false),
+    ENABLE_STALE_ENTRY_EVICTION_ON_TIMEOUT("EnableStaleEntryEvictionOnTimeout", true),
 
     /** 
      * Flight to enable server-side client data telemetry from the x-ms-clientdata response
