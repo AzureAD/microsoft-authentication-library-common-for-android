@@ -47,9 +47,6 @@ enum class MetricType(val displayName: String) {
  * Default implementation of IBenchmarkSpanPrinter that asynchronously writes
  * benchmark span status information to a file.
  *
- * NOTE: in order to simulate concurrent request coming from multiple apps (while we only have one MSALTestApp),
- * shouldSkipSilentTokenCommandCacheForStressTest is required to be set to true.
- *
  * @param outputDirectoryAbsolutePath   Path to the directory where benchmark files will be written.
  * @param batchSize                     Size of batches to accumulate before writing to file (default: 1, meaning write each span immediately).
  * @param metricsToDisplay              List of MetricType to display in the output (default: AVERAGE, P50, P75, P90).

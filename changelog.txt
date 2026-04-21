@@ -1,5 +1,7 @@
 vNext
 ----------
+- [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
+- [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
 - [PATCH] Optimize AcquireTokenSilent save path: replace keySet() decrypt-all with in-memory map lookup in removeAccount()/removeCredential(), add telemetry for deleteAccessTokensWithIntersectingScopes, and remove unused elapsed_time_save_account_shared_preferences attribute (#3074)
 - [MINOR] Add DeviceRegistrationClientApplication as public API for OneAuth device registration with mandatory correlationId, DeviceState and DrsDiscoveryEndpoint enums (#3073)
 - [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support (#3066)

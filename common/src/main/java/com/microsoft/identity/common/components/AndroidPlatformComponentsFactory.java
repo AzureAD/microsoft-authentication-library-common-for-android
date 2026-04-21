@@ -122,6 +122,29 @@ public class AndroidPlatformComponentsFactory {
     }
 
     /**
+     * Creates an {@link IPlatformComponents} object from a {@link Context},
+     * with the storage encryption manager configured to always use the Android KeyStore
+     * for encryption, ignoring any predefined key set via {@link AuthenticationSettings#setSecretKey(byte[])}.
+     * <p>
+     * This is intended for components (e.g. Device Registration API, Broker API)
+     * that should not depend on the MSAL/ADAL predefined key lifecycle.
+     *
+     * @param context an application context.
+     **/
+    public static IPlatformComponents createFromContextWithKeystoreOnlyEncryptionForStorage(
+            @NonNull final Context context) {
+        initializeGlobalStates(context);
+
+        final PlatformComponents.PlatformComponentsBuilder builder = PlatformComponents.builder();
+        fillBuilderWithBasicImplementations(builder, context, null, null);
+
+        // Override the storage supplier with a keystore-only encryption manager.
+        builder.storageSupplier(new AndroidStorageSupplier(context,
+                new AndroidAuthSdkStorageEncryptionManager(context, true)));
+        return builder.build();
+    }
+
+    /**
      * Fill {@link PlatformComponents.PlatformComponentsBuilder}
      * with Android implementations that could be shared with other Factories, i.e. Broker.
      */
