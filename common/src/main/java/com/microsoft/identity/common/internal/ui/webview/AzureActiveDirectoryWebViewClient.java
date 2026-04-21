@@ -112,6 +112,9 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
@@ -336,6 +339,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
+            } else if (isAuthenticatorActivationAppLink(formattedURL)) {
+                Logger.info(methodTag,"Request to open Authenticator via activation app link.");
+                processAuthenticatorActivationAppLink(view, url);
             } else if (isAmazonAppRedirect(formattedURL)) {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
@@ -397,6 +403,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isAuthAppMFAUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX);
+    }
+
+    /**
+     * Checks if the URL is an Authenticator app activation Android App Link.
+     * These are HTTPS URLs from trusted AAD hosts with the activation path,
+     * e.g., https://login.microsoftonline.com/authenticatorApp/activateAccount?...
+     *
+     * Unlike Chrome, WebView does not resolve Android App Links automatically.
+     * We must intercept them and dispatch via Intent.ACTION_VIEW.
+     *
+     * @param url The lowercased URL to check.
+     * @return true if the URL is an Authenticator activation app link.
+     */
+    boolean isAuthenticatorActivationAppLink(@NonNull final String url) {
+        if (!url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+            return false;
+        }
+        final Uri uri = Uri.parse(url);
+        final String host = uri.getHost();
+        final String path = uri.getPath();
+        // For 21Vianet cloud identity environment.
+        final String china_cloud_legacy_host = "login.chinacloudapi.cn";
+        if (host == null || path == null) {
+            return false;
+        }
+        final boolean isTrustedHost = host.equalsIgnoreCase(PUBLIC_CLOUD_HOST)
+                || host.equalsIgnoreCase(US_GOV_CLOUD_HOST)
+                || host.equalsIgnoreCase(china_cloud_legacy_host);
+        final boolean isActivationPath = path.equalsIgnoreCase(
+                AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_ACTIVATION_PATH);
+        return isTrustedHost && isActivationPath;
     }
 
     private boolean isPlayStoreUrl(@NonNull final String url) {
@@ -892,6 +929,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             getActivity().startActivity(intent);
         } catch (android.content.ActivityNotFoundException e) {
             Logger.error(methodTag,"Failed to open the Authenticator application.", e);
+        }
+    }
+
+    /**
+     * Handles Authenticator activation Android App Links.
+     * WebView does not resolve Android App Links automatically (unlike Chrome).
+     * This method intercepts the HTTPS activation URL and dispatches it via
+     * Intent.ACTION_VIEW so the system can route it to the Authenticator app.
+     *
+     * @param view The WebView that intercepted the navigation.
+     * @param url  The original (non-lowercased) activation URL.
+     */
+    void processAuthenticatorActivationAppLink(@NonNull final WebView view,
+                                               @NonNull final String url) {
+        final String methodTag = TAG + ":processAuthenticatorActivationAppLink";
+        view.stopLoading();
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                getActivity().startActivity(intent);
+                Logger.info(methodTag, "Launched Authenticator via activation app link.");
+            } else {
+                Logger.warn(methodTag, "No application found to handle activation app link. Opening in browser.");
+                openLinkInBrowser(url);
+            }
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "Failed to launch Authenticator via activation app link.", e);
+            openLinkInBrowser(url);
         }
     }
 
