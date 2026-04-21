@@ -424,13 +424,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String host = uri.getHost();
         final String path = uri.getPath();
         // For 21Vianet cloud identity environment.
-        final String china_cloud_legacy_host = "login.chinacloudapi.cn";
+        final String chinaCloudLegacyHost = "login.chinacloudapi.cn";
         if (host == null || path == null) {
             return false;
         }
         final boolean isTrustedHost = host.equalsIgnoreCase(PUBLIC_CLOUD_HOST)
                 || host.equalsIgnoreCase(US_GOV_CLOUD_HOST)
-                || host.equalsIgnoreCase(china_cloud_legacy_host);
+                || host.equalsIgnoreCase(chinaCloudLegacyHost);
         final boolean isActivationPath = path.equalsIgnoreCase(
                 AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_ACTIVATION_PATH);
         return isTrustedHost && isActivationPath;

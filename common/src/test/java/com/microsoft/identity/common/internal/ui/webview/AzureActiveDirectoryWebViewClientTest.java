@@ -139,7 +139,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_AUTHENTICATOR_ACTIVATION_CHINA =
             "https://login.chinacloudapi.cn/authenticatorApp/activateAccount?accountType=mfa&source=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
     private static final String TEST_AUTHENTICATOR_ACTIVATION_US_GOV =
-            "https://login.microsoftonline.us/authenticatorApp/activateAccount?accountType=mfa&ssource=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
+            "https://login.microsoftonline.us/authenticatorApp/activateAccount?accountType=mfa&source=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
     private static final String TEST_AUTHENTICATOR_ACTIVATION_INVALID_HOST =
             "https://login.evil.com/authenticatorApp/activateAccount?accountType=mfa&code=123";
     private static final String TEST_AUTHENTICATOR_ACTIVATION_INVALID_PATH =
