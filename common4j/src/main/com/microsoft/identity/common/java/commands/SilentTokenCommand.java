@@ -151,11 +151,6 @@ public class SilentTokenCommand extends TokenCommand {
 
     @Override
     public boolean isEligibleForCaching() {
-        if (BuildConfig.SHOULD_SKIP_SILENT_TOKEN_COMMAND_CACHE_FOR_STRESS_TEST) {
-            // by disabling this, MSAL/Broker will allow similar request to be executed
-            // as opposed to being handled by cache.
-            return false;
-        }
         return true;
     }
 }
