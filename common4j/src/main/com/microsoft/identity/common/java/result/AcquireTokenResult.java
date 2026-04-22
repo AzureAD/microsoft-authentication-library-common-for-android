@@ -28,10 +28,12 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.broker.telemetry.ITelemetrySchemaProvider;
+import com.microsoft.identity.common.java.broker.telemetry.TelemetrySchema;
 
 import javax.annotation.Nullable;
 
-public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
+public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider, ITelemetrySchemaProvider {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
@@ -48,6 +50,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     private String mBrokerAppPackageName;
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
+
+    @Nullable
+    private TelemetrySchema mTelemetrySchema;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
@@ -73,6 +78,17 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     @Override
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
         return this.mBrokerPerformanceMetrics;
+    }
+
+    @Override
+    public void setTelemetrySchema(@Nullable final TelemetrySchema telemetrySchema) {
+        this.mTelemetrySchema = telemetrySchema;
+    }
+
+    @Override
+    @Nullable
+    public TelemetrySchema getTelemetrySchema() {
+        return this.mTelemetrySchema;
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult

@@ -600,6 +600,16 @@ public class AuthenticationConstants {
         public static final String BROKER_SILENT_EXECUTOR_POOL_SIZE = "broker_silent_executor_pool_size";
 
         /**
+         * Bundle key for the serialized broker telemetry request.
+         */
+        public static final String BROKER_TELEMETRY_REQUEST = "broker_telemetry_request";
+
+        /**
+         * Bundle key for the serialized broker telemetry schema.
+         */
+        public static final String BROKER_TELEMETRY_SCHEMA = "broker_telemetry_schema";
+
+        /**
          * Broker application version name.
          */
         public static final String BROKER_VERSION = "broker_version";
