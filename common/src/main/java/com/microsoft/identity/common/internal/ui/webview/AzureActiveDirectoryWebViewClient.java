@@ -951,10 +951,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Launched Authenticator via activation app link.");
             } else {
                 Logger.warn(methodTag, "No application found to handle activation app link. Opening in browser.");
+                // Browser automatically redirects user to playstore.
                 openLinkInBrowser(url);
             }
         } catch (final ActivityNotFoundException e) {
             Logger.error(methodTag, "Failed to launch Authenticator via activation app link.", e);
+            // Browser automatically redirects user to playstore.
             openLinkInBrowser(url);
         }
     }
