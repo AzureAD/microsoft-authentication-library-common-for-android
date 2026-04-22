@@ -137,6 +137,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
+    // For 21Vianet cloud identity environment.
+    private static final String CHINA_CLOUD_LEGACY_HOST = "login.chinacloudapi.cn";
     // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
     private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
     private final String mRedirectUrl;
@@ -423,14 +425,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Uri uri = Uri.parse(url);
         final String host = uri.getHost();
         final String path = uri.getPath();
-        // For 21Vianet cloud identity environment.
-        final String chinaCloudLegacyHost = "login.chinacloudapi.cn";
         if (host == null || path == null) {
             return false;
         }
         final boolean isTrustedHost = host.equalsIgnoreCase(PUBLIC_CLOUD_HOST)
                 || host.equalsIgnoreCase(US_GOV_CLOUD_HOST)
-                || host.equalsIgnoreCase(chinaCloudLegacyHost);
+                || host.equalsIgnoreCase(CHINA_CLOUD_LEGACY_HOST);
         final boolean isActivationPath = path.equalsIgnoreCase(
                 AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_ACTIVATION_PATH);
         return isTrustedHost && isActivationPath;
