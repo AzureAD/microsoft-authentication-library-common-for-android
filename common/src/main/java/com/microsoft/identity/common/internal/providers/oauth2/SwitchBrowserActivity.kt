@@ -26,8 +26,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.logging.Logger
-import androidx.core.net.toUri
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 
 
 /**
@@ -61,9 +59,9 @@ import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
  */
 class SwitchBrowserActivity : FragmentActivity() {
 
-    // Flag to track if a Custom Chrome Tab (CCT) has been launched
-    private var cctLaunched = false
-    private var customTabsManager = CustomTabsManager(this)
+    // Flag to track if browser flow has been launched
+    private var browserLaunched = false
+    private var browserLaunchStrategy: BrowserLaunchStrategy? = null
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -108,7 +106,7 @@ class SwitchBrowserActivity : FragmentActivity() {
      */
     private fun launchBrowser() {
         val methodTag = "$TAG:launchBrowser"
-        cctLaunched = false
+        browserLaunched = false
         // Extract configuration parameters from intent extras
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
@@ -131,25 +129,50 @@ class SwitchBrowserActivity : FragmentActivity() {
             methodTag,
             "Launching switch browser request on browser: $browserPackageName, Custom Tabs supported: $browserSupportsCustomTabs"
         )
-
-        // Create an intent to launch the browser
-        val browserIntent: Intent
-        if (browserSupportsCustomTabs) {
-            Logger.info(methodTag, "CustomTabsService is supported.")
-            //create customTabsIntent
-            if (!customTabsManager.bind(this, browserPackageName)) {
-                Logger.warn(methodTag, "Failed to bind CustomTabsService.")
-                browserIntent = Intent(Intent.ACTION_VIEW)
-            } else {
-                browserIntent = customTabsManager.customTabsIntent.intent
-            }
-        } else {
-            Logger.warn(methodTag, "CustomTabsService is NOT supported")
-            browserIntent = Intent(Intent.ACTION_VIEW)
-            browserIntent.setPackage(browserPackageName)
+        val launchStrategy = createLaunchStrategy(browserPackageName, browserSupportsCustomTabs)
+        browserLaunchStrategy = launchStrategy
+        try {
+            launchStrategy.launch(browserPackageName, processUri)
+        } catch (throwable: Throwable) {
+            val strategyName = browserLaunchStrategy?.javaClass?.simpleName ?: "none"
+            val exceptionType = throwable::class.java.simpleName
+            Logger.error(
+                methodTag,
+                "Failed to launch browser strategy. package=$browserPackageName strategy=$strategyName exception=$exceptionType",
+                throwable
+            )
+            finishAndRemoveTask()
         }
-        browserIntent.setData(processUri.toUri())
-        startActivity(browserIntent)
+    }
+
+    private fun createLaunchStrategy(
+        browserPackageName: String,
+        browserSupportsCustomTabs: Boolean
+    ): BrowserLaunchStrategy {
+        val methodTag = "$TAG:createLaunchStrategy"
+        if (AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)) {
+            val authTabStrategy = AuthTabStrategyProvider.createStrategy(this) { resultBundle ->
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) {
+                        Logger.warn(methodTag, "Auth Tab result callback ignored because activity is finishing or destroyed")
+                        return@runOnUiThread
+                    }
+                    Logger.info(methodTag, "Auth Tab result callback received, finishing SwitchBrowserActivity")
+                    WebViewAuthorizationFragment.setSwitchBrowserBundle(resultBundle)
+                    finishAndRemoveTask()
+                }
+            }
+            if (authTabStrategy != null) {
+                Logger.info(methodTag, "Using registered Auth Tab browser launch strategy")
+                return authTabStrategy
+            }
+            Logger.warn(
+                methodTag,
+                "Auth Tab provider reported support but did not provide a strategy. Falling back to Custom Tabs strategy"
+            )
+        }
+        Logger.info(methodTag, "Using Custom Tabs browser launch strategy")
+        return CustomTabsLaunchStrategy(this, browserSupportsCustomTabs)
     }
 
     /**
@@ -196,49 +219,47 @@ class SwitchBrowserActivity : FragmentActivity() {
     }
 
     /**
-     * Handles the activity resume lifecycle event and manages Custom Chrome Tab (CCT) launch state.
+     * Handles the activity resume lifecycle event and manages browser launch cancellation behavior.
      *
-     * This method implements a critical part of the browser switch flow by tracking whether a Custom Chrome Tab
-     * has been launched and handling the case where the user returns to this activity without completing
-     * the authentication flow in the browser.
+     * This method tracks whether browser flow has already been launched and allows the active strategy
+     * to indicate whether returning to this activity should be treated as cancellation.
      *
      * **Behavior Logic:**
-     * - On first resume (after onCreate): Sets cctLaunched flag to true and continues normally
-     * - On subsequent resumes: If CCT was already launched, assumes user backed out of browser and finishes activity
+     * - On first resume (after onCreate): marks browser as launched.
+     * - On subsequent resumes: if strategy handles cancellation-on-resume, finishes activity.
      *
-     * **Why This Logic is Needed:**
-     * When a Custom Chrome Tab is launched, this activity goes into the background. If the user presses the back
-     * button in the CCT or otherwise returns to this activity without completing authentication, we need to
-     * clean up and finish this activity to prevent it from remaining in the back stack.
-     *
-     * **Flow Scenarios:**
-     * 1. **Normal Flow**: onCreate → onResume (1st time) → CCT launched → user completes auth → onNewIntent → finish
-     * 2. **User Cancellation**: onCreate → onResume (1st time) → CCT launched → user backs out → onResume (2nd time) → finish
-     *
-     * **Important Notes:**
-     * - This prevents the activity from staying alive indefinitely if authentication is cancelled
-     * - Uses finishAndRemoveTask() to clean up the entire task stack, not just this activity
-     * - The cctLaunched flag is essential for distinguishing between the initial resume and subsequent resumes
+     * This prevents the activity from staying alive indefinitely if authentication is cancelled and
+     * keeps browser-specific cancellation behavior inside each launch strategy.
      */
     override fun onResume() {
         super.onResume()
         val methodTag = "$TAG:onResume"
-        Logger.info(methodTag, "onResume called - Managing CCT launch state")
+        val activeStrategy = browserLaunchStrategy
+        if (activeStrategy == null) {
+            Logger.warn(methodTag, "No active browser launch strategy on resume")
+        }
+        val handlesCancellationOnResume = activeStrategy?.handlesCancellationOnResume() ?: false
+        Logger.info(
+            methodTag,
+            "onResume called - Managing browser launch state. handlesCancellationOnResume=$handlesCancellationOnResume"
+        )
 
-        if (cctLaunched) {
-            // User has returned to this activity after CCT was launched, likely due to backing out
-            Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
-            finishAndRemoveTask()
-        } else {
-            // First resume after onCreate - mark CCT as launched for future reference
-            Logger.info(methodTag, "First resume after onCreate - Marking CCT as launched")
+        if (handlesCancellationOnResume) {
+            if (browserLaunched) {
+                // User has returned to this activity after browser was launched, likely due to backing out
+                Logger.info(methodTag, "Browser launched previously and user returned - Assuming cancellation, finishing activity")
+                finishAndRemoveTask()
+            } else {
+                // First resume after onCreate - mark browser launch for future cancellation handling
+                Logger.info(methodTag, "First resume after onCreate - Marking browser as launched")
+            }
         }
 
-        cctLaunched = true
+        browserLaunched = true
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        customTabsManager.unbind()
+        browserLaunchStrategy?.cleanup()
     }
 }
