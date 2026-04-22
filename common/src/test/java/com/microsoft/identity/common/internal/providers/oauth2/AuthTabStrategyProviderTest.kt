@@ -56,7 +56,7 @@ class AuthTabStrategyProviderTest {
 
         assertFalse(AuthTabStrategyProvider.isAvailable())
         assertFalse(AuthTabStrategyProvider.isAuthTabSupported(activity, "com.android.chrome"))
-        assertFalse(AuthTabStrategyProvider.createStrategy(activity) { _: Bundle? -> } != null)
+        assertTrue(AuthTabStrategyProvider.createStrategy(activity) { _: Bundle? -> } == null)
     }
 
     @Test

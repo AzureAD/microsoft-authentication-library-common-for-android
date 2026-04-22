@@ -106,6 +106,9 @@ class SwitchBrowserActivityTest {
     private fun buildAndCreateActivity(
         browserPackageName: String = "com.android.chrome"
     ): SwitchBrowserActivity {
+        // PROCESS_URI is intentionally omitted so launchBrowser() exits early. This allows the
+        // tests below to validate strategy selection in onCreate without launching an external
+        // browser intent.
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             SwitchBrowserActivity::class.java
@@ -116,6 +119,15 @@ class SwitchBrowserActivityTest {
         return Robolectric.buildActivity(SwitchBrowserActivity::class.java, intent)
             .create()
             .get()
+    }
+
+    @Test
+    fun `onCreate finishes activity when PROCESS_URI is missing`() {
+        testFlightsProvider.setFlight(CommonFlight.ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER.key, false)
+
+        val activity = buildAndCreateActivity()
+
+        assertTrue(activity.isFinishing)
     }
 
     @Test

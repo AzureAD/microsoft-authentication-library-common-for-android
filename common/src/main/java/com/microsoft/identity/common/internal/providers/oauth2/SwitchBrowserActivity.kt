@@ -97,10 +97,6 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Selecting launch strategy")
 
-        if (::launchStrategy.isInitialized) {
-            launchStrategy.cleanup()
-        }
-
         val browserPackageName = intent?.extras?.getString(BROWSER_PACKAGE_NAME) ?: ""
         val shouldUseAuthTab = isAuthTabFlightEnabled() &&
             AuthTabStrategyProvider.isAvailable() &&
@@ -165,7 +161,10 @@ class SwitchBrowserActivity : FragmentActivity() {
         Logger.info(methodTag, "On new intent received.")
 
         if (!::launchStrategy.isInitialized) {
-            Logger.warn(methodTag, "launchStrategy not initialized - ignoring new intent")
+            // Defensive guard for cases where strategy selection in onCreate fails before
+            // assignment (for example, unexpected runtime exceptions while resolving flights).
+            Logger.warn(methodTag, "launchStrategy not initialized - finishing activity")
+            finishAndRemoveTask()
             return
         }
 
@@ -208,6 +207,9 @@ class SwitchBrowserActivity : FragmentActivity() {
         Logger.info(methodTag, "onResume called - Managing CCT launch state")
 
         if (!::launchStrategy.isInitialized) {
+            // Defensive guard for cases where strategy selection in onCreate fails before
+            // assignment (for example, unexpected runtime exceptions while resolving flights).
+            finishAndRemoveTask()
             return
         }
 
@@ -240,6 +242,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             CommonFlightsManager.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER)
         } catch (e: Exception) {
+            // Fail closed: if flight checks fail unexpectedly, continue with Custom Tabs path.
             Logger.warn("$TAG:isAuthTabFlightEnabled", "Exception checking Auth Tab flight: ${e.message}")
             false
         }

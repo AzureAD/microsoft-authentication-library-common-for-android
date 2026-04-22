@@ -31,14 +31,20 @@ import androidx.fragment.app.FragmentActivity
  *
  * Common does not depend on AndroidX Browser 1.9.0 APIs directly; the broker registers Auth Tab
  * support and strategy construction through this provider at initialization time.
+ *
+ * Thread-safety contract: registration is expected to happen during process initialization before
+ * concurrent reads. A single volatile [registration] object ensures both factory and checker are
+ * observed together.
  */
 object AuthTabStrategyProvider {
 
-    @Volatile
-    private var strategyFactory: ((FragmentActivity, (Bundle?) -> Unit) -> BrowserLaunchStrategy)? = null
+    private data class Registration(
+        val strategyFactory: (FragmentActivity, (Bundle?) -> Unit) -> BrowserLaunchStrategy,
+        val supportChecker: (Context, String) -> Boolean
+    )
 
     @Volatile
-    private var supportChecker: ((Context, String) -> Boolean)? = null
+    private var registration: Registration? = null
 
     /**
      * Registers broker-provided Auth Tab strategy creation and support checks.
@@ -51,8 +57,10 @@ object AuthTabStrategyProvider {
         factory: (FragmentActivity, (Bundle?) -> Unit) -> BrowserLaunchStrategy,
         isSupported: (Context, String) -> Boolean
     ) {
-        strategyFactory = factory
-        supportChecker = isSupported
+        registration = Registration(
+            strategyFactory = factory,
+            supportChecker = isSupported
+        )
     }
 
     /**
@@ -61,7 +69,7 @@ object AuthTabStrategyProvider {
      * Returns `false` when no support checker is registered.
      */
     fun isAuthTabSupported(context: Context, browserPackage: String): Boolean {
-        return supportChecker?.invoke(context, browserPackage) ?: false
+        return registration?.supportChecker?.invoke(context, browserPackage) ?: false
     }
 
     /**
@@ -73,20 +81,19 @@ object AuthTabStrategyProvider {
         activity: FragmentActivity,
         onResult: (Bundle?) -> Unit
     ): BrowserLaunchStrategy? {
-        return strategyFactory?.invoke(activity, onResult)
+        return registration?.strategyFactory?.invoke(activity, onResult)
     }
 
     /**
      * Returns `true` when an Auth Tab strategy factory has been registered.
      */
-    fun isAvailable(): Boolean = strategyFactory != null
+    fun isAvailable(): Boolean = registration != null
 
     /**
      * Clears the registered factory and checker. Visible for unit tests only.
      */
     @Synchronized
     internal fun resetForTest() {
-        strategyFactory = null
-        supportChecker = null
+        registration = null
     }
 }
