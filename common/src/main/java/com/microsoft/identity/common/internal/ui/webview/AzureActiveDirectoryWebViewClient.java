@@ -112,7 +112,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
-import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_LEGACY_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
@@ -137,8 +137,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
-    // For 21Vianet cloud identity environment.
-    private static final String CHINA_CLOUD_LEGACY_HOST = "login.chinacloudapi.cn";
     // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
     private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
     private final String mRedirectUrl;
