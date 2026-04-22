@@ -26,8 +26,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.logging.Logger
-import androidx.core.net.toUri
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
 
 
 /**
@@ -63,7 +61,7 @@ class SwitchBrowserActivity : FragmentActivity() {
 
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
-    private var customTabsManager = CustomTabsManager(this)
+    private var launchStrategy: BrowserLaunchStrategy? = null
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
@@ -93,6 +91,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
+        launchStrategy = getLaunchStrategy()
         launchBrowser()
     }
 
@@ -109,47 +108,42 @@ class SwitchBrowserActivity : FragmentActivity() {
     private fun launchBrowser() {
         val methodTag = "$TAG:launchBrowser"
         cctLaunched = false
-        // Extract configuration parameters from intent extras
+        if (launchStrategy == null) {
+            Logger.error(methodTag, "No browser launch strategy available", null)
+            finish()
+            return
+        }
+
+        launchStrategy?.launch()
+    }
+
+    private fun getLaunchStrategy(): BrowserLaunchStrategy {
         val extras = this.intent.extras ?: Bundle()
-        val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME)
-        val browserSupportsCustomTabs = extras.getBoolean(BROWSER_SUPPORTS_CUSTOM_TABS, false)
-        val processUri = extras.getString(PROCESS_URI)
-
-        // Validate required parameters
-        if (browserPackageName.isNullOrBlank()) {
-            Logger.error(methodTag, "No browser package name found in extras - Cannot proceed with browser switch", null)
-            finish()
-            return
-        }
-        if (processUri.isNullOrBlank()) {
-            Logger.error(methodTag, "No process URI found in extras - Cannot proceed with browser switch", null)
-            finish()
-            return
-        }
-
-        Logger.info(
-            methodTag,
-            "Launching switch browser request on browser: $browserPackageName, Custom Tabs supported: $browserSupportsCustomTabs"
-        )
-
-        // Create an intent to launch the browser
-        val browserIntent: Intent
-        if (browserSupportsCustomTabs) {
-            Logger.info(methodTag, "CustomTabsService is supported.")
-            //create customTabsIntent
-            if (!customTabsManager.bind(this, browserPackageName)) {
-                Logger.warn(methodTag, "Failed to bind CustomTabsService.")
-                browserIntent = Intent(Intent.ACTION_VIEW)
-            } else {
-                browserIntent = customTabsManager.customTabsIntent.intent
-            }
+        val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME).orEmpty()
+        val methodTag = "$TAG:getLaunchStrategy"
+        val authTabStrategy = if (
+            browserPackageName.isNotBlank() &&
+            AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
+        ) {
+            AuthTabStrategyProvider.createStrategy(this, ::onAuthTabResult)
         } else {
-            Logger.warn(methodTag, "CustomTabsService is NOT supported")
-            browserIntent = Intent(Intent.ACTION_VIEW)
-            browserIntent.setPackage(browserPackageName)
+            null
         }
-        browserIntent.setData(processUri.toUri())
-        startActivity(browserIntent)
+
+        if (authTabStrategy != null) {
+            Logger.info(methodTag, "Using Auth Tab strategy")
+            return authTabStrategy
+        }
+
+        Logger.info(methodTag, "Using Custom Tabs strategy")
+        return CustomTabsLaunchStrategy(this)
+    }
+
+    private fun onAuthTabResult(resultBundle: Bundle) {
+        val methodTag = "$TAG:onAuthTabResult"
+        Logger.info(methodTag, "Received Auth Tab result callback")
+        WebViewAuthorizationFragment.setSwitchBrowserBundle(resultBundle)
+        finishAndRemoveTask()
     }
 
     /**
@@ -225,7 +219,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         val methodTag = "$TAG:onResume"
         Logger.info(methodTag, "onResume called - Managing CCT launch state")
 
-        if (cctLaunched) {
+        if (cctLaunched && launchStrategy?.handlesCancellationOnResume() == true) {
             // User has returned to this activity after CCT was launched, likely due to backing out
             Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
             finishAndRemoveTask()
@@ -239,6 +233,6 @@ class SwitchBrowserActivity : FragmentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        customTabsManager.unbind()
+        launchStrategy?.cleanup()
     }
 }
