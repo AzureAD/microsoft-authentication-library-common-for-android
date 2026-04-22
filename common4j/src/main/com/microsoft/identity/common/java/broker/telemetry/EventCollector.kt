@@ -38,7 +38,9 @@ class EventCollector(private val correlationId: String) {
     private val startTimeMs: Long = System.currentTimeMillis()
 
     /**
-     * Records a new [ExecutionEvent] with the current elapsed time since collection started.
+     * Records a new [ExecutionEvent] with the elapsed time since collection started.
+     * The resulting [ExecutionEvent.timestampMs] is relative elapsed milliseconds from
+     * collector start — not an absolute epoch timestamp.
      *
      * @param tag            The [EventTag] identifying the phase.
      * @param diagnosticCode Optional diagnostic code for additional context.

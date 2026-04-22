@@ -27,6 +27,10 @@ import com.google.gson.annotations.SerializedName
 /**
  * Enum of event tags representing distinct phases in the broker authentication flow.
  * Each tag has a compact serialized value for efficient IPC transport.
+ *
+ * @param value Compact serialized form used in JSON (e.g., "bre.recv" for BrokerRequestReceived).
+ *              Prefix convention: bre=BrokerEntry, bdi=BrokerDispatch, bca=BrokerCache,
+ *              bne=BrokerNetwork, brs=BrokerResponse, cst=CommonStrategy.
  */
 enum class EventTag(@SerializedName("v") val value: String) {
     // BrokerEntry (5)
