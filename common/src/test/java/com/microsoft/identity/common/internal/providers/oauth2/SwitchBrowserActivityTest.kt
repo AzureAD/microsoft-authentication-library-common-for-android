@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Intent
-import io.mockk.anyConstructed
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
