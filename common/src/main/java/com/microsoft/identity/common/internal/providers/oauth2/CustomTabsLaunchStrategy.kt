@@ -43,10 +43,14 @@ class CustomTabsLaunchStrategy(
 
     override fun launch() {
         val methodTag = "$TAG:launch"
-        val extras = activity.intent.extras ?: return finishWithError(
-            methodTag,
-            "Intent extras are missing - Cannot proceed with browser switch"
-        )
+        val extras = activity.intent.extras
+        if (extras == null) {
+            finishWithError(
+                methodTag,
+                "Intent extras are missing - Cannot proceed with browser switch"
+            )
+            return
+        }
         val browserPackageName = extras.getString(SwitchBrowserActivity.BROWSER_PACKAGE_NAME)
         val browserSupportsCustomTabs = extras.getBoolean(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, false)
         val processUri = extras.getString(SwitchBrowserActivity.PROCESS_URI)

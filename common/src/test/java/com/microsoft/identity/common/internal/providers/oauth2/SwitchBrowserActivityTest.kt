@@ -73,6 +73,23 @@ class SwitchBrowserActivityTest {
         verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
     }
 
+    @Test
+    fun onCreate_fallsBackToCustomTabsStrategy_whenBrowserPackageMissing() {
+        mockkObject(AuthTabStrategyProvider)
+        mockkConstructor(CustomTabsLaunchStrategy::class)
+        every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
+
+        val intentWithoutPackage = Intent().apply {
+            putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, true)
+            putExtra(SwitchBrowserActivity.PROCESS_URI, "https://login.microsoftonline.com/switchbrowser/process")
+        }
+
+        Robolectric.buildActivity(SwitchBrowserActivity::class.java, intentWithoutPackage).create()
+
+        verify(exactly = 0) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
+        verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
+    }
+
     private fun getIntent(): Intent {
         return Intent().apply {
             putExtra(SwitchBrowserActivity.BROWSER_PACKAGE_NAME, "com.test.browser")

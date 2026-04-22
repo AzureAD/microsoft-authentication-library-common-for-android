@@ -33,7 +33,10 @@ interface BrowserLaunchStrategy {
     fun launch()
 
     /**
-     * Returns true if this strategy expects cancellation handling in [SwitchBrowserActivity.onResume].
+     * Returns true if [SwitchBrowserActivity] should finish in [SwitchBrowserActivity.onResume]
+     * when the user returns after launch (for example, pressing back in the browser).
+     *
+     * Strategies that receive results through callbacks should return false.
      */
     fun handlesCancellationOnResume(): Boolean
 

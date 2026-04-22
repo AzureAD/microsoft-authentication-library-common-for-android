@@ -35,7 +35,15 @@ import com.microsoft.identity.common.logging.Logger
  */
 object AuthTabStrategyProvider {
 
+    /**
+     * Creates an Auth Tab [BrowserLaunchStrategy] for the supplied host [FragmentActivity]
+     * and result callback.
+     */
     private typealias StrategyFactory = (FragmentActivity, (Bundle) -> Unit) -> BrowserLaunchStrategy
+
+    /**
+     * Checks if Auth Tab is supported in the supplied [Context] and browser package name.
+     */
     private typealias SupportChecker = (Context, String) -> Boolean
 
     private val lock = Any()
