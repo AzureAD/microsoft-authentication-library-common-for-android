@@ -29,6 +29,8 @@ import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.broker.telemetry.ITelemetrySchemaProvider;
+import com.microsoft.identity.common.java.broker.telemetry.TelemetrySchema;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +43,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
+public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider, IBrokerInfoProvider, ITelemetrySchemaProvider {
 
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
     // When MSAL converts the result bundle it looks for this value to know about exception type
@@ -89,6 +91,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
+
+    @Nullable
+    private TelemetrySchema mTelemetrySchema;
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -234,6 +239,16 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Override
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
         return this.mBrokerPerformanceMetrics;
+    }
+
+    public void setTelemetrySchema(@Nullable final TelemetrySchema telemetrySchema) {
+        this.mTelemetrySchema = telemetrySchema;
+    }
+
+    @Override
+    @Nullable
+    public TelemetrySchema getTelemetrySchema() {
+        return this.mTelemetrySchema;
     }
 
     public void setUsername(@Nullable final String username) {

@@ -624,6 +624,16 @@ public class AuthenticationConstants {
          * Value for nativebroker mode sent in the extra query param by ESTS when the request is from lookup.
          */
         public static final String LOOKUP_MODE_VALUE = "Lookup";
+
+        /**
+         * Bundle key for the broker telemetry request payload.
+         */
+        public static final String BROKER_TELEMETRY_REQUEST = "broker_telemetry_request";
+
+        /**
+         * Bundle key for the broker telemetry schema payload.
+         */
+        public static final String BROKER_TELEMETRY_SCHEMA = "broker_telemetry_schema";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
