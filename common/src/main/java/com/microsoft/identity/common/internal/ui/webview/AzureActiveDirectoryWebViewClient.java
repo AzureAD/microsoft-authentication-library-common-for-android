@@ -417,7 +417,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return true if the URL is an Authenticator activation app link.
      */
     boolean isAuthenticatorActivationAppLink(@NonNull final String url) {
-        if (!url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+        if (!isUriSSLProtected(url)) {
             return false;
         }
         final Uri uri = Uri.parse(url);
