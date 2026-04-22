@@ -225,7 +225,7 @@ class TelemetrySchemaSerializationTest {
         return TelemetrySchema(
             correlationId = "test-corr-id",
             name = "AcquireTokenSilent",
-            version = "1.0",
+            version = "test-sdk-1.0",
             authOutcome = "success",
             errorCode = null,
             responseStarvationDuration = 5,
