@@ -206,14 +206,6 @@ public class LabClientTest {
             Assert.assertNotNull(resourceAccount.getPassword());
             Assert.assertNotNull(resourceAccount.getHomeObjectId());
             Assert.assertNotNull(resourceAccount.getHomeTenantId());
-
-            final ILabAccount tpCaAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.TP_CA);
-            Assert.assertNotNull(tpCaAccount);
-            Assert.assertNotNull(tpCaAccount.getUsername());
-            Assert.assertNotNull(tpCaAccount.getPassword());
-            Assert.assertNotNull(tpCaAccount.getHomeObjectId());
-            Assert.assertNotNull(tpCaAccount.getHomeTenantId());
-
         } catch (final LabApiException e){
             throw new AssertionError(e);
         }

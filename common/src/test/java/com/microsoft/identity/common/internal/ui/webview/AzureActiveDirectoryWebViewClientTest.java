@@ -160,9 +160,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         dummyHeaders.put("key", "value");
         mWebViewClient.setRequestHeaders(dummyHeaders);
         mWebViewClient.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
-        if (!AzureActiveDirectory.isInitialized()) {
-            AzureActiveDirectory.performCloudDiscovery();
-        }
+        AzureActiveDirectory.ensureCloudDiscovery();
     }
 
     @After
@@ -228,6 +226,45 @@ public class AzureActiveDirectoryWebViewClientTest {
                 ((ClientException) capturedResult.getException()).getErrorCode());
         assertTrue("Expected error message about no application found",
                 capturedResult.getException().getMessage().contains("No application found"));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesOpenIdVcUrl_FlightDisabled() {
+        // When the flight is disabled, the openid-vc:// URL bypasses the VC handler
+        // and is caught by the SSL protection check instead (non-https URL).
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor = ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false
+        );
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(false);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final boolean result = webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_OPENID_VC_URL);
+
+        assertTrue("shouldOverrideUrlLoading must return true (intercepted by SSL check)", result);
+        Mockito.verify(mockWebView).stopLoading();
+
+        // Verify the error is SSL protection, NOT the VC-specific ACTIVITY_NOT_FOUND.
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        final RawAuthorizationResult capturedResult = resultCaptor.getValue();
+        assertEquals("Expected SSL protection error, not VC handler error",
+                ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED,
+                ((ClientException) capturedResult.getException()).getErrorCode());
+
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test

@@ -96,6 +96,9 @@ boolean newBrokerDiscoveryEnabledFlag = project.hasProperty("newBrokerDiscoveryE
 boolean trustDebugBrokerFlag = project.hasProperty("trustDebugBrokerFlag")
 boolean bypassRedirectUriCheck = project.hasProperty("bypassRedirectUriCheck")
 
+def robolectricRepoUsername = System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
+def robolectricRepoPassword = System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
 android {
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
@@ -160,6 +163,11 @@ android {
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
+            if (robolectricRepoUsername?.toString()?.trim() && robolectricRepoPassword?.toString()?.trim()) {
+                it.systemProperty("robolectric.dependency.repo.url", "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1")
+                it.systemProperty("robolectric.dependency.repo.username", robolectricRepoUsername)
+                it.systemProperty("robolectric.dependency.repo.password", robolectricRepoPassword)
+            }
         }
     }
 
@@ -275,6 +283,7 @@ dependencies {
     })
 
     implementation "io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion"
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:$rootProject.ext.openTelemetryVersion")
     implementation "androidx.fragment:fragment:1.3.2"
 }
 

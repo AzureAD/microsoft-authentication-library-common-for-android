@@ -122,6 +122,13 @@ public enum AttributeName {
     correlation_id,
 
     /**
+     * The correlation id sent from client app.
+     * This is a second attribute name to denote EUDB compliance.
+     * We will only emit this value when we have a tenant id, or when we are in unauthenticated scenarios.
+     */
+    correlation_id_v2,
+
+    /**
      * Indicates if token was return from token cache
      */
     is_serviced_from_cache,
@@ -140,6 +147,7 @@ public enum AttributeName {
      * The content type of the response returned by eSTS for the request.
      */
     response_content_type,
+
     /**
      * The http status code of the operation.
      */
@@ -160,6 +168,12 @@ public enum AttributeName {
      * The size of the silent request executor pool.
      */
     silent_executor_pool_size,
+
+    /**
+     * The outcome of cancellation signal processing for a timed-out ATS request.
+     * Only emitted when the cancellation flight is enabled and a timeout triggers cancellation.
+     */
+    cancellation_outcome,
 
     /**
      * The time (in milliseconds) spent in executing the save method in OAuth2TokenCache.
@@ -187,6 +201,11 @@ public enum AttributeName {
     elapsed_time_cache_save_and_load_aggregated_account_data,
 
     /**
+     * The time (in milliseconds) spent in executing the deleteAccessTokensWithIntersectingScopes method in MsalOAuth2TokenCache.
+     */
+    elapsed_time_cache_delete_access_tokens_with_intersecting_scopes,
+
+    /**
      * The time (in milliseconds) spent in executing the removeCredential method in OAuth2TokenCache.
      */
     elapsed_time_cache_remove_credential,
@@ -210,11 +229,6 @@ public enum AttributeName {
      * The time (in milliseconds) spent in executing the getAccountWithAggregatedAccountDataByLocalAccountId method in OAuth2TokenCache.
      */
     elapsed_time_cache_get_account_with_aggregated_account_data_by_local_account_id,
-
-    /**
-     * The time (in milliseconds) spent in saving account data to Shared Preferences.
-     */
-    elapsed_time_save_account_shared_preferences,
 
     /**
      * The time (in milliseconds) spent in executing the getAccounts method in OAuth2TokenCache.
@@ -392,6 +406,26 @@ public enum AttributeName {
     is_switch_browser_resume_handled,
 
     /**
+     * Records if the Auth Tab was used in the switch browser flow (boolean).
+     */
+    auth_tab_used,
+
+    /**
+     * Records the Android Activity result code returned by the Auth Tab in the switch browser flow (integer).
+     */
+    auth_tab_result_code,
+
+    /**
+     * Records if Auth Tab is supported for the switch browser flow (boolean).
+     */
+    is_auth_tab_supported,
+
+    /**
+     * Records if the Auth Tab fell back to custom tabs in the switch browser flow (boolean).
+     */
+    auth_tab_fallback_to_custom_tabs,
+
+    /**
      * The tenant id for the home tenant of the account for which PRT is required.
      */
     tenant_id,
@@ -481,6 +515,19 @@ public enum AttributeName {
     in_memory_cache_used_for_accounts_and_credentials,
 
     /**
+     * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
+     * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
+     */
+    is_filter_then_clone_enabled,
+
+    /**
+     * Indicates whether a desync was detected between the in-memory cache and SharedPreferences
+     * during removeCredential(). True means the key was found in SharedPreferences
+     * (via keySet()) but not in the in-memory map.
+     */
+    cache_key_in_storage_but_not_in_memory,
+
+    /**
      * Elapsed time (in milliseconds) spent in executing the load() method in BrokerOAuth2TokenCache for in memory cache.
      */
     elapsed_time_in_memory_cache_load,
@@ -494,6 +541,16 @@ public enum AttributeName {
      * Passkey DOM exception name (if any).
      */
     passkey_dom_exception_name,
+
+    /**
+     * Origin extracted from the WebAuthn clientDataJSON response.
+     */
+    passkey_origin,
+
+    /**
+     * AAGUID of the authenticator, extracted from the attestation authenticatorData (create flow only).
+     */
+    passkey_aaguid,
 
     /**
      *  Elapsed time (in milliseconds) spent in executing the save() method in BrokerOAuth2TokenCache.
@@ -646,6 +703,34 @@ public enum AttributeName {
      * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
      */
     target_blank_navigation_route,
+
+    //endregion
+
+    //region x-ms-clientdata server telemetry attributes
+
+    /**
+     * The server-side error code returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA.
+     */
+    server_error,
+
+    /**
+     * The server-side sub-error code returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA.
+     */
+    server_sub_error,
+
+    /**
+     * The cloud instance returned in the x-ms-clientdata header or clientdata query
+     * parameter from eSTS / MSA (e.g. "public", "usgov").
+     */
+    server_cloud_instance,
+
+    /**
+     * The caller data boundary returned in the x-ms-clientdata header or clientdata
+     * query parameter from eSTS / MSA, indicating the data residency boundary.
+     */
+    server_caller_data_boundary,
 
     //endregion
 }
