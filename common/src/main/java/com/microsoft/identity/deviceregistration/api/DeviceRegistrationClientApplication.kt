@@ -85,7 +85,7 @@ class DeviceRegistrationClientApplication {
      */
     @Throws(ClientException::class)
     constructor(context: Context) {
-        val components = AndroidPlatformComponentsFactory.createFromContext(context)
+        val components = AndroidPlatformComponentsFactory.createFromContextWithKeystoreOnlyEncryptionForStorage(context)
         mController = buildController(
             context,
             components,
