@@ -28,13 +28,14 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
+import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy
+import com.microsoft.identity.common.java.browser.Browser
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
-import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -46,8 +47,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 
 /**
- * Tests that [AndroidAuthorizationStrategy.launchIntent] performs URL scheme conflict validation
- * for non-WebView flows and skips it for WebView flows.
+ * Tests that [BrowserAuthorizationStrategy.launchIntent] performs URL scheme conflict validation
+ * for browser flows before delegating to the base class.
  */
 @RunWith(RobolectricTestRunner::class)
 class AndroidAuthorizationStrategyValidationTest {
@@ -68,24 +69,27 @@ class AndroidAuthorizationStrategyValidationTest {
     }
 
     /**
-     * Minimal concrete subclass of [AndroidAuthorizationStrategy] that exposes [launchIntent]
-     * publicly for testing (and overrides [requestAuthorization] as required by the interface).
+     * Minimal concrete subclass of [BrowserAuthorizationStrategy] that exposes [launchIntent]
+     * publicly for testing.
      */
     @Suppress("UNCHECKED_CAST")
-    private inner class TestAndroidAuthorizationStrategy(
+    private inner class TestBrowserAuthorizationStrategy(
         appContext: Context,
         act: Activity
-    ) : AndroidAuthorizationStrategy<
+    ) : BrowserAuthorizationStrategy<
             OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>,
-            AuthorizationRequest<*>>(appContext, act, null) {
+            AuthorizationRequest<*>>(
+        appContext, act, null,
+        Browser("com.android.chrome", emptySet(), "1.0", false)
+    ) {
+        override fun setIntentFlag(intent: Intent) { /* no-op */ }
 
         override fun requestAuthorization(
             authorizationRequest: AuthorizationRequest<*>,
             oAuth2Strategy: OAuth2Strategy<*, *, *, *, *, *, *, *, *, *, *, *, *>
         ) = throw UnsupportedOperationException("not used in these tests")
 
-        override fun completeAuthorization(requestCode: Int, data: com.microsoft.identity.common.java.providers.RawAuthorizationResult) =
-            Unit
+        override fun completeAuthorization(requestCode: Int, data: RawAuthorizationResult) = Unit
 
         // Expose the protected method publicly for tests.
         @Throws(ClientException::class)
@@ -113,9 +117,8 @@ class AndroidAuthorizationStrategyValidationTest {
         )
     }
 
-    private fun buildIntent(agent: AuthorizationAgent?, redirectUri: String? = REDIRECT_URI_VALUE): Intent {
+    private fun buildIntent(redirectUri: String? = REDIRECT_URI_VALUE): Intent {
         val intent = Intent()
-        if (agent != null) intent.putExtra(AUTHORIZATION_AGENT, agent)
         if (redirectUri != null) intent.putExtra(REDIRECT_URI, redirectUri)
         return intent
     }
@@ -131,40 +134,10 @@ class AndroidAuthorizationStrategyValidationTest {
     @Test
     fun `launchIntent browser flow throws ClientException when competing app is registered`() {
         registerCompetingApp()
-        val strategy = TestAndroidAuthorizationStrategy(context, activity)
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
         try {
-            strategy.testLaunchIntent(buildIntent(AuthorizationAgent.BROWSER))
-            fail("Expected ClientException")
-        } catch (e: ClientException) {
-            assertEquals(ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME, e.errorCode)
-        }
-    }
-
-    /**
-     * WebView flow with a competing app registered → no exception (WebView is excluded from
-     * URL scheme conflict validation).
-     */
-    @Test
-    fun `launchIntent webview flow does not throw even when competing app is registered`() {
-        registerCompetingApp()
-        val strategy = TestAndroidAuthorizationStrategy(context, activity)
-
-        // Should not throw — activity.startActivity() will simply be called.
-        strategy.testLaunchIntent(buildIntent(AuthorizationAgent.WEBVIEW))
-    }
-
-    /**
-     * Null authorizationAgent is treated as a browser flow → validation runs, and a conflict
-     * causes [ClientException].
-     */
-    @Test
-    fun `launchIntent null authorizationAgent treated as browser flow and throws on conflict`() {
-        registerCompetingApp()
-        val strategy = TestAndroidAuthorizationStrategy(context, activity)
-
-        try {
-            strategy.testLaunchIntent(buildIntent(agent = null))
+            strategy.testLaunchIntent(buildIntent())
             fail("Expected ClientException")
         } catch (e: ClientException) {
             assertEquals(ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME, e.errorCode)
@@ -176,9 +149,9 @@ class AndroidAuthorizationStrategyValidationTest {
      */
     @Test
     fun `launchIntent browser flow passes when no competing app is registered`() {
-        val strategy = TestAndroidAuthorizationStrategy(context, activity)
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
         // No competing app registered — should not throw (startActivity completes normally).
-        strategy.testLaunchIntent(buildIntent(AuthorizationAgent.BROWSER))
+        strategy.testLaunchIntent(buildIntent())
     }
 }
