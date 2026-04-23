@@ -256,5 +256,4 @@ public class AuthorizationActivityFactoryTest {
         // Verify it creates BrowserAuthorizationFragment even with silent flow when not WebView
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
     }
-
 }
