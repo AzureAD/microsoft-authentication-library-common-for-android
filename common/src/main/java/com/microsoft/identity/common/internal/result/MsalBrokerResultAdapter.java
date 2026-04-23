@@ -1038,6 +1038,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
                 );
             }
+
+            // Extract onboarding blob from BrokerResult if present
+            try {
+                final BrokerResult brokerResult = resultAdapter.brokerResultFromBundle(resultBundle);
+                if (brokerResult != null && brokerResult.getOnboardingBlob() != null) {
+                    acquireTokenResult.setOnboardingBlob(brokerResult.getOnboardingBlob());
+                }
+            } catch (final Exception e) {
+                // Best-effort — don't fail the result for telemetry
+            }
+
             return acquireTokenResult;
         }
 

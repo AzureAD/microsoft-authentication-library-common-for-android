@@ -87,6 +87,7 @@ public class BrokerRequest implements Serializable {
         final static String TENANT_ID = "tenant_id";
         final static String REQUEST_TYPE = "request_type";
         final static String WEB_APPS_STATE = "web_apps_state";
+        final static String ONBOARDING_SEED_JSON = "onboarding_seed_json";
     }
 
     /**
@@ -295,4 +296,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.REQUEST_TYPE)
     private String mRequestType;
+
+    /**
+     * Onboarding telemetry seed JSON blob.
+     * Contains sessionCorrelationId, onboarding_mode, schema_version.
+     * Broker populates this with blocking errors and returns in the result.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.ONBOARDING_SEED_JSON)
+    private String mOnboardingSeedJson;
 }

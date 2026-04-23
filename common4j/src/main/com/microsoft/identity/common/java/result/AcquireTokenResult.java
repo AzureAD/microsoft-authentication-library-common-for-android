@@ -49,6 +49,21 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
+    /**
+     * Populated onboarding telemetry blob JSON returned by the broker.
+     */
+    @Nullable
+    private String mOnboardingBlob;
+
+    public void setOnboardingBlob(@Nullable final String onboardingBlob) {
+        this.mOnboardingBlob = onboardingBlob;
+    }
+
+    @Nullable
+    public String getOnboardingBlob() {
+        return this.mOnboardingBlob;
+    }
+
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
         this.mSucceeded = true;
