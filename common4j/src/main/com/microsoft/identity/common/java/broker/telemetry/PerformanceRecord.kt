@@ -27,14 +27,23 @@ import com.google.gson.annotations.SerializedName
 /**
  * Aggregation container for the performance data captured during an authentication flow.
  *
- * @param version Schema version for this record. Defaults to [TelemetrySchema.CURRENT_VERSION].
+ * @param version Schema version for this perf section. Independent of [TelemetrySchema.CURRENT_VERSION].
  * @param startTime ISO 8601 UTC timestamp when the flow started.
  * @param duration Total elapsed time in milliseconds for the authentication flow.
  * @param executionFlow Ordered list of [ExecutionEvent]s captured during the flow.
  */
 data class PerformanceRecord(
-    @SerializedName("version") val version: String = TelemetrySchema.CURRENT_VERSION,
+    @SerializedName("version") val version: String = CURRENT_PERF_VERSION,
     @SerializedName("start_time") val startTime: String,
     @SerializedName("duration") val duration: Long,
     @SerializedName("execution_flow") val executionFlow: List<ExecutionEvent>
-)
+) {
+    companion object {
+        /**
+         * Version of the perf section schema. Informational only — not used in
+         * version negotiation (which uses root-level [TelemetrySchema.CURRENT_VERSION]).
+         * Evolves independently from the top-level schema version.
+         */
+        const val CURRENT_PERF_VERSION = "1.0.0"
+    }
+}

@@ -172,19 +172,17 @@ class TelemetrySchemaSerializationTest {
     // ------------------------------------------------------------------
 
     @Test
-    fun eventTag_serializedNameIsCompactValue() {
+    fun eventTag_serializedAsEnumName() {
         val event = ExecutionEvent(tag = EventTag.BrokerRequestReceived, timestampMs = 0L)
 
         val json = gson.toJson(event)
 
-        // The tag should be serialized as its compact value, not the enum name
+        // The tag should be serialized as the human-readable enum name
         assertNotNull(json)
-        // The 't' field in JSON should contain the compact value string
         val tagJson = gson.toJsonTree(event).asJsonObject.get("t")
         assertNotNull(tagJson)
-        // Tag is serialized as an object with "v" field containing the compact value
-        val tagValue = tagJson.asJsonObject.get("v").asString
-        assertEquals("bre.recv", tagValue)
+        // EventTag is a plain enum — Gson serializes it as its .name()
+        assertEquals("BrokerRequestReceived", tagJson.asString)
     }
 
     // ------------------------------------------------------------------

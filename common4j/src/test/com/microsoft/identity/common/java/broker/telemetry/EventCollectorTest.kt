@@ -139,9 +139,18 @@ class EventCollectorTest {
         threads.forEach { it.start() }
         threads.forEach { it.join() }
 
-        val events = collector.toTelemetrySchema().performanceRecord?.executionFlow
+        val schema = collector.toTelemetrySchema()
+        val events = schema.performanceRecord?.executionFlow
         assertNotNull(events)
         assertEquals(threadCount * eventsPerThread, events!!.size)
+
+        // Verify duration invariant: duration >= max event timestamp (race condition regression test)
+        val maxEventTs = events.maxOf { it.timestampMs }
+        val duration = schema.performanceRecord!!.duration
+        assertTrue(
+            "Duration ($duration) must be >= max event timestamp ($maxEventTs)",
+            duration >= maxEventTs
+        )
     }
 
     @Test

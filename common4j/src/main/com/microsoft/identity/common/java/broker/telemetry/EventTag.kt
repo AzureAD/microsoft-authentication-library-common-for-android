@@ -22,41 +22,40 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.broker.telemetry
 
-import com.google.gson.annotations.SerializedName
-
 /**
  * Enum of event tags representing phases of the broker authentication flow.
- * Each tag has a compact serialized value to minimize payload size.
+ * Serialized as human-readable enum names (e.g., "BrokerCacheHit") on the IPC wire format.
+ * Compact JSON keys on [ExecutionEvent] fields (t, ts, tid, d, e) minimize payload size.
  */
-enum class EventTag(@SerializedName("v") val value: String) {
+enum class EventTag {
     // BrokerEntry (5)
-    BrokerRequestReceived("bre.recv"),
-    BrokerRequestDeserialized("bre.dser"),
-    BrokerAccountLookupStart("bre.als"),
-    BrokerAccountLookupEnd("bre.ale"),
-    BrokerRequestValidated("bre.val"),
+    BrokerRequestReceived,
+    BrokerRequestDeserialized,
+    BrokerAccountLookupStart,
+    BrokerAccountLookupEnd,
+    BrokerRequestValidated,
     // BrokerDispatch (3)
-    BrokerControllerSelected("bdi.csel"),
-    BrokerCommandQueued("bdi.cq"),
-    BrokerCommandExecutionStart("bdi.cex"),
+    BrokerControllerSelected,
+    BrokerCommandQueued,
+    BrokerCommandExecutionStart,
     // BrokerCache (6)
-    BrokerCacheCheckStart("bca.cks"),
-    BrokerCacheCheckEnd("bca.cke"),
-    BrokerCacheHit("bca.hit"),
-    BrokerCacheMiss("bca.miss"),
-    BrokerCacheWriteStart("bca.wrs"),
-    BrokerCacheWriteEnd("bca.wre"),
+    BrokerCacheCheckStart,
+    BrokerCacheCheckEnd,
+    BrokerCacheHit,
+    BrokerCacheMiss,
+    BrokerCacheWriteStart,
+    BrokerCacheWriteEnd,
     // BrokerNetwork (5)
-    BrokerPrtLoadStart("bne.prt"),
-    BrokerNetworkCallStart("bne.ncs"),
-    BrokerNetworkCallEnd("bne.nce"),
-    BrokerTokenAcquired("bne.tok"),
-    BrokerNetworkCallFailed("bne.nfl"),
+    BrokerPrtLoadStart,
+    BrokerNetworkCallStart,
+    BrokerNetworkCallEnd,
+    BrokerTokenAcquired,
+    BrokerNetworkCallFailed,
     // BrokerResponse (3)
-    BrokerResponseSerialized("brs.ser"),
-    BrokerResponseSent("brs.snt"),
-    BrokerRequestFailed("brs.fail"),
+    BrokerResponseSerialized,
+    BrokerResponseSent,
+    BrokerRequestFailed,
     // CommonStrategy (2)
-    CommonHttpRequestExecute("cst.hreq"),
-    CommonHttpResponseReceived("cst.hrsp")
+    CommonHttpRequestExecute,
+    CommonHttpResponseReceived
 }
