@@ -435,7 +435,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processCrossCloudRedirect(view, url);
             } else if (shouldReAttachPrtForEstsHost(url)) {
                 Logger.info(methodTag, "Navigation redirects to eSTS cloud host, re-attaching PRT header.");
-                processEstsHostRedirect(view, url);
+                return processEstsHostRedirect(view, url);
             } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
                 Logger.info(methodTag,"Navigation contains web cp enrollment url.");
                 processWebCpEnrollmentUrl(view, url);
@@ -1327,11 +1327,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * the original request's client_id.
      */
     private boolean shouldReAttachPrtForEstsHost(@NonNull final String url) {
-        return CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
-                && isEstsCloudHost(url)
-                && hasPrtHeaderAttached()
-                && (!url.contains("/authorize") || hasKnownClientId(url));
+        // TODO: Restore original logic after testing
+        //return true;
+         return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                 .isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
+                 && isEstsCloudHost(url)
+                 && hasPrtHeaderAttached()
+                 && (!isAuthorizeUrl(url) || hasKnownClientId(url));
+    }
+
+    /**
+     * Returns true if the URL's path contains "/authorize" (case-insensitive).
+     * Parses the path segment to avoid false positives from query string content.
+     */
+    private boolean isAuthorizeUrl(@NonNull final String url) {
+        final String methodTag = TAG + ":isAuthorizeUrl";
+        try {
+            final String path = new URL(url).getPath();
+            return path != null && path.toLowerCase(Locale.ROOT).contains("/authorize");
+        } catch (final MalformedURLException e) {
+            Logger.warn(methodTag, "Malformed URL in authorize path check.");
+            return false;
+        }
     }
 
     /**
@@ -1357,26 +1374,32 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * Processes an eSTS host redirect by generating a fresh PRT credential JWT and attaching it.
+     *
+     * @return true if PRT was successfully re-attached, false if an error occurred
+     *         (caller should return false to let WebView continue the navigation naturally).
      */
-    private void processEstsHostRedirect(@NonNull final WebView view, @NonNull final String url) {
+    private boolean processEstsHostRedirect(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processEstsHostRedirect";
         Logger.info(methodTag, "Processing eSTS host redirect with PRT re-attachment.");
         Span span = null;
         try {
+            // TODO: Remove after testing — force exception to verify return-false fallback
+            if (true) throw new RuntimeException("Test: simulating processEstsHostRedirect failure");
             span = createSpanWithAttributesFromParent(SpanName.EstsHostRedirectPrtAttach.name());
             final String host = new URL(url).getHost();
             span.setAttribute(AttributeName.ests_redirect_host.name(), host);
             final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
                     new ReAttachPrtHeaderHandler(view, mRequestHeaders, span, getLoginHintFromRequestUrl(), true);
             reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
+            return true;
         } catch (final Throwable e) {
-            Logger.warn(methodTag, "Failed to process eSTS host redirect. Falling back to loading URL without PRT." + e);
+            Logger.warn(methodTag, "Failed to process eSTS host redirect. Letting WebView continue naturally." + e);
             if (span != null) {
                 span.recordException(e);
                 span.setStatus(StatusCode.ERROR);
                 span.end();
             }
-            view.loadUrl(url);
+            return false;
         }
     }
 

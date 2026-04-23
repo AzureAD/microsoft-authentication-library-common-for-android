@@ -120,8 +120,18 @@ public class AndroidDevicePopManager extends AbstractDevicePopManager {
                 .build();
     }
 
+    // TODO: TEMPORARY - Remove after verifying ATS span captures key gen errors.
+    // Set to true to simulate a key generation failure for telemetry validation.
+    // Throws InvalidAlgorithmParameterException to match real Android KeyStore failures.
+    public static boolean sSimulateKeyGenFailure = true;
+
     @Override
     public KeyPair generateNewRsaKeyPair(int keySize) throws UnsupportedOperationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+        if (sSimulateKeyGenFailure) {
+            throw new InvalidAlgorithmParameterException(
+                    "SIMULATED: Incompatible purpose (telemetry validation)"
+            );
+        }
         return generateNewRsaKeyPair(mContext, keySize);
     }
 

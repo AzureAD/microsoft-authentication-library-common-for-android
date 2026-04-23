@@ -305,6 +305,7 @@ public abstract class AbstractDevicePopManager implements IDevicePopManager {
     @Override
     public String generateAsymmetricKey() throws ClientException {
         final String methodTag = TAG + ":generateAsymmetricKey";
+
         final Exception exception;
         final String errCode;
 
