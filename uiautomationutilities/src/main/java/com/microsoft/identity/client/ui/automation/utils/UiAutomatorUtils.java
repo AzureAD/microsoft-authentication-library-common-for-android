@@ -558,6 +558,8 @@ public class UiAutomatorUtils {
      * and logging a warning.
      *
      * @param text the text on the button to click
+     * @param existsTimeout the maximum time to wait, in milliseconds, for the button
+     *                      to exist before giving up and logging a warning
      */
     public static void handleButtonClickForObjectWithTextSafely(@NonNull final String text, final long existsTimeout) {
         final UiObject button = obtainUiObjectWithText(text, existsTimeout);
