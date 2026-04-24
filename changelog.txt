@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
+- [PATCH] Add support for Authenticator app activation links in WebView, enabling account pairing/MFA flows to launch Microsoft Authenticator directly instead of redirecting to the Play Store (#3090)
 - [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
 - [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
 - [PATCH] Optimize AcquireTokenSilent save path: replace keySet() decrypt-all with in-memory map lookup in removeAccount()/removeCredential(), add telemetry for deleteAccessTokensWithIntersectingScopes, and remove unused elapsed_time_save_account_shared_preferences attribute (#3074)
