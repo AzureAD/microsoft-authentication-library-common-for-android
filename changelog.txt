@@ -1,6 +1,13 @@
-Version 24.1.1
+vNext
 ----------
+- [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
 - [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
+- [PATCH] Optimize AcquireTokenSilent save path: replace keySet() decrypt-all with in-memory map lookup in removeAccount()/removeCredential(), add telemetry for deleteAccessTokensWithIntersectingScopes, and remove unused elapsed_time_save_account_shared_preferences attribute (#3074)
+- [MINOR] Add DeviceRegistrationClientApplication as public API for OneAuth device registration with mandatory correlationId, DeviceState and DrsDiscoveryEndpoint enums (#3073)
+- [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support (#3066)
+- [MINOR] Upgrade compileSdkVersion to 36 and buildToolsVersion to 36.0.0 (#3065)
+- [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
+- [MINOR] Add CancellationSignal to gracefully cancel in-flight HTTP requests on ATS command-level timeout, preventing zombie worker threads from holding thread pool slots (#3055)
 
 Version 24.1.0
 ----------
