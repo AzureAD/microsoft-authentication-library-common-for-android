@@ -565,7 +565,8 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            Logger.w(TAG, "Button with text \"" + text + "\" was not found: " + e.getMessage());
+            Logger.w(TAG, "Button with text \"" + text + "\" was not found after waiting "
+                    + existsTimeout + " ms: " + e.getMessage());
         }
     }
 
