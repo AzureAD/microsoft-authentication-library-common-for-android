@@ -571,6 +571,41 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String applicationIdentifier,
+            @Nullable final String mamEnrollmentIdentifier,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims,
+            @Nullable final String kid) {
+        final List<Credential> allCredentials = getCredentials();
+        final List<Credential> result = new ArrayList<>();
+        result.addAll(
+                getCredentialsFilteredByInternal(
+                        allCredentials,
+                        homeAccountId,
+                        environment,
+                        credentialType,
+                        clientId,
+                        applicationIdentifier,
+                        mamEnrollmentIdentifier,
+                        realm,
+                        target,
+                        authScheme,
+                        requestedClaims,
+                        kid,
+                        false
+                )
+        );
+        return result;
+    }
+
+    @Override
     public boolean removeAccount(@NonNull final AccountRecord accountToRemove) {
         final String methodTag = TAG + ":removeAccount";
         Logger.info(methodTag, "Removing Account...");
