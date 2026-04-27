@@ -53,6 +53,7 @@ import java.net.URISyntaxException
  * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
  */
 object AuthorizationActivityFactory {
+
     /**
      * Return the correct authorization activity based on library configuration.
      *
@@ -150,6 +151,11 @@ object AuthorizationActivityFactory {
      * [WebViewAuthorizationFragment]
      * [BrowserAuthorizationFragment]
      * [CurrentTaskBrowserAuthorizationFragment]
+     *
+     * Note: multiple-app URL scheme validation is NOT performed here. It is performed upstream
+     * in [AndroidAuthorizationStrategy.launchIntent], where a checked [ClientException] can
+     * propagate correctly through the command pipeline. Callers should ensure validation has
+     * already been performed before invoking this factory method for browser flows.
      *
      * @param intent The intent used to start the authorization flow.
      * @return returns an Fragment that's used as to authorize a token request.
