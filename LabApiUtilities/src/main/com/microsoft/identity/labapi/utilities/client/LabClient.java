@@ -75,7 +75,38 @@ public class LabClient implements ILabClient {
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
     private Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
 
-    public static ILabAccount latestLabAccount = null;
+    /**
+     * Holds the most recently fetched or created {@link ILabAccount} for this process.
+     * <p>
+     * Updated after each successful account fetch or temporary user creation via
+     * {@link LabClient}. Intended as a convenience for single-threaded test scenarios
+     * that need access to the last lab account without explicitly passing it between
+     * methods.
+     * </p>
+     * <p>
+     * The field is {@code volatile} to ensure writes performed by one thread are
+     * immediately visible to all other threads. It may be {@code null} if no account
+     * has been fetched or created yet. Do not rely on this field in multi-threaded
+     * or production code.
+     * </p>
+     */
+    public static volatile ILabAccount latestLabAccount = null;
+
+    /**
+     * Updates {@link #latestLabAccount} from a static context, avoiding the
+     * {@code ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD} SpotBugs warning that would
+     * be raised if instance methods assigned the field directly.
+     * <p>
+     * This method is thread-safe; the underlying field is {@code volatile}, so
+     * the write is immediately visible to all threads. {@code account} may be
+     * {@code null} to clear the stored account.
+     * </p>
+     *
+     * @param account The {@link ILabAccount} to store as the latest; may be {@code null}.
+     */
+    private static void setLatestLabAccount(final ILabAccount account) {
+        latestLabAccount = account;
+    }
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
@@ -155,7 +186,7 @@ public class LabClient implements ILabClient {
                 .azureEnvironment(configInfo.getLabInfo().getAzureEnvironment())
                 .build();
 
-        latestLabAccount = account;
+        setLatestLabAccount(account);
 
         return account;
     }
@@ -267,7 +298,7 @@ public class LabClient implements ILabClient {
                 .homeObjectId(tempUser.getObjectId())
                 .build();
 
-        latestLabAccount = account;
+        setLatestLabAccount(account);
         return account;
     }
 
@@ -377,7 +408,7 @@ public class LabClient implements ILabClient {
                 .cloudUrl(accountEntry.getCloudUrl())
                 .build();
 
-        latestLabAccount = account;
+        setLatestLabAccount(account);
 
         return account;
     }
