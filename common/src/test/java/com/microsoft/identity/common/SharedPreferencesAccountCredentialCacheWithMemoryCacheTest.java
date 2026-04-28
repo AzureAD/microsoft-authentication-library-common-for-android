@@ -2850,7 +2850,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getCredentialsFilteredByWithKid_flightDisabled_returnsClonesFromAllCredentials() {
-        // Save an access token with a specific kid-like attribute
+        // Save an access token with kid = "kid1"
         final AccessTokenRecord at = new AccessTokenRecord();
         at.setCredentialType(CredentialType.AccessToken.name());
         at.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -2861,37 +2861,54 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         at.setCachedAt(CACHED_AT);
         at.setExpiresOn(EXPIRES_ON);
         at.setSecret(SECRET);
+        at.setKid("kid1");
         mSharedPreferencesAccountCredentialCache.saveCredential(at);
 
-        // Also save a non-matching credential
+        // Also save a non-matching credential type
         final RefreshTokenRecord rt = buildDefaultRefreshToken();
         mSharedPreferencesAccountCredentialCache.saveCredential(rt);
 
-        // Call the new overload with kid = null (should match the AT)
-        final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+        // Matching kid = "kid1" should return the AT
+        final List<Credential> matchingKid = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, "kid1");
+        assertEquals(1, matchingKid.size());
+        assertEquals(CredentialType.AccessToken.name(), matchingKid.get(0).getCredentialType());
+
+        // Non-matching kid = "kid2" should return nothing
+        final List<Credential> nonMatchingKid = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, "kid2");
+        assertEquals(0, nonMatchingKid.size());
+
+        // kid = null should return the AT (no kid filter applied)
+        final List<Credential> nullKid = mSharedPreferencesAccountCredentialCache
                 .getCredentialsFilteredBy(
                         HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
                         CLIENT_ID, null, null, REALM, TARGET,
                         null, null, (String) null);
-
-        assertEquals(1, filtered.size());
-        assertEquals(CredentialType.AccessToken.name(), filtered.get(0).getCredentialType());
+        assertEquals(1, nullKid.size());
+        assertEquals(CredentialType.AccessToken.name(), nullKid.get(0).getCredentialType());
 
         // Returned objects should be clones — mutating should not affect cache
-        filtered.get(0).setCachedAt("mutated");
-        final List<Credential> filtered2 = mSharedPreferencesAccountCredentialCache
+        matchingKid.get(0).setCachedAt("mutated");
+        final List<Credential> afterMutation = mSharedPreferencesAccountCredentialCache
                 .getCredentialsFilteredBy(
                         HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
                         CLIENT_ID, null, null, REALM, TARGET,
-                        null, null, (String) null);
-        assertNotEquals("mutated", filtered2.get(0).getCachedAt());
+                        null, null, "kid1");
+        assertNotEquals("mutated", afterMutation.get(0).getCachedAt());
     }
 
     @Test
     public void getCredentialsFilteredByWithKid_flightEnabled_returnsClonedMatchesOnly() {
         enableFilterThenCloneFlight();
         try {
-            // Save an access token
+            // Save an access token with kid = "kid1"
             final AccessTokenRecord at = new AccessTokenRecord();
             at.setCredentialType(CredentialType.AccessToken.name());
             at.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -2902,30 +2919,47 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
             at.setCachedAt(CACHED_AT);
             at.setExpiresOn(EXPIRES_ON);
             at.setSecret(SECRET);
+            at.setKid("kid1");
             mSharedPreferencesAccountCredentialCache.saveCredential(at);
 
-            // Also save a non-matching credential
+            // Also save a non-matching credential type
             final RefreshTokenRecord rt = buildDefaultRefreshToken();
             mSharedPreferencesAccountCredentialCache.saveCredential(rt);
 
-            // Call the new overload with kid = null (should match the AT)
-            final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+            // Matching kid = "kid1" should return the AT
+            final List<Credential> matchingKid = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, "kid1");
+            assertEquals(1, matchingKid.size());
+            assertEquals(CredentialType.AccessToken.name(), matchingKid.get(0).getCredentialType());
+
+            // Non-matching kid = "kid2" should return nothing
+            final List<Credential> nonMatchingKid = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, "kid2");
+            assertEquals(0, nonMatchingKid.size());
+
+            // kid = null should return the AT (no kid filter applied)
+            final List<Credential> nullKid = mSharedPreferencesAccountCredentialCache
                     .getCredentialsFilteredBy(
                             HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
                             CLIENT_ID, null, null, REALM, TARGET,
                             null, null, (String) null);
-
-            assertEquals(1, filtered.size());
-            assertEquals(CredentialType.AccessToken.name(), filtered.get(0).getCredentialType());
+            assertEquals(1, nullKid.size());
+            assertEquals(CredentialType.AccessToken.name(), nullKid.get(0).getCredentialType());
 
             // Returned objects should be clones — mutating should not affect cache
-            filtered.get(0).setCachedAt("mutated");
-            final List<Credential> filtered2 = mSharedPreferencesAccountCredentialCache
+            matchingKid.get(0).setCachedAt("mutated");
+            final List<Credential> afterMutation = mSharedPreferencesAccountCredentialCache
                     .getCredentialsFilteredBy(
                             HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
                             CLIENT_ID, null, null, REALM, TARGET,
-                            null, null, (String) null);
-            assertNotEquals("mutated", filtered2.get(0).getCachedAt());
+                            null, null, "kid1");
+            assertNotEquals("mutated", afterMutation.get(0).getCachedAt());
         } finally {
             resetFlight();
         }
