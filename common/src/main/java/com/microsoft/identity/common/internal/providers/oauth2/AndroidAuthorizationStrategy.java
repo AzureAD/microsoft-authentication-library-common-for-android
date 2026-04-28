@@ -73,6 +73,9 @@ public abstract class AndroidAuthorizationStrategy<
     /**
      * If fragment is provided, add AuthorizationFragment on top of that fragment.
      * Otherwise, launch AuthorizationActivity.
+     *
+     * <p>Subclasses that represent browser-based flows (e.g. {@code BrowserAuthorizationStrategy})
+     * perform URL scheme conflict validation by overriding this method before delegating here.
      */
     protected void launchIntent(@NonNull Intent intent) throws ClientException {
         final Fragment fragment = mReferencedFragment.get();

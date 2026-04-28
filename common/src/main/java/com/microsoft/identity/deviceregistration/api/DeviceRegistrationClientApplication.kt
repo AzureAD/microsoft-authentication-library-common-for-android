@@ -89,11 +89,11 @@ class DeviceRegistrationClientApplication {
      */
     @Throws(ClientException::class)
     constructor(context: Context) {
-        val components = AndroidPlatformComponentsFactory.createFromContext(context)
+        val components = AndroidPlatformComponentsFactory.createFromContextWithKeystoreOnlyEncryptionForStorage(context)
         mController = buildController(
             context,
             components,
-            BrokerDiscoveryClientFactory.Companion.getInstanceForClientSdk(context, components),
+            BrokerDiscoveryClientFactory.getInstanceForClientSdk(context, components),
             DeviceRegistrationIpcStrategiesProvider()
         )
     }
@@ -125,7 +125,7 @@ class DeviceRegistrationClientApplication {
         ): AndroidDeviceRegistrationClientController {
             val cacheUpdater = ActiveBrokerCacheUpdater(
                 context,
-                ClientActiveBrokerCache.Companion.getBrokerSdkCache(components.storageSupplier)
+                ClientActiveBrokerCache.getBrokerSdkCache(components.storageSupplier)
             )
             return AndroidDeviceRegistrationClientController(
                 context,
