@@ -778,60 +778,32 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy() -- with kid");
 
-        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
-
-        SpanExtension.current().setAttribute(
-                AttributeName.is_filter_then_clone_enabled.name(), useFilterThenClone);
-
-        if (useFilterThenClone) {
-            synchronized (mCacheLock) {
-                waitForInitialLoad();
-                final List<Credential> unclonedCredentials =
-                        new ArrayList<>(mCachedCredentialsWithKeys.values());
-                final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
-                        unclonedCredentials,
-                        homeAccountId,
-                        environment,
-                        credentialType,
-                        clientId,
-                        applicationIdentifier,
-                        mamEnrollmentIdentifier,
-                        realm,
-                        target,
-                        authScheme,
-                        requestedClaims,
-                        kid,
-                        false
-                );
-                final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
-                Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
-                return clonedMatches;
-            }
+        // No flight check here — the caller (MsalOAuth2TokenCache) already gates
+        // entry to this overload via the ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight.
+        // Always use the optimized filter-then-clone path.
+        synchronized (mCacheLock) {
+            waitForInitialLoad();
+            final List<Credential> unclonedCredentials =
+                    new ArrayList<>(mCachedCredentialsWithKeys.values());
+            final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
+                    unclonedCredentials,
+                    homeAccountId,
+                    environment,
+                    credentialType,
+                    clientId,
+                    applicationIdentifier,
+                    mamEnrollmentIdentifier,
+                    realm,
+                    target,
+                    authScheme,
+                    requestedClaims,
+                    kid,
+                    false
+            );
+            final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
+            Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
+            return clonedMatches;
         }
-
-        final List<Credential> allCredentials = getCredentials();
-
-        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
-                allCredentials,
-                homeAccountId,
-                environment,
-                credentialType,
-                clientId,
-                applicationIdentifier,
-                mamEnrollmentIdentifier,
-                realm,
-                target,
-                authScheme,
-                requestedClaims,
-                kid,
-                false
-        );
-
-        Logger.verbose(methodTag, "Found [" + matchingCredentials.size() + "] matching Credentials...");
-
-        return matchingCredentials;
     }
 
     @Override
