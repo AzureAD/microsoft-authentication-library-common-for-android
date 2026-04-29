@@ -29,6 +29,11 @@ import org.junit.Test;
 
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI;
+import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALL_REDIRECT_URI_CHINA_FWLINK;
+import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALL_REDIRECT_URI_COMPANY_PORTAL;
+import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALL_REDIRECT_URI_FAKE_PACKAGE;
+import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALL_REDIRECT_URI_HOSTILE_HOST;
+import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALL_REDIRECT_URI_JS_SCHEME;
 import static com.microsoft.identity.common.java.providers.Constants.CANCEL_RESPONSE_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.ERROR_RESPONSE_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.MALFORMED_REDIRECT_URI;
@@ -169,5 +174,51 @@ public class RawAuthorizationResultTest {
 
         Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
         Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI, result.getAuthorizationFinalUri().toString());
+    }
+
+    @Test
+    public void testFromCompanyPortalBrokerInstallationRedirectUri() {
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALL_REDIRECT_URI_COMPANY_PORTAL);
+
+        Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
+        Assert.assertEquals(BROKER_INSTALL_REDIRECT_URI_COMPANY_PORTAL, result.getAuthorizationFinalUri().toString());
+    }
+
+    @Test
+    public void testFromChinaFwlinkBrokerInstallationRedirectUri() {
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALL_REDIRECT_URI_CHINA_FWLINK);
+
+        Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
+        Assert.assertEquals(BROKER_INSTALL_REDIRECT_URI_CHINA_FWLINK, result.getAuthorizationFinalUri().toString());
+    }
+
+    @Test
+    public void testFromHostileAppLink_HostileHost() {
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALL_REDIRECT_URI_HOSTILE_HOST);
+
+        Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
+        Assert.assertNull(result.getAuthorizationFinalUri());
+        Assert.assertNotNull(result.getException());
+        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
+    }
+
+    @Test
+    public void testFromHostileAppLink_JsScheme() {
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALL_REDIRECT_URI_JS_SCHEME);
+
+        Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
+        Assert.assertNull(result.getAuthorizationFinalUri());
+        Assert.assertNotNull(result.getException());
+        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
+    }
+
+    @Test
+    public void testFromHostileAppLink_FakePackage() {
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALL_REDIRECT_URI_FAKE_PACKAGE);
+
+        Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
+        Assert.assertNull(result.getAuthorizationFinalUri());
+        Assert.assertNotNull(result.getException());
+        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
     }
 }
