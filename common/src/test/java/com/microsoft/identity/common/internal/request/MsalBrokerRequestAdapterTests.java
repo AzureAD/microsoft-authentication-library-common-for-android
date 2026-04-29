@@ -54,6 +54,7 @@ import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.java.util.RequestHeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,8 +68,6 @@ import lombok.SneakyThrows;
 
 @RunWith(RobolectricTestRunner.class)
 public class MsalBrokerRequestAdapterTests {
-
-    final String CLIENT_ID = "c6bb302a-1e38-408e-9754-87c18fe81c80";
 
     @Test
     public void test_getRequestBundleForSsoToken() {
@@ -121,7 +120,7 @@ public class MsalBrokerRequestAdapterTests {
         final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(CORRELATION_ID)
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .applicationName(CALLER_PACKAGE_NAME)
                 .applicationVersion(VERSION)
                 .redirectUri(REDIRECT_URI)
@@ -156,7 +155,7 @@ public class MsalBrokerRequestAdapterTests {
         final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(CORRELATION_ID)
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .applicationName(CALLER_PACKAGE_NAME)
                 .applicationVersion(VERSION)
                 .redirectUri(REDIRECT_URI)
@@ -195,7 +194,7 @@ public class MsalBrokerRequestAdapterTests {
         final AndroidInteractiveTokenCommandParameters params = AndroidInteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .redirectUri("msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D")
                 .applicationName("com.microsoft.identity.client.sample.local")
                 .applicationVersion("1.0.0")
@@ -297,7 +296,7 @@ public class MsalBrokerRequestAdapterTests {
         final InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .redirectUri("msauth://com.microsoft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D")
                 .applicationName("com.microsoft.identity.client.sample.local")
                 .applicationVersion("1.0.0")

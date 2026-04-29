@@ -45,6 +45,7 @@ import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticati
 import com.microsoft.identity.labapi.utilities.client.ILabAccount;
 import com.microsoft.identity.labapi.utilities.client.ILabClient;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
+import com.microsoft.identity.labapi.utilities.constants.LabConstants;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
@@ -76,8 +77,6 @@ public class LocalMsalControllerTest {
     private static ILabAccount sTestAccount;
 
     private static final String AUTHORITY_URL = "https://login.microsoftonline.com/organizations";
-
-    private static final String CLIENT_ID = "c6bb302a-1e38-408e-9754-87c18fe81c80";
 
     private static final String REDIRECT_URI = "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D";
 
@@ -155,7 +154,7 @@ public class LocalMsalControllerTest {
                 .username(sTestAccount.getUsername())
                 .password(sTestAccount.getPassword())
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .correlationId(UUID.randomUUID().toString())
                 .redirectUri(REDIRECT_URI)
                 .platformComponents(mPlatformComponents)
@@ -170,7 +169,7 @@ public class LocalMsalControllerTest {
     private SilentTokenCommandParameters createSilentTokenCommandParameters(@NonNull final IAccountRecord accountRecord) {
         return SilentTokenCommandParameters.builder()
                 .authority(Authority.getAuthorityFromAuthorityUrl(AUTHORITY_URL))
-                .clientId(CLIENT_ID)
+                .clientId(LabConstants.DEFAULT_ID4SLAB2_CLIENT_ID)
                 .correlationId(UUID.randomUUID().toString())
                 .redirectUri(REDIRECT_URI)
                 .platformComponents(mPlatformComponents)
