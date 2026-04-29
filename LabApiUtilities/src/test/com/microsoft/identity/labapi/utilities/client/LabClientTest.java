@@ -113,8 +113,7 @@ public class LabClientTest {
     public void canFetchUsGovAccount() {
         try {
             final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.USGOV);
-
-            assertLabAccount(labAccount, null, "arlmsidlab1");
+            assertLabAccount(labAccount, UserType.USGOV, "arlmsidlab1");
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -124,8 +123,7 @@ public class LabClientTest {
     public void canFetchChinaAccount() {
         try {
             final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.CHINA);
-
-            assertLabAccount(labAccount, null, "mncmsidlab1");
+            assertLabAccount(labAccount, UserType.CHINA, "mncmsidlab1");
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
