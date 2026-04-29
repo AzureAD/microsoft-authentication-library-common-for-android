@@ -61,7 +61,7 @@ public interface ILabAccount {
     /**
      * Get the guest tenant id of this account.
      *
-     * @return a String representing the account's home tenant id
+     * @return a String representing the account's guest tenant id
      */
     String getGuestTenantId();
 

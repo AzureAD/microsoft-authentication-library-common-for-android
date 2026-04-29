@@ -70,7 +70,7 @@ public class LabClientTest {
     }
 
     @Test
-    public void canFetchCloudAccount() {
+    public void canFetchBasicAccount() {
         try {
             final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.BASIC);
             assertLabAccount(labAccount, UserType.BASIC, DEFAULT_LAB_NAME);

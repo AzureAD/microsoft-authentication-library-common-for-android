@@ -34,9 +34,9 @@ import com.microsoft.identity.labapi.utilities.constants.UserType;
 public interface ILabTest {
 
     /**
-     * Get the query that can be used to pull a user from the LAB API.
+     * Get the user type to fetch from the Json String
      *
-     * @return A {@link LabQuery} object that can be used to pull user via LAB API
+     * @return A {@link UserType} representing the type of user to fetch from the Json String
      */
     UserType getJsonUserType();
 
