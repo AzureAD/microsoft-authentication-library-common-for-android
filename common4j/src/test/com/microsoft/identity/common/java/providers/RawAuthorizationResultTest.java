@@ -199,7 +199,7 @@ public class RawAuthorizationResultTest {
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
         Assert.assertNull(result.getAuthorizationFinalUri());
         Assert.assertNotNull(result.getException());
-        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
+        Assert.assertEquals(ClientException.UNSUPPORTED_URL, result.getException().getErrorCode());
     }
 
     @Test
@@ -209,7 +209,7 @@ public class RawAuthorizationResultTest {
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
         Assert.assertNull(result.getAuthorizationFinalUri());
         Assert.assertNotNull(result.getException());
-        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
+        Assert.assertEquals(ClientException.UNSUPPORTED_URL, result.getException().getErrorCode());
     }
 
     @Test
@@ -219,6 +219,6 @@ public class RawAuthorizationResultTest {
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
         Assert.assertNull(result.getAuthorizationFinalUri());
         Assert.assertNotNull(result.getException());
-        Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
+        Assert.assertEquals(ClientException.UNSUPPORTED_URL, result.getException().getErrorCode());
     }
 }

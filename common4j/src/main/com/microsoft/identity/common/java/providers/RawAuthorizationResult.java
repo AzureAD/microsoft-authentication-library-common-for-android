@@ -187,8 +187,24 @@ public class RawAuthorizationResult {
 
     @NonNull
     public static RawAuthorizationResult fromRedirectUri(@NonNull final String redirectUri) {
+        final String methodTag = TAG + "fromRedirectUri";
         try {
             final URI uri = new URI(redirectUri);
+            // Validate the app_link allowlist before classifying the redirect.
+            // This is handled here (rather than inside getResultCodeFromFinalRedirectUri)
+            // so that a policy rejection is returned as UNSUPPORTED_URL and is
+            // distinguishable from a genuine URI parse error (MALFORMED_URL).
+            if (REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme())) {
+                final Map<String, String> parameters = UrlUtil.getParameters(uri);
+                if (parameters.containsKey(APP_LINK_KEY)) {
+                    final String appLink = parameters.get(APP_LINK_KEY);
+                    if (!BrokerInstallLinkValidator.isSafeBrokerInstallLink(appLink)) {
+                        Logger.warn(methodTag, "Rejected app_link that is not on the broker-install allowlist.");
+                        return fromException(new ClientException(ClientException.UNSUPPORTED_URL,
+                                "app_link rejected by allowlist"));
+                    }
+                }
+            }
             return RawAuthorizationResult.builder()
                     .resultCode(getResultCodeFromFinalRedirectUri(uri))
                     .authorizationFinalUri(uri)
@@ -225,13 +241,6 @@ public class RawAuthorizationResult {
             // i.e. (Browser) msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator
             //      (WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
             if (parameters.containsKey(APP_LINK_KEY)) {
-                // Only the eSTS-emitted Play Store and China fwlink targets
-                // are accepted; anything else is treated as a malformed redirect.
-                final String appLink = parameters.get(APP_LINK_KEY);
-                if (!BrokerInstallLinkValidator.isSafeBrokerInstallLink(appLink)) {
-                    Logger.warn(methodTag, "Rejected app_link that is not on the broker-install allowlist; treating redirect as malformed.");
-                    throw new URISyntaxException(uri.toString(), "app_link rejected by allowlist");
-                }
                 Logger.info(methodTag, "Return to caller with BROWSER_CODE_WAIT_FOR_BROKER_INSTALL, and waiting for result.");
                 return ResultCode.BROKER_INSTALLATION_TRIGGERED;
             }
