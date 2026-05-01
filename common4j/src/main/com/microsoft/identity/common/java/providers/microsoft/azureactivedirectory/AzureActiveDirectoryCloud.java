@@ -121,6 +121,8 @@ public class AzureActiveDirectoryCloud {
     public static final String PUBLIC_CLOUD_HOST = "login.microsoftonline.com";
     public static final String PPE_CLOUD_HOST = "login.windows-ppe.net";
     public static final String CHINA_CLOUD_HOST = "login.partner.microsoftonline.cn";
+    // Legacy host for the 21Vianet cloud identity environment.
+    public static final String CHINA_CLOUD_LEGACY_HOST = "login.chinacloudapi.cn";
     public static final String US_GOV_CLOUD_HOST = "login.microsoftonline.us";
     public static final String BLEU_CLOUD_HOST = "login.sovcloud-identity.fr";
     public static final String DELOS_CLOUD_HOST = "login.sovcloud-identity.de";
