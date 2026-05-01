@@ -156,10 +156,6 @@ stages:
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
-    - bash: |
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-      displayName: 'Set VSTS Fields in Environment'
     - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
       displayName: Assemble msalautomationapp
