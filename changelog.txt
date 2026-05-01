@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 
 Version 24.2.0
 ----------
