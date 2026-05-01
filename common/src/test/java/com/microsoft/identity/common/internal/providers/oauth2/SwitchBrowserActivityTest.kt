@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import io.mockk.every
@@ -41,6 +42,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 /**
  * Tests for [SwitchBrowserActivity].
@@ -61,6 +63,10 @@ class SwitchBrowserActivityTest {
         every { AuthTabStrategyProvider.createStrategy(any(), any()) } returns authTabStrategy
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
+        // Drain any tasks posted to the main looper during onCreate (lifecycle observers,
+        // AuthTabIntent.registerActivityResultLauncher, telemetry). Robolectric's PAUSED
+        // looper otherwise leaves them queued and verification races against them.
+        shadowOf(Looper.getMainLooper()).idle()
 
         verify(exactly = 1) { authTabStrategy.launch() }
     }
@@ -73,6 +79,7 @@ class SwitchBrowserActivityTest {
         every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
+        shadowOf(Looper.getMainLooper()).idle()
 
         verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
     }
@@ -90,6 +97,7 @@ class SwitchBrowserActivityTest {
         }
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, intentWithoutPackage).create()
+        shadowOf(Looper.getMainLooper()).idle()
 
         // isAuthTabSupported is called but returns false (package is empty)
         verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), "") }
@@ -110,6 +118,7 @@ class SwitchBrowserActivityTest {
         every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
+        shadowOf(Looper.getMainLooper()).idle()
 
         // Verify that isAuthTabSupported was called
         verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
