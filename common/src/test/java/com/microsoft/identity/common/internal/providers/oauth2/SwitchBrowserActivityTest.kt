@@ -24,9 +24,12 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.content.Context
 import android.content.Intent
-import android.os.Looper
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightConfig
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -35,14 +38,15 @@ import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 
 /**
  * Tests for [SwitchBrowserActivity].
@@ -50,11 +54,28 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(RobolectricTestRunner::class)
 class SwitchBrowserActivityTest {
 
+    @Before
+    fun setUp() {
+        // SwitchBrowserActivity.getLaunchStrategy() reads
+        // CommonFlight.ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER. Its default value is environment-
+        // dependent (true on a developer machine where it has been initialized, false in CI
+        // where the DefaultValueFlightsProvider returns the flight's default — which is false
+        // for any feature still rolling out). Force it ON here via the shared
+        // MockCommonFlightsManager helper so the Auth Tab branch is exercised deterministically
+        // across local and pipeline runs.
+        val flightsManager = MockCommonFlightsManager().apply {
+            setMockCommonFlightsProvider(AllOnFlightsProvider)
+        }
+        CommonFlightsManager.initializeCommonFlightsManager(flightsManager)
+    }
+
     @After
     fun tearDown() {
+        CommonFlightsManager.resetFlightsManager()
         unmockkAll()
     }
 
+    // ...existing code...
     @Test
     fun onCreate_usesAuthTabStrategy_whenProviderReturnsOne() {
         mockkObject(AuthTabStrategyProvider)
@@ -63,11 +84,10 @@ class SwitchBrowserActivityTest {
         every { AuthTabStrategyProvider.createStrategy(any(), any()) } returns authTabStrategy
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
-        // Drain any tasks posted to the main looper during onCreate (lifecycle observers,
-        // AuthTabIntent.registerActivityResultLauncher, telemetry). Robolectric's PAUSED
-        // looper otherwise leaves them queued and verification races against them.
-        shadowOf(Looper.getMainLooper()).idle()
 
+        // launchStrategy.launch() is invoked synchronously inside onCreate(); no looper idling
+        // required. Idling here previously drained a queued CustomTabs service-connection
+        // callback that NPE'd inside CustomTabsClient.warmup under Robolectric.
         verify(exactly = 1) { authTabStrategy.launch() }
     }
 
@@ -79,7 +99,6 @@ class SwitchBrowserActivityTest {
         every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
-        shadowOf(Looper.getMainLooper()).idle()
 
         verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
     }
@@ -97,7 +116,6 @@ class SwitchBrowserActivityTest {
         }
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, intentWithoutPackage).create()
-        shadowOf(Looper.getMainLooper()).idle()
 
         // isAuthTabSupported is called but returns false (package is empty)
         verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), "") }
@@ -118,7 +136,6 @@ class SwitchBrowserActivityTest {
         every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
-        shadowOf(Looper.getMainLooper()).idle()
 
         // Verify that isAuthTabSupported was called
         verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
@@ -160,5 +177,23 @@ class SwitchBrowserActivityTest {
             putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, true)
             putExtra(SwitchBrowserActivity.PROCESS_URI, "https://login.microsoftonline.com/switchbrowser/process")
         }
+    }
+
+    /**
+     * Test [IFlightsProvider] that returns `true` for any boolean flight, ensuring tests are
+     * not affected by environment-specific flight defaults (CI vs local dev machine).
+     * Plugged into the shared [MockCommonFlightsManager] helper.
+     */
+    private object AllOnFlightsProvider : IFlightsProvider {
+        override fun isFlightEnabled(flightConfig: IFlightConfig): Boolean = true
+        override fun getBooleanValue(flightConfig: IFlightConfig): Boolean = true
+        override fun getIntValue(flightConfig: IFlightConfig): Int =
+            flightConfig.defaultValue as Int
+        override fun getDoubleValue(flightConfig: IFlightConfig): Double =
+            flightConfig.defaultValue as Double
+        override fun getStringValue(flightConfig: IFlightConfig): String =
+            flightConfig.defaultValue as String
+        override fun getJsonValue(flightConfig: IFlightConfig): JSONObject =
+            flightConfig.defaultValue as JSONObject
     }
 }
