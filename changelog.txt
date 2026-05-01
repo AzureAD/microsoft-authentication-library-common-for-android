@@ -14,6 +14,10 @@ Version 24.2.0
 - [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
 - [MINOR] Add CancellationSignal to gracefully cancel in-flight HTTP requests on ATS command-level timeout, preventing zombie worker threads from holding thread pool slots (#3055)
 
+Version 24.1.1
+----------
+- [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3083)
+
 Version 24.1.0
 ----------
 - [MINOR] Add sovereign cloud (Bleu/Delos/SovSG) instance discovery support with pre-seeded cloud metadata, cache-aware discovery routing, and ensureCloudDiscoveryForAuthority API (#3027)
