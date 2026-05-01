@@ -22,17 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers
 
-import java.io.UnsupportedEncodingException
-import java.net.URI
+import com.microsoft.identity.common.java.util.CommonURIBuilder
+import org.apache.hc.core5.http.NameValuePair
 import java.net.URISyntaxException
-import java.net.URLDecoder
 
 /**
  * Strict allowlist validator for the `app_link` query-parameter value carried on
  * a broker-installation redirect URI (`msauth://...?app_link=<url>`).
  *
- * The classifier in [RawAuthorizationResult.fromRedirectUri] uses this to decide
- * whether to return [RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED]
+ * The classifier in [RawAuthorizationResult.getResultCodeFromFinalRedirectUri] uses this to
+ * decide whether to return [RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED]
  * (which downstream Android sinks turn into `startActivity(ACTION_VIEW, app_link)`).
  *
  * The Microsoft identity service (eSTS) only ever emits one of three concrete
@@ -71,23 +70,27 @@ object BrokerInstallLinkValidator {
     fun isSafeBrokerInstallLink(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
 
-        val uri: URI = try {
-            URI(url)
+        val builder: CommonURIBuilder = try {
+            CommonURIBuilder(url)
         } catch (e: URISyntaxException) {
             return false
         }
 
         // Scheme must be exactly https (case-insensitive).
-        if (!SCHEME_HTTPS.equals(uri.scheme, ignoreCase = true)) return false
+        if (!SCHEME_HTTPS.equals(builder.scheme, ignoreCase = true)) return false
 
         // Reject embedded credentials, fragments, and non-default ports.
-        if (uri.rawUserInfo != null) return false
-        if (uri.rawFragment != null) return false
-        if (uri.port != -1) return false
+        if (builder.userInfo != null) return false
+        if (builder.fragment != null) return false
+        if (builder.port != -1) return false
 
-        val host = uri.host?.lowercase() ?: return false
-        val path = uri.rawPath ?: return false
-        val params = parseQuery(uri.rawQuery) ?: return false
+        val host = builder.host?.lowercase() ?: return false
+        val path = builder.path ?: return false
+
+        // Use getQueryParams() from CommonURIBuilder to parse query parameters.
+        // toUniqueParamMap returns null if any key appears more than once, defending
+        // against parameter-smuggling attacks such as ?id=safe&id=evil.
+        val params = toUniqueParamMap(builder.queryParams) ?: return false
 
         return when (host) {
             HOST_PLAY -> isValidPlayLink(path, params)
@@ -120,44 +123,17 @@ object BrokerInstallLinkValidator {
     }
 
     /**
-     * Parse a URI query string into a key/value map.
+     * Converts a [NameValuePair] list (from [CommonURIBuilder.getQueryParams]) into a map.
      *
      * Returns `null` if any key appears more than once — this defends against
      * parameter-smuggling attacks such as `?id=safe&id=evil` where a permissive
      * parser might pick the wrong value.
      */
-    private fun parseQuery(rawQuery: String?): Map<String, String>? {
-        if (rawQuery.isNullOrEmpty()) return emptyMap()
+    private fun toUniqueParamMap(pairs: List<NameValuePair>): Map<String, String>? {
         val out = LinkedHashMap<String, String>()
-        for (pair in rawQuery.split('&')) {
-            if (pair.isEmpty()) return null
-            val eq = pair.indexOf('=')
-            val rawKey: String
-            val rawValue: String
-            if (eq < 0) {
-                rawKey = pair
-                rawValue = ""
-            } else {
-                rawKey = pair.substring(0, eq)
-                rawValue = pair.substring(eq + 1)
-            }
-            if (rawKey.isEmpty()) return null
-            val key = try {
-                URLDecoder.decode(rawKey, "UTF-8")
-            } catch (e: UnsupportedEncodingException) {
-                return null
-            } catch (e: IllegalArgumentException) {
-                return null
-            }
-            val value = try {
-                URLDecoder.decode(rawValue, "UTF-8")
-            } catch (e: UnsupportedEncodingException) {
-                return null
-            } catch (e: IllegalArgumentException) {
-                return null
-            }
-            if (out.containsKey(key)) return null
-            out[key] = value
+        for (pair in pairs) {
+            if (out.containsKey(pair.name)) return null
+            out[pair.name] = pair.value ?: ""
         }
         return out
     }
