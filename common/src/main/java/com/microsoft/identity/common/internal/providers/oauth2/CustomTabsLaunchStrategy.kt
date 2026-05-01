@@ -26,6 +26,8 @@ import android.content.Intent
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -71,12 +73,14 @@ class CustomTabsLaunchStrategy(
         )
 
         val browserIntent: Intent
+        var isUsingCustomTabs = false
         if (browserSupportsCustomTabs) {
             Logger.info(methodTag, "CustomTabsService is supported.")
             if (!customTabsManager.bind(activity, browserPackageName)) {
                 Logger.warn(methodTag, "Failed to bind CustomTabsService.")
                 browserIntent = Intent(Intent.ACTION_VIEW)
             } else {
+                isUsingCustomTabs = true
                 browserIntent = customTabsManager.customTabsIntent.intent
             }
         } else {
@@ -84,6 +88,11 @@ class CustomTabsLaunchStrategy(
             browserIntent = Intent(Intent.ACTION_VIEW)
             browserIntent.setPackage(browserPackageName)
         }
+        SpanExtension.current().setAttribute(
+            AttributeName.auth_tab_fallback_to_custom_tabs.name,
+            isUsingCustomTabs
+        )
+
 
         browserIntent.setData(processUri.toUri())
         activity.startActivity(browserIntent)

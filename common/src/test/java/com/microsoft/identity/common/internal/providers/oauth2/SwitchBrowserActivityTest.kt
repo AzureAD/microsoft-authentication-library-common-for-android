@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.content.Context
 import android.content.Intent
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -32,8 +35,10 @@ import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
@@ -87,6 +92,32 @@ class SwitchBrowserActivityTest {
 
         verify(exactly = 0) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
         verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
+    }
+
+    @Test
+    fun `test buildSwitchBrowserResumeIntent`() {
+        // Mock parameters
+        val mockContext = mock(Context::class.java)
+        val actionUri = "mock-action-uri"
+        val code = "mock-code"
+        val state = "mock-state"
+        val intentDataString =
+            "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.RESUME_PATH}?" +
+                    "${SWITCH_BROWSER.ACTION_URI}=$actionUri&" +
+                    "${SWITCH_BROWSER.CODE}=$code&" +
+                    "${SWITCH_BROWSER.STATE}=$state"
+
+        // Call the method to be tested
+        val intent = SwitchBrowserActivity.buildSwitchBrowserResumeIntent(mockContext, intentDataString)
+
+        // Verify the result
+        Assert.assertEquals(
+            0,
+            intent.flags
+        )
+        Assert.assertEquals(actionUri, intent.getStringExtra(SWITCH_BROWSER.ACTION_URI))
+        Assert.assertEquals(code, intent.getStringExtra(SWITCH_BROWSER.CODE))
+        Assert.assertEquals(state, intent.getStringExtra(SWITCH_BROWSER.STATE))
     }
 
     private fun getIntent(): Intent {

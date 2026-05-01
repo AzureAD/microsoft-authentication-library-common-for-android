@@ -22,11 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
+import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.logging.Logger
-
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.StatusCode
 
 /**
  * Activity responsible for handling browser switching flows.
@@ -62,12 +73,16 @@ class SwitchBrowserActivity : FragmentActivity() {
     // Flag to track if a Custom Chrome Tab (CCT) has been launched
     private var cctLaunched = false
     private var launchStrategy: BrowserLaunchStrategy? = null
+    private var span: Span? = null
 
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
         /** Intent extra key for the target browser package name */
         const val BROWSER_PACKAGE_NAME = "browser_package_name"
+
+        /** Intent extra key for the broker redirect URI to use */
+        const val BROKER_REDIRECT_URI = "broker_redirect_uri"
 
         /** Intent extra key indicating if the browser supports Custom Tabs */
         const val BROWSER_SUPPORTS_CUSTOM_TABS = "browser_supports_custom_tabs"
@@ -77,6 +92,79 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         /** Intent extra key indicating a resume request from the browser redirect */
         const val RESUME_REQUEST = "resume_request"
+
+        /**
+         * Builds an [Intent] targeting [SwitchBrowserActivity] to resume the switch-browser flow
+         * in the WebView.
+         *
+         * Parses [intentDataString] as a URI and copies the following query parameters into
+         * intent extras: [SWITCH_BROWSER.ACTION_URI], [SWITCH_BROWSER.CODE], and
+         * [SWITCH_BROWSER.STATE]. Also sets [RESUME_REQUEST] to `true` so that
+         * [onNewIntent] can identify this as a resume delivery.
+         *
+         * @param context           Application or activity context used to build the intent.
+         * @param intentDataString  The full redirect URI string received from the browser,
+         *                          e.g. `msauth://com.microsoft.identity.client/switch_browser_resume?code=…&action_uri=…&state=…`
+         * @return A configured [Intent] ready to be delivered to [SwitchBrowserActivity].
+         */
+        @JvmStatic
+        fun buildSwitchBrowserResumeIntent(context: Context, intentDataString: String): Intent {
+            val uri = intentDataString.toUri()
+            return Intent(context, SwitchBrowserActivity::class.java).apply {
+                putExtra(
+                    SWITCH_BROWSER.ACTION_URI,
+                    uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
+                )
+                putExtra(
+                    SWITCH_BROWSER.CODE,
+                    uri.getQueryParameter(SWITCH_BROWSER.CODE)
+                )
+                putExtra(
+                    SWITCH_BROWSER.STATE,
+                    uri.getQueryParameter(SWITCH_BROWSER.STATE)
+                )
+                putExtra(
+                    RESUME_REQUEST,
+                    true
+                )
+            }
+        }
+
+        /**
+         * Builds an [Intent] to start [SwitchBrowserActivity] for launching a browser-based
+         * switch-browser authentication flow.
+         *
+         * The intent includes all parameters needed to identify the target browser, the URI to
+         * process, and the span context for distributed tracing continuity across the activity
+         * boundary.
+         *
+         * @param context                   Application or activity context used to build the intent.
+         * @param brokerRedirectUri          The broker redirect URI used for the switch-browser callback.
+         * @param browserPackageName         The package name of the browser to launch.
+         * @param browserSupportsCustomTabs  Whether the target browser supports Custom Tabs.
+         * @param processUri                 The URI to open in the browser for authentication.
+         * @param spanContext                The serializable span context for trace propagation, or `null`.
+         * @return A configured [Intent] with [Intent.FLAG_ACTIVITY_NEW_TASK] set.
+         */
+        @JvmStatic
+        fun buildSwitchBrowserLaunchIntent(
+            context: Context,
+            brokerRedirectUri: String,
+            browserPackageName: String,
+            browserSupportsCustomTabs: Boolean,
+            processUri: String,
+            spanContext: SerializableSpanContext?
+        ): Intent {
+            return Intent(context, SwitchBrowserActivity::class.java).apply {
+                putExtra(BROKER_REDIRECT_URI, brokerRedirectUri)
+                putExtra(BROWSER_PACKAGE_NAME, browserPackageName)
+                putExtra(BROWSER_SUPPORTS_CUSTOM_TABS, browserSupportsCustomTabs)
+                putExtra(PROCESS_URI, processUri)
+                putExtra(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, spanContext)
+                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        }
+
     }
 
     /**
@@ -91,6 +179,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
+        initSpanFromIntent()
         launchStrategy = getLaunchStrategy()
         launchBrowser()
     }
@@ -118,17 +207,30 @@ class SwitchBrowserActivity : FragmentActivity() {
     }
 
     private fun getLaunchStrategy(): BrowserLaunchStrategy {
+        val methodTag = "$TAG:getLaunchStrategy"
+        val isAuthTabFlightEnabled = CommonFlightsManager.getFlightsProvider(0)
+            .isFlightEnabled(CommonFlight.ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER)
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME).orEmpty()
-        val methodTag = "$TAG:getLaunchStrategy"
-        val authTabStrategy = if (
-            browserPackageName.isNotBlank() &&
-            AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
-        ) {
+        val isAuthTabSupported = AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
+        SpanExtension.current().setAttribute(
+            AttributeName.browser_package_name.name,
+            browserPackageName
+        )
+        SpanExtension.current().setAttribute(
+            AttributeName.is_auth_tab_supported.name,
+            isAuthTabSupported
+        )
+
+        val authTabStrategy = if (isAuthTabFlightEnabled && browserPackageName.isNotBlank() && isAuthTabSupported) {
             AuthTabStrategyProvider.createStrategy(this, ::onAuthTabResult)
         } else {
             null
         }
+        SpanExtension.current().setAttribute(
+            AttributeName.auth_tab_used.name,
+            authTabStrategy != null
+        )
 
         if (authTabStrategy != null) {
             Logger.info(methodTag, "Using Auth Tab strategy")
@@ -166,6 +268,11 @@ class SwitchBrowserActivity : FragmentActivity() {
         setIntent(intent)
 
         if (intent.hasExtra(PROCESS_URI)) {
+            SpanExtension.current().setStatus(StatusCode.ERROR)
+            SpanExtension.current().setAttribute(
+                AttributeName.error_code.name,
+                "ALREADY_IN_PROGRESS"
+            )
             // Handle scenario where a new browser switch request is received while one is already in progress
             // This can occur when the user initiates another auth request before completing the first one.
             Logger.warn(
@@ -178,12 +285,18 @@ class SwitchBrowserActivity : FragmentActivity() {
             return
         }
         if (intent.hasExtra(RESUME_REQUEST)) {
+            SpanExtension.current().setStatus(StatusCode.OK)
             WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
             // Clean up: finish this activity and remove it from task stack
             Logger.info(methodTag, "Finishing activity and removing from task stack")
             finishAndRemoveTask()
             return
         }
+        SpanExtension.current().setStatus(StatusCode.ERROR)
+        SpanExtension.current().setAttribute(
+            AttributeName.error_code.name,
+            "UNEXPECTED_INTENT"
+        )
         // Clean up: finish this activity and remove it from task stack
         Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
         finishAndRemoveTask()
@@ -232,7 +345,36 @@ class SwitchBrowserActivity : FragmentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        span?.end()
         launchStrategy?.cleanup()
+        super.onDestroy()
+    }
+
+    /**
+     * Restores the distributed tracing context propagated.
+     * via the intent extras.
+     *
+     * Extracts [SerializableSpanContext] from the launching intent and creates a child span
+     * ([SpanName.SwitchBrowserFlow]) parented to it. The span is stored as a field and made
+     * current so that any code in this activity (or its strategies) that calls
+     * [SpanExtension.current] will record attributes on the correct trace.
+     */
+    private fun initSpanFromIntent() {
+        val extras = intent.extras ?: return
+        val spanContext: SerializableSpanContext? =
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                extras.getSerializable(
+                    SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT,
+                    SerializableSpanContext::class.java
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                extras.getSerializable(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT)
+                    as? SerializableSpanContext
+            }
+        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserFlow.name, spanContext).let {
+            span = it
+            SpanExtension.makeCurrentSpan(it)
+        }
     }
 }
