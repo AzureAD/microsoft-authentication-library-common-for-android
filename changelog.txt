@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 24.2.0
+----------
 - [PATCH] Add support for Authenticator app activation links in WebView, enabling account pairing/MFA flows to launch Microsoft Authenticator directly instead of redirecting to the Play Store (#3090)
 - [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
 - [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
