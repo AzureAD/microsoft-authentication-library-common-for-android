@@ -132,6 +132,41 @@ stages:
         tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         jdkArchitecture: x64
         jdkVersionOption: "1.17"
+  # msalautomationapp
+  - job: msalAutomationAppValidation
+    displayName: MSAL Automation App
+    dependsOn:
+      - setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    steps:
+    - checkout: msal
+      displayName: Checkout msal repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - bash: |
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+      displayName: 'Set VSTS Fields in Environment'
+    - template: ../templates/steps/automation-cert.yml
+    - task: Gradle@3
+      displayName: Assemble msalautomationapp
+      inputs:
+        jdkArchitecture: x64
+        jdkVersionOption: "1.17"
+        tasks: clean msalautomationapp:assembleLocal
   # broker
   - job: brokerValidation
     displayName: Broker
@@ -178,5 +213,47 @@ stages:
       displayName: Run broker Unit tests
       inputs:
         tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
+        jdkArchitecture: x64
+        jdkVersionOption: "1.17"
+  # brokerautomationapp
+  - job: brokerAutomationAppValidation
+    displayName: Broker Automation App
+    cancelTimeoutInMinutes: 1
+    timeoutInMinutes: 120
+    dependsOn:
+      - setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    pool:
+      name: MSSecurity-1ES-Build-Agents-Pool
+      image: MSSecurity-1ES-Windows-2022
+      os: windows
+    steps:
+    - checkout: broker
+      displayName: Checkout broker repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - bash: |
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+        echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+      displayName: 'Set VSTS Fields in Environment'
+    - template: ../templates/steps/automation-cert.yml
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - task: Gradle@3
+      displayName: Assemble brokerautomationapp
+      inputs:
+        tasks: brokerautomationapp:clean brokerautomationapp:assembleLocal --build-cache --info
+        publishJUnitResults: false
         jdkArchitecture: x64
         jdkVersionOption: "1.17"
