@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Rework switch browser Auth Tab integration to provider-based strategy selection compatible with androidx.browser:browser:1.7.0, adding AuthTabStrategyProvider and BrowserLaunchStrategy with Custom Tabs fallback
+- [MINOR] Refactor Auth Tab integration to use provider-based strategy selection. Adds AuthTabStrategyProvider and BrowserLaunchStrategy with Custom Tabs fallback. Compatible with androidx.browser:browser:1.7.0.
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 - [PATCH] Add support for Authenticator app activation links in WebView, enabling account pairing/MFA flows to launch Microsoft Authenticator directly instead of redirecting to the Play Store (#3090)
 - [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
