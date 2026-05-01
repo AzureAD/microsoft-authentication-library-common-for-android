@@ -80,6 +80,7 @@ class SwitchBrowserActivityTest {
     @Test
     fun onCreate_fallsBackToCustomTabsStrategy_whenBrowserPackageMissing() {
         mockkObject(AuthTabStrategyProvider)
+        every { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) } returns false
         mockkConstructor(CustomTabsLaunchStrategy::class)
         every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
 
@@ -90,7 +91,31 @@ class SwitchBrowserActivityTest {
 
         Robolectric.buildActivity(SwitchBrowserActivity::class.java, intentWithoutPackage).create()
 
-        verify(exactly = 0) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
+        // isAuthTabSupported is called but returns false (package is empty)
+        verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), "") }
+        // createStrategy should NOT be called because browserPackageName.isNotBlank() fails
+        verify(exactly = 0) { AuthTabStrategyProvider.createStrategy(any(), any()) }
+        // CustomTabs strategy is used as fallback
+        verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
+    }
+
+    @Test
+    fun onCreate_fallsBackToCustomTabsStrategy_whenCreateStrategyReturnsNull() {
+        mockkObject(AuthTabStrategyProvider)
+        // isAuthTabSupported returns true, but createStrategy returns null
+        // This can occur if the provider is misconfigured or fails to create a strategy
+        every { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) } returns true
+        every { AuthTabStrategyProvider.createStrategy(any(), any()) } returns null
+        mockkConstructor(CustomTabsLaunchStrategy::class)
+        every { anyConstructed<CustomTabsLaunchStrategy>().launch() } just runs
+
+        Robolectric.buildActivity(SwitchBrowserActivity::class.java, getIntent()).create()
+
+        // Verify that isAuthTabSupported was called
+        verify(exactly = 1) { AuthTabStrategyProvider.isAuthTabSupported(any(), any()) }
+        // Verify that createStrategy was called
+        verify(exactly = 1) { AuthTabStrategyProvider.createStrategy(any(), any()) }
+        // Verify that CustomTabsLaunchStrategy.launch() was called as fallback
         verify(exactly = 1) { anyConstructed<CustomTabsLaunchStrategy>().launch() }
     }
 

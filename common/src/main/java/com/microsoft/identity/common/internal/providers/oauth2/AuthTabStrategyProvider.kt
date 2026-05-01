@@ -35,27 +35,32 @@ import com.microsoft.identity.common.logging.Logger
  */
 object AuthTabStrategyProvider {
 
-    private val lock = Any()
+    /**
+     * Immutable holder so both callbacks are published atomically through a single
+     * volatile reference. This prevents readers from observing a half-registered
+     * state where, for example, [isAvailable] returns true while
+     * [isAuthTabSupported] still sees a null support checker.
+     */
+    private data class Registration(
+        val strategyFactory: (FragmentActivity, (Bundle) -> Unit) -> BrowserLaunchStrategy,
+        val supportChecker: (Context, String) -> Boolean
+    )
 
     @Volatile
-    private var strategyFactory: ((FragmentActivity, (Bundle) -> Unit) -> BrowserLaunchStrategy)? = null
-
-    @Volatile
-    private var supportChecker: ((Context, String) -> Boolean)? = null
+    private var registration: Registration? = null
 
     private val tag = AuthTabStrategyProvider::class.java.simpleName
 
     /**
      * Registers Auth Tab strategy creation and support checking callbacks.
+     *
+     * Both callbacks become visible to other threads atomically.
      */
     fun register(
         factory: (FragmentActivity, (Bundle) -> Unit) -> BrowserLaunchStrategy,
         isSupported: (Context, String) -> Boolean
     ) {
-        synchronized(lock) {
-            strategyFactory = factory
-            supportChecker = isSupported
-        }
+        registration = Registration(factory, isSupported)
         Logger.info("$tag:register", "Auth Tab strategy provider registered")
     }
 
@@ -63,8 +68,8 @@ object AuthTabStrategyProvider {
      * Returns true if Auth Tab is supported for the provided browser package.
      */
     fun isAuthTabSupported(context: Context, browserPackage: String): Boolean {
-        val checker = supportChecker ?: return false
-        return checker(context, browserPackage)
+        val current = registration ?: return false
+        return current.supportChecker(context, browserPackage)
     }
 
     /**
@@ -74,19 +79,16 @@ object AuthTabStrategyProvider {
         activity: FragmentActivity,
         onResult: (Bundle) -> Unit
     ): BrowserLaunchStrategy? {
-        val factory = strategyFactory ?: return null
-        return factory(activity, onResult)
+        val current = registration ?: return null
+        return current.strategyFactory(activity, onResult)
     }
 
     /**
      * Returns true if an Auth Tab strategy factory has been registered.
      */
-    fun isAvailable(): Boolean = strategyFactory != null
+    fun isAvailable(): Boolean = registration != null
 
     internal fun resetForTest() {
-        synchronized(lock) {
-            strategyFactory = null
-            supportChecker = null
-        }
+        registration = null
     }
 }
