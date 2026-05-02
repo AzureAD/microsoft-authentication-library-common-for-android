@@ -38,6 +38,7 @@ public enum UserType {
     USGOV_GUEST(LabConstants.UserType.USGOV_GUEST),
     CHINA(LabConstants.UserType.CHINA),
     CHINA_GUEST(LabConstants.UserType.CHINA_GUEST),
+    PPE(LabConstants.UserType.PPE),
     QR_PIN(LabConstants.UserType.QR_PIN),
     TOKEN_BINDING(LabConstants.UserType.TOKEN_BINDING),
     CBA(LabConstants.UserType.CBA),

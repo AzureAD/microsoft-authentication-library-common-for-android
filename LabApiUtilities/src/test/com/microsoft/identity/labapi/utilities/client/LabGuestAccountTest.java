@@ -24,9 +24,6 @@ package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.BuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
-import com.microsoft.identity.labapi.utilities.constants.AzureEnvironment;
-import com.microsoft.identity.labapi.utilities.constants.FederationProvider;
-import com.microsoft.identity.labapi.utilities.constants.GuestHomedIn;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
@@ -42,16 +39,9 @@ public class LabGuestAccountTest {
         );
         final LabClient labClient = new LabClient(authenticationClient);
 
-        final LabQuery queryForUser = LabQuery.builder()
-                .userType(UserType.GUEST)
-                .guestHomedIn(GuestHomedIn.ON_PREM)
-                .azureEnvironment(AzureEnvironment.AZURE_CLOUD)
-                .federationProvider(FederationProvider.ADFS_V4)
-                .build();
+        final ILabAccount user = labClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.GUEST);
 
-        final LabGuestAccount user = labClient.loadGuestAccountFromLab(queryForUser);
-
-        Assert.assertNotNull(user.getHomeUpn());
-        Assert.assertNotNull(labClient.getPasswordForGuestUser(user));
+        Assert.assertNotNull(user.getUsername());
+        Assert.assertNotNull(user.getPassword());
     }
 }

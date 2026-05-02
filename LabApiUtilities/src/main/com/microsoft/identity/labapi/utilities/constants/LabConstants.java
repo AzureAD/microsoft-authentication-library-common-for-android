@@ -49,6 +49,7 @@ public class LabConstants {
         public static final String USGOV_GUEST = "usgov_guest";
         public static final String CHINA = "china";
         public static final String CHINA_GUEST = "china_guest";
+        public static final String PPE = "ppe";
         public static final String QR_PIN = "qr_pin";
         public static final String TOKEN_BINDING = "token_binding";
         public static final String CBA = "cba";
