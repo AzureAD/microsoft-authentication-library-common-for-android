@@ -952,7 +952,6 @@ public class MsalOAuth2TokenCache
                 .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
 
         final List<Credential> idTokens;
-        final List<Credential> v1IdTokens;
 
         if (useFilterThenClone) {
             // When filter-then-clone is enabled, call direct (non-input-list) overloads
@@ -969,7 +968,7 @@ public class MsalOAuth2TokenCache
                     null // not applicable
             );
 
-            v1IdTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+            idTokens.addAll(mAccountCredentialCache.getCredentialsFilteredBy(
                     accountRecord.getHomeAccountId(),
                     accountRecord.getEnvironment(),
                     CredentialType.V1IdToken,
@@ -979,7 +978,7 @@ public class MsalOAuth2TokenCache
                     accountRecord.getRealm(),
                     null, // wildcard (*)
                     null // not applicable
-            );
+            ));
         } else {
             // Legacy path: preload all credentials (clone-all) once,
             // then filter the pre-cloned list multiple times.
@@ -998,7 +997,7 @@ public class MsalOAuth2TokenCache
                     allCredentials
             );
 
-            v1IdTokens = new ArrayList<>(
+            idTokens.addAll(
                     mAccountCredentialCache.getCredentialsFilteredBy(
                             accountRecord.getHomeAccountId(),
                             accountRecord.getEnvironment(),
@@ -1015,12 +1014,6 @@ public class MsalOAuth2TokenCache
         }
 
         for (final Credential credential : idTokens) {
-            if (credential instanceof IdTokenRecord) {
-                result.add((IdTokenRecord) credential);
-            }
-        }
-
-        for (final Credential credential : v1IdTokens) {
             if (credential instanceof IdTokenRecord) {
                 result.add((IdTokenRecord) credential);
             }

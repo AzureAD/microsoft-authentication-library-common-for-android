@@ -584,8 +584,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Nullable final String requestedClaims,
             @Nullable final String kid) {
         final List<Credential> allCredentials = getCredentials();
-        final List<Credential> result = new ArrayList<>();
-        result.addAll(
+        return new ArrayList<>(
                 getCredentialsFilteredByInternal(
                         allCredentials,
                         homeAccountId,
@@ -602,7 +601,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                         false
                 )
         );
-        return result;
     }
 
     @Override
