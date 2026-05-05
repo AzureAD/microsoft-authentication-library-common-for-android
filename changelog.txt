@@ -2,6 +2,9 @@ vNext
 ----------
 - [PATCH] Handle app_link Intent redirection by validating broker install links and rejecting unsupported redirect URIs with appropriate error responses (#3102)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
+
+Version 24.2.0
+----------
 - [PATCH] Add support for Authenticator app activation links in WebView, enabling account pairing/MFA flows to launch Microsoft Authenticator directly instead of redirecting to the Play Store (#3090)
 - [PATCH] Fix: WPJ's BrokerDiscovery cache crash due to shared predefined encryption key with MSAL (#3081)
 - [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3082)
@@ -11,6 +14,10 @@ vNext
 - [MINOR] Upgrade compileSdkVersion to 36 and buildToolsVersion to 36.0.0 (#3065)
 - [PATCH] Rename SovSG to GovSG for the Singapore sovereign cloud identifiers (#3068)
 - [MINOR] Add CancellationSignal to gracefully cancel in-flight HTTP requests on ATS command-level timeout, preventing zombie worker threads from holding thread pool slots (#3055)
+
+Version 24.1.1
+----------
+- [PATCH] Fix ABBA deadlock between AzureActiveDirectory and AzureActiveDirectoryAuthority class monitors by extracting polymorphic getAuthorityURL() calls outside synchronized scopes and removing unnecessary synchronized from ConcurrentHashMap read-only methods (#3083)
 
 Version 24.1.0
 ----------
