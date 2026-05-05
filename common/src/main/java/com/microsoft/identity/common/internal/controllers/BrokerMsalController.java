@@ -1436,6 +1436,8 @@ public class BrokerMsalController extends BaseController {
     public String executeWebAppRequest(@NonNull final String request,
                                        @NonNull final String minBrokerProtocolVersion,
                                        @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
+        final String methodTag = TAG + ":executeWebAppRequest";
+        Logger.info(methodTag, "[PROXY-DEBUG] WebApp API Request received: " + request);
         try {
             return getBrokerOperationExecutor().execute(null,
                     new BrokerOperation<String>() {
@@ -1472,15 +1474,22 @@ public class BrokerMsalController extends BaseController {
                             if (resultBundle.containsKey(BROKER_WEB_APPS_INTERACTIVE_INTENT)) {
                                 final Intent interactiveIntent = resultBundle.getParcelable(BROKER_WEB_APPS_INTERACTIVE_INTENT);
                                 if (interactiveIntent != null) {
+                                    Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive intent received, launching acquireTokenInternal");
                                     try {
                                         final Bundle interactiveGetTokenBundle = acquireTokenInternal(null, interactiveIntent);
-                                        return mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
+                                        final String interactiveResult = mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
+                                        Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive response: " + interactiveResult);
+                                        return interactiveResult;
                                     } catch (final Throwable t) {
-                                        return WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request process");
+                                        final String errorResult = WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request process");
+                                        Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive error response: " + errorResult);
+                                        return errorResult;
                                     }
                                 }
                             }
-                            return mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                            final String result = mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
+                            Logger.info(methodTag, "[PROXY-DEBUG] WebApp non-interactive response: " + result);
+                            return result;
                         }
 
                         @NonNull
