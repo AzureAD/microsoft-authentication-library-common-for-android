@@ -306,7 +306,7 @@ public class MicrosoftStsAccountCredentialAdapter
         } else {
             final String idTokenValue = microsoftStsTokenResponse.getIdToken();
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    parameters.isLookupMode() ?
+                    parameters.isLookupMode() && idTokenValue.equals("none") ?
                             IDToken.createForLookup(idTokenValue) : new IDToken(idTokenValue),
                     clientInfo
             );
