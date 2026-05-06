@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
+- [PATCH] Edge TB: Fix lookup mode (#3108)
 
 Version 24.2.0
 ----------

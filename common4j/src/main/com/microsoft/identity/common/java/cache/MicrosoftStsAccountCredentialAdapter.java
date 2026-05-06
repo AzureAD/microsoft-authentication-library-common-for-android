@@ -26,6 +26,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
@@ -306,7 +307,7 @@ public class MicrosoftStsAccountCredentialAdapter
         } else {
             final String idTokenValue = microsoftStsTokenResponse.getIdToken();
             final MicrosoftStsAccount microsoftStsAccount = new MicrosoftStsAccount(
-                    parameters.isLookupMode() && idTokenValue.equals("none") ?
+                    parameters.isLookupMode() && AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(idTokenValue) ?
                             IDToken.createForLookup(idTokenValue) : new IDToken(idTokenValue),
                     clientInfo
             );
