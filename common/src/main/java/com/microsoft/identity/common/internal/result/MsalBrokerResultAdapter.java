@@ -209,15 +209,22 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 getTokenResponse,
                 WebAppsGetTokenSubOperationResponse.class
         );
+        final WebAppsGetTokenSubOperationResponse scrubbedResponse = new WebAppsGetTokenSubOperationResponse(
+                state,
+                WebAppsUtil.computeRemainingSeconds(expiresOn),
+                null,
+                clientInfo != null ? "<present>" : "<absent>",
+                new WebAppsAccountItem(
+                        username != null ? "<present>" : "<absent>",
+                        homeAccountId != null ? "<present>" : "<absent>",
+                        null
+                ),
+                idToken != null ? "<present>" : "<absent>",
+                authenticationResult.getAccessToken() != null ? "<present>" : "<absent>",
+                String.join(" ", authenticationResult.getScope())
+        );
         Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " +
-                "state=" + state +
-                ", expires_in=" + WebAppsUtil.computeRemainingSeconds(expiresOn) +
-                ", scopes=" + String.join(" ", authenticationResult.getScope()) +
-                ", access_token=" + (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>") +
-                ", id_token=" + (idToken != null ? "<present>" : "<absent>") +
-                ", client_info=" + (clientInfo != null ? "<present>" : "<absent>") +
-                ", account.username=" + (username != null ? "<present>" : "<absent>") +
-                ", account.homeAccountId=" + (homeAccountId != null ? "<present>" : "<absent>")
+                AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(scrubbedResponse, WebAppsGetTokenSubOperationResponse.class)
         );
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
