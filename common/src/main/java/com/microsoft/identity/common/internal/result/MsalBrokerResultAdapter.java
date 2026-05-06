@@ -209,7 +209,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 getTokenResponse,
                 WebAppsGetTokenSubOperationResponse.class
         );
-        Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " + getTokenJsonString);
+        Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " +
+                "state=" + state +
+                ", expires_in=" + WebAppsUtil.computeRemainingSeconds(expiresOn) +
+                ", scopes=" + String.join(" ", authenticationResult.getScope()) +
+                ", access_token=" + (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>") +
+                ", id_token=" + (idToken != null ? "<present>" : "<absent>") +
+                ", client_info=" + (clientInfo != null ? "<present>" : "<absent>") +
+                ", account.username=" + (username != null ? "<present>" : "<absent>") +
+                ", account.homeAccountId=" + (homeAccountId != null ? "<present>" : "<absent>")
+        );
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedBrokerProtocolVersion)) {
             try {
                 byte[] compressedBytes = compressString(getTokenJsonString);
