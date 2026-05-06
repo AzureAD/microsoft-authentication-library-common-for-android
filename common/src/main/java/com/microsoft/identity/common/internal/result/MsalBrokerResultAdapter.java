@@ -221,7 +221,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         null
                 ),
                 isLookupMode ? idToken : (idToken != null ? "<present>" : "<absent>"),
-                isLookupMode ? authenticationResult.getAccessToken() : (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>"),
+                isLookupMode && AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(authenticationResult.getAccessToken())
+                        ? authenticationResult.getAccessToken()
+                        : (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>"),
                 String.join(" ", authenticationResult.getScope())
         );
         Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " +
