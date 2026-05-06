@@ -1437,7 +1437,8 @@ public class BrokerMsalController extends BaseController {
                                        @NonNull final String minBrokerProtocolVersion,
                                        @NonNull final WebAppsAdditionalRequiredParameters additionalRequiredParams) throws BaseException {
         final String methodTag = TAG + ":executeWebAppRequest";
-        Logger.info(methodTag, "[PROXY-DEBUG] WebApp API Request received: " + request);
+        Logger.info(methodTag, "[PROXY-DEBUG] WebApp API Request received: " +
+                request.replaceAll("\"(accountId|userName)\"\\s*:\\s*\"[^\"]*\"", "\"$1\":\"<present>\""));
         try {
             return getBrokerOperationExecutor().execute(null,
                     new BrokerOperation<String>() {
@@ -1479,7 +1480,7 @@ public class BrokerMsalController extends BaseController {
                                         final Bundle interactiveGetTokenBundle = acquireTokenInternal(null, interactiveIntent);
                                         final String interactiveResult = mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
                                         final String scrubbedInteractiveResult = interactiveResult != null
-                                                ? interactiveResult.replaceAll("\"(access_token|id_token|client_info|data)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
+                                                ? interactiveResult.replaceAll("\"(access_token|id_token|client_info|data|id|userName)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
                                                 : null;
                                         Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive response: " + scrubbedInteractiveResult);
                                         return interactiveResult;
@@ -1492,7 +1493,7 @@ public class BrokerMsalController extends BaseController {
                             }
                             final String result = mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
                             final String scrubbedResult = result != null
-                                    ? result.replaceAll("\"(access_token|id_token|client_info|data)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
+                                    ? result.replaceAll("\"(access_token|id_token|client_info|data|id|userName)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
                                     : null;
                             Logger.info(methodTag, "[PROXY-DEBUG] WebApp non-interactive response: " + scrubbedResult);
                             return result;
