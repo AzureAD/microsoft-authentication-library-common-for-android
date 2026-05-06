@@ -65,6 +65,16 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
     private final Object mCacheLock = new Object();
+
+    /**
+     * Returns the internal cache lock for callers that need to atomically perform
+     * multiple filtered reads under a single lock acquisition (e.g., MsalOAuth2TokenCache.load()).
+     * The lock is reentrant via Java's synchronized semantics.
+     */
+    public Object getCacheLock() {
+        return mCacheLock;
+    }
+
     private boolean mLoaded = false;
     private Map<String, AccountRecord> mCachedAccountRecordsWithKeys = new HashMap<>();
     private Map<String, Credential> mCachedCredentialsWithKeys = new HashMap<>();
