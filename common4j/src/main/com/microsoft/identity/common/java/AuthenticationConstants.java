@@ -624,6 +624,11 @@ public class AuthenticationConstants {
          * Value for nativebroker mode sent in the extra query param by ESTS when the request is from lookup.
          */
         public static final String LOOKUP_MODE_VALUE = "Lookup";
+
+        /**
+         * When a Lookup mode request is forwarded to ESTS, the ID token in the response will have the value "none".
+         */
+        public static final String LOOKUP_MODE_ID_TOKEN_VALUE = "none";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

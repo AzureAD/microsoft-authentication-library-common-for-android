@@ -190,11 +190,6 @@ public class IDToken {
      */
     public static final String UPDATED_AT = "updated_at";
 
-    /**
-     * When a Lookup mode request is forwarded to ESTS, the ID token in the response will have the value "none".
-     */
-    public static final String LOOKUP_MODE_VALUE = "none";
-
     private final Map<String, ?> mTokenClaims;
     private final String mRawIdToken;
 

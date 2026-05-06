@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.base64.Base64Flags;
 import com.microsoft.identity.common.java.base64.Base64Util;
@@ -310,7 +311,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     public void testCreateAccountRecord_LookupModeWithNoneIdToken_UsernameIsMissing() throws ServiceException {
         // In lookup mode with id_token="none", username cannot be derived from the token.
         when(mockParameters.isLookupMode()).thenReturn(true);
-        when(mockResponse.getIdToken()).thenReturn("none");
+        when(mockResponse.getIdToken()).thenReturn(AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE);
 
         final AccountRecord account = mAccountCredentialAdapter.createAccountRecord(
                 mockParameters, SdkType.MSAL, mockResponse);
