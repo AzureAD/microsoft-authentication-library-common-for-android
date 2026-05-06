@@ -209,6 +209,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 getTokenResponse,
                 WebAppsGetTokenSubOperationResponse.class
         );
+        final boolean isLookupMode = AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(idToken);
         final WebAppsGetTokenSubOperationResponse scrubbedResponse = new WebAppsGetTokenSubOperationResponse(
                 state,
                 WebAppsUtil.computeRemainingSeconds(expiresOn),
@@ -219,8 +220,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         homeAccountId != null ? "<present>" : "<absent>",
                         null
                 ),
-                idToken != null ? "<present>" : "<absent>",
-                authenticationResult.getAccessToken() != null ? "<present>" : "<absent>",
+                isLookupMode ? idToken : (idToken != null ? "<present>" : "<absent>"),
+                isLookupMode ? authenticationResult.getAccessToken() : (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>"),
                 String.join(" ", authenticationResult.getScope())
         );
         Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " +
