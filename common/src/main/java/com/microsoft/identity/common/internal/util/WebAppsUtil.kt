@@ -68,8 +68,8 @@ class WebAppsUtil {
         @JvmStatic
         fun getResponseBundle(responseObject: Any): Bundle {
             val jsonString = ObjectMapper.serializeObjectToJsonString(responseObject)
-            Logger.info("$TAG:getResponseBundle", "[PROXY-DEBUG] WebApps response " +
-                "(${responseObject.javaClass.simpleName}): payload size=${jsonString.length}")
+            val logString = jsonString.replace(Regex(""""data"\s*:\s*"[^"]*""""), """"data":"<present>"""")
+            Logger.info("$TAG:getResponseBundle", "[PROXY-DEBUG] WebApps response: $logString")
             return Bundle().apply {
                 putString(
                     AuthenticationConstants.Broker.BROKER_WEB_APPS_SUCCESSFUL_RESULT,
