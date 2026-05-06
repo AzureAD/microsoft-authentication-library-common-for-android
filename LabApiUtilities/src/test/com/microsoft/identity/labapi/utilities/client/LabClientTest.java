@@ -209,6 +209,17 @@ public class LabClientTest {
         }
     }
 
+    @Test
+    public void canFetchAccountFromDifferentJson() {
+        try {
+            mLabClient.setAccountUpnJsonStringSecretName("OneAuth-ID4SLAB2-User-Identifiers");
+            final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.BASIC);
+            assertLabAccount(labAccount, UserType.BASIC, DEFAULT_LAB_NAME);
+        } catch (final LabApiException e) {
+            throw new AssertionError(e);
+        }
+    }
+
     // Helper to assert common properties of a lab account
     private void assertLabAccount(final ILabAccount labAccount,
                                   final UserType expectedUserType,
