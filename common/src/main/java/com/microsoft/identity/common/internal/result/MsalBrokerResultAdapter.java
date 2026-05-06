@@ -209,7 +209,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 getTokenResponse,
                 WebAppsGetTokenSubOperationResponse.class
         );
-        final boolean isLookupMode = AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(idToken);
+        final boolean isLookupMode = com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(idToken);
         final WebAppsGetTokenSubOperationResponse scrubbedResponse = new WebAppsGetTokenSubOperationResponse(
                 state,
                 WebAppsUtil.computeRemainingSeconds(expiresOn),
@@ -221,7 +221,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         null
                 ),
                 isLookupMode ? idToken : (idToken != null ? "<present>" : "<absent>"),
-                AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(authenticationResult.getAccessToken())
+                com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(authenticationResult.getAccessToken())
                         ? authenticationResult.getAccessToken()
                         : (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>"),
                 String.join(" ", authenticationResult.getScope())
