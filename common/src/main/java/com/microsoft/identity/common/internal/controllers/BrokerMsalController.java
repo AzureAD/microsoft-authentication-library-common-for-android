@@ -1478,7 +1478,10 @@ public class BrokerMsalController extends BaseController {
                                     try {
                                         final Bundle interactiveGetTokenBundle = acquireTokenInternal(null, interactiveIntent);
                                         final String interactiveResult = mResultAdapter.getExecuteWebAppRequestResultFromBundle(interactiveGetTokenBundle);
-                                        Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive response: " + interactiveResult);
+                                        final String scrubbedInteractiveResult = interactiveResult != null
+                                                ? interactiveResult.replaceAll("\"(access_token|id_token|client_info|data)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
+                                                : null;
+                                        Logger.info(methodTag, "[PROXY-DEBUG] WebApp interactive response: " + scrubbedInteractiveResult);
                                         return interactiveResult;
                                     } catch (final Throwable t) {
                                         final String errorResult = WebAppsUtil.createErrorResponseString(t, "Error occurred during interactive request process");
@@ -1488,7 +1491,10 @@ public class BrokerMsalController extends BaseController {
                                 }
                             }
                             final String result = mResultAdapter.getExecuteWebAppRequestResultFromBundle(resultBundle);
-                            Logger.info(methodTag, "[PROXY-DEBUG] WebApp non-interactive response: " + result);
+                            final String scrubbedResult = result != null
+                                    ? result.replaceAll("\"(access_token|id_token|client_info|data)\"\\s*:\\s*\"(?!none\")[^\"]*\"", "\"$1\":\"<present>\"")
+                                    : null;
+                            Logger.info(methodTag, "[PROXY-DEBUG] WebApp non-interactive response: " + scrubbedResult);
                             return result;
                         }
 
