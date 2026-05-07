@@ -20,12 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import androidx.annotation.NonNull;
+import android.content.Context
 
 /**
  * SharedPreferences-backed persistence for session correlation IDs.
@@ -34,33 +31,29 @@ import androidx.annotation.NonNull;
  * the same schema and file name are used across apps for consistency.
  * OnboardingTelemetryRecorder also writes to this file on block detection.
  */
-public class OnboardingSessionCorrelationStore {
+class OnboardingSessionCorrelationStore(context: Context) {
 
-    private static final String PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache";
-
-    private final Context mContext;
-
-    public OnboardingSessionCorrelationStore(@NonNull Context context) {
-        mContext = context.getApplicationContext();
-    }
+    private val appContext: Context = context.applicationContext
 
     /**
      * Load the persisted session correlation cache JSON string.
      * @return JSON string, or empty string if nothing is persisted
      */
-    @NonNull
-    public String load() {
-        SharedPreferences prefs = mContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
-        String value = prefs.getString(PREFS_FILE, "");
-        return value != null ? value : "";
+    fun load(): String {
+        val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        return prefs.getString(PREFS_FILE, "") ?: ""
     }
 
     /**
      * Save the session correlation cache JSON string to SharedPreferences.
      * @param json The JSON string to persist
      */
-    public void save(@NonNull String json) {
-        SharedPreferences prefs = mContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
-        prefs.edit().putString(PREFS_FILE, json).apply();
+    fun save(json: String) {
+        val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        prefs.edit().putString(PREFS_FILE, json).apply()
+    }
+
+    companion object {
+        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
     }
 }

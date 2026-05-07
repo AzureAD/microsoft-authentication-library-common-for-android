@@ -20,50 +20,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.internal.telemetry
 
-import androidx.test.core.app.ApplicationProvider;
+import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
+@RunWith(RobolectricTestRunner::class)
+class OnboardingSessionCorrelationStoreTest {
 
-@RunWith(RobolectricTestRunner.class)
-public class OnboardingSessionCorrelationStoreTest {
-
-    private OnboardingSessionCorrelationStore mPersistence;
+    private lateinit var store: OnboardingSessionCorrelationStore
 
     @Before
-    public void setup() {
-        mPersistence = new OnboardingSessionCorrelationStore(
-                ApplicationProvider.getApplicationContext());
+    fun setup() {
+        store = OnboardingSessionCorrelationStore(
+            ApplicationProvider.getApplicationContext()
+        )
     }
 
     @Test
-    public void testLoad_Empty_ReturnsEmptyString() {
-        Assert.assertEquals("", mPersistence.load());
+    fun testLoad_Empty_ReturnsEmptyString() {
+        Assert.assertEquals("", store.load())
     }
 
     @Test
-    public void testSaveAndLoad() {
-        final String json = "{\"key|scope\":{\"id\":\"uuid\",\"ts\":1234567890}}";
-        mPersistence.save(json);
-        Assert.assertEquals(json, mPersistence.load());
+    fun testSaveAndLoad() {
+        val json = "{\"key|scope\":{\"id\":\"uuid\",\"ts\":1234567890}}"
+        store.save(json)
+        Assert.assertEquals(json, store.load())
     }
 
     @Test
-    public void testSave_OverwritesPrevious() {
-        mPersistence.save("first");
-        mPersistence.save("second");
-        Assert.assertEquals("second", mPersistence.load());
+    fun testSave_OverwritesPrevious() {
+        store.save("first")
+        store.save("second")
+        Assert.assertEquals("second", store.load())
     }
 
     @Test
-    public void testSave_EmptyString() {
-        mPersistence.save("some data");
-        mPersistence.save("");
-        Assert.assertEquals("", mPersistence.load());
+    fun testSave_EmptyString() {
+        store.save("some data")
+        store.save("")
+        Assert.assertEquals("", store.load())
     }
 }
