@@ -1,5 +1,25 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 package com.microsoft.identity.common.internal.telemetry;
 
@@ -8,7 +28,8 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.telemetry.OnboardingBlobFieldKeys;
+import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants;
+import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +50,7 @@ import java.util.List;
  */
 public class OnboardingTelemetryRecorder {
 
+    private static final String TAG = OnboardingTelemetryRecorder.class.getSimpleName();
     private static final String PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache";
 
     // Seed field key constants — must match OnboardingBlobConstants (Djinni-generated).
@@ -102,12 +124,13 @@ public class OnboardingTelemetryRecorder {
     }
 
     /**
-     * Record a step in the onboarding flow.
+     * Record a step in the onboarding flow. Captures the current time automatically.
      *
-     * @param stepId    Step ID constant (from OnboardingBlobFieldKeys)
-     * @param isoTimestamp The time when the step occurred, as ISO 8601 string
+     * @param stepId Step ID constant (from OnboardingTelemetryConstants)
      */
-    public void addStep(@NonNull String stepId, @NonNull String isoTimestamp) {
+    public void addStep(@NonNull String stepId) {
+        final String isoTimestamp = new java.text.SimpleDateFormat(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(new java.util.Date());
         mStepsList.add(new StepEntry(stepId, isoTimestamp));
     }
 
@@ -117,8 +140,8 @@ public class OnboardingTelemetryRecorder {
      * (best-effort, async) for app-kill resilience.
      *
      * @param errorCode The onboarding blocking-error identifier to record
-     *                  (e.g., {@link OnboardingBlobFieldKeys#BLOCKING_ERROR_BROKER_INSTALL}
-     *                  or {@link OnboardingBlobFieldKeys#BLOCKING_ERROR_MDM_FLOW}),
+     *                  (e.g., {@link OnboardingTelemetryConstants#BLOCKING_ERROR_BROKER_INSTALL}
+     *                  or {@link OnboardingTelemetryConstants#BLOCKING_ERROR_MDM_FLOW}),
      *                  not a numeric service auth error code.
      */
     public void addBlockingError(@NonNull String errorCode) {
@@ -140,7 +163,7 @@ public class OnboardingTelemetryRecorder {
     /**
      * Set the Android profile context.
      *
-     * @param profile One of OnboardingBlobFieldKeys.PROFILE_USER or PROFILE_WORK
+     * @param profile One of OnboardingTelemetryConstants.PROFILE_USER or PROFILE_WORK
      */
     public void setProfile(@NonNull String profile) {
         mProfile = profile;
@@ -165,6 +188,7 @@ public class OnboardingTelemetryRecorder {
     @NonNull
     public String finalizeBlob() {
         if (mBlockingErrors.isEmpty()) {
+            Logger.verbose(TAG, "finalizeBlob: no blocking errors recorded, returning empty");
             return "";
         }
 
@@ -191,21 +215,21 @@ public class OnboardingTelemetryRecorder {
             for (String error : mBlockingErrors) {
                 errorsArray.put(error);
             }
-            blob.put(OnboardingBlobFieldKeys.BLOCKING_ERRORS, errorsArray);
-            blob.put(OnboardingBlobFieldKeys.LAST_BLOCKING_ERROR,
+            blob.put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray);
+            blob.put(OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
                     mBlockingErrors.get(mBlockingErrors.size() - 1));
 
             if (mLastLoadedDomain != null) {
-                blob.put(OnboardingBlobFieldKeys.LAST_LOADED_DOMAIN, mLastLoadedDomain);
+                blob.put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, mLastLoadedDomain);
             }
 
             if (!mStepsList.isEmpty()) {
-                blob.put(OnboardingBlobFieldKeys.LAST_COMPLETED_STEP,
+                blob.put(OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
                         mStepsList.get(mStepsList.size() - 1).stepId);
             }
 
             if (mProfile != null) {
-                blob.put(OnboardingBlobFieldKeys.PROFILE, mProfile);
+                blob.put(OnboardingTelemetryConstants.PROFILE, mProfile);
             }
 
             if (!mUxFlowUsed.isEmpty()) {
@@ -213,11 +237,12 @@ public class OnboardingTelemetryRecorder {
                 for (String flow : mUxFlowUsed) {
                     flows.put(flow);
                 }
-                blob.put(OnboardingBlobFieldKeys.UX_FLOW_USED, flows);
+                blob.put(OnboardingTelemetryConstants.UX_FLOW_USED, flows);
             }
 
             return blob.toString();
         } catch (JSONException e) {
+            Logger.error(TAG, "Failed to serialize onboarding blob", e);
             return "";
         }
     }
