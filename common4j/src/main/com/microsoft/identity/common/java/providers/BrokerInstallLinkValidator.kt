@@ -101,7 +101,7 @@ object BrokerInstallLinkValidator {
 
     private fun isValidPlayLink(path: String, params: Map<String, String>): Boolean {
         if (path != PATH_PLAY) return false
-        val id = params[PARAM_ID] ?: return false
+        val id = params[PARAM_ID]?.lowercase() ?: return false
         if (id !in ALLOWED_PACKAGE_IDS) return false
         return hasOnlyAllowedExtras(params, PARAM_ID)
     }
