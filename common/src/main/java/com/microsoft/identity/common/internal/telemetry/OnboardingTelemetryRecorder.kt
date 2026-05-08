@@ -79,8 +79,11 @@ class OnboardingTelemetryRecorder(
             sv = seed.optString(FIELD_SCHEMA_VERSION, "")
             scid = seed.optString(FIELD_SESSION_CORRELATION_ID, "")
             om = seed.optString(FIELD_ONBOARDING_MODE, "")
-        } catch (_: JSONException) {
-            // Corrupted seed — use empty values
+        } catch (e: JSONException) {
+            Logger.warn(
+                TAG,
+                "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
+            )
         }
         schemaVersion = sv
         sessionCorrelationId = scid
@@ -158,6 +161,13 @@ class OnboardingTelemetryRecorder(
             Logger.verbose(TAG, "finalizeBlob: no blocking errors recorded, returning empty")
             return ""
         }
+        if (sessionCorrelationId.isEmpty()) {
+            Logger.warn(
+                TAG,
+                "finalizeBlob: sessionCorrelationId is empty; dropping blob to avoid emitting uncorrelatable telemetry"
+            )
+            return ""
+        }
 
         return try {
             val blob = JSONObject().apply {
@@ -220,8 +230,12 @@ class OnboardingTelemetryRecorder(
 
     /**
      * Persist session correlation entry to SharedPreferences.
-     * Best-effort async write — may be lost if process is killed before disk flush.
-     * Called on block detection for app-kill resilience.
+     * Uses async [SharedPreferences.Editor.apply] — the in-memory write is
+     * effective immediately, and the disk flush happens shortly after. Acceptable
+     * for this use case: blocking errors leave the app alive for seconds-to-minutes
+     * of user remediation, so the flush window is far longer than typical loss.
+     * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
+     * Called on block detection.
      */
     private fun persistSessionCorrelation() {
         if (sessionCorrelationId.isEmpty()) {
@@ -235,14 +249,14 @@ class OnboardingTelemetryRecorder(
 
             val key = "$clientId|$target"
             val entry = JSONObject().apply {
-                put("id", sessionCorrelationId)
+                put(FIELD_ID, sessionCorrelationId)
                 put(FIELD_TS, System.currentTimeMillis())
             }
             cache.put(key, entry)
 
             prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
-        } catch (_: JSONException) {
-            // Best-effort persistence — don't crash
+        } catch (e: JSONException) {
+            Logger.warn(TAG, "Failed to persist session correlation entry: " + e.message)
         }
     }
 
@@ -258,5 +272,6 @@ class OnboardingTelemetryRecorder(
         private const val FIELD_STEPS_LIST = "steps_list"
         private const val FIELD_STEP_ID = "step_id"
         private const val FIELD_TS = "ts"
+        private const val FIELD_ID = "id"
     }
 }
