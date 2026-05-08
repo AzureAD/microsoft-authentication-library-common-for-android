@@ -56,12 +56,14 @@ public class ProvisionResourceAccountCredentialsV0Parameters extends AbstractDev
                                                            @NonNull final String tenantId,
                                                            @NonNull final String raObjectId,
                                                            @Nullable final String sdkType,
-                                                           @Nullable final String sdkVersion) {
+                                                           @Nullable final String sdkVersion,
+                                                           @Nullable final String drsDiscoveryEndpoint) {
         super(correlationId);
         mTenantId = tenantId;
         mRaObjectId = raObjectId;
         mSdkType = sdkType;
         mSdkVersion = sdkVersion;
+        mDrsDiscoveryEndpoint = drsDiscoveryEndpoint;
     }
 
     @Getter
@@ -79,6 +81,10 @@ public class ProvisionResourceAccountCredentialsV0Parameters extends AbstractDev
     @Getter
     @Nullable
     private final String mSdkVersion;
+
+    @Getter
+    @Nullable
+    private final String mDrsDiscoveryEndpoint;
 
     @Override
     @NonNull

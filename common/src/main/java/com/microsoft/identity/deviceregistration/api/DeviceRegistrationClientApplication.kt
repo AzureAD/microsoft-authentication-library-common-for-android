@@ -440,25 +440,28 @@ class DeviceRegistrationClientApplication {
     /**
      * Provisions resource account credentials for the specified tenant and resource account object ID.
      *
-     * @param tenantId      tenant ID for the resource account.
-     * @param raObjectId    resource account object ID (user ID in home tenant).
-     * @param correlationId correlation ID for request tracing.
-     * @param sdkType       SDK type of the caller (required).
-     * @param sdkVersion    SDK version of the caller (required).
+     * @param tenantId             tenant ID for the resource account.
+     * @param raObjectId           resource account object ID (user ID in home tenant).
+     * @param correlationId        correlation ID for request tracing.
+     * @param sdkType              SDK type of the caller (required).
+     * @param sdkVersion           SDK version of the caller (required).
+     * @param drsDiscoveryEndpoint discovery endpoint name. Default is "PROD".
      * @return [AccountRecord] representing the provisioned resource account credentials.
      */
+    @JvmOverloads
     @Throws(BaseException::class)
     fun provisionResourceAccountCredentials(
         tenantId: String,
         raObjectId: String,
         correlationId: UUID,
         sdkType: SdkType,
-        sdkVersion: String
+        sdkVersion: String,
+        drsDiscoveryEndpoint: DrsDiscoveryEndpoint = DrsDiscoveryEndpoint.PROD
     ): AccountRecord {
         val methodTag = "$TAG:provisionResourceAccountCredentials"
         Logger.info(methodTag, "ProvisionResourceAccountCredentials started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
-            ProvisionResourceAccountCredentialsV0Parameters(correlationId, tenantId, raObjectId, sdkType.name, sdkVersion)
+            ProvisionResourceAccountCredentialsV0Parameters(correlationId, tenantId, raObjectId, sdkType.name, sdkVersion, drsDiscoveryEndpoint.name)
         )
         val response = ProvisionResourceAccountCredentialsV0Response.create(responseSerialized)
         val result = response.accountRecord

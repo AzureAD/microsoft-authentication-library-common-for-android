@@ -240,6 +240,7 @@ class DeviceRegistrationClientApplicationTest {
             Assert.assertEquals("test-ra-oid", parameters.raObjectId)
             Assert.assertEquals("MSAL", parameters.sdkType)
             Assert.assertEquals("1.0.0", parameters.sdkVersion)
+            Assert.assertEquals("PROD", parameters.drsDiscoveryEndpoint)
             packer.pack(response)
         }
 
