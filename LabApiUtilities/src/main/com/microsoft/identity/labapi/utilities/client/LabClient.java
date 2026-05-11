@@ -73,6 +73,7 @@ public class LabClient implements ILabClient {
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
+    private String mAlternativeUpnJsonStringSecretName;
     private Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
 
     /**
@@ -106,6 +107,18 @@ public class LabClient implements ILabClient {
      */
     private static void setLatestLabAccount(final ILabAccount account) {
         latestLabAccount = account;
+    }
+
+    /**
+     * This method allows tests to specify an alternative secret name for the UPN JSON string in Key Vault,
+     * as the default points specifically to Android Team's upn json. T
+     *
+     * IF YOU ARE THE ONEAUTH TEAM, PLEASE USE THIS METHOD TO POINT TO YOUR OWN JSON SECRET NAME
+     *
+     * @param secretName The name of the alternative Key Vault secret to use for fetching the UPN JSON string.
+     */
+    public void setAccountUpnJsonStringSecretName(final String secretName) {
+        mAlternativeUpnJsonStringSecretName = secretName;
     }
 
     @Override
@@ -375,8 +388,15 @@ public class LabClient implements ILabClient {
         );
         final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi(KeyVaultSecretsApi.MOBILE_BUILD_VAULT_URL);
 
+        final String keyvaultSecret;
+        if (mAlternativeUpnJsonStringSecretName != null && !mAlternativeUpnJsonStringSecretName.isEmpty()) {
+            keyvaultSecret = mAlternativeUpnJsonStringSecretName;
+        } else {
+            keyvaultSecret = ACCOUNT_UPN_JSON_STRING_SECRET_NAME;
+        }
+
         try {
-            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(ACCOUNT_UPN_JSON_STRING_SECRET_NAME);
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(keyvaultSecret);
 
             labUPNJsonMap = LabJsonStringAccountEntry.parseJsonToMap(secretBundle.getValue());
             return labUPNJsonMap;
