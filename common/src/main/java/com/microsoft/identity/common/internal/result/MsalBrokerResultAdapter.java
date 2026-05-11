@@ -131,6 +131,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     private static final Long INVALID_TIMESTAMP = -1L;
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
     private static final String WEBAPPS_ENTRY_IS_NULL_ERROR = "WebApps entry in the bundle is null";
+    private static final String SCRUB_PRESENT = "<present>";
+    private static final String SCRUB_ABSENT = "<absent>";
 
     interface IBooleanCallback {
         boolean getResult();
@@ -214,16 +216,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 state,
                 WebAppsUtil.computeRemainingSeconds(expiresOn),
                 null,
-                clientInfo != null ? "<present>" : "<absent>",
+                clientInfo != null ? SCRUB_PRESENT : SCRUB_ABSENT,
                 new WebAppsAccountItem(
-                        username != null ? "<present>" : "<absent>",
-                        homeAccountId != null ? "<present>" : "<absent>",
+                        username != null ? SCRUB_PRESENT : SCRUB_ABSENT,
+                        homeAccountId != null ? SCRUB_PRESENT : SCRUB_ABSENT,
                         null
                 ),
-                isLookupMode ? idToken : (idToken != null ? "<present>" : "<absent>"),
+                isLookupMode ? idToken : (idToken != null ? SCRUB_PRESENT : SCRUB_ABSENT),
                 com.microsoft.identity.common.java.AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE.equals(authenticationResult.getAccessToken())
                         ? authenticationResult.getAccessToken()
-                        : (authenticationResult.getAccessToken() != null ? "<present>" : "<absent>"),
+                        : (authenticationResult.getAccessToken() != null ? SCRUB_PRESENT : SCRUB_ABSENT),
                 String.join(" ", authenticationResult.getScope())
         );
         Logger.info(methodTag, "[PROXY-DEBUG] MsalBrokerResultAdapter response: " +
