@@ -70,24 +70,29 @@ class OnboardingTelemetryRecorder(
     private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
-        // Deserialize seed JSON
-        var sv = ""
-        var scid = ""
-        var om = ""
-        try {
-            val seed = JSONObject(seedJson)
-            sv = seed.optString(FIELD_SCHEMA_VERSION, "")
-            scid = seed.optString(FIELD_SESSION_CORRELATION_ID, "")
-            om = seed.optString(FIELD_ONBOARDING_MODE, "")
-        } catch (e: JSONException) {
-            Logger.warn(
-                TAG,
-                "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
-            )
-        }
-        schemaVersion = sv
-        sessionCorrelationId = scid
-        onboardingMode = om
+        val (parsedSchemaVersion, parsedSessionCorrelationId, parsedOnboardingMode) = parseSeed(seedJson)
+        schemaVersion = parsedSchemaVersion
+        sessionCorrelationId = parsedSessionCorrelationId
+        onboardingMode = parsedOnboardingMode
+    }
+
+    /**
+     * Parse the seed JSON into [schemaVersion], [sessionCorrelationId], and [onboardingMode].
+     * Returns a Triple of empty strings if the seed is malformed.
+     */
+    private fun parseSeed(json: String): Triple<String, String, String> = try {
+        val seed = JSONObject(json)
+        Triple(
+            seed.optString(FIELD_SCHEMA_VERSION, ""),
+            seed.optString(FIELD_SESSION_CORRELATION_ID, ""),
+            seed.optString(FIELD_ONBOARDING_MODE, "")
+        )
+    } catch (e: JSONException) {
+        Logger.warn(
+            TAG,
+            "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
+        )
+        Triple("", "", "")
     }
 
     private data class StepEntry(val stepId: String, val timestamp: String)
@@ -98,9 +103,7 @@ class OnboardingTelemetryRecorder(
      * @param stepId Step ID constant (from OnboardingTelemetryConstants)
      */
     fun addStep(stepId: String) {
-        val isoTimestamp = SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US
-        ).format(Date())
+        val isoTimestamp = SimpleDateFormat(ISO_TIMESTAMP_FORMAT, Locale.US).format(Date())
         stepsList.add(StepEntry(stepId, isoTimestamp))
     }
 
@@ -158,15 +161,15 @@ class OnboardingTelemetryRecorder(
      */
     fun finalizeBlob(): String {
         if (blockingErrors.isEmpty()) {
-            Logger.verbose(TAG, "finalizeBlob: no blocking errors recorded, returning empty")
-            return ""
+            Logger.verbose(TAG, sessionCorrelationId, "finalizeBlob: no blocking errors recorded, returning empty")
+            return EMPTY_BLOB
         }
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,
                 "finalizeBlob: sessionCorrelationId is empty; dropping blob to avoid emitting uncorrelatable telemetry"
             )
-            return ""
+            return EMPTY_BLOB
         }
 
         return try {
@@ -223,8 +226,8 @@ class OnboardingTelemetryRecorder(
 
             blob.toString()
         } catch (e: JSONException) {
-            Logger.error(TAG, "Failed to serialize onboarding blob", e)
-            ""
+            Logger.error(TAG, sessionCorrelationId, "Failed to serialize onboarding blob", e)
+            EMPTY_BLOB
         }
     }
 
@@ -255,14 +258,21 @@ class OnboardingTelemetryRecorder(
             cache.put(key, entry)
 
             prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
+            Logger.verbose(
+                TAG,
+                sessionCorrelationId,
+                "Persisted session correlation entry for key=$key"
+            )
         } catch (e: JSONException) {
-            Logger.warn(TAG, "Failed to persist session correlation entry: " + e.message)
+            Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
         }
     }
 
     companion object {
         private val TAG = OnboardingTelemetryRecorder::class.java.simpleName
         private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
+        private const val EMPTY_BLOB = ""
+        private const val ISO_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
         // Seed field key constants — must match OnboardingBlobConstants (Djinni-generated).
         // Duplicated here to avoid a dependency on the Djinni-generated Java class in Common.
