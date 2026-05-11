@@ -242,6 +242,7 @@ class OnboardingTelemetryRecorder(
      */
     private fun persistSessionCorrelation() {
         if (sessionCorrelationId.isEmpty()) {
+            Logger.verbose(TAG, "persistSessionCorrelation: skipped — no sessionCorrelationId")
             return
         }
 
