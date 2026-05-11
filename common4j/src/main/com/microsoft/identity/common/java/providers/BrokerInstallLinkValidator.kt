@@ -84,7 +84,7 @@ object BrokerInstallLinkValidator {
         if (builder.fragment != null) return false
         if (builder.port != -1) return false
 
-        val host = builder.host?.lowercase() ?: return false
+        val host = builder.host ?: return false
         val path = builder.path ?: return false
 
         // Use getQueryParams() from CommonURIBuilder to parse query parameters.
@@ -92,17 +92,17 @@ object BrokerInstallLinkValidator {
         // against parameter-smuggling attacks such as ?id=safe&id=evil.
         val params = toUniqueParamMap(builder.queryParams) ?: return false
 
-        return when (host) {
-            HOST_PLAY -> isValidPlayLink(path, params)
-            HOST_FWLINK -> isValidFwlink(path, params)
+        return when {
+            HOST_PLAY.equals(host, ignoreCase = true) -> isValidPlayLink(path, params)
+            HOST_FWLINK.equals(host, ignoreCase = true) -> isValidFwlink(path, params)
             else -> false
         }
     }
 
     private fun isValidPlayLink(path: String, params: Map<String, String>): Boolean {
         if (path != PATH_PLAY) return false
-        val id = params[PARAM_ID]?.lowercase() ?: return false
-        if (id !in ALLOWED_PACKAGE_IDS) return false
+        val id = params[PARAM_ID] ?: return false
+        if (!ALLOWED_PACKAGE_IDS.any { it.equals(id, ignoreCase = true) }) return false
         return hasOnlyAllowedExtras(params, PARAM_ID)
     }
 
