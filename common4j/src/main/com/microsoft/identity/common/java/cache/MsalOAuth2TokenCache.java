@@ -675,6 +675,12 @@ public class MsalOAuth2TokenCache
         final List<Credential> v1IdTokens;
         List<Credential> refreshTokens;
 
+        // The instanceof guard is necessary because the cache type is fixed at construction time,
+        // but flights are evaluated at runtime. For example, BrokerClientIdRefreshTokenAccessor
+        // always calls MsalOAuth2TokenCache.create(components) with useInMemoryCache=false,
+        // producing a plain SharedPreferencesAccountCredentialCache regardless of flight state.
+        // If both flights are later enabled at runtime, casting without this guard would throw
+        // a ClassCastException.
         if (useFilterThenClone
                 && mAccountCredentialCache instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache) {
             // Wrap all reads under one lock to ensure a consistent snapshot and prevent
@@ -964,6 +970,8 @@ public class MsalOAuth2TokenCache
 
         final List<Credential> idTokens;
 
+        // See the same instanceof guard in load() for a full explanation of why the cache type
+        // may not match the flight state at runtime.
         if (useFilterThenClone
                 && mAccountCredentialCache instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache) {
             // Wrap under one lock for snapshot consistency (same rationale as load()).
