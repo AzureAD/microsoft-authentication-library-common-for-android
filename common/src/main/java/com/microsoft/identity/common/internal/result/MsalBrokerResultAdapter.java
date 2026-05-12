@@ -565,6 +565,25 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
     }
 
+    /**
+     * Extracts the onboarding telemetry blob (JSON string) from the result bundle.
+     * Best-effort: returns null if the bundle cannot be deserialized into a BrokerResult
+     * or if no blob is present. Telemetry failures must never fail an otherwise-successful
+     * auth result. Blob contents are not logged (may carry sessionCorrelationId).
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public String getOnboardingBlobFromBundle(@NonNull final Bundle resultBundle) {
+        final String methodTag = TAG + ":getOnboardingBlobFromBundle";
+        try {
+            final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+            return brokerResult.getOnboardingBlob();
+        } catch (final ClientException e) {
+            Logger.warn(methodTag, "Failed to extract onboarding blob from broker result: " + e.getErrorCode());
+            return null;
+        }
+    }
+
     @NonNull
     @Override
     public AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle) {
@@ -1015,7 +1034,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     public @NonNull
     AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
-        final String methodTag = TAG + ":getAcquireTokenResultFromResultBundle";
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
@@ -1040,17 +1058,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 );
             }
 
-            // Extract onboarding blob from BrokerResult if present. Best-effort — telemetry
-            // failures must never fail an otherwise-successful auth result. Logged at warn so
-            // diagnosing IPC/regression issues remains possible. Blob contents are not logged
-            // (may contain sessionCorrelationId).
-            try {
-                final BrokerResult brokerResult = resultAdapter.brokerResultFromBundle(resultBundle);
-                if (brokerResult.getOnboardingBlob() != null) {
-                    acquireTokenResult.setOnboardingBlob(brokerResult.getOnboardingBlob());
-                }
-            } catch (final ClientException e) {
-                Logger.warn(methodTag, "Failed to extract onboarding blob from broker result: " + e.getErrorCode());
+            // Set onboarding telemetry blob if present (best-effort; never fails the result).
+            final String onboardingBlob = resultAdapter.getOnboardingBlobFromBundle(resultBundle);
+            if (onboardingBlob != null) {
+                acquireTokenResult.setOnboardingBlob(onboardingBlob);
             }
 
             return acquireTokenResult;
