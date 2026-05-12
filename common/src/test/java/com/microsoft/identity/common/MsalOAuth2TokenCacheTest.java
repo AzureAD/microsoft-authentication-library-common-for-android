@@ -1642,6 +1642,8 @@ public class MsalOAuth2TokenCacheTest {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
                 .thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
+                .thenReturn(true);
         final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
         mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);

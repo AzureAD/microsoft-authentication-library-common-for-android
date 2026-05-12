@@ -675,11 +675,10 @@ public class MsalOAuth2TokenCache
         final List<Credential> v1IdTokens;
         List<Credential> refreshTokens;
 
-        if (useFilterThenClone) {
+        if (useFilterThenClone
+                && mAccountCredentialCache instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache) {
             // Wrap all reads under one lock to ensure a consistent snapshot and prevent
             // a concurrent removal from causing partial/inconsistent cache records.
-            // Safe to cast — USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS guarantees
-            // mAccountCredentialCache is SharedPreferencesAccountCredentialCacheWithMemoryCache.
             final Object cacheLock = ((SharedPreferencesAccountCredentialCacheWithMemoryCache)
                     mAccountCredentialCache).getCacheLock();
             synchronized (cacheLock) {
@@ -965,7 +964,8 @@ public class MsalOAuth2TokenCache
 
         final List<Credential> idTokens;
 
-        if (useFilterThenClone) {
+        if (useFilterThenClone
+                && mAccountCredentialCache instanceof SharedPreferencesAccountCredentialCacheWithMemoryCache) {
             // Wrap under one lock for snapshot consistency (same rationale as load()).
             final Object cacheLock = ((SharedPreferencesAccountCredentialCacheWithMemoryCache)
                     mAccountCredentialCache).getCacheLock();
