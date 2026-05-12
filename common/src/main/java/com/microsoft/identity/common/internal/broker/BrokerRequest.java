@@ -299,8 +299,12 @@ public class BrokerRequest implements Serializable {
 
     /**
      * Onboarding telemetry seed JSON blob.
-     * Contains sessionCorrelationId, onboarding_mode, schema_version.
-     * Broker populates this with blocking errors and returns in the result.
+     * Direction: client → broker (input only). Contains sessionCorrelationId,
+     * onboarding_mode, and schema_version, supplied by the client (OneAuth/MSAL)
+     * so the broker can construct an OnboardingTelemetryRecorder using the same
+     * correlation id. The broker returns the populated blob (with steps and
+     * blocking errors) via {@link BrokerResult#getOnboardingBlob()}, not via
+     * this field.
      */
     @Nullable
     @SerializedName(SerializedNames.ONBOARDING_SEED_JSON)
