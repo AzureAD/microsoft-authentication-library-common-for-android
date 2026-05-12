@@ -155,6 +155,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private String mPasskeyRegistrationScript;
 
     /**
+     * Optional onboarding telemetry recorder. Set via {@link #setOnboardingTelemetryRecorder}
+     * after this client is constructed (the recorder is created by the host fragment/activity
+     * when a seed JSON arrives, which is typically later than WebView construction).
+     * When non-null, key URL transitions (broker install, MDM enrollment, Company Portal
+     * launch, etc.) and `lastLoadedDomain` are recorded for the onboarding telemetry blob.
+     */
+    @Nullable
+    private com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+
+    /**
      * Callback for tracking URL load events.
      */
     private final IUrlLoadTracker mUrlLoadTracker;
@@ -201,10 +211,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * Attach an onboarding telemetry recorder so subsequent WebView page transitions
+     * (broker install prompts, MDM enrollment redirects, Company Portal launches, etc.)
+     * are recorded into the onboarding telemetry blob.
+     *
+     * Recorder is owned by the host fragment / activity (e.g. OneAuthNavigationFragment
+     * on the OneAuth side, AuthorizationActivity on the broker side). May be null when
+     * no seed JSON is available — in which case all hooks become no-ops.
+     */
+    public void setOnboardingTelemetryRecorder(
+            @Nullable final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder) {
+        mOnboardingTelemetryRecorder = recorder;
+    }
+
     @Override
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+
+        // Onboarding telemetry: record domain navigation (best-effort, no-op if no recorder).
+        recordLastLoadedDomain(url);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -722,6 +749,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
 
+        // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED);
+
         if (shouldLaunchCompanyPortal()) {
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
@@ -831,6 +861,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCpEnrollmentUrl";
+        // Onboarding telemetry: WebCP enrollment is a distinct enrollment path.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED);
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpEnrollmentRedirect.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             view.stopLoading();
@@ -859,6 +891,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // Opens the Google enrollment URL in the browser or the default intent handler (like DPC)
     private void openGoogleEnrollmentUrl(@NonNull final String url) {
         final String methodTag = TAG + ":openGoogleEnrollmentUrl";
+        // Onboarding telemetry: Google enrollment redirect is a distinct enrollment path.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED);
         Logger.info(methodTag, "Opening Google enrollment URL");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -920,6 +954,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void processAuthAppMFAUrl(String url) {
         final String methodTag = TAG + ":processAuthAppMFAUrl";
+        // Onboarding telemetry: redirect to Authenticator for MFA linking.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED);
         Logger.verbose(methodTag, "Linking Account in Broker for MFA.");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -963,6 +999,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void launchCompanyPortal() {
         final String methodTag = TAG + ":launchCompanyPortal";
+
+        // Onboarding telemetry: Company Portal launch is a discrete onboarding step.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED);
 
         Logger.verbose(methodTag, "Sending intent to launch the CompanyPortal.");
         final Intent intent = new Intent();
@@ -1051,6 +1090,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processInstallRequest";
 
+        // Onboarding telemetry: broker install request reached the WebView client. Record the
+        // step at method entry so we capture intent regardless of the parsed result code.
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED);
+
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
 
         if (result.getResultCode() != RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED) {
@@ -1108,6 +1151,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
+        // Onboarding telemetry: alternate broker install path (intent-scheme).
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED);
         try {
             final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
@@ -1429,5 +1474,41 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     public void addPasskeyRegistrationJsScript(@NonNull final String script) {
         this.mPasskeyRegistrationScript = script;
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook: records a step on the attached recorder
+     * if one is present. No-op when no recorder has been attached. Never throws.
+     */
+    private void recordOnboardingStep(@NonNull final String stepId) {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            return;
+        }
+        try {
+            recorder.addStep(stepId);
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
+        }
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook: records the host of the most recently loaded
+     * page on the attached recorder. No-op when no recorder is attached, no host can be
+     * extracted, or url is null/blank. Never throws.
+     */
+    private void recordLastLoadedDomain(@Nullable final String url) {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null || url == null || url.isEmpty()) {
+            return;
+        }
+        try {
+            final String host = Uri.parse(url).getHost();
+            if (host != null && !host.isEmpty()) {
+                recorder.setLastLoadedDomain(host);
+            }
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
+        }
     }
 }
