@@ -318,40 +318,52 @@ public abstract class Authority {
     }
 
     /**
-     * Authorities are either known by the developer and communicated to the library via configuration or they
-     * are known to Microsoft based on the list of clouds returned from:
+     * Clears all known authorities. For test use only.
+     */
+    // Visible for testing
+    static void clearKnownAuthorities() {
+        synchronized (sLock) {
+            knownAuthorities.clear();
+        }
+    }
+
+    /**
+     * Authorities are either known by the developer and communicated to the library via
+     * configuration, or they are known to Microsoft based on the cloud discovery metadata cache.
      *
      * @param authority Authority to check against.
      * @return True if the authority is known to Microsoft or defined in the configuration.
      */
     public static boolean isKnownAuthority(Authority authority) {
-        final String methodName = ":isKnownAuthority";
+        final String methodTag = TAG + ":isKnownAuthority";
         boolean knownToDeveloper = false;
         boolean knownToMicrosoft;
 
         if (authority == null) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Authority is null"
-            );
+            Logger.warn(methodTag, "Authority is null");
             return false;
         }
 
-        if (BuildConfig.ALLOW_ONEBOX_AUTHORITIES && AzureActiveDirectoryEnvironment.ONEBOX_AUTHORITY.equals(authority.getAuthorityURL().getAuthority())) {
+        // Resolve the authority URL outside any lock to avoid calling a potentially-
+        // synchronized polymorphic method (e.g. AzureActiveDirectoryAuthority.getAuthorityURL())
+        // while holding sLock, which could create a lock-ordering inversion.
+        final URL authorityUrl = authority.getAuthorityURL();
+
+        if (authorityUrl == null) {
+            Logger.warn(methodTag, "Authority URL is null");
+            return false;
+        }
+
+        if (BuildConfig.ALLOW_ONEBOX_AUTHORITIES && AzureActiveDirectoryEnvironment.ONEBOX_AUTHORITY.equals(authorityUrl.getAuthority())) {
             return true; // onebox authorities are always considered to be known.
         }
 
-        //Check if authority was added to configuration
         synchronized (sLock) {
             for (final Authority currentAuthority : knownAuthorities) {
                 if (currentAuthority.mAuthorityUrlString != null &&
-                        authority.getAuthorityURL() != null &&
-                        authority.getAuthorityURL().getAuthority() != null &&
+                        authorityUrl.getAuthority() != null &&
                         currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                authority
-                                        .getAuthorityURL()
-                                        .getAuthority()
-                                        .toLowerCase(Locale.ROOT))) {
+                                authorityUrl.getAuthority().toLowerCase(Locale.ROOT))) {
                     knownToDeveloper = true;
                     break;
                 }
@@ -360,19 +372,14 @@ public abstract class Authority {
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
         // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
-        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authority.getAuthorityURL());
+        knownToMicrosoft = AzureActiveDirectory.hasCloudHost(authorityUrl);
 
         final boolean isKnown = (knownToDeveloper || knownToMicrosoft);
 
-        Logger.verbose(
-                TAG + methodName,
-                "Authority is known to developer? [" + knownToDeveloper + "]"
-        );
-
-        Logger.verbose(
-                TAG + methodName,
-                "Authority is known to Microsoft? [" + knownToMicrosoft + "]"
-        );
+        Logger.verbose(methodTag,
+                "Authority is known to developer? [" + knownToDeveloper + "]");
+        Logger.verbose(methodTag,
+                "Authority is known to Microsoft? [" + knownToMicrosoft + "]");
 
         return isKnown;
     }
@@ -383,9 +390,8 @@ public abstract class Authority {
                 methodTag,
                 "Getting known authority result..."
         );
-        ClientException clientException = null;
-        boolean known = false;
 
+        ClientException discoveryException = null;
         try {
             AzureActiveDirectory.ensureCloudDiscoveryForAuthority(authority);
             Logger.info(methodTag, "Cloud discovery complete.");
@@ -393,27 +399,34 @@ public abstract class Authority {
             // Cloud discovery failed (e.g. network error).
             // Log but continue — the authority may still be known via hardcoded
             // metadata or developer configuration.
+            discoveryException = ex;
             Logger.warn(methodTag,
                     "Cloud discovery failed, will check hardcoded/configured authorities. Error: "
                             + ex.getErrorCode());
         }
 
-        if (!isKnownAuthority(authority)) {
-            clientException = new ClientException(
+        if (isKnownAuthority(authority)) {
+            Logger.info(methodTag, "Authority is known.");
+            return new KnownAuthorityResult(true, null);
+        }
+
+        // Authority is not known via any source.
+        if (discoveryException != null) {
+            // Discovery failed — propagate the original error
+            return new KnownAuthorityResult(false, discoveryException);
+        } else {
+            // Discovery succeeded but authority is not in any known list.
+            final ClientException clientException = new ClientException(
                     ClientException.UNKNOWN_AUTHORITY,
                     "Provided authority is not known.  MSAL will only make requests to known authorities"
             );
-        } else {
-            Logger.info(methodTag, "Cloud is known.");
-            known = true;
+            return new KnownAuthorityResult(false, clientException);
         }
-
-        return new KnownAuthorityResult(known, clientException);
     }
 
     public static class KnownAuthorityResult {
-        private boolean mKnown;
-        private ClientException mClientException;
+        private final boolean mKnown;
+        private final ClientException mClientException;
 
         KnownAuthorityResult(boolean known, ClientException exception) {
             mKnown = known;

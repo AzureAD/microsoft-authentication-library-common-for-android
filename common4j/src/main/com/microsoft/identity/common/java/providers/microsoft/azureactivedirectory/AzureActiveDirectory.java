@@ -28,7 +28,7 @@ import static com.microsoft.identity.common.java.providers.microsoft.azureactive
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.DELOS_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PPE_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
-import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.SOVSG_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.GOVSG_CLOUD_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
 import com.google.gson.Gson;
@@ -116,7 +116,7 @@ public class AzureActiveDirectory
             US_GOV_CLOUD_HOST,
             BLEU_CLOUD_HOST,
             DELOS_CLOUD_HOST,
-            SOVSG_CLOUD_HOST
+            GOVSG_CLOUD_HOST
     )));
 
     static {
@@ -134,7 +134,7 @@ public class AzureActiveDirectory
         for (final AzureActiveDirectoryCloud cloud : new AzureActiveDirectoryCloud[]{
                 AzureActiveDirectoryCloud.BLEU,
                 AzureActiveDirectoryCloud.DELOS,
-                AzureActiveDirectoryCloud.SOVSG
+                AzureActiveDirectoryCloud.GOVSG
         }) {
             sAadClouds.put(
                     cloud.getPreferredNetworkHostName().toLowerCase(Locale.US),
@@ -164,12 +164,13 @@ public class AzureActiveDirectory
         return new AzureActiveDirectoryOAuth2Strategy(config, parameters);
     }
 
-    public static synchronized boolean hasCloudHost(@NonNull final URL authorityUrl) {
+    public static boolean hasCloudHost(@NonNull final URL authorityUrl) {
         return sAadClouds.containsKey(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
-    public static synchronized boolean isValidCloudHost(@NonNull final URL authorityUrl) {
-        return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
+    public static boolean isValidCloudHost(@NonNull final URL authorityUrl) {
+        final AzureActiveDirectoryCloud cloud = getAzureActiveDirectoryCloud(authorityUrl);
+        return cloud != null && cloud.isValidated();
     }
 
     public static synchronized void setEnvironment(@NonNull final Environment environment) {
@@ -191,7 +192,7 @@ public class AzureActiveDirectory
      * @param authorityUrl URL
      * @return AzureActiveDirectoryCloud
      */
-    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) {
+    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
@@ -199,7 +200,7 @@ public class AzureActiveDirectory
      * @param preferredCacheHostName String
      * @return AzureActiveDirectoryCloud
      */
-    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
+    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
         return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
     }
 
@@ -368,11 +369,16 @@ public class AzureActiveDirectory
      *
      * @param authority The authority whose URL determines the discovery endpoint, or null to use the default.
      */
-    public static synchronized void ensureCloudDiscoveryForAuthority(@Nullable final Authority authority)
+    public static void ensureCloudDiscoveryForAuthority(@Nullable final Authority authority)
             throws ClientException {
-        ensureCloudDiscoveryForAuthority(
-                authority != null ? authority.getAuthorityURL() : null
-        );
+        // Resolve the URL outside the synchronized scope to avoid deadlock:
+        // getAuthorityURL() on AzureActiveDirectoryAuthority acquires
+        // AzureActiveDirectoryAuthority.class then AzureActiveDirectory.class,
+        // while ensureCloudDiscoveryForAuthority(URL) acquires AzureActiveDirectory.class.
+        // Calling getAuthorityURL() while holding AzureActiveDirectory.class would
+        // create a lock-ordering inversion with any concurrent getAuthorityURL() caller.
+        final URL authorityUrl = authority != null ? authority.getAuthorityURL() : null;
+        ensureCloudDiscoveryForAuthority(authorityUrl);
     }
 
     /**
