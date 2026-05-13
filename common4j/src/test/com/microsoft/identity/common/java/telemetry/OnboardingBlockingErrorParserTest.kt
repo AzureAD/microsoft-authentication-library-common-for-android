@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.telemetry
 
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -153,5 +154,90 @@ class OnboardingBlockingErrorParserTest {
             setCliTelemErrorCode("65001")
         }
         assertEquals("65001", OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    // --- extractBlockingErrorsFromAuthorizationErrorCodes (Path B / OAuth error_codes) ---
+
+    @Test
+    fun authzErrorCodes_NullReturnsEmpty() {
+        Assert.assertTrue(
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes(null).isEmpty()
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_BlankReturnsEmpty() {
+        Assert.assertTrue(
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("").isEmpty()
+        )
+        Assert.assertTrue(
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("   ").isEmpty()
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_SingleCodeReturned() {
+        Assert.assertEquals(
+            listOf("53003"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("53003")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_MultipleCodesAllReturnedInOrder() {
+        // eSTS commonly emits multiple codes when one failure has multiple causes.
+        Assert.assertEquals(
+            listOf("53003", "65001"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("53003,65001")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_ExcludedCodesFilteredOut() {
+        // 50058 is in the non-onboarding whitelist; 53003 is a real CA block.
+        Assert.assertEquals(
+            listOf("53003"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,53003")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_AllExcludedReturnsEmpty() {
+        Assert.assertTrue(
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,50097,50126").isEmpty()
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_ZeroSentinelFilteredOut() {
+        Assert.assertEquals(
+            listOf("53003"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("0,53003")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_EmptyEntriesFilteredOut() {
+        // Trailing/leading commas → empty entries → ignored.
+        Assert.assertEquals(
+            listOf("53003", "65001"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes(",53003,,65001,")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_WhitespaceTrimmed() {
+        Assert.assertEquals(
+            listOf("53003", "65001"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes(" 53003 , 65001 ")
+        )
+    }
+
+    @Test
+    fun authzErrorCodes_DuplicatesDeduped() {
+        Assert.assertEquals(
+            listOf("53003", "65001"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("53003,65001,53003")
+        )
     }
 }

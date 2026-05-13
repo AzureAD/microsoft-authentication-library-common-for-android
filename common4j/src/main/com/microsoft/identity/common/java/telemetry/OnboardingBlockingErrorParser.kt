@@ -123,4 +123,33 @@ object OnboardingBlockingErrorParser {
 
         return null
     }
+
+    /**
+     * Extract blocking-error attribution codes from the OAuth `error_codes` query parameter
+     * of an authorization redirect (Microsoft extension to OAuth — comma-separated AADSTS codes,
+     * available on `MicrosoftStsAuthorizationErrorResponse.getErrorCodes()`).
+     *
+     * Unlike the single-value overloads (which return the most-specific identifier from the
+     * `x-ms-clitelem` header), eSTS frequently emits multiple AADSTS codes here when one
+     * authorization failure has multiple contributing causes (e.g. `"50058,53003"` =
+     * "no SSO session AND CA-blocked"). Returning all qualified codes lets callers add
+     * each via [com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.addBlockingError]
+     * without losing attribution detail; the schema's `blocking_errors[]` is already an array.
+     *
+     * Filters out:
+     *  - empty entries (e.g. trailing commas)
+     *  - the literal `"0"` (eSTS's "no error" sentinel)
+     *  - codes in [NON_ONBOARDING_AADSTS_CODES]
+     *  - duplicates (preserves first-occurrence order)
+     *
+     * @return ordered list of qualifying AADSTS codes; empty if none qualify
+     */
+    @JvmStatic
+    fun extractBlockingErrorsFromAuthorizationErrorCodes(errorCodes: String?): List<String> {
+        if (errorCodes.isNullOrBlank()) return emptyList()
+        return errorCodes.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && it != "0" && !isExcluded(it) }
+            .distinct()
+    }
 }
