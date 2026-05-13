@@ -3,6 +3,7 @@ vNext
 - [PATCH] Extend filter-then-clone optimization to load() and getIdTokensForAccountRecord() in MsalOAuth2TokenCache: when ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight is enabled, skip clone-all preload and call direct flight-gated overloads that clone only matching credentials; add new getCredentialsFilteredBy overload with kid support (#3100)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 - [MINOR] Add HttpRequest interceptor (#)
+- [PATCH] Edge TB: Fix lookup mode (#3108)
 
 Version 24.2.0
 ----------
