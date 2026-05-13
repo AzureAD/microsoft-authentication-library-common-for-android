@@ -43,18 +43,31 @@ import java.util.Locale
  * Lives in Android common core so both OneAuth (non-brokered) and broker apps
  * (brokered) use the same class.
  *
- * @param seedJson  The seed blob JSON string from authParameters
- * @param clientId  Client ID for cache persistence key
- * @param target    Target (scopes) for cache persistence key
- * @param context   Android context for SharedPreferences access
+ * @param seedJson  Seed blob JSON produced by the C++ xplat core (via Djinni
+ *                  `OnboardingBlobConstants`) and passed in from `authParameters`.
+ *                  Expected shape:
+ *                  `{ "schema_version": "1.0.0",
+ *                     "session_correlation_id": "<uuid>",
+ *                     "onboarding_mode": "brokered" | "non-brokered" }`.
+ *                  If null/blank/malformed, the recorder still functions but with empty
+ *                  seed fields; a warning is logged and `finalizeBlob()` will refuse to
+ *                  emit a blob with an empty `sessionCorrelationId`.
+ * @param clientId  Client (application) ID, used as part of the SharedPreferences
+ *                  cache key for session correlation persistence.
+ * @param target    Target scopes (space-joined, sorted) for the same cache key.
+ * @param context   Any Android context; the application context is captured internally
+ *                  so the recorder can outlive the originating Activity/Fragment without
+ *                  leaking it.
  */
 class OnboardingTelemetryRecorder(
     seedJson: String,
     private val clientId: String,
-    private val target: String,
+    private val target: String, // sorted, space-joined scopes
     context: Context
 ) {
 
+    // Use applicationContext so this recorder, which may outlive the originating
+    // Activity/Fragment, never holds a reference that would leak that context.
     private val appContext: Context = context.applicationContext
 
     // Seed fields (from C++ common core)
@@ -70,29 +83,33 @@ class OnboardingTelemetryRecorder(
     private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
-        val (parsedSchemaVersion, parsedSessionCorrelationId, parsedOnboardingMode) = parseSeed(seedJson)
-        schemaVersion = parsedSchemaVersion
-        sessionCorrelationId = parsedSessionCorrelationId
-        onboardingMode = parsedOnboardingMode
+        val parsed = parseSeed(seedJson)
+        schemaVersion = parsed?.first ?: ""
+        sessionCorrelationId = parsed?.second ?: ""
+        onboardingMode = parsed?.third ?: ""
     }
 
     /**
      * Parse the seed JSON into [schemaVersion], [sessionCorrelationId], and [onboardingMode].
-     * Returns a Triple of empty strings if the seed is malformed.
+     * Returns null if the seed is null/blank or fails to parse — callers fall back to
+     * empty-string defaults rather than receiving a fake-empty Triple.
      */
-    private fun parseSeed(json: String): Triple<String, String, String> = try {
-        val seed = JSONObject(json)
-        Triple(
-            seed.optString(FIELD_SCHEMA_VERSION, ""),
-            seed.optString(FIELD_SESSION_CORRELATION_ID, ""),
-            seed.optString(FIELD_ONBOARDING_MODE, "")
-        )
-    } catch (e: JSONException) {
-        Logger.warn(
-            TAG,
-            "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
-        )
-        Triple("", "", "")
+    private fun parseSeed(json: String): Triple<String, String, String>? {
+        if (json.isBlank()) return null
+        return try {
+            val seed = JSONObject(json)
+            Triple(
+                seed.optString(FIELD_SCHEMA_VERSION, ""),
+                seed.optString(FIELD_SESSION_CORRELATION_ID, ""),
+                seed.optString(FIELD_ONBOARDING_MODE, "")
+            )
+        } catch (e: JSONException) {
+            Logger.warn(
+                TAG,
+                "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
+            )
+            null
+        }
     }
 
     private data class StepEntry(val stepId: String, val timestamp: String)
@@ -144,9 +161,16 @@ class OnboardingTelemetryRecorder(
     }
 
     /**
-     * Add a UX flow variant tag.
+     * Add a UX flow variant tag to the onboarding blob.
      *
-     * @param flowTag Flow variant (e.g., "MobileOnboardingPhase1")
+     * The tag identifies which experiment/feature variant the user was exposed to during
+     * the onboarding journey (e.g. a phased rollout cohort like `"MobileOnboardingPhase1"`,
+     * or a remediation experiment like `"MdmEnrollmentRedesign_v2"`). Multiple tags can be
+     * added when several flights apply to the same flow. The values are emitted as the
+     * `ux_flow_used` array in the populated blob and surface in MATS as `mo_ux_flow_used`,
+     * enabling per-experiment slicing of the onboarding funnel.
+     *
+     * @param flowTag Caller-defined experiment/variant identifier.
      */
     fun addUxFlowUsed(flowTag: String) {
         uxFlowUsed.add(flowTag)
@@ -167,7 +191,8 @@ class OnboardingTelemetryRecorder(
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,
-                "finalizeBlob: sessionCorrelationId is empty; dropping blob to avoid emitting uncorrelatable telemetry"
+                "finalizeBlob: sessionCorrelationId is empty; returning empty blob (skipping MATS emission) " +
+                    "to avoid emitting telemetry that cannot be joined with the broker side or with retries"
             )
             return EMPTY_BLOB
         }
@@ -251,7 +276,7 @@ class OnboardingTelemetryRecorder(
             val existing = prefs.getString(PREFS_FILE, "")
             val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
 
-            val key = "$clientId|$target"
+            val key = "$clientId|$target" // target = sorted, space-joined scopes
             val entry = JSONObject().apply {
                 put(FIELD_ID, sessionCorrelationId)
                 put(FIELD_TS, System.currentTimeMillis())
