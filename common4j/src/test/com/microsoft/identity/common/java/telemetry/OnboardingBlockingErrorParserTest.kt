@@ -101,4 +101,57 @@ class OnboardingBlockingErrorParserTest {
         val header = "1,0,0,1234,routinghint"
         assertNull(OnboardingBlockingErrorParser.extractBlockingError(header))
     }
+
+    // --- Non-onboarding AADSTS code whitelist ---
+
+    @Test
+    fun excludedAadstsCode_50058_FilteredFromResponse() {
+        val response = MicrosoftTokenResponse().apply {
+            setCliTelemErrorCode("50058") // UserInformationNotProvided
+        }
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    @Test
+    fun excludedAadstsCode_50097_FilteredFromResponse() {
+        val response = MicrosoftTokenResponse().apply {
+            setCliTelemErrorCode("50097") // DeviceAuthenticationRequired
+        }
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    @Test
+    fun excludedAadstsCode_50126_FilteredFromResponse() {
+        val response = MicrosoftTokenResponse().apply {
+            setCliTelemErrorCode("50126") // InvalidUserNameOrPassword
+        }
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    @Test
+    fun excludedAadstsCode_AsSubError_AlsoFiltered() {
+        // Even when the excluded code is in the sub-error position, it is filtered.
+        // This also means the parser falls through to the (non-excluded) top-level error.
+        val response = MicrosoftTokenResponse().apply {
+            setCliTelemErrorCode("65001")
+            setCliTelemSubErrorCode("50126")
+        }
+        assertEquals("65001", OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    @Test
+    fun excludedAadstsCode_FilteredFromHeader() {
+        val header = "1,50058,0,1234,routinghint"
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError(header))
+    }
+
+    @Test
+    fun nonExcludedAadstsCode_StillReturned() {
+        // Sanity check: 65001 is a real onboarding-related blocker (interaction_required-ish).
+        // It must still pass through the filter.
+        val response = MicrosoftTokenResponse().apply {
+            setCliTelemErrorCode("65001")
+        }
+        assertEquals("65001", OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
 }
