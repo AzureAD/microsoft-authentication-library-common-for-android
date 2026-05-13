@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -168,6 +169,13 @@ public class LocalMSALController extends BaseController {
         );
         acquireTokenResult.setAuthorizationResult(result);
 
+        // Wire ClientDataInfo from the authorization result (authorize endpoint).
+        if (result instanceof MicrosoftStsAuthorizationResult) {
+            acquireTokenResult.setClientDataInfo(
+                    ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
+            );
+        }
+
         ResultUtil.logResult(TAG, result);
 
         if (result.getAuthorizationStatus().equals(AuthorizationStatus.SUCCESS)) {
@@ -180,6 +188,11 @@ public class LocalMSALController extends BaseController {
             );
 
             acquireTokenResult.setTokenResult(tokenResult);
+
+            // Prefer ClientDataInfo from the token endpoint (later, more authoritative call).
+            if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
+                acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
+            }
 
             if (tokenResult != null && tokenResult.getSuccess()) {
                 //4) Save tokens in token cache
@@ -205,6 +218,11 @@ public class LocalMSALController extends BaseController {
                                 false
                         )
                 );
+
+                // Set ClientDataInfo on the LocalAuthenticationResult for IPC propagation
+                final LocalAuthenticationResult localResult =
+                        (LocalAuthenticationResult) acquireTokenResult.getLocalAuthenticationResult();
+                localResult.setClientDataInfo(acquireTokenResult.getClientDataInfo());
             }
         }
 
@@ -742,6 +760,9 @@ public class LocalMSALController extends BaseController {
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);
+            if (tokenResult != null) {
+                acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
+            }
 
             // If the token is valid, save it into token cache
             final List<ICacheRecord> records = saveTokens(
@@ -764,6 +785,13 @@ public class LocalMSALController extends BaseController {
                             false
                     )
             );
+
+            // Set ClientDataInfo on the LocalAuthenticationResult for IPC propagation
+            if (tokenResult != null) {
+                final LocalAuthenticationResult localResult =
+                        (LocalAuthenticationResult) acquireTokenResult.getLocalAuthenticationResult();
+                localResult.setClientDataInfo(tokenResult.getClientDataInfo());
+            }
         } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()

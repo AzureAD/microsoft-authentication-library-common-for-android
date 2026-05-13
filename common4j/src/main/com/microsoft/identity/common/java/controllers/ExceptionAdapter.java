@@ -44,6 +44,7 @@ import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
@@ -84,7 +85,15 @@ public class ExceptionAdapter {
 
         if (null != authorizationResult) {
             if (!authorizationResult.getSuccess()) {
-                return exceptionFromAuthorizationResult(authorizationResult, commandParameters);
+                final BaseException authException = exceptionFromAuthorizationResult(authorizationResult, commandParameters);
+                // Attach ClientDataInfo from the authorize redirect (clientdata query param)
+                // so callers can inspect server-side error context on auth failures.
+                if (authorizationResult instanceof MicrosoftStsAuthorizationResult) {
+                    authException.setClientDataInfo(
+                            ((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo()
+                    );
+                }
+                return authException;
             }
         } else {
             Logger.warn(
@@ -183,6 +192,7 @@ public class ExceptionAdapter {
 
             outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
+            outErr.setClientDataInfo(tokenResult.getClientDataInfo());
         } else {
             Logger.warn(
                     TAG + methodName,

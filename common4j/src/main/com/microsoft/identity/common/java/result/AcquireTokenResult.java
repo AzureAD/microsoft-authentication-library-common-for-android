@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +49,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     private String mBrokerAppPackageName;
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
+
+    @Nullable
+    private ClientDataInfo mClientDataInfo;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
@@ -105,5 +109,25 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     @Override
     public String getBrokerAppPackageName() {
         return mBrokerAppPackageName;
+    }
+
+    /**
+     * Gets the {@link ClientDataInfo} containing server-side telemetry data from the
+     * x-ms-clientdata response header (/token) or clientdata redirect query parameter (/authorize).
+     *
+     * @return The ClientDataInfo, or null if not available.
+     */
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        return mClientDataInfo;
+    }
+
+    /**
+     * Sets the {@link ClientDataInfo} containing server-side telemetry data.
+     *
+     * @param clientDataInfo The ClientDataInfo to set.
+     */
+    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
+        mClientDataInfo = clientDataInfo;
     }
 }

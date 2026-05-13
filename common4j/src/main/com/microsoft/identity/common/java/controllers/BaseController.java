@@ -219,6 +219,9 @@ public abstract class BaseController {
         final TokenResult tokenResult = oAuth2Strategy.requestToken(ropcTokenRequest);
 
         acquireTokenResult.setTokenResult(tokenResult);
+        if (tokenResult != null) {
+            acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
+        }
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2TokenCache tokenCache = parameters.getOAuth2TokenCache();
 
@@ -250,6 +253,9 @@ public abstract class BaseController {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
             }
+
+            // Set server client data info on the authentication result for IPC propagation
+            authenticationResult.setClientDataInfo(tokenResult.getClientDataInfo());
 
             // Set the AuthenticationResult on the final result object
             acquireTokenResult.setLocalAuthenticationResult(authenticationResult);
@@ -484,6 +490,7 @@ public abstract class BaseController {
         );
 
         acquireTokenSilentResult.setTokenResult(tokenResult);
+        acquireTokenSilentResult.setClientDataInfo(tokenResult.getClientDataInfo());
 
         ResultUtil.logResult(methodTag, tokenResult);
 
@@ -527,6 +534,9 @@ public abstract class BaseController {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
             }
+
+            // Set server client data info on the authentication result for IPC propagation
+            authenticationResult.setClientDataInfo(tokenResult.getClientDataInfo());
 
             // Set the AuthenticationResult on the final result object
             acquireTokenSilentResult.setLocalAuthenticationResult(authenticationResult);

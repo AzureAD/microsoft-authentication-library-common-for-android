@@ -75,8 +75,9 @@ public class MicrosoftStsAuthorizationResultFactory
 
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
+        ClientDataInfo clientDataInfo = null;
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-            final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
+            clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
             if (null != clientDataInfo) {
                 clientDataInfo.emitToSpan();
             }
@@ -106,6 +107,8 @@ public class MicrosoftStsAuthorizationResultFactory
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE
             );
         }
+
+        result.setClientDataInfo(clientDataInfo);
 
         return result;
     }

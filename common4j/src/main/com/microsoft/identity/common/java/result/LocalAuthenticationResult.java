@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -54,6 +55,8 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     private String mFamilyId;
     private String mSpeRing;
     private String mRefreshTokenAge;
+    @Nullable
+    private ClientDataInfo mClientDataInfo;
     private List<ICacheRecord> mCompleteResultFromCache;
     private boolean mServicedFromCache;
     private String mCorrelationId;
@@ -201,6 +204,25 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
      */
     public void setRefreshTokenAge(final String refreshTokenAge) {
         mRefreshTokenAge = refreshTokenAge;
+    }
+
+    /**
+     * Gets the server client data info from the x-ms-clientdata response header.
+     *
+     * @return The ClientDataInfo, or null if not available.
+     */
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        return mClientDataInfo;
+    }
+
+    /**
+     * Sets the server client data info.
+     *
+     * @param clientDataInfo The ClientDataInfo to set.
+     */
+    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
+        mClientDataInfo = clientDataInfo;
     }
 
     @Override
