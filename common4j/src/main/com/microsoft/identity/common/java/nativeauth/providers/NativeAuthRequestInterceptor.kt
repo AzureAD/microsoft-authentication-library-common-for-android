@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import java.net.URL
 
 /**
@@ -32,15 +33,18 @@ import java.net.URL
  * The prefixes "x-ms-", "x-client-", "x-broker-", and "x-app-" are reserved and must not be used.
  * Headers that violate these rules will be ignored by the SDK.
  */
-interface NativeAuthRequestInterceptor {
+interface NativeAuthRequestInterceptor : OAuth2RequestInterceptor {
 
     /**
      * Called before each native auth network request to retrieve additional HTTP header fields.
      *
+     * This callback executes synchronously on the thread performing the request (typically a
+     * background/network thread), so implementations must be thread-safe and return quickly.
      * Inspect [requestUrl] to determine the request endpoint and conditionally apply headers.
+     * Any exception thrown from this method will propagate to the caller and fail the request.
      *
      * @param requestUrl The URL of the outgoing request.
      * @return A map of header field names to values to inject, or null if no additional headers are needed.
      */
-    fun additionalHeaders(requestUrl: URL): Map<String, String>?
+    override fun additionalHeaders(requestUrl: URL): Map<String, String>?
 }

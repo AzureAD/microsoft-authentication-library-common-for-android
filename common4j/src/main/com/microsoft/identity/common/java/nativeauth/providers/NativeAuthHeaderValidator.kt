@@ -39,7 +39,7 @@ object NativeAuthHeaderValidator {
      * Invalid headers are logged as warnings and excluded from the result.
      *
      * @param headers The raw headers provided by the interceptor.
-     * @return A map containing only valid headers, or an empty map if none are valid.
+     * @return A map containing only valid headers using lowercase field names, or an empty map if none are valid.
      */
     fun filterValidHeaders(headers: Map<String, String>): Map<String, String> {
         val validHeaders = mutableMapOf<String, String>()
@@ -68,7 +68,7 @@ object NativeAuthHeaderValidator {
             }
 
             if (!isReserved) {
-                validHeaders[field] = value
+                validHeaders[lowerField] = value
             }
         }
 

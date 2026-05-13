@@ -126,7 +126,7 @@ class NativeAuthHeaderValidatorTest {
         val result = NativeAuthHeaderValidator.filterValidHeaders(headers)
 
         assertEquals(1, result.size)
-        assertEquals("value1", result["X-Custom-Header"])
+        assertEquals("value1", result["x-custom-header"])
     }
 
     @Test
@@ -149,7 +149,7 @@ class NativeAuthHeaderValidatorTest {
     }
 
     @Test
-    fun testOriginalHeaderCaseIsPreserved() {
+    fun testHeaderFieldNamesAreNormalizedToLowercase() {
         val headers = mapOf(
             "X-Akamai-Sensor-Data" to "encoded-value"
         )
@@ -157,7 +157,20 @@ class NativeAuthHeaderValidatorTest {
         val result = NativeAuthHeaderValidator.filterValidHeaders(headers)
 
         assertEquals(1, result.size)
-        assertEquals("encoded-value", result["X-Akamai-Sensor-Data"])
+        assertEquals("encoded-value", result["x-akamai-sensor-data"])
+    }
+
+    @Test
+    fun testDuplicateHeaderWithDifferentCaseKeepsSingleEntry() {
+        val headers = linkedMapOf(
+            "X-Custom-Header" to "first",
+            "x-custom-header" to "second"
+        )
+
+        val result = NativeAuthHeaderValidator.filterValidHeaders(headers)
+
+        assertEquals(1, result.size)
+        assertEquals("second", result["x-custom-header"])
     }
 
     @Test
