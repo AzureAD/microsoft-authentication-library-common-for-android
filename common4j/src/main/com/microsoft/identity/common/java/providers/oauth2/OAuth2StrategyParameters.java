@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor;
 
 import java.util.List;
 
@@ -60,6 +61,12 @@ public class OAuth2StrategyParameters {
      */
     @Nullable
     public final List<String> mCapabilities;
+
+    /**
+     * An optional interceptor for injecting custom HTTP headers into native auth requests.
+     */
+    @Nullable
+    public final transient NativeAuthRequestInterceptor mRequestInterceptor;
 
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.

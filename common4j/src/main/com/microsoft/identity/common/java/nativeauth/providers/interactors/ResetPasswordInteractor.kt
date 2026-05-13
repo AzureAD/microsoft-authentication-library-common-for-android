@@ -28,6 +28,8 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidator
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -42,6 +44,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpa
 import com.microsoft.identity.common.java.nativeauth.providers.responses.resetpassword.ResetPasswordSubmitApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.StringUtil
+import java.net.URL
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.
@@ -56,9 +59,21 @@ import com.microsoft.identity.common.java.util.StringUtil
 class ResetPasswordInteractor(
     private val httpClient: UrlConnectionHttpClient,
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
-    private val nativeAuthResponseHandler: NativeAuthResponseHandler
+    private val nativeAuthResponseHandler: NativeAuthResponseHandler,
+    private val requestInterceptor: NativeAuthRequestInterceptor? = null
 ) {
     private val TAG:String = ResetPasswordInteractor::class.java.simpleName
+
+    private fun applyInterceptorHeaders(requestUrl: URL, headers: Map<String, String?>): Map<String, String?> {
+        if (requestInterceptor == null) return headers
+        val additionalHeaders = requestInterceptor.additionalHeaders(requestUrl) ?: return headers
+        val validHeaders = NativeAuthHeaderValidator.filterValidHeaders(additionalHeaders)
+        if (validHeaders.isEmpty()) return headers
+        val mergedHeaders = headers.toMutableMap()
+        mergedHeaders.putAll(validHeaders)
+        return mergedHeaders
+    }
+
     //region /resetpassword/start
     fun performResetPasswordStart(
         parameters: ResetPasswordStartCommandParameters
@@ -95,7 +110,7 @@ class ResetPasswordInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val httpResponse = httpClient.post(
@@ -169,7 +184,7 @@ class ResetPasswordInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val httpResponse = httpClient.post(
@@ -240,7 +255,7 @@ class ResetPasswordInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val httpResponse = httpClient.post(
@@ -317,7 +332,7 @@ class ResetPasswordInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val httpResponse = httpClient.post(
@@ -391,7 +406,7 @@ class ResetPasswordInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val httpResponse = httpClient.post(

@@ -26,6 +26,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor;
 import com.microsoft.identity.common.java.nativeauth.util.ILoggable;
 
 import java.util.List;
@@ -61,6 +62,13 @@ public abstract class BaseNativeAuthCommandParameters extends CommandParameters 
      */
     @Nullable
     public final List<String> capabilities;
+
+    /**
+     * An optional interceptor for injecting custom HTTP headers into native auth requests.
+     */
+    @Nullable
+    @EqualsAndHashCode.Exclude
+    public final transient NativeAuthRequestInterceptor requestInterceptor;
 
     @Override
     public void logParameters(String tag, String correlationId) {

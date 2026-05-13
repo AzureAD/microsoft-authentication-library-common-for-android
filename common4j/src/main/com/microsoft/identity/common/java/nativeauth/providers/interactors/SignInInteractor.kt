@@ -29,6 +29,8 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInStartCommandParameters
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidator
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInChallengeRequest
@@ -41,6 +43,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.util.ObjectMapper
 import com.microsoft.identity.common.java.util.StringUtil
+import java.net.URL
 
 /**
  * Acts as a binding layer between the request providers and response handlers for a given request.
@@ -55,9 +58,21 @@ import com.microsoft.identity.common.java.util.StringUtil
 class SignInInteractor(
     private val httpClient: UrlConnectionHttpClient,
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
-    private val nativeAuthResponseHandler: NativeAuthResponseHandler
+    private val nativeAuthResponseHandler: NativeAuthResponseHandler,
+    private val requestInterceptor: NativeAuthRequestInterceptor? = null
 ) {
     private val TAG:String = SignInInteractor::class.java.simpleName
+
+    private fun applyInterceptorHeaders(requestUrl: URL, headers: Map<String, String?>): Map<String, String?> {
+        if (requestInterceptor == null) return headers
+        val additionalHeaders = requestInterceptor.additionalHeaders(requestUrl) ?: return headers
+        val validHeaders = NativeAuthHeaderValidator.filterValidHeaders(additionalHeaders)
+        if (validHeaders.isEmpty()) return headers
+        val mergedHeaders = headers.toMutableMap()
+        mergedHeaders.putAll(validHeaders)
+        return mergedHeaders
+    }
+
     //region /oauth/v2.0/initiate
     fun performSignInInitiate(
         parameters: SignInStartCommandParameters
@@ -95,7 +110,7 @@ class SignInInteractor(
             methodName = "${TAG}.performSignInInitiate"
         )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
@@ -168,7 +183,7 @@ class SignInInteractor(
             methodName = "${TAG}.performSignInIntrospect"
         )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
@@ -270,7 +285,7 @@ class SignInInteractor(
             methodName = "${TAG}.performSignInChallenge"
         )
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
@@ -396,7 +411,7 @@ class SignInInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
