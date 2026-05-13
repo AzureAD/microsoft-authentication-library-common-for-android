@@ -26,6 +26,11 @@ import java.net.URL
 
 /**
  * Generic OAuth2 request interceptor used to add request-specific HTTP headers.
+ *
+ * This callback executes synchronously on the thread performing the request (typically a
+ * background/network thread), so implementations must be thread-safe and return quickly.
+ * Any exception thrown from this method will propagate to the caller and fail the request.
+ * Returning null and returning an empty map both mean that no additional headers are added.
  */
 interface OAuth2RequestInterceptor {
     fun additionalHeaders(requestUrl: URL): Map<String, String>?

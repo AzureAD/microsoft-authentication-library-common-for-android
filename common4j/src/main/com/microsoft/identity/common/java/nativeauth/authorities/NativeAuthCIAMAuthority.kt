@@ -125,6 +125,10 @@ class NativeAuthCIAMAuthority (
 
     @Throws(ClientException::class)
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
+        if (parameters.mRequestInterceptor != null && parameters.mRequestInterceptor !is NativeAuthRequestInterceptor) {
+            Logger.warn(TAG, "Ignoring non-native OAuth2RequestInterceptor for NativeAuthCIAMAuthority.")
+        }
+
         val config = createNativeAuthOAuth2Configuration(
             parameters.mChallengeTypes,
             parameters.mCapabilities,

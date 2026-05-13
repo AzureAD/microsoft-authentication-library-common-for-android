@@ -26,6 +26,17 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderV
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
 import java.net.URL
 
+/**
+ * Applies additional interceptor headers to the base request headers for native auth interactors.
+ *
+ * Uses case-insensitive merge semantics: interceptor headers replace matching base headers.
+ * Interceptor headers are validated and normalized to lowercase by [NativeAuthHeaderValidator].
+ *
+ * @param requestUrl The outbound request URL.
+ * @param headers The base request headers.
+ * @param requestInterceptor Optional interceptor providing additional headers.
+ * @return The merged headers map with interceptor values taking precedence.
+ */
 internal fun applyInterceptorHeaders(
     requestUrl: URL,
     headers: Map<String, String?>,
