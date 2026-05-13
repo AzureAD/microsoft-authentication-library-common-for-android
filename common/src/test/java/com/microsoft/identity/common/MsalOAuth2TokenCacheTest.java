@@ -1642,6 +1642,8 @@ public class MsalOAuth2TokenCacheTest {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
                 .thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
+                .thenReturn(true);
         final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
         mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
@@ -1763,5 +1765,73 @@ public class MsalOAuth2TokenCacheTest {
 
         assertEquals(1, idTokens.size());
         assertEquals(defaultTestBundleV2.mGeneratedIdToken, idTokens.get(0));
+    }
+
+    /**
+     * Regression test for ClassCastException: both flights enabled but the cache was constructed
+     * with a plain {@link SharedPreferencesAccountCredentialCache} (not the memory-cache subclass).
+     * The instanceof guard must cause load() to fall back to the legacy path without throwing.
+     */
+    @Test
+    public void load_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
+            throws ClientException {
+        enableFilterThenCloneFlight();
+        try {
+            // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
+            configureMocksForTestBundle(defaultTestBundleV2);
+            final ICacheRecord saved = mOauth2TokenCache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+
+            final ICacheRecord loaded = mOauth2TokenCache.load(
+                    CLIENT_ID,
+                    APPLICATION_IDENTIFIER_SHA512,
+                    MAM_ENROLLMENT_IDENTIFIER,
+                    TARGET,
+                    defaultTestBundleV2.mGeneratedAccount,
+                    BEARER_AUTHENTICATION_SCHEME
+            );
+
+            assertNotNull(loaded);
+            assertEquals(saved.getAccount(), loaded.getAccount());
+            assertEquals(saved.getAccessToken(), loaded.getAccessToken());
+            assertEquals(saved.getRefreshToken(), loaded.getRefreshToken());
+            assertEquals(saved.getIdToken(), loaded.getIdToken());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    /**
+     * Regression test for ClassCastException: both flights enabled but the cache was constructed
+     * with a plain {@link SharedPreferencesAccountCredentialCache} (not the memory-cache subclass).
+     * The instanceof guard must cause getIdTokensForAccountRecord() to fall back to the legacy path
+     * without throwing.
+     */
+    @Test
+    public void getIdTokensForAccountRecord_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
+            throws ClientException {
+        enableFilterThenCloneFlight();
+        try {
+            // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
+            configureMocksForTestBundle(defaultTestBundleV2);
+            mOauth2TokenCache.save(
+                    mockStrategy,
+                    mockRequest,
+                    mockResponse
+            );
+
+            final List<IdTokenRecord> idTokens = mOauth2TokenCache.getIdTokensForAccountRecord(
+                    CLIENT_ID,
+                    defaultTestBundleV2.mGeneratedAccount
+            );
+
+            assertEquals(1, idTokens.size());
+            assertEquals(defaultTestBundleV2.mGeneratedIdToken, idTokens.get(0));
+        } finally {
+            resetFlight();
+        }
     }
 }
