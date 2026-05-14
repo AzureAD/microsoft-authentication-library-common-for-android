@@ -57,7 +57,8 @@ class JITInteractorRequestInterceptorTest {
 
     private val baseHeaders = mapOf<String, String?>(
         "Content-Type" to "application/x-www-form-urlencoded",
-        "x-client-SKU" to "MSAL.Android"
+        "x-client-SKU" to "MSAL.Android",
+        "Accept" to "application/json"
     )
 
     private val testInterceptor = object : NativeAuthRequestInterceptor {
@@ -153,7 +154,7 @@ class JITInteractorRequestInterceptorTest {
         interactor.performIntrospect(createJITIntrospectParams())
 
         assertTrue(capturedHeaders.isCaptured)
-        assertEquals(2, capturedHeaders.captured.size)
+        assertEquals(3, capturedHeaders.captured.size)
         assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion

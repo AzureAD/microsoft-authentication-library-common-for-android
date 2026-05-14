@@ -29,13 +29,17 @@ import java.net.URL
 /**
  * Applies additional interceptor headers to the base request headers for native auth interactors.
  *
- * Uses case-insensitive merge semantics: interceptor headers replace matching base headers.
- * Interceptor headers are validated and normalized to lowercase by [NativeAuthHeaderValidator].
+ * Uses case-insensitive merge semantics matching iOS behavior: interceptor headers replace
+ * matching base headers regardless of casing. Interceptor headers are first validated and
+ * normalized to lowercase by [NativeAuthHeaderValidator], which filters out any non-`x-` prefixed
+ * headers and reserved prefixes (`x-ms-`, `x-client-`, `x-broker-`, `x-app-`). This ensures that
+ * mandatory SDK headers (e.g., `Content-Type`, `x-client-SKU`) cannot be overwritten by the
+ * interceptor, since they either lack the `x-` prefix or use a reserved prefix.
  *
  * @param requestUrl The outbound request URL.
  * @param headers The base request headers.
  * @param requestInterceptor Optional interceptor providing additional headers.
- * @return The merged headers map with interceptor values taking precedence.
+ * @return The merged headers map with interceptor values taking precedence for valid custom headers.
  */
 internal fun applyInterceptorHeaders(
     requestUrl: URL,
@@ -48,6 +52,8 @@ internal fun applyInterceptorHeaders(
     val validHeaders = NativeAuthHeaderValidator.filterValidHeaders(additionalHeaders)
     if (validHeaders.isEmpty()) return headers
 
+    // Case-insensitive merge: matches iOS's [NSMutableURLRequest setValue:forHTTPHeaderField:]
+    // which replaces existing headers case-insensitively.
     val mergedHeaders = headers.toMutableMap()
     for ((field, value) in validHeaders) {
         val existingHeader = mergedHeaders.keys.firstOrNull { it.equals(field, ignoreCase = true) }
