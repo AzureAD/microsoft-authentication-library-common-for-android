@@ -108,8 +108,13 @@ public class MicrosoftStsAuthorizationResultFactory
             );
         }
 
-        if (null != clientDataInfo && AuthorizationStatus.SUCCESS == result.getAuthorizationStatus()) {
-            result.setClientDataInfo(clientDataInfo);
+        if (null != clientDataInfo) {
+            final MicrosoftStsAuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+            final boolean isStateMismatch = errorResponse != null
+                    && ErrorStrings.STATE_MISMATCH.equals(errorResponse.getError());
+            if (!isStateMismatch) {
+                result.setClientDataInfo(clientDataInfo);
+            }
         }
 
         return result;

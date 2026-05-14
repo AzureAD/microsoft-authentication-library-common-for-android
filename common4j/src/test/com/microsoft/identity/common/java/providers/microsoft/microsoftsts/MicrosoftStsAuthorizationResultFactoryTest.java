@@ -338,6 +338,34 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
+    public void testClientDataParam_serverErrorRedirect_clientDataInfoAttached() {
+        // When the server returns an error in the redirect (e.g., access_denied), clientDataInfo
+        // must still be attached — this is a trusted failure we especially want telemetry for.
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?error=access_denied"
+                + "&error_description=user+denied+consent"
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS65004%7Cconsent_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                    mAuthorizationResultFactory.createAuthorizationResult(
+                            RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+            // ClientDataInfo must be attached even for server-error redirects (not state-mismatch)
+            assertNotNull(result.getClientDataInfo());
+            assertEquals("AADSTS65004", result.getClientDataInfo().getError());
+        }
+    }
+
+    @Test
     public void testClientDataParam_stateMismatch_clientDataInfoNotAttached() {
         // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
         final String redirectUrl = MOCK_REDIRECT_URI
