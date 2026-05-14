@@ -108,7 +108,9 @@ public class MicrosoftStsAuthorizationResultFactory
             );
         }
 
-        result.setClientDataInfo(clientDataInfo);
+        if (null != clientDataInfo) {
+            result.setClientDataInfo(clientDataInfo);
+        }
 
         return result;
     }

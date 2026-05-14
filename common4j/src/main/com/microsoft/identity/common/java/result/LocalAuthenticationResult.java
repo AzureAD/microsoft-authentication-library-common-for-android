@@ -207,7 +207,9 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult, IT
     }
 
     /**
-     * Gets the server client data info from the x-ms-clientdata response header.
+     * Gets the server client data info parsed from the {@code x-ms-clientdata} response header
+     * returned by the {@code /token} endpoint, or from the {@code clientdata} query parameter
+     * returned in the {@code /authorize} redirect URI.
      *
      * @return The ClientDataInfo, or null if not available.
      */
