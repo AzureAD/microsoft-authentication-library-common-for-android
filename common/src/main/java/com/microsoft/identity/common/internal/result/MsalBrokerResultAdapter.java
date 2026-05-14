@@ -1032,13 +1032,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 final ILocalAuthenticationResult authResult = authenticationResultFromBundle(resultBundle);
                 acquireTokenResult.setLocalAuthenticationResult(authResult);
 
-                // Propagate ClientDataInfo from LocalAuthenticationResult to AcquireTokenResult
-                if (authResult instanceof LocalAuthenticationResult) {
-                    acquireTokenResult.setClientDataInfo(
-                            ((LocalAuthenticationResult) authResult).getClientDataInfo()
-                    );
-                }
-
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
             } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
@@ -1066,12 +1059,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     resultAdapter.authenticationResultFromBundle(resultBundle);
             acquireTokenResult.setLocalAuthenticationResult(authResult);
 
-            // Propagate ClientDataInfo from LocalAuthenticationResult to AcquireTokenResult
-            if (authResult instanceof LocalAuthenticationResult) {
-                acquireTokenResult.setClientDataInfo(
-                        ((LocalAuthenticationResult) authResult).getClientDataInfo()
-                );
-            }
             // Set broker performance metrics if available
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
             if (metrics != null) {

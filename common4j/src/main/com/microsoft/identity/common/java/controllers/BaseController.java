@@ -219,9 +219,6 @@ public abstract class BaseController {
         final TokenResult tokenResult = oAuth2Strategy.requestToken(ropcTokenRequest);
 
         acquireTokenResult.setTokenResult(tokenResult);
-        if (tokenResult != null) {
-            acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
-        }
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2TokenCache tokenCache = parameters.getOAuth2TokenCache();
 
@@ -490,7 +487,6 @@ public abstract class BaseController {
         );
 
         acquireTokenSilentResult.setTokenResult(tokenResult);
-        acquireTokenSilentResult.setClientDataInfo(tokenResult.getClientDataInfo());
 
         ResultUtil.logResult(methodTag, tokenResult);
 

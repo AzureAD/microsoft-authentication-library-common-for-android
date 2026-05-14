@@ -50,9 +50,6 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
-    @Nullable
-    private ClientDataInfo mClientDataInfo;
-
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
         this.mSucceeded = true;
@@ -119,15 +116,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
      */
     @Nullable
     public ClientDataInfo getClientDataInfo() {
-        return mClientDataInfo;
-    }
-
-    /**
-     * Sets the {@link ClientDataInfo} containing server-side telemetry data.
-     *
-     * @param clientDataInfo The ClientDataInfo to set.
-     */
-    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
-        mClientDataInfo = clientDataInfo;
+        if (mLocalAuthenticationResult instanceof LocalAuthenticationResult) {
+            return ((LocalAuthenticationResult) mLocalAuthenticationResult).getClientDataInfo();
+        }
+        return null;
     }
 }

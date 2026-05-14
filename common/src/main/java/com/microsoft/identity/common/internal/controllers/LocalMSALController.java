@@ -169,13 +169,6 @@ public class LocalMSALController extends BaseController {
         );
         acquireTokenResult.setAuthorizationResult(result);
 
-        // Wire ClientDataInfo from the authorization result (authorize endpoint).
-        if (result instanceof MicrosoftStsAuthorizationResult) {
-            acquireTokenResult.setClientDataInfo(
-                    ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
-            );
-        }
-
         ResultUtil.logResult(TAG, result);
 
         if (result.getAuthorizationStatus().equals(AuthorizationStatus.SUCCESS)) {
@@ -188,11 +181,6 @@ public class LocalMSALController extends BaseController {
             );
 
             acquireTokenResult.setTokenResult(tokenResult);
-
-            // Prefer ClientDataInfo from the token endpoint (later, more authoritative call).
-            if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
-                acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
-            }
 
             if (tokenResult != null && tokenResult.getSuccess()) {
                 //4) Save tokens in token cache
@@ -219,10 +207,18 @@ public class LocalMSALController extends BaseController {
                         )
                 );
 
-                // Set ClientDataInfo on the LocalAuthenticationResult for IPC propagation
+                // Set ClientDataInfo on the LocalAuthenticationResult for IPC propagation.
+                // Prefer the token-endpoint value (later, more authoritative); fall back to the
+                // authorize-endpoint value.
                 final LocalAuthenticationResult localResult =
                         (LocalAuthenticationResult) acquireTokenResult.getLocalAuthenticationResult();
-                localResult.setClientDataInfo(acquireTokenResult.getClientDataInfo());
+                if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
+                    localResult.setClientDataInfo(tokenResult.getClientDataInfo());
+                } else if (result instanceof MicrosoftStsAuthorizationResult) {
+                    localResult.setClientDataInfo(
+                            ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
+                    );
+                }
             }
         }
 
@@ -760,9 +756,6 @@ public class LocalMSALController extends BaseController {
 
             // Assign token result
             acquireTokenResult.setTokenResult(tokenResult);
-            if (tokenResult != null) {
-                acquireTokenResult.setClientDataInfo(tokenResult.getClientDataInfo());
-            }
 
             // If the token is valid, save it into token cache
             final List<ICacheRecord> records = saveTokens(
