@@ -338,7 +338,7 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
-    public void testClientDataParam_serverErrorRedirect_clientDataInfoAttached() {
+    public void testClientDataParam_serverError_clientDataInfoAttached() {
         // When the server returns an error in the redirect (e.g., access_denied), clientDataInfo
         // must still be attached — this is a trusted failure we especially want telemetry for.
         // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance

@@ -108,6 +108,8 @@ public class MicrosoftStsAuthorizationResultFactory
             );
         }
 
+        // Attach ClientDataInfo for both success and trusted server errors.
+        // Exclude state-mismatch (CSRF) redirects only, as they may originate from untrusted sources.
         if (null != clientDataInfo) {
             final MicrosoftStsAuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
             final boolean isStateMismatch = errorResponse != null
