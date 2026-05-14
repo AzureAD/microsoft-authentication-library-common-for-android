@@ -43,6 +43,7 @@ public class AcquireTokenResultTest {
 
     private static final String PIPE_DELIMITED_A = "m|AADSTS50058|login_required|us|public";
     private static final String PIPE_DELIMITED_B = "e|AADSTS70011|invalid_scope|eu|sovereign";
+    private static final String PIPE_DELIMITED_C = "m|AADSTS50076|mfa_required|us|public";
 
     // ---------------------------------------------------------------------------
     // Helpers
@@ -170,7 +171,7 @@ public class AcquireTokenResultTest {
     public void getClientDataInfo_allSourcesPopulated_prefersLocalAuthResult() {
         final ClientDataInfo localData = makeClientDataInfo(PIPE_DELIMITED_A);
         final ClientDataInfo tokenData = makeClientDataInfo(PIPE_DELIMITED_B);
-        final ClientDataInfo authData = makeClientDataInfo(PIPE_DELIMITED_A);
+        final ClientDataInfo authData = makeClientDataInfo(PIPE_DELIMITED_C);
 
         final TokenResult tokenResult = new TokenResult();
         tokenResult.setClientDataInfo(tokenData);
