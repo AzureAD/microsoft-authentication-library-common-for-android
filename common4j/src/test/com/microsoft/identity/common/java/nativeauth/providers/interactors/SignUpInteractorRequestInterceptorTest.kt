@@ -37,7 +37,6 @@ import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -45,8 +44,9 @@ import org.junit.Test
 import java.net.URL
 
 /**
- * Tests verifying that [SignUpInteractor] correctly applies custom headers
- * from a [NativeAuthRequestInterceptor] to outgoing HTTP requests.
+ * Tests verifying that [SignUpInteractor] correctly wires the request interceptor
+ * to each public method. Merge logic, filtering, and edge cases are covered by
+ * [RequestInterceptorHeaderUtilsTest] and [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidatorTest].
  */
 class SignUpInteractorRequestInterceptorTest {
 
@@ -63,10 +63,7 @@ class SignUpInteractorRequestInterceptorTest {
 
     private val testInterceptor = object : NativeAuthRequestInterceptor {
         override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-            return mapOf(
-                "x-akamai-sensor" to "sensor-data-123",
-                "x-fraud-signal" to "signal-abc"
-            )
+            return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
     }
 
@@ -105,7 +102,6 @@ class SignUpInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
-        assertEquals("signal-abc", capturedHeaders.captured["x-fraud-signal"])
         assertEquals("MSAL.Android", capturedHeaders.captured["x-client-SKU"])
     }
 
@@ -144,7 +140,6 @@ class SignUpInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
-        assertEquals("signal-abc", capturedHeaders.captured["x-fraud-signal"])
     }
     // endregion
 
@@ -202,152 +197,6 @@ class SignUpInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
-    }
-    // endregion
-
-    // region reserved header filtering
-    @Test
-    fun testInterceptorReservedHeadersAreFilteredInSignUp() {
-        val filteringInterceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "x-akamai-sensor" to "valid",
-                    "x-ms-evil" to "should-be-filtered",
-                    "x-client-override" to "should-be-filtered",
-                    "x-app-secret" to "should-be-filtered",
-                    "x-broker-bypass" to "should-be-filtered",
-                    "Authorization" to "should-be-filtered"
-                )
-            }
-        }
-
-        val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns baseHeaders
-        every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
-        every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
-
-        val capturedHeaders = setupHttpClientCapture()
-        val interactor = createInteractor(interceptor = filteringInterceptor)
-
-        interactor.performSignUpStart(mockk<SignUpStartCommandParameters>(relaxed = true))
-
-        assertTrue(capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertTrue(headers.containsKey("x-akamai-sensor"))
-        assertFalse("x-ms- prefix should be filtered", headers.containsKey("x-ms-evil"))
-        assertFalse("x-client- prefix should be filtered", headers.containsKey("x-client-override"))
-        assertFalse("x-app- prefix should be filtered", headers.containsKey("x-app-secret"))
-        assertFalse("x-broker- prefix should be filtered", headers.containsKey("x-broker-bypass"))
-        assertFalse("Non x- prefix should be filtered", headers.containsKey("Authorization"))
-    }
-    // endregion
-
-    // region interceptor receives correct URL
-    @Test
-    fun testInterceptorReceivesCorrectRequestUrl() {
-        val capturedUrls = mutableListOf<URL>()
-        val urlCapturingInterceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                capturedUrls.add(requestUrl)
-                return mapOf("x-test" to "value")
-            }
-        }
-
-        val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns baseHeaders
-        every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
-        every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
-        every {
-            mockHttpClient.post(any<URL>(), any<Map<String, String>>(), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = createInteractor(interceptor = urlCapturingInterceptor)
-
-        interactor.performSignUpStart(mockk<SignUpStartCommandParameters>(relaxed = true))
-
-        assertEquals(1, capturedUrls.size)
-        assertEquals(testUrl, capturedUrls[0])
-    }
-    // endregion
-
-    // region reserved header overwrite protection
-    @Test
-    fun testInterceptorCannotOverwriteReservedBaseHeaders() {
-        val overwriteInterceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "x-client-SKU" to "Evil.SDK",
-                    "x-ms-request-id" to "fake-id",
-                    "x-akamai-sensor" to "valid-data"
-                )
-            }
-        }
-
-        val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns baseHeaders
-        every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
-        every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
-
-        val capturedHeaders = setupHttpClientCapture()
-        val interactor = createInteractor(interceptor = overwriteInterceptor)
-
-        interactor.performSignUpStart(mockk<SignUpStartCommandParameters>(relaxed = true))
-
-        assertTrue(capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        // Reserved prefix headers from interceptor should be filtered, preserving base values
-        assertEquals("MSAL.Android", headers["x-client-SKU"])
-        assertFalse("x-ms- prefix should be filtered", headers.containsKey("x-ms-request-id"))
-        // Valid custom header should be merged
-        assertEquals("valid-data", headers["x-akamai-sensor"])
-    }
-    // endregion
-
-    // region case-insensitive header merge
-    @Test
-    fun testCaseInsensitiveHeaderMerge() {
-        val baseHeadersWithCustom = mapOf<String, String?>(
-            "Content-Type" to "application/x-www-form-urlencoded",
-            "x-client-SKU" to "MSAL.Android",
-            "x-existing-custom" to "old-value"
-        )
-
-        val caseInterceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "X-Existing-Custom" to "new-value",
-                    "x-new-header" to "new-data"
-                )
-            }
-        }
-
-        val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns baseHeadersWithCustom
-        every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
-        every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
-
-        val capturedHeaders = setupHttpClientCapture()
-        val interactor = createInteractor(interceptor = caseInterceptor)
-
-        interactor.performSignUpStart(mockk<SignUpStartCommandParameters>(relaxed = true))
-
-        assertTrue(capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        // The original casing key should be replaced by the normalized (lowercase) key from validator
-        assertFalse(
-            "Original casing key should be removed",
-            headers.containsKey("x-existing-custom") && headers.containsKey("x-Existing-Custom")
-        )
-        // The value should be the interceptor's new value (validator normalizes to lowercase)
-        assertEquals("new-value", headers["x-existing-custom"])
-        // New header should be added
-        assertEquals("new-data", headers["x-new-header"])
-        // Base reserved headers should be preserved
-        assertEquals("MSAL.Android", headers["x-client-SKU"])
     }
     // endregion
 }

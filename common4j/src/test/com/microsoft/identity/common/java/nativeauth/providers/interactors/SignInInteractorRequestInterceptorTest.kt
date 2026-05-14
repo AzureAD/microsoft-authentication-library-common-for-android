@@ -38,7 +38,6 @@ import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -46,8 +45,9 @@ import org.junit.Test
 import java.net.URL
 
 /**
- * Tests verifying that [SignInInteractor] correctly applies custom headers
- * from a [NativeAuthRequestInterceptor] to outgoing HTTP requests.
+ * Tests verifying that [SignInInteractor] correctly wires the request interceptor
+ * to each public method. Merge logic, filtering, and edge cases are covered by
+ * [RequestInterceptorHeaderUtilsTest] and [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidatorTest].
  */
 class SignInInteractorRequestInterceptorTest {
 
@@ -57,257 +57,85 @@ class SignInInteractorRequestInterceptorTest {
     private val mockRequestProvider = mockk<NativeAuthRequestProvider>()
     private val mockResponseHandler = mockk<NativeAuthResponseHandler>()
 
-    private fun createMockRequest(
-        url: URL = testUrl,
-        headers: Map<String, String?> = mapOf("Content-Type" to "application/x-www-form-urlencoded")
-    ): SignInInitiateRequest {
-        val mockRequest = mockk<SignInInitiateRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns url
-        every { mockRequest.headers } returns headers
-        return mockRequest
-    }
+    private val baseHeaders = mapOf<String, String?>(
+        "Content-Type" to "application/x-www-form-urlencoded",
+        "x-client-SKU" to "MSAL.Android"
+    )
 
-    private fun setupMocks(mockRequest: SignInInitiateRequest) {
-        every { mockRequestProvider.createSignInInitiateRequest(any()) } returns mockRequest
-        every {
-            mockResponseHandler.getSignInInitiateResultFromHttpResponse(any(), any())
-        } returns mockk(relaxed = true)
-    }
-
-    @Test
-    fun testInterceptorHeadersAreMergedIntoRequest() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "x-akamai-sensor" to "sensor-data-123",
-                    "x-fraud-signal" to "signal-abc"
-                )
-            }
+    private val testInterceptor = object : NativeAuthRequestInterceptor {
+        override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
+            return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
+    }
 
-        val baseHeaders = mapOf<String, String?>(
-            "Content-Type" to "application/x-www-form-urlencoded",
-            "x-client-SKU" to "MSAL.Android"
-        )
-        val mockRequest = createMockRequest(headers = baseHeaders)
-        setupMocks(mockRequest)
-
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
+    private fun createInteractor(
+        interceptor: NativeAuthRequestInterceptor? = testInterceptor
+    ): SignInInteractor {
+        return SignInInteractor(
             httpClient = mockHttpClient,
             nativeAuthRequestProvider = mockRequestProvider,
             nativeAuthResponseHandler = mockResponseHandler,
             requestInterceptor = interceptor
         )
+    }
 
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
+    private fun setupHttpClientCapture(): io.mockk.CapturingSlot<Map<String, String>> {
+        val capturedHeaders = slot<Map<String, String>>()
+        every {
+            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
+        } returns HttpResponse(200, "{}", emptyMap())
+        return capturedHeaders
+    }
 
-        assertTrue("Headers should have been captured", capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertEquals("sensor-data-123", headers["x-akamai-sensor"])
-        assertEquals("signal-abc", headers["x-fraud-signal"])
-        assertEquals("application/x-www-form-urlencoded", headers["Content-Type"])
-        assertEquals("MSAL.Android", headers["x-client-SKU"])
+    // region performSignInInitiate
+    @Test
+    fun testInterceptorHeadersAreMergedInPerformSignInInitiate() {
+        val mockRequest = mockk<SignInInitiateRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignInInitiateRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignInInitiateResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
+
+        interactor.performSignInInitiate(mockk<SignInStartCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+        assertEquals("MSAL.Android", capturedHeaders.captured["x-client-SKU"])
     }
 
     @Test
     fun testNullInterceptorDoesNotModifyHeaders() {
-        val baseHeaders = mapOf<String, String?>(
-            "Content-Type" to "application/x-www-form-urlencoded"
-        )
-        val mockRequest = createMockRequest(headers = baseHeaders)
-        setupMocks(mockRequest)
+        val mockRequest = mockk<SignInInitiateRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignInInitiateRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignInInitiateResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
 
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = null
-        )
+        interactor.performSignInInitiate(mockk<SignInStartCommandParameters>(relaxed = true))
 
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
-
-        assertTrue("Headers should have been captured", capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertEquals(1, headers.size)
-        assertEquals("application/x-www-form-urlencoded", headers["Content-Type"])
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
-
-    @Test
-    fun testInterceptorReturningNullDoesNotModifyHeaders() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? = null
-        }
-
-        val baseHeaders = mapOf<String, String?>(
-            "Content-Type" to "application/x-www-form-urlencoded"
-        )
-        val mockRequest = createMockRequest(headers = baseHeaders)
-        setupMocks(mockRequest)
-
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
-
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
-
-        assertTrue("Headers should have been captured", capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertEquals(1, headers.size)
-    }
-
-    @Test
-    fun testInterceptorReservedHeadersAreFiltered() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "x-akamai-sensor" to "valid",
-                    "x-ms-evil" to "should-be-filtered",
-                    "x-client-override" to "should-be-filtered",
-                    "Authorization" to "should-be-filtered"
-                )
-            }
-        }
-
-        val mockRequest = createMockRequest()
-        setupMocks(mockRequest)
-
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
-
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
-
-        assertTrue("Headers should have been captured", capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertTrue(headers.containsKey("x-akamai-sensor"))
-        assertEquals("valid", headers["x-akamai-sensor"])
-        assertFalse("x-ms- prefix should be filtered", headers.containsKey("x-ms-evil"))
-        assertFalse("x-client- prefix should be filtered", headers.containsKey("x-client-override"))
-        assertFalse("Non x- prefix should be filtered", headers.containsKey("Authorization"))
-    }
-
-    @Test
-    fun testInterceptorReceivesCorrectRequestUrl() {
-        val capturedUrls = mutableListOf<URL>()
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                capturedUrls.add(requestUrl)
-                return mapOf("x-test" to "value")
-            }
-        }
-
-        val mockRequest = createMockRequest()
-        setupMocks(mockRequest)
-
-        every {
-            mockHttpClient.post(any<URL>(), any<Map<String, String>>(), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
-
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
-
-        assertEquals("Interceptor should have been called once", 1, capturedUrls.size)
-        assertEquals(testUrl, capturedUrls[0])
-    }
-
-    @Test
-    fun testInterceptorEmptyHeadersDoNotModifyRequest() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return emptyMap()
-            }
-        }
-
-        val baseHeaders = mapOf<String, String?>(
-            "Content-Type" to "application/x-www-form-urlencoded"
-        )
-        val mockRequest = createMockRequest(headers = baseHeaders)
-        setupMocks(mockRequest)
-
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
-
-        val mockParameters = mockk<SignInStartCommandParameters>(relaxed = true)
-        interactor.performSignInInitiate(mockParameters)
-
-        assertTrue("Headers should have been captured", capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertEquals(1, headers.size)
-        assertEquals("application/x-www-form-urlencoded", headers["Content-Type"])
-    }
+    // endregion
 
     // region performIntrospect
     @Test
     fun testInterceptorHeadersAreMergedInPerformIntrospect() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInIntrospectRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createIntrospectRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInIntrospectResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performIntrospect(continuationToken = "token", correlationId = "corr-id")
 
@@ -319,29 +147,14 @@ class SignInInteractorRequestInterceptorTest {
     // region performSignInDefaultChallenge
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignInDefaultChallenge() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInDefaultChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performSignInDefaultChallenge(continuationToken = "token", correlationId = "corr-id")
 
@@ -353,29 +166,14 @@ class SignInInteractorRequestInterceptorTest {
     // region performSignInSelectedChallenge
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignInSelectedChallenge() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInSelectedChallengeRequest(any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performSignInSelectedChallenge(continuationToken = "token", challengeId = "challenge-1", correlationId = "corr-id")
 
@@ -387,29 +185,14 @@ class SignInInteractorRequestInterceptorTest {
     // region performOOBTokenRequest
     @Test
     fun testInterceptorHeadersAreMergedInPerformOOBTokenRequest() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createOOBTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performOOBTokenRequest(mockk<SignInSubmitCodeCommandParameters>(relaxed = true))
 
@@ -421,29 +204,14 @@ class SignInInteractorRequestInterceptorTest {
     // region performContinuationTokenTokenRequest
     @Test
     fun testInterceptorHeadersAreMergedInPerformContinuationTokenTokenRequest() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createContinuationTokenTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performContinuationTokenTokenRequest(mockk<SignInWithContinuationTokenCommandParameters>(relaxed = true))
 
@@ -455,29 +223,14 @@ class SignInInteractorRequestInterceptorTest {
     // region performPasswordTokenRequest
     @Test
     fun testInterceptorHeadersAreMergedInPerformPasswordTokenRequest() {
-        val interceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf("x-akamai-sensor" to "sensor-data-123")
-            }
-        }
-
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
         every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns mapOf<String, String?>("Content-Type" to "application/x-www-form-urlencoded")
+        every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createPasswordTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
 
-        val capturedHeaders = slot<Map<String, String>>()
-        every {
-            mockHttpClient.post(any<URL>(), capture(capturedHeaders), any<ByteArray>())
-        } returns HttpResponse(200, "{}", emptyMap())
-
-        val interactor = SignInInteractor(
-            httpClient = mockHttpClient,
-            nativeAuthRequestProvider = mockRequestProvider,
-            nativeAuthResponseHandler = mockResponseHandler,
-            requestInterceptor = interceptor
-        )
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor()
 
         interactor.performPasswordTokenRequest(mockk<SignInSubmitPasswordCommandParameters>(relaxed = true))
 

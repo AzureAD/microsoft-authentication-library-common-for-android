@@ -45,8 +45,9 @@ import org.junit.Test
 import java.net.URL
 
 /**
- * Tests verifying that [ResetPasswordInteractor] correctly applies custom headers
- * from a [NativeAuthRequestInterceptor] to outgoing HTTP requests.
+ * Tests verifying that [ResetPasswordInteractor] correctly wires the request interceptor
+ * to each public method. Merge logic, filtering, and edge cases are covered by
+ * [RequestInterceptorHeaderUtilsTest] and [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidatorTest].
  */
 class ResetPasswordInteractorRequestInterceptorTest {
 
@@ -63,10 +64,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
 
     private val testInterceptor = object : NativeAuthRequestInterceptor {
         override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-            return mapOf(
-                "x-akamai-sensor" to "sensor-data-123",
-                "x-fraud-signal" to "signal-abc"
-            )
+            return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
     }
 
@@ -105,7 +103,6 @@ class ResetPasswordInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
-        assertEquals("signal-abc", capturedHeaders.captured["x-fraud-signal"])
         assertEquals("MSAL.Android", capturedHeaders.captured["x-client-SKU"])
     }
 
@@ -203,44 +200,6 @@ class ResetPasswordInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
-    }
-    // endregion
-
-    // region reserved header filtering
-    @Test
-    fun testInterceptorReservedHeadersAreFilteredInResetPassword() {
-        val filteringInterceptor = object : NativeAuthRequestInterceptor {
-            override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
-                return mapOf(
-                    "x-akamai-sensor" to "valid",
-                    "x-ms-evil" to "should-be-filtered",
-                    "x-client-override" to "should-be-filtered",
-                    "x-app-secret" to "should-be-filtered",
-                    "x-broker-bypass" to "should-be-filtered",
-                    "Authorization" to "should-be-filtered"
-                )
-            }
-        }
-
-        val mockRequest = mockk<ResetPasswordStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
-        every { mockRequest.headers } returns baseHeaders
-        every { mockRequestProvider.createResetPasswordStartRequest(any()) } returns mockRequest
-        every { mockResponseHandler.getResetPasswordStartApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
-
-        val capturedHeaders = setupHttpClientCapture()
-        val interactor = createInteractor(interceptor = filteringInterceptor)
-
-        interactor.performResetPasswordStart(mockk<ResetPasswordStartCommandParameters>(relaxed = true))
-
-        assertTrue(capturedHeaders.isCaptured)
-        val headers = capturedHeaders.captured
-        assertTrue(headers.containsKey("x-akamai-sensor"))
-        assertFalse("x-ms- prefix should be filtered", headers.containsKey("x-ms-evil"))
-        assertFalse("x-client- prefix should be filtered", headers.containsKey("x-client-override"))
-        assertFalse("x-app- prefix should be filtered", headers.containsKey("x-app-secret"))
-        assertFalse("x-broker- prefix should be filtered", headers.containsKey("x-broker-bypass"))
-        assertFalse("Non x- prefix should be filtered", headers.containsKey("Authorization"))
     }
     // endregion
 }
