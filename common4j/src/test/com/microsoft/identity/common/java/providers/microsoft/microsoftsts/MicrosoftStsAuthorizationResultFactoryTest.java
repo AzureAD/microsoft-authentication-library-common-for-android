@@ -338,6 +338,50 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
+    public void testClientDataParam_stateMismatch_clientDataInfoNotAttached() {
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?" + MOCK_AUTH_CODE_AND_STATE
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        // Pass a mismatched state to trigger state validation failure (potential CSRF redirect)
+        final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(redirectUrl),
+                        getMstsAuthorizationRequestWithState("incorrect_state"));
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+        // ClientDataInfo must NOT be attached for untrusted/state-mismatch redirects
+        assertNull(result.getClientDataInfo());
+    }
+
+    @Test
+    public void testClientDataParam_validState_clientDataInfoAttached() {
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                    mAuthorizationResultFactory.createAuthorizationResult(
+                            RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+            // ClientDataInfo must be attached when state validation passes
+            assertNotNull(result.getClientDataInfo());
+        }
+    }
+
+
+    @Test
     public void testClientDataParam_flightDisabled_attributesNotEmitted() {
         final MockFlightsProvider provider = new MockFlightsProvider();
         provider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "false");

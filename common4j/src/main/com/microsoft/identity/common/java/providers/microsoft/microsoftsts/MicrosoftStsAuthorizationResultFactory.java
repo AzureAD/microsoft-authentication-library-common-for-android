@@ -108,7 +108,7 @@ public class MicrosoftStsAuthorizationResultFactory
             );
         }
 
-        if (null != clientDataInfo) {
+        if (null != clientDataInfo && AuthorizationStatus.SUCCESS == result.getAuthorizationStatus()) {
             result.setClientDataInfo(clientDataInfo);
         }
 
