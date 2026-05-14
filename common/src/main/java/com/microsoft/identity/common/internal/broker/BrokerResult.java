@@ -727,7 +727,7 @@ public class BrokerResult {
             return this;
         }
 
-        public Builder onboardingBlob(String onboardingBlob) {
+        public Builder onboardingBlob(@Nullable final String onboardingBlob) {
             this.mOnboardingBlob = onboardingBlob;
             return this;
         }
