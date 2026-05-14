@@ -3,6 +3,7 @@ vNext
 
 Version 24.2.1-RC1
 ----------
+- [MINOR] Add onboarding telemetry recorder, field keys, and session persistence for mobile onboarding flow (#3088)
 
 Version 24.2.0
 ----------
