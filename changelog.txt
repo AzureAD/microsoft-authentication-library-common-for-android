@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Handle app_link Intent redirection by validating broker install links and rejecting unsupported redirect URIs with appropriate error responses (#3102)
 - [PATCH] Extend filter-then-clone optimization to load() and getIdTokensForAccountRecord() in MsalOAuth2TokenCache: when ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight is enabled, skip clone-all preload and call direct flight-gated overloads that clone only matching credentials; add new getCredentialsFilteredBy overload with kid support (#3100)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 - [PATCH] Edge TB: Fix lookup mode (#3108)
