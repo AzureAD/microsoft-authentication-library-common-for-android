@@ -59,6 +59,8 @@ import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ThreadUtils;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -212,12 +214,14 @@ public class LocalMSALController extends BaseController {
                 // authorize-endpoint value.
                 final LocalAuthenticationResult localResult =
                         (LocalAuthenticationResult) acquireTokenResult.getLocalAuthenticationResult();
-                if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
-                    localResult.setClientDataInfo(tokenResult.getClientDataInfo());
-                } else if (result instanceof MicrosoftStsAuthorizationResult) {
-                    localResult.setClientDataInfo(
-                            ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
-                    );
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                    if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
+                        localResult.setClientDataInfo(tokenResult.getClientDataInfo());
+                    } else if (result instanceof MicrosoftStsAuthorizationResult) {
+                        localResult.setClientDataInfo(
+                                ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
+                        );
+                    }
                 }
             }
         }
@@ -780,7 +784,7 @@ public class LocalMSALController extends BaseController {
             );
 
             // Set ClientDataInfo on the LocalAuthenticationResult for IPC propagation
-            if (tokenResult != null) {
+            if (tokenResult != null && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
                 final LocalAuthenticationResult localResult =
                         (LocalAuthenticationResult) acquireTokenResult.getLocalAuthenticationResult();
                 localResult.setClientDataInfo(tokenResult.getClientDataInfo());

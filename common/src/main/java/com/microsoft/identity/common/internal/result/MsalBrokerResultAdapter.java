@@ -288,7 +288,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         // Serialize ClientDataInfo as raw pipe-delimited string for IPC transfer.
         // The raw field is populated by ClientDataInfo.fromPipeDelimited(), the only
         // path that populates the parsed fields, so it is safe to ship as-is.
-        if (authenticationResult instanceof LocalAuthenticationResult) {
+        if (authenticationResult instanceof LocalAuthenticationResult
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
             final ClientDataInfo clientDataInfo =
                     ((LocalAuthenticationResult) authenticationResult).getClientDataInfo();
             if (clientDataInfo != null) {
@@ -425,7 +426,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         // Serialize ClientDataInfo (server telemetry from x-ms-clientdata) so it
         // survives the broker IPC boundary on error paths.
-        if (exception.getClientDataInfo() != null) {
+        if (exception.getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
             builder.clientDataInfoRaw(exception.getClientDataInfo().getRaw());
         }
 
@@ -509,10 +511,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
 
         // Deserialize ClientDataInfo from the broker result if available
-        final ClientDataInfo clientDataInfo =
-                ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw());
-        if (clientDataInfo != null) {
-            localAuthResult.setClientDataInfo(clientDataInfo);
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            final ClientDataInfo clientDataInfo =
+                    ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw());
+            if (clientDataInfo != null) {
+                localAuthResult.setClientDataInfo(clientDataInfo);
+            }
         }
 
         return localAuthResult;
@@ -552,7 +556,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         // Restore ClientDataInfo (server telemetry) from the broker result so callers
         // catching the exception can inspect server-side error context.
-        if (!StringUtil.isNullOrEmpty(brokerResult.getClientDataInfoRaw())) {
+        if (!StringUtil.isNullOrEmpty(brokerResult.getClientDataInfoRaw())
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
             baseException.setClientDataInfo(
                     ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw())
             );
