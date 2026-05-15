@@ -736,4 +736,34 @@ class MsalBrokerResultAdapterTests {
         assertEquals("AADSTS50058", acquireTokenResult.clientDataInfo!!.error)
         assertEquals(clientDataRaw, acquireTokenResult.clientDataInfo!!.raw)
     }
+
+    @Test
+    fun testOnboardingBlob_RoundTripsThroughBundle() {
+        val blobJson = """{"schema_version":"1.0.0","session_correlation_id":"abc-123","onboarding_mode":"brokered","blocking_errors":["BROKER_INSTALLATION_TRIGGERED"]}"""
+        val brokerResult = BrokerResult.Builder()
+            .clientId("aClientId")
+            .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
+            .onboardingBlob(blobJson)
+            .build()
+
+        val adapter = getInstance()
+        val resultBundle = adapter.bundleFromBrokerResult(brokerResult, "10.0")
+        val deserialized = adapter.brokerResultFromBundle(resultBundle)
+
+        assertEquals(blobJson, deserialized.onboardingBlob)
+    }
+
+    @Test
+    fun testOnboardingBlob_NotSet_DeserializesAsNull() {
+        val brokerResult = BrokerResult.Builder()
+            .clientId("aClientId")
+            .correlationId("987d8962-3f4d-4054-a852-ac0c4b6a602e")
+            .build()
+
+        val adapter = getInstance()
+        val resultBundle = adapter.bundleFromBrokerResult(brokerResult, "10.0")
+        val deserialized = adapter.brokerResultFromBundle(resultBundle)
+
+        assertNull(deserialized.onboardingBlob)
+    }
 }

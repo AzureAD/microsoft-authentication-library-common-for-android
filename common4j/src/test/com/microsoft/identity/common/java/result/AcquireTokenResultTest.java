@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -213,5 +214,33 @@ public class AcquireTokenResultTest {
         result.setAuthorizationResult(makeAuthResult(authData));
 
         assertSame(authData, result.getClientDataInfo());
+    }
+
+    // ---------------------------------------------------------------------------
+    // Onboarding blob accessor tests
+    // ---------------------------------------------------------------------------
+
+    @Test
+    public void onboardingBlob_DefaultsToNull() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+        Assert.assertNull(result.getOnboardingBlob());
+    }
+
+    @Test
+    public void onboardingBlob_RoundTripsThroughSetter() {
+        final String blobJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"brokered\"}";
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setOnboardingBlob(blobJson);
+        Assert.assertEquals(blobJson, result.getOnboardingBlob());
+    }
+
+    @Test
+    public void onboardingBlob_NullSetterClearsValue() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setOnboardingBlob("non-null");
+        result.setOnboardingBlob(null);
+        Assert.assertNull(result.getOnboardingBlob());
     }
 }
