@@ -113,6 +113,7 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
                 final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(clientDataHeader);
                 if (null != clientDataInfo) {
                     clientDataInfo.emitToSpan();
+                    result.setClientDataInfo(clientDataInfo);
                 }
             }
 
