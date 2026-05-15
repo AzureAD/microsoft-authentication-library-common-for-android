@@ -50,7 +50,9 @@ import java.net.URL
  */
 class JITInteractorRequestInterceptorTest {
 
-    private val testUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/register/introspect")
+    private val introspectUrl = URL("https://contoso.ciamlogin.com/register/v1.0/introspect")
+    private val challengeUrl = URL("https://contoso.ciamlogin.com/register/v1.0/challenge")
+    private val continueUrl = URL("https://contoso.ciamlogin.com/register/v1.0/continue")
 
     private val mockHttpClient = mockk<UrlConnectionHttpClient>()
     private val mockRequestProvider = mockk<NativeAuthRequestProvider>()
@@ -122,7 +124,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformIntrospect() {
         val mockRequest = mockk<JITIntrospectRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns introspectUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITIntrospectRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITIntrospectApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -140,7 +142,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformIntrospect() {
         val mockRequest = mockk<JITIntrospectRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns introspectUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITIntrospectRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITIntrospectApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -160,7 +162,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformChallenge() {
         val mockRequest = mockk<JITChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITChallengeRequest(any(), any(), any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -177,7 +179,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformChallenge() {
         val mockRequest = mockk<JITChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITChallengeRequest(any(), any(), any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -197,7 +199,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformContinue() {
         val mockRequest = mockk<JITContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITContinueRequest(any(), any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -214,7 +216,7 @@ class JITInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformContinue() {
         val mockRequest = mockk<JITContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createJITContinueRequest(any(), any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getJITContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)

@@ -51,7 +51,10 @@ import java.net.URL
  */
 class SignInInteractorRequestInterceptorTest {
 
-    private val testUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/initiate")
+    private val initiateUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/initiate")
+    private val introspectUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/introspect")
+    private val challengeUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/challenge")
+    private val tokenUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/token")
 
     private val mockHttpClient = mockk<UrlConnectionHttpClient>()
     private val mockRequestProvider = mockk<NativeAuthRequestProvider>()
@@ -91,7 +94,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignInInitiate() {
         val mockRequest = mockk<SignInInitiateRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns initiateUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInInitiateRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInInitiateResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -109,7 +112,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeaders() {
         val mockRequest = mockk<SignInInitiateRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns initiateUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInInitiateRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInInitiateResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -129,7 +132,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformIntrospect() {
         val mockRequest = mockk<SignInIntrospectRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns introspectUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createIntrospectRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInIntrospectResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -146,7 +149,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformIntrospect() {
         val mockRequest = mockk<SignInIntrospectRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns introspectUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createIntrospectRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInIntrospectResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -166,7 +169,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignInDefaultChallenge() {
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInDefaultChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -183,7 +186,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignInDefaultChallenge() {
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInDefaultChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -203,7 +206,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignInSelectedChallenge() {
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInSelectedChallengeRequest(any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -220,7 +223,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignInSelectedChallenge() {
         val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignInSelectedChallengeRequest(any(), any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -240,7 +243,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformOOBTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createOOBTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -257,7 +260,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformOOBTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createOOBTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -277,7 +280,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformContinuationTokenTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createContinuationTokenTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -294,7 +297,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformContinuationTokenTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createContinuationTokenTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -314,7 +317,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformPasswordTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createPasswordTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -331,7 +334,7 @@ class SignInInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformPasswordTokenRequest() {
         val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns tokenUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createPasswordTokenRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)

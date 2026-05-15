@@ -51,7 +51,11 @@ import java.net.URL
  */
 class ResetPasswordInteractorRequestInterceptorTest {
 
-    private val testUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/resetpassword/start")
+    private val startUrl = URL("https://contoso.ciamlogin.com/resetpassword/v1.0/start")
+    private val challengeUrl = URL("https://contoso.ciamlogin.com/resetpassword/v1.0/challenge")
+    private val continueUrl = URL("https://contoso.ciamlogin.com/resetpassword/v1.0/continue")
+    private val submitUrl = URL("https://contoso.ciamlogin.com/resetpassword/v1.0/submit")
+    private val pollCompletionUrl = URL("https://contoso.ciamlogin.com/resetpassword/v1.0/poll_completion")
 
     private val mockHttpClient = mockk<UrlConnectionHttpClient>()
     private val mockRequestProvider = mockk<NativeAuthRequestProvider>()
@@ -91,7 +95,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformResetPasswordStart() {
         val mockRequest = mockk<ResetPasswordStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns startUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordStartRequest(any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordStartApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -109,7 +113,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordStart() {
         val mockRequest = mockk<ResetPasswordStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns startUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordStartRequest(any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordStartApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -129,7 +133,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformResetPasswordChallenge() {
         val mockRequest = mockk<ResetPasswordChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -146,7 +150,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordChallenge() {
         val mockRequest = mockk<ResetPasswordChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -166,7 +170,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformResetPasswordContinue() {
         val mockRequest = mockk<ResetPasswordContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordContinueRequest(any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -183,7 +187,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordContinue() {
         val mockRequest = mockk<ResetPasswordContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordContinueRequest(any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -204,7 +208,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     fun testInterceptorHeadersAreMergedInPerformResetPasswordSubmit() {
         val mockRequestParams = mockk<ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestParameters>(relaxed = true)
         val mockRequest = mockk<ResetPasswordSubmitRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns submitUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequest.parameters } returns mockRequestParams
         every { mockRequestProvider.createResetPasswordSubmitRequest(any()) } returns mockRequest
@@ -223,7 +227,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordSubmit() {
         val mockRequestParams = mockk<ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestParameters>(relaxed = true)
         val mockRequest = mockk<ResetPasswordSubmitRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns submitUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequest.parameters } returns mockRequestParams
         every { mockRequestProvider.createResetPasswordSubmitRequest(any()) } returns mockRequest
@@ -244,7 +248,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformResetPasswordPollCompletion() {
         val mockRequest = mockk<ResetPasswordPollCompletionRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns pollCompletionUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordPollCompletionRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordPollCompletionApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -261,7 +265,7 @@ class ResetPasswordInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordPollCompletion() {
         val mockRequest = mockk<ResetPasswordPollCompletionRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns pollCompletionUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createResetPasswordPollCompletionRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getResetPasswordPollCompletionApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)

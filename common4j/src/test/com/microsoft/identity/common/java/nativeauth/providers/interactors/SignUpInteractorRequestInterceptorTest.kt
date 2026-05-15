@@ -50,7 +50,9 @@ import java.net.URL
  */
 class SignUpInteractorRequestInterceptorTest {
 
-    private val testUrl = URL("https://contoso.ciamlogin.com/oauth2/v2.0/signup/start")
+    private val startUrl = URL("https://contoso.ciamlogin.com/signup/v1.0/start")
+    private val challengeUrl = URL("https://contoso.ciamlogin.com/signup/v1.0/challenge")
+    private val continueUrl = URL("https://contoso.ciamlogin.com/signup/v1.0/continue")
 
     private val mockHttpClient = mockk<UrlConnectionHttpClient>()
     private val mockRequestProvider = mockk<NativeAuthRequestProvider>()
@@ -90,7 +92,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignUpStart() {
         val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns startUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -108,7 +110,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpStart() {
         val mockRequest = mockk<SignUpStartRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns startUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpStartRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpStartResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -128,7 +130,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignUpChallenge() {
         val mockRequest = mockk<SignUpChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignUpChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -145,7 +147,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpChallenge() {
         val mockRequest = mockk<SignUpChallengeRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns challengeUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpChallengeRequest(any(), any()) } returns mockRequest
         every { mockResponseHandler.getSignUpChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -165,7 +167,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignUpSubmitCode() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitCodeRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -182,7 +184,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitCode() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitCodeRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -202,7 +204,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignUpSubmitPassword() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitPasswordRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -219,7 +221,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitPassword() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitPasswordRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -239,7 +241,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testInterceptorHeadersAreMergedInPerformSignUpSubmitUserAttributes() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitUserAttributesRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
@@ -256,7 +258,7 @@ class SignUpInteractorRequestInterceptorTest {
     @Test
     fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitUserAttributes() {
         val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
-        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.requestUrl } returns continueUrl
         every { mockRequest.headers } returns baseHeaders
         every { mockRequestProvider.createSignUpSubmitUserAttributesRequest(any()) } returns mockRequest
         every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
