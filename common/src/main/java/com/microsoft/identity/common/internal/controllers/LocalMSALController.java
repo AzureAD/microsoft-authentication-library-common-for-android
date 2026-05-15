@@ -57,6 +57,7 @@ import com.microsoft.identity.common.java.platform.DevicePoPUtils;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
