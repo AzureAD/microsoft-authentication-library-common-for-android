@@ -90,7 +90,12 @@ object OnboardingTelemetryConstants {
     // Blocking error values — must match C++ hardcoded strings in InteractiveRequest.cpp
     const val BLOCKING_ERROR_BROKER_INSTALL = "BROKER_INSTALLATION_TRIGGERED"
     const val BLOCKING_ERROR_MDM_FLOW = "MDM_FLOW"
-    const val BLOCKING_ERROR_DEVICE_REGISTRATION = "DEVICE_REGISTRATION_REQUIRED"
+
+    // Device-registration blocking errors — one per BrokerExceptionClassifier.Category
+    // (see broker4j BrokerExceptionClassifier + InteractiveRequestAcquireTokenErrorHandler).
+    const val BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED = "DEVICE_REGISTRATION_NEEDED"
+    const val BLOCKING_ERROR_STRONG_DEVICE_REGISTRATION_NEEDED = "STRONG_DEVICE_REGISTRATION_NEEDED"
+    const val BLOCKING_ERROR_INSUFFICIENT_DEVICE_REGISTRATION = "INSUFFICIENT_DEVICE_REGISTRATION"
 
     // Platform-specific values
     const val PROFILE_USER = "userProfile"
