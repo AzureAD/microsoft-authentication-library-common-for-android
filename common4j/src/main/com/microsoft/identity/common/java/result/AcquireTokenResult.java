@@ -28,6 +28,8 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
 import javax.annotation.Nullable;
 
@@ -120,5 +122,39 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     @Override
     public String getBrokerAppPackageName() {
         return mBrokerAppPackageName;
+    }
+
+    /**
+     * Gets the {@link ClientDataInfo} containing server-side telemetry data from the
+     * x-ms-clientdata response header (/token) or clientdata redirect query parameter (/authorize).
+     *
+     * <p>Resolution order:
+     * <ol>
+     *   <li>{@link LocalAuthenticationResult} — authoritative on success paths; the only carrier
+     *       that survives the broker IPC boundary.</li>
+     *   <li>{@link TokenResult} — fallback for paths where token call succeeded but no
+     *       {@code LocalAuthenticationResult} was constructed (e.g., error responses).</li>
+     *   <li>{@link MicrosoftStsAuthorizationResult} — fallback for failures before the
+     *       /token call (e.g., authorize-step errors).</li>
+     * </ol>
+     *
+     * @return The ClientDataInfo, or null if not available from any source.
+     */
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        if (mLocalAuthenticationResult instanceof LocalAuthenticationResult) {
+            final ClientDataInfo fromLocalAuth =
+                    ((LocalAuthenticationResult) mLocalAuthenticationResult).getClientDataInfo();
+            if (fromLocalAuth != null) {
+                return fromLocalAuth;
+            }
+        }
+        if (mTokenResult != null && mTokenResult.getClientDataInfo() != null) {
+            return mTokenResult.getClientDataInfo();
+        }
+        if (mAuthorizationResult instanceof MicrosoftStsAuthorizationResult) {
+            return ((MicrosoftStsAuthorizationResult) mAuthorizationResult).getClientDataInfo();
+        }
+        return null;
     }
 }
