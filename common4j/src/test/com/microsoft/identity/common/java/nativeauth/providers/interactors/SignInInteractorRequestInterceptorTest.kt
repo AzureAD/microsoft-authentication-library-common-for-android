@@ -142,6 +142,24 @@ class SignInInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformIntrospect() {
+        val mockRequest = mockk<SignInIntrospectRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createIntrospectRequest(any(), any()) } returns mockRequest
+        every { mockResponseHandler.getSignInIntrospectResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performIntrospect(continuationToken = "token", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performSignInDefaultChallenge
@@ -160,6 +178,24 @@ class SignInInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignInDefaultChallenge() {
+        val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignInDefaultChallengeRequest(any(), any()) } returns mockRequest
+        every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignInDefaultChallenge(continuationToken = "token", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 
@@ -180,6 +216,24 @@ class SignInInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignInSelectedChallenge() {
+        val mockRequest = mockk<SignInChallengeRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignInSelectedChallengeRequest(any(), any(), any()) } returns mockRequest
+        every { mockResponseHandler.getSignInChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignInSelectedChallenge(continuationToken = "token", challengeId = "challenge-1", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performOOBTokenRequest
@@ -198,6 +252,24 @@ class SignInInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformOOBTokenRequest() {
+        val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createOOBTokenRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performOOBTokenRequest(mockk<SignInSubmitCodeCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 
@@ -218,6 +290,24 @@ class SignInInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformContinuationTokenTokenRequest() {
+        val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createContinuationTokenTokenRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performContinuationTokenTokenRequest(mockk<SignInWithContinuationTokenCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performPasswordTokenRequest
@@ -236,6 +326,24 @@ class SignInInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformPasswordTokenRequest() {
+        val mockRequest = mockk<SignInTokenRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createPasswordTokenRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignInTokenApiResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performPasswordTokenRequest(mockk<SignInSubmitPasswordCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 }

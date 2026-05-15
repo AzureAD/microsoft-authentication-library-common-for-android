@@ -141,6 +141,24 @@ class SignUpInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpChallenge() {
+        val mockRequest = mockk<SignUpChallengeRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignUpChallengeRequest(any(), any()) } returns mockRequest
+        every { mockResponseHandler.getSignUpChallengeResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignUpChallenge(continuationToken = "token", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performSignUpSubmitCode
@@ -159,6 +177,24 @@ class SignUpInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitCode() {
+        val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignUpSubmitCodeRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignUpSubmitCode(mockk<SignUpSubmitCodeCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 
@@ -179,6 +215,24 @@ class SignUpInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitPassword() {
+        val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignUpSubmitPasswordRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignUpSubmitPassword(mockk<SignUpSubmitPasswordCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performSignUpSubmitUserAttributes
@@ -197,6 +251,24 @@ class SignUpInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformSignUpSubmitUserAttributes() {
+        val mockRequest = mockk<SignUpContinueRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createSignUpSubmitUserAttributesRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getSignUpContinueResultFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performSignUpSubmitUserAttributes(mockk<SignUpSubmitUserAttributesCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 }

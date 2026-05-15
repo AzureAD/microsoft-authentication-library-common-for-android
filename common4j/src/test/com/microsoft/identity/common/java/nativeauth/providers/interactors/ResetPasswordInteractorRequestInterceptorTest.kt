@@ -142,6 +142,24 @@ class ResetPasswordInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordChallenge() {
+        val mockRequest = mockk<ResetPasswordChallengeRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createResetPasswordChallengeRequest(any(), any()) } returns mockRequest
+        every { mockResponseHandler.getResetPasswordChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performResetPasswordChallenge(continuationToken = "token", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performResetPasswordContinue
@@ -160,6 +178,24 @@ class ResetPasswordInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordContinue() {
+        val mockRequest = mockk<ResetPasswordContinueRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createResetPasswordContinueRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getResetPasswordContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performResetPasswordContinue(mockk<ResetPasswordSubmitCodeCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 
@@ -182,6 +218,26 @@ class ResetPasswordInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordSubmit() {
+        val mockRequestParams = mockk<ResetPasswordSubmitRequest.NativeAuthResetPasswordSubmitRequestParameters>(relaxed = true)
+        val mockRequest = mockk<ResetPasswordSubmitRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequest.parameters } returns mockRequestParams
+        every { mockRequestProvider.createResetPasswordSubmitRequest(any()) } returns mockRequest
+        every { mockResponseHandler.getResetPasswordSubmitApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performResetPasswordSubmit(mockk<ResetPasswordSubmitNewPasswordCommandParameters>(relaxed = true))
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performResetPasswordPollCompletion
@@ -200,6 +256,24 @@ class ResetPasswordInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformResetPasswordPollCompletion() {
+        val mockRequest = mockk<ResetPasswordPollCompletionRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createResetPasswordPollCompletionRequest(any(), any()) } returns mockRequest
+        every { mockResponseHandler.getResetPasswordPollCompletionApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performResetPasswordPollCompletion(continuationToken = "token", correlationId = "corr-id")
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(2, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 }

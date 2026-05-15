@@ -173,6 +173,24 @@ class JITInteractorRequestInterceptorTest {
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
     }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformChallenge() {
+        val mockRequest = mockk<JITChallengeRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createJITChallengeRequest(any(), any(), any(), any(), any()) } returns mockRequest
+        every { mockResponseHandler.getJITChallengeApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performChallenge(createJITChallengeParams())
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(3, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
+    }
     // endregion
 
     // region performContinue
@@ -191,6 +209,24 @@ class JITInteractorRequestInterceptorTest {
 
         assertTrue(capturedHeaders.isCaptured)
         assertEquals("sensor-data-123", capturedHeaders.captured["x-akamai-sensor"])
+    }
+
+    @Test
+    fun testNullInterceptorDoesNotModifyHeadersInPerformContinue() {
+        val mockRequest = mockk<JITContinueRequest>(relaxed = true)
+        every { mockRequest.requestUrl } returns testUrl
+        every { mockRequest.headers } returns baseHeaders
+        every { mockRequestProvider.createJITContinueRequest(any(), any(), any(), any()) } returns mockRequest
+        every { mockResponseHandler.getJITContinueApiResponseFromHttpResponse(any(), any()) } returns mockk(relaxed = true)
+
+        val capturedHeaders = setupHttpClientCapture()
+        val interactor = createInteractor(interceptor = null)
+
+        interactor.performContinue(createJITContinueParams())
+
+        assertTrue(capturedHeaders.isCaptured)
+        assertEquals(3, capturedHeaders.captured.size)
+        assertFalse(capturedHeaders.captured.containsKey("x-akamai-sensor"))
     }
     // endregion
 }
