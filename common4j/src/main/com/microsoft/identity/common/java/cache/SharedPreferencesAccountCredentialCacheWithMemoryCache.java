@@ -301,6 +301,12 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
         synchronized (mCacheLock) {
             waitForInitialLoad();
+            SpanExtension.current().setAttribute(
+                    AttributeName.number_of_accounts_in_cache.name(),
+                    mCachedAccountRecordsWithKeys.size());
+            SpanExtension.current().setAttribute(
+                    AttributeName.number_of_credentials_in_cache.name(),
+                    mCachedCredentialsWithKeys.size());
             final List<AccountRecord> accounts = cloneItems(mCachedAccountRecordsWithKeys.values(), methodTag);
             Logger.info(methodTag, "Found [" + accounts.size() + "] Accounts...");
             return accounts;
