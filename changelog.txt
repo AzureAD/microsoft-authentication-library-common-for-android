@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
 - [PATCH] Handle app_link Intent redirection by validating broker install links and rejecting unsupported redirect URIs with appropriate error responses (#3102)
 - [MINOR] Add onboarding telemetry blob fields to BrokerRequest/BrokerResult and command parameters for client↔broker IPC transport (#3111)

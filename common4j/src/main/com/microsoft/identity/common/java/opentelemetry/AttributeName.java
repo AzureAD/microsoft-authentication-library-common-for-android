@@ -266,6 +266,16 @@ public enum AttributeName {
     elapsed_time_cache_get_all_client_ids,
 
     /**
+     * The total number of account records in the in-memory cache at the time of the request.
+     */
+    number_of_accounts_in_cache,
+
+    /**
+     * The total number of credential records in the in-memory cache at the time of the request.
+     */
+    number_of_credentials_in_cache,
+
+    /**
      * The time (in milliseconds) spent on network when acquiring PRT.
      */
     elapsed_time_network_acquire_prt,
@@ -508,11 +518,6 @@ public enum AttributeName {
      * Records if current flow is in webcp flow.
      */
     is_in_web_cp_flow,
-
-    /**
-     * Indicates whether or not in memory cache is used for accounts and credentials.
-     */
-    in_memory_cache_used_for_accounts_and_credentials,
 
     /**
      * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
