@@ -54,7 +54,8 @@ public class ClientDataInfoTest {
     @Test
     public void fromPipeDelimited_validFiveSegments_allFieldsParsed() {
         // format: account_type|error|sub_error|caller_data_boundary|cloud_instance
-        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public");
+        final String raw = "m|AADSTS50058|login_required|us|public";
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited(raw);
 
         assertNotNull(info);
         assertEquals("m", info.getAccountType());
@@ -62,6 +63,7 @@ public class ClientDataInfoTest {
         assertEquals("login_required", info.getSubError());
         assertEquals("us", info.getCallerDataBoundary());
         assertEquals("public", info.getCloudInstance());
+        assertEquals(raw, info.getRaw());
     }
 
     @Test
@@ -108,12 +110,9 @@ public class ClientDataInfoTest {
 
     @Test
     public void emitToSpan_allFieldsSet_allAttributesEmitted() {
-        final ClientDataInfo info = new ClientDataInfo();
-        info.setError("AADSTS50058");
-        info.setSubError("login_required");
-        info.setAccountType("m");
-        info.setCloudInstance("public");
-        info.setCallerDataBoundary("us");
+        // format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public");
+        assertNotNull(info);
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
@@ -133,9 +132,9 @@ public class ClientDataInfoTest {
 
     @Test
     public void emitToSpan_someFieldsNull_nullFieldsNotEmitted() {
-        final ClientDataInfo info = new ClientDataInfo();
-        info.setError("AADSTS50058");
-        // subError, accountType, cloudInstance, callerDataBoundary all null
+        // Only error populated; account_type and sub_error empty
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("|AADSTS50058|");
+        assertNotNull(info);
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
@@ -159,8 +158,9 @@ public class ClientDataInfoTest {
 
     @Test
     public void emitToSpan_accountTypeMsa_mappedToMSA() {
-        final ClientDataInfo info = new ClientDataInfo();
-        info.setAccountType("m");
+        // Only account_type populated (m for MSA)
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("m||");
+        assertNotNull(info);
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
@@ -176,8 +176,9 @@ public class ClientDataInfoTest {
 
     @Test
     public void emitToSpan_accountTypeAad_mappedToAAD() {
-        final ClientDataInfo info = new ClientDataInfo();
-        info.setAccountType("e");
+        // Only account_type populated (e for AAD)
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("e||");
+        assertNotNull(info);
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
@@ -207,8 +208,9 @@ public class ClientDataInfoTest {
             expected256.append('A');
         }
 
-        final ClientDataInfo info = new ClientDataInfo();
-        info.setError(longValue);
+        // Construct via the only public entry point; long value goes in the error field
+        final ClientDataInfo info = ClientDataInfo.fromPipeDelimited("|" + longValue + "|");
+        assertNotNull(info);
 
         final Span mockSpan = mock(Span.class);
         when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);

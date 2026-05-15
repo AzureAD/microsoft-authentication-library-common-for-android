@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
 
 Version 24.2.1-RC1
 ----------
