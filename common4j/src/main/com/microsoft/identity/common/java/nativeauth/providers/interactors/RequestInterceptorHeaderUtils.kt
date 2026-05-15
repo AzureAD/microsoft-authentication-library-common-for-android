@@ -49,11 +49,10 @@ internal fun applyInterceptorHeaders(
     if (requestInterceptor == null) return headers
 
     val additionalHeaders = requestInterceptor.additionalHeaders(requestUrl) ?: return headers
+    // For case-insensitive merge, the headers in RESERVED_PREFIXES are filtered out
     val validHeaders = NativeAuthHeaderValidator.filterValidHeaders(additionalHeaders)
     if (validHeaders.isEmpty()) return headers
-
-    // Case-insensitive merge: matches iOS's [NSMutableURLRequest setValue:forHTTPHeaderField:]
-    // which replaces existing headers case-insensitively.
+    
     val mergedHeaders = headers.toMutableMap()
     for ((field, value) in validHeaders) {
         val existingHeader = mergedHeaders.keys.firstOrNull { it.equals(field, ignoreCase = true) }
