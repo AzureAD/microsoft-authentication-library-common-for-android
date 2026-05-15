@@ -1,6 +1,9 @@
 vNext
 ----------
+- [PATCH] Handle app_link Intent redirection by validating broker install links and rejecting unsupported redirect URIs with appropriate error responses (#3102)
+- [MINOR] Add onboarding telemetry blob fields to BrokerRequest/BrokerResult and command parameters for client↔broker IPC transport (#3111)
 - [PATCH] Extend filter-then-clone optimization to load() and getIdTokensForAccountRecord() in MsalOAuth2TokenCache: when ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight is enabled, skip clone-all preload and call direct flight-gated overloads that clone only matching credentials; add new getCredentialsFilteredBy overload with kid support (#3100)
+- [MINOR] Add onboarding telemetry recorder, field keys, and session persistence for mobile onboarding flow (#3088)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 - [MINOR] Add NativeAuthRequestInterceptor for custom per-request headers in native auth flows (#3112)
 - [PATCH] Edge TB: Fix lookup mode (#3108)
