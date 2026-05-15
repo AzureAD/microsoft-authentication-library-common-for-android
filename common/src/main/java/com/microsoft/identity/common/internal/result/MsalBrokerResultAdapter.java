@@ -288,8 +288,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         // Serialize ClientDataInfo as raw pipe-delimited string for IPC transfer.
         // The raw field is populated by ClientDataInfo.fromPipeDelimited(), the only
         // path that populates the parsed fields, so it is safe to ship as-is.
-        if (authenticationResult instanceof LocalAuthenticationResult
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)
+                && authenticationResult instanceof LocalAuthenticationResult) {
             final ClientDataInfo clientDataInfo =
                     ((LocalAuthenticationResult) authenticationResult).getClientDataInfo();
             if (clientDataInfo != null) {

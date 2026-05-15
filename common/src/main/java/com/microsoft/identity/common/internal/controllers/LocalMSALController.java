@@ -218,9 +218,11 @@ public class LocalMSALController extends BaseController {
                     if (tokenResult != null && tokenResult.getClientDataInfo() != null) {
                         localResult.setClientDataInfo(tokenResult.getClientDataInfo());
                     } else if (result instanceof MicrosoftStsAuthorizationResult) {
-                        localResult.setClientDataInfo(
-                                ((MicrosoftStsAuthorizationResult) result).getClientDataInfo()
-                        );
+                        final ClientDataInfo authClientData =
+                                ((MicrosoftStsAuthorizationResult) result).getClientDataInfo();
+                        if (authClientData != null) {
+                            localResult.setClientDataInfo(authClientData);
+                        }
                     }
                 }
             }
