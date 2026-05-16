@@ -3,6 +3,7 @@ vNext
 
 Version 24.2.1-RC1
 ----------
+- [MINOR] Add additional step ID and blocking error constants for full onboarding telemetry coverage (#3117)
 - [MINOR] Add onboarding telemetry blob fields to BrokerRequest/BrokerResult and command parameters for client↔broker IPC transport (#3111)
 - [MINOR] Add onboarding telemetry recorder, field keys, and session persistence for mobile onboarding flow (#3088)
 
