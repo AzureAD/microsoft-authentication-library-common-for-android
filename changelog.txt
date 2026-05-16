@@ -3,6 +3,7 @@ vNext
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
+- [MINOR] Add additional step ID and blocking error constants for full onboarding telemetry coverage (#3117)
 - [PATCH] Handle app_link Intent redirection by validating broker install links and rejecting unsupported redirect URIs with appropriate error responses (#3102)
 - [MINOR] Add onboarding telemetry blob fields to BrokerRequest/BrokerResult and command parameters for client↔broker IPC transport (#3111)
 - [PATCH] Extend filter-then-clone optimization to load() and getIdTokensForAccountRecord() in MsalOAuth2TokenCache: when ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight is enabled, skip clone-all preload and call direct flight-gated overloads that clone only matching credentials; add new getCredentialsFilteredBy overload with kid support (#3100)

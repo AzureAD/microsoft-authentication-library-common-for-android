@@ -39,16 +39,63 @@ object OnboardingTelemetryConstants {
 
     // Step ID values not used in C++ aggregation (no derived duration metric computed from these)
     const val STEP_AUTHENTICATION_STARTED = "AuthenticationStarted"
+    const val STEP_ACCOUNT_SELECTION_STARTED = "AccountSelectionStarted"
     const val STEP_CREDENTIAL_ENTRY_COMPLETED = "CredentialEntryCompleted"
+    const val STEP_PASSKEY_AUTH_STARTED = "PasskeyAuthStarted"
+    const val STEP_CERT_BASED_AUTH_STARTED = "CertBasedAuthStarted"
+
+    // MFA / Strong Auth Setup
+    const val STEP_STRONG_AUTH_SETUP_STARTED = "StrongAuthSetupStarted"
+    const val STEP_STRONG_AUTH_SETUP_COMPLETED = "StrongAuthSetupCompleted"
+    const val STEP_AUTHENTICATOR_MFA_LINKING_STARTED = "AuthenticatorMfaLinkingStarted"
+
+    // Conditional Access Block & Remediation
+    const val STEP_CA_BLOCK_RECEIVED = "CABlockReceived"
+    const val STEP_INTERRUPT_FLOW_STARTED = "InterruptFlowStarted"
+    const val STEP_CONSENT_PROMPT_SHOWN = "ConsentPromptShown"
+    const val STEP_TERMS_OF_USE_SHOWN = "TermsOfUseShown"
+    const val STEP_PASSWORD_RESET_REQUIRED = "PasswordResetRequired"
+
+    // Broker Installation
     const val STEP_BROKER_INSTALL_PROMPTED = "BrokerInstallPrompted"
     const val STEP_BROKER_INSTALL_PROMPTED_FOR_MDM = "BrokerInstallPromptedForMDM"
+
+    // Device Registration (WPJ)
     const val STEP_DEVICE_REGISTRATION_STARTED = "DeviceRegistrationStarted"
     const val STEP_DEVICE_REGISTRATION_COMPLETED = "DeviceRegistrationCompleted"
+    const val STEP_DEVICE_REGISTRATION_UPGRADE_STARTED = "DeviceRegistrationUpgradeStarted"
+
+    // MDM Enrollment (PP → WP transition)
+    const val STEP_MDM_ENROLLMENT_STARTED = "MDMEnrollmentStarted"
+    const val STEP_COMPANY_PORTAL_LAUNCHED = "CompanyPortalLaunched"
+    const val STEP_WEB_CP_ENROLLMENT_STARTED = "WebCpEnrollmentStarted"
+    const val STEP_GOOGLE_ENROLLMENT_STARTED = "GoogleEnrollmentStarted"
+
+    // Intune App Protection (MAM)
+    const val STEP_INTUNE_APP_PROTECTION_REQUIRED = "IntuneAppProtectionRequired"
+
+    // Compliance Remediation
+    const val STEP_COMPLIANCE_REMEDIATION_STARTED = "ComplianceRemediationStarted"
+    const val STEP_COMPLIANCE_REMEDIATION_COMPLETED = "ComplianceRemediationCompleted"
+
+    // Token Acquisition & Completion
+    const val STEP_PRT_ACQUIRED = "PrtAcquired"
+    const val STEP_TOKEN_ISSUED = "TokenIssued"
     const val STEP_FLOW_COMPLETED = "FlowCompleted"
+
+    // Termination (Non-Success)
+    const val STEP_USER_CANCELED = "UserCanceled"
+    const val STEP_AUTHORIZATION_TIMED_OUT = "AuthorizationTimedOut"
 
     // Blocking error values — must match C++ hardcoded strings in InteractiveRequest.cpp
     const val BLOCKING_ERROR_BROKER_INSTALL = "BROKER_INSTALLATION_TRIGGERED"
     const val BLOCKING_ERROR_MDM_FLOW = "MDM_FLOW"
+
+    // Device-registration blocking errors — one per BrokerExceptionClassifier.Category
+    // (see broker4j BrokerExceptionClassifier + InteractiveRequestAcquireTokenErrorHandler).
+    const val BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED = "DEVICE_REGISTRATION_NEEDED"
+    const val BLOCKING_ERROR_STRONG_DEVICE_REGISTRATION_NEEDED = "STRONG_DEVICE_REGISTRATION_NEEDED"
+    const val BLOCKING_ERROR_INSUFFICIENT_DEVICE_REGISTRATION = "INSUFFICIENT_DEVICE_REGISTRATION"
 
     // Platform-specific values
     const val PROFILE_USER = "userProfile"
