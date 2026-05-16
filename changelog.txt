@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
 - [MINOR] Add additional step ID and blocking error constants for full onboarding telemetry coverage (#3117)
