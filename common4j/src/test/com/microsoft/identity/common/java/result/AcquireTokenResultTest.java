@@ -32,13 +32,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Tests for {@link AcquireTokenResult} accessors, including ClientDataInfo precedence
+ * across LocalAuthenticationResult / TokenResult / MicrosoftStsAuthorizationResult and
+ * the onboarding telemetry blob field used to convey broker-side onboarding telemetry
+ * back to the client.
+ */
 @RunWith(JUnit4.class)
 public class AcquireTokenResultTest {
 
@@ -216,4 +221,31 @@ public class AcquireTokenResultTest {
         assertSame(authData, result.getClientDataInfo());
     }
 
+    // ---------------------------------------------------------------------------
+    // Onboarding blob accessor tests
+    // ---------------------------------------------------------------------------
+
+    @Test
+    public void onboardingBlob_DefaultsToNull() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+        Assert.assertNull(result.getOnboardingBlob());
+    }
+
+    @Test
+    public void onboardingBlob_RoundTripsThroughSetter() {
+        final String blobJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"brokered\"}";
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setOnboardingBlob(blobJson);
+        Assert.assertEquals(blobJson, result.getOnboardingBlob());
+    }
+
+    @Test
+    public void onboardingBlob_NullSetterClearsValue() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setOnboardingBlob("non-null");
+        result.setOnboardingBlob(null);
+        Assert.assertNull(result.getOnboardingBlob());
+    }
 }

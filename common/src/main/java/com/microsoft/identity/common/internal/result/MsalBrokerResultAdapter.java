@@ -485,9 +485,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @NonNull
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
-        final String methodTag = TAG + ":authenticationResultFromBundle";
-        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        return authenticationResultFromBrokerResult(brokerResultFromBundle(resultBundle));
+    }
 
+    /**
+     * Overload that builds the authentication result from an already-deserialized
+     * {@link BrokerResult}. Use this when the caller has the [BrokerResult] in hand
+     * to avoid a redundant deserialization of the result bundle.
+     */
+    public ILocalAuthenticationResult authenticationResultFromBrokerResult(@NonNull final BrokerResult brokerResult) throws ClientException {
+        final String methodTag = TAG + ":authenticationResultFromBrokerResult";
         Logger.info(methodTag, "Broker Result returned from Bundle, constructing authentication result");
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
@@ -603,6 +610,39 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.warn(TAG, "Broker performance metrics not found in the result bundle.");
             return null;
         }
+    }
+
+    /**
+     * Extracts the onboarding telemetry blob (JSON string) from the result bundle.
+     * Best-effort: returns null if the bundle cannot be deserialized into a BrokerResult
+     * or if no blob is present. Telemetry failures must never fail an otherwise-successful
+     * auth result. Blob contents are not logged (may carry sessionCorrelationId).
+     *
+     * If the caller has already deserialized the [BrokerResult], prefer the overload
+     * [getOnboardingBlobFromBundle(BrokerResult)] to avoid a second deserialization.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public String getOnboardingBlobFromBundle(@NonNull final Bundle resultBundle) {
+        final String methodTag = TAG + ":getOnboardingBlobFromBundle";
+        try {
+            final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+            return brokerResult.getOnboardingBlob();
+        } catch (final ClientException e) {
+            Logger.warn(methodTag, "Failed to extract onboarding blob from broker result: " + e.getErrorCode());
+            return null;
+        }
+    }
+
+    /**
+     * Overload that reads the onboarding telemetry blob from a {@link BrokerResult}
+     * that has already been deserialized by the caller. Use this when you already
+     * have a [BrokerResult] in hand to avoid a second deserialization of the bundle.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public String getOnboardingBlobFromBundle(@NonNull final BrokerResult brokerResult) {
+        return brokerResult.getOnboardingBlob();
     }
 
     @NonNull
@@ -1059,9 +1099,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            // Deserialize BrokerResult once and reuse for both the local authentication result
+            // and the onboarding telemetry blob, instead of letting authenticationResultFromBundle
+            // and getOnboardingBlobFromBundle each pay the deserialization cost.
+            final BrokerResult brokerResult = resultAdapter.brokerResultFromBundle(resultBundle);
+
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
             acquireTokenResult.setLocalAuthenticationResult(
-                    resultAdapter.authenticationResultFromBundle(resultBundle)
+                    resultAdapter.authenticationResultFromBrokerResult(brokerResult)
             );
             // Set broker performance metrics if available
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
@@ -1080,6 +1125,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
                 );
             }
+
+            // Set onboarding telemetry blob if present (best-effort; never fails the result).
+            final String onboardingBlob = resultAdapter.getOnboardingBlobFromBundle(brokerResult);
+            if (onboardingBlob != null) {
+                acquireTokenResult.setOnboardingBlob(onboardingBlob);
+            }
+
             return acquireTokenResult;
         }
 
