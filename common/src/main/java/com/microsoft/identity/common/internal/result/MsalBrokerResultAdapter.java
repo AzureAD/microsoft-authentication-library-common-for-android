@@ -431,6 +431,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             builder.clientDataInfoRaw(exception.getClientDataInfo().getRaw());
         }
 
+        // Serialize onboarding telemetry blob so it survives the broker IPC boundary on
+        // error paths — symmetric with the success path which carries the blob on
+        // BrokerResult. Telemetry-only — never affects auth logic.
+        if (!StringUtil.isNullOrEmpty(exception.getOnboardingBlob())) {
+            builder.onboardingBlob(exception.getOnboardingBlob());
+        }
+
         if (exception instanceof ServiceException) {
             final ServiceException serviceException = (ServiceException) exception;
             builder.subErrorCode(serviceException.getSubErrorCode())
@@ -561,6 +568,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             baseException.setClientDataInfo(
                     ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw())
             );
+        }
+
+        // Restore onboarding telemetry blob from the broker result so callers catching
+        // the exception (e.g., OneAuth) can include onboarding telemetry for failure
+        // outcomes — symmetric with the success path which attaches the blob to
+        // AcquireTokenResult. Telemetry-only — never affects auth logic.
+        final String onboardingBlob = getOnboardingBlobFromBundle(brokerResult);
+        if (!StringUtil.isNullOrEmpty(onboardingBlob)) {
+            baseException.setOnboardingBlob(onboardingBlob);
         }
 
         // Set broker app info if available

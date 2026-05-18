@@ -766,4 +766,34 @@ class MsalBrokerResultAdapterTests {
 
         assertNull(deserialized.onboardingBlob)
     }
+
+    @Test
+    fun testOnboardingBlob_RoundTripsThroughBaseExceptionBundle() {
+        val blobJson = """{"schema_version":"1.0.0","session_correlation_id":"abc-123","onboarding_mode":"brokered","blocking_errors":["BROKER_INSTALLATION_TRIGGERED"]}"""
+        val exception = ClientException("invalid_grant", "token failure")
+        exception.onboardingBlob = blobJson
+
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBaseException(exception, null)
+        val brokerResult = resultAdapter.brokerResultFromBundle(resultBundle)
+        assertEquals(blobJson, brokerResult.onboardingBlob)
+
+        val received = resultAdapter.getBaseExceptionFromBundle(resultBundle)
+        assertEquals(
+            "Onboarding blob should be reconstructed on the exception",
+            blobJson,
+            received.onboardingBlob
+        )
+    }
+
+    @Test
+    fun testOnboardingBlob_NullOnException_NotInBundle() {
+        val exception = ClientException("invalid_grant", "token failure")
+        // No onboarding blob set
+
+        val resultAdapter = MsalBrokerResultAdapter()
+        val resultBundle = resultAdapter.bundleFromBaseException(exception, null)
+        val received = resultAdapter.getBaseExceptionFromBundle(resultBundle)
+        assertNull(received.onboardingBlob)
+    }
 }
