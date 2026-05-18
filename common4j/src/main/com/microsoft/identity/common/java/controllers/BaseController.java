@@ -58,6 +58,8 @@ import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -249,6 +251,11 @@ public abstract class BaseController {
             } else {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
+            }
+
+            // Set server client data info on the authentication result for IPC propagation
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                authenticationResult.setClientDataInfo(tokenResult.getClientDataInfo());
             }
 
             // Set the AuthenticationResult on the final result object
@@ -526,6 +533,11 @@ public abstract class BaseController {
             } else {
                 // we can't put SpeInfo as the CliTelemInfo is null
                 Telemetry.emit(new CacheEndEvent());
+            }
+
+            // Set server client data info on the authentication result for IPC propagation
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                authenticationResult.setClientDataInfo(tokenResult.getClientDataInfo());
             }
 
             // Set the AuthenticationResult on the final result object
