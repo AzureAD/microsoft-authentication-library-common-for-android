@@ -1803,20 +1803,44 @@ public class MsalOAuth2TokenCache
         final String methodName = "deleteAccessTokensWithIntersectingScopes";
         final long startTimeNanos = System.nanoTime();
 
-        final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
-                referenceToken.getHomeAccountId(),
-                referenceToken.getEnvironment(),
-                CredentialType.fromString(referenceToken.getCredentialType()),
-                referenceToken.getClientId(),
-                referenceToken.getApplicationIdentifier(),
-                referenceToken.getMamEnrollmentIdentifier(),
-                referenceToken.getRealm(),
-                null, // Wildcard (*)
-                referenceToken.getAccessTokenType(),
-                referenceToken.getRequestedClaims(),
-                mustMatchExactClaims,
-                mAccountCredentialCache.getCredentials()
-        );
+        final boolean useFilterThenClone = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE);
+
+        final List<Credential> accessTokens;
+
+        if (useFilterThenClone) {
+            // Filter-then-clone: use the direct overload that reads from cache
+            // and clones only matching credentials.
+            accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                    referenceToken.getHomeAccountId(),
+                    referenceToken.getEnvironment(),
+                    CredentialType.fromString(referenceToken.getCredentialType()),
+                    referenceToken.getClientId(),
+                    referenceToken.getApplicationIdentifier(),
+                    referenceToken.getMamEnrollmentIdentifier(),
+                    referenceToken.getRealm(),
+                    null, // Wildcard (*)
+                    referenceToken.getAccessTokenType(),
+                    referenceToken.getRequestedClaims()
+            );
+        } else {
+            // Legacy path: clone all credentials, then filter.
+            accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
+                    referenceToken.getHomeAccountId(),
+                    referenceToken.getEnvironment(),
+                    CredentialType.fromString(referenceToken.getCredentialType()),
+                    referenceToken.getClientId(),
+                    referenceToken.getApplicationIdentifier(),
+                    referenceToken.getMamEnrollmentIdentifier(),
+                    referenceToken.getRealm(),
+                    null, // Wildcard (*)
+                    referenceToken.getAccessTokenType(),
+                    referenceToken.getRequestedClaims(),
+                    mustMatchExactClaims,
+                    mAccountCredentialCache.getCredentials()
+            );
+        }
 
         Logger.verbose(
                 TAG + ":" + methodName,

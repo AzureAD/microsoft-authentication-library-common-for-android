@@ -98,6 +98,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
@@ -284,6 +285,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .success(true)
                 .servicedFromCache(authenticationResult.isServicedFromCache());
 
+        // Serialize ClientDataInfo as raw pipe-delimited string for IPC transfer.
+        // The raw field is populated by ClientDataInfo.fromPipeDelimited(), the only
+        // path that populates the parsed fields, so it is safe to ship as-is.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)
+                && authenticationResult instanceof LocalAuthenticationResult) {
+            final ClientDataInfo clientDataInfo =
+                    ((LocalAuthenticationResult) authenticationResult).getClientDataInfo();
+            if (clientDataInfo != null) {
+                brokerResultBuilder.clientDataInfoRaw(clientDataInfo.getRaw());
+            }
+        }
+
         if (shouldRemoveRefreshTokenFromResult(authenticationResult, negotiatedBrokerProtocolVersion)){
             brokerResultBuilder.tenantProfileRecords(
                     removeRefreshTokenFromCacheRecords(
@@ -411,6 +424,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .speRing(exception.getSpeRing())
                 .refreshTokenAge(exception.getRefreshTokenAge());
 
+        // Serialize ClientDataInfo (server telemetry from x-ms-clientdata) so it
+        // survives the broker IPC boundary on error paths.
+        if (exception.getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            builder.clientDataInfoRaw(exception.getClientDataInfo().getRaw());
+        }
+
         if (exception instanceof ServiceException) {
             final ServiceException serviceException = (ServiceException) exception;
             builder.subErrorCode(serviceException.getSubErrorCode())
@@ -483,12 +503,23 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             throw new ClientException(INVALID_BROKER_BUNDLE, "getTenantProfileData is null.");
         }
 
-        return new LocalAuthenticationResult(
+        final LocalAuthenticationResult localAuthResult = new LocalAuthenticationResult(
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
                 SdkType.MSAL,
                 brokerResult.isServicedFromCache()
         );
+
+        // Deserialize ClientDataInfo from the broker result if available
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            final ClientDataInfo clientDataInfo =
+                    ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw());
+            if (clientDataInfo != null) {
+                localAuthResult.setClientDataInfo(clientDataInfo);
+            }
+        }
+
+        return localAuthResult;
     }
 
     @NonNull
@@ -521,6 +552,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         // Attach broker performance metrics if available
         if (metrics != null) {
             baseException.setBrokerPerformanceMetrics(metrics);
+        }
+
+        // Restore ClientDataInfo (server telemetry) from the broker result so callers
+        // catching the exception can inspect server-side error context.
+        if (!StringUtil.isNullOrEmpty(brokerResult.getClientDataInfoRaw())
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            baseException.setClientDataInfo(
+                    ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw())
+            );
         }
 
         // Set broker app info if available
@@ -1034,7 +1074,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
             if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
                 final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
-                acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
+                final ILocalAuthenticationResult authResult = authenticationResultFromBundle(resultBundle);
+                acquireTokenResult.setLocalAuthenticationResult(authResult);
+
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
             } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
