@@ -1325,6 +1325,13 @@ public final class AuthenticationConstants {
         public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
 
         /**
+         * Path for the Authenticator app activation Android App Link.
+         * This is the HTTPS-based app link used by eSTS to launch the Authenticator app
+         * for MFA account pairing (e.g., https://login.microsoftonline.com/authenticatorApp/activateAccount).
+         */
+        public static final String AUTHENTICATOR_APP_LINK_ACTIVATION_PATH = "/authenticatorapp/activateaccount";
+
+        /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
         public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";

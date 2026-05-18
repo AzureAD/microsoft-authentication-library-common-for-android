@@ -25,7 +25,8 @@ package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
-import lombok.AllArgsConstructor;
+import java.util.UUID;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -37,7 +38,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 /**
  * Implements a protocol parameters to install a certificate
  */
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class GetInstallWpjCertificateIntentRequestV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
@@ -51,6 +51,12 @@ public class GetInstallWpjCertificateIntentRequestV0Parameters extends AbstractD
      */
     public static GetInstallWpjCertificateIntentRequestV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
+    }
+
+    public GetInstallWpjCertificateIntentRequestV0Parameters(@NonNull final UUID correlationId,
+                                                             @NonNull final IDeviceRegistrationRecord deviceRegistrationRecord) {
+        super(correlationId);
+        mDeviceRegistrationRecord = deviceRegistrationRecord;
     }
 
     @Getter

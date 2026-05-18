@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.deviceregistration;
 
-import static com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException.INTERNAL_ERROR_CODE;
-import static com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException.INVALID_PACKAGE_ERROR_CODE;
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.CORRELATION_ID;
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.PROTOCOL_DATA;
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.PROTOCOL_EXCEPTION_ERROR_CAUSE_MESSAGE;
@@ -31,23 +29,23 @@ import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistratio
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.PROTOCOL_EXCEPTION_ERROR_MESSAGE;
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.PROTOCOL_EXCEPTION_STACK_TRACE_STRING;
 import static com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtocolPacker.PROTOCOL_NAME;
-
+import static com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException.INTERNAL_ERROR_CODE;
+import static com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException.INVALID_PACKAGE_ERROR_CODE;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.deviceregistration.testprotocols.TestHappyPathV0Parameters;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord;
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecordWithAccount;
 import com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException;
 import com.microsoft.identity.deviceregistration.java.exception.DrsErrorResponseException;
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.deviceregistration.testprotocols.TestHappyPathV0Parameters;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-
 
 import java.util.UUID;
 
@@ -72,6 +70,7 @@ public class AndroidDeviceRegistrationProtocolPackerTest {
 
 
     private static final TestHappyPathV0Parameters TEST_PROTOCOL = new TestHappyPathV0Parameters(
+            UUID.randomUUID(),
             TEST_DATA,
             TEST_DATA,
             true,

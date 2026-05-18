@@ -39,6 +39,10 @@ import static org.mockito.Mockito.when;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
@@ -74,8 +78,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-
+import org.robolectric.shadows.ShadowPackageManager;
 import java.util.HashMap;
 
 import io.opentelemetry.api.trace.Span;
@@ -127,6 +132,18 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
     private static final String TEST_OPENID_VC_URL = "openid-vc://credential-offer?credential_issuer=https%3A%2F%2Fexample.com&credential_configuration_ids=VerifiedEmployee";
+
+    // Authenticator activation app link test URLs
+    private static final String TEST_AUTHENTICATOR_ACTIVATION_GLOBAL =
+            "https://login.microsoftonline.com/authenticatorApp/activateAccount?accountType=mfa&source=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
+    private static final String TEST_AUTHENTICATOR_ACTIVATION_CHINA =
+            "https://login.chinacloudapi.cn/authenticatorApp/activateAccount?accountType=mfa&source=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
+    private static final String TEST_AUTHENTICATOR_ACTIVATION_US_GOV =
+            "https://login.microsoftonline.us/authenticatorApp/activateAccount?accountType=mfa&source=qrCode&accountType=msa&code=demo&uaid=0022d4c4141444b484dd38026d312794&expires=3971458484";
+    private static final String TEST_AUTHENTICATOR_ACTIVATION_INVALID_HOST =
+            "https://login.evil.com/authenticatorApp/activateAccount?accountType=mfa&code=123";
+    private static final String TEST_AUTHENTICATOR_ACTIVATION_INVALID_PATH =
+            "https://login.microsoftonline.com/some/other/path?accountType=mfa&code=123";
 
     @Before
     public void setup() throws ClientException {
@@ -921,5 +938,161 @@ public class AzureActiveDirectoryWebViewClientTest {
         client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
 
         Mockito.verify(mockTracker, never()).updateLatestUrlStatus(any(), any());
+    }
+
+    // ===== Authenticator activation app link tests =====
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_globalHost_shouldReturnTrue() {
+        assertTrue(mWebViewClient.isAuthenticatorActivationAppLink(
+                TEST_AUTHENTICATOR_ACTIVATION_GLOBAL.toLowerCase()));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_chinaHost_shouldReturnTrue() {
+        assertTrue(mWebViewClient.isAuthenticatorActivationAppLink(
+                TEST_AUTHENTICATOR_ACTIVATION_CHINA.toLowerCase()));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_usGovHost_shouldReturnTrue() {
+        assertTrue(mWebViewClient.isAuthenticatorActivationAppLink(
+                TEST_AUTHENTICATOR_ACTIVATION_US_GOV.toLowerCase()));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_invalidHost_shouldReturnFalse() {
+        assertFalse(mWebViewClient.isAuthenticatorActivationAppLink(
+                TEST_AUTHENTICATOR_ACTIVATION_INVALID_HOST.toLowerCase()));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_invalidPath_shouldReturnFalse() {
+        assertFalse(mWebViewClient.isAuthenticatorActivationAppLink(
+                TEST_AUTHENTICATOR_ACTIVATION_INVALID_PATH.toLowerCase()));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_nonHttpsScheme_shouldReturnFalse() {
+        assertFalse(mWebViewClient.isAuthenticatorActivationAppLink(
+                "http://login.microsoftonline.com/authenticatorapp/activateaccount"));
+    }
+
+    @Test
+    public void testIsAuthenticatorActivationAppLink_legacyMfaScheme_shouldReturnFalse() {
+        assertFalse(mWebViewClient.isAuthenticatorActivationAppLink(
+                AUTHENTICATOR_MFA_LINKING_PREFIX.toLowerCase()));
+    }
+
+    /**
+     * Registers a fake handler on the given activity's PackageManager so that
+     * {@code intent.resolveActivity(...)} returns non-null for ACTION_VIEW + the given Uri.
+     * This lets us exercise the "handler present" branch of
+     * processAuthenticatorActivationAppLink in a Robolectric test.
+     */
+    private void registerActivationHandler(@NonNull final Activity activity,
+                                           @NonNull final Uri uri,
+                                           @NonNull final String packageName,
+                                           @NonNull final String activityClass) {
+        final ShadowPackageManager shadowPm = Shadows.shadowOf(activity.getPackageManager());
+        final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        final ResolveInfo info = new ResolveInfo();
+        info.activityInfo = new ActivityInfo();
+        info.activityInfo.packageName = packageName;
+        info.activityInfo.name = activityClass;
+        shadowPm.addResolveInfoForIntent(intent, info);
+    }
+
+    @Test
+    public void testAuthenticatorActivationAppLink_launchesIntent_whenHandlerPresent() {
+        // Arrange: register a handler so resolveActivity(...) returns non-null.
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_AUTHENTICATOR_ACTIVATION_GLOBAL),
+                "com.azure.authenticator",
+                "com.azure.authenticator.ui.MainActivity");
+
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Act
+        final boolean handled = mWebViewClient.shouldOverrideUrlLoading(
+                mockWebView, TEST_AUTHENTICATOR_ACTIVATION_GLOBAL);
+
+        // Assert: URL was intercepted, WebView stopped, and an ACTION_VIEW intent was launched.
+        assertTrue(handled);
+        Mockito.verify(mockWebView).stopLoading();
+
+        final Intent launched = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        Assert.assertNotNull("Expected an intent to be launched for the activation link", launched);
+        assertEquals(Intent.ACTION_VIEW, launched.getAction());
+        assertEquals(TEST_AUTHENTICATOR_ACTIVATION_GLOBAL, launched.getData().toString());
+        assertTrue("Expected FLAG_ACTIVITY_NEW_TASK on activation intent",
+                (launched.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
+    }
+
+    @Test
+    public void testAuthenticatorActivationAppLink_noHandler_stopsLoading_andDoesNotCrash() {
+        // Arrange: no handler registered -> intent.resolveActivity() returns null in both
+        // the Authenticator launch path and the openLinkInBrowser fallback path.
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Act
+        final boolean handled = mWebViewClient.shouldOverrideUrlLoading(
+                mockWebView, TEST_AUTHENTICATOR_ACTIVATION_GLOBAL);
+
+        // Assert: handled=true, WebView stopped, no activity started (no crash, no error callback).
+        assertTrue(handled);
+        Mockito.verify(mockWebView).stopLoading();
+        Assert.assertNull("Expected NO intent to be launched when no handler is installed",
+                Shadows.shadowOf(mActivity).getNextStartedActivity());
+    }
+
+    @Test
+    public void testAuthenticatorActivationAppLink_preservesOriginalCasing() {
+        // The activation link carries case-sensitive query values (e.g. base64 codes).
+        // shouldOverrideUrlLoading lowercases the URL for matching but must dispatch the
+        // *original* URL to the Authenticator.
+        final String mixedCaseUrl =
+                "https://login.microsoftonline.com/authenticatorApp/activateAccount"
+                        + "?accountType=mfa&source=QrCode&code=AbCdEf123XYZ&url=https://Service";
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(mixedCaseUrl),
+                "com.azure.authenticator",
+                "com.azure.authenticator.ui.MainActivity");
+
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = mWebViewClient.shouldOverrideUrlLoading(mockWebView, mixedCaseUrl);
+
+        assertTrue(handled);
+        final Intent launched = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        Assert.assertNotNull(launched);
+        assertEquals("Authenticator activation intent must carry the original-cased URL",
+                mixedCaseUrl, launched.getData().toString());
+    }
+
+    @Test
+    public void testProcessAuthAppMFAUrl_startsViewIntentWithNewTaskFlag() {
+        // microsoft-authenticator://activatemfa/... is handed to processAuthAppMFAUrl,
+        // which dispatches an ACTION_VIEW intent with FLAG_ACTIVITY_NEW_TASK.
+        final String mfaUrl = AUTHENTICATOR_MFA_LINKING_PREFIX + "/?x=1";
+        // Make the intent resolvable so the OS would accept the launch. (Robolectric
+        // records the started activity regardless, but this documents the expectation.)
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(mfaUrl),
+                "com.azure.authenticator",
+                "com.azure.authenticator.ui.MainActivity");
+
+        final boolean handled = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, mfaUrl);
+
+        assertTrue(handled);
+        final Intent launched = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        Assert.assertNotNull(launched);
+        assertEquals(Intent.ACTION_VIEW, launched.getAction());
+        assertEquals(mfaUrl, launched.getDataString());
+        assertTrue("MFA activation intent must carry FLAG_ACTIVITY_NEW_TASK",
+                (launched.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
     }
 }

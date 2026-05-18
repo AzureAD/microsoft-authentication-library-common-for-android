@@ -36,5 +36,9 @@ public abstract class AbstractDeviceRegistrationProtocolParameters implements ID
 
     @Getter
     @NonNull
-    protected final UUID mCorrelationId = UUID.randomUUID();
+    protected final UUID mCorrelationId;
+
+    protected AbstractDeviceRegistrationProtocolParameters(@NonNull final UUID correlationId) {
+        mCorrelationId = correlationId;
+    }
 }

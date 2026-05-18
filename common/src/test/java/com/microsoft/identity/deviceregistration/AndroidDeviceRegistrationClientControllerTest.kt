@@ -101,7 +101,7 @@ class AndroidDeviceRegistrationClientControllerTest {
     private val testRecordWithAccount = DeviceRegistrationRecordWithAccount("account", "tenant", "upn", "deviceId", false, false)
 
     private fun testParams() = TestHappyPathV0Parameters(
-        "hello ", "world", true, false, 1.4f, 3.7f, testRecord, testRecordWithAccount
+        UUID.randomUUID(), "hello ", "world", true, false, 1.4f, 3.7f, testRecord, testRecordWithAccount
     )
 
     private fun testResponse() = TestHappyPathV0Response(

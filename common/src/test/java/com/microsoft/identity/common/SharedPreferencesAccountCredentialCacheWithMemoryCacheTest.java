@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.components.InMemoryStorageSupplier;
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
@@ -40,20 +41,28 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
@@ -62,6 +71,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
@@ -2514,5 +2524,444 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
         creds1.get(0).setCachedAt("banana");
         assertNotEquals(creds1.get(0), creds2.get(0));
+    }
+
+    // =====================================================================
+    // Flight-gated behavior tests for ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE
+    // =====================================================================
+
+    private void enableFilterThenCloneFlight() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+    }
+
+    private void resetFlight() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void getAccounts_flightDisabled_returnsMutableListOfClones() {
+        final AccountRecord account = buildDefaultAccountRecord();
+        mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+        final List<AccountRecord> accounts1 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertEquals(1, accounts1.size());
+        final List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertEquals(1, accounts2.size());
+
+        // The list itself should be a new mutable list each time
+        assertNotSame(accounts1, accounts2);
+
+        // The returned objects should be clones, not the same references
+        assertNotSame(accounts1.get(0), accounts2.get(0));
+        assertEquals(accounts1.get(0), accounts2.get(0));
+
+        // Mutating a returned object should not affect subsequent retrievals
+        accounts1.get(0).setLocalAccountId("mutated");
+        final List<AccountRecord> accounts3 = mSharedPreferencesAccountCredentialCache.getAccounts();
+        assertNotEquals("mutated", accounts3.get(0).getLocalAccountId());
+
+        // The returned list should be mutable (no exception thrown)
+        accounts1.add(new AccountRecord());
+    }
+
+    @Test
+    public void getAccounts_flightEnabled_stillReturnsMutableListOfClones() {
+        enableFilterThenCloneFlight();
+        try {
+            final AccountRecord account = buildDefaultAccountRecord();
+            mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+            final List<AccountRecord> accounts1 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertEquals(1, accounts1.size());
+            final List<AccountRecord> accounts2 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertEquals(1, accounts2.size());
+
+            // Even with flight enabled, getAccounts() still returns clones
+            assertNotSame(accounts1.get(0), accounts2.get(0));
+            assertEquals(accounts1.get(0), accounts2.get(0));
+
+            // Mutating a returned object should not affect subsequent retrievals
+            accounts1.get(0).setLocalAccountId("mutated");
+            final List<AccountRecord> accounts3 = mSharedPreferencesAccountCredentialCache.getAccounts();
+            assertNotEquals("mutated", accounts3.get(0).getLocalAccountId());
+
+            // The returned list should be mutable (no exception thrown)
+            accounts1.add(new AccountRecord());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    @Test
+    public void getCredentials_flightDisabled_returnsMutableListOfClones() {
+        final RefreshTokenRecord rt = buildDefaultRefreshToken();
+        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+        final List<Credential> creds1 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertEquals(1, creds1.size());
+        final List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertEquals(1, creds2.size());
+
+        // The list itself should be a new mutable list each time
+        assertNotSame(creds1, creds2);
+
+        // The returned objects should be clones, not the same references
+        assertNotSame(creds1.get(0), creds2.get(0));
+        assertEquals(creds1.get(0), creds2.get(0));
+
+        // Mutating a returned object should not affect subsequent retrievals
+        creds1.get(0).setCachedAt("mutated");
+        final List<Credential> creds3 = mSharedPreferencesAccountCredentialCache.getCredentials();
+        assertNotEquals("mutated", creds3.get(0).getCachedAt());
+
+        // The returned list should be mutable (no exception thrown)
+        creds1.add(new RefreshTokenRecord());
+    }
+
+    @Test
+    public void getCredentials_flightEnabled_stillReturnsMutableListOfClones() {
+        enableFilterThenCloneFlight();
+        try {
+            final RefreshTokenRecord rt = buildDefaultRefreshToken();
+            mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+            final List<Credential> creds1 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertEquals(1, creds1.size());
+            final List<Credential> creds2 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertEquals(1, creds2.size());
+
+            // Even with flight enabled, getCredentials() still returns clones
+            assertNotSame(creds1.get(0), creds2.get(0));
+            assertEquals(creds1.get(0), creds2.get(0));
+
+            // Mutating a returned object should not affect subsequent retrievals
+            creds1.get(0).setCachedAt("mutated");
+            final List<Credential> creds3 = mSharedPreferencesAccountCredentialCache.getCredentials();
+            assertNotEquals("mutated", creds3.get(0).getCachedAt());
+
+            // The returned list should be mutable (no exception thrown)
+            creds1.add(new RefreshTokenRecord());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    // =====================================================================
+    // Tests verifying filter-then-clone optimization in FilteredBy methods
+    // =====================================================================
+
+    @Test
+    public void getAccountsFilteredBy_flightEnabled_returnsClonedMatches() {
+        enableFilterThenCloneFlight();
+        try {
+            final AccountRecord account = buildDefaultAccountRecord();
+            mSharedPreferencesAccountCredentialCache.saveAccount(account);
+
+            // Also save a non-matching account
+            final AccountRecord otherAccount = new AccountRecord();
+            otherAccount.setHomeAccountId("other-home-id");
+            otherAccount.setEnvironment("other.environment.com");
+            otherAccount.setRealm("other-realm");
+            otherAccount.setLocalAccountId("other-local-id");
+            otherAccount.setUsername("other-user");
+            otherAccount.setAuthorityType(AUTHORITY_TYPE);
+            mSharedPreferencesAccountCredentialCache.saveAccount(otherAccount);
+
+            // Filter by the default account's realm — should return only one match
+            final List<AccountRecord> filtered = mSharedPreferencesAccountCredentialCache
+                    .getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+            assertEquals(1, filtered.size());
+            assertEquals(HOME_ACCOUNT_ID, filtered.get(0).getHomeAccountId());
+
+            // Returned objects should be clones — mutating should not affect cache
+            filtered.get(0).setLocalAccountId("mutated");
+            final List<AccountRecord> filtered2 = mSharedPreferencesAccountCredentialCache
+                    .getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
+            assertNotEquals("mutated", filtered2.get(0).getLocalAccountId());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    @Test
+    public void getCredentialsFilteredBy_flightEnabled_returnsClonedMatches() {
+        enableFilterThenCloneFlight();
+        try {
+            final RefreshTokenRecord rt = buildDefaultRefreshToken();
+            mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+            // Also save a non-matching credential
+            final RefreshTokenRecord otherRt = new RefreshTokenRecord();
+            otherRt.setCredentialType(CredentialType.RefreshToken.name());
+            otherRt.setHomeAccountId("other-home-id");
+            otherRt.setEnvironment("other.environment.com");
+            otherRt.setClientId("other-client-id");
+            otherRt.setCachedAt(CACHED_AT);
+            otherRt.setSecret(SECRET);
+            mSharedPreferencesAccountCredentialCache.saveCredential(otherRt);
+
+            // Filter by the default credential's attributes — should return only one match
+            final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.RefreshToken,
+                            CLIENT_ID, null, null, null, null, null);
+            assertEquals(1, filtered.size());
+            assertEquals(CLIENT_ID, filtered.get(0).getClientId());
+
+            // Returned objects should be clones — mutating should not affect cache
+            filtered.get(0).setCachedAt("mutated");
+            final List<Credential> filtered2 = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.RefreshToken,
+                            CLIENT_ID, null, null, null, null, null);
+            assertNotEquals("mutated", filtered2.get(0).getCachedAt());
+        } finally {
+            resetFlight();
+        }
+    }
+
+    // =====================================================================
+    // Tests verifying removeAccount/removeCredential do not call keySet()
+    // =====================================================================
+
+    /**
+     * An {@link INameValueStorage} wrapper that counts calls to {@link #keySet()} and {@link #getAll()}.
+     * Used to verify that the {@code removeAccount()} and {@code removeCredential()} optimization
+     * avoids the expensive decrypt-all path by not calling these methods on the backing storage.
+     */
+    private static class KeySetTrackingStorage implements INameValueStorage<String> {
+        private final INameValueStorage<String> mDelegate;
+        // AtomicInteger used because the cache performs its initial load on a background thread.
+        private final AtomicInteger mKeySetCallCount = new AtomicInteger(0);
+        private final AtomicInteger mGetAllCallCount = new AtomicInteger(0);
+
+        KeySetTrackingStorage(final INameValueStorage<String> delegate) {
+            mDelegate = delegate;
+        }
+
+        @Override
+        public String get(final String name) {
+            return mDelegate.get(name);
+        }
+
+        @Override
+        public Map<String, String> getAll() {
+            mGetAllCallCount.incrementAndGet();
+            return mDelegate.getAll();
+        }
+
+        @Override
+        public void put(final String name, final String value) {
+            mDelegate.put(name, value);
+        }
+
+        @Override
+        public void remove(final String name) {
+            mDelegate.remove(name);
+        }
+
+        @Override
+        public void clear() {
+            mDelegate.clear();
+        }
+
+        @Override
+        public Set<String> keySet() {
+            mKeySetCallCount.incrementAndGet();
+            return mDelegate.keySet();
+        }
+
+        @Override
+        public Iterator<Map.Entry<String, String>> getAllFilteredByKey(final Predicate<String> keyFilter) {
+            return mDelegate.getAllFilteredByKey(keyFilter);
+        }
+
+        int getKeySetCallCount() {
+            return mKeySetCallCount.get();
+        }
+
+        int getAllCallCount() {
+            return mGetAllCallCount.get();
+        }
+
+        void resetCallCounts() {
+            mKeySetCallCount.set(0);
+            mGetAllCallCount.set(0);
+        }
+    }
+
+    @Test
+    public void removeAccount_doesNotCallKeySetOrGetAll() throws Exception {
+        final INameValueStorage<String> baseStorage = new InMemoryStorageSupplier()
+                .getEncryptedNameValueStore(
+                        sAccountCredentialSharedPreferences + "_removeAccountTest",
+                        String.class);
+        final KeySetTrackingStorage trackingStorage = new KeySetTrackingStorage(baseStorage);
+        final SharedPreferencesAccountCredentialCacheWithMemoryCache cache =
+                new SharedPreferencesAccountCredentialCacheWithMemoryCache(mDelegate, trackingStorage);
+
+        final AccountRecord account = buildDefaultAccountRecord();
+        cache.saveAccount(account);
+
+        // Force initial load to complete (getAccounts blocks on waitForInitialLoad),
+        // then reset counters so only removeAccount() calls are measured.
+        cache.getAccounts();
+        trackingStorage.resetCallCounts();
+
+        cache.removeAccount(account);
+
+        assertEquals("removeAccount() must not call keySet()", 0, trackingStorage.getKeySetCallCount());
+        assertEquals("removeAccount() must not call getAll()", 0, trackingStorage.getAllCallCount());
+    }
+
+    @Test
+    public void removeCredential_doesNotCallKeySetOrGetAll() throws Exception {
+        final INameValueStorage<String> baseStorage = new InMemoryStorageSupplier()
+                .getEncryptedNameValueStore(
+                        sAccountCredentialSharedPreferences + "_removeCredentialTest",
+                        String.class);
+        final KeySetTrackingStorage trackingStorage = new KeySetTrackingStorage(baseStorage);
+        final SharedPreferencesAccountCredentialCacheWithMemoryCache cache =
+                new SharedPreferencesAccountCredentialCacheWithMemoryCache(mDelegate, trackingStorage);
+
+        final RefreshTokenRecord rt = buildDefaultRefreshToken();
+        cache.saveCredential(rt);
+
+        // Force initial load to complete (getCredentials blocks on waitForInitialLoad),
+        // then reset counters so only removeCredential() calls are measured.
+        cache.getCredentials();
+        trackingStorage.resetCallCounts();
+
+        cache.removeCredential(rt);
+
+        assertEquals("removeCredential() must not call keySet()", 0, trackingStorage.getKeySetCallCount());
+        assertEquals("removeCredential() must not call getAll()", 0, trackingStorage.getAllCallCount());
+    }
+
+    // =====================================================================
+    // Tests for new getCredentialsFilteredBy overload with kid (no input list)
+    // =====================================================================
+
+    @Test
+    public void getCredentialsFilteredByWithKid_flightDisabled_returnsClonesFromAllCredentials() {
+        // Save an access token with kid = "kid1"
+        final AccessTokenRecord at = new AccessTokenRecord();
+        at.setCredentialType(CredentialType.AccessToken.name());
+        at.setHomeAccountId(HOME_ACCOUNT_ID);
+        at.setEnvironment(ENVIRONMENT);
+        at.setClientId(CLIENT_ID);
+        at.setRealm(REALM);
+        at.setTarget(TARGET);
+        at.setCachedAt(CACHED_AT);
+        at.setExpiresOn(EXPIRES_ON);
+        at.setSecret(SECRET);
+        at.setKid("kid1");
+        mSharedPreferencesAccountCredentialCache.saveCredential(at);
+
+        // Also save a non-matching credential type
+        final RefreshTokenRecord rt = buildDefaultRefreshToken();
+        mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+        // Matching kid = "kid1" should return the AT
+        final List<Credential> matchingKid = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, "kid1");
+        assertEquals(1, matchingKid.size());
+        assertEquals(CredentialType.AccessToken.name(), matchingKid.get(0).getCredentialType());
+
+        // Non-matching kid = "kid2" should return nothing
+        final List<Credential> nonMatchingKid = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, "kid2");
+        assertEquals(0, nonMatchingKid.size());
+
+        // kid = null should return the AT (no kid filter applied)
+        final List<Credential> nullKid = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, (String) null);
+        assertEquals(1, nullKid.size());
+        assertEquals(CredentialType.AccessToken.name(), nullKid.get(0).getCredentialType());
+
+        // Returned objects should be clones — mutating should not affect cache
+        matchingKid.get(0).setCachedAt("mutated");
+        final List<Credential> afterMutation = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                        CLIENT_ID, null, null, REALM, TARGET,
+                        null, null, "kid1");
+        assertNotEquals("mutated", afterMutation.get(0).getCachedAt());
+    }
+
+    @Test
+    public void getCredentialsFilteredByWithKid_flightEnabled_returnsClonedMatchesOnly() {
+        enableFilterThenCloneFlight();
+        try {
+            // Save an access token with kid = "kid1"
+            final AccessTokenRecord at = new AccessTokenRecord();
+            at.setCredentialType(CredentialType.AccessToken.name());
+            at.setHomeAccountId(HOME_ACCOUNT_ID);
+            at.setEnvironment(ENVIRONMENT);
+            at.setClientId(CLIENT_ID);
+            at.setRealm(REALM);
+            at.setTarget(TARGET);
+            at.setCachedAt(CACHED_AT);
+            at.setExpiresOn(EXPIRES_ON);
+            at.setSecret(SECRET);
+            at.setKid("kid1");
+            mSharedPreferencesAccountCredentialCache.saveCredential(at);
+
+            // Also save a non-matching credential type
+            final RefreshTokenRecord rt = buildDefaultRefreshToken();
+            mSharedPreferencesAccountCredentialCache.saveCredential(rt);
+
+            // Matching kid = "kid1" should return the AT
+            final List<Credential> matchingKid = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, "kid1");
+            assertEquals(1, matchingKid.size());
+            assertEquals(CredentialType.AccessToken.name(), matchingKid.get(0).getCredentialType());
+
+            // Non-matching kid = "kid2" should return nothing
+            final List<Credential> nonMatchingKid = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, "kid2");
+            assertEquals(0, nonMatchingKid.size());
+
+            // kid = null should return the AT (no kid filter applied)
+            final List<Credential> nullKid = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, (String) null);
+            assertEquals(1, nullKid.size());
+            assertEquals(CredentialType.AccessToken.name(), nullKid.get(0).getCredentialType());
+
+            // Returned objects should be clones — mutating should not affect cache
+            matchingKid.get(0).setCachedAt("mutated");
+            final List<Credential> afterMutation = mSharedPreferencesAccountCredentialCache
+                    .getCredentialsFilteredBy(
+                            HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.AccessToken,
+                            CLIENT_ID, null, null, REALM, TARGET,
+                            null, null, "kid1");
+            assertNotEquals("mutated", afterMutation.get(0).getCachedAt());
+        } finally {
+            resetFlight();
+        }
     }
 }
