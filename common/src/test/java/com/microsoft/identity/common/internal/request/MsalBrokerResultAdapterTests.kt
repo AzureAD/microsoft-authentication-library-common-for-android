@@ -796,4 +796,31 @@ class MsalBrokerResultAdapterTests {
         val received = resultAdapter.getBaseExceptionFromBundle(resultBundle)
         assertNull(received.onboardingBlob)
     }
+
+    @Test
+    fun testOnboardingBlob_RoundTripsThroughAuthenticationResultBundle() {
+        val blobJson = """{"schema_version":"1.0.0","session_correlation_id":"abc-123","onboarding_mode":"brokered","steps_list":[{"step_id":"TokenIssued","ts":"2026-05-18T00:00:00.000Z"}]}"""
+        val cacheRecord = newCacheRecord()
+        val cacheRecords: MutableList<ICacheRecord> = arrayListOf(cacheRecord)
+        val authResult = LocalAuthenticationResult(cacheRecord, cacheRecords, SdkType.MSAL, false)
+
+        val adapter = getInstance()
+        val resultBundle = adapter.bundleFromAuthenticationResult(authResult, blobJson, "16.0")
+        val deserialized = adapter.brokerResultFromBundle(resultBundle)
+
+        assertEquals(blobJson, deserialized.onboardingBlob)
+    }
+
+    @Test
+    fun testOnboardingBlob_NullOnAuthenticationResult_NotInBundle() {
+        val cacheRecord = newCacheRecord()
+        val cacheRecords: MutableList<ICacheRecord> = arrayListOf(cacheRecord)
+        val authResult = LocalAuthenticationResult(cacheRecord, cacheRecords, SdkType.MSAL, false)
+
+        val adapter = getInstance()
+        val resultBundle = adapter.bundleFromAuthenticationResult(authResult, null, "16.0")
+        val deserialized = adapter.brokerResultFromBundle(resultBundle)
+
+        assertNull(deserialized.onboardingBlob)
+    }
 }

@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Propagate the onboarding telemetry blob through the broker failure path: add BaseException.onboardingBlob and round-trip it through MsalBrokerResultAdapter so callers can emit onboarding telemetry on failure outcomes
+- [MINOR] Propagate the onboarding telemetry blob through the broker failure path: add BaseException.onboardingBlob and round-trip it through MsalBrokerResultAdapter so callers can emit onboarding telemetry on failure outcomes. Also add an MsalBrokerResultAdapter overload that accepts an onboarding blob on the success path so the broker can attach the finalized blob to the success result bundle.
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
