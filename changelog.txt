@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Wire onboarding telemetry hooks into AzureActiveDirectoryWebViewClient for page-transition step capture (broker install, MDM enrollment, Company Portal launch, MFA linking) and last-loaded-domain tracking
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
