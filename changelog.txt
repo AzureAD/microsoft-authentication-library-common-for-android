@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
