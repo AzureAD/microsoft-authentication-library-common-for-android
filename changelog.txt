@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 24.2.1-RC1
+Version 24.2.1
 ----------
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)
 - [MINOR] Add additional step ID and blocking error constants for full onboarding telemetry coverage (#3117)
