@@ -43,6 +43,8 @@ import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -211,5 +213,42 @@ public class ExceptionAdapterTests {
         assertTrue(exception instanceof UiRequiredException);
         assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
         assertEquals("UI required.", exception.getMessage());
+    }
+
+    // -----------------------------------------------------------------------
+    // ClientDataInfo wiring tests (PR #3109)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testExceptionFromTokenResult_attachesClientDataInfo() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setErrorDescription("token failure");
+
+        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public");
+        Assert.assertNotNull(clientDataInfo);
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        tokenResult.setClientDataInfo(clientDataInfo);
+
+        final ServiceException exception = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+
+        Assert.assertNotNull("ClientDataInfo should be attached to the exception", exception.getClientDataInfo());
+        assertEquals("AADSTS50058", exception.getClientDataInfo().getError());
+        assertEquals("login_required", exception.getClientDataInfo().getSubError());
+        assertEquals("m|AADSTS50058|login_required|us|public", exception.getClientDataInfo().getRaw());
+    }
+
+    @Test
+    public void testExceptionFromTokenResult_nullClientDataInfo_doesNotThrow() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setErrorDescription("token failure");
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        // No ClientDataInfo set
+
+        final ServiceException exception = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+        Assert.assertNull(exception.getClientDataInfo());
     }
 }
