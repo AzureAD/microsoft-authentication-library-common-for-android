@@ -75,8 +75,9 @@ public class MicrosoftStsAuthorizationResultFactory
 
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
+        ClientDataInfo clientDataInfo = null;
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-            final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
+            clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
             if (null != clientDataInfo) {
                 clientDataInfo.emitToSpan();
             }
@@ -105,6 +106,17 @@ public class MicrosoftStsAuthorizationResultFactory
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE
             );
+        }
+
+        // Attach ClientDataInfo for both success and trusted server errors.
+        // Exclude state-mismatch (CSRF) redirects only, as they may originate from untrusted sources.
+        if (null != clientDataInfo) {
+            final MicrosoftStsAuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+            final boolean isStateMismatch = errorResponse != null
+                    && ErrorStrings.STATE_MISMATCH.equals(errorResponse.getError());
+            if (!isStateMismatch) {
+                result.setClientDataInfo(clientDataInfo);
+            }
         }
 
         return result;

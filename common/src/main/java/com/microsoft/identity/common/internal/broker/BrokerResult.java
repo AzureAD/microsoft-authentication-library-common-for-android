@@ -97,6 +97,8 @@ public class BrokerResult {
         static final String SPE_RING = "spe_ring";
         static final String CLI_TELEM_ERRORCODE = "cli_telem_error_code";
         static final String CLI_TELEM_SUB_ERROR_CODE = "cli_telem_suberror_code";
+        static final String CLIENT_DATA_INFO = "client_data_info";
+        static final String ONBOARDING_BLOB = "onboarding_blob";
     }
 
     private static final long serialVersionUID = 8606631820514878489L;
@@ -237,6 +239,13 @@ public class BrokerResult {
     private String mRefreshTokenAge;
 
     /**
+     * Server client data info from x-ms-clientdata response header (pipe-delimited format).
+     */
+    @Nullable
+    @SerializedName(SerializedNames.CLIENT_DATA_INFO)
+    private String mClientDataInfoRaw;
+
+    /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
@@ -327,6 +336,13 @@ public class BrokerResult {
     @SerializedName(SerializedNames.BROKER_AAD_DEVICE_ID_RECORD)
     private final AadDeviceIdRecord mAadDeviceIdRecord;
 
+    /**
+     * Populated onboarding telemetry blob JSON returned by the broker.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.ONBOARDING_BLOB)
+    private final String mOnboardingBlob;
+
     private BrokerResult(@NonNull final Builder builder) {
         mAccessToken = builder.mAccessToken;
         mIdToken = builder.mIdToken;
@@ -347,6 +363,7 @@ public class BrokerResult {
         mCachedAt = builder.mCachedAt;
         mSpeRing = builder.mSpeRing;
         mRefreshTokenAge = builder.mRefreshTokenAge;
+        mClientDataInfoRaw = builder.mClientDataInfoRaw;
         mSuccess = builder.mSuccess;
         mTenantProfileData = builder.mTenantProfileData;
         mServicedFromCache = builder.mServicedFromCache;
@@ -362,6 +379,7 @@ public class BrokerResult {
         mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
         mExceptionType = builder.mExceptionType;
         mAadDeviceIdRecord = builder.mAadDeviceIdRecord;
+        mOnboardingBlob = builder.mOnboardingBlob;
     }
 
     public String getExceptionType() {
@@ -424,6 +442,11 @@ public class BrokerResult {
 
     public String getSpeRing() {
         return mSpeRing;
+    }
+
+    @Nullable
+    public String getClientDataInfoRaw() {
+        return mClientDataInfoRaw;
     }
 
     public long getCachedAt() {
@@ -498,6 +521,11 @@ public class BrokerResult {
         return mAadDeviceIdRecord;
     }
 
+    @Nullable
+    public String getOnboardingBlob() {
+        return mOnboardingBlob;
+    }
+
     public static class Builder {
         private String mAccessToken;
         private String mIdToken;
@@ -518,11 +546,13 @@ public class BrokerResult {
         private long mCachedAt;
         private String mSpeRing;
         private String mRefreshTokenAge;
+        private String mClientDataInfoRaw;
         private boolean mSuccess;
         private String mNegotiatedBrokerProtocolVersion;
         private List<ICacheRecord> mTenantProfileData;
         private boolean mServicedFromCache;
         private AadDeviceIdRecord mAadDeviceIdRecord;
+        private String mOnboardingBlob;
 
         // Exception parameters
         private String mErrorCode;
@@ -535,7 +565,6 @@ public class BrokerResult {
         private String mCliTelemErrorCode;
         private String mCliTelemSubErrorCode;
         private String mExceptionType;
-
         public Builder accessToken(@Nullable final String accessToken) {
             this.mAccessToken = accessToken;
             return this;
@@ -631,6 +660,11 @@ public class BrokerResult {
             return this;
         }
 
+        public Builder clientDataInfoRaw(@Nullable final String clientDataInfoRaw) {
+            this.mClientDataInfoRaw = clientDataInfoRaw;
+            return this;
+        }
+
         public Builder success(boolean success) {
             this.mSuccess = success;
             return this;
@@ -710,6 +744,11 @@ public class BrokerResult {
 
         public Builder exceptionType(String exceptionType) {
             this.mExceptionType = exceptionType;
+            return this;
+        }
+
+        public Builder onboardingBlob(@Nullable final String onboardingBlob) {
+            this.mOnboardingBlob = onboardingBlob;
             return this;
         }
     }

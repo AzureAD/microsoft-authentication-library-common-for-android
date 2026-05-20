@@ -29,8 +29,9 @@ import com.microsoft.identity.common.java.util.StringUtil;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import io.opentelemetry.api.trace.Span;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -40,7 +41,7 @@ import lombok.experimental.Accessors;
  * Contains server-side error codes, account type, cloud instance, and data boundary info.
  */
 @Getter
-@Setter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Accessors(prefix = "m")
 public class ClientDataInfo {
 
@@ -86,6 +87,14 @@ public class ClientDataInfo {
     private String mCallerDataBoundary;
 
     /**
+     * The original raw pipe-delimited string this instance was parsed from.
+     * Always set when the instance was constructed via {@link #fromPipeDelimited(String)},
+     * which is the only public entry point. Exposed for partner teams that want to
+     * inspect or forward the unparsed payload.
+     */
+    private String mRaw;
+
+    /**
      * Parses an already-decoded pipe-delimited clientdata query parameter value.
      * The caller is responsible for URL-decoding before passing (e.g. values from
      * {@link com.microsoft.identity.common.java.util.UrlUtil#getParameters} are
@@ -110,6 +119,7 @@ public class ClientDataInfo {
             }
 
             final ClientDataInfo info = new ClientDataInfo();
+            info.mRaw = decodedValue;
             info.mAccountType = emptyToNull(segments[PIPE_INDEX_ACCOUNT_TYPE]);
             info.mError = emptyToNull(segments[PIPE_INDEX_ERROR]);
             info.mSubError = emptyToNull(segments[PIPE_INDEX_SUB_ERROR]);

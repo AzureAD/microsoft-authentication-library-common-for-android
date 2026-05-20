@@ -98,6 +98,7 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
@@ -284,6 +285,18 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .success(true)
                 .servicedFromCache(authenticationResult.isServicedFromCache());
 
+        // Serialize ClientDataInfo as raw pipe-delimited string for IPC transfer.
+        // The raw field is populated by ClientDataInfo.fromPipeDelimited(), the only
+        // path that populates the parsed fields, so it is safe to ship as-is.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)
+                && authenticationResult instanceof LocalAuthenticationResult) {
+            final ClientDataInfo clientDataInfo =
+                    ((LocalAuthenticationResult) authenticationResult).getClientDataInfo();
+            if (clientDataInfo != null) {
+                brokerResultBuilder.clientDataInfoRaw(clientDataInfo.getRaw());
+            }
+        }
+
         if (shouldRemoveRefreshTokenFromResult(authenticationResult, negotiatedBrokerProtocolVersion)){
             brokerResultBuilder.tenantProfileRecords(
                     removeRefreshTokenFromCacheRecords(
@@ -411,6 +424,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .speRing(exception.getSpeRing())
                 .refreshTokenAge(exception.getRefreshTokenAge());
 
+        // Serialize ClientDataInfo (server telemetry from x-ms-clientdata) so it
+        // survives the broker IPC boundary on error paths.
+        if (exception.getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            builder.clientDataInfoRaw(exception.getClientDataInfo().getRaw());
+        }
+
         if (exception instanceof ServiceException) {
             final ServiceException serviceException = (ServiceException) exception;
             builder.subErrorCode(serviceException.getSubErrorCode())
@@ -465,9 +485,16 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @NonNull
     @Override
     public ILocalAuthenticationResult authenticationResultFromBundle(@NonNull final Bundle resultBundle) throws ClientException {
-        final String methodTag = TAG + ":authenticationResultFromBundle";
-        final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+        return authenticationResultFromBrokerResult(brokerResultFromBundle(resultBundle));
+    }
 
+    /**
+     * Overload that builds the authentication result from an already-deserialized
+     * {@link BrokerResult}. Use this when the caller has the [BrokerResult] in hand
+     * to avoid a redundant deserialization of the result bundle.
+     */
+    public ILocalAuthenticationResult authenticationResultFromBrokerResult(@NonNull final BrokerResult brokerResult) throws ClientException {
+        final String methodTag = TAG + ":authenticationResultFromBrokerResult";
         Logger.info(methodTag, "Broker Result returned from Bundle, constructing authentication result");
 
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
@@ -476,12 +503,23 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             throw new ClientException(INVALID_BROKER_BUNDLE, "getTenantProfileData is null.");
         }
 
-        return new LocalAuthenticationResult(
+        final LocalAuthenticationResult localAuthResult = new LocalAuthenticationResult(
                 tenantProfileCacheRecords.get(0),
                 tenantProfileCacheRecords,
                 SdkType.MSAL,
                 brokerResult.isServicedFromCache()
         );
+
+        // Deserialize ClientDataInfo from the broker result if available
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            final ClientDataInfo clientDataInfo =
+                    ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw());
+            if (clientDataInfo != null) {
+                localAuthResult.setClientDataInfo(clientDataInfo);
+            }
+        }
+
+        return localAuthResult;
     }
 
     @NonNull
@@ -514,6 +552,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         // Attach broker performance metrics if available
         if (metrics != null) {
             baseException.setBrokerPerformanceMetrics(metrics);
+        }
+
+        // Restore ClientDataInfo (server telemetry) from the broker result so callers
+        // catching the exception can inspect server-side error context.
+        if (!StringUtil.isNullOrEmpty(brokerResult.getClientDataInfoRaw())
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            baseException.setClientDataInfo(
+                    ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw())
+            );
         }
 
         // Set broker app info if available
@@ -563,6 +610,39 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             Logger.warn(TAG, "Broker performance metrics not found in the result bundle.");
             return null;
         }
+    }
+
+    /**
+     * Extracts the onboarding telemetry blob (JSON string) from the result bundle.
+     * Best-effort: returns null if the bundle cannot be deserialized into a BrokerResult
+     * or if no blob is present. Telemetry failures must never fail an otherwise-successful
+     * auth result. Blob contents are not logged (may carry sessionCorrelationId).
+     *
+     * If the caller has already deserialized the [BrokerResult], prefer the overload
+     * [getOnboardingBlobFromBundle(BrokerResult)] to avoid a second deserialization.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public String getOnboardingBlobFromBundle(@NonNull final Bundle resultBundle) {
+        final String methodTag = TAG + ":getOnboardingBlobFromBundle";
+        try {
+            final BrokerResult brokerResult = brokerResultFromBundle(resultBundle);
+            return brokerResult.getOnboardingBlob();
+        } catch (final ClientException e) {
+            Logger.warn(methodTag, "Failed to extract onboarding blob from broker result: " + e.getErrorCode());
+            return null;
+        }
+    }
+
+    /**
+     * Overload that reads the onboarding telemetry blob from a {@link BrokerResult}
+     * that has already been deserialized by the caller. Use this when you already
+     * have a [BrokerResult] in hand to avoid a second deserialization of the bundle.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public String getOnboardingBlobFromBundle(@NonNull final BrokerResult brokerResult) {
+        return brokerResult.getOnboardingBlob();
     }
 
     @NonNull
@@ -994,7 +1074,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
             if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
                 final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
-                acquireTokenResult.setLocalAuthenticationResult(authenticationResultFromBundle(resultBundle));
+                final ILocalAuthenticationResult authResult = authenticationResultFromBundle(resultBundle);
+                acquireTokenResult.setLocalAuthenticationResult(authResult);
+
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
             } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
@@ -1017,9 +1099,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
         final MsalBrokerResultAdapter resultAdapter = new MsalBrokerResultAdapter();
         if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)) {
+            // Deserialize BrokerResult once and reuse for both the local authentication result
+            // and the onboarding telemetry blob, instead of letting authenticationResultFromBundle
+            // and getOnboardingBlobFromBundle each pay the deserialization cost.
+            final BrokerResult brokerResult = resultAdapter.brokerResultFromBundle(resultBundle);
+
             final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
             acquireTokenResult.setLocalAuthenticationResult(
-                    resultAdapter.authenticationResultFromBundle(resultBundle)
+                    resultAdapter.authenticationResultFromBrokerResult(brokerResult)
             );
             // Set broker performance metrics if available
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
@@ -1038,6 +1125,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
                 );
             }
+
+            // Set onboarding telemetry blob if present (best-effort; never fails the result).
+            final String onboardingBlob = resultAdapter.getOnboardingBlobFromBundle(brokerResult);
+            if (onboardingBlob != null) {
+                acquireTokenResult.setOnboardingBlob(onboardingBlob);
+            }
+
             return acquireTokenResult;
         }
 
