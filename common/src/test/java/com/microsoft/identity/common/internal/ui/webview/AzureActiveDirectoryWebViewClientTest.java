@@ -183,6 +183,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
+        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
+        if (mContext != null) {
+            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
+                    .save("");
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -1128,7 +1134,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
         boolean foundStep = false;
         for (int i = 0; i < steps.length(); i++) {
-            if ("BrokerInstallPrompted".equals(steps.getJSONObject(i).getString("step_id"))) {
+            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
                 foundStep = true;
                 break;
             }
@@ -1165,7 +1172,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.onPageFinished(mMockWebView, "https://login.microsoftonline.com/common/oauth2/authorize");
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
-        assertEquals("login.microsoftonline.com", blob.getString("last_loaded_domain"));
+        assertEquals("login.microsoftonline.com", blob.getString(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_LOADED_DOMAIN));
     }
 
     /**

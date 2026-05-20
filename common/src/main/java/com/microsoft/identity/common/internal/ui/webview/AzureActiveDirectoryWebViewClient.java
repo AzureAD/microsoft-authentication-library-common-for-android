@@ -159,7 +159,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * after this client is constructed (the recorder is created by the host fragment/activity
      * when a seed JSON arrives, which is typically later than WebView construction).
      * When non-null, key URL transitions (broker install, MDM enrollment, Company Portal
-     * launch, etc.) and `lastLoadedDomain` are recorded for the onboarding telemetry blob.
+     * launch, etc.) and {@code lastLoadedDomain} are recorded for the onboarding telemetry blob.
      */
     @Nullable
     private com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
@@ -917,6 +917,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
@@ -936,6 +937,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
+        recordOnboardingStep(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_APP_PREFIX + appPackageName));
