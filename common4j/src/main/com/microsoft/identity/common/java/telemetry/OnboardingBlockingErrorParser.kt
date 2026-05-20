@@ -27,7 +27,8 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResp
 /**
  * Bridges eSTS-emitted error codes (carried via the `x-ms-clitelem` header and parsed
  * into [MicrosoftTokenResponse] by [com.microsoft.identity.common.java.providers.microsoft.microsoftsts.AbstractMicrosoftStsTokenResponseHandler])
- * into the onboarding telemetry blob's `lastBlockingError` / `blockingErrors` fields.
+ * into the onboarding telemetry blob's `last_blocking_error` / `blocking_errors` fields
+ * (see [OnboardingTelemetryConstants.LAST_BLOCKING_ERROR] / [OnboardingTelemetryConstants.BLOCKING_ERRORS]).
  *
  * Callers (OneAuth navigation fragment, broker error handler, etc.) invoke
  * [extractBlockingError] on the [MicrosoftTokenResponse] of a failed token request
@@ -36,9 +37,11 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResp
  *
  * Returns null when the response carries no error or the error is not blocking.
  *
- * Per design spec (Mobile Onboarding Telemetry §10), `errorCode` from position 2 of the
- * `x-ms-clitelem` header is the canonical attribution source for blocking errors.
- * Sub-error code (position 3) is also captured for finer-grained classification.
+ * Per design spec (Mobile Onboarding Telemetry §10), the `x-ms-clitelem` header
+ * supplies both an `errorCode` (position 2) and a `subErrorCode` (position 3).
+ * This parser prefers the sub-error code when present (it is the most specific
+ * attribution signal) and falls back to the server error code; both are surfaced
+ * to the onboarding blob via `addBlockingError`.
  */
 object OnboardingBlockingErrorParser {
 

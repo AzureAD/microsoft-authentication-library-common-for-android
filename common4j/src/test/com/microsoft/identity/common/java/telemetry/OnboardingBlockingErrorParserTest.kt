@@ -103,7 +103,7 @@ class OnboardingBlockingErrorParserTest {
         assertNull(OnboardingBlockingErrorParser.extractBlockingError(header))
     }
 
-    // --- Non-onboarding AADSTS code whitelist ---
+    // --- Non-onboarding AADSTS code exclusion list ---
 
     @Test
     fun excludedAadstsCode_50058_FilteredFromResponse() {
@@ -194,7 +194,7 @@ class OnboardingBlockingErrorParserTest {
 
     @Test
     fun authzErrorCodes_ExcludedCodesFilteredOut() {
-        // 50058 is in the non-onboarding whitelist; 53003 is a real CA block.
+        // 50058 is in the non-onboarding exclusion list; 53003 is a real CA block.
         Assert.assertEquals(
             listOf("53003"),
             OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,53003")
