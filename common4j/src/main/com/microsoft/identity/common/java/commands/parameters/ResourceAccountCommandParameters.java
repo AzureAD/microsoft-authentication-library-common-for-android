@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.commands.parameters;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -40,4 +41,12 @@ public class ResourceAccountCommandParameters extends TokenCommandParameters {
     // user id in home tenant uid.tid
     @NonNull
     private final String homeAccountId;
+
+    /**
+     * When true, forces re-provisioning of the resource account key even if one already exists.
+     * When false (default), skips key provisioning if a valid credential is already present
+     * and proceeds directly to PRT acquisition.
+     */
+    @Builder.Default
+    private final boolean forceReprovisionKey = true;
 }
