@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Fix Edge browser selection on devices where Microsoft Edge is the default browser: add the rotated Edge signing certificate hash to the Edge BrowserDescriptor and accept multi-signer browsers when any signature intersects the safelist, instead of requiring strict set-equality (resolves MSAL #2414)
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
 - [PATCH] Extend filter-then-clone optimization to deleteAccessTokensWithIntersectingScopes and add telemetry attributes (#3114)
 - [PATCH] Wire ClientDataInfo through AcquireTokenResult, exceptions (#3109)

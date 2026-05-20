@@ -78,6 +78,10 @@ public class BrowserDescriptor implements Serializable {
     static private BrowserDescriptor getBrowserDescriptorForEdge() {
         final HashSet<String> edgeSignatureHashes = new HashSet<>();
         edgeSignatureHashes.add("Ivy-Rk6ztai_IudfbyUrSHugzRqAtHWslFvHT0PTvLMsEKLUIgv7ZZbVxygWy_M5mOPpfjZrd3vOx3t-cA6fVQ==");
+        // Edge production APK is signed with two certificates (APK Signature Scheme v3 lineage).
+        // Both must be present in the safelist because apps targeting API 28+ see all signers,
+        // and the safelist match accepts any signer that intersects this set.
+        edgeSignatureHashes.add("KxJRZ8RFW-6BQa-e4xNE7UmeGU6BWIR_6dzgaAOQWh0rWVENxsXU5TjnWuTR9GqOFbCKMilXKIu7as6VJRjuSw==");
         return new BrowserDescriptor(
                 "com.microsoft.emmx",
                 edgeSignatureHashes,
