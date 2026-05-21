@@ -111,5 +111,9 @@ public enum SpanName {
     /**
      * Span name for WebView file upload (onShowFileChooser) operations.
      */
-    WebViewFileUpload
+    WebViewFileUpload,
+    /**
+     * Span name for switching browser flow operations.
+     */
+    SwitchBrowserFlow
 }
