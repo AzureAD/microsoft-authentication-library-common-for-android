@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
 import java.net.URL
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -46,6 +47,56 @@ object SwitchBrowserUriHelper {
             .isFlightEnabled(CommonFlight.SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE)
     }
 
+    /**
+     * Extracts the base redirect URI (scheme + authority + all paths except the last one) from a full URI.
+     *
+     * This is useful for extracting the redirect base before the final path segment (e.g., "switch_browser").
+     *
+     * @param uri The full URI to extract the redirect from.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp/switch_browser?action=1
+     *
+     * @return The base redirect URI containing scheme, authority, and all path segments except the last one.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp
+     *
+     * @throws ClientException if the URI is missing a scheme or authority.
+     */
+    @Throws(ClientException::class)
+    fun extractBaseRedirectUri(uri: Uri): String {
+        val methodTag = "$TAG:extractRedirectUri"
+        val scheme = uri.scheme
+        if (scheme.isNullOrEmpty()) {
+            val errorMessage = "URI is missing a scheme: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+        val authority = uri.authority
+        if (authority.isNullOrEmpty()) {
+            val errorMessage = "URI is missing an authority: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+
+        // Get the path segments and exclude the last one
+        val path = uri.path
+        val result = if (!path.isNullOrEmpty() && path != "/") {
+            val segments = path.trim('/').split('/')
+            if (segments.size > 1) {
+                // Exclude the last segment (e.g., "switch_browser")
+                val pathWithoutLast = segments.dropLast(1).joinToString("/")
+                "$scheme://$authority/$pathWithoutLast"
+            } else {
+                // Only one segment, return scheme://authority
+                "$scheme://$authority"
+            }
+        } else {
+            // No path, return scheme://authority
+            "$scheme://$authority"
+        }
+
+        return result
+    }
 
     /**
      * Build the process uri for the switch browser challenge.
@@ -113,6 +164,19 @@ object SwitchBrowserUriHelper {
     }
 
     /**
+     * Builds the resume browser URI by appending [SWITCH_BROWSER.RESUME_PATH] to the base redirect URI.
+     *
+     * @param redirectUri The base redirect URI.
+     * e.g. msauth://com.microsoft.identity.client
+     *
+     * @return The resume browser URI.
+     * e.g. msauth://com.microsoft.identity.client/switch_browser_resume
+     */
+    fun buildResumeBrowserUri(redirectUri: String): Uri {
+        return "$redirectUri/${SWITCH_BROWSER.RESUME_PATH}".toUri()
+    }
+
+    /**
      * Check if the url is a switch browser redirect url
      *
      * The request is considered "switch_browser" if the URL
@@ -152,7 +216,7 @@ object SwitchBrowserUriHelper {
             span.end()
             throw clientException
         }
-        val authRequestState = Uri.parse(authorizationUrl).getQueryParameter(SWITCH_BROWSER.STATE)
+        val authRequestState = authorizationUrl.toUri().getQueryParameter(SWITCH_BROWSER.STATE)
         if (authRequestState.isNullOrEmpty()) {
             val clientException = ClientException(
                 ClientException.STATE_MISMATCH,
@@ -208,7 +272,7 @@ object SwitchBrowserUriHelper {
         actionUri: String,
         queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
-        val uri = Uri.parse(actionUri)
+        val uri = actionUri.toUri()
 
         val uriBuilder = uri.buildUpon()
 
