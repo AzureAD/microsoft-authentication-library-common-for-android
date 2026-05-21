@@ -59,6 +59,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
@@ -79,6 +80,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
@@ -94,6 +96,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
         val handler = SwitchBrowserRequestHandler(activity, browserSelector, null)
         val exception = Assert.assertThrows(ClientException::class.java) {
@@ -111,6 +114,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=456")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
