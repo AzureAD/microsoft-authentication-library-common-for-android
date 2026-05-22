@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 24.3.0-RC1
+Version 24.3.0-RC2
 ----------
 - [PATCH] Emit ipc_strategy telemetry attribute for successful device registration IPC strategy and refactor execute flow to pack protocol request once before strategy retries (#3124)
 - [PATCH] Fix Edge browser selection on devices where Microsoft Edge is the default browser: add the rotated Edge signing certificate hash to the Edge BrowserDescriptor and accept multi-signer browsers when any signature intersects the safelist, instead of requiring strict set-equality (resolves MSAL #2414)
