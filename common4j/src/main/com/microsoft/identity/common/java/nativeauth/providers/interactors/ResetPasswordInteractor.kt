@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -58,7 +58,7 @@ class ResetPasswordInteractor(
     private val httpClient: UrlConnectionHttpClient,
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
     private val nativeAuthResponseHandler: NativeAuthResponseHandler,
-    private val requestInterceptor: NativeAuthRequestInterceptor? = null
+    private val requestInterceptor: OAuth2RequestInterceptor? = null
 ) {
     private val TAG:String = ResetPasswordInteractor::class.java.simpleName
 

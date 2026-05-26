@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthConstan
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2StrategyFactory
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
 /**
@@ -77,7 +77,7 @@ class NativeAuthCIAMAuthority (
         mAuthorityUrlString = authorityUrl
     }
 
-    private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?, capabilities: List<String>?, requestInterceptor: NativeAuthRequestInterceptor?): NativeAuthOAuth2Configuration {
+    private fun createNativeAuthOAuth2Configuration(challengeTypes: List<String>?, capabilities: List<String>?, requestInterceptor: OAuth2RequestInterceptor?): NativeAuthOAuth2Configuration {
        LogSession.logMethodCall(
            tag = TAG,
            correlationId = null,
@@ -125,14 +125,10 @@ class NativeAuthCIAMAuthority (
 
     @Throws(ClientException::class)
     override fun createOAuth2Strategy(parameters: OAuth2StrategyParameters): NativeAuthOAuth2Strategy {
-        if (parameters.mRequestInterceptor != null && parameters.mRequestInterceptor !is NativeAuthRequestInterceptor) {
-            Logger.warn(TAG, "Request interceptor is not a NativeAuthRequestInterceptor instance; custom headers will not be applied to native auth requests.")
-        }
-
         val config = createNativeAuthOAuth2Configuration(
             parameters.mChallengeTypes,
             parameters.mCapabilities,
-            parameters.mRequestInterceptor as? NativeAuthRequestInterceptor
+            parameters.mRequestInterceptor
         )
 
         // CIAM Authorities can fetch endpoints from open id configuration. We disable this option.

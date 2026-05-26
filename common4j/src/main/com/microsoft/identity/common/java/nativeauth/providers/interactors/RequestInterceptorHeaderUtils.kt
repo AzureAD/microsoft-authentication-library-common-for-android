@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthHeaderValidator
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import java.net.URL
 
 /**
@@ -43,7 +43,7 @@ import java.net.URL
 internal fun applyInterceptorHeaders(
     requestUrl: URL,
     headers: Map<String, String?>,
-    requestInterceptor: NativeAuthRequestInterceptor?
+    requestInterceptor: OAuth2RequestInterceptor?
 ): Map<String, String?> {
     if (requestInterceptor == null) return headers
 

@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -58,7 +58,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testInterceptorReturningNullReturnsSameHeaders() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String>? = null
         }
         val result = applyInterceptorHeaders(testUrl, baseHeaders, interceptor)
@@ -67,7 +67,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testInterceptorReturningEmptyMapReturnsSameHeaders() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String>? = emptyMap()
         }
         val result = applyInterceptorHeaders(testUrl, baseHeaders, interceptor)
@@ -80,7 +80,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testValidCustomHeadersAreMergedWithBaseHeaders() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String> {
                 return mapOf(
                     "x-akamai-sensor" to "sensor-data-123",
@@ -105,7 +105,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testReservedPrefixHeadersAreFiltered() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String> {
                 return mapOf(
                     "x-akamai-sensor" to "valid",
@@ -130,7 +130,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testInterceptorCannotOverwriteReservedBaseHeaders() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String> {
                 return mapOf(
                     "x-client-SKU" to "Evil.SDK",
@@ -151,7 +151,7 @@ class RequestInterceptorHeaderUtilsTest {
 
     @Test
     fun testAllInvalidHeadersReturnsSameBaseSize() {
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String> {
                 return mapOf(
                     "x-ms-evil" to "filtered",
@@ -181,7 +181,7 @@ class RequestInterceptorHeaderUtilsTest {
             "x-existing-custom" to "old-value"
         )
 
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String> {
                 return mapOf(
                     "X-Existing-Custom" to "new-value",
@@ -209,7 +209,7 @@ class RequestInterceptorHeaderUtilsTest {
     @Test
     fun testInterceptorReceivesCorrectRequestUrl() {
         val capturedUrls = mutableListOf<URL>()
-        val interceptor = object : NativeAuthRequestInterceptor {
+        val interceptor = object : OAuth2RequestInterceptor {
             override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
                 capturedUrls.add(requestUrl)
                 return mapOf("x-test" to "value")

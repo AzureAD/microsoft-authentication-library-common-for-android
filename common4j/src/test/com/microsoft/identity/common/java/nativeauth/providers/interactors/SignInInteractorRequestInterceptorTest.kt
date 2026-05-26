@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInWithContinuationTokenCommandParameters
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInChallengeRequest
@@ -65,14 +65,14 @@ class SignInInteractorRequestInterceptorTest {
         "x-client-SKU" to "MSAL.Android"
     )
 
-    private val testInterceptor = object : NativeAuthRequestInterceptor {
+    private val testInterceptor = object : OAuth2RequestInterceptor {
         override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
             return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
     }
 
     private fun createInteractor(
-        interceptor: NativeAuthRequestInterceptor? = testInterceptor
+        interceptor: OAuth2RequestInterceptor? = testInterceptor
     ): SignInInteractor {
         return SignInInteractor(
             httpClient = mockHttpClient,

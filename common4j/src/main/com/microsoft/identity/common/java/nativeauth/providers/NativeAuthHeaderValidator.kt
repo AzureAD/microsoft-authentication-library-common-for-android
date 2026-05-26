@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.logging.Logger
 
 /**
- * Validates custom headers provided by a [NativeAuthRequestInterceptor].
+ * Validates custom headers provided by an [OAuth2RequestInterceptor].
  * Enforces that header names start with "x-" and do not use reserved prefixes.
  */
 object NativeAuthHeaderValidator {

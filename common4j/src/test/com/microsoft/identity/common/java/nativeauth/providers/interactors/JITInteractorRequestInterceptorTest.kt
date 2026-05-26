@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITChallengeAuthMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITContinueCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.JITIntrospectCommandParameters
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.jit.JITChallengeRequest
@@ -64,14 +64,14 @@ class JITInteractorRequestInterceptorTest {
         "Accept" to "application/json"
     )
 
-    private val testInterceptor = object : NativeAuthRequestInterceptor {
+    private val testInterceptor = object : OAuth2RequestInterceptor {
         override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
             return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
     }
 
     private fun createInteractor(
-        interceptor: NativeAuthRequestInterceptor? = testInterceptor
+        interceptor: OAuth2RequestInterceptor? = testInterceptor
     ): JITInteractor {
         return JITInteractor(
             httpClient = mockHttpClient,

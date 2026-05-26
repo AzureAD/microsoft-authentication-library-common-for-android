@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
-import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestInterceptor
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.resetpassword.ResetPasswordChallengeRequest
@@ -66,14 +66,14 @@ class ResetPasswordInteractorRequestInterceptorTest {
         "x-client-SKU" to "MSAL.Android"
     )
 
-    private val testInterceptor = object : NativeAuthRequestInterceptor {
+    private val testInterceptor = object : OAuth2RequestInterceptor {
         override fun additionalHeaders(requestUrl: URL): Map<String, String>? {
             return mapOf("x-akamai-sensor" to "sensor-data-123")
         }
     }
 
     private fun createInteractor(
-        interceptor: NativeAuthRequestInterceptor? = testInterceptor
+        interceptor: OAuth2RequestInterceptor? = testInterceptor
     ): ResetPasswordInteractor {
         return ResetPasswordInteractor(
             httpClient = mockHttpClient,
