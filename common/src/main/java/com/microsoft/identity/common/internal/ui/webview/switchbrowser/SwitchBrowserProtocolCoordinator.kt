@@ -23,12 +23,9 @@
 package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
-import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
@@ -40,7 +37,6 @@ import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.api.trace.StatusCode
-import androidx.core.net.toUri
 
 /**
  * SwitchBrowserProtocolCoordinator is responsible for coordinating the switch browser protocol.
@@ -67,34 +63,6 @@ class SwitchBrowserProtocolCoordinator(
          */
         fun isSwitchBrowserResume(url: String?, redirectUrl: String): Boolean {
             return SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
-        }
-
-        /**
-         * Creates an intent to resume the BrokerAuthorizationActivity for the WebView.
-         * Extracts the action_uri and code from the [intentDataString] and add those as extras of the intent.
-         *
-         * Returns the [Intent] used to start the WebView.
-         */
-        fun getIntentToResumeWebViewAuth(context: Context, intentDataString: String): Intent {
-            val uri = intentDataString.toUri()
-            return Intent(context, SwitchBrowserActivity::class.java).apply {
-                putExtra(
-                    SWITCH_BROWSER.ACTION_URI,
-                    uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
-                )
-                putExtra(
-                    SWITCH_BROWSER.CODE,
-                    uri.getQueryParameter(SWITCH_BROWSER.CODE)
-                )
-                putExtra(
-                    SWITCH_BROWSER.STATE,
-                    uri.getQueryParameter(SWITCH_BROWSER.STATE)
-                )
-                putExtra(
-                    SwitchBrowserActivity.RESUME_REQUEST,
-                    true
-                )
-            }
         }
     }
 

@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
 import com.microsoft.identity.common.logging.Logger
 import org.json.JSONArray
@@ -64,7 +65,7 @@ class OnboardingTelemetryRecorder(
     private val clientId: String,
     private val target: String, // sorted, space-joined scopes
     context: Context
-) {
+) : IOnboardingTelemetryRecorder {
 
     // Use applicationContext so this recorder, which may outlive the originating
     // Activity/Fragment, never holds a reference that would leak that context.
@@ -119,7 +120,7 @@ class OnboardingTelemetryRecorder(
      *
      * @param stepId Step ID constant (from OnboardingTelemetryConstants)
      */
-    fun addStep(stepId: String) {
+    override fun addStep(stepId: String) {
         val isoTimestamp = SimpleDateFormat(ISO_TIMESTAMP_FORMAT, Locale.US).format(Date())
         stepsList.add(StepEntry(stepId, isoTimestamp))
     }
@@ -134,7 +135,7 @@ class OnboardingTelemetryRecorder(
      *                  or [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]),
      *                  not a numeric service auth error code.
      */
-    fun addBlockingError(errorCode: String) {
+    override fun addBlockingError(errorCode: String) {
         blockingErrors.add(errorCode)
 
         // Persist session correlation to SharedPreferences immediately on block

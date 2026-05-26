@@ -79,6 +79,15 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     private ClientDataInfo mClientDataInfo;
 
+    /**
+     * Onboarding telemetry blob (serialized JSON) carried through the brokered failure path.
+     * Populated by {@code MsalBrokerResultAdapter} when a {@code BrokerResult} on the failure
+     * path contains an onboarding blob, mirroring the success-path
+     * {@code AcquireTokenResult.setOnboardingBlob}. Telemetry-only — never affects auth logic.
+     */
+    @Nullable
+    private String mOnboardingBlob;
+
     private String mErrorCode;
 
     private String mSubErrorCode;
@@ -229,6 +238,23 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
         this.mClientDataInfo = clientDataInfo;
+    }
+
+    /**
+     * @return The onboarding telemetry blob (serialized JSON) attached on the broker
+     *         failure path, or null if none was provided.
+     */
+    @Nullable
+    public String getOnboardingBlob() {
+        return mOnboardingBlob;
+    }
+
+    /**
+     * @param onboardingBlob The onboarding telemetry blob (serialized JSON) to attach
+     *                       on the broker failure path.
+     */
+    public void setOnboardingBlob(@Nullable final String onboardingBlob) {
+        this.mOnboardingBlob = onboardingBlob;
     }
 
     @Nullable
