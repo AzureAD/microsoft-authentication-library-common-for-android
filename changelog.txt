@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 24.3.0-RC2
+Version 24.3.0
 ----------
 - [PATCH] Fix Token Endpoint Server Telemetry Parsing (#3128)
 - [PATCH] Emit ipc_strategy telemetry attribute for successful device registration IPC strategy and refactor execute flow to pack protocol request once before strategy retries (#3124)
