@@ -152,11 +152,26 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @Override
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
                                                  @Nullable final String negotiatedBrokerProtocolVersion) {
+        return bundleFromAuthenticationResult(authenticationResult, null, negotiatedBrokerProtocolVersion);
+    }
+
+    /**
+     * MSAL-only overload that attaches an onboarding telemetry blob (serialized JSON) to the
+     * success-path result bundle. The broker uses this to ship the finalized onboarding blob
+     * back to the client on a successful interactive token request. Symmetric with
+     * {@link #bundleFromBaseException} which carries the blob via {@link BaseException#getOnboardingBlob()}.
+     *
+     * @param onboardingBlob The finalized onboarding telemetry blob, or null if none.
+     */
+    @NonNull
+    public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                 @Nullable final String onboardingBlob,
+                                                 @Nullable final String negotiatedBrokerProtocolVersion) {
         final String methodTag = TAG + ":bundleFromAuthenticationResult";
         Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
 
         final Bundle resultBundle = bundleFromBrokerResult(
-                buildBrokerResultFromAuthenticationResult(authenticationResult, negotiatedBrokerProtocolVersion),
+                buildBrokerResultFromAuthenticationResult(authenticationResult, onboardingBlob, negotiatedBrokerProtocolVersion),
                 negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
@@ -247,6 +262,22 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public BrokerResult buildBrokerResultFromAuthenticationResult
             (@NonNull final ILocalAuthenticationResult authenticationResult,
              @Nullable final String negotiatedBrokerProtocolVersion){
+        return buildBrokerResultFromAuthenticationResult(authenticationResult, null, negotiatedBrokerProtocolVersion);
+    }
+
+    /**
+     * Overload that attaches a serialized onboarding telemetry blob to the resulting
+     * {@link BrokerResult}. Used by the broker to ship the finalized onboarding blob
+     * back to the client on a successful interactive token request.
+     *
+     * @param onboardingBlob The finalized onboarding telemetry blob, or null if none.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @NonNull
+    public BrokerResult buildBrokerResultFromAuthenticationResult
+            (@NonNull final ILocalAuthenticationResult authenticationResult,
+             @Nullable final String onboardingBlob,
+             @Nullable final String negotiatedBrokerProtocolVersion){
 
         final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
 
@@ -307,6 +338,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                     .refreshToken(authenticationResult.getRefreshToken())
                     .refreshTokenAge(authenticationResult.getRefreshTokenAge());
+        }
+
+        // Onboarding telemetry blob (success path) — carried back to the client adapter
+        // which attaches it to AcquireTokenResult. Telemetry-only, never affects auth.
+        if (!StringUtil.isNullOrEmpty(onboardingBlob)) {
+            brokerResultBuilder.onboardingBlob(onboardingBlob);
         }
 
         return brokerResultBuilder.build();
@@ -429,6 +466,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (exception.getClientDataInfo() != null
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
             builder.clientDataInfoRaw(exception.getClientDataInfo().getRaw());
+        }
+
+        // Serialize onboarding telemetry blob so it survives the broker IPC boundary on
+        // error paths — symmetric with the success path which carries the blob on
+        // BrokerResult. Telemetry-only — never affects auth logic.
+        if (!StringUtil.isNullOrEmpty(exception.getOnboardingBlob())) {
+            builder.onboardingBlob(exception.getOnboardingBlob());
         }
 
         if (exception instanceof ServiceException) {
@@ -561,6 +605,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             baseException.setClientDataInfo(
                     ClientDataInfo.fromPipeDelimited(brokerResult.getClientDataInfoRaw())
             );
+        }
+
+        // Restore onboarding telemetry blob from the broker result so callers catching
+        // the exception (e.g., OneAuth) can include onboarding telemetry for failure
+        // outcomes — symmetric with the success path which attaches the blob to
+        // AcquireTokenResult. Telemetry-only — never affects auth logic.
+        final String onboardingBlob = getOnboardingBlobFromBundle(brokerResult);
+        if (!StringUtil.isNullOrEmpty(onboardingBlob)) {
+            baseException.setOnboardingBlob(onboardingBlob);
         }
 
         // Set broker app info if available
