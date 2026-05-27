@@ -197,7 +197,7 @@ publishing {
     repositories {
         maven {
             name "vsts-maven-adal-android"
-            url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
             credentials {
                 username project.ext.vstsUsername
                 password project.ext.vstsMavenAccessToken
