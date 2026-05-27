@@ -130,6 +130,9 @@ public class ClientDataInfo {
             return info;
         } catch (final Exception e) {
             Logger.warn(TAG, "Failed to parse clientdata pipe-delimited value: " + e.getMessage());
+            // Emit that we failed to parse the clientdata value
+            final Span span = SpanExtension.current();
+            span.setAttribute(AttributeName.server_error.name(), "msal_android_parsing_failed");
             return null;
         }
     }
