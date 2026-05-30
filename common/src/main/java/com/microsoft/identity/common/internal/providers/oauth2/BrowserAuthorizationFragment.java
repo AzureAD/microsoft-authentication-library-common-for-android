@@ -101,7 +101,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             return null;
         }
 
-        // We cannot pass this as part of a new intent, because we might not have any control over the calling activity.
+        // We cannot pass this as part of a new  intent, because we might not have any control over the calling activity.
         sCustomTabResponseUri = responseUri;
 
         final Intent intent = new Intent(context, sCallingActivityClass);
