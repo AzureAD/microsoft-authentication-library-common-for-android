@@ -31,6 +31,13 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
+        <!-- Activity to handle browser redirects for Switch Browser protocol in non-broker flows.
+             Apps that opt into Switch Browser must override this in their manifest with
+             android:exported="true" and the appropriate intent-filter. -->
+        <activity
+            android:name="com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserRedirectActivity"
+            android:exported="false" />
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
