@@ -29,6 +29,9 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_DEBUG_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -112,6 +115,18 @@ object AppRegistry {
         signingCertificateThumbprint = INTUNE_APP_SHA512_DEBUG_SIGNATURE
     )
 
+    val TEAMS_IPPHONE_PROD = App(
+        nickName = "Teams IP Phone - Teams Devices (prod)",
+        packageName = IPPHONE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = IPPHONE_APP_SHA512_RELEASE_SIGNATURE
+    )
+
+    val TEAMS_IPPHONE_DEBUG = App(
+        nickName = "Teams IP Phone - Teams Devices (debug)",
+        packageName = IPPHONE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = IPPHONE_APP_SHA512_DEBUG_SIGNATURE
+    )
+
     val MSAL_TEST_APP = App(
         nickName = "MSAL Test App",
         packageName = "com.msft.identity.client.sample.local",
@@ -145,12 +160,14 @@ object AppRegistry {
         add(BrokerData.prodCompanyPortal)
         add(INTUNE_CE_PROD)
         add(INTUNE_AOSP_AGENT_PROD)
+        add(TEAMS_IPPHONE_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(BrokerData.debugCompanyPortal)
             add(INTUNE_CE_DEBUG)
+            add(TEAMS_IPPHONE_DEBUG)
         }
     }
 

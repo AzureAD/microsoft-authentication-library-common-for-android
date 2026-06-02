@@ -139,7 +139,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .preferredBrowser(parameters.getPreferredBrowser())
                 .preferredAuthMethod(parameters.getPreferredAuthMethod())
                 .accountTransferToken(parameters.getAccountTransferToken())
-                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker());
+                .suppressAccountPicker(parameters.isSuppressBrokerAccountPicker())
+                .onboardingSeedJson(parameters.getOnboardingSeedJson());
 
         if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
             final AndroidInteractiveTokenCommandParameters androidInteractiveTokenCommandParameters = (AndroidInteractiveTokenCommandParameters) parameters;
