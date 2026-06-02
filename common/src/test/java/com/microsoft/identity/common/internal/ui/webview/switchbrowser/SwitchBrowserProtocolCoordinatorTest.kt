@@ -36,6 +36,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
@@ -275,6 +277,48 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
         Assert.assertTrue(exception.message!!.contains("Authority 'invalid.authority.com' is not a valid AAD authority"))
+    }
+
+    @Test
+    fun `test createErrorBundle round-trips errorCode and errorMessage via processSwitchBrowserResume`() {
+        // Arrange
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val errorCode = "switch_browser_failed"
+        val errorMessage = "Simulated upstream failure in the switch browser flow."
+        val extras = SwitchBrowserProtocolCoordinator.createErrorBundle(errorCode, errorMessage)
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        // Act + Assert: the exception thrown carries the same code/message the bundle was built with.
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            coordinator.processSwitchBrowserResume("https://auth.com", extras) { _, _ ->
+                Assert.fail("Success callback must not be invoked when the bundle contains an error.")
+            }
+        }
+        Assert.assertEquals(errorCode, exception.errorCode)
+        Assert.assertEquals(errorMessage, exception.message)
+
+        // The error path short-circuits before resetChallengeState() runs — verify that contract,
+        // so a future change that moves the reset above the error check is caught by this test.
+        verify(mockSwitchBrowserRequestHandler, never()).resetChallengeState()
+    }
+
+    @Test
+    fun `test createErrorBundle with only errorCode still throws with that code`() {
+        // Arrange: createErrorBundle does not allow nulls, but the coordinator's error parsing
+        // tolerates an empty message. Use a non-empty code and an empty message to exercise the
+        // "code present, message blank" branch.
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val errorCode = "code_only_error"
+        val extras = SwitchBrowserProtocolCoordinator.createErrorBundle(errorCode, "")
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            coordinator.processSwitchBrowserResume("https://auth.com", extras) { _, _ ->
+                Assert.fail("Success callback must not be invoked when the bundle contains an error.")
+            }
+        }
+        Assert.assertEquals(errorCode, exception.errorCode)
+        verify(mockSwitchBrowserRequestHandler, never()).resetChallengeState()
     }
 
     private fun isStateRequired(isStateRequired: Boolean) {

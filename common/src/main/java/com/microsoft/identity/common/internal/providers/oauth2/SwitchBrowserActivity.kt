@@ -80,6 +80,11 @@ class SwitchBrowserActivity : FragmentActivity() {
     private var launchStrategy: BrowserLaunchStrategy? = null
     private var span: Span? = null
 
+    // Scope returned by SpanExtension.makeCurrentSpan(...). Must be closed to avoid
+    // leaking the span into thread-local storage beyond this activity's lifetime,
+    // which would contaminate later traces on the same thread.
+    private var spanScope: io.opentelemetry.context.Scope? = null
+
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
@@ -166,7 +171,13 @@ class SwitchBrowserActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
-        initSpanFromIntent()
+        // Only initialize the span on the first creation. On activity recreation
+        // (config change / process restore) the intent still carries the upstream
+        // SerializableSpanContext, and creating another child span would produce
+        // a duplicate sibling in the trace for one logical flow.
+        if (savedInstanceState == null) {
+            initSpanFromIntent()
+        }
         launchStrategy = getLaunchStrategy()
         launchBrowser()
     }
@@ -195,7 +206,6 @@ class SwitchBrowserActivity : FragmentActivity() {
                 )
             )
             return
-        }
         }
         try {
             launchStrategy?.launch()
@@ -360,6 +370,10 @@ class SwitchBrowserActivity : FragmentActivity() {
     }
 
     override fun onDestroy() {
+        // Close the Scope before ending the span so the thread-local context is restored
+        // to whatever it was prior to initSpanFromIntent().
+        spanScope?.close()
+        spanScope = null
         span?.end()
         launchStrategy?.cleanup()
         super.onDestroy()
@@ -392,7 +406,9 @@ class SwitchBrowserActivity : FragmentActivity() {
         // so later code paths never operate on an unset/invalid span.
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserFlow.name, spanContext).let {
             span = it
-            SpanExtension.makeCurrentSpan(it)
+            // Hold onto the Scope so we can close it in onDestroy(); otherwise the span
+            // would remain attached to this thread's context and leak into subsequent work.
+            spanScope = SpanExtension.makeCurrentSpan(it)
         }
     }
 

@@ -28,10 +28,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITC
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
-import io.opentelemetry.api.trace.StatusCode
 import java.net.URL
 import androidx.core.net.toUri
 
@@ -231,45 +229,37 @@ object SwitchBrowserUriHelper {
 
     /**
      * Check if state in the auth request matches the state provided.
+     *
+     * On mismatch this throws a [ClientException] with [ClientException.STATE_MISMATCH].
+     * Span/telemetry concerns are intentionally left to the caller — this helper does
+     * not touch the current OpenTelemetry span. Callers that wrap this in a span scope
+     * are responsible for recording the exception and ending their span exactly once.
      */
+    @Throws(ClientException::class)
     fun statesMatch(authorizationUrl: String, state: String?) {
         val methodTag = "$TAG:statesMatch"
         if (!STATE_VALIDATION_REQUIRED) {
             Logger.info(methodTag, "State validation is not required.")
             return
         }
-        val span = SpanExtension.current()
-        // Validate the state from auth request and redirect URL is the same
         if (state.isNullOrEmpty()) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "State is null."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
         val authRequestState = authorizationUrl.toUri().getQueryParameter(SWITCH_BROWSER.STATE)
         if (authRequestState.isNullOrEmpty()) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "Authorization request state is null."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
         if (state != authRequestState) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "State does not match with the auth request state."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
         Logger.info(methodTag, "States match.")
     }

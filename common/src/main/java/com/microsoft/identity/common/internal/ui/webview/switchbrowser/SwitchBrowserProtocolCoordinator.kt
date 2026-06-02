@@ -89,14 +89,10 @@ class SwitchBrowserProtocolCoordinator(
         val errorCode = bundle.getString(ERROR_CODE_KEY)
         val errorMessage = bundle.getString(ERROR_MESSAGE_KEY)
         if (!errorCode.isNullOrEmpty() || !errorMessage.isNullOrEmpty()) {
-            val clientException = ClientException(
+            throw ClientException(
                 errorCode ?: ClientException.UNKNOWN_ERROR,
                 errorMessage ?: "An unknown error occurred in the switch browser flow."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
     }
 
@@ -115,35 +111,37 @@ class SwitchBrowserProtocolCoordinator(
         extras: Bundle,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
+        val methodTag = "$TAG:processSwitchBrowserResume"
         SpanExtension.makeCurrentSpan(span).use {
-            val methodTag = "$TAG:processSwitchBrowserResume"
-            throwIfBundleContainsError(extras)
-            val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
-            val code = extras.getString(SWITCH_BROWSER.CODE)
-            val state = extras.getString(SWITCH_BROWSER.STATE)
-            if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
-                val clientException = ClientException(
-                    ClientException.MISSING_PARAMETER,
-                    "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
-                            " code is null/empty: ${code.isNullOrEmpty()}."
-                )
+            try {
+                throwIfBundleContainsError(extras)
+                val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
+                val code = extras.getString(SWITCH_BROWSER.CODE)
+                val state = extras.getString(SWITCH_BROWSER.STATE)
+                if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
+                    throw ClientException(
+                        ClientException.MISSING_PARAMETER,
+                        "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
+                                " code is null/empty: ${code.isNullOrEmpty()}."
+                    )
+                }
+                // Validate the state from auth request and redirect URL is the same.
+                SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
+                val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
+                val headers = hashMapOf(AUTHORIZATION to "Bearer $code")
+                onSuccessAction(resumeUri, headers)
+                // Reset the challenge state after processing the resume action
+                switchBrowserRequestHandler.resetChallengeState()
+                Logger.info(methodTag, "Switch browser resume action processed successfully.")
+                span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
+                span.setStatus(StatusCode.OK)
+            } catch (t: Throwable) {
                 span.setStatus(StatusCode.ERROR)
-                span.recordException(clientException)
+                span.recordException(t)
+                throw t
+            } finally {
                 span.end()
-                throw clientException
             }
-            SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
-            // Validate the state from auth request and redirect URL is the same
-            val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
-            val authorizationHeaderValue = "Bearer $code"
-            val headers = hashMapOf(AUTHORIZATION to authorizationHeaderValue)
-            onSuccessAction(resumeUri, headers)
-            // Reset the challenge state after processing the resume action
-            switchBrowserRequestHandler.resetChallengeState()
-            Logger.info(methodTag, "Switch browser resume action processed successfully.")
-            span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
-            span.setStatus(StatusCode.OK)
-            span.end()
         }
     }
 
