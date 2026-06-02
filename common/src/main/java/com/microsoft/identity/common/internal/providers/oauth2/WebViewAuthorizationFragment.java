@@ -90,6 +90,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
@@ -161,7 +162,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private boolean isBrokerRequest = false;
 
-    private static Bundle switchBrowserBundle;
+    private static final AtomicReference<Bundle> sSwitchBrowserBundle = new AtomicReference<>();
+
+    public static void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
+        sSwitchBrowserBundle.set(bundle);
+    }
+
+    public static void clearSwitchBrowserBundle() {
+        sSwitchBrowserBundle.set(null);
+    }
+
+    @VisibleForTesting
+    static @Nullable Bundle consumeSwitchBrowserBundle() {
+        return sSwitchBrowserBundle.getAndSet(null);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -224,7 +238,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (getSwitchBrowserCoordinator().isExpectingSwitchBrowserResume()) {
             resumeSwitchBrowser();
         } else {
-            setSwitchBrowserBundle(null);
+            clearSwitchBrowserBundle();
         }
     }
 
@@ -234,6 +248,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private void resumeSwitchBrowser() {
         final String methodTag = TAG + ":resumeSwitchBrowser";
         try {
+            final Bundle switchBrowserBundle = consumeSwitchBrowserBundle();
             if (switchBrowserBundle == null) {
                 throw new ClientException(
                         ClientException.NULL_OBJECT,
@@ -249,7 +264,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         return null;
                     }
             );
-            setSwitchBrowserBundle(null);
         } catch (final ClientException e) {
             Logger.error(methodTag, "Error processing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
@@ -770,16 +784,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         return mSwitchBrowserProtocolCoordinator;
     }
-
-    /**
-     * Set the switch browser bundle to be used when resuming the flow.
-     *
-     * @param bundle The bundle containing the data needed to resume the flow.
-     */
-    public static synchronized void setSwitchBrowserBundle(@Nullable final Bundle bundle) {
-        switchBrowserBundle = bundle;
-    }
-
 
     /**
      * Sets up the PasskeyWebListener if the request headers indicate that both authentication and registration

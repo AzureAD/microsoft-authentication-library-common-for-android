@@ -55,6 +55,9 @@ class SwitchBrowserProtocolCoordinator(
     companion object {
         private const val TAG = "SwitchBrowserProtocolCoordinator"
 
+        private const val ERROR_CODE_KEY = "error_code"
+        private const val ERROR_MESSAGE_KEY = "error_message"
+
         /**
          * Checks if the given [url] is used to resume the switch browser flow.
          * This is determined by validating whether the URL starts with `[redirectUrl]/switch_browser_resume`.
@@ -63,6 +66,37 @@ class SwitchBrowserProtocolCoordinator(
          */
         fun isSwitchBrowserResume(url: String?, redirectUrl: String): Boolean {
             return SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
+        }
+
+        fun createErrorBundle(errorCode: String, errorMessage: String): Bundle {
+            return Bundle().apply {
+                putString(ERROR_CODE_KEY, errorCode)
+                putString(ERROR_MESSAGE_KEY, errorMessage)
+            }
+        }
+    }
+
+    /**
+     * Inspects the given [bundle] for error entries populated by [createErrorBundle].
+     * If either [ERROR_CODE_KEY] or [ERROR_MESSAGE_KEY] is present, a [ClientException] is
+     * constructed with those values and thrown immediately.
+     *
+     * @param bundle The bundle to inspect.
+     * @throws ClientException if the bundle contains an error code or error message.
+     */
+    @Throws(ClientException::class)
+    private fun throwIfBundleContainsError(bundle: Bundle) {
+        val errorCode = bundle.getString(ERROR_CODE_KEY)
+        val errorMessage = bundle.getString(ERROR_MESSAGE_KEY)
+        if (!errorCode.isNullOrEmpty() || !errorMessage.isNullOrEmpty()) {
+            val clientException = ClientException(
+                errorCode ?: ClientException.UNKNOWN_ERROR,
+                errorMessage ?: "An unknown error occurred in the switch browser flow."
+            )
+            span.setStatus(StatusCode.ERROR)
+            span.recordException(clientException)
+            span.end()
+            throw clientException
         }
     }
 
@@ -83,6 +117,7 @@ class SwitchBrowserProtocolCoordinator(
     ) {
         SpanExtension.makeCurrentSpan(span).use {
             val methodTag = "$TAG:processSwitchBrowserResume"
+            throwIfBundleContainsError(extras)
             val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
             val code = extras.getString(SWITCH_BROWSER.CODE)
             val state = extras.getString(SWITCH_BROWSER.STATE)
