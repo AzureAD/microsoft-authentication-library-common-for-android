@@ -191,8 +191,14 @@ class SwitchBrowserActivity : FragmentActivity() {
             Logger.error(methodTag, "No browser launch strategy available", null)
             span?.setStatus(StatusCode.ERROR)
             span?.setAttribute(AttributeName.error_code.name, "NO_LAUNCH_STRATEGY")
-            finish()
+            setResultAndFinish(
+                SwitchBrowserProtocolCoordinator.createErrorBundle(
+                    "NO_LAUNCH_STRATEGY",
+                    "No browser launch strategy available"
+                )
+            )
             return
+        }
         }
         try {
             launchStrategy?.launch()
