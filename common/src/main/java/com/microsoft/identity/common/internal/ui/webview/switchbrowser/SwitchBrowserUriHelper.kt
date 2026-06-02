@@ -204,7 +204,7 @@ object SwitchBrowserUriHelper {
                 uri.getQueryParameter(SWITCH_BROWSER.STATE)
             )
             putBoolean(
-               SWITCH_BROWSER.RESUME_REQUEST,
+                SWITCH_BROWSER.RESUME_REQUEST,
                 true
             )
         }
