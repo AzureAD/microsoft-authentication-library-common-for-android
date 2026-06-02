@@ -34,7 +34,6 @@ import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
 import java.net.URL
 import androidx.core.net.toUri
-import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity.Companion.RESUME_REQUEST
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -185,7 +184,7 @@ object SwitchBrowserUriHelper {
      * - [SWITCH_BROWSER.ACTION_URI] - The broker action URI from the resume response
      * - [SWITCH_BROWSER.CODE] - The authorization code from the resume response
      * - [SWITCH_BROWSER.STATE] - The state parameter from the resume response
-     * - [RESUME_REQUEST] - Set to `true` to indicate this is a resume delivery
+     * - [SWITCH_BROWSER.RESUME_REQUEST] - Set to `true` to indicate this is a resume delivery
      *
      * @param uri The resume redirect URI containing authentication response parameters
      * @return A [Bundle] containing the extracted switch-browser resume parameters
@@ -205,7 +204,7 @@ object SwitchBrowserUriHelper {
                 uri.getQueryParameter(SWITCH_BROWSER.STATE)
             )
             putBoolean(
-                RESUME_REQUEST,
+               SWITCH_BROWSER.RESUME_REQUEST,
                 true
             )
         }

@@ -95,16 +95,13 @@ class SwitchBrowserActivity : FragmentActivity() {
         /** Intent extra key for the URI to process in the browser */
         const val PROCESS_URI = "process_uri"
 
-        /** Intent extra key indicating a resume request from the browser redirect */
-        const val RESUME_REQUEST = "resume_request"
-
         /**
          * Builds an [Intent] targeting [SwitchBrowserActivity] to resume the switch-browser flow
          * in the WebView.
          *
          * Parses [intentDataString] as a resume redirect URI and extracts the authentication response
          * parameters ([SWITCH_BROWSER.ACTION_URI], [SWITCH_BROWSER.CODE], [SWITCH_BROWSER.STATE]).
-         * Also sets [RESUME_REQUEST] to `true` so that [onNewIntent] can identify this as a resume delivery.
+         * Also sets [SWITCH_BROWSER.RESUME_REQUEST] to `true` so that [onNewIntent] can identify this as a resume delivery.
          *
          * @param context           Application or activity context used to build the intent.
          * @param intentDataString  The full resume redirect URI string received from the browser,
@@ -291,7 +288,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             launchBrowser()
             return
         }
-        if (intent.hasExtra(RESUME_REQUEST)) {
+        if (intent.hasExtra(SWITCH_BROWSER.RESUME_REQUEST)) {
             span?.setStatus(StatusCode.OK)
             setResultAndFinish(intent.extras)
             return
