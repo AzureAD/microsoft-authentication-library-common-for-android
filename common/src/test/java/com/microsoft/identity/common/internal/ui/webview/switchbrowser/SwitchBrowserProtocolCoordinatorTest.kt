@@ -36,7 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
@@ -297,9 +297,10 @@ class SwitchBrowserProtocolCoordinatorTest {
         Assert.assertEquals(errorCode, exception.errorCode)
         Assert.assertEquals(errorMessage, exception.message)
 
-        // The error path short-circuits before resetChallengeState() runs — verify that contract,
-        // so a future change that moves the reset above the error check is caught by this test.
-        verify(mockSwitchBrowserRequestHandler, never()).resetChallengeState()
+        // Reset must run on the error path too — otherwise isSwitchBrowserChallengeActive
+        // stays true and subsequent onResume() calls would re-enter the resume flow with
+        // an already-consumed bundle.
+        verify(mockSwitchBrowserRequestHandler, times(1)).resetChallengeState()
     }
 
     @Test
@@ -318,7 +319,7 @@ class SwitchBrowserProtocolCoordinatorTest {
             }
         }
         Assert.assertEquals(errorCode, exception.errorCode)
-        verify(mockSwitchBrowserRequestHandler, never()).resetChallengeState()
+        verify(mockSwitchBrowserRequestHandler, times(1)).resetChallengeState()
     }
 
     private fun isStateRequired(isStateRequired: Boolean) {

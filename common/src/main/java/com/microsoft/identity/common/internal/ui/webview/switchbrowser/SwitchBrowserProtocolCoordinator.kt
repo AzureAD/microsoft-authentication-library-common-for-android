@@ -130,8 +130,6 @@ class SwitchBrowserProtocolCoordinator(
                 val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
                 val headers = hashMapOf(AUTHORIZATION to "Bearer $code")
                 onSuccessAction(resumeUri, headers)
-                // Reset the challenge state after processing the resume action
-                switchBrowserRequestHandler.resetChallengeState()
                 Logger.info(methodTag, "Switch browser resume action processed successfully.")
                 span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
                 span.setStatus(StatusCode.OK)
@@ -140,6 +138,10 @@ class SwitchBrowserProtocolCoordinator(
                 span.recordException(t)
                 throw t
             } finally {
+                // Always clear the challenge state — this resume is one-shot. Leaving it set
+                // on the error path would cause subsequent onResume() calls to re-enter the
+                // resume flow with an already-consumed bundle and fail again.
+                switchBrowserRequestHandler.resetChallengeState()
                 span.end()
             }
         }
