@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.exception;
 
 import com.microsoft.identity.common.java.broker.IBrokerInfoProvider;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.telemetry.ITelemetryAccessor;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
@@ -69,6 +70,23 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     @Nullable
     private String mCliTelemSubErrorCode;
+
+    /**
+     * Server-side telemetry from the x-ms-clientdata response header (/token error responses)
+     * or the clientdata query parameter (/authorize error redirects). Useful for diagnosing
+     * server-driven failures (account_type, error, sub_error, caller_data_boundary, cloud_instance).
+     */
+    @Nullable
+    private ClientDataInfo mClientDataInfo;
+
+    /**
+     * Onboarding telemetry blob (serialized JSON) carried through the brokered failure path.
+     * Populated by {@code MsalBrokerResultAdapter} when a {@code BrokerResult} on the failure
+     * path contains an onboarding blob, mirroring the success-path
+     * {@code AcquireTokenResult.setOnboardingBlob}. Telemetry-only — never affects auth logic.
+     */
+    @Nullable
+    private String mOnboardingBlob;
 
     private String mErrorCode;
 
@@ -211,6 +229,32 @@ public class BaseException extends Exception implements IErrorInformation, ITele
 
     public void setCliTelemSubErrorCode(@Nullable final String cliTelemSubErrorCode) {
         this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
+    }
+
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        return mClientDataInfo;
+    }
+
+    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
+        this.mClientDataInfo = clientDataInfo;
+    }
+
+    /**
+     * @return The onboarding telemetry blob (serialized JSON) attached on the broker
+     *         failure path, or null if none was provided.
+     */
+    @Nullable
+    public String getOnboardingBlob() {
+        return mOnboardingBlob;
+    }
+
+    /**
+     * @param onboardingBlob The onboarding telemetry blob (serialized JSON) to attach
+     *                       on the broker failure path.
+     */
+    public void setOnboardingBlob(@Nullable final String onboardingBlob) {
+        this.mOnboardingBlob = onboardingBlob;
     }
 
     @Nullable
