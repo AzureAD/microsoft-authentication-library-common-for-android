@@ -61,6 +61,12 @@ public class OAuth2StrategyParameters {
     @Nullable
     public final List<String> mCapabilities;
 
+    /**
+     * An optional interceptor for injecting custom HTTP headers into native auth requests.
+     */
+    @Nullable
+    public final transient OAuth2RequestInterceptor mRequestInterceptor;
+
     // TODO: Consider moving this field into MicrosoftStsOAuth2Configuration and updating it's endpoint methods
     //  to use OpenId Configuration.
     private transient boolean mUsingOpenIdConfiguration;
