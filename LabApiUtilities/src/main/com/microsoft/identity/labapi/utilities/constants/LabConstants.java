@@ -62,6 +62,7 @@ public class LabConstants {
         public static final String ONPREM = "onprem";
         public static final String GUEST = "guest";
         public static final String B2C = "b2c";
+        public static final String CIAM = "ciam";
     }
 
     static final class UserRole {
