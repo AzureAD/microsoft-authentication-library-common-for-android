@@ -26,6 +26,7 @@ package com.microsoft.identity.common.java.nativeauth.providers
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.util.UrlUtil
 import java.net.MalformedURLException
 import java.net.URISyntaxException
@@ -41,6 +42,7 @@ class NativeAuthOAuth2Configuration(
     val clientId: String,
     val challengeType: String,
     val capabilities: String?,
+    val requestInterceptor: OAuth2RequestInterceptor? = null,
     // Need this to decide whether or not to return mock api authority or actual authority supplied in configuration
     // Turn this on if you plan to use web auth and/or open id configuration
     val useMockApiForNativeAuth: Boolean = BuildValues.shouldUseMockApiForNativeAuth(),
