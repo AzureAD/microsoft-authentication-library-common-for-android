@@ -55,7 +55,8 @@ public enum UserType {
     B2C(LabConstants.UserType.B2C),
     CIAM(LabConstants.UserType.CIAM),
     GUEST(LabConstants.UserType.GUEST),
-    ONPREM(LabConstants.UserType.ONPREM);
+    ONPREM(LabConstants.UserType.ONPREM),
+    CIAM(LabConstants.UserType.CIAM);
 
     final String value;
 
