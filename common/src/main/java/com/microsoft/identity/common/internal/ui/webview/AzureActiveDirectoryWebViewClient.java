@@ -492,8 +492,84 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Determines whether {@code url} should be treated as the navigation that
+     * carries the OAuth2 authorization response back to the configured redirect
+     * URI.
+     * <p>
+     * Historically this used a prefix match ({@code String#startsWith}) which
+     * permitted attacker-controlled suffixes such as
+     * {@code msauth://app/HASH=.attacker.com/x?code=&lt;AUTH_CODE&gt;} to be
+     * accepted as legitimate redirects whenever the server (or a malicious /
+     * MITM'd response) caused the WebView to navigate to a crafted URL.
+     * Although the eSTS server enforces exact redirect URI validation on its
+     * side, the client check should also be exact (defense-in-depth — MSRC
+     * Ceiling Rule 3).
+     * <p>
+     * The new comparison parses both the candidate URL and the configured
+     * redirect URI and requires that scheme, authority (host[:port]) and path
+     * match. Query string and fragment are intentionally ignored because they
+     * carry the auth code / state on legitimate redirects.
+     *
+     * @param url the URL the WebView is about to navigate to. The caller is
+     *            expected to pass the lowercased URL ({@code formattedURL} in
+     *            {@link #handleUrl}); comparisons are therefore performed
+     *            case-insensitively so that mixed-case redirect URI paths
+     *            (e.g. base64 hashes) still match.
+     * @return true if {@code url} is a redirect response to the configured
+     *         redirect URI, false otherwise.
+     */
     private boolean isRedirectUrl(@NonNull final String url) {
-        return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        if (mRedirectUrl == null || mRedirectUrl.isEmpty()) {
+            return false;
+        }
+        try {
+            final Uri actual = Uri.parse(url);
+            final Uri expected = Uri.parse(mRedirectUrl);
+            final String expectedScheme = expected.getScheme();
+
+            // If the configured redirect URI does not have a scheme we cannot do
+            // a structured comparison; fall back to strict equality
+            // (case-insensitive) which is still safer than the historical
+            // prefix match.
+            if (expectedScheme == null || expectedScheme.isEmpty()) {
+                return url.equalsIgnoreCase(mRedirectUrl);
+            }
+
+            // Scheme: case-insensitive per RFC 3986 §3.1.
+            if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
+                return false;
+            }
+
+            // Authority (host[:port]): case-insensitive per RFC 3986 §3.2.
+            if (!equalsIgnoreCaseNullSafe(actual.getAuthority(), expected.getAuthority())) {
+                return false;
+            }
+
+            // Path: compare case-insensitively because the URL we receive has
+            // already been lowercased by handleUrl, while mRedirectUrl is in
+            // its registered case.
+            return nullToEmpty(actual.getPath())
+                    .equalsIgnoreCase(nullToEmpty(expected.getPath()));
+        } catch (final Throwable t) {
+            // Be conservative: if either URL cannot be parsed we treat the
+            // navigation as not-a-redirect rather than risk leaking the auth
+            // code to a malformed URL.
+            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: " + t);
+            return false;
+        }
+    }
+
+    private static boolean equalsIgnoreCaseNullSafe(@Nullable final String a,
+                                                    @Nullable final String b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equalsIgnoreCase(b);
+    }
+
+    private static String nullToEmpty(@Nullable final String s) {
+        return s == null ? "" : s;
     }
 
     private boolean isNonceRedirect(@NonNull final String url) {

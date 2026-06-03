@@ -94,7 +94,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private AzureActiveDirectoryWebViewClient mWebViewClient;
     private Context mContext;
     private Activity mActivity;
-    private static final String TEST_REDIRECT_URI = "abc12";
+    private static final String TEST_REDIRECT_URI = "msauth://com.example.app/somehash=";
 
     // Test strings initialized.
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
@@ -107,7 +107,20 @@ public class AzureActiveDirectoryWebViewClientTest {
             AUTHENTICATOR_MFA_LINKING_PREFIX + "xyz";
     private static final String TEST_SSL_PROTECTION_HTTP_URL = "http://foo";
     private static final String TEST_SSL_PROTECTION_FTP_URL = "ftp://foo";
-    private static final String TEST_REDIRECT_URL = "ABC12/xyz";
+    private static final String TEST_REDIRECT_URL = "msauth://com.example.app/somehash=?code=AUTH_CODE&state=xyz";
+
+    // --- isRedirectUrl spoofing-attack test vectors (see FireWatch finding c1bf88bd) ---
+    // Attacker prepends additional path/host that *would* pass a startsWith() check.
+    private static final String TEST_REDIRECT_URL_SPOOFED_SUFFIX_HOST =
+            "msauth://com.example.app/somehash=.attacker.com/x?code=STOLEN";
+    private static final String TEST_REDIRECT_URL_SPOOFED_PATH_SUFFIX =
+            "msauth://com.example.app/somehash=stolen?code=STOLEN";
+    private static final String TEST_REDIRECT_URL_DIFFERENT_HOST =
+            "msauth://attacker.com/somehash=?code=STOLEN";
+    private static final String TEST_REDIRECT_URL_DIFFERENT_SCHEME =
+            "https://com.example.app/somehash=?code=STOLEN";
+    private static final String TEST_REDIRECT_URL_WITH_FRAGMENT =
+            "msauth://com.example.app/somehash=?code=AUTH_CODE#fragment";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -348,6 +361,52 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesRedirectUriString() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL));
+    }
+
+    /**
+     * URL with auth code in the fragment instead of query string is still a
+     * legitimate redirect — only scheme, authority and path are matched.
+     */
+    @Test
+    public void testUrlOverrideHandlesRedirectUriWithFragment() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL_WITH_FRAGMENT));
+    }
+
+    /**
+     * Regression test for the FireWatch finding c1bf88bd-5fce-454c-a028-cbfe176639e0.
+     * <p>
+     * Historically {@code isRedirectUrl} used {@code String#startsWith}, so a
+     * URL that contained the registered redirect URI as a prefix but had an
+     * attacker-controlled suffix (e.g. an extra host or path segment) would be
+     * accepted as a redirect and the auth code would be exfiltrated by
+     * {@code processRedirectUrl}. The strict scheme + authority + path
+     * comparison must now reject these.
+     */
+    @Test
+    public void testUrlOverrideRejectsSpoofedRedirectWithSuffixHost() {
+        // shouldOverrideUrlLoading returns false when no handler matches.
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_REDIRECT_URL_SPOOFED_SUFFIX_HOST));
+    }
+
+    @Test
+    public void testUrlOverrideRejectsSpoofedRedirectWithPathSuffix() {
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_REDIRECT_URL_SPOOFED_PATH_SUFFIX));
+    }
+
+    @Test
+    public void testUrlOverrideRejectsRedirectWithDifferentHost() {
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_REDIRECT_URL_DIFFERENT_HOST));
+    }
+
+    @Test
+    public void testUrlOverrideRejectsRedirectWithDifferentScheme() {
+        // Different scheme also doesn't match other handlers (TEST_INVALID_URL is also
+        // an https:// URL that is rejected by isWebsiteRequestUrl etc.).
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_REDIRECT_URL_DIFFERENT_SCHEME));
     }
 
     @Test
