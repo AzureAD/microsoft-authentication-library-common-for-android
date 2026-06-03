@@ -16,6 +16,7 @@ vNext
 - [MINOR] Add onboarding telemetry recorder, field keys, and session persistence for mobile onboarding flow (#3088)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
 - [PATCH] Edge TB: Fix lookup mode (#3108)
+- [MINOR] Disabling GetCookies API from webapps APIs (#3135)
 
 Version 24.2.0
 ----------
