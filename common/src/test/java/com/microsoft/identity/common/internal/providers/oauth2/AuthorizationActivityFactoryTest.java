@@ -35,8 +35,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlat
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
@@ -48,14 +50,18 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
+import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
+import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.MockedConstruction;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 import lombok.SneakyThrows;
@@ -255,5 +261,37 @@ public class AuthorizationActivityFactoryTest {
 
         // Verify it creates BrowserAuthorizationFragment even with silent flow when not WebView
         assertEquals(BrowserAuthorizationFragment.class, fragment.getClass());
+    }
+
+    @Test
+    public void testSwitchBrowserEnabled_noBrowser_urlUnchanged() {
+        // No browsers installed in Robolectric → selectBrowser returns null → URL unchanged
+        final AuthorizationActivityParameters params = new AuthorizationActivityParameters(
+                context, authIntent, requestUrl, redirectUri, requestHeaders,
+                authorizationAgent, webViewZoomEnabled, webViewZoomControlsEnabled,
+                sourceLibraryName, sourceLibraryVersion, null, null, false, true
+        );
+
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(params);
+        assertEquals(requestUrl, resultIntent.getStringExtra(REQUEST_URL));
+        assertFalse(resultIntent.getStringExtra(REQUEST_URL).contains("switch_browser"));
+    }
+
+    @Test
+    public void testSwitchBrowserEnabled_browserAvailable_appendsParam() {
+        final Browser mockBrowser = new Browser("com.android.chrome", Collections.singleton("hash"), "100", true);
+        try (MockedConstruction<AndroidBrowserSelector> ignored = mockConstruction(
+                AndroidBrowserSelector.class,
+                (mock, ctx) -> when(mock.selectBrowser(any(), any())).thenReturn(mockBrowser)
+        )) {
+            final AuthorizationActivityParameters params = new AuthorizationActivityParameters(
+                    context, authIntent, requestUrl, redirectUri, requestHeaders,
+                    authorizationAgent, webViewZoomEnabled, webViewZoomControlsEnabled,
+                    sourceLibraryName, sourceLibraryVersion, null, null, false, true
+            );
+
+            final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(params);
+            assertTrue(resultIntent.getStringExtra(REQUEST_URL).contains("switch_browser=1"));
+        }
     }
 }
