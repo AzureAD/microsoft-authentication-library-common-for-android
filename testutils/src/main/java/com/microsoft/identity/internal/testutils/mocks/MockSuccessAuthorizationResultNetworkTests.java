@@ -28,7 +28,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorRes
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
-import com.microsoft.identity.internal.testutils.labutils.LabConfig;
+import com.microsoft.identity.labapi.utilities.client.ILabAccount;
+import com.microsoft.identity.labapi.utilities.client.LabClient;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -47,12 +48,12 @@ public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationRes
     public MockSuccessAuthorizationResultNetworkTests() {
         try {
             final HashMap<String, String> authorizationParams = new HashMap<>();
-            final LabConfig labConfig = LabConfig.getCurrentLabConfig();
+            final ILabAccount labAccount = LabClient.latestLabAccount;
 
-            if (labConfig != null) {
+            if (labAccount != null) {
                 // get cloud instance host name from the authority url provided by lab info
                 // and set in the mock authorization response so that we can test multiple cloud support
-                final URL authorityURL = new URL(LabConfig.getCurrentLabConfig().getAuthority());
+                final URL authorityURL = new URL(labAccount.getCloudUrl());
                 authorizationParams.put(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME, authorityURL.getHost());
             }
 

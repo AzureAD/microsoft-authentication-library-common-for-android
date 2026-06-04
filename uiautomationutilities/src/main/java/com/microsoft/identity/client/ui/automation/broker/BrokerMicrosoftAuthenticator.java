@@ -24,6 +24,8 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -398,7 +400,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
             // This is required for auth app as it has increased the compile sdk version to 34
-            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW");
+            UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW", FIND_UI_ELEMENT_TIMEOUT_SHORT);
             shouldHandleFirstRun = false;
         }
     }
