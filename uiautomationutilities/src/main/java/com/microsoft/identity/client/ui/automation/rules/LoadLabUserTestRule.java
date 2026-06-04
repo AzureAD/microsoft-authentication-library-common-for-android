@@ -32,6 +32,7 @@ import com.microsoft.identity.labapi.utilities.client.ILabAccount;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
 import com.microsoft.identity.labapi.utilities.client.LabQuery;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -45,6 +46,7 @@ public class LoadLabUserTestRule implements TestRule {
     private static final String TAG = LoadLabUserTestRule.class.getSimpleName();
 
     private LabQuery query;
+    private UserType jsonUserType;
     private TempUserType tempUserType;
 
     protected LabClient mLabClient;
@@ -52,6 +54,14 @@ public class LoadLabUserTestRule implements TestRule {
 
     public LoadLabUserTestRule(@NonNull final LabQuery query) {
         this.query = query;
+        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
+                BuildConfig.LAB_CLIENT_SECRET
+        );
+        mLabClient = new LabClient(authenticationClient);
+    }
+
+    public LoadLabUserTestRule(@NonNull final UserType jsonUserType) {
+        this.jsonUserType = jsonUserType;
         final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
                 BuildConfig.LAB_CLIENT_SECRET
         );
@@ -75,6 +85,10 @@ public class LoadLabUserTestRule implements TestRule {
                 if (query != null) {
                     Logger.i(TAG, "Loading Existing User for Test..");
                     mLabAccount = mLabClient.getLabAccount(query);
+                } else if (jsonUserType != null) {
+                    Logger.i(TAG, "Loading Existing User for Test based on JSON user type...");
+                    mLabAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(jsonUserType);
+
                 } else if (tempUserType != null) {
                     Logger.i(TAG, "Loading Temp User for Test....");
                     mLabAccount = mLabClient.createTempAccount(tempUserType);
