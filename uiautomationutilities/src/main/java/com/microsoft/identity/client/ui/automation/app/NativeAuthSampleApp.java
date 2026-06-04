@@ -20,30 +20,34 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.client.ui.automation.app;
 
-import com.microsoft.identity.labapi.utilities.constants.TempUserType;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
+import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+
+import lombok.NonNull;
 
 /**
- * An interface describing a test that can leverage the Lab Api to fetch accounts. Implementing this
- * interface on a test facilitates specifying the type of user that should be pulled by Lab Api for
- * that test.
+ * A model for interacting with the NativeAuth Sample App during UI automation tests.
  */
-public interface ILabTest {
+public class NativeAuthSampleApp extends App {
 
-    /**
-     * Get the user type to fetch from the Json String
-     *
-     * @return A {@link UserType} representing the type of user to fetch from the Json String
-     */
-    UserType getJsonUserType();
+    public static final String NATIVE_AUTH_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalnativeauthandroidkotlinsampleapp";
+    public static final String NATIVE_AUTH_SAMPLE_APP_NAME = "NativeAuth Sample App";
+    public static final String NATIVE_AUTH_SAMPLE_APK = "NativeAuthSampleApp.apk";
 
-    /**
-     * Get the type of temp user that can be used to create a new temp user via LAB API.
-     *
-     * @return The type of temp user as denoted in {@link TempUserType}
-     */
-    TempUserType getTempUserType();
+    public NativeAuthSampleApp() {
+        super(NATIVE_AUTH_SAMPLE_PACKAGE_NAME, NATIVE_AUTH_SAMPLE_APP_NAME, new LocalApkInstaller());
+        localApkFileName = NATIVE_AUTH_SAMPLE_APK;
+        localUpdateApkFileName = NATIVE_AUTH_SAMPLE_APK;
+    }
 
+    @Override
+    protected void initialiseAppImpl() {
+        // No version-specific implementation needed for NativeAuthSampleApp
+    }
+
+    @Override
+    public void handleFirstRun() {
+        // No first-run dialog to handle for NativeAuthSampleApp
+    }
 }

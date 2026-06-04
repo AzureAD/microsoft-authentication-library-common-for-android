@@ -20,30 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.common.java.providers.oauth2
 
-import com.microsoft.identity.labapi.utilities.constants.TempUserType;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
+import java.net.URL
 
 /**
- * An interface describing a test that can leverage the Lab Api to fetch accounts. Implementing this
- * interface on a test facilitates specifying the type of user that should be pulled by Lab Api for
- * that test.
+ * Generic OAuth2 request interceptor used to add request-specific HTTP headers.
+ *
+ * This callback executes synchronously on the thread performing the request (typically a
+ * background/network thread), so implementations must be thread-safe and return quickly.
+ * Any exception thrown from this method will propagate to the caller and fail the request.
+ * Returning null and returning an empty map both mean that no additional headers are added.
  */
-public interface ILabTest {
-
-    /**
-     * Get the user type to fetch from the Json String
-     *
-     * @return A {@link UserType} representing the type of user to fetch from the Json String
-     */
-    UserType getJsonUserType();
-
-    /**
-     * Get the type of temp user that can be used to create a new temp user via LAB API.
-     *
-     * @return The type of temp user as denoted in {@link TempUserType}
-     */
-    TempUserType getTempUserType();
-
+interface OAuth2RequestInterceptor {
+    fun additionalHeaders(requestUrl: URL): Map<String, String>?
 }
