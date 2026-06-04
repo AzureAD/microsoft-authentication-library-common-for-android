@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Fix Token Endpoint Server Telemetry Parsing (#3128)
+- [MINOR] Enable passkey registration by default in CommonFlight (ENABLE_PASSKEY_REGISTRATION) (#3132)
 - [PATCH] Emit ipc_strategy telemetry attribute for successful device registration IPC strategy and refactor execute flow to pack protocol request once before strategy retries (#3124)
 - [PATCH] Fix Edge browser selection on devices where Microsoft Edge is the default browser: add the rotated Edge signing certificate hash to the Edge BrowserDescriptor and accept multi-signer browsers when any signature intersects the safelist, instead of requiring strict set-equality (resolves MSAL #2414)
 - [MINOR] Refactor Auth Tab integration to use provider-based strategy selection. Adds AuthTabStrategyProvider and BrowserLaunchStrategy with Custom Tabs fallback. Compatible with androidx.browser:browser:1.7.0.
@@ -15,6 +16,7 @@ vNext
 - [PATCH] Extend filter-then-clone optimization to load() and getIdTokensForAccountRecord() in MsalOAuth2TokenCache: when ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE flight is enabled, skip clone-all preload and call direct flight-gated overloads that clone only matching credentials; add new getCredentialsFilteredBy overload with kid support (#3100)
 - [MINOR] Add onboarding telemetry recorder, field keys, and session persistence for mobile onboarding flow (#3088)
 - [PATCH] Move Multiple Listening apps check to the authorization layer (#3070)
+- [MINOR] Add NativeAuthRequestInterceptor for custom per-request headers in native auth flows (#3112)
 - [PATCH] Edge TB: Fix lookup mode (#3108)
 - [MINOR] Disabling GetCookies API from webapps APIs (#3135)
 
