@@ -83,35 +83,6 @@ public class PowerManagerWrapper {
     }
 
     /**
-     * Gets a string representing Device Idle status.
-     * Will return an empty string if the device is not in any idle mode.
-     * (Possible Values: "Idle", "LightIdle", "Unknown" , "")
-     */
-    @NonNull
-    public String getDeviceIdleMode(@NonNull final Context context){
-        try {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                return UNKNOWN_STATUS;
-            }
-
-            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
-            if (powerManager.isDeviceIdleMode()) {
-                return "Idle";
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    powerManager.isDeviceLightIdleMode()) {
-                return "LightIdle";
-            }
-        } catch (final Exception e){
-            // Swallow all exception!
-            return UNKNOWN_STATUS;
-        }
-
-        return "";
-    }
-
-    /**
      * Gets the Device Doze Mode Status.
      * 
      * This is exposed to OneAuth.
@@ -142,27 +113,6 @@ public class PowerManagerWrapper {
         } catch (Exception e){
             Logger.error(methodTag, "Unknown Exception when checking doze mode status", e);
             return DeviceDozeModeStatus.UnknownError;
-        }
-    }
-
-    /**
-     * Gets a string representing Power Optimization settings of the calling app
-     * Will return an empty string if the app isn't opting out.
-     * (Possible Values: "OptOut", "Unknown" , "")
-     */
-    @NonNull
-    public String getPowerOptimizationSettings(@NonNull final Context context){
-        try {
-            final PowerManager powerManager = ((PowerManager) context.getSystemService(Context.POWER_SERVICE));
-            if (powerManager.isIgnoringBatteryOptimizations(context.getPackageName())){
-                return "OptOut";
-            } else {
-                return "";
-            }
-
-        } catch (final Exception e){
-            // Swallow all exception!
-            return UNKNOWN_STATUS;
         }
     }
 

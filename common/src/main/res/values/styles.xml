@@ -62,4 +62,38 @@
     <style name="DualScreenActivityTheme" parent="Theme.AppCompat.Light">
         <item name="android:windowBackground">@color/com_microsoft_identity_common_white</item>
     </style>
+
+    <!--
+        Window animation style that suppresses every activity / task / window animation slot
+        by pointing it at an empty @anim/broker_no_animation set. WindowManager reads this
+        from the activity's theme in system_server, so it applies across the :auth process
+        boundary and the predictive-back gesture in a way overridePendingTransition cannot.
+    -->
+    <style name="BrokerNoWindowAnimation">
+        <item name="android:activityOpenEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:activityOpenExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:activityCloseEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:activityCloseExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskOpenEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskOpenExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskCloseEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskCloseExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskToFrontEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskToFrontExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskToBackEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:taskToBackExitAnimation">@anim/broker_no_animation</item>
+        <item name="android:windowEnterAnimation">@anim/broker_no_animation</item>
+        <item name="android:windowExitAnimation">@anim/broker_no_animation</item>
+    </style>
+
+    <!--
+        Variant of DualScreenActivityTheme that suppresses activity transitions for
+        BrokerAuthorizationActivity. See BrokerAuthorizationActivity#getThemeResId().
+    -->
+    <style name="DualScreenBrokerAuthorizationActivityTheme" parent="DualScreenActivityTheme">
+        <item name="android:windowBackground">@color/com_microsoft_identity_common_white</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/BrokerNoWindowAnimation</item>
+    </style>
 </resources>
