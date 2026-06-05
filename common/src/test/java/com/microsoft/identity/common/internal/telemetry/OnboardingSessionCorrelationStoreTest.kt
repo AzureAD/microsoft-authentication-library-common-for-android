@@ -20,28 +20,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
+package com.microsoft.identity.common.internal.telemetry
 
-import com.microsoft.identity.labapi.utilities.BuildConfig;
-import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
-import com.microsoft.identity.labapi.utilities.constants.UserType;
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-import org.junit.Assert;
-import org.junit.Test;
+@RunWith(RobolectricTestRunner::class)
+class OnboardingSessionCorrelationStoreTest {
 
-public class LabGuestAccountTest {
+    private lateinit var store: OnboardingSessionCorrelationStore
+
+    @Before
+    fun setup() {
+        store = OnboardingSessionCorrelationStore(
+            ApplicationProvider.getApplicationContext()
+        )
+    }
 
     @Test
-    public void testCanCreateLabGuestAccount() throws LabApiException {
-        final LabApiAuthenticationClient authenticationClient = new LabApiAuthenticationClient(
-                BuildConfig.LAB_CLIENT_SECRET
-        );
-        final LabClient labClient = new LabClient(authenticationClient);
+    fun testLoad_Empty_ReturnsEmptyString() {
+        Assert.assertEquals("", store.load())
+    }
 
-        final ILabAccount user = labClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.GUEST);
+    @Test
+    fun testSaveAndLoad() {
+        val json = "{\"key|scope\":{\"id\":\"uuid\",\"ts\":1234567890}}"
+        store.save(json)
+        Assert.assertEquals(json, store.load())
+    }
 
-        Assert.assertNotNull(user.getUsername());
-        Assert.assertNotNull(user.getPassword());
+    @Test
+    fun testSave_OverwritesPrevious() {
+        store.save("first")
+        store.save("second")
+        Assert.assertEquals("second", store.load())
+    }
+
+    @Test
+    fun testSave_EmptyString() {
+        store.save("some data")
+        store.save("")
+        Assert.assertEquals("", store.load())
     }
 }

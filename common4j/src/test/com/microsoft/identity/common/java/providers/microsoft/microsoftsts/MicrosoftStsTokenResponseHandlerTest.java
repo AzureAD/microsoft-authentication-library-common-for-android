@@ -141,6 +141,59 @@ public class MicrosoftStsTokenResponseHandlerTest {
 
     @SneakyThrows
     @Test
+    public void testHandleTokenResponse_withUrlEncodedClientDataHeader_attributesEmitted() {
+        // eSTS URL-encodes pipe separators in the response header (e.g. "%7C" for "|").
+        // Real-world example: x-ms-clientdata=[m%7C0x800482A5%7C%7Cmicrosoftonline.com%7Cnone]
+        final String encodedClientDataHeader = "m%7C0x800482A5%7C%7Cmicrosoftonline.com%7Cnone";
+
+        final HashMap<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
+        headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
+                Collections.singletonList(encodedClientDataHeader));
+
+        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+            Assert.assertNotNull(tokenResult);
+            Assert.assertTrue(tokenResult.getSuccess());
+            Assert.assertNotNull(tokenResult.getClientDataInfo());
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "0x800482A5");
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "MSA");
+        }
+    }
+
+    @SneakyThrows
+    @Test
+    public void testHandleTokenResponse_withMalformedPercentEncoding_doesNotCrash() {
+        // Lone '%' is invalid percent-encoding; decode should fail gracefully and skip ClientDataInfo.
+        final String malformedHeader = "e|AADSTS50058|%ZZ|us|public";
+
+        final HashMap<String, List<String>> headers = new HashMap<>();
+        headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));
+        headers.put(HttpConstants.HeaderField.X_MS_CLIENTDATA,
+                Collections.singletonList(malformedHeader));
+
+        final HttpResponse response = new HttpResponse(200, MOCK_TOKEN_SUCCESS_RESPONSE, headers);
+        final MicrosoftStsTokenResponseHandler handler = new MicrosoftStsTokenResponseHandler();
+
+        final TokenResult tokenResult = handler.handleTokenResponse(response);
+
+        Assert.assertNotNull(tokenResult);
+        Assert.assertTrue(tokenResult.getSuccess());
+        // Malformed encoding => null ClientDataInfo, but token result still valid.
+        Assert.assertNull(tokenResult.getClientDataInfo());
+    }
+
+    @SneakyThrows
+    @Test
     public void testHandleTokenResponse_noClientDataHeader_doesNotCrash() {
         final HashMap<String, List<String>> headers = new HashMap<>();
         headers.put("Content-Type", Collections.singletonList("application/json; charset=utf-8"));

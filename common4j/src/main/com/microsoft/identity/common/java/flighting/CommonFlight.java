@@ -57,7 +57,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable passkey registration feature.
      */
-    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", false),
+    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", true),
 
     /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
