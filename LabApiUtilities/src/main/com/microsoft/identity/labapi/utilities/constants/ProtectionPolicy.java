@@ -27,12 +27,15 @@ public enum ProtectionPolicy {
     CA(LabConstants.ProtectionPolicy.CA),
     CADJ(LabConstants.ProtectionPolicy.CADJ),
     MAM(LabConstants.ProtectionPolicy.MAM),
+    GLOBAL_MFA(LabConstants.ProtectionPolicy.GLOBAL_MFA),
     MDM(LabConstants.ProtectionPolicy.MDM),
     MAM_CA(LabConstants.ProtectionPolicy.MAM_CA),
     MDM_CA(LabConstants.ProtectionPolicy.MDM_CA),
     TRUE_MAM_CA(LabConstants.ProtectionPolicy.TRUE_MAM_CA),
     MAM_SPO(LabConstants.ProtectionPolicy.MAM_SPO),
-    BLOCKED(LabConstants.ProtectionPolicy.BLOCKED);
+    BLOCKED(LabConstants.ProtectionPolicy.BLOCKED),
+    AUTHAPP_LBAC(LabConstants.ProtectionPolicy.AUTHAPP_LBAC),
+    AUTHAPP_RICH_CONTEXT(LabConstants.ProtectionPolicy.AUTHAPP_RICH_CONTEXT);
 
     final String value;
 
