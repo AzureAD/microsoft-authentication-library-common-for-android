@@ -119,6 +119,17 @@ public class ExceptionAdapter {
             return new ClientException(ClientException.AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE, "Authorization error response is null. Authorization Status: " +authorizationResult.getAuthorizationStatus());
         }
 
+        final BaseException exception = getExceptionByAuthorizationResult(authorizationResult, authorizationErrorResponse);
+        if (authorizationResult instanceof MicrosoftStsAuthorizationResult
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            exception.setClientDataInfo(((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo());
+        }
+
+        return exception;
+    }
+
+    private static BaseException getExceptionByAuthorizationResult(@NonNull final AuthorizationResult authorizationResult, @NonNull final AuthorizationErrorResponse authorizationErrorResponse) {
+        final String methodTag = TAG + ":getExceptionByAuthorizationResult";
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
         switch (authorizationResult.getAuthorizationStatus()) {
             case FAIL:
@@ -297,6 +308,11 @@ public class ExceptionAdapter {
         outErr.setSubErrorCode(exception.getSubErrorCode());
         outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
         outErr.setHttpResponseBody(exception.getHttpResponseBody());
+
+        if (exception.getClientDataInfo() != null) {
+            outErr.setClientDataInfo(exception.getClientDataInfo());
+        }
+
         return outErr;
     }
 
@@ -417,6 +433,18 @@ public class ExceptionAdapter {
 
     @NonNull
     public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
+        final ClientException outErr = clientExceptionFromExceptionInternal(exception);
+
+        if (exception instanceof BaseException
+                && ((BaseException) exception).getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            outErr.setClientDataInfo(((BaseException) exception).getClientDataInfo());
+        }
+
+        return outErr;
+    }
+
+    private static ClientException clientExceptionFromExceptionInternal(@NonNull final Throwable exception) {
         if (exception instanceof ClientException){
             return (ClientException) exception;
         }
