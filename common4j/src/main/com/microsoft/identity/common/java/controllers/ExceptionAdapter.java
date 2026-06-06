@@ -309,7 +309,8 @@ public class ExceptionAdapter {
         outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
         outErr.setHttpResponseBody(exception.getHttpResponseBody());
 
-        if (exception.getClientDataInfo() != null) {
+        if (exception.getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
             outErr.setClientDataInfo(exception.getClientDataInfo());
         }
 
