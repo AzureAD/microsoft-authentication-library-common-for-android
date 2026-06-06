@@ -435,15 +435,15 @@ public class ExceptionAdapter {
     @NonNull
     public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
         final ClientException outErr = clientExceptionFromExceptionInternal(exception);
-        Throwable wrappedException = exception;
+        Throwable sourceException = exception;
         if (exception instanceof ExecutionException && exception.getCause() != null) {
-            wrappedException = exception.getCause();
+            sourceException = exception.getCause();
         }
 
-        if (wrappedException instanceof BaseException
-                && ((BaseException) wrappedException).getClientDataInfo() != null
+        if (sourceException instanceof BaseException
+                && ((BaseException) sourceException).getClientDataInfo() != null
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
-            outErr.setClientDataInfo(((BaseException) wrappedException).getClientDataInfo());
+            outErr.setClientDataInfo(((BaseException) sourceException).getClientDataInfo());
         }
 
         return outErr;
