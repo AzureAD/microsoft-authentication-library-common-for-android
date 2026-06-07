@@ -1327,13 +1327,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * the original request's client_id.
      */
     private boolean shouldReAttachPrtForEstsHost(@NonNull final String url) {
-        // TODO: Restore original logic after testing
-        //return true;
-         return CommonFlightsManager.INSTANCE.getFlightsProvider()
-                 .isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
-                 && isEstsCloudHost(url)
-                 && hasPrtHeaderAttached()
-                 && (!isAuthorizeUrl(url) || hasKnownClientId(url));
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_FOR_ESTS_HOST_REDIRECT)
+                && isEstsCloudHost(url)
+                && hasPrtHeaderAttached()
+                && (!isAuthorizeUrl(url) || hasKnownClientId(url));
     }
 
     /**
@@ -1383,9 +1381,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Processing eSTS host redirect with PRT re-attachment.");
         Span span = null;
         try {
-            // TODO: Remove after testing — force exception to verify return-false fallback
-            if (true) throw new RuntimeException("Test: simulating processEstsHostRedirect failure");
-            span = createSpanWithAttributesFromParent(SpanName.EstsHostRedirectPrtAttach.name());
+            span = createSpanWithAttributesFromParent(SpanName.ProcessEstsHostRedirect.name());
             final String host = new URL(url).getHost();
             span.setAttribute(AttributeName.ests_redirect_host.name(), host);
             final ReAttachPrtHeaderHandler reAttachPrtHeaderHandler =
@@ -1393,7 +1389,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             reAttachPrtHeader(url, reAttachPrtHeaderHandler, view, methodTag, span);
             return true;
         } catch (final Throwable e) {
-            Logger.warn(methodTag, "Failed to process eSTS host redirect. Letting WebView continue naturally." + e);
+            Logger.warn(methodTag, "Failed to process eSTS host redirect. Letting WebView continue naturally.");
             if (span != null) {
                 span.recordException(e);
                 span.setStatus(StatusCode.ERROR);

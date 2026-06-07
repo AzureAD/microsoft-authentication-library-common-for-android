@@ -66,7 +66,7 @@ public enum SpanName {
     /**
      * Span name for PRT header re-attachment when WebView redirects to an eSTS cloud host.
      */
-    EstsHostRedirectPrtAttach,
+    ProcessEstsHostRedirect,
     SwitchBrowserResume,
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,

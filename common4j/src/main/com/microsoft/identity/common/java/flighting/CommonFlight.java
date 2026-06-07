@@ -195,7 +195,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
      */
-    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", true),
+    DISABLE_UNNECESSARY_CRYPTO_PURPOSES_FROM_DEVICE_POP_MANAGER ("DisableUnnecessaryCryptoPurposesFromDevicePopManager", false),
 
     /**
      * Flight to re-enable validating signing certificate chain for broker validation
@@ -279,7 +279,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable PRT header re-attachment when WebView navigates to an eSTS cloud host.
      * When enabled, a fresh PRT credential JWT is generated and attached to the request.
      */
-    ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT("EnablePrtHeaderForEstsHostRedirect", false);
+    ENABLE_ATTACH_PRT_HEADER_FOR_ESTS_HOST_REDIRECT("EnableAttachPrtHeaderForEstsHostRedirect", false);
 
     private String key;
     private Object defaultValue;

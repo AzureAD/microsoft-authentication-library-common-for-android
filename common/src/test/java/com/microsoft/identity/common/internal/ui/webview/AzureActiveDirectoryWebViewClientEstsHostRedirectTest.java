@@ -117,7 +117,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
     }
 
     // ------- Flight DISABLED regression tests -------
-    // When the ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT flight is OFF, all eSTS host URLs
+    // When the ENABLE_ATTACH_PRT_HEADER_FOR_ESTS_HOST_REDIRECT flight is OFF, all eSTS host URLs
     // must fall through to the default path (return false) — exactly the same behavior as
     // before this feature existed.  reAttachPrtHeader must never be called.
 
@@ -126,7 +126,7 @@ public class AzureActiveDirectoryWebViewClientEstsHostRedirectTest {
      */
     private void initFlightsWithEstsPrtFlight(boolean enabled) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_ATTACH_PRT_HEADER_FOR_ESTS_HOST_REDIRECT))
                 .thenReturn(enabled);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
