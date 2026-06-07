@@ -26,6 +26,7 @@ import lombok.NonNull;
 
 public enum UserType {
     BASIC(LabConstants.UserType.BASIC),
+    BASIC2(LabConstants.UserType.BASIC2),
     MSA(LabConstants.UserType.MSA),
     MDM_CA(LabConstants.UserType.MDM_CA),
     MAM_CA(LabConstants.UserType.MAM_CA),
@@ -33,6 +34,8 @@ public enum UserType {
     TRUE_MAM_CA(LabConstants.UserType.TRUE_MAM_CA),
     WP(LabConstants.UserType.WP),
     FEDERATED(LabConstants.UserType.FEDERATED),
+    ANDROID_FEDERATED(LabConstants.UserType.ANDROID_FEDERATED),
+    ANDROID_FEDERATED2(LabConstants.UserType.ANDROID_FEDERATED2),
     DEVICE_ADMIN(LabConstants.UserType.DEVICE_ADMIN),
     USGOV(LabConstants.UserType.USGOV),
     USGOV_GUEST(LabConstants.UserType.USGOV_GUEST),
