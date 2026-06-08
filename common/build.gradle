@@ -283,7 +283,7 @@ dependencies {
     })
 
     implementation "io.opentelemetry:opentelemetry-api:$rootProject.ext.openTelemetryVersion"
-    implementation("io.opentelemetry:opentelemetry-extension-kotlin:$rootProject.ext.openTelemetryVersion")
+    implementation("io.opentelemetry:opentelemetry-extension-kotlin:$rootProject.ext.openTelemetryExtensionKotlinVersion")
     implementation "androidx.fragment:fragment:1.3.2"
 }
 
