@@ -3,6 +3,7 @@ vNext
 
 Version 24.3.0
 ----------
+- [MINOR] Add SwitchBrowserRedirectActivity for non-broker Switch Browser protocol flows. BrokerBrowserRedirectActivity now extends this shared base class (#3133)
 - [PATCH] Fix Token Endpoint Server Telemetry Parsing (#3128)
 - [MINOR] Enable passkey registration by default in CommonFlight (ENABLE_PASSKEY_REGISTRATION) (#3132)
 - [PATCH] Emit ipc_strategy telemetry attribute for successful device registration IPC strategy and refactor execute flow to pack protocol request once before strategy retries (#3124)
