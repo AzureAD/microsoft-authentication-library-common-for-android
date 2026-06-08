@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.IS_SWITCH_BROWSER_FLOW;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -82,6 +83,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -769,6 +771,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
         }
         return mSwitchBrowserProtocolCoordinator;
+    }
+
+    @NonNull
+    @Override
+    protected PropertyBag propertyBagFromAuthorizationResult(@NonNull final RawAuthorizationResult result) {
+        final PropertyBag propertyBag = super.propertyBagFromAuthorizationResult(result);
+        if (mSwitchBrowserProtocolCoordinator != null
+                && mSwitchBrowserProtocolCoordinator.getWasSwitchBrowserFlowInitiated()) {
+            propertyBag.put(IS_SWITCH_BROWSER_FLOW, true);
+        }
+        return propertyBag;
     }
 
     /**

@@ -57,6 +57,14 @@ class SwitchBrowserRequestHandler(
 
     var isSwitchBrowserChallengeActive: Boolean = false
 
+    /**
+     * Indicates that the switch browser flow was initiated during this session.
+     * Set when [processChallenge] successfully launches the browser activity.
+     * Unlike [isSwitchBrowserChallengeActive], this flag is never reset.
+     */
+    var wasSwitchBrowserFlowInitiated: Boolean = false
+        private set
+
     companion object {
         private val TAG = SwitchBrowserRequestHandler::class.simpleName
     }
@@ -121,6 +129,7 @@ class SwitchBrowserRequestHandler(
             activity.startActivity(switchBrowserIntent)
             span.setStatus(StatusCode.OK)
             isSwitchBrowserChallengeActive = true
+            wasSwitchBrowserFlowInitiated = true
             span.end()
         }
     }
