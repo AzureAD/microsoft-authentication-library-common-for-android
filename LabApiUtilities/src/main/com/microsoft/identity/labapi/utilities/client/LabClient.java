@@ -73,7 +73,53 @@ public class LabClient implements ILabClient {
     public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(35);
 
     private static final String ACCOUNT_UPN_JSON_STRING_SECRET_NAME = "Android-ID4SLAB2-User-Identifiers";
+    private String mAlternativeUpnJsonStringSecretName;
     private Map<String, LabJsonStringAccountEntry> labUPNJsonMap = null;
+
+    /**
+     * Holds the most recently fetched or created {@link ILabAccount} for this process.
+     * <p>
+     * Updated after each successful account fetch or temporary user creation via
+     * {@link LabClient}. Intended as a convenience for single-threaded test scenarios
+     * that need access to the last lab account without explicitly passing it between
+     * methods.
+     * </p>
+     * <p>
+     * The field is {@code volatile} to ensure writes performed by one thread are
+     * immediately visible to all other threads. It may be {@code null} if no account
+     * has been fetched or created yet. Do not rely on this field in multi-threaded
+     * or production code.
+     * </p>
+     */
+    public static volatile ILabAccount latestLabAccount = null;
+
+    /**
+     * Updates {@link #latestLabAccount} from a static context, avoiding the
+     * {@code ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD} SpotBugs warning that would
+     * be raised if instance methods assigned the field directly.
+     * <p>
+     * This method is thread-safe; the underlying field is {@code volatile}, so
+     * the write is immediately visible to all threads. {@code account} may be
+     * {@code null} to clear the stored account.
+     * </p>
+     *
+     * @param account The {@link ILabAccount} to store as the latest; may be {@code null}.
+     */
+    private static void setLatestLabAccount(final ILabAccount account) {
+        latestLabAccount = account;
+    }
+
+    /**
+     * This method allows tests to specify an alternative secret name for the UPN JSON string in Key Vault,
+     * as the default points specifically to Android Team's upn json. T
+     *
+     * IF YOU ARE THE ONEAUTH TEAM, PLEASE USE THIS METHOD TO POINT TO YOUR OWN JSON SECRET NAME
+     *
+     * @param secretName The name of the alternative Key Vault secret to use for fetching the UPN JSON string.
+     */
+    public void setAccountUpnJsonStringSecretName(final String secretName) {
+        mAlternativeUpnJsonStringSecretName = secretName;
+    }
 
     @Override
     public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
@@ -142,7 +188,7 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(configInfo);
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account = new LabAccount.LabAccountBuilder()
                 .username(username)
                 .password(password)
                 .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
@@ -152,6 +198,10 @@ public class LabClient implements ILabClient {
                 .cloudUrl(configInfo.getLabInfo().getAuthority())
                 .azureEnvironment(configInfo.getLabInfo().getAzureEnvironment())
                 .build();
+
+        setLatestLabAccount(account);
+
+        return account;
     }
 
     private List<ConfigInfo> fetchConfigsFromLab(@NonNull final String upn) throws LabApiException {
@@ -252,7 +302,7 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(tempUser);
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account = new LabAccount.LabAccountBuilder()
                 .username(tempUser.getUpn())
                 .password(password)
                 // all temp users created by Lab Api are currently cloud users
@@ -260,6 +310,9 @@ public class LabClient implements ILabClient {
                 .homeTenantId(tempUser.getTenantId())
                 .homeObjectId(tempUser.getObjectId())
                 .build();
+
+        setLatestLabAccount(account);
+        return account;
     }
 
     @Override
@@ -335,8 +388,15 @@ public class LabClient implements ILabClient {
         );
         final KeyVaultSecretsApi keyVaultSecretsApi = new KeyVaultSecretsApi(KeyVaultSecretsApi.MOBILE_BUILD_VAULT_URL);
 
+        final String keyvaultSecret;
+        if (mAlternativeUpnJsonStringSecretName != null && !mAlternativeUpnJsonStringSecretName.isEmpty()) {
+            keyvaultSecret = mAlternativeUpnJsonStringSecretName;
+        } else {
+            keyvaultSecret = ACCOUNT_UPN_JSON_STRING_SECRET_NAME;
+        }
+
         try {
-            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(ACCOUNT_UPN_JSON_STRING_SECRET_NAME);
+            final SecretBundle secretBundle = keyVaultSecretsApi.getKeyVaultSecret(keyvaultSecret);
 
             labUPNJsonMap = LabJsonStringAccountEntry.parseJsonToMap(secretBundle.getValue());
             return labUPNJsonMap;
@@ -356,16 +416,21 @@ public class LabClient implements ILabClient {
         }
         final String accountPassword = getPassword(accountEntry.getKeyVaultEntry());
 
-        return new LabAccount.LabAccountBuilder()
+        final LabAccount account =  new LabAccount.LabAccountBuilder()
                 .username(accountEntry.getUpn())
                 .password(accountPassword)
                 .userType(userType)
                 .homeTenantId(accountEntry.getHomeTenantId())
                 .homeObjectId(accountEntry.getHomeObjectId())
+                .guestTenantId(accountEntry.getGuestTenantId())
+                .associatedClientId(accountEntry.getAssociatedClientId())
                 .azureEnvironment(accountEntry.getAzureEnvironment())
                 .cloudUrl(accountEntry.getCloudUrl())
                 .build();
 
+        setLatestLabAccount(account);
+
+        return account;
     }
 
     @Override

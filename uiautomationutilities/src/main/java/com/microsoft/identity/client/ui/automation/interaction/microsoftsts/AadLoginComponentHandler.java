@@ -86,7 +86,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // says "Other ways to sign in"
         // 2. No OTP or MFA, just prompted for password right away.
         if (isMsaAccount) {
-            final UiObject otherWays = UiAutomatorUtils.obtainUiObjectWithExactText("Other ways to sign in", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            final UiObject otherWays = UiAutomatorUtils.obtainUiObjectWithExactText("Other ways to sign in", mFindLoginUiElementTimeout);
             if (otherWays.exists()) {
                 try {
                     otherWays.click();
@@ -229,7 +229,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleRegistration() {
         Logger.i(TAG, "Handle Registration Page Received..");
         final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Register page appears.", registerBtn.exists());
+        Assert.assertTrue("Register page did not appear...", registerBtn.exists());
 
         handleRegistrationButton();
     }
@@ -238,7 +238,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     public void handleGetTheAppPage() {
         Logger.i(TAG, "Handle Get the app page..");
         final UiObject getAppBtn = UiAutomatorUtils.obtainUiObjectWithText("Get the app", mFindLoginUiElementTimeout);
-        Assert.assertTrue("Get the app page appears.", getAppBtn.exists());
+        Assert.assertTrue("Get the app page did not appear...", getAppBtn.exists());
 
         handleNextButton();
     }
