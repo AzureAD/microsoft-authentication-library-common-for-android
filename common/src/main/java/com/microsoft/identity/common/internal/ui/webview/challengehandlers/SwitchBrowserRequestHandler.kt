@@ -120,7 +120,7 @@ class SwitchBrowserRequestHandler(
             )
             val switchBrowserIntent = SwitchBrowserActivity.buildSwitchBrowserLaunchIntent(
                 context = activity,
-                brokerRedirectUri = switchBrowserChallenge.redirectUri,
+                redirectUri = switchBrowserChallenge.redirectUri,
                 browserPackageName = browser.packageName,
                 browserSupportsCustomTabs = browser.isCustomTabsServiceSupported,
                 processUri = switchBrowserChallenge.processUri.toString(),
