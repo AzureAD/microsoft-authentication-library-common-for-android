@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Enable SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE flight by default (change default from false to true)
 - [PATCH] Remove stale code, eliminate flickers due to BrokerAuthorizationActivity (#3139)
 
 Version 24.3.0
