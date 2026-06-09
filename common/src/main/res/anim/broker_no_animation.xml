@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (c) Microsoft Corporation. Licensed under the MIT License.
+
+    Empty animation set used by BrokerNoWindowAnimation. We point every animation slot
+    at an explicit empty set rather than @null because several OEMs treat @null as
+    "fall back to platform default" (i.e. the slide), defeating the suppression.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android" />
