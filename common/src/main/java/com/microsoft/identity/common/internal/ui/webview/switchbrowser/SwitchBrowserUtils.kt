@@ -52,19 +52,11 @@ object SwitchBrowserUtils {
     fun isSwitchBrowserSupported(context: Context, redirectUri: String): Boolean {
         val methodTag = "$TAG:isSwitchBrowserSupported"
         try {
-            // Check 1: Compatible browser available
-            val browserSelector = AndroidBrowserSelector(context)
-            val browser = browserSelector.selectBrowser(
-                BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
-                null
-            )
-            if (browser == null) {
+            if (!isCompatibleBrowserInstalled(context)) {
                 Logger.info(methodTag, "No compatible browser found for Switch Browser protocol.")
                 return false
             }
-            Logger.info(methodTag, "Compatible browser found for Switch Browser: ${browser.packageName}")
 
-            // Check 2: Manifest declares handler for switch_browser_resume redirect
             if (!isSwitchBrowserResumeHandlerRegistered(context, redirectUri)) {
                 Logger.warn(
                     methodTag,
@@ -81,14 +73,31 @@ object SwitchBrowserUtils {
     }
 
     /**
-     * Checks whether the app's manifest declares an Activity that can handle the
-     * switch_browser_resume redirect URI. To be used by non-broker flows to check
-     * if the consuming app has properly configured the manifest to handle the Switch
-     * Browser redirect from browser.
+     * Checks whether a compatible browser (Chrome, Edge, or AEA) is installed on the device.
+     *
+     * @param context Android context for browser resolution.
+     * @return true if a compatible browser is installed, false otherwise.
+     */
+    @JvmStatic
+    fun isCompatibleBrowserInstalled(context: Context): Boolean {
+        val browserSelector = AndroidBrowserSelector(context)
+        val browser = browserSelector.selectBrowser(
+            BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
+            null
+        )
+        return browser != null
+    }
+
+    /**
+     * Checks whether the app's manifest declares [SwitchBrowserRedirectActivity] with an
+     * intent-filter that can handle the switch_browser_resume redirect URI. This
+     * validates both that the activity is declared and that it can handle the resume URI.
+     * Note: This check is for non-broker flows only. Broker uses its own subclass via a
+     * different code path.
      *
      * @param context Android context for PackageManager access.
      * @param redirectUri The app's redirect URI.
-     * @return true if a handler is registered, false otherwise.
+     * @return true if a valid handler is registered, false otherwise.
      */
     private fun isSwitchBrowserResumeHandlerRegistered(
         context: Context,
