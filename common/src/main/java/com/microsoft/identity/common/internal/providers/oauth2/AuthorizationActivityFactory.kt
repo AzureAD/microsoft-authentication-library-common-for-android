@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.msafederation.getIdProviderHeaders
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi.Companion.getInstance
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
-import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUtils
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUtil
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.internal.util.ProcessUtil
 import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID
@@ -304,7 +304,7 @@ object AuthorizationActivityFactory {
         redirectUri: String
     ): String {
         val methodTag = "$TAG:appendSwitchBrowserParam"
-        if (!SwitchBrowserUtils.isSwitchBrowserSupported(context, redirectUri)) {
+        if (!SwitchBrowserUtil.isSwitchBrowserSupported(context, redirectUri)) {
             return requestUrl
         }
         return try {

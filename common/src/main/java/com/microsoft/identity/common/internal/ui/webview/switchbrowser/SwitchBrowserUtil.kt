@@ -34,7 +34,7 @@ import androidx.core.net.toUri
 /**
  * Utility class for Switch Browser protocol
  */
-object SwitchBrowserUtils {
+object SwitchBrowserUtil {
 
     private const val TAG = "SwitchBrowserUtils"
 
@@ -99,7 +99,8 @@ object SwitchBrowserUtils {
      * @param redirectUri The app's redirect URI.
      * @return true if a valid handler is registered, false otherwise.
      */
-    private fun isSwitchBrowserResumeHandlerRegistered(
+    @JvmStatic
+    fun isSwitchBrowserResumeHandlerRegistered(
         context: Context,
         redirectUri: String
     ): Boolean {
