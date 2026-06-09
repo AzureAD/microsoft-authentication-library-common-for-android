@@ -46,7 +46,6 @@ import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.List;
