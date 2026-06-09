@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.msafederation.getIdProviderHeaders
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleApi.Companion.getInstance
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters
-import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUtils
 import com.microsoft.identity.common.internal.util.CommonMoshiJsonAdapter
 import com.microsoft.identity.common.internal.util.ProcessUtil
 import com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID
@@ -47,7 +47,6 @@ import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.TextMapPropagatorExtension
 import com.microsoft.identity.common.java.ui.AuthorizationAgent
-import com.microsoft.identity.common.java.ui.BrowserDescriptor
 import com.microsoft.identity.common.java.util.CommonURIBuilder
 import com.microsoft.identity.common.logging.Logger
 import java.net.URISyntaxException
@@ -90,7 +89,7 @@ object AuthorizationActivityFactory {
 
         // If switch browser is enabled, check browser availability and append switch_browser=1
         val effectiveRequestUrl = if (parameters.enableSwitchBrowser) {
-            appendSwitchBrowserParam(parameters.context, parameters.requestUrl)
+            appendSwitchBrowserParam(parameters.context, parameters.requestUrl, parameters.redirectUri)
         } else {
             parameters.requestUrl
         }
@@ -291,34 +290,30 @@ object AuthorizationActivityFactory {
     }
 
     /**
-     * Checks if a browser compatible with the Switch Browser protocol is available on the device.
-     * If so, appends `switch_browser=1` to the request URL to signal the server that the client
-     * supports the Switch Browser protocol.
+     * If Switch Browser is supported (compatible browser + manifest entry), appends
+     * `switch_browser=1` to the request URL. Otherwise returns the URL unchanged.
      *
-     * @param context Android context for browser resolution.
+     * @param context Android context.
      * @param requestUrl The original authorization request URL.
-     * @return The request URL with `switch_browser=1` appended if a compatible browser is available,
-     *         or the original URL if no compatible browser is found.
+     * @param redirectUri The app's redirect URI.
+     * @return The (possibly modified) request URL.
      */
-    private fun appendSwitchBrowserParam(context: android.content.Context, requestUrl: String): String {
+    private fun appendSwitchBrowserParam(
+        context: android.content.Context,
+        requestUrl: String,
+        redirectUri: String
+    ): String {
         val methodTag = "$TAG:appendSwitchBrowserParam"
-        try {
-            val browserSelector = AndroidBrowserSelector(context)
-            val browser = browserSelector.selectBrowser(
-                BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
-                null
-            )
-            if (browser != null) {
-                Logger.info(methodTag, "Compatible browser found for Switch Browser: ${browser.packageName}")
-                val uriBuilder = CommonURIBuilder(requestUrl)
-                uriBuilder.addParameterIfAbsent(SWITCH_BROWSER.SWITCH_BROWSER_EXTRA_QUERY_PARAM, "1")
-                return uriBuilder.build().toString()
-            } else {
-                Logger.info(methodTag, "No compatible browser found for Switch Browser protocol.")
-            }
-        } catch (e: Exception) {
-            Logger.warn(methodTag, "Failed to check browser availability for Switch Browser: ${e.message}")
+        if (!SwitchBrowserUtils.isSwitchBrowserSupported(context, redirectUri)) {
+            return requestUrl
         }
-        return requestUrl
+        return try {
+            val uriBuilder = CommonURIBuilder(requestUrl)
+            uriBuilder.addParameterIfAbsent(SWITCH_BROWSER.SWITCH_BROWSER_EXTRA_QUERY_PARAM, "1")
+            uriBuilder.build().toString()
+        } catch (e: Exception) {
+            Logger.warn(methodTag, "Failed to append switch_browser param: ${e.message}")
+            requestUrl
+        }
     }
 }
