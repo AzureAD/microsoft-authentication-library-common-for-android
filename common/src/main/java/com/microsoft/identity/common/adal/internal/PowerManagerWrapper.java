@@ -46,8 +46,6 @@ public class PowerManagerWrapper {
 
     private static PowerManagerWrapper sInstance;
 
-    private static final String UNKNOWN_STATUS = "Unknown";
-
     // In-memory cache for battery optimization status for each apps.
     private final Map<String, BatteryOptimizationStatus> batteryOptOutCache = new ConcurrentHashMap<>();
     /**
