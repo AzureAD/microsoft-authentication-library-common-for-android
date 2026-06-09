@@ -56,16 +56,16 @@ import io.opentelemetry.api.trace.StatusCode
  * 2. This activity is launched with browser configuration parameters
  * 3. Activity launches the specified browser (Custom Tabs or standard browser)
  * 4. User completes authentication in the external browser
- * 5. BrokerBrowserRedirectActivity is launched when the redirect URI is triggered.
- * 5. BrokerBrowserRedirectActivity redirects back to this activity via onNewIntent()
+ * 5. SwitchBrowserRedirectActivity (or subclass) is launched when the redirect URI is triggered.
+ * 5. SwitchBrowserRedirectActivity redirects back to this activity via onNewIntent()
  * 6. Activity passes the result back to WebViewAuthorizationFragment
  * 7. Activity finishes and removes itself from the task stack
  *
  * Activity back stack behavior:
- * 1 BrokerAuthorizationActivity hosting WebViewAuthorizationFragment --launches--> SwitchBrowserActivity in a new task.
+ * 1 AuthorizationActivity hosting WebViewAuthorizationFragment --launches--> SwitchBrowserActivity in a new task.
  * 2 SwitchBrowserActivity --launches--> 3rd Party Browser (Custom Tabs or standard browser) in current task.
- * 3 3rd Party Browser --redirects to--> BrokerBrowserRedirectActivity in a new task.
- * 4 BrokerBrowserRedirectActivity -- launches--> SwitchBrowserActivity in the existing task, and finishes current task.
+ * 3 3rd Party Browser --redirects to--> SwitchBrowserRedirectActivity (or subclass) in a new task.
+ * 4 SwitchBrowserRedirectActivity -- launches--> SwitchBrowserActivity in the existing task, and finishes current task.
  * 5 SwitchBrowserActivity --passes result to--> WebViewAuthorizationFragment, and finishes current activity stack.
  *
  * **Security Note:** This activity is not exported and can only be launched within the app
@@ -91,8 +91,8 @@ class SwitchBrowserActivity : FragmentActivity() {
         /** Intent extra key for the target browser package name */
         const val BROWSER_PACKAGE_NAME = "browser_package_name"
 
-        /** Intent extra key for the broker redirect URI to use */
-        const val BROKER_REDIRECT_URI = "broker_redirect_uri"
+        /** Intent extra key for the redirect URI to use for the switch-browser callback */
+        const val REDIRECT_URI = "redirect_uri"
 
         /** Intent extra key indicating if the browser supports Custom Tabs */
         const val BROWSER_SUPPORTS_CUSTOM_TABS = "browser_supports_custom_tabs"
@@ -131,7 +131,7 @@ class SwitchBrowserActivity : FragmentActivity() {
          * boundary.
          *
          * @param context                   Application or activity context used to build the intent.
-         * @param brokerRedirectUri          The broker redirect URI used for the switch-browser callback.
+         * @param redirectUri               The redirect URI used for the switch-browser callback.
          * @param browserPackageName         The package name of the browser to launch.
          * @param browserSupportsCustomTabs  Whether the target browser supports Custom Tabs.
          * @param processUri                 The URI to open in the browser for authentication.
@@ -141,14 +141,14 @@ class SwitchBrowserActivity : FragmentActivity() {
         @JvmStatic
         fun buildSwitchBrowserLaunchIntent(
             context: Context,
-            brokerRedirectUri: String,
+            redirectUri: String,
             browserPackageName: String,
             browserSupportsCustomTabs: Boolean,
             processUri: String,
             spanContext: SerializableSpanContext?
         ): Intent {
             return Intent(context, SwitchBrowserActivity::class.java).apply {
-                putExtra(BROKER_REDIRECT_URI, brokerRedirectUri)
+                putExtra(REDIRECT_URI, redirectUri)
                 putExtra(BROWSER_PACKAGE_NAME, browserPackageName)
                 putExtra(BROWSER_SUPPORTS_CUSTOM_TABS, browserSupportsCustomTabs)
                 putExtra(PROCESS_URI, processUri)

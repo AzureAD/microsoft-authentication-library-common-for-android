@@ -103,13 +103,13 @@ object SwitchBrowserUriHelper {
      * @param uri The uri containing the switch browser code and action URL.
      * e.g. msauth://com.microsoft.identity.client/switch_browser?code=code&action_uri=action-uri
      *
-     * @return The process uri constructed from the broker redirect uri.
+     * @return The process uri constructed from the redirect uri.
      * e.g. action_uri?code=code
      */
     @Throws(ClientException::class, IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     fun buildProcessUri(uri: Uri): Uri {
         val methodTag = "$TAG:buildProcessUri"
-        // Get the SwitchBrowser purpose token from the broker redirect uri.
+        // Get the SwitchBrowser purpose token from the redirect uri.
         val code = uri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
@@ -120,7 +120,7 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
-        // Get the process uri from the broker redirect uri.
+        // Get the process uri from the redirect uri.
         val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
