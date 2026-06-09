@@ -54,10 +54,10 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
 
     /**
      * Respond to the Android system "Allow [app] to ignore battery optimizations?" dialog raised
-     * via {@code Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS} by tapping "Allow". This
-     * is the OS-level alert dialog (not an in-app screen), so it is dismissed via the standard
-     * positive system button ("android:id/button1"). Safe to call when the dialog may or may not
-     * appear (e.g., the permission was already granted on a previous run).
+     * via {@code Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS} by tapping "Allow".
+     * This is the OS-level alert dialog (not an in-app screen), so it is dismissed via the standard
+     * positive system button ("android:id/button1").
+     * Note: Implementations may assert/fail if the dialog does not appear when this handler is invoked.
      */
     void handleBatteryOptimizationIgnoreSystemPrompt();
 
