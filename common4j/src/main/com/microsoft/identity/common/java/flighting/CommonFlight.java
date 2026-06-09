@@ -136,11 +136,6 @@ public enum CommonFlight implements IFlightConfig {
     WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
 
     /**
-     * Flight to enable handling the UI in edge to edge mode
-     */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
-
-    /**
      * Flight to enable the Web CP in WebView.
      */
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),

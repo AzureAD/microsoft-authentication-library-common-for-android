@@ -22,9 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.R;
+
 /**
  * Declares as a separate class so that we can specify attributes exclusively to :auth process
- * in AndroidManifest without overriding MSAL's (In case where MSAL and broker is shipped together).
+ * in AndroidManifest without overriding MSAL's (in case where MSAL and broker are shipped together).
+ *
+ * <p>Transition animations are suppressed via {@code BrokerAuthorizationActivityTheme} pinned in
+ * the broker's manifest. {@link #getThemeResId()} returns the DualScreen variant so the theme
+ * swap inside {@link com.microsoft.identity.common.internal.ui.DualScreenActivity#onCreate}
+ * preserves that suppression.
  */
 public class BrokerAuthorizationActivity extends AuthorizationActivity {
+
+    @Override
+    protected int getThemeResId() {
+        return R.style.DualScreenBrokerAuthorizationActivityTheme;
+    }
 }
