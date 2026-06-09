@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Remove stale code, eliminate flickers due to BrokerAuthorizationActivity (#3139)
 
 Version 24.3.0
 ----------
