@@ -179,10 +179,13 @@ class OnboardingTelemetryRecorder(
 
     /**
      * Finalize the blob and return the JSON string.
-     * If no blocking errors were recorded, returns empty string (clears seed blob).
-     * Otherwise serializes the populated blob to JSON.
+     * Emits the populated blob whenever a valid [sessionCorrelationId] is present — the
+     * blocking_errors array may be empty, since a seeded onboarding session is still worth
+     * reporting. Returns an empty string only when [sessionCorrelationId] is empty, because
+     * telemetry that cannot be joined with the broker side or with retries is intentionally
+     * dropped.
      *
-     * @return Populated blob JSON string, or empty string if no blocking errors
+     * @return Populated blob JSON string, or empty string if [sessionCorrelationId] is empty
      */
     fun finalizeBlob(): String {
         if (sessionCorrelationId.isEmpty()) {
