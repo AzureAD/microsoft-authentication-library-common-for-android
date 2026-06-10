@@ -153,7 +153,6 @@ object AppRegistry {
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(BrokerData.debugBrokerHost)
             add(ONE_AUTH_TEST_APP)
-            add(MDE_APP_DEBUG)
         }
     }
 
@@ -165,6 +164,7 @@ object AppRegistry {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
+            add(MDE_APP_DEBUG)
         }
     }
 
