@@ -36,6 +36,7 @@ public class LabConstants {
     // TODO, REMOVE LEGACY UserTypes WHEN WE REMOVE LAB QUERY USAGE
     static final class UserType {
         public static final String BASIC = "basic";
+        public static final String BASIC2 = "basic2";
         public static final String MSA = "msa";
         public static final String MDM_CA = "mdm_ca";
         public static final String MAM_CA = "mam_ca";
@@ -44,11 +45,14 @@ public class LabConstants {
         public static final String TRUE_MAM_CA = "true_mam_ca";
         public static final String WP = "wp";
         public static final String FEDERATED = "federated";
+        public static final String ANDROID_FEDERATED = "android_federated";
+        public static final String ANDROID_FEDERATED2 = "android_federated2";
         public static final String DEVICE_ADMIN = "device_admin";
         public static final String USGOV = "usgov";
         public static final String USGOV_GUEST = "usgov_guest";
         public static final String CHINA = "china";
         public static final String CHINA_GUEST = "china_guest";
+        public static final String PPE = "ppe";
         public static final String QR_PIN = "qr_pin";
         public static final String TOKEN_BINDING = "token_binding";
         public static final String CBA = "cba";
