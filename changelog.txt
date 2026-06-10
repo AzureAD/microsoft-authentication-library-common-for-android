@@ -1,6 +1,7 @@
 vNext
 ----------
-- [MINOR] OnboardingTelemetryRecorder.finalizeBlob() emits the populated blob whenever a valid sessionCorrelationId is present (previously returned empty when blockingErrors was empty)
+- [MINOR] Add Microsoft Defender for Endpoint (MDE) to AppRegistry authorized app lists (GET_DEVICE_TOKEN, DEVICE_REGISTRATION) (#3149)
+- [MINOR] OnboardingTelemetryRecorder.finalizeBlob() emits the populated blob whenever a valid sessionCorrelationId is present (previously returned empty when blockingErrors was empty) (#3148)
 - [PATCH] Change SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE flight default to true - overridden by Broker to false (#3144)
 - [MINOR] Add enableSwitchBrowser opt-in param to AuthorizationActivityFactory/Parameters so consumers (OneAuth) can signal switch_browser=1 when a compatible browser is available (#3137)
 - [PATCH] Remove stale code, eliminate flickers due to BrokerAuthorizationActivity (#3139)
