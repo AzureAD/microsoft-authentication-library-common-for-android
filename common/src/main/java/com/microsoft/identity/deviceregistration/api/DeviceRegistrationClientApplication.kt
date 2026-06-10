@@ -312,6 +312,7 @@ class DeviceRegistrationClientApplication {
      * @param resources                resource requiring device token.
      * @param correlationId            correlation ID for request tracing.
      * @param clientId                 client ID of the calling application.
+     * @param redirectUri              redirect URI of the calling application.
      * @param scope                    optional scope.
      */
     @Throws(BaseException::class)
@@ -320,12 +321,13 @@ class DeviceRegistrationClientApplication {
         resources: String,
         correlationId: UUID,
         clientId: String,
+        redirectUri: String,
         scope: String? = null
     ): String {
         val methodTag = "$TAG:getDeviceToken"
         Logger.info(methodTag, "GetDeviceToken (V1) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
-            GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, scope)
+            GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, redirectUri, scope)
         )
         Logger.info(methodTag, "Get device token ended successfully.")
         return GetDeviceTokenV1Response.create(responseSerialized).deviceToken

@@ -261,7 +261,8 @@ class DeviceRegistrationClientApplicationTest {
             DeviceRegistrationRecord("tenant", "upn", "device", false, false),
             "https://resource.example.com",
             UUID.randomUUID(),
-            "test-client-id"
+            "test-client-id",
+            "msauth://com.test.app/callback"
         )
 
         Assert.assertEquals(expectedToken, result)
@@ -278,6 +279,7 @@ class DeviceRegistrationClientApplicationTest {
             "https://resource.example.com",
             UUID.randomUUID(),
             "test-client-id",
+            "msauth://com.test.app/callback",
             "openid profile"
         )
 
@@ -299,6 +301,7 @@ class DeviceRegistrationClientApplicationTest {
             Assert.assertEquals(correlationId, parameters.correlationId)
             Assert.assertEquals("https://resource.example.com", parameters.resources)
             Assert.assertEquals("test-client-id", parameters.clientId)
+            Assert.assertEquals("msauth://com.test.app/callback", parameters.redirectUri)
             Assert.assertEquals("openid", parameters.scope)
             Assert.assertEquals("tenant", parameters.deviceRegistrationRecord.tenantId)
             packer.pack(response)
@@ -310,6 +313,7 @@ class DeviceRegistrationClientApplicationTest {
             "https://resource.example.com",
             correlationId,
             "test-client-id",
+            "msauth://com.test.app/callback",
             "openid"
         )
     }

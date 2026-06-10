@@ -59,11 +59,13 @@ public class GetDeviceTokenV1Parameters extends AbstractDeviceRegistrationProtoc
                                       @NonNull final IDeviceRegistrationRecord deviceRegistrationRecord,
                                       @NonNull final String resources,
                                       @NonNull final String clientId,
+                                      @NonNull final String redirectUri,
                                       @Nullable final String scope) {
         super(correlationId);
         mDeviceRegistrationRecord = deviceRegistrationRecord;
         mResources = resources;
         mClientId = clientId;
+        mRedirectUri = redirectUri;
         mScope = scope;
     }
 
@@ -78,6 +80,10 @@ public class GetDeviceTokenV1Parameters extends AbstractDeviceRegistrationProtoc
     @Getter
     @NonNull
     private final String mClientId;
+
+    @Getter
+    @NonNull
+    private final String mRedirectUri;
 
     @Getter
     @Nullable

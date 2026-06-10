@@ -40,6 +40,7 @@ class GetDeviceTokenV1ParametersTest {
         private const val TEST_DEVICE_ID = "device-123"
         private const val TEST_RESOURCES = "https://resource.example.com"
         private const val TEST_CLIENT_ID = "test-client-id-12345"
+        private const val TEST_REDIRECT_URI = "msauth://com.test.app/callback"
         private const val TEST_SCOPE = "openid profile"
         private val DEVICE_REGISTRATION_RECORD =
             DeviceRegistrationRecord(TEST_TENANT, TEST_UPN, TEST_DEVICE_ID, false, false)
@@ -48,7 +49,7 @@ class GetDeviceTokenV1ParametersTest {
     @Test
     fun testSerializationRoundTrip_withScope() {
         val original = GetDeviceTokenV1Parameters(
-            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_SCOPE
+            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_REDIRECT_URI, TEST_SCOPE
         )
 
         val serialized = original.serialize()
@@ -60,13 +61,14 @@ class GetDeviceTokenV1ParametersTest {
         Assert.assertEquals(TEST_DEVICE_ID, deserialized.deviceRegistrationRecord.deviceId)
         Assert.assertEquals(TEST_RESOURCES, deserialized.resources)
         Assert.assertEquals(TEST_CLIENT_ID, deserialized.clientId)
+        Assert.assertEquals(TEST_REDIRECT_URI, deserialized.redirectUri)
         Assert.assertEquals(TEST_SCOPE, deserialized.scope)
     }
 
     @Test
     fun testSerializationRoundTrip_withoutScope() {
         val original = GetDeviceTokenV1Parameters(
-            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, null
+            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_REDIRECT_URI, null
         )
 
         val serialized = original.serialize()
@@ -75,13 +77,14 @@ class GetDeviceTokenV1ParametersTest {
         Assert.assertEquals(CORRELATION_ID, deserialized.correlationId)
         Assert.assertEquals(TEST_RESOURCES, deserialized.resources)
         Assert.assertEquals(TEST_CLIENT_ID, deserialized.clientId)
+        Assert.assertEquals(TEST_REDIRECT_URI, deserialized.redirectUri)
         Assert.assertNull(deserialized.scope)
     }
 
     @Test
     fun testProtocolName() {
         val parameters = GetDeviceTokenV1Parameters(
-            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, null
+            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_REDIRECT_URI, null
         )
 
         Assert.assertEquals(
@@ -93,13 +96,14 @@ class GetDeviceTokenV1ParametersTest {
     @Test
     fun testGetters() {
         val parameters = GetDeviceTokenV1Parameters(
-            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_SCOPE
+            CORRELATION_ID, DEVICE_REGISTRATION_RECORD, TEST_RESOURCES, TEST_CLIENT_ID, TEST_REDIRECT_URI, TEST_SCOPE
         )
 
         Assert.assertEquals(CORRELATION_ID, parameters.correlationId)
         Assert.assertSame(DEVICE_REGISTRATION_RECORD, parameters.deviceRegistrationRecord)
         Assert.assertEquals(TEST_RESOURCES, parameters.resources)
         Assert.assertEquals(TEST_CLIENT_ID, parameters.clientId)
+        Assert.assertEquals(TEST_REDIRECT_URI, parameters.redirectUri)
         Assert.assertEquals(TEST_SCOPE, parameters.scope)
     }
 }
