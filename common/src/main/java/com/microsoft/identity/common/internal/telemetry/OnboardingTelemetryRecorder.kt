@@ -185,10 +185,6 @@ class OnboardingTelemetryRecorder(
      * @return Populated blob JSON string, or empty string if no blocking errors
      */
     fun finalizeBlob(): String {
-        if (blockingErrors.isEmpty()) {
-            Logger.verbose(TAG, sessionCorrelationId, "finalizeBlob: no blocking errors recorded, returning empty")
-            return EMPTY_BLOB
-        }
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,
@@ -221,10 +217,14 @@ class OnboardingTelemetryRecorder(
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
-                put(
-                    OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                    blockingErrors.last()
-                )
+                // last_blocking_error is only meaningful when at least one was recorded;
+                // omit the field on smooth-success flows rather than serializing a sentinel.
+                if (blockingErrors.isNotEmpty()) {
+                    put(
+                        OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
+                        blockingErrors.last()
+                    )
+                }
 
                 lastLoadedDomain?.let {
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)

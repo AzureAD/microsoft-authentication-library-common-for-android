@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Onboarding telemetry: emit a populated blob whenever a valid sessionCorrelationId is present, regardless of whether any blocking errors were recorded. Previously OnboardingTelemetryRecorder.finalizeBlob() returned an empty string when blockingErrors was empty, which dropped the session-correlation chain on smooth-success flows and prevented consumers from counting seeded sessions toward smooth-success metrics. The decision to emit to MATS now belongs to the consumer based on blob content.
 - [MINOR] Add enableSwitchBrowser opt-in param to AuthorizationActivityFactory/Parameters so consumers (OneAuth) can signal switch_browser=1 when a compatible browser is available (#3137)
 - [PATCH] Remove stale code, eliminate flickers due to BrokerAuthorizationActivity (#3139)
 - [MINOR] Add SwitchBrowserRedirectActivity for non-broker Switch Browser protocol flows. BrokerBrowserRedirectActivity now extends this shared base class (#3133)
