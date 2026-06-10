@@ -159,7 +159,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
-    private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+    private volatile SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @VisibleForTesting
     void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator coordinator) {
