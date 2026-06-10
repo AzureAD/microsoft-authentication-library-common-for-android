@@ -527,4 +527,44 @@ public final class ErrorStrings {
      * Switch browser flow: an intent was received that does not match any expected pattern.
      */
     public static final String SWITCH_BROWSER_UNEXPECTED_INTENT = "unexpected_intent";
+
+    /**
+     * Auth Tab flow: PROCESS_URI is missing from the intent extras.
+     */
+    public static final String AUTH_TAB_PROCESS_URI_MISSING = "PROCESS_URI is required to launch Auth Tab";
+
+    /**
+     * Auth Tab flow: BROKER_REDIRECT_URI is missing from the intent extras.
+     */
+    public static final String AUTH_TAB_REDIRECT_URI_MISSING = "BROKER_REDIRECT_URI is required to launch Auth Tab";
+
+    /**
+     * Auth Tab result code: the user cancelled authentication.
+     */
+    public static final String AUTH_TAB_CANCELED = "CANCELED";
+
+    /**
+     * Auth Tab result message: the user cancelled authentication.
+     */
+    public static final String AUTH_TAB_CANCELED_MESSAGE = "User cancelled authentication by returning from browser";
+
+    /**
+     * Auth Tab result code: browser redirect verification failed.
+     */
+    public static final String AUTH_TAB_VERIFICATION_FAILED = "VERIFICATION_FAILED";
+
+    /**
+     * Auth Tab result message: browser redirect verification failed.
+     */
+    public static final String AUTH_TAB_VERIFICATION_FAILED_MESSAGE = "Failed to verify the authenticity of the browser redirect";
+
+    /**
+     * Auth Tab result code: browser redirect verification timed out.
+     */
+    public static final String AUTH_TAB_VERIFICATION_TIMED_OUT = "VERIFICATION_TIMED_OUT";
+
+    /**
+     * Auth Tab result message: browser redirect verification timed out.
+     */
+    public static final String AUTH_TAB_VERIFICATION_TIMED_OUT_MESSAGE = "Timed out while waiting for browser redirect verification";
 }
