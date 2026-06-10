@@ -172,8 +172,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         sSwitchBrowserBundle.set(null);
     }
 
-    @VisibleForTesting
-    static @Nullable Bundle consumeSwitchBrowserBundle() {
+    private static @Nullable Bundle consumeSwitchBrowserBundle() {
         return sSwitchBrowserBundle.getAndSet(null);
     }
 
