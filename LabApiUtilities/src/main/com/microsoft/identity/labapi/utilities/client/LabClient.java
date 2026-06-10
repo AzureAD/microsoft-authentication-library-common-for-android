@@ -121,136 +121,6 @@ public class LabClient implements ILabClient {
         mAlternativeUpnJsonStringSecretName = secretName;
     }
 
-    @Override
-    public ILabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
-        // Adding a second attempt here, api sometimes fails to fetch the user.
-        try {
-            return getLabAccountInternalWithQuery(labQuery);
-        } catch (final Exception e){
-            // Seems new Lab API may fail temp user creation, without throwing a lab exception
-            // (we may get a non-error response, with a null temp user field)
-            // So, we will make this exception handling generic, and retry in all failure cases
-
-            // Wait for a bit
-            try {
-                Thread.sleep(LAB_API_RETRY_WAIT);
-            } catch (final InterruptedException e2) {
-                e2.printStackTrace();
-            }
-
-            return getLabAccountInternalWithQuery(labQuery);
-        }
-    }
-
-    private ILabAccount getLabAccountInternalWithQuery(@NonNull final LabQuery labQuery) throws LabApiException {
-        final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
-        // for each query, lab actually returns a list of accounts..all of which fit the criteria..
-        // usually we only need one such account, and hence over here we are just picking the first
-        // element of the list.
-        final ConfigInfo configInfo = configInfos.get(0);
-        return getLabAccountObject(configInfo);
-    }
-
-    @Override
-    public ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException {
-        final List<ConfigInfo> configInfos = fetchConfigsFromLab(upn);
-        // We still get a list of configs despite passing in a single upn, so we select the account from the list.
-        final ConfigInfo configInfo = configInfos.get(0);
-        return getLabAccountObject(configInfo);
-    }
-
-    @Override
-    public List<ILabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
-        final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
-
-        final List<ILabAccount> labAccounts = new ArrayList<>(configInfos.size());
-
-        for (final ConfigInfo configInfo : configInfos) {
-            labAccounts.add(getLabAccountObject(configInfo));
-        }
-
-        return labAccounts;
-    }
-
-    private ILabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
-        // If the userInfo is null, then no lab account was found
-        final UserInfo userInfo = configInfo.getUserInfo();
-        if (userInfo == null) {
-            throw new AssertionError("Lab account was not found.");
-        }
-
-        // for guest accounts the UPN is located under homeUpn field
-        String username = userInfo.getHomeUPN();
-        if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
-            // for accounts that are NOT guest..the UPN is directly on the UPN field
-            username = configInfo.getUserInfo().getUpn();
-        }
-
-        final String password = getPassword(configInfo);
-
-        final LabAccount account = new LabAccount.LabAccountBuilder()
-                .username(username)
-                .password(password)
-                .userType(UserType.fromName(configInfo.getUserInfo().getUserType()))
-                .homeTenantId(configInfo.getUserInfo().getHomeTenantID())
-                .homeObjectId(configInfo.getUserInfo().getHomeObjectId())
-                .associatedClientId(configInfo.getAppInfo().getAppId())
-                .cloudUrl(configInfo.getLabInfo().getAuthority())
-                .azureEnvironment(configInfo.getLabInfo().getAzureEnvironment())
-                .build();
-
-        setLatestLabAccount(account);
-
-        return account;
-    }
-
-    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final String upn) throws LabApiException {
-        Configuration.getLabUserFetchApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
-        try {
-            final ConfigApi api = new ConfigApi();
-            return api.apiConfigUpnGet(upn);
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
-        }
-    }
-
-    public List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
-        Configuration.getLabUserFetchApiClient().setAccessToken(
-                mLabApiAuthenticationClient.getAccessToken()
-        );
-        try {
-            final ConfigApi api = new ConfigApi();
-            return api.apiConfigGet(
-                    valueOf(query.getUserType()),
-                    valueOf(query.getUserRole()),
-                    valueOf(query.getMfa()),
-                    valueOf(query.getProtectionPolicy()),
-                    valueOf(query.getHomeDomain()),
-                    valueOf(query.getHomeUpn()),
-                    valueOf(query.getB2cProvider()),
-                    valueOf(query.getFederationProvider()),
-                    valueOf(query.getAzureEnvironment()),
-                    valueOf(query.getGuestHomeAzureEnvironment()),
-                    valueOf(query.getAppType()),
-                    valueOf(query.getPublicClient()),
-                    valueOf(query.getSignInAudience()),
-                    valueOf(query.getGuestHomedIn()),
-                    valueOf(query.getHasAltId()),
-                    valueOf(query.getAltIdSource()),
-                    valueOf(query.getAltIdType()),
-                    valueOf(query.getPasswordPolicyValidityPeriod()),
-                    valueOf(query.getPasswordPolicyNotificationDays()),
-                    valueOf(query.getTokenLifetimePolicy()),
-                    valueOf(query.getTokenType()),
-                    valueOf(query.getTokenLifetime())
-            );
-        } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
-        }
-    }
-
     private String valueOf(final Object obj) {
         return obj == null ? null : obj.toString();
     }
@@ -313,53 +183,6 @@ public class LabClient implements ILabClient {
 
         setLatestLabAccount(account);
         return account;
-    }
-
-    @Override
-    public LabGuestAccount loadGuestAccountFromLab(LabQuery labQuery) throws LabApiException {
-        final List<ConfigInfo> configInfoList = fetchConfigsFromLab(labQuery);
-
-        List<String> guestLabTenants = new ArrayList<>();
-        for (ConfigInfo configInfo : configInfoList) {
-            guestLabTenants.add(configInfo.getUserInfo().getTenantID());
-        }
-
-        // pick one config info object to obtain home tenant information
-        // doesn't matter which one as all have the same home tenant
-        final ConfigInfo configInfo = configInfoList.get(0);
-        final UserInfo userInfo = configInfo.getUserInfo();
-
-        return new LabGuestAccount(
-                userInfo.getHomeUPN(),
-                userInfo.getHomeDomain(),
-                userInfo.getHomeTenantID(),
-                guestLabTenants
-        );
-    }
-
-    @Override
-    public String getPasswordForGuestUser(LabGuestAccount guestUser) throws LabApiException {
-        final String labName = guestUser.getHomeDomain().split("\\.")[0];
-
-        // Adding a second attempt here, api sometimes fails to get the lab secret.
-        try {
-            return getPasswordSecretFromLabsKeyVault(labName);
-        } catch (final LabApiException e){
-            if (e.getErrorCode().equals(LabError.FAILED_TO_GET_SECRET_FROM_LAB)){
-
-                // Wait for a bit
-                try {
-                    Thread.sleep(LAB_API_RETRY_WAIT);
-                } catch (final InterruptedException e2) {
-                    e2.printStackTrace();
-                }
-
-                // Try to get the secret again
-                return getPasswordSecretFromLabsKeyVault(labName);
-            } else {
-                throw e;
-            }
-        }
     }
 
     @Override
@@ -516,10 +339,6 @@ public class LabClient implements ILabClient {
 
         // All attempts exhausted without success and without a terminal exception.
         return false;
-    }
-
-    private String getPassword(@NonNull final ConfigInfo configInfo) throws LabApiException {
-        return getPassword(configInfo.getLabInfo().getCredentialVaultKeyName());
     }
 
     private String getPassword(@NonNull final TempUser tempUser) throws LabApiException {
