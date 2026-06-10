@@ -101,9 +101,9 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
     /**
-     * Flight to make the state parameter required for the switch browser protocol.
+     * Flight to make the state parameter required for the switch browser protocol. Overridden in Broker (default: false).
      */
-    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", true),
 
     /**
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
