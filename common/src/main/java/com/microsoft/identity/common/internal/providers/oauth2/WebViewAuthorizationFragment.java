@@ -161,6 +161,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // This is used by the switch browser protocol to handle the resume of the flow.
     private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
+    @VisibleForTesting
+    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator coordinator) {
+        mSwitchBrowserProtocolCoordinator = coordinator;
+    }
+
     private boolean isBrokerRequest = false;
 
     private static Bundle switchBrowserBundle;

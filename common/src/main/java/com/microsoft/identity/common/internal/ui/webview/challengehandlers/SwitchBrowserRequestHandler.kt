@@ -61,7 +61,9 @@ class SwitchBrowserRequestHandler(
      * Indicates that the switch browser flow was initiated during this session.
      * Set when [processChallenge] successfully launches the browser activity.
      * Unlike [isSwitchBrowserChallengeActive], this flag is never reset.
+     * Marked volatile for safe cross-thread visibility.
      */
+    @Volatile
     var wasSwitchBrowserFlowInitiated: Boolean = false
         private set
 
