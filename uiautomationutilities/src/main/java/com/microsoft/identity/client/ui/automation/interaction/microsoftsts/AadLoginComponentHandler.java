@@ -226,6 +226,57 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     @Override
+    public void handleBatteryOptimizationIgnoreSystemPrompt() {
+        // Android system dialog raised by Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS.
+        // We deliberately verify the dialog identity BEFORE tapping android:id/button1, so we do
+        // not accidentally dismiss some unrelated AlertDialog (e.g., a Play Store update prompt,
+        // a Keyguard biometric fallback, or an OEM-specific banner) that happens to share the
+        // same positive-button resource id.
+        //
+        // Identity check uses a case-insensitive regex against any TextView text on screen,
+        // because the wording differs across API levels / OEMs:
+        //   API 23-29 (AOSP): "Allow the app to ignore battery optimizations?"
+        //   API 30+ (AOSP):   "Allow [app] to ignore battery optimizations?"
+        //   Samsung One UI:   "... ignore battery optimization?" (singular)
+        // 'battery' is the only token guaranteed to appear in every variant.
+        Logger.i(TAG, "Handle 'ignore battery optimizations' system prompt..");
+
+        final String batteryRegex = "(?i).*battery.*";
+        final UiObject batteryDialogText = UiAutomatorUtils.obtainUiObjectWithRegex(
+                batteryRegex,
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+
+        if (!batteryDialogText.exists()) {
+            // The flow under test (StrongKey WPJ upgrade) is expected to raise this dialog every
+            // run. If it didn't appear, the broker side regressed (e.g., stopped firing
+            // ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, or fired it before we started
+            // watching). Fail loudly so the regression is caught rather than masked.
+            // Note: the OS-level permission is sticky, so re-running this test on the same
+            // device/emulator without uninstalling Authenticator will hit this branch. Wipe app
+            // data on the broker package between runs when iterating locally.
+            fail("Expected the 'ignore battery optimizations' system prompt to appear within "
+                    + CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT + "ms but it did not.");
+        }
+
+        // Sanity-check that a positive button is actually present on this dialog before tapping.
+        final UiObject allowButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "android:id/button1",
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+        if (!allowButton.exists()) {
+            fail("Detected a dialog containing 'battery' text but no android:id/button1 to tap.");
+        }
+
+        try {
+            Logger.i(TAG, "Battery-optimization dialog confirmed. Tapping Allow..");
+            allowButton.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError("Failed to click Allow on battery-optimization system prompt.", e);
+        }
+    }
+
+    @Override
     public void handleRegistration() {
         Logger.i(TAG, "Handle Registration Page Received..");
         final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register", mFindLoginUiElementTimeout);
