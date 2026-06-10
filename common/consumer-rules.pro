@@ -25,6 +25,8 @@
 -keep class * extends com.microsoft.identity.common.java.cache.ITokenCacheItem { *; }
 -keep class * extends com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme { *; }
 -keep class com.microsoft.identity.common.internal.broker.AuthUxJsonPayload { *; }
+-keep class * extends com.microsoft.identity.deviceregistration.java.protocol.IDeviceRegistrationProtocol { *; }
+-keep class * extends com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord { *; }
 
 # Keep WebView JS bridge methods annotated with @JavascriptInterface
 -keepclassmembers class com.microsoft.identity.** {

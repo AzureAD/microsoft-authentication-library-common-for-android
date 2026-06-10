@@ -24,20 +24,36 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import io.opentelemetry.api.trace.Span;
 
 import lombok.NonNull;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import static com.microsoft.identity.common.java.providers.Constants.BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI;
 import static com.microsoft.identity.common.java.providers.Constants.CANCEL_RESPONSE_REDIRECT_URI;
@@ -62,6 +78,11 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     @Before
     public void setUp() {
         mAuthorizationResultFactory = new MicrosoftStsAuthorizationResultFactory();
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     private MicrosoftStsAuthorizationRequest getMstsAuthorizationRequest() {
@@ -278,5 +299,141 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
         AuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
         assertEquals(errorResponse.getError(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED);
         assertEquals(errorResponse.getErrorDescription(), MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
+    }
+
+    @Test
+    public void testClientDataParam_attributesEmitted() {
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                    RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+            verify(mockSpan).setAttribute(AttributeName.server_error.name(), "AADSTS50058");
+            verify(mockSpan).setAttribute(AttributeName.account_type.name(), "MSA");
+        }
+    }
+
+    @Test
+    public void testClientDataParam_noClientDataParam_doesNotCrash() {
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED;
+
+        // Verify no exception is thrown even when clientdata parameter is absent
+        final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+    }
+
+    @Test
+    public void testClientDataParam_serverError_clientDataInfoAttached() {
+        // When the server returns an error in the redirect (e.g., access_denied), clientDataInfo
+        // must still be attached — this is a trusted failure we especially want telemetry for.
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?error=access_denied"
+                + "&error_description=user+denied+consent"
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS65004%7Cconsent_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                    mAuthorizationResultFactory.createAuthorizationResult(
+                            RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+            // ClientDataInfo must be attached even for server-error redirects (not state-mismatch)
+            assertNotNull(result.getClientDataInfo());
+            assertEquals("AADSTS65004", result.getClientDataInfo().getError());
+        }
+    }
+
+    @Test
+    public void testClientDataParam_stateMismatch_clientDataInfoNotAttached() {
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?" + MOCK_AUTH_CODE_AND_STATE
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        // Pass a mismatched state to trigger state validation failure (potential CSRF redirect)
+        final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                mAuthorizationResultFactory.createAuthorizationResult(
+                        RawAuthorizationResult.fromRedirectUri(redirectUrl),
+                        getMstsAuthorizationRequestWithState("incorrect_state"));
+
+        assertNotNull(result);
+        assertEquals(AuthorizationStatus.FAIL, result.getAuthorizationStatus());
+        // ClientDataInfo must NOT be attached for untrusted/state-mismatch redirects
+        assertNull(result.getClientDataInfo());
+    }
+
+    @Test
+    public void testClientDataParam_validState_clientDataInfoAttached() {
+        // Pipe-delimited format: account_type|error|sub_error|caller_data_boundary|cloud_instance
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final MicrosoftStsAuthorizationResult result = (MicrosoftStsAuthorizationResult)
+                    mAuthorizationResultFactory.createAuthorizationResult(
+                            RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+            // ClientDataInfo must be attached when state validation passes
+            assertNotNull(result.getClientDataInfo());
+        }
+    }
+
+
+    @Test
+    public void testClientDataParam_flightDisabled_attributesNotEmitted() {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), "false");
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+
+        final String redirectUrl = MOCK_REDIRECT_URI
+                + "?code=auth_code&state=" + MOCK_STATE_ENCODED
+                + "&" + ClientDataInfo.CLIENTDATA_QUERY_PARAMETER + "=m%7CAADSTS50058%7Clogin_required%7Cus%7Cpublic";
+
+        final Span mockSpan = mock(Span.class);
+        when(mockSpan.setAttribute(Mockito.anyString(), Mockito.anyString())).thenReturn(mockSpan);
+
+        try (MockedStatic<SpanExtension> mockedExtension = Mockito.mockStatic(SpanExtension.class)) {
+            mockedExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                    RawAuthorizationResult.fromRedirectUri(redirectUrl), getMstsAuthorizationRequest());
+
+            assertNotNull(result);
+            assertEquals(AuthorizationStatus.SUCCESS, result.getAuthorizationStatus());
+            Mockito.verify(mockSpan, Mockito.never()).setAttribute(
+                    AttributeName.server_error.name(), "AADSTS50058");
+        }
     }
 }

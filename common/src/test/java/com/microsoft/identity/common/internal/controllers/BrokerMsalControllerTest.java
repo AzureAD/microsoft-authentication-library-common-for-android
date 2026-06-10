@@ -334,7 +334,10 @@ public class BrokerMsalControllerTest {
                 null,
                 null,
                 false,
-                null
+                null,
+                null,
+                null,                                  // tokenType
+                null                                   // reqCnf
         );
 
         WebAppsGetTokenSubOperationEnvelope envelope = new WebAppsGetTokenSubOperationEnvelope(
@@ -359,7 +362,10 @@ public class BrokerMsalControllerTest {
                 null,                // state
                 null,                // loginHint
                 false,               // instanceAware
-                null                 // extraParameters
+                null,                 // extraParameters
+                null,                 // claims
+                null,                 // tokenType
+                null                  // reqCnf
         );
 
         WebAppsGetTokenSubOperationEnvelope envelope =

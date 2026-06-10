@@ -506,4 +506,10 @@ public final class ErrorStrings {
      * The operation is only allowed for Broker applications.
      */
     public static final String BROKER_ONLY_OPERATION = "broker_only_operation";
+
+    /**
+     * More than one app is registered to handle the custom URL scheme used for the redirect URI
+     * of BrowserTabActivity. Only the current application should be listening on this scheme.
+     */
+    public static final String MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME = "multiple_apps_listening_url_scheme";
 }

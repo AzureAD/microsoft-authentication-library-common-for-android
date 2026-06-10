@@ -57,7 +57,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable passkey registration feature.
      */
-    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", false),
+    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", true),
 
     /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
@@ -136,11 +136,6 @@ public enum CommonFlight implements IFlightConfig {
     WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
 
     /**
-     * Flight to enable handling the UI in edge to edge mode
-     */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
-
-    /**
      * Flight to enable the Web CP in WebView.
      */
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
@@ -211,7 +206,69 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false);
+    USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
+    
+    /**
+     * Flight to enable multiple window support in WebView, which allows target="_blank" links
+     * to be intercepted via onCreateWindow and opened in an external browser.
+     */
+    ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
+
+    /**
+     * Flight to enable file upload support in the embedded WebView.
+     * When enabled, the WebView will handle file chooser requests from web pages.
+     */
+    ENABLE_WEBVIEW_FILE_UPLOAD("EnableWebViewFileUpload", false),
+
+    /**
+     * Flight to enable open-id vc redirect handling in webview.
+     */
+    ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
+
+    /**
+     * Flight to enable sovereign cloud instance discovery routing.
+     * When enabled, discovery requests for known sovereign cloud hosts are routed
+     * through host of passed in authority if part of known cloud list.
+     * Turn off to fall back to global-only discovery, previous behavior.
+     */
+    ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY("EnableSovereignCloudInstanceDiscovery", true),
+
+    /**
+     * Flight to use getApplicationEnabledSetting() instead of ApplicationInfo.enabled
+     * in PackageHelper.isPackageInstalledAndEnabled().
+     * This provides a more granular enabled check that distinguishes
+     * DISABLED_USER, DISABLED_UNTIL_USED, etc.
+     */
+    USE_ENABLED_SETTING_FOR_PACKAGE_CHECK("UseEnabledSettingForPackageCheck", false),
+
+    /**
+     * Enables HTTP cancellation on command-level timeout.
+     * When true, CommandDispatcher calls CancellationSignal.cancel() on TimeoutException,
+     * which disconnects the active HttpURLConnection on the worker thread.
+     *
+     * Default: false (disabled for safe rollout).
+     */
+    ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
+    
+    /** 
+     * Flight to enable server-side client data telemetry from the x-ms-clientdata response
+     * header (/token endpoint) and the clientdata redirect query parameter (/authorize endpoint).
+     * Enabled by default; can be turned off via ECS if any issues arise in production.
+     */
+    ENABLE_SERVER_CLIENT_DATA_TELEMETRY("EnableServerClientDataTelemetry", true),
+
+    /**
+     * Flight to enable Auth Tab for the switch browser feature.
+     */
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    
+    /**
+     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
+     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
+     * references first, then clones only the matching items — avoiding the cost of
+     * cloning the entire cache when only a subset is needed.
+     */
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
 
     private String key;
     private Object defaultValue;

@@ -548,7 +548,7 @@ public final class AuthenticationConstants {
         /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
          */
-        public static final String CLIENT_SUPPORTS_FLOW = "switch_browser";
+        public static final String SWITCH_BROWSER_EXTRA_QUERY_PARAM = "switch_browser";
 
         /**
          * String Query parameter key for the purpose token.
@@ -1313,9 +1313,23 @@ public final class AuthenticationConstants {
         public static final String AMAZON_APP_REDIRECT_PREFIX = "aea://";
 
         /**
+         * Custom URI scheme prefix for OpenID Verifiable Credentials.
+         * WebView cannot load this scheme natively; it must be intercepted and
+         * forwarded to an external handler (wallet app) via an ACTION_VIEW intent.
+         */
+        public static final String OPENID_VC_SCHEME_PREFIX = "openid-vc://";
+
+        /**
          * Prefix for the Authenticator MFA linking.
          */
         public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
+
+        /**
+         * Path for the Authenticator app activation Android App Link.
+         * This is the HTTPS-based app link used by eSTS to launch the Authenticator app
+         * for MFA account pairing (e.g., https://login.microsoftonline.com/authenticatorApp/activateAccount).
+         */
+        public static final String AUTHENTICATOR_APP_LINK_ACTIVATION_PATH = "/authenticatorapp/activateaccount";
 
         /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
@@ -1480,6 +1494,36 @@ public final class AuthenticationConstants {
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
+
+        /**
+         * Path segment for the TLR (Total loss recovery) start page.
+         */
+        public static final String TLR_START_PATH = "/tlr/start";
+
+        /**
+         * WebView routing value when the target URL from a target=_blank navigation is null.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL = "null_url";
+
+        /**
+         * WebView routing value when the target URL is not SSL-protected.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL = "non_ssl";
+
+        /**
+         * WebView routing value when the target URL is loaded inline (non-TLR page).
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR = "non_tlr_flow";
+
+        /**
+         * WebView routing value when the target URL is delegated to the system browser (TLR page).
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_TLR = "tlr_flow";
+
+        /**
+         * WebView routing value when the popup was not initiated by a user gesture.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE = "no_user_gesture";
 
         /**
          * Prefix in the redirect for PlayStore.

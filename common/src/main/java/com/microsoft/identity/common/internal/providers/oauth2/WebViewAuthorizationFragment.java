@@ -40,17 +40,22 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -79,6 +84,7 @@ import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -87,8 +93,14 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * Authorization fragment with embedded webview.
@@ -129,6 +141,19 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private final CameraPermissionRequestHandler mCameraPermissionRequestHandler = new CameraPermissionRequestHandler(this);
 
+    /**
+     * Callback for file chooser requests from the WebView.
+     * This is set when {@link WebChromeClient#onShowFileChooser} is invoked and
+     * must be called back with the selected file URI(s) or null if cancelled.
+     */
+    private ValueCallback<Uri[]> mFileUploadCallback;
+
+    /**
+     * Launcher for the file chooser activity, registered in {@link #onCreate}.
+     * Handles the result of the file selection and passes it back to the WebView.
+     */
+    private ActivityResultLauncher<Intent> mFileChooserLauncher;
+
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
@@ -146,6 +171,40 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final FragmentActivity activity = getActivity();
         if (activity != null) {
             WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
+
+        // Register file chooser launcher for WebView file upload support.
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
+            mFileChooserLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (mFileUploadCallback == null) {
+                            Logger.warn(methodTag, "File upload callback is null, ignoring result.");
+                            return;
+                        }
+                        Uri[] resultUris = null;
+                        if (result.getResultCode() == FragmentActivity.RESULT_OK && result.getData() != null) {
+                            final Intent data = result.getData();
+                            if (data.getClipData() != null) {
+                                // Multiple files selected
+                                final int count = data.getClipData().getItemCount();
+                                resultUris = new Uri[count];
+                                for (int i = 0; i < count; i++) {
+                                    resultUris[i] = data.getClipData().getItemAt(i).getUri();
+                                }
+                            } else if (data.getData() != null) {
+                                // Single file selected
+                                resultUris = new Uri[]{data.getData()};
+                            }
+                            Logger.info(methodTag, "File chooser returned "
+                                    + (resultUris != null ? resultUris.length : 0) + " file(s).");
+                        } else {
+                            Logger.info(methodTag, "File chooser cancelled or returned no data.");
+                        }
+                        mFileUploadCallback.onReceiveValue(resultUris);
+                        mFileUploadCallback = null;
+                    }
+            );
         }
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -264,6 +323,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
+
+                        // Dynamically toggle multiple-windows support so that target="_blank"
+                        // interception is active ONLY on the TLR start page. On all other
+                        // pages the WebView behaves exactly as before.
+                        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
+                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
+                        }
                     }
                 },
                 mRedirectUri,
@@ -352,6 +419,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setUseWideViewPort(true);
         mWebView.getSettings().setBuiltInZoomControls(webViewZoomControlsEnabled);
         mWebView.getSettings().setSupportZoom(webViewZoomEnabled);
+
         mWebView.setVisibility(View.INVISIBLE);
         mWebView.setWebViewClient(webViewClient);
         mWebView.setWebChromeClient(new WebChromeClient() {
@@ -368,6 +436,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             @Override
+            public boolean onShowFileChooser(
+                    final WebView webView,
+                    final ValueCallback<Uri[]> filePathCallback,
+                    final FileChooserParams fileChooserParams) {
+                final FragmentActivity host = getActivity();
+                final SpanContext parentSpanContext = host instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) host).getSpanContext() : null;
+                return handleFileUploadRequest(filePathCallback, fileChooserParams, parentSpanContext);
+            }
+
+            @Override
             public Bitmap getDefaultVideoPoster() {
                 // When not playing, video elements are represented by a 'poster' image.
                 // The image to use can be specified by the poster attribute of the video tag in HTML.
@@ -376,8 +455,204 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // We will return a 10x10 empty image, instead of the default grey playback image. #2424
                 return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
             }
+
+            @Override
+            public boolean onCreateWindow(final WebView view, boolean isDialog,
+                                          boolean isUserGesture, final Message resultMsg) {
+                if (resultMsg.obj == null) {
+                    Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
+                    return false;
+                }
+
+                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+                final Span span = OTelUtility.createSpanFromParent(
+                        SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                boolean windowHandled = false;
+                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                    Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
+                    final WebView interceptorWebView = new WebView(view.getContext());
+                    interceptorWebView.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
+                            handleInterceptedUrlFromNewWindow(view, v, request, span, isUserGesture);
+                            return true;
+                        }
+                    });
+                    final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                    transport.setWebView(interceptorWebView);
+                    resultMsg.sendToTarget();
+                    // Span status and end are handled in handleInterceptedUrlFromNewWindow,
+                    // which fires asynchronously when shouldOverrideUrlLoading is called.
+                    windowHandled = true;
+                } catch (@NonNull final Exception e) {
+                    Logger.error(methodTag, "Error handling target=_blank navigation.", e);
+                    span.recordException(e);
+                    span.setStatus(StatusCode.ERROR);
+                    span.end();
+                }
+                return windowHandled;
+            }
         });
         setupPasskeyWebListener(mWebView, webViewClient);
+    }
+
+    /**
+     * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
+     * Routes the URL based on whether the main WebView is currently on a TLR page:
+     * - TLR page: opens the URL in an external browser.
+     * - Non-TLR page: loads the URL inline in the main WebView.
+     *
+     * @param mainWebView        The main authentication WebView.
+     * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
+     * @param request            The intercepted URL request.
+     * @param span               The telemetry span to record which routing path is taken.
+     * @param isUserGesture      Whether the popup was initiated by a user gesture (e.g. a click).
+     */
+    @VisibleForTesting
+    void handleInterceptedUrlFromNewWindow(@NonNull final WebView mainWebView,
+                                                   @NonNull final WebView interceptorWebView,
+                                                   @NonNull final WebResourceRequest request,
+                                                   @NonNull final Span span,
+                                                   final boolean isUserGesture) {
+        final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
+        try {
+            final String targetUrl = request.getUrl().toString();
+            final String currentPageUrl = mainWebView.getUrl();
+
+            if (targetUrl == null) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
+                Logger.warn(methodTag, "onCreateWindow: target URL is null, ignoring.");
+            } else if (!isUserGesture) {
+                // Not initiated by user gesture: load inline as a safe fallback instead of
+                // opening an external browser, to prevent programmatic/scripted popups.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
+                mainWebView.loadUrl(targetUrl);
+            } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+                // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
+                Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
+            } else if (!isTlrUrl(currentPageUrl)) {
+                // Non-TLR page: load inline, same as WebView default behavior.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR);
+                Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
+                mainWebView.loadUrl(targetUrl);
+            } else {
+                // TLR page: delegate to system browser so user can view terms externally.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
+                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                mainWebView.getContext().startActivity(browserIntent);
+            }
+            span.setStatus(StatusCode.OK);
+        } catch (final Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            Logger.error(methodTag, "Error handling target=_blank URL.", e);
+        } finally {
+            span.end();
+            // Destroy the interceptor WebView after it has served its purpose
+            interceptorWebView.post(interceptorWebView::destroy);
+        }
+    }
+
+    /**
+     * Checks whether the given URL corresponds to a TLR (Terms, License, and Restrictions)
+     * start page.
+     *
+     * @param url The URL to check.
+     * @return {@code true} if the URL is a TLR start page, {@code false} otherwise.
+     */
+    @VisibleForTesting
+    boolean isTlrUrl(@Nullable final String url) {
+        if (url == null) {
+            return false;
+        }
+        final String lowerUrl = url.toLowerCase();
+        return lowerUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)
+                && lowerUrl.contains(AuthenticationConstants.Broker.TLR_START_PATH);
+    }
+
+    /**
+     * Handles a file chooser request from the WebView. Creates a telemetry span,
+     * manages the file upload callback, and launches the system file picker.
+     *
+     * @param filePathCallback  The callback to deliver file selection results to the WebView.
+     * @param fileChooserParams Parameters describing the file chooser request.
+     * @param parentSpanContext The parent span context for telemetry, or null.
+     * @return {@code true} if the file chooser was launched, {@code false} otherwise.
+     */
+    @VisibleForTesting
+    boolean handleFileUploadRequest(
+            @NonNull final ValueCallback<Uri[]> filePathCallback,
+            @NonNull final WebChromeClient.FileChooserParams fileChooserParams,
+            @Nullable final SpanContext parentSpanContext) {
+        final String methodTag = TAG + ":handleFileUploadRequest";
+
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
+            Logger.info(methodTag, "ENABLE_WEBVIEW_FILE_UPLOAD flight is disabled.");
+            return false;
+        }
+
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.WebViewFileUpload.name(), parentSpanContext);
+
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            // Cancel any existing callback to avoid a dangling reference.
+            if (mFileUploadCallback != null) {
+                mFileUploadCallback.onReceiveValue(null);
+            }
+            // Clear any previous callback reference before handling the new request.
+            mFileUploadCallback = null;
+
+            // Ensure the file chooser launcher is initialized before attempting to launch.
+            if (mFileChooserLauncher == null) {
+                Logger.error(methodTag,
+                        "File chooser launcher is not initialized. Cannot handle file upload request.",
+                        null);
+                // Notify the caller that no file was selected/returned.
+                filePathCallback.onReceiveValue(null);
+                span.setStatus(StatusCode.ERROR);
+                return false;
+            }
+
+            // At this point we have a valid launcher; store the callback for the result.
+            mFileUploadCallback = filePathCallback;
+
+            final Intent intent = fileChooserParams.createIntent();
+            Logger.info(methodTag, "Launching file chooser for WebView file upload.");
+            mFileChooserLauncher.launch(intent);
+            span.setStatus(StatusCode.OK);
+            return true;
+        } catch (final Exception e) {
+            Logger.error(methodTag, "Failed to launch file chooser.", e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            if (mFileUploadCallback != null) {
+                mFileUploadCallback.onReceiveValue(null);
+                mFileUploadCallback = null;
+            }
+            return false;
+        } finally {
+            span.end();
+        }
+    }
+
+    @VisibleForTesting
+    void setFileUploadCallback(@Nullable final ValueCallback<Uri[]> callback) {
+        mFileUploadCallback = callback;
+    }
+
+    @VisibleForTesting
+    ValueCallback<Uri[]> getFileUploadCallback() {
+        return mFileUploadCallback;
+    }
+
+    @VisibleForTesting
+    void setFileChooserLauncher(@Nullable final ActivityResultLauncher<Intent> launcher) {
+        mFileChooserLauncher = launcher;
     }
 
     /**
@@ -421,6 +696,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             // Note: mFidoLauncher shouldn't be null (based on the OS version check),
             // but we should still have a check here just to be safe.
             mFidoLauncher.unregister();
+        }
+        // Clean up file upload callback to prevent memory leaks.
+        if (mFileUploadCallback != null) {
+            mFileUploadCallback.onReceiveValue(null);
+            mFileUploadCallback = null;
+        }
+        if (mFileChooserLauncher != null) {
+            mFileChooserLauncher.unregister();
         }
     }
 

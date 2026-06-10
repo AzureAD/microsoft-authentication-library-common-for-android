@@ -25,11 +25,13 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_ID;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.XMS_CCS_REQUEST_SEQUENCE;
 import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLIENTDATA;
 
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -38,9 +40,11 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.ITokenResponseHandler;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ResultUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.HttpURLConnection;
 import java.util.HashMap;
@@ -103,6 +107,31 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
                     tokenResponse.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
                     tokenResponse.setCliTelemErrorCode(cliTelemInfo.getServerErrorCode());
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
+                }
+            }
+
+            final String clientDataHeader = response.getHeaderValue(X_MS_CLIENTDATA, 0);
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)
+                    && !StringUtil.isNullOrEmpty(clientDataHeader)) {
+                // eSTS URL-encodes the pipe-delimited value in the response header (e.g. "m%7C0x800482A5%7C%7C...").
+                // ClientDataInfo.fromPipeDelimited expects an already-decoded value (its contract matches the
+                // authorize-endpoint path, where UrlUtil#getParameters has already decoded the query param).
+                // Decode here so the token-endpoint header path produces the same shape.
+                String decodedClientDataHeader = null;
+                try {
+                    decodedClientDataHeader = StringUtil.urlFormDecode(clientDataHeader);
+                } catch (final Exception e) {
+                    // Malformed percent-encoding shouldn't break token parsing; swallow and fall through.
+                    Logger.warn(methodTag, "Failed to URL-decode x-ms-clientdata header: " + e.getMessage());
+                    // Emit that we failed to decode the clientdata value
+                    SpanExtension.current().setAttribute(AttributeName.server_error.name(), "msal_android_decoding_failed");
+                }
+                if (decodedClientDataHeader != null) {
+                    final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited(decodedClientDataHeader);
+                    if (null != clientDataInfo) {
+                        clientDataInfo.emitToSpan();
+                        result.setClientDataInfo(clientDataInfo);
+                    }
                 }
             }
 

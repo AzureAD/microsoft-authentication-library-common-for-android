@@ -27,9 +27,12 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
@@ -72,6 +75,14 @@ public class MicrosoftStsAuthorizationResultFactory
 
         final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
+        ClientDataInfo clientDataInfo = null;
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            clientDataInfo = ClientDataInfo.fromPipeDelimited(urlParameters.get(ClientDataInfo.CLIENTDATA_QUERY_PARAMETER));
+            if (null != clientDataInfo) {
+                clientDataInfo.emitToSpan();
+            }
+        }
+
         MicrosoftStsAuthorizationResult result;
         if (urlParameters.isEmpty()) {
             Logger.warn(methodTag, "Invalid server response, empty query string from the webview redirect.");
@@ -95,6 +106,17 @@ public class MicrosoftStsAuthorizationResultFactory
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                     MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE
             );
+        }
+
+        // Attach ClientDataInfo for both success and trusted server errors.
+        // Exclude state-mismatch (CSRF) redirects only, as they may originate from untrusted sources.
+        if (null != clientDataInfo) {
+            final MicrosoftStsAuthorizationErrorResponse errorResponse = result.getAuthorizationErrorResponse();
+            final boolean isStateMismatch = errorResponse != null
+                    && ErrorStrings.STATE_MISMATCH.equals(errorResponse.getError());
+            if (!isStateMismatch) {
+                result.setClientDataInfo(clientDataInfo);
+            }
         }
 
         return result;

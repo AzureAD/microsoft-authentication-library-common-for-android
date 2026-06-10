@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.StatusCode
 import java.net.URL
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -46,6 +47,56 @@ object SwitchBrowserUriHelper {
             .isFlightEnabled(CommonFlight.SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE)
     }
 
+    /**
+     * Extracts the base redirect URI (scheme + authority + all paths except the last one) from a full URI.
+     *
+     * This is useful for extracting the redirect base before the final path segment (e.g., "switch_browser").
+     *
+     * @param uri The full URI to extract the redirect from.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp/switch_browser?action=1
+     *
+     * @return The base redirect URI containing scheme, authority, and all path segments except the last one.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp
+     *
+     * @throws ClientException if the URI is missing a scheme or authority.
+     */
+    @Throws(ClientException::class)
+    fun extractBaseRedirectUri(uri: Uri): String {
+        val methodTag = "$TAG:extractRedirectUri"
+        val scheme = uri.scheme
+        if (scheme.isNullOrEmpty()) {
+            val errorMessage = "URI is missing a scheme: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+        val authority = uri.authority
+        if (authority.isNullOrEmpty()) {
+            val errorMessage = "URI is missing an authority: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+
+        // Get the path segments and exclude the last one
+        val path = uri.path
+        val result = if (!path.isNullOrEmpty() && path != "/") {
+            val segments = path.trim('/').split('/')
+            if (segments.size > 1) {
+                // Exclude the last segment (e.g., "switch_browser")
+                val pathWithoutLast = segments.dropLast(1).joinToString("/")
+                "$scheme://$authority/$pathWithoutLast"
+            } else {
+                // Only one segment, return scheme://authority
+                "$scheme://$authority"
+            }
+        } else {
+            // No path, return scheme://authority
+            "$scheme://$authority"
+        }
+
+        return result
+    }
 
     /**
      * Build the process uri for the switch browser challenge.
@@ -53,13 +104,13 @@ object SwitchBrowserUriHelper {
      * @param uri The uri containing the switch browser code and action URL.
      * e.g. msauth://com.microsoft.identity.client/switch_browser?code=code&action_uri=action-uri
      *
-     * @return The process uri constructed from the broker redirect uri.
+     * @return The process uri constructed from the redirect uri.
      * e.g. action_uri?code=code
      */
     @Throws(ClientException::class, IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     fun buildProcessUri(uri: Uri): Uri {
         val methodTag = "$TAG:buildProcessUri"
-        // Get the SwitchBrowser purpose token from the broker redirect uri.
+        // Get the SwitchBrowser purpose token from the redirect uri.
         val code = uri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
@@ -70,7 +121,7 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
-        // Get the process uri from the broker redirect uri.
+        // Get the process uri from the redirect uri.
         val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
@@ -113,6 +164,19 @@ object SwitchBrowserUriHelper {
     }
 
     /**
+     * Builds the resume browser URI by appending [SWITCH_BROWSER.RESUME_PATH] to the base redirect URI.
+     *
+     * @param redirectUri The base redirect URI.
+     * e.g. msauth://com.microsoft.identity.client
+     *
+     * @return The resume browser URI.
+     * e.g. msauth://com.microsoft.identity.client/switch_browser_resume
+     */
+    fun buildResumeBrowserUri(redirectUri: String): Uri {
+        return "$redirectUri/${SWITCH_BROWSER.RESUME_PATH}".toUri()
+    }
+
+    /**
      * Check if the url is a switch browser redirect url
      *
      * The request is considered "switch_browser" if the URL
@@ -152,7 +216,7 @@ object SwitchBrowserUriHelper {
             span.end()
             throw clientException
         }
-        val authRequestState = Uri.parse(authorizationUrl).getQueryParameter(SWITCH_BROWSER.STATE)
+        val authRequestState = authorizationUrl.toUri().getQueryParameter(SWITCH_BROWSER.STATE)
         if (authRequestState.isNullOrEmpty()) {
             val clientException = ClientException(
                 ClientException.STATE_MISMATCH,
@@ -208,7 +272,7 @@ object SwitchBrowserUriHelper {
         actionUri: String,
         queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
-        val uri = Uri.parse(actionUri)
+        val uri = actionUri.toUri()
 
         val uriBuilder = uri.buildUpon()
 
@@ -232,24 +296,19 @@ object SwitchBrowserUriHelper {
      * @throws ClientException with error code [ClientException.MALFORMED_URL] if the URI string is malformed
      * @throws ClientException with error code [ClientException.UNKNOWN_AUTHORITY] if the URI host is not a valid AAD authority
      *
-     * @see AzureActiveDirectory.performCloudDiscovery
+     * @see AzureActiveDirectory.ensureCloudDiscoveryForAuthority
      * @see AzureActiveDirectory.isValidCloudHost
      */
     private fun validateActionUri(actionUriString: String) {
         val methodTag = "$TAG:validateActionUri"
-        // Check if AzureActiveDirectory is initialized, if not, perform cloud discovery.
-        if (!AzureActiveDirectory.isInitialized()) {
-            Logger.warn(
-                methodTag,
-                "AzureActiveDirectory is not initialized. Performing cloud discovery."
-            )
-            try {
-                AzureActiveDirectory.performCloudDiscovery()
-            } catch (e: Exception) {
-                val errorMessage = "Failed to perform cloud discovery for AAD authorities."
-                Logger.error(methodTag, errorMessage, e)
-                throw ClientException(ClientException.IO_ERROR, errorMessage, e)
-            }
+        // Ensure cloud discovery is complete for this authority.
+        try {
+            val actionUrlForDiscovery = URL(actionUriString)
+            AzureActiveDirectory.ensureCloudDiscoveryForAuthority(actionUrlForDiscovery)
+        } catch (e: Exception) {
+            val errorMessage = "Failed to perform cloud discovery for AAD authorities."
+            Logger.error(methodTag, errorMessage, e)
+            throw ClientException(ClientException.IO_ERROR, errorMessage, e)
         }
         // Validate the action uri is not null or empty.
         val actionUrl: URL

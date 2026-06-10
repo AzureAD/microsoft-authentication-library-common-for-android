@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.app.Activity
-import android.content.Intent
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
@@ -33,6 +32,7 @@ import com.microsoft.identity.common.java.browser.IBrowserSelector
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
+import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.ui.BrowserDescriptor
@@ -110,12 +110,14 @@ class SwitchBrowserRequestHandler(
                 AttributeName.is_custom_tabs_supported.name,
                 browser.isCustomTabsServiceSupported
             )
-            val switchBrowserIntent = Intent(activity, SwitchBrowserActivity::class.java).apply {
-                putExtra(SwitchBrowserActivity.BROWSER_PACKAGE_NAME, browser.packageName)
-                putExtra(SwitchBrowserActivity.BROWSER_SUPPORTS_CUSTOM_TABS, browser.isCustomTabsServiceSupported)
-                putExtra(SwitchBrowserActivity.PROCESS_URI, switchBrowserChallenge.processUri.toString())
-                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val switchBrowserIntent = SwitchBrowserActivity.buildSwitchBrowserLaunchIntent(
+                context = activity,
+                redirectUri = switchBrowserChallenge.redirectUri,
+                browserPackageName = browser.packageName,
+                browserSupportsCustomTabs = browser.isCustomTabsServiceSupported,
+                processUri = switchBrowserChallenge.processUri.toString(),
+                spanContext = span.spanContext.toSerializable()
+            )
             activity.startActivity(switchBrowserIntent)
             span.setStatus(StatusCode.OK)
             isSwitchBrowserChallengeActive = true
@@ -146,3 +148,15 @@ class SwitchBrowserRequestHandler(
         isSwitchBrowserChallengeActive = false
     }
 }
+
+/**
+ * Converts a [SpanContext] to a [SerializableSpanContext] so it can be passed between activities
+ * via [android.content.Intent] extras under the [SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT] key.
+ */
+private fun SpanContext.toSerializable(): SerializableSpanContext =
+    SerializableSpanContext.builder()
+        .traceId(traceId)
+        .spanId(spanId)
+        .traceFlags(traceFlags.asByte())
+        .build()
+

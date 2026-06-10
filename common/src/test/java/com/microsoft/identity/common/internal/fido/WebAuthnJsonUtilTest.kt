@@ -22,9 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil.Companion.base64UrlEncoded
+import com.microsoft.identity.common.internal.fido.WebAuthnJsonUtil.base64UrlEncoded
 import org.json.JSONException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -150,5 +151,68 @@ class WebAuthnJsonUtilTest {
     @Test
     fun testBase64UrlEncoded_RandomString() {
         assertEquals(expectedEncodedRandomString, randomString.base64UrlEncoded())
+    }
+
+    // createCredentialResponse.json test data
+    // clientDataJSON decodes to:
+    // {"type":"webauthn.create","challenge":"...","origin":"android:apk-key-hash:E8lSX1zJMPBZ9G_zpnfxfmfh-d0q2qEYz-2bgNeUKCU","androidPackageName":"com.microsoft.identity.testuserapp"}
+    val createCredentialResponseJson = """{"rawId":"_mqxqFyisYcQDo7sTf5Ggw","authenticatorAttachment":"platform","type":"public-key","id":"_mqxqFyisYcQDo7sTf5Ggw","response":{"clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiTFVOeGMwZ3FXaXBwYTBacmRGTmpiMU5OUkc1UmNqaHZlRFUxWkVOUFZGWkZVbVJrV0hSNFFXSnRWbWN6Wld4UldGVkxZblpvUWpkalJrNXRaa2g1VkhNek9FUjNaM05pVG5oVFVtTnRjRzgwZVVSRVUzQk5SVlpuYzBKc2QxUnlNVkZ4TlhOcVFqSndTMnBSS2ciLCJvcmlnaW4iOiJhbmRyb2lkOmFway1rZXktaGFzaDpFOGxTWDF6Sk1QQlo5R196cG5meGZtZmgtZDBxMnFFWXotMmJnTmVVS0NVIiwiYW5kcm9pZFBhY2thZ2VOYW1lIjoiY29tLm1pY3Jvc29mdC5pZGVudGl0eS50ZXN0dXNlcmFwcCJ9","attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUNWye1KCTIblpXx6vkYID8bVfaJ2mH7yWGEwVfdpoDIFdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEP5qsahcorGHEA6O7E3-RoOlAQIDJiABIVgg2wYC7isQOus7OjKigGo_J37T42oJq0SROrLhqn-53AgiWCAN3Z596TH_Lh9BeAdZinza_vXPWfb90QzUcK-vpipqKQ","transports":["internal","hybrid"],"authenticatorData":"NWye1KCTIblpXx6vkYID8bVfaJ2mH7yWGEwVfdpoDIFdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEP5qsahcorGHEA6O7E3-RoOlAQIDJiABIVgg2wYC7isQOus7OjKigGo_J37T42oJq0SROrLhqn-53AgiWCAN3Z596TH_Lh9BeAdZinza_vXPWfb90QzUcK-vpipqKQ","publicKeyAlgorithm":-7,"publicKey":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2wYC7isQOus7OjKigGo_J37T42oJq0SROrLhqn-53AgN3Z596TH_Lh9BeAdZinza_vXPWfb90QzUcK-vpipqKQ"},"clientExtensionResults":{"credProps":{"rk":true}}}"""
+    val expectedOriginFromCreateCredentialResponse = "android:apk-key-hash:E8lSX1zJMPBZ9G_zpnfxfmfh-d0q2qEYz-2bgNeUKCU"
+
+    // attestationObject from createCredentialResponseJson decodes to AAGUID ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4
+    val expectedAaguidFromCreateCredentialResponse = "ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4"
+    val attestationObjectFromCreateCredential = "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUNWye1KCTIblpXx6vkYID8bVfaJ2mH7yWGEwVfdpoDIFdAAAAAOqbjWZNAR0hPOS2tIy1ddQAEP5qsahcorGHEA6O7E3-RoOlAQIDJiABIVgg2wYC7isQOus7OjKigGo_J37T42oJq0SROrLhqn-53AgiWCAN3Z596TH_Lh9BeAdZinza_vXPWfb90QzUcK-vpipqKQ"
+
+    @Test
+    fun testExtractOriginFromRegistrationResponse_fromCreateCredentialResponse() {
+        val result = WebAuthnJsonUtil.extractOriginFromRegistrationResponse(createCredentialResponseJson)
+        assertEquals(expectedOriginFromCreateCredentialResponse, result)
+    }
+
+    @Test
+    fun testExtractOriginFromRegistrationResponse_invalidJson_returnsNull() {
+        val result = WebAuthnJsonUtil.extractOriginFromRegistrationResponse("not valid json")
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractOriginFromRegistrationResponse_missingResponseKey_returnsNull() {
+        val result = WebAuthnJsonUtil.extractOriginFromRegistrationResponse("""{"id":"abc","type":"public-key"}""")
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractAaguidFromRegistrationResponse_fromCreateCredentialResponse() {
+        val result = WebAuthnJsonUtil.extractAaguidFromRegistrationResponse(createCredentialResponseJson)
+        assertEquals(expectedAaguidFromCreateCredentialResponse, result)
+    }
+
+    @Test
+    fun testExtractAaguidFromRegistrationResponse_invalidJson_returnsNull() {
+        val result = WebAuthnJsonUtil.extractAaguidFromRegistrationResponse("not valid json")
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractAaguidFromRegistrationResponse_missingResponseKey_returnsNull() {
+        val result = WebAuthnJsonUtil.extractAaguidFromRegistrationResponse("""{"id":"abc","type":"public-key"}""")
+        assertNull(result)
+    }
+
+    @Test
+    fun testExtractAaguidFromAttestationObject_validAttestationObject_returnsExpectedAaguid() {
+        val result = WebAuthnJsonUtil.extractAaguidFromAttestationObject(attestationObjectFromCreateCredential)
+        assertEquals(expectedAaguidFromCreateCredentialResponse, result)
+    }
+
+    @Test(expected = Exception::class)
+    fun testExtractAaguidFromAttestationObject_invalidBase64_throws() {
+        WebAuthnJsonUtil.extractAaguidFromAttestationObject("!!!not-valid-base64!!!")
+    }
+
+    @Test(expected = Exception::class)
+    fun testExtractAaguidFromAttestationObject_missingAuthData_throws() {
+        // Valid base64url but CBOR with no authData key
+        WebAuthnJsonUtil.extractAaguidFromAttestationObject("oA")
     }
 }
