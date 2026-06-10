@@ -46,6 +46,13 @@ class SwitchBrowserProtocolCoordinator(
     val switchBrowserRequestHandler: SwitchBrowserRequestHandler,
     private val spanContext: SpanContext? = null) {
 
+    /**
+     * Indicates that the switch browser flow was initiated during this session.
+     * Delegates to the handler's flag which is set at challenge time and never reset.
+     */
+    val wasSwitchBrowserFlowInitiated: Boolean
+        get() = switchBrowserRequestHandler.wasSwitchBrowserFlowInitiated
+
     constructor(activity: Activity, spanContext: SpanContext?) : this(SwitchBrowserRequestHandler(activity, spanContext), spanContext)
 
     val span: Span by lazy {
