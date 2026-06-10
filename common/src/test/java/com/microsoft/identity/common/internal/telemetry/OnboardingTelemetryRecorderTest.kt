@@ -130,6 +130,23 @@ class OnboardingTelemetryRecorderTest {
         Assert.assertEquals("non-brokered", blob.getString("onboarding_mode"))
     }
 
+    @Test
+    fun testFinalizeBlob_EmptySessionCorrelationId_ReturnsEmptyBlob() {
+        // A corrupted/missing seed leaves sessionCorrelationId empty. finalizeBlob() must
+        // refuse to emit in that case: a blob without a sessionCorrelationId cannot be joined
+        // with the broker side or with retries, so emitting it would be unattributable noise.
+        // Recording a blocking error first also exercises the persistSessionCorrelation()
+        // no-op guard for the empty-sessionCorrelationId path.
+        val r = OnboardingTelemetryRecorder(
+            "not valid json", CLIENT_ID, TARGET,
+            ApplicationProvider.getApplicationContext()
+        )
+        Assert.assertEquals("", r.sessionCorrelationId)
+        r.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
+
+        Assert.assertEquals("", r.finalizeBlob())
+    }
+
     // --- addStep ---
 
     @Test
