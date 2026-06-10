@@ -512,4 +512,19 @@ public final class ErrorStrings {
      * of BrowserTabActivity. Only the current application should be listening on this scheme.
      */
     public static final String MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME = "multiple_apps_listening_url_scheme";
+
+    /**
+     * Switch browser flow: no browser launch strategy is available to handle the request.
+     */
+    public static final String SWITCH_BROWSER_NO_LAUNCH_STRATEGY = "no_launch_strategy";
+
+    /**
+     * Switch browser flow: a new browser switch request was received while one is already in progress.
+     */
+    public static final String SWITCH_BROWSER_ALREADY_IN_PROGRESS = "already_in_progress";
+
+    /**
+     * Switch browser flow: an intent was received that does not match any expected pattern.
+     */
+    public static final String SWITCH_BROWSER_UNEXPECTED_INTENT = "unexpected_intent";
 }

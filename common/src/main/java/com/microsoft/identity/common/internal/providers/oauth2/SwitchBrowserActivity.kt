@@ -198,10 +198,10 @@ class SwitchBrowserActivity : FragmentActivity() {
         if (launchStrategy == null) {
             Logger.error(methodTag, "No browser launch strategy available", null)
             span?.setStatus(StatusCode.ERROR)
-            span?.setAttribute(AttributeName.error_code.name, "NO_LAUNCH_STRATEGY")
+            span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_NO_LAUNCH_STRATEGY)
             setResultAndFinish(
                 SwitchBrowserProtocolCoordinator.createErrorBundle(
-                    "NO_LAUNCH_STRATEGY",
+                    ErrorStrings.SWITCH_BROWSER_NO_LAUNCH_STRATEGY,
                     "No browser launch strategy available"
                 )
             )
@@ -286,7 +286,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         if (intent.hasExtra(PROCESS_URI)) {
             // Don't set terminal ERROR status here — the flow is being restarted, not failed.
             // Record it as an attribute/event so the span outcome reflects the final result.
-            span?.setAttribute(AttributeName.error_code.name, "ALREADY_IN_PROGRESS")
+            span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_ALREADY_IN_PROGRESS)
             // Handle scenario where a new browser switch request is received while one is already in progress
             // This can occur when the user initiates another auth request before completing the first one.
             Logger.warn(
@@ -304,12 +304,12 @@ class SwitchBrowserActivity : FragmentActivity() {
             return
         }
         span?.setStatus(StatusCode.ERROR)
-        span?.setAttribute(AttributeName.error_code.name, "UNEXPECTED_INTENT")
+        span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_UNEXPECTED_INTENT)
         // Clean up: finish this activity and remove it from task stack
         Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
         setResultAndFinish(
             SwitchBrowserProtocolCoordinator.createErrorBundle(
-                "UNEXPECTED_INTENT",
+                ErrorStrings.SWITCH_BROWSER_UNEXPECTED_INTENT,
                 "Received an intent that does not match expected patterns for switch browser flow"
             )
         )
