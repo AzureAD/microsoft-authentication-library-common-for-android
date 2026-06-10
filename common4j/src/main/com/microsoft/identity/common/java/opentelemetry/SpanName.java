@@ -70,6 +70,7 @@ public enum SpanName {
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
+    PersistToStorageAsync,
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     ProcessOpenIdVcRequest,
