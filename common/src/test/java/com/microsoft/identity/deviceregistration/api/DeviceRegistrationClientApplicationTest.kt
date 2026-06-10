@@ -36,9 +36,12 @@ import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategies
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
@@ -246,5 +249,118 @@ class DeviceRegistrationClientApplicationTest {
 
         val drca = createDrca(strategy)
         drca.provisionResourceAccountCredentials("test-tenant", "test-ra-oid", correlationId, SdkType.MSAL, "1.0.0")
+    }
+
+    @Test
+    fun getDeviceToken_v1_returnsDeviceToken() {
+        val expectedToken = "device.token.jwt"
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id"
+        )
+
+        Assert.assertEquals(expectedToken, result)
+    }
+
+    @Test
+    fun getDeviceToken_v1_withScope_returnsDeviceToken() {
+        val expectedToken = "device.token.jwt.scoped"
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id",
+            "openid profile"
+        )
+
+        Assert.assertEquals(expectedToken, result)
+    }
+
+    @Test
+    fun getDeviceToken_v1_passesClientIdToIpc() {
+        val correlationId = UUID.randomUUID()
+        val expectedToken = "device.token.jwt"
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
+            val parameters = GetDeviceTokenV1Parameters.create(protocolData)
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("https://resource.example.com", parameters.resources)
+            Assert.assertEquals("test-client-id", parameters.clientId)
+            Assert.assertEquals("openid", parameters.scope)
+            Assert.assertEquals("tenant", parameters.deviceRegistrationRecord.tenantId)
+            packer.pack(response)
+        }
+
+        val drca = createDrca(strategy)
+        drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            correlationId,
+            "test-client-id",
+            "openid"
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun getDeviceToken_v0Deprecated_stillWorks() {
+        val expectedToken = "device.token.v0"
+        val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(
+            UUID.randomUUID(), expectedToken
+        )
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            null
+        )
+
+        Assert.assertEquals(expectedToken, result)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun getDeviceToken_v0Deprecated_usesV0Protocol() {
+        val correlationId = UUID.randomUUID()
+        val expectedToken = "device.token.v0"
+        val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(
+            UUID.randomUUID(), expectedToken
+        )
+        val strategy: IIpcStrategy = mock()
+        whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
+        whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
+            val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            val protocolName = bundle?.getString("protocol.name")
+            Assert.assertEquals("protocol.get.device.token.v0", protocolName)
+            val protocolData = bundle?.getByteArray("protocol.data")
+            Assert.assertNotNull(protocolData)
+            val parameters = GetDeviceTokenV0Parameters.create(protocolData)
+            Assert.assertEquals(correlationId, parameters.correlationId)
+            Assert.assertEquals("https://resource.example.com", parameters.resources)
+            packer.pack(response)
+        }
+
+        val drca = createDrca(strategy)
+        drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            correlationId,
+            null
+        )
     }
 }

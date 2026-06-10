@@ -48,6 +48,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.Device
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetInstallWpjCertificateIntentRequestV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetRegistrationStateV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.InstallCertificateSilentlyV0Parameters
@@ -59,6 +60,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRe
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetInstallWpjCertificateIntentRequestV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.InstallCertificateSilentlyV0Response
@@ -309,18 +311,48 @@ class DeviceRegistrationClientApplication {
      * @param deviceRegistrationRecord record to get token for.
      * @param resources                resource requiring device token.
      * @param correlationId            correlation ID for request tracing.
+     * @param clientId                 client ID of the calling application.
      * @param scope                    optional scope.
      */
     @Throws(BaseException::class)
-    @JvmOverloads
     fun getDeviceToken(
         deviceRegistrationRecord: IDeviceRegistrationRecord,
         resources: String,
         correlationId: UUID,
+        clientId: String,
         scope: String? = null
     ): String {
         val methodTag = "$TAG:getDeviceToken"
-        Logger.info(methodTag, "GetDeviceToken started. CorrelationId: $correlationId")
+        Logger.info(methodTag, "GetDeviceToken (V1) started. CorrelationId: $correlationId")
+        val responseSerialized = mController.execute(
+            GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, scope)
+        )
+        Logger.info(methodTag, "Get device token ended successfully.")
+        return GetDeviceTokenV1Response.create(responseSerialized).deviceToken
+    }
+
+    /**
+     * Gets the device token for a device registration record.
+     * @deprecated Use the overload that accepts clientId parameter.
+     *
+     * @param deviceRegistrationRecord record to get token for.
+     * @param resources                resource requiring device token.
+     * @param correlationId            correlation ID for request tracing.
+     * @param scope                    optional scope.
+     */
+    @Deprecated(
+        message = "Use the overload that accepts clientId parameter.",
+        replaceWith = ReplaceWith("getDeviceToken(deviceRegistrationRecord, resources, correlationId, clientId, scope)")
+    )
+    @Throws(BaseException::class)
+    fun getDeviceToken(
+        deviceRegistrationRecord: IDeviceRegistrationRecord,
+        resources: String,
+        correlationId: UUID,
+        scope: String?
+    ): String {
+        val methodTag = "$TAG:getDeviceToken"
+        Logger.info(methodTag, "GetDeviceToken (V0, deprecated) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
             GetDeviceTokenV0Parameters(correlationId, deviceRegistrationRecord, resources, scope)
         )
