@@ -341,15 +341,15 @@ class DeviceRegistrationClientApplication {
      * @param scope                    optional scope.
      */
     @Deprecated(
-        message = "Use the overload that accepts clientId parameter.",
-        replaceWith = ReplaceWith("getDeviceToken(deviceRegistrationRecord, resources, correlationId, clientId, scope)")
+        message = "Use the overload that accepts clientId parameter."
     )
     @Throws(BaseException::class)
+    @JvmOverloads
     fun getDeviceToken(
         deviceRegistrationRecord: IDeviceRegistrationRecord,
         resources: String,
         correlationId: UUID,
-        scope: String?
+        scope: String? = null
     ): String {
         val methodTag = "$TAG:getDeviceToken"
         Logger.info(methodTag, "GetDeviceToken (V0, deprecated) started. CorrelationId: $correlationId")
