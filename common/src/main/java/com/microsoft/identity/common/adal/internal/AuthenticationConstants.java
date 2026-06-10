@@ -548,7 +548,7 @@ public final class AuthenticationConstants {
         /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
          */
-        public static final String CLIENT_SUPPORTS_FLOW = "switch_browser";
+        public static final String SWITCH_BROWSER_EXTRA_QUERY_PARAM = "switch_browser";
 
         /**
          * String Query parameter key for the purpose token.
