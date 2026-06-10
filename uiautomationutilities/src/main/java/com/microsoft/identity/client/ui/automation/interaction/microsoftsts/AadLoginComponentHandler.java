@@ -233,15 +233,22 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         // a Keyguard biometric fallback, or an OEM-specific banner) that happens to share the
         // same positive-button resource id.
         //
-        // Identity check uses a case-insensitive regex against any TextView text on screen,
-        // because the wording differs across API levels / OEMs:
-        //   API 23-29 (AOSP): "Allow the app to ignore battery optimizations?"
-        //   API 30+ (AOSP):   "Allow [app] to ignore battery optimizations?"
-        //   Samsung One UI:   "... ignore battery optimization?" (singular)
-        // 'battery' is the only token guaranteed to appear in every variant.
+        // Identity check uses a case-insensitive, DOTALL regex against any TextView on screen.
+        // The dialog is AOSP's RequestIgnoreBatteryOptimizations activity (fired by
+        // ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, present since API 23). Its canonical
+        // strings are:
+        //   title: "Let app always run in background?"
+        //   body:  "Allowing [app] to always run in the background may reduce battery life.
+        //           You can change this later from Settings > Apps & notifications."
+        // Note the title contains 'background' but NOT 'battery'; 'battery' only appears in the
+        // multi-line body. We match on the 'battery' token, which is present in the body across
+        // the variants observed. obtainUiObjectWithRegex uses UiSelector.textMatches(), a
+        // FULL-STRING match, and Java Pattern has DOTALL off by default, so '.' won't span the
+        // newline between the body's paragraphs -- hence the inline (?is) flags (case-insensitive
+        // + DOTALL).
         Logger.i(TAG, "Handle 'ignore battery optimizations' system prompt..");
 
-        final String batteryRegex = "(?i).*battery.*";
+        final String batteryRegex = "(?is).*battery.*";
         final UiObject batteryDialogText = UiAutomatorUtils.obtainUiObjectWithRegex(
                 batteryRegex,
                 CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
