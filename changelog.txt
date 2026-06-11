@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry — Browser SSO previously rejected Chrome Dev with "Caller is not an authorized browser application"
 
 Version 24.4.0-RC1
 ----------
