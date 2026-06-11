@@ -94,7 +94,7 @@ object AppRegistry {
     val CHROME_DEV = App(
         nickName = "Google Chrome Dev",
         packageName = "com.chrome.dev",
-        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7GvHpHu6QOz+XIaXybtzL7A=="
+        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7Gv2HpHu6QOz+XIaXybtzL7A=="
     )
 
     val CHROME_CANARY = App(
