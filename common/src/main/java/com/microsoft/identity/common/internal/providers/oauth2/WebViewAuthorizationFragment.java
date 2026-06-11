@@ -32,6 +32,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.IS_SWITCH_BROWSER_FLOW;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -82,6 +83,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.util.ClientExtraSku;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -158,7 +160,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
     // This is used by the switch browser protocol to handle the resume of the flow.
-    private SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+    private volatile SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
+
+    @VisibleForTesting
+    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator coordinator) {
+        mSwitchBrowserProtocolCoordinator = coordinator;
+    }
 
     private boolean isBrokerRequest = false;
 
@@ -782,6 +789,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
         }
         return mSwitchBrowserProtocolCoordinator;
+    }
+
+    @NonNull
+    @Override
+    protected PropertyBag propertyBagFromAuthorizationResult(@NonNull final RawAuthorizationResult result) {
+        final PropertyBag propertyBag = super.propertyBagFromAuthorizationResult(result);
+        if (mSwitchBrowserProtocolCoordinator != null
+                && mSwitchBrowserProtocolCoordinator.getWasSwitchBrowserFlowInitiated()) {
+            propertyBag.put(IS_SWITCH_BROWSER_FLOW, true);
+        }
+        return propertyBag;
     }
 
     /**
