@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
+import com.microsoft.identity.common.java.exception.ClientException
+
 /**
  * Strategy contract for launching external browser authentication flows.
  */
@@ -29,7 +31,10 @@ interface BrowserLaunchStrategy {
 
     /**
      * Launches the browser using the strategy implementation.
+     *
+     * @throws ClientException if required parameters are missing or invalid.
      */
+    @Throws(ClientException::class)
     fun launch()
 
     /**

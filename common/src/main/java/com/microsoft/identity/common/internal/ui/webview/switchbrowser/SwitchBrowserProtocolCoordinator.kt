@@ -62,6 +62,9 @@ class SwitchBrowserProtocolCoordinator(
     companion object {
         private const val TAG = "SwitchBrowserProtocolCoordinator"
 
+        private const val ERROR_CODE_KEY = "error_code"
+        private const val ERROR_MESSAGE_KEY = "error_message"
+
         /**
          * Checks if the given [url] is used to resume the switch browser flow.
          * This is determined by validating whether the URL starts with `[redirectUrl]/switch_browser_resume`.
@@ -70,6 +73,33 @@ class SwitchBrowserProtocolCoordinator(
          */
         fun isSwitchBrowserResume(url: String?, redirectUrl: String): Boolean {
             return SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, SWITCH_BROWSER.RESUME_PATH)
+        }
+
+        fun createErrorBundle(errorCode: String, errorMessage: String): Bundle {
+            return Bundle().apply {
+                putString(ERROR_CODE_KEY, errorCode)
+                putString(ERROR_MESSAGE_KEY, errorMessage)
+            }
+        }
+    }
+
+    /**
+     * Inspects the given [bundle] for error entries populated by [createErrorBundle].
+     * If either [ERROR_CODE_KEY] or [ERROR_MESSAGE_KEY] is present, a [ClientException] is
+     * constructed with those values and thrown immediately.
+     *
+     * @param bundle The bundle to inspect.
+     * @throws ClientException if the bundle contains an error code or error message.
+     */
+    @Throws(ClientException::class)
+    private fun throwIfBundleContainsError(bundle: Bundle) {
+        val errorCode = bundle.getString(ERROR_CODE_KEY)
+        val errorMessage = bundle.getString(ERROR_MESSAGE_KEY)
+        if (!errorCode.isNullOrEmpty() || !errorMessage.isNullOrEmpty()) {
+            throw ClientException(
+                errorCode ?: ClientException.UNKNOWN_ERROR,
+                errorMessage ?: "An unknown error occurred in the switch browser flow."
+            )
         }
     }
 
@@ -88,34 +118,39 @@ class SwitchBrowserProtocolCoordinator(
         extras: Bundle,
         onSuccessAction: (Uri, HashMap<String, String>) -> Unit
     ) {
+        val methodTag = "$TAG:processSwitchBrowserResume"
         SpanExtension.makeCurrentSpan(span).use {
-            val methodTag = "$TAG:processSwitchBrowserResume"
-            val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
-            val code = extras.getString(SWITCH_BROWSER.CODE)
-            val state = extras.getString(SWITCH_BROWSER.STATE)
-            if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
-                val clientException = ClientException(
-                    ClientException.MISSING_PARAMETER,
-                    "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
-                            " code is null/empty: ${code.isNullOrEmpty()}."
-                )
+            try {
+                throwIfBundleContainsError(extras)
+                val actionUri = extras.getString(SWITCH_BROWSER.ACTION_URI)
+                val code = extras.getString(SWITCH_BROWSER.CODE)
+                val state = extras.getString(SWITCH_BROWSER.STATE)
+                if (actionUri.isNullOrEmpty() || code.isNullOrEmpty()) {
+                    throw ClientException(
+                        ClientException.MISSING_PARAMETER,
+                        "Action URI is null/empty: ${actionUri.isNullOrEmpty()}," +
+                                " code is null/empty: ${code.isNullOrEmpty()}."
+                    )
+                }
+                // Validate the state from auth request and redirect URL is the same.
+                SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
+                val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
+                val headers = hashMapOf(AUTHORIZATION to "Bearer $code")
+                onSuccessAction(resumeUri, headers)
+                Logger.info(methodTag, "Switch browser resume action processed successfully.")
+                span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
+                span.setStatus(StatusCode.OK)
+            } catch (t: Throwable) {
                 span.setStatus(StatusCode.ERROR)
-                span.recordException(clientException)
+                span.recordException(t)
+                throw t
+            } finally {
+                // Always clear the challenge state — this resume is one-shot. Leaving it set
+                // on the error path would cause subsequent onResume() calls to re-enter the
+                // resume flow with an already-consumed bundle and fail again.
+                switchBrowserRequestHandler.resetChallengeState()
                 span.end()
-                throw clientException
             }
-            SwitchBrowserUriHelper.statesMatch(authorizationRequest, state)
-            // Validate the state from auth request and redirect URL is the same
-            val resumeUri = SwitchBrowserUriHelper.buildResumeUri(actionUri, state)
-            val authorizationHeaderValue = "Bearer $code"
-            val headers = hashMapOf(AUTHORIZATION to authorizationHeaderValue)
-            onSuccessAction(resumeUri, headers)
-            // Reset the challenge state after processing the resume action
-            switchBrowserRequestHandler.resetChallengeState()
-            Logger.info(methodTag, "Switch browser resume action processed successfully.")
-            span.setAttribute(AttributeName.is_switch_browser_resume_handled.name, true)
-            span.setStatus(StatusCode.OK)
-            span.end()
         }
     }
 
