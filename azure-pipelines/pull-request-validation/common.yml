@@ -174,8 +174,6 @@ stages:
       - task: Gradle@3
         displayName: Run OWASP Dependency Check
         # Scan configuration:
-        #   -PnvdApiKey                 NVD-API-Key (secret) — see comment above. Quoted to
-        #                               protect against shell expansion of special chars.
         #   -PdependencyCheckFormats    Generate HTML (human review), JSON (tooling), and
         #                               SARIF (security dashboards / GitHub code scanning /
         #                               Defender for DevOps ingestion).
@@ -184,13 +182,28 @@ stages:
         #                               reports findings as warnings + an artifact instead
         #                               of blocking the PR; ownership / SLA enforcement
         #                               happens via the published SARIF in security tooling.
+        #
+        # NVD API key is passed via the NVD_API_KEY environment variable rather than as a
+        # `-PnvdApiKey="$(NVD-API-Key)"` argument. Reasons:
+        #   1. Windows-agent shell quoting: Gradle@3 spawns gradle through cmd.exe; a
+        #      secret containing &, =, ^ or other shell-special chars can be mangled when
+        #      ADO macro-substitutes it into the `tasks:` string, producing an empty key
+        #      and the "UpdateException: Error updating the NVD Data" failure cascade.
+        #   2. SDL hygiene: secrets on a command line can leak into process listings,
+        #      crash dumps, and verbose Gradle logs. Env vars stay scoped to the process.
+        # `common/common/build.gradle` already reads `System.getenv("NVD_API_KEY")` as
+        # resolution-order #3 in its NVD key block, so no build-script change is needed.
         # `continueOnError: true` is a belt-and-braces safety net in case the scan itself
         # errors out (e.g. transient NVD outage) so the PR is never blocked by this job.
         continueOnError: true
+        env:
+          # ADO secret variables are NOT auto-mapped into env; explicit mapping is required.
+          # The hyphenated source name (NVD-API-Key) can't be used directly as an env var,
+          # so we re-map it to the underscored name the build script expects.
+          NVD_API_KEY: $(NVD-API-Key)
         inputs:
           tasks: >-
             common:dependencyCheckAnalyze
-            -PnvdApiKey="$(NVD-API-Key)"
             -PdependencyCheckFormats=HTML,JSON,SARIF
             -PdependencyCheckFailOnCvss=11
           publishJUnitResults: false
