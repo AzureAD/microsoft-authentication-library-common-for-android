@@ -152,6 +152,65 @@ stages:
           javaHomeSelection: JDKVersion
           jdkVersionOption: "1.17"
 
+    - job: dependency_check
+      displayName: OWASP Dependency Check (PR)
+      cancelTimeoutInMinutes: 1
+      # AndroidAuthClientAutomationSecrets is linked to the team KeyVault and
+      # exposes NVD-API-Key (owned by the Android Auth team). Required by the
+      # dependencyCheck { nvd.apiKey = ... } block in common/common/build.gradle
+      # — without it the NVD feed throttles anonymous calls (HTTP 429) and the
+      # plugin fails fast via the gradle.taskGraph.whenReady guard.
+      variables:
+        - group: AndroidAuthClientAutomationSecrets
+      steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - bash: |
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
+          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
+        displayName: 'Set VSTS Fields in Environment'
+      - task: Gradle@3
+        displayName: Run OWASP Dependency Check
+        # Scan configuration:
+        #   -PnvdApiKey                 NVD-API-Key (secret) — see comment above. Quoted to
+        #                               protect against shell expansion of special chars.
+        #   -PdependencyCheckFormats    Generate HTML (human review), JSON (tooling), and
+        #                               SARIF (security dashboards / GitHub code scanning /
+        #                               Defender for DevOps ingestion).
+        #   -PdependencyCheckFailOnCvss=11   CVSS scores cap at 10.0, so a threshold of 11
+        #                               disables the build-fail behavior. PR validation
+        #                               reports findings as warnings + an artifact instead
+        #                               of blocking the PR; ownership / SLA enforcement
+        #                               happens via the published SARIF in security tooling.
+        # `continueOnError: true` is a belt-and-braces safety net in case the scan itself
+        # errors out (e.g. transient NVD outage) so the PR is never blocked by this job.
+        continueOnError: true
+        inputs:
+          tasks: >-
+            common:dependencyCheckAnalyze
+            -PnvdApiKey="$(NVD-API-Key)"
+            -PdependencyCheckFormats=HTML,JSON,SARIF
+            -PdependencyCheckFailOnCvss=11
+          publishJUnitResults: false
+          javaHomeSelection: JDKVersion
+          jdkVersionOption: "1.17"
+      # Publish the full report directory (HTML for humans, JSON for tooling, SARIF for
+      # security dashboards). `always()` so the artifact is available even if the scan
+      # surfaced warnings or the step soft-failed via continueOnError.
+      - publish: $(Build.SourcesDirectory)/common/build/reports/dependency-check
+        artifact: dependencyCheckReport
+        displayName: 'Publish OWASP Dependency Check Report'
+        condition: always()
+      # Publish the SARIF separately so downstream stages / pipelines (e.g. GitHub
+      # Advanced Security upload, Defender for DevOps, custom triage automation) can
+      # consume it without pulling the entire report bundle.
+      - publish: $(Build.SourcesDirectory)/common/build/reports/dependency-check/dependency-check-report.sarif
+        artifact: dependencyCheckSarif
+        displayName: 'Publish OWASP Dependency Check SARIF'
+        condition: always()
+
   - template: ../code-coverage/compare-code-coverage.yml
     parameters:
       commonRepoAlias: self
