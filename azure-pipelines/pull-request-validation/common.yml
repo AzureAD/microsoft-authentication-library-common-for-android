@@ -155,11 +155,9 @@ stages:
     - job: dependency_check
       displayName: OWASP Dependency Check (PR)
       cancelTimeoutInMinutes: 1
-      # AndroidAuthClientAutomationSecrets is linked to the team KeyVault and
-      # exposes NVD-API-Key (owned by the Android Auth team). Required by the
-      # dependencyCheck { nvd.apiKey = ... } block in common/common/build.gradle
-      # — without it the NVD feed throttles anonymous calls (HTTP 429) and the
-      # plugin fails fast via the gradle.taskGraph.whenReady guard.
+      # OWASP scan — non-blocking. Findings surface as warnings + published
+      # HTML/JSON/SARIF artifacts; PR is never gated on CVEs.
+      # KeyVault-backed group exposing NVD-API-Key (required by the NVD scanner).
       variables:
         - group: AndroidAuthClientAutomationSecrets
       steps:
@@ -171,34 +169,21 @@ stages:
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
         displayName: 'Set VSTS Fields in Environment'
-      # Pre-flight sanity check: surfaces a missing / empty NVD_API_KEY in one log line
-      # instead of buried inside an NVD "UpdateException" stack-trace 60 seconds later.
-      # We print ONLY the length, never the value, so the secret is never echoed even
-      # under `set -x` or verbose pipeline diagnostics.
+      # Fail fast (and clearly) if the KeyVault secret didn't reach us. Length-only
+      # log keeps the secret out of pipeline output.
       - pwsh: |
           $key = $env:NVD_API_KEY
           if ([string]::IsNullOrWhiteSpace($key)) {
-            Write-Host "##vso[task.logissue type=error]NVD_API_KEY env var is empty. Check that AndroidAuthClientAutomationSecrets is linked and NVD-API-Key is populated in KeyVault."
+            Write-Host "##vso[task.logissue type=error]NVD_API_KEY is empty. Check AndroidAuthClientAutomationSecrets / NVD-API-Key in KeyVault."
             exit 1
           }
           Write-Host "NVD_API_KEY is set (length=$($key.Length))."
         displayName: 'Validate NVD_API_KEY is populated'
         env:
           NVD_API_KEY: $(NVD-API-Key)
-      # Cache the dependency-check H2 database across pipeline runs.
-      # ---------------------------------------------------------------------------
-      # The plugin stores its NVD feed mirror at ~/.gradle/dependency-check-data/.
-      # Without caching, every PR run pulls the full NVD feed (~25 years of CVEs)
-      # from services.nvd.nist.gov, which is the single biggest cause of the
-      # `UpdateException: Error updating the NVD Data` failures we've seen — NVD
-      # has frequent transient 503s and even with an API key the cold pull can
-      # race the agent's network timeout.
-      #
-      # With this cache:
-      #   - First run on a new key seeds the DB (one-time slow path).
-      #   - Subsequent runs only fetch incremental updates (cheap, ~seconds).
-      #   - The cache key is bumped by changing the version suffix below if we
-      #     ever need to force a rebuild (e.g. plugin major version upgrade).
+      # Cache the NVD H2 DB (~/.gradle/dependency-check-data/) across runs.
+      # Cold pulls are the main cause of "Error updating the NVD Data" failures.
+      # Bump the "v1" suffix to force a rebuild (e.g. plugin major upgrade).
       - task: Cache@2
         displayName: 'Cache OWASP dependency-check NVD DB'
         inputs:
@@ -206,49 +191,14 @@ stages:
           path: $(USERPROFILE)/.gradle/dependency-check-data
       - task: Gradle@3
         displayName: Run OWASP Dependency Check
-        # Scan configuration:
-        #   -PdependencyCheckFormats    Generate HTML (human review), JSON (tooling), and
-        #                               SARIF (security dashboards / GitHub code scanning /
-        #                               Defender for DevOps ingestion).
-        #   -PdependencyCheckFailOnCvss=11   CVSS scores cap at 10.0, so a threshold of 11
-        #                               disables the build-fail behavior. PR validation
-        #                               reports findings as warnings + an artifact instead
-        #                               of blocking the PR; ownership / SLA enforcement
-        #                               happens via the published SARIF in security tooling.
-        #   --stacktrace --info         Surface the `Caused by` clause when the NVD update
-        #                               step throws `UpdateException: Error updating the
-        #                               NVD Data` — without it the root cause (403 invalid
-        #                               key / 429 throttled / 503 outage / proxy block /
-        #                               JSON parse error) is hidden and the failure is
-        #                               undiagnosable from the pipeline log alone.
-        #
-        # NVD API key is passed via the NVD_API_KEY environment variable rather than as a
-        # `-PnvdApiKey="$(NVD-API-Key)"` argument. Reasons:
-        #   1. Windows-agent shell quoting: Gradle@3 spawns gradle through cmd.exe; a
-        #      secret containing &, =, ^ or other shell-special chars can be mangled when
-        #      ADO macro-substitutes it into the `tasks:` string, producing an empty key
-        #      and the "UpdateException: Error updating the NVD Data" failure cascade.
-        #   2. SDL hygiene: secrets on a command line can leak into process listings,
-        #      crash dumps, and verbose Gradle logs. Env vars stay scoped to the process.
-        # `common/common/build.gradle` already reads `System.getenv("NVD_API_KEY")` as
-        # resolution-order #3 in its NVD key block, so no build-script change is needed.
-        #
-        # Resilience knobs:
-        #   continueOnError: true            Vulnerability findings (or scan-engine
-        #                                    errors like a transient NVD 503) never
-        #                                    block the PR — the job is marked
-        #                                    "succeeded with issues" and reviewers
-        #                                    consume findings via the published
-        #                                    SARIF / HTML artifacts.
-        #   retryCountOnTaskFailure: 1       NVD 5xx/429 hiccups are common; one
-        #                                    automatic retry catches the majority
-        #                                    without us having to re-run the PR.
+        # Key is passed via env (not -P) to avoid cmd.exe mangling secrets with
+        # &, =, ^ etc. The build script reads NVD_API_KEY as resolution-order #3.
+        # -PdependencyCheckFailOnCvss=11 disables build-fail on CVE (caps at 10.0);
+        # continueOnError + retryCountOnTaskFailure keep the PR un-blocked even on
+        # transient NVD 5xx/429.
         continueOnError: true
         retryCountOnTaskFailure: 1
         env:
-          # ADO secret variables are NOT auto-mapped into env; explicit mapping is required.
-          # The hyphenated source name (NVD-API-Key) can't be used directly as an env var,
-          # so we re-map it to the underscored name the build script expects.
           NVD_API_KEY: $(NVD-API-Key)
         inputs:
           tasks: >-
@@ -260,16 +210,12 @@ stages:
           publishJUnitResults: false
           javaHomeSelection: JDKVersion
           jdkVersionOption: "1.17"
-      # Publish the full report directory (HTML for humans, JSON for tooling, SARIF for
-      # security dashboards). `always()` so the artifact is available even if the scan
-      # surfaced warnings or the step soft-failed via continueOnError.
+      # Full report bundle (HTML for humans, JSON for tooling, SARIF for dashboards).
       - publish: $(Build.SourcesDirectory)/common/build/reports/dependency-check
         artifact: dependencyCheckReport
         displayName: 'Publish OWASP Dependency Check Report'
         condition: always()
-      # Publish the SARIF separately so downstream stages / pipelines (e.g. GitHub
-      # Advanced Security upload, Defender for DevOps, custom triage automation) can
-      # consume it without pulling the entire report bundle.
+      # SARIF standalone — for GitHub Advanced Security / Defender for DevOps ingestion.
       - publish: $(Build.SourcesDirectory)/common/build/reports/dependency-check/dependency-check-report.sarif
         artifact: dependencyCheckSarif
         displayName: 'Publish OWASP Dependency Check SARIF'

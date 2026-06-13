@@ -470,180 +470,72 @@ tasks.withType(GenerateMavenPom).all {
 }
 
 // ---------------------------------------------------------------------------
-// OWASP Dependency-Check
+// OWASP Dependency-Check (plugin applied in `plugins { }` at top of file)
 // ---------------------------------------------------------------------------
-// The `org.owasp.dependencycheck` plugin is applied at the top of this file via
-// the `plugins { }` DSL (version 12.2.2). It is applied here — rather than only
-// in the standalone `common/build.gradle` root — so the `dependencyCheck { }`
-// extension is also registered when this module is evaluated from the
-// android-complete multi-repo build (whose root build.gradle does not apply
-// the plugin via `allprojects { }`).
-//
-// This block tunes the plugin with Android variant-aware settings for this
-// module and wires `dependencyCheckAnalyze` into the standard `check` lifecycle
-// so vulnerability scanning runs as part of `./gradlew :common:check` (in the
-// android-complete build) or `./gradlew :common:common:check` (standalone).
-//
-// Override threshold / formats locally via project properties:
-//   -PdependencyCheckFailOnCvss=7.0
+// Wires `dependencyCheckAnalyze` into `check` and configures the NVD scanner
+// for an Android library. Tunables (override on CLI):
+//   -PdependencyCheckFailOnCvss=11      (default 7.0; use 11 to never fail the build)
 //   -PdependencyCheckFormats=HTML,JSON,SARIF
-def dependencyCheckFailOnCvss = (project.hasProperty("dependencyCheckFailOnCvss")
-        ? project.dependencyCheckFailOnCvss
-        : "7.0").toFloat()
-def dependencyCheckFormats = (project.hasProperty("dependencyCheckFormats")
-        ? project.dependencyCheckFormats.toString().split(",").collect { it.trim() }
-        : ["HTML", "JSON"])
+//
+// NVD API key — required, no hardcoded fallback (this file ships in a public repo).
+// Resolution order (first wins): -PnvdApiKey  →  gradle.properties: nvdApiKey  →  env NVD_API_KEY
+// Missing key triggers fail-fast in the taskGraph hook below (avoids confusing
+// 429 / NoDataException cascade from inside the plugin).
+def dependencyCheckFailOnCvss = (project.findProperty("dependencyCheckFailOnCvss") ?: "7.0").toFloat()
+def dependencyCheckFormats = (project.findProperty("dependencyCheckFormats")?.toString()?.split(",")*.trim()
+        ?: ["HTML", "JSON"])
 def dependencyCheckSuppressionFile = file("${projectDir}/../config/owasp/dependency-check-suppressions.xml")
-
-// ---------------------------------------------------------------------------
-// NVD API key resolution.
-// ---------------------------------------------------------------------------
-// Without a key, NVD throttles anonymous calls aggressively and returns HTTP 429
-// ("UpdateException: Error updating the NVD Data ... NVD Returned Status Code: 429"),
-// which then surfaces as "NoDataException: No documents exist" on the first scan.
-//
-// The key is owned by the Android Auth team and stored in our team KeyVault.
-// It is injected at build time from one of the sources below. There is NO
-// hardcoded fallback in this file by design: `common/common/build.gradle` lives
-// in the PUBLIC `AzureAD/microsoft-authentication-library-common-for-android`
-// repository, and NVD will rotate any key that appears in a public commit.
-//
-// Resolution order (first non-empty match wins):
-//   1. CLI:    ./gradlew ... -PnvdApiKey=<key>
-//              CI pipelines pull the key from KeyVault and inject it this way.
-//   2. Project / user gradle.properties:  nvdApiKey=<key>
-//              (Same lookup as #1 — both resolve via project.findProperty.)
-//   3. Env:    NVD_API_KEY=<key>
-//
-// If the key is missing when `dependencyCheckAnalyze` is in the task graph, the
-// build fails fast with an actionable error (see the gradle.taskGraph.whenReady
-// block below `tasks.named('check')`) rather than producing a confusing
-// 429 / NoDataException stack-trace cascade from inside the plugin.
-def __nvdApiKey = (project.findProperty("nvdApiKey")
-        ?: System.getenv("NVD_API_KEY"))?.toString()?.trim()
+def __nvdApiKey = (project.findProperty("nvdApiKey") ?: System.getenv("NVD_API_KEY"))?.toString()?.trim()
 
 dependencyCheck {
-    // Fail the build on HIGH severity (>=7.0) findings by default. CI can relax via -PdependencyCheckFailOnCvss=11.
     failBuildOnCVSS = dependencyCheckFailOnCvss
     formats = dependencyCheckFormats
     outputDirectory = layout.buildDirectory.dir("reports/dependency-check").get().asFile.absolutePath
 
-    // -----------------------------------------------------------------------
-    // NVD feed configuration — addresses HTTP 429 / "No documents exist" failures.
-    // -----------------------------------------------------------------------
-    // Uses flat property assignment (`nvd.apiKey = ...`) rather than the closure form
-    // (`nvd { apiKey = ... }`). In dependency-check-gradle 12.x the `nvd(Closure)`
-    // configure-method on `DependencyCheckExtension` is @Deprecated; the underlying
-    // `NvdExtension` property accessor (`nvd.<prop>`) is still the supported API.
-    //
-    // The key is only assigned when one was actually supplied (see resolution
-    // above). Assigning null / empty would silently regress the scan to anonymous
-    // mode and trigger NVD's anonymous throttle (~5 req/30s) on the next run, which
-    // surfaces as the 429 / NoDataException cascade we explicitly want to avoid.
-    // The fail-fast guard below `tasks.named('check')` ensures the user is told
-    // about the missing key before the scan starts.
+    // NOTE on API shape: dependency-check-gradle 12.x @Deprecated the closure forms
+    // `nvd { ... }` and `analyzers { ... }`. Use flat `nvd.<prop>` / `analyzers.<prop>`.
+    // `cve.validForHours` / `cveValidForHours` are NOT exposed in 12.x — caching is
+    // handled internally by the plugin's H2 DB at ~/.gradle/dependency-check-data/.
     if (__nvdApiKey) {
         nvd.apiKey = __nvdApiKey
     }
-    // Minimum ms between NVD calls. NVD allows higher throughput with a key
-    // (~50 req / 30s) than anonymous (~5 req / 30s), so 2000ms is a safe ceiling
-    // that still completes the initial feed pull in a reasonable time.
-    nvd.delay = 2000
-    // Bound the number of retry attempts so transient NVD outages don't hang CI.
+    nvd.delay = 2000          // ms between calls; keyed throughput is ~50 req/30s
     nvd.maxRetryCount = 10
 
-    // NOTE on NVD feed caching:
-    // dependency-check-gradle 12.x does NOT expose a `cveValidForHours` /
-    // `cve { validForHours = N }` / equivalent flat property on
-    // `DependencyCheckExtension`. Setting either form throws at evaluation:
-    //   - "Could not find method cve() for arguments [...]"
-    //   - "Could not set unknown property 'cveValidForHours' for extension 'dependencyCheck'"
-    // The plugin handles NVD feed caching internally via its embedded H2 database
-    // (default location: ~/.gradle/dependency-check-data/). With `nvd.apiKey` set
-    // and `nvd.delay = 2000`, the keyed throughput limit (~50 req/30s) is enough
-    // to complete the initial feed pull without 429s, and incremental updates on
-    // subsequent runs are cheap. No additional caching config is required here.
-
-    // Only scan runtime classpaths actually shipped by this Android library; skip
-    // test/androidTest configurations to keep scans fast and signal-to-noise high.
+    // Only scan shipped runtime classpaths (skip test/androidTest for speed + signal).
     scanConfigurations = [
-            "distReleaseRuntimeClasspath",
-            "distDebugRuntimeClasspath",
-            "localReleaseRuntimeClasspath",
-            "localDebugRuntimeClasspath"
+            "distReleaseRuntimeClasspath", "distDebugRuntimeClasspath",
+            "localReleaseRuntimeClasspath", "localDebugRuntimeClasspath"
     ]
 
-    // Apply suppression file only if it has been authored; avoids breaking builds on fresh clones.
     if (dependencyCheckSuppressionFile.exists()) {
         suppressionFile = dependencyCheckSuppressionFile.absolutePath
     }
 
-    // -----------------------------------------------------------------------
-    // Analyzer toggles — disable analyzers not relevant for an Android/Java library.
-    // -----------------------------------------------------------------------
-    // Flat property assignment for the same reason as `nvd.*` above: the closure
-    // form `analyzers { ... }` is @Deprecated in 12.x. Additionally:
-    //   - `nodeEnabled`      -> `nodePackage.enabled`  (replaced by NodePackageExtension)
-    //   - `nodeAuditEnabled` -> `nodeAudit.enabled`    (replaced by NodeAuditExtension)
-    //   - `nexusEnabled`     -> REMOVED upstream; the Nexus analyzer was deleted from
-    //     dependency-check after the legacy Nexus IQ Server API was retired, so the
-    //     flag is a no-op and emitting it produces a deprecation warning.
-    analyzers.assemblyEnabled = false
-    analyzers.nuspecEnabled = false
-    analyzers.nodePackage.enabled = false
-    analyzers.nodeAudit.enabled = false
+    // Disabled analyzers — not relevant for an Android/Java library:
+    analyzers.assemblyEnabled = false        // .NET assemblies
+    analyzers.nuspecEnabled = false          // NuGet
+    analyzers.nodePackage.enabled = false    // npm
+    analyzers.nodeAudit.enabled = false      // npm audit
+    analyzers.ossIndex.enabled = false       // requires Sonatype Guide token
 
-    // ArchiveAnalyzer (scans .aar / .zip / .tar.gz for "disguised JARs") is
-    // disabled because it crashes with `NoSuchMethodError: ZipFile.builder()` on
-    // this build's classpath:
-    //   dependency-check 12.x requires commons-compress >= 1.26 (the version that
-    //   introduced ZipFile.builder()), but the AGP-heavy buildscript classpath of
-    //   `android-complete/build.gradle` pulls in an older commons-compress that
-    //   shadows it in the plugin classloader. Forcing commons-compress upstream
-    //   risks breaking AGP / other buildscript plugins, so we disable the analyzer
-    //   instead. We lose nothing of substance: every dependency is already
-    //   identified by its Maven GAV coordinates (handled by JarAnalyzer + the
-    //   plugin's dependency-graph analyzer), which is what NVD lookups key off.
-    //   "Disguised JAR" detection is only useful for opaque archives, not for
-    //   AARs pulled from a Maven repository.
+    // ArchiveAnalyzer disabled: crashes with NoSuchMethodError on ZipFile.builder()
+    // because AGP's buildscript classpath shadows commons-compress < 1.26 into the
+    // plugin classloader. Maven GAV-based detection (JarAnalyzer) still covers all
+    // our AARs, so we lose no CVE coverage.
     analyzers.archiveEnabled = false
-
-    // Sonatype OSS Index analyzer requires a token now (Sonatype migrated to the
-    // "Sonatype Guide" auth model). We don't have one provisioned and CVE coverage
-    // from NVD alone is sufficient for this module's needs. Explicitly disabling
-    // suppresses the noisy "OSS Index Analyzer disabled due to missing credentials"
-    // log line on every run. See:
-    //   https://dependency-check.github.io/DependencyCheck/analyzers/oss-index-analyzer.html
-    analyzers.ossIndex.enabled = false
 }
 
-// Make `check` (and therefore CI's standard verification step) run the OWASP scan.
-tasks.named('check').configure {
-    dependsOn 'dependencyCheckAnalyze'
-}
+tasks.named('check').configure { dependsOn 'dependencyCheckAnalyze' }
 
-// ---------------------------------------------------------------------------
-// Fail fast when the NVD API key is missing.
-// ---------------------------------------------------------------------------
-// Without this guard, a missing key produces the following confusing cascade
-// deep inside the plugin:
-//   UpdateException: Error updating the NVD Data
-//     caused by NvdApiException: NVD Returned Status Code: 429
-//   NoDataException: No documents exist
-// We check at task-graph-ready time (after configuration but before execution)
-// so the error fires only when the user actually intends to run the scan, not
-// on every Gradle invocation (e.g. `./gradlew tasks`, IDE sync, etc.).
+// Fail fast on missing NVD key only when the scan is actually in the task graph,
+// so IDE sync / `./gradlew tasks` aren't broken.
 gradle.taskGraph.whenReady { graph ->
     if (!__nvdApiKey && graph.hasTask(project.tasks.named('dependencyCheckAnalyze').get())) {
         throw new GradleException(
-                "OWASP dependency-check requires an NVD API key, but none was provided.\n" +
-                "\n" +
-                "The key is stored in the Android Auth team KeyVault. Provide it via ONE of:\n" +
-                "  1. CLI:                     ./gradlew :common:dependencyCheckAnalyze -PnvdApiKey=<key>\n" +
-                "  2. ~/.gradle/gradle.properties:    nvdApiKey=<key>\n" +
-                "  3. Environment variable:    NVD_API_KEY=<key>\n" +
-                "\n" +
-                "CI pipelines should retrieve the key from KeyVault and inject it via -PnvdApiKey.")
+                "OWASP dependency-check requires an NVD API key.\n" +
+                "Provide via: -PnvdApiKey=<key>  |  gradle.properties: nvdApiKey=<key>  |  env NVD_API_KEY=<key>\n" +
+                "Key lives in the Android Auth team KeyVault; CI injects it from there.")
     }
 }
 
