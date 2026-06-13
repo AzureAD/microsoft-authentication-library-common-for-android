@@ -220,6 +220,15 @@ stages:
         artifact: dependencyCheckSarif
         displayName: 'Publish OWASP Dependency Check SARIF'
         condition: always()
+      # Surface findings in the ADO repo's Advanced Security → Code Scanning tab.
+      # Requires GitHub Advanced Security for Azure DevOps to be enabled on the repo.
+      # Docs: https://learn.microsoft.com/azure/devops/repos/security/github-advanced-security-code-scanning-third-party
+      - task: AdvancedSecurity-Publish@1
+        displayName: 'Publish SARIF to Advanced Security'
+        condition: always()
+        inputs:
+          SarifsInputDirectory: '$(Build.SourcesDirectory)/common/build/reports/dependency-check'
+          Category: 'owasp-dependency-check'
 
   - template: ../code-coverage/compare-code-coverage.yml
     parameters:
