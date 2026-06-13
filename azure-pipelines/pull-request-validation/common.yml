@@ -215,20 +215,40 @@ stages:
         artifact: dependencyCheckReport
         displayName: 'Publish OWASP Dependency Check Report'
         condition: always()
-      # SARIF standalone — for GitHub Advanced Security / Defender for DevOps ingestion.
-      - publish: $(Build.SourcesDirectory)/common/build/reports/dependency-check/dependency-check-report.sarif
-        artifact: dependencyCheckSarif
-        displayName: 'Publish OWASP Dependency Check SARIF'
+      # Stage the SARIF into a dedicated folder so we can publish exactly the SARIF
+      # (and nothing else) under the "CodeAnalysisLogs" build artifact that
+      # AdvancedSecurity-Publish@1 looks for. If the scan soft-failed and didn't
+      # produce SARIF, surface a clear warning instead of uploading an empty artifact
+      # (which produces the confusing "No SARIF logs found" downstream error).
+      - pwsh: |
+          $src = "$(Build.SourcesDirectory)/common/build/reports/dependency-check/dependency-check-report.sarif"
+          $dst = "$(Build.ArtifactStagingDirectory)/CodeAnalysisLogs"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          if (Test-Path $src) {
+            Copy-Item $src -Destination $dst -Force
+            Write-Host "Staged SARIF for Advanced Security: $dst"
+          } else {
+            Write-Host "##vso[task.logissue type=warning]SARIF not found at $src — scan likely soft-failed; nothing to publish to Advanced Security."
+          }
+        displayName: 'Stage SARIF for Advanced Security'
         condition: always()
+      # AdvancedSecurity-Publish@1 requires SARIF under a Build Artifact (not a
+      # Pipeline Artifact) literally named "CodeAnalysisLogs" — same well-known
+      # name used by other SDL / Code Analysis publishers.
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish CodeAnalysisLogs (SARIF)'
+        condition: always()
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/CodeAnalysisLogs'
+          ArtifactName: 'CodeAnalysisLogs'
+          publishLocation: 'Container'
       # Surface findings in the ADO repo's Advanced Security → Code Scanning tab.
       # Requires GitHub Advanced Security for Azure DevOps to be enabled on the repo.
+      # Reads SARIF from the CodeAnalysisLogs build artifact published above.
       # Docs: https://learn.microsoft.com/azure/devops/repos/security/github-advanced-security-code-scanning-third-party
       - task: AdvancedSecurity-Publish@1
         displayName: 'Publish SARIF to Advanced Security'
         condition: always()
-        inputs:
-          SarifsInputDirectory: '$(Build.SourcesDirectory)/common/build/reports/dependency-check'
-          Category: 'owasp-dependency-check'
 
   - template: ../code-coverage/compare-code-coverage.yml
     parameters:
