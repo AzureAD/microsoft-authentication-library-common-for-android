@@ -550,7 +550,6 @@ public class UiAutomatorUtils {
         }
     }
 
-
     /**
      * Clicks the button element that contains the supplied text.
      * Do not throw an exception if the button is not found. Waits

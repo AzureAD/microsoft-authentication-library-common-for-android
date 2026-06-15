@@ -129,6 +129,13 @@ public class PromptHandlerParameters {
     private final boolean enrollPageExpected;
 
     /**
+     * Denotes whether or not the Android system "Allow [app] to ignore battery optimizations?"
+     * dialog (raised via {@code Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS}) is expected
+     * to appear during an interactive token request.
+     */
+    private final boolean batteryOptimizationIgnoreSystemPromptExpected;
+
+    /**
      * Denotes whether or not the Stay signed in page is expected to appear during an interactive
      * token request.
      */

@@ -101,9 +101,9 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
     /**
-     * Flight to make the state parameter required for the switch browser protocol.
+     * Flight to make the state parameter required for the switch browser protocol. Overridden in Broker (default: false).
      */
-    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", true),
 
     /**
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
@@ -134,11 +134,6 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to control the WrappedSecretKey serializer version
      */
     WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
-
-    /**
-     * Flight to enable handling the UI in edge to edge mode
-     */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
 
     /**
      * Flight to enable the Web CP in WebView.

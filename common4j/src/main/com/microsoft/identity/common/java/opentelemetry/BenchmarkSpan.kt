@@ -127,7 +127,7 @@ class BenchmarkSpan(
 
     override fun <T : Any?> setAttribute(
         key: AttributeKey<T>,
-        value: T
+        value: T?
     ): Span? {
         statuses.add(Pair(key.toString(), System.nanoTime()))
         return originalSpan.setAttribute(key, value)
