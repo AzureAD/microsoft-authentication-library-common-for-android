@@ -108,19 +108,27 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_SSL_PROTECTION_HTTP_URL = "http://foo";
     private static final String TEST_SSL_PROTECTION_FTP_URL = "ftp://foo";
     private static final String TEST_REDIRECT_URL = "msauth://com.example.app/somehash=?code=AUTH_CODE&state=xyz";
-
-    // --- isRedirectUrl spoofing-attack test vectors (see FireWatch finding c1bf88bd) ---
-    // Attacker prepends additional path/host that *would* pass a startsWith() check.
-    private static final String TEST_REDIRECT_URL_SPOOFED_SUFFIX_HOST =
-            "msauth://com.example.app/somehash=.attacker.com/x?code=STOLEN";
-    private static final String TEST_REDIRECT_URL_SPOOFED_PATH_SUFFIX =
-            "msauth://com.example.app/somehash=stolen?code=STOLEN";
-    private static final String TEST_REDIRECT_URL_DIFFERENT_HOST =
-            "msauth://attacker.com/somehash=?code=STOLEN";
-    private static final String TEST_REDIRECT_URL_DIFFERENT_SCHEME =
-            "https://com.example.app/somehash=?code=STOLEN";
     private static final String TEST_REDIRECT_URL_WITH_FRAGMENT =
             "msauth://com.example.app/somehash=?code=AUTH_CODE#fragment";
+
+    // --- isRedirectUrl spoofing-attack test vectors (see FireWatch finding c1bf88bd) ---
+    //
+    // NOTE on scheme: these vectors use an https:// registered redirect URI on purpose.
+    // The broker registers an msauth:// redirect URI, but ANY msauth:// URL is also caught
+    // downstream of isRedirectUrl by isInstallRequestUrl (BROWSER_EXT_INSTALL_PREFIX =
+    // "msauth://"), whose processInstallRequest also extracts the code via
+    // RawAuthorizationResult.fromRedirectUri. So for msauth:// the isRedirectUrl fix alone
+    // is not observable at the completion callback. An https:// redirect URI isolates the
+    // isRedirectUrl behavior so these tests actually prove the prefix-confusion fix. The
+    // msauth:// install-path gap is tracked separately (see PR description / changelog).
+    private static final String HTTPS_REDIRECT_URI = "https://login.contoso.com/auth";
+    private static final String HTTPS_REDIRECT_LEGIT =
+            "https://login.contoso.com/auth?code=AUTH_CODE&state=xyz";
+    // Attacker appends extra path/host that *would* pass a startsWith() check.
+    private static final String HTTPS_REDIRECT_SPOOFED_SUFFIX_HOST =
+            "https://login.contoso.com/auth.attacker.com/x?code=STOLEN&state=xyz";
+    private static final String HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX =
+            "https://login.contoso.com/authstolen?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -373,40 +381,101 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * Regression test for the FireWatch finding c1bf88bd-5fce-454c-a028-cbfe176639e0.
-     * <p>
-     * Historically {@code isRedirectUrl} used {@code String#startsWith}, so a
-     * URL that contained the registered redirect URI as a prefix but had an
-     * attacker-controlled suffix (e.g. an extra host or path segment) would be
-     * accepted as a redirect and the auth code would be exfiltrated by
-     * {@code processRedirectUrl}. The strict scheme + authority + path
-     * comparison must now reject these.
+     * Positive control for the strict-matching change: a legitimate redirect to
+     * the configured https redirect URI (auth code in the query string) is still
+     * recognized and delivered to the completion callback.
      */
     @Test
-    public void testUrlOverrideRejectsSpoofedRedirectWithSuffixHost() {
-        // shouldOverrideUrlLoading returns false when no handler matches.
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
-                mMockWebView, TEST_REDIRECT_URL_SPOOFED_SUFFIX_HOST));
+    public void testStrictMatching_acceptsLegitimateHttpsRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_LEGIT);
+
+        assertTrue("Legitimate redirect must be handled", handled);
+        // The auth code is delivered exactly once via the redirect path.
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * Regression test for the FireWatch finding c1bf88bd-5fce-454c-a028-cbfe176639e0.
+     * <p>
+     * Historically {@code isRedirectUrl} used {@code String#startsWith}, so a URL
+     * that contained the registered redirect URI as a prefix but had an
+     * attacker-controlled suffix would be accepted as a redirect and the auth code
+     * delivered to the completion callback. The strict scheme + authority + path
+     * comparison must reject these, so the completion callback is never invoked
+     * with the spoofed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsSpoofedRedirectWithSuffixHost() throws ClientException {
+        assertSpoofedRedirectNotDelivered(HTTPS_REDIRECT_SPOOFED_SUFFIX_HOST);
     }
 
     @Test
-    public void testUrlOverrideRejectsSpoofedRedirectWithPathSuffix() {
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
-                mMockWebView, TEST_REDIRECT_URL_SPOOFED_PATH_SUFFIX));
+    public void testStrictMatching_rejectsSpoofedRedirectWithPathSuffix() throws ClientException {
+        assertSpoofedRedirectNotDelivered(HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX);
     }
 
-    @Test
-    public void testUrlOverrideRejectsRedirectWithDifferentHost() {
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
-                mMockWebView, TEST_REDIRECT_URL_DIFFERENT_HOST));
+    private void assertSpoofedRedirectNotDelivered(@NonNull final String spoofedUrl)
+            throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, spoofedUrl);
+
+        // The spoofed URL must NOT be treated as a redirect that delivers an auth code.
+        Mockito.verify(mockCallback, Mockito.never())
+                .onChallengeResponseReceived(Mockito.any());
     }
 
+    /**
+     * Kill-switch test: with ENABLE_STRICT_REDIRECT_URI_MATCHING disabled via ECS,
+     * isRedirectUrl falls back to the historical prefix match, so the spoofed
+     * suffix URL is (incorrectly) accepted again and its code delivered. This
+     * proves the flag fully disables the new behavior, allowing a config-only
+     * rollback.
+     */
     @Test
-    public void testUrlOverrideRejectsRedirectWithDifferentScheme() {
-        // Different scheme also doesn't match other handlers (TEST_INVALID_URL is also
-        // an https:// URL that is rejected by isWebsiteRequestUrl etc.).
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
-                mMockWebView, TEST_REDIRECT_URL_DIFFERENT_SCHEME));
+    public void testKillSwitch_disablesStrictMatching_revertsToPrefixMatch() throws ClientException {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING))
+                .thenReturn(false);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX);
+
+        // Prefix match is back: spoofed URL is treated as a redirect and delivered.
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    private AzureActiveDirectoryWebViewClient buildClientWithRedirectUri(
+            @NonNull final IAuthorizationCompletionCallback completionCallback,
+            @NonNull final String redirectUri) throws ClientException {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                completionCallback,
+                url -> { },
+                redirectUri,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false);
     }
 
     @Test

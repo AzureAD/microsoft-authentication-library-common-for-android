@@ -523,6 +523,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mRedirectUrl == null || mRedirectUrl.isEmpty()) {
             return false;
         }
+
+        // ECS kill switch: when disabled, fall back to the historical prefix
+        // match so the strict-comparison change can be turned off via flighting
+        // without a code rollback if a legitimate redirect regression surfaces.
+        final boolean strictMatchingEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING);
+        if (!strictMatchingEnabled) {
+            return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        }
+
         try {
             final Uri actual = Uri.parse(url);
             final Uri expected = Uri.parse(mRedirectUrl);
@@ -548,7 +559,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             // Path: compare case-insensitively because the URL we receive has
             // already been lowercased by handleUrl, while mRedirectUrl is in
-            // its registered case.
+            // its registered case. Trailing slashes are intentionally treated
+            // as distinct (fail-closed); loosen only with a concrete repro.
             return nullToEmpty(actual.getPath())
                     .equalsIgnoreCase(nullToEmpty(expected.getPath()));
         } catch (final Throwable t) {
