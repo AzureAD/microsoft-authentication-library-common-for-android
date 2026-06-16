@@ -65,7 +65,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
     public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
-    private final static int PASSWORD_UI_ATTEMPT_COUNT = 3;
+    private final static String PIN_ENTRY_RESOURCE_ID = "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView";
 
     // Timeout to wait for complete enrollment page to appear
     final static long COMPLETE_ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
@@ -397,10 +397,32 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // get access screen - continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
-        // handle PIN
+        // handle PIN entry and confirmation
+        enterAndConfirmPin(device);
+
+        // Due to a known issue, the PIN entry and confirmation screens can appear twice in
+        // succession. If it happens, handle the second occurrence; if not, continue normally.
+        final UiObject secondPinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                PIN_ENTRY_RESOURCE_ID
+        );
+
+        if (secondPinField.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+            Logger.i(TAG, "PIN screen appeared a second time, handling again..");
+            enterAndConfirmPin(device);
+        } else {
+            Logger.i(TAG, "PIN screen did not reappear again - fine, continuing..");
+        }
+    }
+
+    /**
+     * Enters the PIN and confirms it on the App Protection Policy PIN screens.
+     *
+     * @param device the UiDevice instance used to interact with the device
+     */
+    private void enterAndConfirmPin(@NonNull final UiDevice device) {
         Logger.i(TAG, "Handle PIN to enable App Protection Policy..");
         final UiObject pinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+                PIN_ENTRY_RESOURCE_ID
         );
 
         try {
@@ -413,7 +435,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // confirm PIN
         final UiObject pinConfirmField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+                PIN_ENTRY_RESOURCE_ID
         );
 
         try {
