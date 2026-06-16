@@ -40,7 +40,7 @@
        file when the dependency-check plugin is upgraded.
 
     4. REGENERATE FROM THE HTML REPORT WHEN POSSIBLE. Open the generated report
-       at common/common/build/reports/dependency-check/dependency-check-report.html,
+       at common/build/reports/dependency-check/dependency-check-report.html,
        click "suppress" on a finding, and paste the generated snippet here —
        that guarantees the SHA1/packageUrl values exactly match what the scan
        sees.
