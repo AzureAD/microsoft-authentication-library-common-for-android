@@ -17,9 +17,7 @@
                 "${projectDir}/../config/owasp/dependency-check-suppressions.xml")
         if (dependencyCheckSuppressionFile.exists()) {
             suppressionFile = dependencyCheckSuppressionFile.absolutePath
-        }
-    The path is resolved relative to the module's own `projectDir` (not
-    `project.rootDir`) so it works identically in both build contexts.
+                }
 
     GUIDELINES
     ==========
@@ -155,8 +153,8 @@
         the path described in the CVE advisory.
 
         Note: CVE-2022-3171 and CVE-2024-7254 DO explicitly list
-        protobuf-javalite and are genuinely applicable to version 3.10.0.
-        Those are suppressed below on different grounds (unexploitable context).
+        protobuf-javalite, are genuinely applicable, and are tracked in PBI #3667951
+        for remediation via androidx.datastore upgrade.
 
         Added: 2026-06-16 by build-system maintainers.
     -->
@@ -214,33 +212,7 @@
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-javalite@.*$</packageUrl>
         <cve>CVE-2024-7254</cve>
+
     </suppress>
 
-    <!--
-        CVE-2024-35255 — com.microsoft.identity:common4j
-
-        FALSE POSITIVE. NVD matches `cpe:2.3:a:microsoft:authentication_library:*`
-        against any Microsoft-published artifact whose name contains
-        "authentication" / "auth" / "library", but the CVE is filed against the
-        Azure Identity SDK for .NET (Microsoft.Identity.Web / Azure.Identity).
-        common4j is a Kotlin/Java library for the Android Auth client SDKs and
-        shares no code with the .NET SDK described by the CVE.
-
-        Scoped to the common4j artifact only — other com.microsoft.identity:*
-        artifacts (msal, common, broker4j, ...) still get scanned against this
-        CPE in case a real overlap ever shows up.
-
-        Added: 2026-06-11 by build-system maintainers.
-    -->
-    <suppress>
-        <notes><![CDATA[
-            False positive: cpe:microsoft:authentication_library refers to the
-            Azure Identity SDK for .NET, not the Android Java/Kotlin common4j
-            library.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.microsoft\.identity/common4j@.*$</packageUrl>
-        <cpe>cpe:/a:microsoft:authentication_library</cpe>
-    </suppress>
-
-</suppressions>
 
