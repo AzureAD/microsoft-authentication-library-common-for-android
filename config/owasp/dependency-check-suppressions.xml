@@ -12,7 +12,7 @@
 
     WIRING
     ======
-    Picked up automatically by `common/common/build.gradle`:
+    Picked up automatically by `common/build.gradle`:
         def dependencyCheckSuppressionFile = file(
                 "${projectDir}/../config/owasp/dependency-check-suppressions.xml")
         if (dependencyCheckSuppressionFile.exists()) {
