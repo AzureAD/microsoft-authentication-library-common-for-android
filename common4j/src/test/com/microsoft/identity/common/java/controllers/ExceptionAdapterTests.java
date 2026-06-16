@@ -41,9 +41,19 @@ import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyReq
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,12 +62,28 @@ import org.junit.runners.JUnit4;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import lombok.SneakyThrows;
 
 @RunWith(JUnit4.class)
 public class ExceptionAdapterTests {
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    private static void setServerClientDataTelemetryFlight(final boolean enabled) {
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY.getKey(), String.valueOf(enabled));
+
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
 
     @Test
     public void testBaseExceptionFromException_TerminalException() throws Exception{
@@ -211,5 +237,124 @@ public class ExceptionAdapterTests {
         assertTrue(exception instanceof UiRequiredException);
         assertEquals(OAuth2ErrorCode.INVALID_GRANT, exception.getErrorCode());
         assertEquals("UI required.", exception.getMessage());
+    }
+
+    // -----------------------------------------------------------------------
+    // ClientDataInfo wiring tests (PR #3109)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testExceptionFromTokenResult_attachesClientDataInfo() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setErrorDescription("token failure");
+
+        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public");
+        Assert.assertNotNull(clientDataInfo);
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        tokenResult.setClientDataInfo(clientDataInfo);
+
+        final ServiceException exception = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+
+        Assert.assertNotNull("ClientDataInfo should be attached to the exception", exception.getClientDataInfo());
+        assertEquals("AADSTS50058", exception.getClientDataInfo().getError());
+        assertEquals("login_required", exception.getClientDataInfo().getSubError());
+        assertEquals("m|AADSTS50058|login_required|us|public", exception.getClientDataInfo().getRaw());
+    }
+
+    @Test
+    public void testExceptionFromTokenResult_nullClientDataInfo_doesNotThrow() {
+        final TokenErrorResponse errorResponse = new TokenErrorResponse();
+        errorResponse.setError(OAuth2ErrorCode.INVALID_GRANT);
+        errorResponse.setErrorDescription("token failure");
+
+        final TokenResult tokenResult = new TokenResult(null, errorResponse);
+        // No ClientDataInfo set
+
+        final ServiceException exception = ExceptionAdapter.exceptionFromTokenResult(tokenResult, null);
+        Assert.assertNull(exception.getClientDataInfo());
+    }
+
+    @Test
+    public void testExceptionFromAuthorizationResult_attachesClientDataInfo_whenFlightEnabled() {
+        setServerClientDataTelemetryFlight(true);
+
+        final MicrosoftStsAuthorizationErrorResponse errorResponse =
+                new MicrosoftStsAuthorizationErrorResponse("invalid_grant", "authorize failure");
+        final MicrosoftStsAuthorizationResult authorizationResult =
+                new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, errorResponse);
+        final ClientDataInfo clientDataInfo = ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public");
+        authorizationResult.setClientDataInfo(clientDataInfo);
+
+        final BaseException exception = ExceptionAdapter.exceptionFromAuthorizationResult(authorizationResult, null);
+
+        Assert.assertNotNull(exception.getClientDataInfo());
+        assertEquals("AADSTS50058", exception.getClientDataInfo().getError());
+    }
+
+    @Test
+    public void testExceptionFromAuthorizationResult_doesNotAttachClientDataInfo_whenFlightDisabled() {
+        setServerClientDataTelemetryFlight(false);
+
+        final MicrosoftStsAuthorizationErrorResponse errorResponse =
+                new MicrosoftStsAuthorizationErrorResponse("invalid_grant", "authorize failure");
+        final MicrosoftStsAuthorizationResult authorizationResult =
+                new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, errorResponse);
+        authorizationResult.setClientDataInfo(ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public"));
+
+        final BaseException exception = ExceptionAdapter.exceptionFromAuthorizationResult(authorizationResult, null);
+
+        Assert.assertNull(exception.getClientDataInfo());
+    }
+
+    @Test
+    public void testConvertToNativeAuthException_attachesClientDataInfo_whenFlightEnabled() {
+        setServerClientDataTelemetryFlight(true);
+
+        final ServiceException inputException = new ServiceException("errorCode", "description", null);
+        inputException.setClientDataInfo(ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public"));
+
+        final ServiceException nativeAuthException = ExceptionAdapter.convertToNativeAuthException(inputException);
+
+        Assert.assertNotNull(nativeAuthException.getClientDataInfo());
+        assertEquals("AADSTS50058", nativeAuthException.getClientDataInfo().getError());
+    }
+
+    @Test
+    public void testConvertToNativeAuthException_doesNotAttachClientDataInfo_whenFlightDisabled() {
+        setServerClientDataTelemetryFlight(false);
+
+        final ServiceException inputException = new ServiceException("errorCode", "description", null);
+        inputException.setClientDataInfo(ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public"));
+
+        final ServiceException nativeAuthException = ExceptionAdapter.convertToNativeAuthException(inputException);
+
+        Assert.assertNull(nativeAuthException.getClientDataInfo());
+    }
+
+    @Test
+    public void testClientExceptionFromException_attachesClientDataInfoFromExecutionExceptionCause_whenFlightEnabled() {
+        setServerClientDataTelemetryFlight(true);
+
+        final ServiceException serviceException = new ServiceException("errorCode", "description", null);
+        serviceException.setClientDataInfo(ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public"));
+
+        final ClientException clientException = ExceptionAdapter.clientExceptionFromException(new ExecutionException(serviceException));
+
+        Assert.assertNotNull(clientException.getClientDataInfo());
+        assertEquals("AADSTS50058", clientException.getClientDataInfo().getError());
+    }
+
+    @Test
+    public void testClientExceptionFromException_doesNotAttachClientDataInfo_whenFlightDisabled() {
+        setServerClientDataTelemetryFlight(false);
+
+        final ServiceException serviceException = new ServiceException("errorCode", "description", null);
+        serviceException.setClientDataInfo(ClientDataInfo.fromPipeDelimited("m|AADSTS50058|login_required|us|public"));
+
+        final ClientException clientException = ExceptionAdapter.clientExceptionFromException(serviceException);
+
+        Assert.assertNull(clientException.getClientDataInfo());
     }
 }

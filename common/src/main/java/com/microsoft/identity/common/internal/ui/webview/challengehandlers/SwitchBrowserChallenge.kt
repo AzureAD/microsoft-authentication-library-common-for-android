@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.net.Uri
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserChallenge is a challenge to switch from WebView to browser.
@@ -31,7 +32,8 @@ import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBro
  */
 data class SwitchBrowserChallenge(
     val processUri: Uri,
-    val authorizationUrl: String
+    val authorizationUrl: String,
+    val redirectUri: String
 ) {
 
     companion object {
@@ -40,6 +42,7 @@ data class SwitchBrowserChallenge(
          *
          * @param redirectUrl The redirect URL containing the switch browser code and action URI.
          * e.g. {redirectUrl}/switch_browser?code=code&action_uri=action-uri
+         * @param authorizationUrl The original authorization URL used to start the authentication request.
          *
          * @return The SwitchBrowserChallenge constructed from the redirect URI.
          * e.g. SwitchBrowserChallenge(uri = action-uri?code=code)
@@ -47,14 +50,19 @@ data class SwitchBrowserChallenge(
          */
         @JvmStatic
         @Throws(Exception::class)
-        fun constructFromRedirectUrl(redirectUrl: String, authorizationUrl: String): SwitchBrowserChallenge {
-            Uri.parse(redirectUrl).let { redirectUri ->
-                SwitchBrowserUriHelper.buildProcessUri(redirectUri).let { processUri ->
-                    return SwitchBrowserChallenge(
-                        processUri = processUri,
-                        authorizationUrl = authorizationUrl
-                    )
-                }
+        fun constructFromRedirectUrl(
+            redirectUrl: String,
+            authorizationUrl: String
+        ): SwitchBrowserChallenge {
+            redirectUrl.toUri().let { redirectUri ->
+                val processUri = SwitchBrowserUriHelper.buildProcessUri(redirectUri)
+                val baseRedirectUri = SwitchBrowserUriHelper.extractBaseRedirectUri(redirectUri)
+                return SwitchBrowserChallenge(
+                    processUri = processUri,
+                    authorizationUrl = authorizationUrl,
+                    redirectUri = baseRedirectUri
+                )
+
             }
         }
     }

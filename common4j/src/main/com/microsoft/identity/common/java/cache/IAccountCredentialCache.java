@@ -291,6 +291,38 @@ public interface IAccountCredentialCache {
     );
 
     /**
+     * Returns all of the Credentials matching the supplied criteria, including kid filtering.
+     * Unlike the input-list overload, this method reads directly from the cache and
+     * benefits from filter-then-clone optimization when the corresponding flight is enabled.
+     *
+     * @param homeAccountId   The homeAccountId used to match Credential cache keys.
+     * @param environment     The environment used to match Credential cache keys.
+     * @param credentialType  The sought CredentialType.
+     * @param clientId        The clientId used to match Credential cache keys.
+     * @param applicationIdentifier The physical identifier of the application (Android: packageName/signature)
+     * @param mamEnrollmentIdentifier The Mobile Application Management or Intune App Protection enrollment identifier (Android Only)
+     * @param realm           The realm used to match Credential cache keys.
+     * @param target          The target used to match Credential cache keys.
+     * @param authScheme      The auth scheme used to match Credential cache keys.
+     * @param requestedClaims The requested claims used to match Credential cache keys.
+     * @param kid             Kid value used to match access token record.
+     * @return A mutable List of Credentials matching the supplied criteria.
+     */
+    List<Credential> getCredentialsFilteredBy(
+            final String homeAccountId,
+            final String environment,
+            final CredentialType credentialType,
+            final String clientId,
+            final String applicationIdentifier,
+            final String mamEnrollmentIdentifier,
+            final String realm,
+            final String target,
+            final String authScheme,
+            final String requestedClaims,
+            final String kid
+    );
+
+    /**
      * Removes the supplied Account from the cache.
      *
      * @param accountToRemove The Account to delete.
