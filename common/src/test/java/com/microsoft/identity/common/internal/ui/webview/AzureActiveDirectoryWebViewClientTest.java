@@ -30,6 +30,7 @@ import static com.microsoft.identity.common.java.providers.RawAuthorizationResul
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -126,6 +127,13 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Differs only by a trailing slash — must still match.
     private static final String HTTPS_REDIRECT_TRAILING_SLASH =
             "https://login.contoso.com/auth/?code=AUTH_CODE&state=xyz";
+    // Opaque (urn:) redirect URI — the broker OOB redirect. Authority/path are
+    // null, so the matcher must compare the scheme-specific part.
+    private static final String OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+    private static final String OOB_REDIRECT_LEGIT =
+            "urn:ietf:wg:oauth:2.0:oob?code=AUTH_CODE&state=xyz";
+    private static final String OOB_REDIRECT_SPOOFED_SSP_SUFFIX =
+            "urn:ietf:wg:oauth:2.0:oobstolen?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -417,6 +425,62 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue("Trailing-slash redirect must be handled", handled);
         Mockito.verify(mockCallback, Mockito.times(1))
                 .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * Opaque redirect URI (broker OOB, urn:ietf:wg:oauth:2.0:oob): a legitimate
+     * redirect with the same scheme-specific part (auth code in query) is
+     * accepted and delivered as a completed auth result.
+     */
+    @Test
+    public void testStrictMatching_acceptsLegitimateOpaqueOobRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_LEGIT);
+
+        assertTrue("Legitimate OOB redirect must be handled", handled);
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
+    }
+
+    /**
+     * Opaque redirect URI: an attacker-controlled urn with an extra suffix on the
+     * scheme-specific part (urn:...:oobstolen) must NOT be accepted as the OOB
+     * redirect. Without comparing the scheme-specific part, the null authority /
+     * path would make this match on scheme alone. The auth code must never be
+     * delivered as a completed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsSpoofedOpaqueOobRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_SPOOFED_SSP_SUFFIX);
+
+        // The spoofed urn is not the redirect; it falls through to the SSL-protection
+        // error path, so any delivered result must NOT be a completed auth result.
+        for (final RawAuthorizationResult result : captureAllResults(mockCallback, captor)) {
+            assertNotEquals("Spoofed opaque redirect must not deliver an auth code",
+                    RawAuthorizationResult.ResultCode.COMPLETED, result.getResultCode());
+        }
+    }
+
+    private static java.util.List<RawAuthorizationResult> captureAllResults(
+            final IAuthorizationCompletionCallback mockCallback,
+            final ArgumentCaptor<RawAuthorizationResult> captor) {
+        Mockito.verify(mockCallback, Mockito.atLeast(0)).onChallengeResponseReceived(captor.capture());
+        return captor.getAllValues();
     }
 
     /**

@@ -530,6 +530,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
                 return false;
             }
+
+            // Opaque URIs (e.g. the broker OOB redirect urn:ietf:wg:oauth:2.0:oob)
+            // have null authority/path, so the hierarchical comparison below would
+            // degenerate to scheme-only and accept any same-scheme URI. Compare the
+            // scheme-specific part instead, minus any appended query/fragment.
+            if (expected.isOpaque() || actual.isOpaque()) {
+                if (expected.isOpaque() != actual.isOpaque()) {
+                    return false;
+                }
+                return stripQueryAndFragment(actual.getSchemeSpecificPart())
+                        .equalsIgnoreCase(stripQueryAndFragment(expected.getSchemeSpecificPart()));
+            }
+
             if (!equalsIgnoreCaseNullSafe(actual.getAuthority(), expected.getAuthority())) {
                 return false;
             }
@@ -537,8 +550,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return normalizePath(actual.getPath())
                     .equalsIgnoreCase(normalizePath(expected.getPath()));
         } catch (final Throwable t) {
-            // Fail closed on unparseable URLs rather than risk leaking the code.
-            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: " + t);
+            // Fail closed on unparseable URLs. Do not log the throwable: its
+            // message may embed the URL (and thus the auth code).
+            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison; treating as non-redirect.");
             return false;
         }
     }
@@ -553,6 +567,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private static String nullToEmpty(@Nullable final String s) {
         return s == null ? "" : s;
+    }
+
+    /** Strips a trailing {@code ?query} and/or {@code #fragment} from {@code s}. */
+    private static String stripQueryAndFragment(@Nullable final String s) {
+        String r = nullToEmpty(s);
+        final int q = r.indexOf('?');
+        if (q >= 0) {
+            r = r.substring(0, q);
+        }
+        final int h = r.indexOf('#');
+        if (h >= 0) {
+            r = r.substring(0, h);
+        }
+        return r;
     }
 
     /**
