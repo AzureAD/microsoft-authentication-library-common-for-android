@@ -129,6 +129,10 @@ public class AzureActiveDirectoryWebViewClientTest {
             "https://login.contoso.com/auth.attacker.com/x?code=STOLEN&state=xyz";
     private static final String HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX =
             "https://login.contoso.com/authstolen?code=STOLEN&state=xyz";
+    // Legitimate redirect that differs from the registered URI only by a single
+    // trailing slash on the path — must still be treated as a redirect.
+    private static final String HTTPS_REDIRECT_TRAILING_SLASH =
+            "https://login.contoso.com/auth/?code=AUTH_CODE&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -397,6 +401,27 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         assertTrue("Legitimate redirect must be handled", handled);
         // The auth code is delivered exactly once via the redirect path.
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * A redirect that differs from the registered URI only by a single trailing
+     * slash on the path (registered "/auth" vs incoming "/auth/") denotes the
+     * same resource and must still be accepted. normalizePath() collapses the
+     * single trailing slash before comparison.
+     */
+    @Test
+    public void testStrictMatching_acceptsTrailingSlashPathDifference() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_TRAILING_SLASH);
+
+        assertTrue("Trailing-slash redirect must be handled", handled);
         Mockito.verify(mockCallback, Mockito.times(1))
                 .onChallengeResponseReceived(Mockito.any());
     }

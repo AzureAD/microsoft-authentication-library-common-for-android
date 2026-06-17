@@ -559,10 +559,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             // Path: compare case-insensitively because the URL we receive has
             // already been lowercased by handleUrl, while mRedirectUrl is in
-            // its registered case. Trailing slashes are intentionally treated
-            // as distinct (fail-closed); loosen only with a concrete repro.
-            return nullToEmpty(actual.getPath())
-                    .equalsIgnoreCase(nullToEmpty(expected.getPath()));
+            // its registered case. A single trailing slash is normalized away
+            // so that a registered "/auth" still matches an incoming "/auth/"
+            // (and vice versa) — these denote the same resource. Any other
+            // path difference (extra segment, suffix, different segment) is
+            // still rejected.
+            return normalizePath(actual.getPath())
+                    .equalsIgnoreCase(normalizePath(expected.getPath()));
         } catch (final Throwable t) {
             // Be conservative: if either URL cannot be parsed we treat the
             // navigation as not-a-redirect rather than risk leaking the auth
@@ -582,6 +585,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private static String nullToEmpty(@Nullable final String s) {
         return s == null ? "" : s;
+    }
+
+    /**
+     * Normalizes a URI path for comparison by treating a single trailing slash
+     * as insignificant: {@code "/auth"} and {@code "/auth/"} both normalize to
+     * {@code "/auth"}. The root path {@code "/"} and the empty path are left
+     * unchanged. Only one trailing slash is removed, so {@code "/auth//"} is
+     * not collapsed to {@code "/auth"} — that would be an unusual, attacker-
+     * shaped path and we prefer to fail closed on it.
+     */
+    private static String normalizePath(@Nullable final String path) {
+        final String p = nullToEmpty(path);
+        if (p.length() > 1 && p.endsWith("/")) {
+            return p.substring(0, p.length() - 1);
+        }
+        return p;
     }
 
     private boolean isNonceRedirect(@NonNull final String url) {
