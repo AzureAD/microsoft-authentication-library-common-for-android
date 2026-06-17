@@ -946,6 +946,101 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(mockTracker, never()).updateLatestUrlStatus(any(), any());
     }
 
+    // -----------------------------------------------------------------------
+    // onReceivedHttpError -> fail flow on server (5xx) errors (AB#3408586)
+    // -----------------------------------------------------------------------
+
+    private AzureActiveDirectoryWebViewClient createWebViewClientWithCallback(
+            final IAuthorizationCompletionCallback callback) throws ClientException {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                callback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserRequestHandler.class),
+                "homeTenantId",
+                false);
+    }
+
+    private void initFailWebViewOnServerHttpErrorFlight(final boolean enabled) {
+        final IFlightsManager mockFlightsManager = Mockito.mock(IFlightsManager.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(eq(CommonFlight.FAIL_WEBVIEW_FLOW_ON_SERVER_HTTP_ERROR)))
+                .thenReturn(enabled);
+        when(mockFlightsManager.getFlightsProvider(anyLong())).thenReturn(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+    }
+
+    @Test
+    public void testOnReceivedHttpError_serverError_mainFrame_sendsErrorToCallback() throws ClientException {
+        initFailWebViewOnServerHttpErrorFlight(true);
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithCallback(mockCallback);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(true);
+        Mockito.when(mockErrorResponse.getStatusCode()).thenReturn(500);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        Mockito.verify(mockCallback, Mockito.times(1)).onChallengeResponseReceived(resultCaptor.capture());
+        assertTrue(resultCaptor.getValue().getException() instanceof ClientException);
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testOnReceivedHttpError_clientError_mainFrame_doesNotSendErrorToCallback() throws ClientException {
+        initFailWebViewOnServerHttpErrorFlight(true);
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithCallback(mockCallback);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(true);
+        Mockito.when(mockErrorResponse.getStatusCode()).thenReturn(403);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        Mockito.verify(mockCallback, never()).onChallengeResponseReceived(any());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testOnReceivedHttpError_serverError_subResource_doesNotSendErrorToCallback() throws ClientException {
+        initFailWebViewOnServerHttpErrorFlight(true);
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithCallback(mockCallback);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(false);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        Mockito.verify(mockCallback, never()).onChallengeResponseReceived(any());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testOnReceivedHttpError_serverError_flightDisabled_doesNotSendErrorToCallback() throws ClientException {
+        initFailWebViewOnServerHttpErrorFlight(false);
+        final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = createWebViewClientWithCallback(mockCallback);
+
+        final WebResourceRequest mockRequest = Mockito.mock(WebResourceRequest.class);
+        final WebResourceResponse mockErrorResponse = Mockito.mock(WebResourceResponse.class);
+        Mockito.when(mockRequest.isForMainFrame()).thenReturn(true);
+        Mockito.when(mockErrorResponse.getStatusCode()).thenReturn(503);
+
+        client.onReceivedHttpError(mMockWebView, mockRequest, mockErrorResponse);
+
+        Mockito.verify(mockCallback, never()).onChallengeResponseReceived(any());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
     // ===== Authenticator activation app link tests =====
 
     @Test

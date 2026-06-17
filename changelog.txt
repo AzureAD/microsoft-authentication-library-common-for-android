@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Fail the embedded WebView auth flow when the main-frame request returns a server HTTP error (5xx) instead of leaving the user stuck on an infinite loading spinner; gated by FAIL_WEBVIEW_FLOW_ON_SERVER_HTTP_ERROR flight (default on), Fixes AB#3408586
 - [PATCH] Improve switch browser error handling and telemetry: standardize result delivery via setResultAndFinish, add error bundles for all failure paths, fix span/scope lifecycle, and move RESUME_REQUEST to shared SWITCH_BROWSER constants (#3134)
 - [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry (#3153)
 - [MINOR] Add IS_SWITCH_BROWSER_FLOW flag to PropertyBag so OneAuth can detect when the switch browser protocol was used during interactive auth (#3145)

@@ -95,6 +95,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -1393,9 +1394,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void onReceivedHttpError(final WebView view,
                                     final WebResourceRequest request,
                                     final WebResourceResponse errorResponse) {
+        final String methodTag = TAG + ":onReceivedHttpError";
+        if (request == null || !request.isForMainFrame()) {
+            // Sub-resource HTTP errors (scripts, images, iframes) don't necessarily affect the
+            // sign-in experience, so we ignore them to preserve existing behavior.
+            return;
+        }
+
+        final int statusCode = errorResponse != null ? errorResponse.getStatusCode() : 0;
+
         // Track HTTP error for the URL
-        if (mUrlLoadTracker != null && request.isForMainFrame()) {
-            mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + errorResponse.getStatusCode(), null);
+        if (mUrlLoadTracker != null) {
+            mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + statusCode, null);
+        }
+
+        // A server-side error (5xx) on the main frame means the page will never finish loading,
+        // so onPageFinished/onPageLoaded is never invoked and the progress spinner would stay up
+        // indefinitely, blocking the UI. Surface the error to the caller so the user is shown an
+        // informative error instead of being stuck on the login screen.
+        if (statusCode >= HttpURLConnection.HTTP_INTERNAL_ERROR
+                && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.FAIL_WEBVIEW_FLOW_ON_SERVER_HTTP_ERROR)) {
+            Logger.warn(methodTag, "Received server HTTP error on main frame. Status code: " + statusCode
+                    + ". Failing the WebView authorization flow.");
+            sendErrorToCallback(view, statusCode, "Received server HTTP error during authorization. Status code: " + statusCode);
         }
     }
 

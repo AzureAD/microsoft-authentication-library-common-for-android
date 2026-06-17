@@ -171,9 +171,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
     }
 
-    private void sendErrorToCallback(@NonNull final WebView view,
-                                     final int errorCode,
-                                     @NonNull final String description) {
+    protected void sendErrorToCallback(@NonNull final WebView view,
+                                       final int errorCode,
+                                       @NonNull final String description) {
         view.stopLoading();
 
         // Send the result back to the calling activity

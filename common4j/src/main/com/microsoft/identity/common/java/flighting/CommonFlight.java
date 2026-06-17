@@ -268,7 +268,15 @@ public enum CommonFlight implements IFlightConfig {
      * references first, then clones only the matching items — avoiding the cost of
      * cloning the entire cache when only a subset is needed.
      */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
+
+    /**
+     * Flight to fail the embedded WebView authorization flow when the main-frame request
+     * returns a server-side HTTP error (status code >= 500). When enabled, the user is shown
+     * an error and returned to the caller instead of being stuck on an indefinite loading
+     * spinner. Enabled by default; can be turned off via ECS if any issues arise in production.
+     */
+    FAIL_WEBVIEW_FLOW_ON_SERVER_HTTP_ERROR("FailWebViewFlowOnServerHttpError", true);
 
     private String key;
     private Object defaultValue;
