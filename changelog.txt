@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
 - [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry (#3153)
 - [MINOR] Add IS_SWITCH_BROWSER_FLOW flag to PropertyBag so OneAuth can detect when the switch browser protocol was used during interactive auth (#3145)
 - [MINOR] Add Microsoft Defender for Endpoint (MDE) to AppRegistry authorized app lists (GET_DEVICE_TOKEN, DEVICE_REGISTRATION) (#3149)
@@ -19,7 +20,6 @@ Version 24.3.0
 - [PATCH] Emit ipc_strategy telemetry attribute for successful device registration IPC strategy and refactor execute flow to pack protocol request once before strategy retries (#3124)
 - [PATCH] Fix Edge browser selection on devices where Microsoft Edge is the default browser: add the rotated Edge signing certificate hash to the Edge BrowserDescriptor and accept multi-signer browsers when any signature intersects the safelist, instead of requiring strict set-equality (resolves MSAL #2414)
 - [MINOR] Refactor Auth Tab integration to use provider-based strategy selection. Adds AuthTabStrategyProvider and BrowserLaunchStrategy with Custom Tabs fallback. Compatible with androidx.browser:browser:1.7.0.
-- [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
 - [MINOR] Wire onboarding telemetry hooks into AzureActiveDirectoryWebViewClient for page-transition step capture (broker install, MDM enrollment, Company Portal launch, MFA linking) and last-loaded-domain tracking (#3121)
 - [MINOR] Propagate the onboarding telemetry blob through the broker failure path: add BaseException.onboardingBlob and round-trip it through MsalBrokerResultAdapter so callers can emit onboarding telemetry on failure outcomes. Also add an MsalBrokerResultAdapter overload that accepts an onboarding blob on the success path so the broker can attach the finalized blob to the success result bundle (#3123)
 - [MINOR] Add provisionResourceAccountCredentials API to DeviceRegistrationClientApplication with V0 protocol params/response and add IPPhone to AppRegistry (#3086)
