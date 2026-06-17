@@ -1,7 +1,6 @@
 vNext
 ----------
 - [PATCH] Security: match redirect URI by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
-- [PATCH] Fix Token Endpoint Server Telemetry Parsing (#3128)
 - [PATCH] Improve switch browser error handling and telemetry: standardize result delivery via setResultAndFinish, add error bundles for all failure paths, fix span/scope lifecycle, and move RESUME_REQUEST to shared SWITCH_BROWSER constants (#3134)
 - [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry (#3153)
 - [MINOR] Add IS_SWITCH_BROWSER_FLOW flag to PropertyBag so OneAuth can detect when the switch browser protocol was used during interactive auth (#3145)
