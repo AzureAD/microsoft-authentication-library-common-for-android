@@ -550,9 +550,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return normalizePath(actual.getPath())
                     .equalsIgnoreCase(normalizePath(expected.getPath()));
         } catch (final Throwable t) {
-            // Fail closed on unparseable URLs. Do not log the throwable: its
-            // message may embed the URL (and thus the auth code).
-            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison; treating as non-redirect.");
+            // Fail closed on unparseable URLs. Log only the exception type — its
+            // message could embed the URL (and thus the auth code).
+            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: "
+                    + t.getClass().getSimpleName());
             return false;
         }
     }
