@@ -111,26 +111,19 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_REDIRECT_URL_WITH_FRAGMENT =
             "msauth://com.example.app/somehash=?code=AUTH_CODE#fragment";
 
-    // --- isRedirectUrl spoofing-attack test vectors (see FireWatch finding c1bf88bd) ---
-    //
-    // NOTE on scheme: these vectors use an https:// registered redirect URI on purpose.
-    // The broker registers an msauth:// redirect URI, but ANY msauth:// URL is also caught
-    // downstream of isRedirectUrl by isInstallRequestUrl (BROWSER_EXT_INSTALL_PREFIX =
-    // "msauth://"), whose processInstallRequest also extracts the code via
-    // RawAuthorizationResult.fromRedirectUri. So for msauth:// the isRedirectUrl fix alone
-    // is not observable at the completion callback. An https:// redirect URI isolates the
-    // isRedirectUrl behavior so these tests actually prove the prefix-confusion fix. The
-    // msauth:// install-path gap is tracked separately (see PR description / changelog).
+    // isRedirectUrl spoofing-attack vectors (FireWatch c1bf88bd). These use an https://
+    // redirect URI on purpose: any msauth:// URL is also caught downstream by
+    // isInstallRequestUrl, so https:// isolates the isRedirectUrl behavior. The msauth://
+    // install-path gap is tracked separately (see PR description).
     private static final String HTTPS_REDIRECT_URI = "https://login.contoso.com/auth";
     private static final String HTTPS_REDIRECT_LEGIT =
             "https://login.contoso.com/auth?code=AUTH_CODE&state=xyz";
-    // Attacker appends extra path/host that *would* pass a startsWith() check.
+    // Suffixes that would pass a startsWith() check but differ in path.
     private static final String HTTPS_REDIRECT_SPOOFED_SUFFIX_HOST =
             "https://login.contoso.com/auth.attacker.com/x?code=STOLEN&state=xyz";
     private static final String HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX =
             "https://login.contoso.com/authstolen?code=STOLEN&state=xyz";
-    // Legitimate redirect that differs from the registered URI only by a single
-    // trailing slash on the path — must still be treated as a redirect.
+    // Differs only by a trailing slash — must still match.
     private static final String HTTPS_REDIRECT_TRAILING_SLASH =
             "https://login.contoso.com/auth/?code=AUTH_CODE&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";

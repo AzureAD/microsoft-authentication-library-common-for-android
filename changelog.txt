@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Security: tighten redirect URI matching in AzureActiveDirectoryWebViewClient.isRedirectUrl to use strict scheme + authority + path comparison instead of String#startsWith, preventing prefix-confusion attacks that could exfiltrate the OAuth2 auth code via crafted redirects (FireWatch finding c1bf88bd, IcM 31000000624712). Path comparison normalizes a single trailing slash so "/auth" and "/auth/" still match. Gated by the ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) as an ECS kill switch.
+- [PATCH] Security: match redirect URI by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
 - [PATCH] Fix Token Endpoint Server Telemetry Parsing (#3128)
 - [PATCH] Improve switch browser error handling and telemetry: standardize result delivery via setResultAndFinish, add error bundles for all failure paths, fix span/scope lifecycle, and move RESUME_REQUEST to shared SWITCH_BROWSER constants (#3134)
 - [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry (#3153)

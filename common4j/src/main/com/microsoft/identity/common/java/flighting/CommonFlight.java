@@ -271,14 +271,10 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
 
     /**
-     * Kill switch for the strict redirect-URI matching in
-     * {@code AzureActiveDirectoryWebViewClient.isRedirectUrl}. When enabled
-     * (default), the client compares the navigation URL against the configured
-     * redirect URI by scheme + authority + path instead of a prefix
-     * ({@code String#startsWith}) match, closing a redirect prefix-confusion
-     * hole (FireWatch c1bf88bd / IcM 31000000624712). Enabled by default; can
-     * be turned off via ECS to fall back to the historical prefix match if any
-     * legitimate redirect regression is observed in production.
+     * Kill switch for strict redirect-URI matching in
+     * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
+     * ECS to revert to the historical String#startsWith prefix match
+     * (FireWatch c1bf88bd / IcM 31000000624712).
      */
     ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true);
 

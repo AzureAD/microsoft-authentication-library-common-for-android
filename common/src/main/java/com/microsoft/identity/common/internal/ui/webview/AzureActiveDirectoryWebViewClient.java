@@ -493,40 +493,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Determines whether {@code url} should be treated as the navigation that
-     * carries the OAuth2 authorization response back to the configured redirect
-     * URI.
+     * Returns true if {@code url} is the OAuth2 redirect carrying the auth code
+     * back to the configured redirect URI.
      * <p>
-     * Historically this used a prefix match ({@code String#startsWith}) which
-     * permitted attacker-controlled suffixes such as
-     * {@code msauth://app/HASH=.attacker.com/x?code=&lt;AUTH_CODE&gt;} to be
-     * accepted as legitimate redirects whenever the server (or a malicious /
-     * MITM'd response) caused the WebView to navigate to a crafted URL.
-     * Although the eSTS server enforces exact redirect URI validation on its
-     * side, the client check should also be exact (defense-in-depth — MSRC
-     * Ceiling Rule 3).
-     * <p>
-     * The new comparison parses both the candidate URL and the configured
-     * redirect URI and requires that scheme, authority (host[:port]) and path
-     * match. Query string and fragment are intentionally ignored because they
-     * carry the auth code / state on legitimate redirects.
+     * Matches scheme + authority + path exactly (query/fragment ignored — they
+     * carry the code/state). Replaces a prior {@code String#startsWith} prefix
+     * match that let attacker-controlled path suffixes through
+     * (FireWatch c1bf88bd / IcM 31000000624712); defense-in-depth, since eSTS
+     * already validates the redirect URI exactly server-side.
      *
-     * @param url the URL the WebView is about to navigate to. The caller is
-     *            expected to pass the lowercased URL ({@code formattedURL} in
-     *            {@link #handleUrl}); comparisons are therefore performed
-     *            case-insensitively so that mixed-case redirect URI paths
-     *            (e.g. base64 hashes) still match.
-     * @return true if {@code url} is a redirect response to the configured
-     *         redirect URI, false otherwise.
+     * @param url lowercased URL from {@link #handleUrl}; comparison is
+     *            case-insensitive so mixed-case registered URIs still match.
      */
     private boolean isRedirectUrl(@NonNull final String url) {
         if (mRedirectUrl == null || mRedirectUrl.isEmpty()) {
             return false;
         }
 
-        // ECS kill switch: when disabled, fall back to the historical prefix
-        // match so the strict-comparison change can be turned off via flighting
-        // without a code rollback if a legitimate redirect regression surfaces.
+        // Kill switch: revert to the prior prefix match if disabled via ECS.
         final boolean strictMatchingEnabled = CommonFlightsManager.INSTANCE
                 .getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING);
@@ -539,37 +523,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Uri expected = Uri.parse(mRedirectUrl);
             final String expectedScheme = expected.getScheme();
 
-            // If the configured redirect URI does not have a scheme we cannot do
-            // a structured comparison; fall back to strict equality
-            // (case-insensitive) which is still safer than the historical
-            // prefix match.
+            // Scheme-less configured URI: fall back to strict equality.
             if (expectedScheme == null || expectedScheme.isEmpty()) {
                 return url.equalsIgnoreCase(mRedirectUrl);
             }
-
-            // Scheme: case-insensitive per RFC 3986 §3.1.
             if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
                 return false;
             }
-
-            // Authority (host[:port]): case-insensitive per RFC 3986 §3.2.
             if (!equalsIgnoreCaseNullSafe(actual.getAuthority(), expected.getAuthority())) {
                 return false;
             }
-
-            // Path: compare case-insensitively because the URL we receive has
-            // already been lowercased by handleUrl, while mRedirectUrl is in
-            // its registered case. A single trailing slash is normalized away
-            // so that a registered "/auth" still matches an incoming "/auth/"
-            // (and vice versa) — these denote the same resource. Any other
-            // path difference (extra segment, suffix, different segment) is
-            // still rejected.
+            // Single trailing slash is normalized so "/auth" matches "/auth/".
             return normalizePath(actual.getPath())
                     .equalsIgnoreCase(normalizePath(expected.getPath()));
         } catch (final Throwable t) {
-            // Be conservative: if either URL cannot be parsed we treat the
-            // navigation as not-a-redirect rather than risk leaking the auth
-            // code to a malformed URL.
+            // Fail closed on unparseable URLs rather than risk leaking the code.
             Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: " + t);
             return false;
         }
@@ -588,12 +556,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Normalizes a URI path for comparison by treating a single trailing slash
-     * as insignificant: {@code "/auth"} and {@code "/auth/"} both normalize to
-     * {@code "/auth"}. The root path {@code "/"} and the empty path are left
-     * unchanged. Only one trailing slash is removed, so {@code "/auth//"} is
-     * not collapsed to {@code "/auth"} — that would be an unusual, attacker-
-     * shaped path and we prefer to fail closed on it.
+     * Removes a single trailing slash so "/auth" and "/auth/" compare equal.
+     * Root "/" and empty paths are unchanged; only one slash is stripped.
      */
     private static String normalizePath(@Nullable final String path) {
         final String p = nullToEmpty(path);
