@@ -410,10 +410,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // Due to a known issue, the PIN entry and confirmation screens can appear twice in
         // succession. If it happens, handle the second occurrence; if not, continue normally.
         final UiObject secondTimePinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                PIN_ENTRY_RESOURCE_ID
+                PIN_ENTRY_RESOURCE_ID, TimeUnit.SECONDS.toMillis(5)
         );
 
-        if (secondTimePinField.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+        if (secondTimePinField.exists()) {
             Logger.i(TAG, "PIN screen appeared a second time, handling again..");
             enterAndConfirmPin(device);
         } else {
