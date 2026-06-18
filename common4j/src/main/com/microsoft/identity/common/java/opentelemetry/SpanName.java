@@ -116,5 +116,10 @@ public enum SpanName {
     /**
      * Span name for switching browser flow operations.
      */
-    SwitchBrowserFlow
+    SwitchBrowserFlow,
+
+    /**
+     * Span name for the battery optimization exemption prompt.
+     */
+    BatteryOptimizationExemption
 }
