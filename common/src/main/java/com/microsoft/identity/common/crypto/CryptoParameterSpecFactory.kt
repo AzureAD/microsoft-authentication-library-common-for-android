@@ -76,6 +76,7 @@ class CryptoParameterSpecFactory(
         // Descriptive identifiers for different key generation specifications
         private const val MODERN_SPEC_WITH_PURPOSE_WRAP_KEY = "modern_spec_with_wrap_key"
         private const val MODERN_SPEC_WITHOUT_PURPOSE_WRAP_KEY = "modern_spec_without_wrap_key"
+        private const val CONSERVATIVE_SPEC = "conservative_spec_for_api_30_and_below"
         private const val LEGACY_SPEC = "legacy_key_gen_spec"
     }
 
@@ -134,6 +135,31 @@ class CryptoParameterSpecFactory(
         )
     }
 
+    /**
+     * Conservative, hardware-friendly key generation spec for API 23..30 (pre-Keystore 2.0).
+     *
+     * Requests only RSA with ENCRYPT/DECRYPT purposes, a single SHA-256 digest and PKCS1
+     * padding. It deliberately avoids PURPOSE_WRAP_KEY, SHA-512 and OAEP/MGF1 - features that
+     * many hardware-backed keymasters on API <= 30 (notably rugged/enterprise devices) reject,
+     * causing key generation to fail. A key produced with PKCS1 padding is also reliably
+     * introspectable via [android.security.keystore.KeyInfo], so a compatible cipher spec is
+     * always found when wrapping the secret key.
+     */
+    private val keyGenParamSpecConservative by lazy {
+        KeyGenSpec(
+            keyAlias = keyAlias,
+            purposes = KeyProperties.PURPOSE_ENCRYPT or
+                    KeyProperties.PURPOSE_DECRYPT,
+            keySize = KEY_SIZE,
+            digestAlgorithms = listOf(
+                KeyProperties.DIGEST_SHA256
+            ),
+            description = CONSERVATIVE_SPEC,
+            encryptionPaddings = listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1),
+            algorithm = RSA_ALGORITHM
+        )
+    }
+
     private val keyGenParamSpecLegacy = LegacyKeyGenSpec(
         context = context,
         keyAlias = keyAlias,
@@ -181,18 +207,32 @@ class CryptoParameterSpecFactory(
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
         val specs = mutableListOf<IKeyGenSpec>()
 
-        // Add specs in order of preference
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
-            // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
-            specs.add(keyGenParamSpecWithPurposeWrapKey)
+        // The advanced specs below request features (PURPOSE_WRAP_KEY, SHA-512 digests and
+        // OAEP/MGF1 padding) that are only reliably supported by the hardware keymaster starting
+        // with Keystore 2.0 (API 31). On API <= 30 many hardware-backed keymasters - especially on
+        // rugged/enterprise devices - reject these specs, which previously caused every attempt
+        // (including the deprecated legacy KeyPairGeneratorSpec fallback) to fail with
+        // "All key generation attempts failed". Restrict the advanced specs to API 31+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (keySpecWithWrapPurposeKey) {
+                // First priority: with PURPOSE_WRAP_KEY if enabled
+                specs.add(keyGenParamSpecWithPurposeWrapKey)
+            }
+
+            if (keySpecWithoutWrapPurposeKey) {
+                // Second priority: without PURPOSE_WRAP_KEY
+                specs.add(keyGenParamSpecWithoutPurposeWrapKey)
+            }
         }
 
-        if (keySpecWithoutWrapPurposeKey) {
-            // Second priority: API 23+ without PURPOSE_WRAP_KEY
-            specs.add(keyGenParamSpecWithoutPurposeWrapKey)
+        // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
+        // This is the primary viable spec on API 23..30 keymasters and a safe fallback on API 31+
+        // before resorting to the deprecated legacy spec.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            specs.add(keyGenParamSpecConservative)
         }
 
-        // Always include legacy spec as last resort fallback
+        // Always include legacy spec as last resort fallback (API < 23).
         specs.add(keyGenParamSpecLegacy)
 
         Logger.info(methodTag, "Key generation specs: ${specs.joinToString { it.description }}")
