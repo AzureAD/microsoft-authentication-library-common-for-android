@@ -402,7 +402,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         try {
             Thread.sleep(TimeUnit.SECONDS.toMillis(10));
         } catch (final InterruptedException e) {
-            // Ignored
+            Thread.currentThread().interrupt();
+            Logger.w(TAG, "Interrupted while waiting on Get Access screen", e);
         }
 
         // Click Continue on Get Access
