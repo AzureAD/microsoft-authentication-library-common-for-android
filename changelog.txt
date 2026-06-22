@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3673534)
 
 Version 24.4.0
 ----------
