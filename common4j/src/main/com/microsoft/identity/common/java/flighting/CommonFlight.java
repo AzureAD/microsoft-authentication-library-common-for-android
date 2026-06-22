@@ -268,7 +268,18 @@ public enum CommonFlight implements IFlightConfig {
      * references first, then clones only the matching items — avoiding the cost of
      * cloning the entire cache when only a subset is needed.
      */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
+
+    /**
+     * Flight to require an exact, case-insensitive host match between a candidate authority and the
+     * developer-configured known authorities in {@code Authority.isKnownAuthority()}.
+     * <p>
+     * Default-on (secure). When enabled, only an exact parsed-host match passes the known-authority
+     * security gate. Turn off via ECS to fall back to the previous substring-based comparison
+     * (legacy behavior) as a kill switch, should the stricter matching ever reject a legitimate,
+     * developer-configured authority.
+     */
+    ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH("EnableKnownAuthorityHostExactMatch", true);
 
     private String key;
     private Object defaultValue;

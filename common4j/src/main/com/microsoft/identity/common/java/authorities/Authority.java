@@ -26,6 +26,8 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -336,8 +338,8 @@ public abstract class Authority {
      */
     public static boolean isKnownAuthority(Authority authority) {
         final String methodTag = TAG + ":isKnownAuthority";
-        boolean knownToDeveloper = false;
-        boolean knownToMicrosoft;
+        final boolean knownToDeveloper;
+        final boolean knownToMicrosoft;
 
         if (authority == null) {
             Logger.warn(methodTag, "Authority is null");
@@ -358,17 +360,15 @@ public abstract class Authority {
             return true; // onebox authorities are always considered to be known.
         }
 
-        synchronized (sLock) {
-            for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrlString != null &&
-                        authorityUrl.getAuthority() != null &&
-                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
-                                authorityUrl.getAuthority().toLowerCase(Locale.ROOT))) {
-                    knownToDeveloper = true;
-                    break;
-                }
-            }
-        }
+        // Determine which known-authority matching strategy to use. The exact-host comparison is the
+        // secure default; the legacy substring comparison is retained only behind a kill-switch flight
+        // so it can be re-enabled via ECS if the stricter matching ever rejects a legitimate authority.
+        final boolean useExactHostMatch = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH);
+
+        knownToDeveloper = useExactHostMatch
+                ? isKnownToDeveloperByExactHost(authorityUrl, methodTag)
+                : isKnownToDeveloperByLegacySubstring(authorityUrl);
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
         // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
@@ -382,6 +382,68 @@ public abstract class Authority {
                 "Authority is known to Microsoft? [" + knownToMicrosoft + "]");
 
         return isKnown;
+    }
+
+    /**
+     * Compares the parsed host (and optional port) of the candidate authority against the parsed host
+     * of each developer-configured known authority. An exact, case-insensitive host match is required;
+     * substring matching is never used here, since it would allow an untrusted host (e.g.
+     * "login.com") to pass the gate merely because it is a substring of a configured URL (e.g.
+     * "https://contoso.b2clogin.com/..."). This mirrors the pattern used by
+     * {@link #getEquivalentConfiguredAuthority(String)}.
+     *
+     * @param authorityUrl the candidate authority URL whose host is being validated.
+     * @param methodTag    logging tag of the caller.
+     * @return true if the candidate host exactly matches a developer-configured known authority host.
+     */
+    private static boolean isKnownToDeveloperByExactHost(@NonNull final URL authorityUrl,
+                                                         @NonNull final String methodTag) {
+        final String candidateHost = authorityUrl.getAuthority();
+        synchronized (sLock) {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (currentAuthority.mAuthorityUrlString != null && candidateHost != null) {
+                    try {
+                        final URL knownAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
+                        if (candidateHost.equalsIgnoreCase(knownAuthorityUrl.getAuthority())) {
+                            return true;
+                        }
+                    } catch (final MalformedURLException e) {
+                        // Skip malformed configured authority URLs.
+                        Logger.errorPII(
+                                methodTag,
+                                "Error parsing configured known authority URL",
+                                e
+                        );
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Legacy substring-based comparison between the candidate authority host and the full configured
+     * known-authority URL strings. This is insecure (a substring host can bypass the gate) and is
+     * retained only behind the {@link CommonFlight#ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH} kill switch
+     * so the previous behavior can be restored via ECS in an emergency. Do not use for new code.
+     *
+     * @param authorityUrl the candidate authority URL whose host is being validated.
+     * @return true if the candidate host appears as a substring of any configured known authority URL.
+     * @deprecated superseded by {@link #isKnownToDeveloperByExactHost(URL, String)}.
+     */
+    @Deprecated
+    private static boolean isKnownToDeveloperByLegacySubstring(@NonNull final URL authorityUrl) {
+        synchronized (sLock) {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (currentAuthority.mAuthorityUrlString != null &&
+                        authorityUrl.getAuthority() != null &&
+                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
+                                authorityUrl.getAuthority().toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static KnownAuthorityResult getKnownAuthorityResult(Authority authority) {
