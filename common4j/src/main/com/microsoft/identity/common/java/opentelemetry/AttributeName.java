@@ -632,17 +632,6 @@ public enum AttributeName {
      */
     key_gen_conservative_spec_flight_enabled,
 
-    /**
-     * The Android API level (Build.VERSION.SDK_INT) of the device performing key generation.
-     */
-    key_gen_api_level,
-
-    /**
-     * The prioritized list of key generation spec descriptions elected for the device, in order
-     * of preference. Used to confirm legacy devices no longer attempt the advanced specs.
-     */
-    key_gen_prioritized_spec_list,
-
     //endregion
 
     //region Secret Key Wrapping

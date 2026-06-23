@@ -218,71 +218,84 @@ class CryptoParameterSpecFactory(
      */
     fun getPrioritizedKeyGenParameterSpecs(): List<IKeyGenSpec> {
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
-        val specs = mutableListOf<IKeyGenSpec>()
         val conservativeFixEnabled = conservativeKeyGenForLegacyDevices
 
-        // The advanced specs below request features (PURPOSE_WRAP_KEY, SHA-512 digests and
-        // OAEP/MGF1 padding) that are only reliably supported by the hardware keymaster starting
-        // with Keystore 2.0 (API 31). On API <= 30 many hardware-backed keymasters - especially on
-        // rugged/enterprise devices - reject these specs, which previously caused every attempt
-        // (including the deprecated legacy KeyPairGeneratorSpec fallback) to fail with
-        // "All key generation attempts failed". When the legacy-device fix flight is enabled the
-        // advanced specs are restricted to API 31+; otherwise the previous behaviour is preserved.
-        val advancedSpecsAllowed =
-            !conservativeFixEnabled || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        // Record whether the fix flight was on for this attempt so we can correlate, post-deploy,
+        // against the existing DeviceInfo_OsVersion and key_pair_gen_description telemetry.
+        SpanExtension.current().setAttribute(
+            AttributeName.key_gen_conservative_spec_flight_enabled.name,
+            conservativeFixEnabled
+        )
 
-        if (advancedSpecsAllowed) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
-                // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
-                specs.add(keyGenParamSpecWithPurposeWrapKey)
-            }
-
-            if (keySpecWithoutWrapPurposeKey) {
-                // Second priority: API 23+ without PURPOSE_WRAP_KEY
-                specs.add(keyGenParamSpecWithoutPurposeWrapKey)
-            }
+        // The fix is an ECS kill switch. When the flight is OFF we run the exact original spec
+        // selection; when it is ON we run the legacy-device-safe variant. Keeping the two paths
+        // separate makes the change trivial to reason about and to revert via ECS.
+        val specs = if (conservativeFixEnabled) {
+            getLegacyDeviceSafeKeyGenSpecs()
+        } else {
+            getDefaultKeyGenSpecs()
         }
 
-        // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
-        // Only added when the legacy-device fix is enabled; it is the primary viable spec on
-        // API 23..30 keymasters and a safe fallback on API 31+ before the deprecated legacy spec.
-        if (conservativeFixEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            specs.add(keyGenParamSpecConservative)
-        }
-
-        // Always include legacy spec as last resort fallback (API < 23).
-        specs.add(keyGenParamSpecLegacy)
-
-        recordKeyGenSpecSelectionTelemetry(conservativeFixEnabled, specs)
         Logger.info(methodTag, "Key generation specs: ${specs.joinToString { it.description }}")
         return specs
     }
 
     /**
-     * Records telemetry about which key generation specs were elected for this device on the
-     * current span. This lets us validate, post-deploy, that legacy (API &lt;= 30) devices no
-     * longer attempt the advanced specs and instead elect the conservative spec.
+     * Original key generation spec selection (fix flight OFF) - unchanged behaviour.
      *
-     * @param conservativeFixEnabled whether the legacy-device fix flight is enabled
-     * @param specs the prioritized key generation specs elected for this device
+     * The advanced specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1) are attempted on every API level.
+     * This is what causes pre-Keystore 2.0 (API &lt;= 30) keymasters to reject every spec; see
+     * [getLegacyDeviceSafeKeyGenSpecs] for the fixed path.
      */
-    private fun recordKeyGenSpecSelectionTelemetry(
-        conservativeFixEnabled: Boolean,
-        specs: List<IKeyGenSpec>
-    ) {
-        SpanExtension.current().apply {
-            setAttribute(
-                AttributeName.key_gen_conservative_spec_flight_enabled.name,
-                conservativeFixEnabled
-            )
-            setAttribute(
-                AttributeName.key_gen_api_level.name,
-                Build.VERSION.SDK_INT.toLong()
-            )
-            setAttribute(
-                AttributeName.key_gen_prioritized_spec_list.name,
-                specs.joinToString(separator = ",") { it.description }
-            )
+    private fun getDefaultKeyGenSpecs(): List<IKeyGenSpec> {
+        val specs = mutableListOf<IKeyGenSpec>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
+            // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
+            specs.add(keyGenParamSpecWithPurposeWrapKey)
         }
+
+        if (keySpecWithoutWrapPurposeKey) {
+            // Second priority: API 23+ without PURPOSE_WRAP_KEY
+            specs.add(keyGenParamSpecWithoutPurposeWrapKey)
+        }
+
+        // Always include legacy spec as last resort fallback (API < 23).
+        specs.add(keyGenParamSpecLegacy)
+        return specs
+    }
+
+    /**
+     * Legacy-device-safe key generation spec selection (fix flight ON).
+     *
+     * On API &lt;= 30 the advanced specs are skipped entirely - pre-Keystore 2.0 keymasters
+     * (especially on rugged/enterprise devices) reject PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1, which
+     * previously made every attempt fail with "All key generation attempts failed". Instead a
+     * conservative RSA/PKCS1/SHA-256 spec - which those keymasters reliably support - is used. On
+     * API 31+ (Keystore 2.0) the advanced specs are still attempted first, with the conservative
+     * spec added as an extra fallback before the deprecated legacy spec.
+     */
+    private fun getLegacyDeviceSafeKeyGenSpecs(): List<IKeyGenSpec> {
+        val specs = mutableListOf<IKeyGenSpec>()
+
+        // Advanced specs are only reliable from Keystore 2.0 (API 31) onward.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (keySpecWithWrapPurposeKey) {
+                specs.add(keyGenParamSpecWithPurposeWrapKey)
+            }
+            if (keySpecWithoutWrapPurposeKey) {
+                specs.add(keyGenParamSpecWithoutPurposeWrapKey)
+            }
+        }
+
+        // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
+        // Primary viable spec on API 23..30 keymasters; a safe fallback on API 31+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            specs.add(keyGenParamSpecConservative)
+        }
+
+        // Always include legacy spec as last resort fallback (API < 23).
+        specs.add(keyGenParamSpecLegacy)
+        return specs
     }
 }
