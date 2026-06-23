@@ -208,8 +208,85 @@ class CryptoParameterSpecFactoryTest {
         Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
         Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[1].encryptionPaddings)
     }
-    
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P]) // API 28 (a legacy, <= 30, device)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_LegacyDevice_SkipsAdvancedSpecs() {
+        // When the legacy-device fix is enabled on API <= 30, the advanced specs must be skipped
+        // and the conservative spec elected instead (this is the regression fix).
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // Only the conservative spec and the legacy fallback should be present (no advanced specs).
+        Assert.assertEquals(2, specs.size.toLong())
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[0].description)
+        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[0].encryptionPaddings)
+        Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.VANILLA_ICE_CREAM]) // API 35 (>= 31)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_ModernDevice_IncludesAdvancedAndConservative() {
+        // On API >= 31 the advanced specs are supported, so they are elected alongside the
+        // conservative spec and the legacy fallback even when the fix is enabled.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P]) // API 28 (a legacy, <= 30, device)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixDisabled_LegacyDevice_PreservesAdvancedSpecs() {
+        // When the fix flight is OFF (ECS kill-switch), the previous behaviour must be restored:
+        // advanced specs are still offered on API <= 30 and no conservative spec is added.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(false)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // API 28 satisfies the wrap-key gate, so both advanced specs + legacy, no conservative.
+        Assert.assertEquals(3, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals("legacy_key_gen_spec", specs[2].description)
+        Assert.assertFalse(specs.any { it.description == CONSERVATIVE_SPEC })
+    }
+
     companion object {
         private const val TEST_KEY_ALIAS = "test_key_alias"
+        private const val CONSERVATIVE_SPEC = "conservative_spec_for_api_30_and_below"
     }
 }

@@ -29,6 +29,8 @@ import androidx.annotation.RequiresApi
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager.getFlightsProvider
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -87,6 +89,10 @@ class CryptoParameterSpecFactory(
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY)
     private val enableKeyGenEncryptionPaddingRsaOaep get() =
         flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING)
+    // When enabled, advanced key gen specs are skipped on API <= 30 in favour of a conservative
+    // RSA/PKCS1/SHA-256 spec that legacy keymasters reliably support. Killable via ECS.
+    private val conservativeKeyGenForLegacyDevices get() =
+        flightsProvider.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES)
 
     init {
         val methodTag = "$TAG:init"
@@ -96,7 +102,8 @@ class CryptoParameterSpecFactory(
                     "API: ${Build.VERSION.SDK_INT}, " +
                     "flags: [keySpecWithWrapPurposeKey=$keySpecWithWrapPurposeKey, " +
                     "keySpecWithoutWrapPurposeKey=$keySpecWithoutWrapPurposeKey, " +
-                    "oaepSupported=$enableKeyGenEncryptionPaddingRsaOaep]"
+                    "oaepSupported=$enableKeyGenEncryptionPaddingRsaOaep, " +
+                    "conservativeKeyGenForLegacyDevices=$conservativeKeyGenForLegacyDevices]"
         )
     }
 
@@ -201,41 +208,81 @@ class CryptoParameterSpecFactory(
      * Prioritizes modern Android KeyStore features (API 23+) when enabled by feature flags,
      * with legacy fallback always included for maximum compatibility.
      *
+     * When [CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES] is enabled, the
+     * advanced specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1) are skipped on API &lt;= 30 - where
+     * pre-Keystore 2.0 keymasters frequently reject them - in favour of a conservative
+     * RSA/PKCS1/SHA-256 spec. When the flight is disabled the previous behaviour is restored so the
+     * change can be turned off via ECS.
+     *
      * @return List of [IKeyGenSpec] objects ordered by preference (most modern first)
      */
     fun getPrioritizedKeyGenParameterSpecs(): List<IKeyGenSpec> {
         val methodTag = "$TAG:getPrioritizedKeyGenParameterSpecs"
         val specs = mutableListOf<IKeyGenSpec>()
+        val conservativeFixEnabled = conservativeKeyGenForLegacyDevices
 
         // The advanced specs below request features (PURPOSE_WRAP_KEY, SHA-512 digests and
         // OAEP/MGF1 padding) that are only reliably supported by the hardware keymaster starting
         // with Keystore 2.0 (API 31). On API <= 30 many hardware-backed keymasters - especially on
         // rugged/enterprise devices - reject these specs, which previously caused every attempt
         // (including the deprecated legacy KeyPairGeneratorSpec fallback) to fail with
-        // "All key generation attempts failed". Restrict the advanced specs to API 31+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (keySpecWithWrapPurposeKey) {
-                // First priority: with PURPOSE_WRAP_KEY if enabled
+        // "All key generation attempts failed". When the legacy-device fix flight is enabled the
+        // advanced specs are restricted to API 31+; otherwise the previous behaviour is preserved.
+        val advancedSpecsAllowed =
+            !conservativeFixEnabled || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+        if (advancedSpecsAllowed) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
+                // First priority: API 28+ with PURPOSE_WRAP_KEY if enabled
                 specs.add(keyGenParamSpecWithPurposeWrapKey)
             }
 
             if (keySpecWithoutWrapPurposeKey) {
-                // Second priority: without PURPOSE_WRAP_KEY
+                // Second priority: API 23+ without PURPOSE_WRAP_KEY
                 specs.add(keyGenParamSpecWithoutPurposeWrapKey)
             }
         }
 
         // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
-        // This is the primary viable spec on API 23..30 keymasters and a safe fallback on API 31+
-        // before resorting to the deprecated legacy spec.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        // Only added when the legacy-device fix is enabled; it is the primary viable spec on
+        // API 23..30 keymasters and a safe fallback on API 31+ before the deprecated legacy spec.
+        if (conservativeFixEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             specs.add(keyGenParamSpecConservative)
         }
 
         // Always include legacy spec as last resort fallback (API < 23).
         specs.add(keyGenParamSpecLegacy)
 
+        recordKeyGenSpecSelectionTelemetry(conservativeFixEnabled, specs)
         Logger.info(methodTag, "Key generation specs: ${specs.joinToString { it.description }}")
         return specs
+    }
+
+    /**
+     * Records telemetry about which key generation specs were elected for this device on the
+     * current span. This lets us validate, post-deploy, that legacy (API &lt;= 30) devices no
+     * longer attempt the advanced specs and instead elect the conservative spec.
+     *
+     * @param conservativeFixEnabled whether the legacy-device fix flight is enabled
+     * @param specs the prioritized key generation specs elected for this device
+     */
+    private fun recordKeyGenSpecSelectionTelemetry(
+        conservativeFixEnabled: Boolean,
+        specs: List<IKeyGenSpec>
+    ) {
+        SpanExtension.current().apply {
+            setAttribute(
+                AttributeName.key_gen_conservative_spec_flight_enabled.name,
+                conservativeFixEnabled
+            )
+            setAttribute(
+                AttributeName.key_gen_api_level.name,
+                Build.VERSION.SDK_INT.toLong()
+            )
+            setAttribute(
+                AttributeName.key_gen_prioritized_spec_list.name,
+                specs.joinToString(separator = ",") { it.description }
+            )
+        }
     }
 }

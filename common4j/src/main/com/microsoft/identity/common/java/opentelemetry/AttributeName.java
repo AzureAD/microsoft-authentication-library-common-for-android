@@ -626,6 +626,23 @@ public enum AttributeName {
      */
     key_pair_gen_elapsed_time,
 
+    /**
+     * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
+     * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
+     */
+    key_gen_conservative_spec_flight_enabled,
+
+    /**
+     * The Android API level (Build.VERSION.SDK_INT) of the device performing key generation.
+     */
+    key_gen_api_level,
+
+    /**
+     * The prioritized list of key generation spec descriptions elected for the device, in order
+     * of preference. Used to confirm legacy devices no longer attempt the advanced specs.
+     */
+    key_gen_prioritized_spec_list,
+
     //endregion
 
     //region Secret Key Wrapping
