@@ -151,6 +151,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
 
     /**
+     * Flight to enable post-parse validation of the {@code intent://} broker-install request before it
+     * is launched. When enabled, the parsed intent's component and selector are cleared and its target
+     * package must be the Google Play Store before the activity is started. Defaults to off so the
+     * validation can be rolled out progressively via ECS; when off, the legacy launch behavior is used.
+     */
+    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", false),
+
+    /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */

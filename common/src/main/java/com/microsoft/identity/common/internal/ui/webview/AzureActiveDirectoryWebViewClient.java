@@ -110,6 +110,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
 
@@ -130,6 +131,12 @@ import io.opentelemetry.context.Scope;
  */
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
+
+    /**
+     * Package name of the Google Play Store, the legitimate launch target for a broker-install
+     * {@code intent://} request.
+     */
+    private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
@@ -1045,6 +1052,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+                    // Clear any explicit component or selector carried by the parsed intent so that
+                    // activity resolution is driven solely by the validated package.
+                    intent.setComponent(null);
+                    intent.setSelector(null);
+
+                    final String targetPackage = intent.getPackage();
+                    if (!isAllowedBrokerInstallIntentTarget(targetPackage)) {
+                        Logger.warn(methodTag,
+                                "Blocking intent request to non-allow-listed package: " + targetPackage);
+                        return;
+                    }
+                }
                 view.getContext().startActivity(intent);
                 Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
             } else {
@@ -1060,6 +1081,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
             returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
         }
+    }
+
+    /**
+     * Checks whether the parsed broker-install intent targets the allow-listed package. The only
+     * supported launch target for this path is the Google Play Store, which opens the broker app's
+     * store listing, so any other package is not launched.
+     *
+     * @param packageName The target package declared by the parsed intent.
+     * @return {@code true} if the package is allow-listed, {@code false} otherwise.
+     */
+    private boolean isAllowedBrokerInstallIntentTarget(@Nullable final String packageName) {
+        return GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(packageName);
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
