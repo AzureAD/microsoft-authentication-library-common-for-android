@@ -700,4 +700,36 @@ public class UiAutomatorUtils {
         uiObject.waitForExists(existsTimeout);
         return uiObject;
     }
+
+    /**
+     * Waits until the UI element matching the given selector is gone from the screen.
+     * Uses {@link UiDevice#findObject} directly, so if the element
+     * is already gone this returns immediately.
+     *
+     * @param selector the {@link UiSelector} identifying the element to wait for disappearance
+     * @param timeout  maximum time in milliseconds to wait for the element to disappear
+     * @return {@code true} if the element is gone within the timeout, {@code false} otherwise
+     */
+    public static boolean waitUntilGone(@NonNull final UiSelector selector, final long timeout) {
+        Logger.i(TAG, "Wait until UI element is gone for selector: " + selector);
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(selector);
+        return uiObject.waitUntilGone(timeout);
+    }
+
+    /**
+     * Waits until the UI element with the given resource id is gone from the screen.
+     * Uses {@link UiDevice#findObject} directly, so if the element is already gone this returns
+     * immediately.
+     *
+     * @param resourceId the resource id of the element to wait for disappearance
+     * @param timeout    maximum time in milliseconds to wait for the element to disappear
+     * @return {@code true} if the element is gone within the timeout, {@code false} otherwise
+     */
+    public static boolean waitUntilGoneByResourceId(@NonNull final String resourceId, final long timeout) {
+        Logger.i(TAG, "Wait until UI element with resource id is gone: " + resourceId);
+        return waitUntilGone(new UiSelector().resourceId(resourceId), timeout);
+    }
 }
