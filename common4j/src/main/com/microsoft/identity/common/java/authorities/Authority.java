@@ -367,7 +367,7 @@ public abstract class Authority {
                 .isFlightEnabled(CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH);
 
         knownToDeveloper = useExactHostMatch
-                ? isKnownToDeveloperByExactHost(authorityUrl, methodTag)
+                ? isKnownToDeveloperByExactHost(authorityUrl)
                 : isKnownToDeveloperByLegacySubstring(authorityUrl);
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
@@ -393,11 +393,10 @@ public abstract class Authority {
      * {@link #getEquivalentConfiguredAuthority(String)}.
      *
      * @param authorityUrl the candidate authority URL whose host is being validated.
-     * @param methodTag    logging tag of the caller.
      * @return true if the candidate host exactly matches a developer-configured known authority host.
      */
-    private static boolean isKnownToDeveloperByExactHost(@NonNull final URL authorityUrl,
-                                                         @NonNull final String methodTag) {
+    private static boolean isKnownToDeveloperByExactHost(@NonNull final URL authorityUrl) {
+        final String methodTag = TAG + ":isKnownToDeveloperByExactHost";
         final String candidateHost = authorityUrl.getAuthority();
         synchronized (sLock) {
             for (final Authority currentAuthority : knownAuthorities) {
@@ -429,7 +428,7 @@ public abstract class Authority {
      *
      * @param authorityUrl the candidate authority URL whose host is being validated.
      * @return true if the candidate host appears as a substring of any configured known authority URL.
-     * @deprecated superseded by {@link #isKnownToDeveloperByExactHost(URL, String)}.
+     * @deprecated superseded by {@link #isKnownToDeveloperByExactHost(URL)}.
      */
     @Deprecated
     private static boolean isKnownToDeveloperByLegacySubstring(@NonNull final URL authorityUrl) {
