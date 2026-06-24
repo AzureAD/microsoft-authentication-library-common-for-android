@@ -268,28 +268,31 @@ class CryptoParameterSpecFactory(
     /**
      * Legacy-device-safe key generation spec selection (fix flight ON).
      *
-     * On API &lt;= 30 the advanced specs are skipped entirely - pre-Keystore 2.0 keymasters
-     * (especially on rugged/enterprise devices) reject PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1, which
-     * previously made every attempt fail with "All key generation attempts failed". Instead a
-     * conservative RSA/PKCS1/SHA-256 spec - which those keymasters reliably support - is used. On
-     * API 31+ (Keystore 2.0) the advanced specs are still attempted first, with the conservative
-     * spec added as an extra fallback before the deprecated legacy spec.
+     * This is [getDefaultKeyGenSpecs] with the conservative spec inserted before the deprecated
+     * legacy fallback. We still attempt the strongest specs the device can support first
+     * (PURPOSE_WRAP_KEY on API 28+, the without-wrap spec on API 23+), because telemetry shows the
+     * modern specs succeed for a large share of API 28..30 devices - skipping them would needlessly
+     * downgrade those devices to weaker crypto. The conservative RSA/ENCRYPT|DECRYPT/SHA-256/PKCS1
+     * spec is added as the bridge that pre-Keystore-2.0 keymasters (which reject SHA-512 / OAEP-MGF1)
+     * reliably accept, so devices that fail the advanced specs land on a working modern spec instead
+     * of failing every attempt ("All key generation attempts failed"). The deprecated legacy spec
+     * remains the final fallback.
      */
     private fun getLegacyDeviceSafeKeyGenSpecs(): List<IKeyGenSpec> {
         val specs = mutableListOf<IKeyGenSpec>()
 
-        // Advanced specs are only reliable from Keystore 2.0 (API 31) onward.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (keySpecWithWrapPurposeKey) {
-                specs.add(keyGenParamSpecWithPurposeWrapKey)
-            }
-            if (keySpecWithoutWrapPurposeKey) {
-                specs.add(keyGenParamSpecWithoutPurposeWrapKey)
-            }
+        // Attempt the strongest specs the device can actually support first, so devices that do
+        // support them still get the best crypto. PURPOSE_WRAP_KEY requires API 28+ (P).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && keySpecWithWrapPurposeKey) {
+            specs.add(keyGenParamSpecWithPurposeWrapKey)
+        }
+        if (keySpecWithoutWrapPurposeKey) {
+            specs.add(keyGenParamSpecWithoutPurposeWrapKey)
         }
 
         // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
-        // Primary viable spec on API 23..30 keymasters; a safe fallback on API 31+.
+        // Inserted before the deprecated legacy spec so pre-Keystore-2.0 keymasters that reject the
+        // advanced specs still land on a working modern KeyGenParameterSpec.
         specs.add(keyGenParamSpecConservative)
         // Always include legacy spec as last resort fallback.
         specs.add(keyGenParamSpecLegacy)

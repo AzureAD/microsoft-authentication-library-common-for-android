@@ -27,6 +27,7 @@ import android.os.Build
 import android.security.keystore.KeyProperties
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -56,6 +57,13 @@ class CryptoParameterSpecFactoryTest {
         // Setup mock flights provider
         mockFlightsProvider = Mockito.mock(IFlightsProvider::class.java)
         mockContext = Mockito.mock(Context::class.java)
+    }
+
+    @After
+    fun tearDown() {
+        // Reliably reset to the class-level Robolectric SDK (API 28) after every test so that
+        // tests which override Build.VERSION.SDK_INT (e.g. the API 30 cases) never leak into others.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
     }
 
 
@@ -212,9 +220,11 @@ class CryptoParameterSpecFactoryTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.P]) // API 28 (a legacy, <= 30, device)
-    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_LegacyDevice_SkipsAdvancedSpecs() {
-        // When the legacy-device fix is enabled on API <= 30, the advanced specs must be skipped
-        // and the conservative spec elected instead (this is the regression fix).
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_LegacyDevice_AttemptsModernThenConservative() {
+        // When the legacy-device fix is enabled on API 28..30, the advanced specs are still
+        // attempted first (telemetry shows a large share of these devices support them, so we must
+        // not downgrade their crypto), with the conservative spec inserted before the deprecated
+        // legacy fallback as the bridge for keymasters that reject the advanced specs.
         Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
             .thenReturn(true)
         Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
@@ -228,11 +238,13 @@ class CryptoParameterSpecFactoryTest {
 
         val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
 
-        // Only the conservative spec and the legacy fallback should be present (no advanced specs).
-        Assert.assertEquals(2, specs.size.toLong())
-        Assert.assertEquals(CONSERVATIVE_SPEC, specs[0].description)
-        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[0].encryptionPaddings)
-        Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
+        // Advanced specs first (API 28 satisfies the wrap-key gate), then conservative, then legacy.
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[2].encryptionPaddings)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
     }
 
     @Test
@@ -295,7 +307,7 @@ class CryptoParameterSpecFactoryTest {
     // Build.VERSION_CODES constants, so this faithfully reproduces the API 30 code path.
 
     @Test
-    fun testApi30_ConservativeFixEnabled_UsesConservativeSpecAndSkipsFailingAdvancedSpecs() {
+    fun testApi30_ConservativeFixEnabled_AttemptsModernThenInsertsConservativeBeforeLegacy() {
         // Pin the device to Android 11 / API 30.
         ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 30)
 
@@ -313,22 +325,16 @@ class CryptoParameterSpecFactoryTest {
 
         val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
 
-        // WITH the flight, an API 30 device elects the conservative (hardware-friendly) spec and
-        // none of the advanced specs that pre-Keystore-2.0 keymasters reject.
-        Assert.assertEquals(2, specs.size.toLong())
-        Assert.assertEquals(CONSERVATIVE_SPEC, specs[0].description)
-        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[0].encryptionPaddings)
-        Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
-        Assert.assertFalse(
-            "API 30 must not attempt the advanced wrap-key spec when the fix is on",
-            specs.any { it.description == "modern_spec_with_wrap_key" }
-        )
-        Assert.assertFalse(
-            specs.any { it.description == "modern_spec_without_wrap_key" }
-        )
-
-        // Reset to the class-level Robolectric SDK (API 28) to avoid leaking into other tests.
-        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
+        // WITH the flight, an API 30 device still attempts the advanced specs first (telemetry shows
+        // many such devices support them), but the conservative (hardware-friendly) spec is inserted
+        // before the deprecated legacy fallback so keymasters that reject the advanced specs still
+        // land on a working modern spec instead of failing every attempt.
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[2].encryptionPaddings)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
     }
 
     @Test
@@ -361,9 +367,6 @@ class CryptoParameterSpecFactoryTest {
             "Without the fix, an API 30 device must not receive the conservative (working) spec",
             specs.any { it.description == CONSERVATIVE_SPEC }
         )
-
-        // Reset to the class-level Robolectric SDK (API 28) to avoid leaking into other tests.
-        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
     }
     // endregion
 
