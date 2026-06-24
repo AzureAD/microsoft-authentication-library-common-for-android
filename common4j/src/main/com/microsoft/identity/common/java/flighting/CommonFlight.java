@@ -268,7 +268,12 @@ public enum CommonFlight implements IFlightConfig {
      * references first, then clones only the matching items — avoiding the cost of
      * cloning the entire cache when only a subset is needed.
      */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
+
+    /**
+     * Flight to enable request origin display in the HTTP authentication dialog.
+     */
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
 
     private String key;
     private Object defaultValue;

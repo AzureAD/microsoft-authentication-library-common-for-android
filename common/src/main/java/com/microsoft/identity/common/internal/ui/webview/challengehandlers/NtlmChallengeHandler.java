@@ -25,11 +25,15 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -72,6 +76,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
         final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
         final EditText passwordView = (EditText) v.findViewById(R.id.editPassword);
+        setOriginTextIfEnabled(v, ntlmChallenge);
         final String title = mActivity.getText(R.string.http_auth_dialog_title).toString();
         final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity);
         httpAuthDialog.setTitle(title)
@@ -97,6 +102,59 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                                 cancelRequest();
                             }
                         }).create().show();
+    }
+
+    /**
+     * Sets the request origin details on the dialog when the flight is enabled.
+     *
+     * @param dialogView    the inflated dialog view
+     * @param ntlmChallenge the challenge containing request origin details
+     */
+    void setOriginTextIfEnabled(final View dialogView, final NtlmChallenge ntlmChallenge) {
+        if (!isHttpAuthOriginDisplayEnabled()) {
+            return;
+        }
+
+        final String originText = getOriginText(ntlmChallenge);
+        if (TextUtils.isEmpty(originText)) {
+            return;
+        }
+
+        final TextView originView = (TextView) dialogView.findViewById(R.id.httpAuthOriginText);
+        originView.setText(originText);
+        originView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Gets the request origin text displayed in the dialog.
+     *
+     * @param ntlmChallenge the challenge containing request origin details
+     * @return the formatted origin text
+     */
+    String getOriginText(final NtlmChallenge ntlmChallenge) {
+        final StringBuilder originText = new StringBuilder();
+        if (!TextUtils.isEmpty(ntlmChallenge.getHost())) {
+            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_host, ntlmChallenge.getHost()));
+        }
+
+        if (!TextUtils.isEmpty(ntlmChallenge.getRealm())) {
+            if (originText.length() > 0) {
+                originText.append('\n');
+            }
+            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_realm, ntlmChallenge.getRealm()));
+        }
+
+        return originText.toString();
+    }
+
+    /**
+     * Checks whether the request origin display flight is enabled.
+     *
+     * @return true if the request origin should be shown
+     */
+    boolean isHttpAuthOriginDisplayEnabled() {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_HTTP_AUTH_ORIGIN_DISPLAY);
     }
 
     private void cancelRequest() {
