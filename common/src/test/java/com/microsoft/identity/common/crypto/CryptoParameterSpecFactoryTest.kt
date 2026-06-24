@@ -326,6 +326,9 @@ class CryptoParameterSpecFactoryTest {
         Assert.assertFalse(
             specs.any { it.description == "modern_spec_without_wrap_key" }
         )
+
+        // Reset to the class-level Robolectric SDK (API 28) to avoid leaking into other tests.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
     }
 
     @Test
@@ -358,6 +361,9 @@ class CryptoParameterSpecFactoryTest {
             "Without the fix, an API 30 device must not receive the conservative (working) spec",
             specs.any { it.description == CONSERVATIVE_SPEC }
         )
+
+        // Reset to the class-level Robolectric SDK (API 28) to avoid leaking into other tests.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
     }
     // endregion
 

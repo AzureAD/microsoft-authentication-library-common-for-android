@@ -243,9 +243,9 @@ class CryptoParameterSpecFactory(
     /**
      * Original key generation spec selection (fix flight OFF) - unchanged behaviour.
      *
-     * The advanced specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1) are attempted on every API level.
-     * This is what causes pre-Keystore 2.0 (API &lt;= 30) keymasters to reject every spec; see
-     * [getLegacyDeviceSafeKeyGenSpecs] for the fixed path.
+     * The advanced specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1) are attempted only on API levels
+     * that support them (e.g., wrap-key spec on API 28+; non-wrap spec on API 23+) when their
+     * corresponding feature flags are enabled. See [getLegacyDeviceSafeKeyGenSpecs] for the fixed path.
      */
     private fun getDefaultKeyGenSpecs(): List<IKeyGenSpec> {
         val specs = mutableListOf<IKeyGenSpec>()
@@ -292,9 +292,7 @@ class CryptoParameterSpecFactory(
         // Primary viable spec on API 23..30 keymasters; a safe fallback on API 31+.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             specs.add(keyGenParamSpecConservative)
-        }
-
-        // Always include legacy spec as last resort fallback (API < 23).
+        // Always include legacy spec as last resort fallback.
         specs.add(keyGenParamSpecLegacy)
         return specs
     }
