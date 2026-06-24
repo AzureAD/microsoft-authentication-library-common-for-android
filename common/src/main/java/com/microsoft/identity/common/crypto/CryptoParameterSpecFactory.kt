@@ -292,6 +292,7 @@ class CryptoParameterSpecFactory(
         // Primary viable spec on API 23..30 keymasters; a safe fallback on API 31+.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             specs.add(keyGenParamSpecConservative)
+        }
         // Always include legacy spec as last resort fallback.
         specs.add(keyGenParamSpecLegacy)
         return specs
