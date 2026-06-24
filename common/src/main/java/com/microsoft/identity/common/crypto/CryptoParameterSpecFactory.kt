@@ -223,7 +223,7 @@ class CryptoParameterSpecFactory(
         // Record whether the fix flight was on for this attempt so we can correlate, post-deploy,
         // against the existing DeviceInfo_OsVersion and key_pair_gen_description telemetry.
         SpanExtension.current().setAttribute(
-            AttributeName.key_gen_conservative_spec_flight_enabled.name,
+            AttributeName.key_pair_gen_conservative_spec_flight_enabled.name,
             conservativeFixEnabled
         )
 

@@ -630,7 +630,7 @@ public enum AttributeName {
      * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
      * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
      */
-    key_gen_conservative_spec_flight_enabled,
+    key_pair_gen_conservative_spec_flight_enabled,
 
     //endregion
 
