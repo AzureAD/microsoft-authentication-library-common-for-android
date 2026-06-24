@@ -290,9 +290,7 @@ class CryptoParameterSpecFactory(
 
         // Conservative, hardware-friendly spec (RSA, ENCRYPT|DECRYPT, SHA-256, PKCS1 only).
         // Primary viable spec on API 23..30 keymasters; a safe fallback on API 31+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            specs.add(keyGenParamSpecConservative)
-        }
+        specs.add(keyGenParamSpecConservative)
         // Always include legacy spec as last resort fallback.
         specs.add(keyGenParamSpecLegacy)
         return specs
