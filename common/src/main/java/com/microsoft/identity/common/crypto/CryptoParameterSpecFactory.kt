@@ -260,7 +260,7 @@ class CryptoParameterSpecFactory(
             specs.add(keyGenParamSpecWithoutPurposeWrapKey)
         }
 
-        // Always include legacy spec as last resort fallback (API < 23).
+        // Always include legacy spec as last resort fallback.
         specs.add(keyGenParamSpecLegacy)
         return specs
     }
