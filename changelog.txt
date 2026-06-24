@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
+- [PATCH] Harden Authority.isKnownAuthority() to use exact, case-insensitive host matching for developer-configured known authorities; gated behind CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH (default on)
 
 Version 24.4.0
 ----------
