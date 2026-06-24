@@ -68,7 +68,7 @@ open class DeviceRegistrationIpcStrategiesProvider @JvmOverloads constructor(
         val contentProviderStrategy = ContentProviderStrategy(context, components)
         if (contentProviderStrategy.isSupportedByTargetedBroker(activeBrokerPackageName)) {
             Logger.info(methodTag, "Adding primary strategy: ${ContentProviderStrategy::class.java.simpleName}")
-            strategies.add(contentProviderStrategy)
+            //strategies.add(contentProviderStrategy)
         }
 
         val boundServiceStrategy = BoundServiceStrategy<IDeviceRegistrationService>(
