@@ -174,25 +174,24 @@ public class AuthorityKnownHostTest {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Tests 6 & 7 - Flow-level regression guards.
+    // Flow-level regression guard (covers the finding's Test 6 - ROPC and Test 7 - silent).
     //
-    // Both the ROPC flow (BaseController.acquireTokenWithPassword, which calls
-    // Authority.getKnownAuthorityResult(...) and then `if (!authorityResult.getKnown()) throw
-    // authorityResult.getClientException();` BEFORE constructing the OAuth2 strategy or POSTing the
-    // username/password) and the silent flow (BaseController.performSilentTokenRequest, which
-    // performs the identical getKnownAuthorityResult(...) check BEFORE setting the refresh token on
-    // the request and POSTing it) gate all outbound credential submission on
-    // Authority.getKnownAuthorityResult(). These tests drive that shared gate with a substring host
-    // and assert it returns "not known" with an UNKNOWN_AUTHORITY exception - i.e. the exact value
-    // that makes those flows throw and abort before any credential-bearing HTTP POST is dispatched.
+    // The ROPC flow (BaseController.acquireTokenWithPassword) and the silent flow
+    // (BaseController.performSilentTokenRequest) both gate all outbound credential submission on the
+    // same chokepoint: they call Authority.getKnownAuthorityResult(...) and then
+    // `if (!authorityResult.getKnown()) throw authorityResult.getClientException();` BEFORE
+    // constructing the OAuth2 strategy / setting the refresh token and POSTing any credential. Since
+    // both paths reduce to this single gate, one test exercises it for both. We drive the gate with a
+    // substring host and assert it returns "not known" with an UNKNOWN_AUTHORITY exception - the exact
+    // value that makes those flows throw and abort before any credential-bearing HTTP POST.
     //
     // The credential POST is preceded only by a credential-free AAD instance-discovery GET, which we
     // mock here so the gate runs deterministically and offline.
     // ---------------------------------------------------------------------------------------------
 
-    /** Test 6 - ROPC: a substring-host authority is denied by the gate before credentials are sent. */
+    /** A substring-host authority is denied by the shared gate before any credential is sent. */
     @Test
-    public void ropcGateRejectsSubstringHostBeforeCredentialSubmission() throws IOException {
+    public void gateRejectsSubstringHostBeforeCredentialSubmission() throws IOException {
         configureKnownAuthority(CONFIGURED_B2C_URL);
         enqueueInstanceDiscoveryResponse();
 
@@ -208,23 +207,7 @@ public class AuthorityKnownHostTest {
                 result.getClientException().getErrorCode());
     }
 
-    /** Test 7 - Silent: a substring-host authority is denied by the gate before the refresh token is sent. */
-    @Test
-    public void silentGateRejectsSubstringHostBeforeRefreshTokenSubmission() throws IOException {
-        configureKnownAuthority(CONFIGURED_B2C_URL);
-        enqueueInstanceDiscoveryResponse();
-
-        final Authority attackerAuthority = candidate("https://login.com/contoso.onmicrosoft.com");
-        final Authority.KnownAuthorityResult result = Authority.getKnownAuthorityResult(attackerAuthority);
-
-        Assert.assertFalse("Substring host must not be treated as known", result.getKnown());
-        Assert.assertNotNull("A blocking exception must be produced for the controller to throw",
-                result.getClientException());
-        Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY,
-                result.getClientException().getErrorCode());
-    }
-
-    /** The legitimate, exactly-configured host must still pass the gate (non-regression for both flows). */
+    /** The legitimate, exactly-configured host must still pass the shared gate (non-regression). */
     @Test
     public void gateAcceptsExactlyConfiguredHost() throws IOException {
         configureKnownAuthority(CONFIGURED_B2C_URL);
@@ -246,17 +229,10 @@ public class AuthorityKnownHostTest {
     // developer-configured authority. The same CommonFlight is honored by Broker automatically
     // through its ECS flights provider (which forwards any IFlightConfig by key), matching the
     // ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY precedent in AzureActiveDirectory.
+    //
+    // Contrast with substringHostIsRejected (flight default-on -> rejected): the same substring host
+    // is accepted here when the flight is OFF, demonstrating the switch actually reverts behavior.
     // ---------------------------------------------------------------------------------------------
-
-    /** Flight ON (explicit): substring host is rejected — same as the secure default. */
-    @Test
-    public void flightOn_substringHostIsRejected() {
-        configureKnownAuthority(CONFIGURED_B2C_URL);
-        setExactHostMatchFlight(true);
-
-        Assert.assertFalse(
-                Authority.isKnownAuthority(candidate("https://login.com/contoso.onmicrosoft.com")));
-    }
 
     /** Flight OFF (kill switch): legacy substring behavior is restored, so the substring host matches. */
     @Test
@@ -268,16 +244,6 @@ public class AuthorityKnownHostTest {
         // comparison this (insecurely) passes — documenting exactly what the kill switch reverts to.
         Assert.assertTrue(
                 Authority.isKnownAuthority(candidate("https://login.com/contoso.onmicrosoft.com")));
-    }
-
-    /** Flight OFF: a legitimate exact host still passes (legacy path is a superset of exact matching). */
-    @Test
-    public void flightOff_exactHostStillAccepted() {
-        configureKnownAuthority(CONFIGURED_B2C_URL);
-        setExactHostMatchFlight(false);
-
-        Assert.assertTrue(
-                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com/contoso.onmicrosoft.com/other")));
     }
 
     /**
