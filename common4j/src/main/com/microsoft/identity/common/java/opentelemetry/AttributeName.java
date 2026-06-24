@@ -626,6 +626,12 @@ public enum AttributeName {
      */
     key_pair_gen_elapsed_time,
 
+    /**
+     * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
+     * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
+     */
+    key_pair_gen_conservative_spec_flight_enabled,
+
     //endregion
 
     //region Secret Key Wrapping
