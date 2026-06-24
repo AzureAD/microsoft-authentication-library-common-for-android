@@ -417,11 +417,11 @@ public abstract class Authority {
                         }
                     } catch (final MalformedURLException e) {
                         // Skip malformed configured authority URLs.
-                        Logger.errorPII(
-                                methodTag,
-                                "Error parsing configured known authority URL",
-                                e
-                        );
+                        if (Logger.isAllowPii()) {
+                            Logger.errorPII(methodTag, "Error parsing configured known authority URL", e);
+                        } else {
+                            Logger.error(methodTag, "Error parsing configured known authority URL", null);
+                        }
                     }
                 }
             }
