@@ -141,6 +141,30 @@ public class AuthorityKnownHostTest {
                 Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com.attacker.example/contoso.onmicrosoft.com/B2C_1_signin")));
     }
 
+    /**
+     * Port is ignored: an explicit default port on the candidate must still match a configured
+     * authority that omits the port. The trust boundary is the host, not the port.
+     */
+    @Test
+    public void explicitDefaultPortMatchesImplicitPort() {
+        configureKnownAuthority("https://login.microsoftonline.com/common");
+
+        Assert.assertTrue(
+                Authority.isKnownAuthority(candidate("https://login.microsoftonline.com:443/common")));
+    }
+
+    /**
+     * Port is ignored: a different, non-default port on the same configured host is still accepted,
+     * since the gate trusts the host regardless of port.
+     */
+    @Test
+    public void differentPortSameHostIsAccepted() {
+        configureKnownAuthority("https://login.microsoftonline.com/common");
+
+        Assert.assertTrue(
+                Authority.isKnownAuthority(candidate("https://login.microsoftonline.com:8443/common")));
+    }
+
     /** A null candidate authority must be rejected. */
     @Test
     public void nullAuthorityIsRejected() {

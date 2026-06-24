@@ -385,25 +385,34 @@ public abstract class Authority {
     }
 
     /**
-     * Compares the parsed host (and optional port) of the candidate authority against the parsed host
-     * of each developer-configured known authority. An exact, case-insensitive host match is required;
-     * substring matching is never used here, since it would allow an untrusted host (e.g.
+     * Compares the candidate authority against each developer-configured known authority by parsed
+     * host (case-insensitive) only. Port and path are intentionally ignored: the trust boundary for
+     * this gate is the host (DNS/TLS trust is per-host), so {@code https://example.com},
+     * {@code https://example.com:443} and {@code https://example.com:8443} are all treated as the
+     * same trusted host.
+     * <p>
+     * Substring matching is never used here, since it would allow an untrusted host (e.g.
      * "login.com") to pass the gate merely because it is a substring of a configured URL (e.g.
-     * "https://contoso.b2clogin.com/..."). This mirrors the pattern used by
+     * "https://contoso.b2clogin.com/..."). Using the parsed host (rather than the raw authority
+     * component) also avoids userinfo confusion such as "https://contoso.b2clogin.com@evil.com".
+     * This is consistent with the host-equality intent of
      * {@link #getEquivalentConfiguredAuthority(String)}.
      *
      * @param authorityUrl the candidate authority URL whose host is being validated.
-     * @return true if the candidate host exactly matches a developer-configured known authority host.
+     * @return true if the candidate host matches a developer-configured known authority host.
      */
     private static boolean isKnownToDeveloperByExactHost(@NonNull final URL authorityUrl) {
         final String methodTag = TAG + ":isKnownToDeveloperByExactHost";
-        final String candidateHost = authorityUrl.getAuthority();
+        final String candidateHost = authorityUrl.getHost();
+        if (StringUtil.isNullOrEmpty(candidateHost)) {
+            return false;
+        }
         synchronized (sLock) {
             for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrlString != null && candidateHost != null) {
+                if (currentAuthority.mAuthorityUrlString != null) {
                     try {
                         final URL knownAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
-                        if (candidateHost.equalsIgnoreCase(knownAuthorityUrl.getAuthority())) {
+                        if (candidateHost.equalsIgnoreCase(knownAuthorityUrl.getHost())) {
                             return true;
                         }
                     } catch (final MalformedURLException e) {
