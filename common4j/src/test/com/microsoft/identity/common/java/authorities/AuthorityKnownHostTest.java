@@ -94,7 +94,12 @@ public class AuthorityKnownHostTest {
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
     }
 
-    /** Test 1 - A host that is a substring of a configured host must be rejected. */
+    // =============================================================================================
+    // Group 1 - Security regression guards: these FAIL on the legacy .contains() logic and pass only
+    // WITH the fix. They are the tests that actually catch the substring-bypass vulnerability.
+    // =============================================================================================
+
+    /** A host that is a substring of a configured host must be rejected. */
     @Test
     public void substringHostIsRejected() {
         configureKnownAuthority(CONFIGURED_B2C_URL);
@@ -104,7 +109,7 @@ public class AuthorityKnownHostTest {
                 Authority.isKnownAuthority(candidate("https://login.com/contoso.onmicrosoft.com")));
     }
 
-    /** Test 2 - A short generic substring host must be rejected. */
+    /** A short generic substring host must be rejected. */
     @Test
     public void shortGenericSubstringHostIsRejected() {
         configureKnownAuthority("https://login.microsoftonline.com/common");
@@ -114,36 +119,10 @@ public class AuthorityKnownHostTest {
                 Authority.isKnownAuthority(candidate("https://e.com/common")));
     }
 
-    /** Test 3 - The exact configured host must be accepted (non-regression). */
-    @Test
-    public void exactConfiguredHostIsAccepted() {
-        configureKnownAuthority(CONFIGURED_B2C_URL);
-
-        Assert.assertTrue(
-                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com/contoso.onmicrosoft.com/anotherpolicy")));
-    }
-
-    /** Test 4 - Case-insensitive exact host match must be accepted. */
-    @Test
-    public void caseInsensitiveExactHostIsAccepted() {
-        configureKnownAuthority("https://Contoso.B2CLogin.com/contoso.onmicrosoft.com/B2C_1_signin");
-
-        Assert.assertTrue(
-                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com/contoso.onmicrosoft.com/B2C_1_signin")));
-    }
-
-    /** Test 5 - A look-alike host that merely contains the configured host as a substring must be rejected. */
-    @Test
-    public void pathExtensionLookAlikeHostIsRejected() {
-        configureKnownAuthority("https://contoso.b2clogin.com/contoso.onmicrosoft.com/B2C_1_signin");
-
-        Assert.assertFalse(
-                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com.attacker.example/contoso.onmicrosoft.com/B2C_1_signin")));
-    }
-
     /**
      * Port is ignored: an explicit default port on the candidate must still match a configured
-     * authority that omits the port. The trust boundary is the host, not the port.
+     * authority that omits the port. The trust boundary is the host, not the port. (Legacy
+     * substring matching would have compared "host:443" and failed, so this only passes with the fix.)
      */
     @Test
     public void explicitDefaultPortMatchesImplicitPort() {
@@ -165,7 +144,43 @@ public class AuthorityKnownHostTest {
                 Authority.isKnownAuthority(candidate("https://login.microsoftonline.com:8443/common")));
     }
 
-    /** A null candidate authority must be rejected. */
+    // =============================================================================================
+    // Group 2 - Non-regression guards: these pass WITH AND WITHOUT the fix. They do not catch the
+    // bug; they ensure the stricter matching does not break legitimate authority validation.
+    // =============================================================================================
+
+    /** The exact configured host must be accepted. */
+    @Test
+    public void exactConfiguredHostIsAccepted() {
+        configureKnownAuthority(CONFIGURED_B2C_URL);
+
+        Assert.assertTrue(
+                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com/contoso.onmicrosoft.com/anotherpolicy")));
+    }
+
+    /** Case-insensitive exact host match must be accepted. */
+    @Test
+    public void caseInsensitiveExactHostIsAccepted() {
+        configureKnownAuthority("https://Contoso.B2CLogin.com/contoso.onmicrosoft.com/B2C_1_signin");
+
+        Assert.assertTrue(
+                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com/contoso.onmicrosoft.com/B2C_1_signin")));
+    }
+
+    /**
+     * A look-alike host that merely contains the configured host as a substring must be rejected.
+     * (Legacy already rejects this because the candidate host is longer than the configured host, so
+     * it is a non-regression guard rather than a bug-catcher.)
+     */
+    @Test
+    public void pathExtensionLookAlikeHostIsRejected() {
+        configureKnownAuthority("https://contoso.b2clogin.com/contoso.onmicrosoft.com/B2C_1_signin");
+
+        Assert.assertFalse(
+                Authority.isKnownAuthority(candidate("https://contoso.b2clogin.com.attacker.example/contoso.onmicrosoft.com/B2C_1_signin")));
+    }
+
+    /** A null candidate authority must be rejected (early return, before any matching). */
     @Test
     public void nullAuthorityIsRejected() {
         configureKnownAuthority(CONFIGURED_B2C_URL);
@@ -173,21 +188,16 @@ public class AuthorityKnownHostTest {
         Assert.assertFalse(Authority.isKnownAuthority(null));
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Flow-level regression guard (covers the finding's Test 6 - ROPC and Test 7 - silent).
-    //
-    // The ROPC flow (BaseController.acquireTokenWithPassword) and the silent flow
-    // (BaseController.performSilentTokenRequest) both gate all outbound credential submission on the
-    // same chokepoint: they call Authority.getKnownAuthorityResult(...) and then
-    // `if (!authorityResult.getKnown()) throw authorityResult.getClientException();` BEFORE
+    // =============================================================================================
+    // Group 3 - Full-gate guards: exercise the shared Authority.getKnownAuthorityResult() chokepoint
+    // (with AAD instance-discovery mocked offline) that both the ROPC flow
+    // (BaseController.acquireTokenWithPassword) and the silent flow
+    // (BaseController.performSilentTokenRequest) consult - via
+    // `if (!authorityResult.getKnown()) throw authorityResult.getClientException();` - BEFORE
     // constructing the OAuth2 strategy / setting the refresh token and POSTing any credential. Since
-    // both paths reduce to this single gate, one test exercises it for both. We drive the gate with a
-    // substring host and assert it returns "not known" with an UNKNOWN_AUTHORITY exception - the exact
-    // value that makes those flows throw and abort before any credential-bearing HTTP POST.
-    //
-    // The credential POST is preceded only by a credential-free AAD instance-discovery GET, which we
-    // mock here so the gate runs deterministically and offline.
-    // ---------------------------------------------------------------------------------------------
+    // both paths reduce to this single gate, one reject test and one accept test cover both flows.
+    // The reject test only passes WITH the fix; the accept test is a non-regression guard (both).
+    // =============================================================================================
 
     /** A substring-host authority is denied by the shared gate before any credential is sent. */
     @Test
@@ -221,8 +231,8 @@ public class AuthorityKnownHostTest {
         Assert.assertNull(result.getClientException());
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Kill-switch flight (CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH).
+    // =============================================================================================
+    // Group 4 - Kill-switch flight (CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH).
     //
     // The fix is gated behind a default-on flight so the previous (insecure) substring behavior can
     // be restored via ECS in an emergency, should exact-host matching ever reject a legitimate,
@@ -232,7 +242,7 @@ public class AuthorityKnownHostTest {
     //
     // Contrast with substringHostIsRejected (flight default-on -> rejected): the same substring host
     // is accepted here when the flight is OFF, demonstrating the switch actually reverts behavior.
-    // ---------------------------------------------------------------------------------------------
+    // =============================================================================================
 
     /** Flight OFF (kill switch): legacy substring behavior is restored, so the substring host matches. */
     @Test
