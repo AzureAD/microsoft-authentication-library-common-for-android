@@ -17,6 +17,32 @@ This file is self-contained; it includes full baseline & appendices replicated f
 
 --------------------------------------------------------------------------------
 
+## 0.1 Recurring False-Positive Patterns — Do NOT Flag These
+
+These rules are calibrated from the team's Copilot Code Review Effectiveness analysis: each pattern below is a comment category that engineers explicitly dismissed as *Confirmed Not Helpful* (wrong, irrelevant, or by-design). Treat them as hard suppression rules. The real engineer dismissal is quoted for grounding. When you are tempted to post a comment matching one of these shapes, re-verify against the rule first; if the premise still holds, stay silent. A missed nit costs the team far less than a confirmed false positive.
+
+1. **Exception-handler inheritance — verify the type hierarchy before flagging a "missing" catch.**
+   Before suggesting an added `catch` block, or claiming a thrown type is not handled/retried, confirm the inheritance chain of the type that is already caught. A `catch` (or instanceof check) on a supertype already covers every subtype. Do **not** infer type relationships from class-name similarity — verify against the actual class hierarchy. Known relationship in this codebase: `UiRequiredException extends ServiceException`, so logic guarding on `ServiceException` (including retry logic) already applies to `UiRequiredException`.
+   > Real dismissal: *"UiRequiredException extends ServiceException, so retry logic applies."*
+
+2. **Hypothetical configurations / flight rollout state — don't warn on premises you can't see.**
+   Do not raise a concern whose premise is a flight/configuration *combination* that may not exist in production (e.g. "if flight X is enabled together with cache implementation Y, then…"). You have no visibility into rollout state. Only flag a flag/flight branch when the diff itself introduces an unsafe default or a real, reachable code path. Known production state: the in-memory cache flights for accounts and credentials (e.g. `ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE`) are enabled on 100% of devices, so concerns predicated on a non-memory cache implementation are moot.
+   > Real dismissal: *"This is fine as the in_memory_cache flight for accounts and credentials are enabled on 100% of the devices."*
+
+3. **Telemetry / instrumentation attachment paths — do not demand unit tests for them.**
+   Do not request unit tests whose sole purpose is to cover instrumentation: setting span attributes, attaching values to spans, recording exceptions on spans, or populating an instrumentation field (e.g. asserting `getClientDataInfo()` is non-null when a given header/parameter is present). The team classifies these attachment paths as low-risk. This **narrows** §7 — keep asking for tests around branching logic, parsing/serialization, error/retry/fallback handling, concurrency, and public API behavior; just not for the bare act of attaching an attribute or field to telemetry.
+   > Real dismissal: *"outdated."* (on a request for a test asserting a telemetry field is non-null)
+
+4. **Cross-PR / cross-repo scope creep — keep recommendations inside this diff.**
+   Every recommendation must stay within the scope of the current PR's changed files. Do not ask the author to also modify a *different* repository, a companion feed/pipeline, or files unrelated to this change (e.g. "also update the companion ADAL feed to consume the new upstream"). The suggestion may be valid in the abstract, but the placement is wrong — omit it rather than redirect the PR's scope.
+   > Real dismissal: *"this change is external to this pr."*
+
+5. **Field / domain semantics — don't assert meaning you can't verify; never hallucinate sources.**
+   Do not assert what a field, parameter, or data source "means", or which endpoint it comes from, unless the diff or quoted context supports it — reasoning from a name is not evidence. If a claim depends on a domain fact you cannot confirm from the changed code, either omit it or state it explicitly as an assumption ("Assumption: … If incorrect, disregard."). Known fact in this codebase: `clientDataInfo` / `BaseException.getClientDataInfo()` can be populated **both** from the `x-ms-clientdata` header **and** from an `/authorize` redirect's `clientdata` parameter — do not claim it originates from only one source.
+   > Real dismissal: *"not correct, both fields are populated from x-ms-clientdata."*
+
+--------------------------------------------------------------------------------
+
 ## 1. Domain & Architecture Primer (Common Context)
 
 ### 1.1 High-Level Purpose
@@ -436,6 +462,8 @@ Flag when new code:
 - Adds concurrency primitives (Mutex, atomic operations) without race / cancellation tests.
 - Adds feature flag branching without tests for each state.
 - Adds new public API methods without tests for expected behavior.
+
+Do NOT flag (see §0.1 rule 3): code whose only new behavior is attaching attributes/values to telemetry spans, recording exceptions on spans, or populating an instrumentation field. These attachment paths are considered low-risk and a missing test for them is not a defect.
 
 ### 7.2 Test Types & Expectations
 - Unit tests: pure logic & edge cases.
