@@ -23,10 +23,6 @@
 package com.microsoft.identity.common.java.authorities;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.net.HttpUrlConnectionFactory;
 import com.microsoft.identity.http.MockConnection;
 
@@ -77,21 +73,6 @@ public class AuthorityKnownHostTest {
     public void tearDown() {
         Authority.clearKnownAuthorities();
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
-    /**
-     * Overrides the {@link CommonFlight#ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH} kill-switch flight.
-     * Default (no override) is on/secure; pass {@code false} to fall back to legacy substring matching.
-     */
-    private void setExactHostMatchFlight(final boolean enabled) {
-        final MockFlightsProvider provider = new MockFlightsProvider();
-        provider.addFlight(
-                CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH.getKey(),
-                Boolean.toString(enabled));
-        final MockFlightsManager manager = new MockFlightsManager();
-        manager.setMockBrokerFlightsProvider(provider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
     }
 
     // =============================================================================================
@@ -229,31 +210,6 @@ public class AuthorityKnownHostTest {
 
         Assert.assertTrue("Exactly-configured host must remain known", result.getKnown());
         Assert.assertNull(result.getClientException());
-    }
-
-    // =============================================================================================
-    // Group 4 - Kill-switch flight (CommonFlight.ENABLE_KNOWN_AUTHORITY_HOST_EXACT_MATCH).
-    //
-    // The fix is gated behind a default-on flight so the previous (insecure) substring behavior can
-    // be restored via ECS in an emergency, should exact-host matching ever reject a legitimate,
-    // developer-configured authority. The same CommonFlight is honored by Broker automatically
-    // through its ECS flights provider (which forwards any IFlightConfig by key), matching the
-    // ENABLE_SOVEREIGN_CLOUD_INSTANCE_DISCOVERY precedent in AzureActiveDirectory.
-    //
-    // Contrast with substringHostIsRejected (flight default-on -> rejected): the same substring host
-    // is accepted here when the flight is OFF, demonstrating the switch actually reverts behavior.
-    // =============================================================================================
-
-    /** Flight OFF (kill switch): legacy substring behavior is restored, so the substring host matches. */
-    @Test
-    public void flightOff_substringHostIsAcceptedByLegacyBehavior() {
-        configureKnownAuthority(CONFIGURED_B2C_URL);
-        setExactHostMatchFlight(false);
-
-        // "login.com" is a substring of the configured "contoso.b2clogin.com" host. Under the legacy
-        // comparison this (insecurely) passes — documenting exactly what the kill switch reverts to.
-        Assert.assertTrue(
-                Authority.isKnownAuthority(candidate("https://login.com/contoso.onmicrosoft.com")));
     }
 
     /**
