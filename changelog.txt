@@ -1,6 +1,16 @@
 vNext
 ----------
 - [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId parameter; deprecate V0 overload without clientId in DeviceRegistrationClientApplication (#3147)
+- [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)
+- [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
+
+Version 24.4.0
+----------
+- [PATCH] Improve switch browser error handling and telemetry: standardize result delivery via setResultAndFinish, add error bundles for all failure paths, fix span/scope lifecycle, and move RESUME_REQUEST to shared SWITCH_BROWSER constants (#3134)
+- [PATCH] Fix incorrect Chrome Dev (com.chrome.dev) signing certificate thumbprint in AppRegistry (#3153)
+- [MINOR] Add IS_SWITCH_BROWSER_FLOW flag to PropertyBag so OneAuth can detect when the switch browser protocol was used during interactive auth (#3145)
+- [MINOR] Add Microsoft Defender for Endpoint (MDE) to AppRegistry authorized app lists (GET_DEVICE_TOKEN, DEVICE_REGISTRATION) (#3149)
+- [MINOR] OnboardingTelemetryRecorder.finalizeBlob() emits the populated blob whenever a valid sessionCorrelationId is present (previously returned empty when blockingErrors was empty) (#3148)
 - [PATCH] Change SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE flight default to true - overridden by Broker to false (#3144)
 - [MINOR] Add enableSwitchBrowser opt-in param to AuthorizationActivityFactory/Parameters so consumers (OneAuth) can signal switch_browser=1 when a compatible browser is available (#3137)
 - [PATCH] Remove stale code, eliminate flickers due to BrokerAuthorizationActivity (#3139)

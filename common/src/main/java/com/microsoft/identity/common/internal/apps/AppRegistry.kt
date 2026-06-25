@@ -94,7 +94,7 @@ object AppRegistry {
     val CHROME_DEV = App(
         nickName = "Google Chrome Dev",
         packageName = "com.chrome.dev",
-        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7GvHpHu6QOz+XIaXybtzL7A=="
+        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7Gv2HpHu6QOz+XIaXybtzL7A=="
     )
 
     val CHROME_CANARY = App(
@@ -133,6 +133,18 @@ object AppRegistry {
         signingCertificateThumbprint = AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
     )
 
+    val MDE_APP_PROD = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA=="
+    )
+
+    val MDE_APP_DEBUG = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "k0ZSm/+bEPZAq6mXujRXqP3B6+Zb2yXCiqwuvtCooLfKS91zvHCf+D9FFUYIkJyIKmn1onyWbwRXHEWfS5SaHQ=="
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -147,10 +159,12 @@ object AppRegistry {
     @JvmField
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
+            add(MDE_APP_DEBUG)
         }
     }
 
@@ -161,6 +175,7 @@ object AppRegistry {
         add(INTUNE_CE_PROD)
         add(INTUNE_AOSP_AGENT_PROD)
         add(TEAMS_IPPHONE_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
@@ -168,6 +183,7 @@ object AppRegistry {
             add(BrokerData.debugCompanyPortal)
             add(INTUNE_CE_DEBUG)
             add(TEAMS_IPPHONE_DEBUG)
+            add(MDE_APP_DEBUG)
         }
     }
 

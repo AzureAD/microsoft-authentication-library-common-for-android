@@ -28,6 +28,11 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserUriHelper
+import com.microsoft.identity.common.java.exception.BaseException
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.exception.ErrorStrings
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
@@ -75,6 +80,11 @@ class SwitchBrowserActivity : FragmentActivity() {
     private var launchStrategy: BrowserLaunchStrategy? = null
     private var span: Span? = null
 
+    // Scope returned by SpanExtension.makeCurrentSpan(...). Must be closed to avoid
+    // leaking the span into thread-local storage beyond this activity's lifetime,
+    // which would contaminate later traces on the same thread.
+    private var spanScope: io.opentelemetry.context.Scope? = null
+
     companion object {
         private val TAG: String = SwitchBrowserActivity::class.java.simpleName
 
@@ -90,44 +100,26 @@ class SwitchBrowserActivity : FragmentActivity() {
         /** Intent extra key for the URI to process in the browser */
         const val PROCESS_URI = "process_uri"
 
-        /** Intent extra key indicating a resume request from the browser redirect */
-        const val RESUME_REQUEST = "resume_request"
-
         /**
          * Builds an [Intent] targeting [SwitchBrowserActivity] to resume the switch-browser flow
          * in the WebView.
          *
-         * Parses [intentDataString] as a URI and copies the following query parameters into
-         * intent extras: [SWITCH_BROWSER.ACTION_URI], [SWITCH_BROWSER.CODE], and
-         * [SWITCH_BROWSER.STATE]. Also sets [RESUME_REQUEST] to `true` so that
-         * [onNewIntent] can identify this as a resume delivery.
+         * Parses [intentDataString] as a resume redirect URI and extracts the authentication response
+         * parameters ([SWITCH_BROWSER.ACTION_URI], [SWITCH_BROWSER.CODE], [SWITCH_BROWSER.STATE]).
+         * Also sets [SWITCH_BROWSER.RESUME_REQUEST] to `true` so that [onNewIntent] can identify this as a resume delivery.
          *
          * @param context           Application or activity context used to build the intent.
-         * @param intentDataString  The full redirect URI string received from the browser,
+         * @param intentDataString  The full resume redirect URI string received from the browser,
          *                          e.g. `msauth://com.microsoft.identity.client/switch_browser_resume?code=…&action_uri=…&state=…`
          * @return A configured [Intent] ready to be delivered to [SwitchBrowserActivity].
          */
         @JvmStatic
         fun buildSwitchBrowserResumeIntent(context: Context, intentDataString: String): Intent {
             val uri = intentDataString.toUri()
-            return Intent(context, SwitchBrowserActivity::class.java).apply {
-                putExtra(
-                    SWITCH_BROWSER.ACTION_URI,
-                    uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
-                )
-                putExtra(
-                    SWITCH_BROWSER.CODE,
-                    uri.getQueryParameter(SWITCH_BROWSER.CODE)
-                )
-                putExtra(
-                    SWITCH_BROWSER.STATE,
-                    uri.getQueryParameter(SWITCH_BROWSER.STATE)
-                )
-                putExtra(
-                    RESUME_REQUEST,
-                    true
-                )
-            }
+            val bundle = SwitchBrowserUriHelper.extractSwitchBrowserResumeParamsAsBundle(uri)
+            val intent = Intent(context, SwitchBrowserActivity::class.java)
+            intent.putExtras(bundle)
+            return intent
         }
 
         /**
@@ -179,7 +171,13 @@ class SwitchBrowserActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         val methodTag = "$TAG:onCreate"
         Logger.info(methodTag, "SwitchBrowserActivity created - Launching browser")
-        initSpanFromIntent()
+        // Only initialize the span on the first creation. On activity recreation
+        // (config change / process restore) the intent still carries the upstream
+        // SerializableSpanContext, and creating another child span would produce
+        // a duplicate sibling in the trace for one logical flow.
+        if (savedInstanceState == null) {
+            initSpanFromIntent()
+        }
         launchStrategy = getLaunchStrategy()
         launchBrowser()
     }
@@ -199,11 +197,29 @@ class SwitchBrowserActivity : FragmentActivity() {
         cctLaunched = false
         if (launchStrategy == null) {
             Logger.error(methodTag, "No browser launch strategy available", null)
-            finish()
+            span?.setStatus(StatusCode.ERROR)
+            span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_NO_LAUNCH_STRATEGY)
+            setResultAndFinish(
+                SwitchBrowserProtocolCoordinator.createErrorBundle(
+                    ErrorStrings.SWITCH_BROWSER_NO_LAUNCH_STRATEGY,
+                    "No browser launch strategy available"
+                )
+            )
             return
         }
-
-        launchStrategy?.launch()
+        try {
+            launchStrategy?.launch()
+        } catch (throwable: Throwable) {
+            span?.setStatus(StatusCode.ERROR)
+            span?.recordException(throwable)
+            Logger.error(methodTag, "Failed to launch browser for switch browser flow", throwable)
+            setResultAndFinish(
+                SwitchBrowserProtocolCoordinator.createErrorBundle(
+                    if (throwable is BaseException) throwable.errorCode else ErrorStrings.UNKNOWN_ERROR,
+                    throwable.message ?: "Unknown error occurred while launching browser for switch browser flow"
+                )
+            )
+        }
     }
 
     private fun getLaunchStrategy(): BrowserLaunchStrategy {
@@ -213,11 +229,11 @@ class SwitchBrowserActivity : FragmentActivity() {
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME).orEmpty()
         val isAuthTabSupported = AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
-        SpanExtension.current().setAttribute(
+        span?.setAttribute(
             AttributeName.browser_package_name.name,
             browserPackageName
         )
-        SpanExtension.current().setAttribute(
+        span?.setAttribute(
             AttributeName.is_auth_tab_supported.name,
             isAuthTabSupported
         )
@@ -227,7 +243,7 @@ class SwitchBrowserActivity : FragmentActivity() {
         } else {
             null
         }
-        SpanExtension.current().setAttribute(
+        span?.setAttribute(
             AttributeName.auth_tab_used.name,
             authTabStrategy != null
         )
@@ -244,8 +260,8 @@ class SwitchBrowserActivity : FragmentActivity() {
     private fun onAuthTabResult(resultBundle: Bundle) {
         val methodTag = "$TAG:onAuthTabResult"
         Logger.info(methodTag, "Received Auth Tab result callback")
-        WebViewAuthorizationFragment.setSwitchBrowserBundle(resultBundle)
-        finishAndRemoveTask()
+        span?.setStatus(StatusCode.OK)
+        setResultAndFinish(resultBundle)
     }
 
     /**
@@ -268,11 +284,9 @@ class SwitchBrowserActivity : FragmentActivity() {
         setIntent(intent)
 
         if (intent.hasExtra(PROCESS_URI)) {
-            SpanExtension.current().setStatus(StatusCode.ERROR)
-            SpanExtension.current().setAttribute(
-                AttributeName.error_code.name,
-                "ALREADY_IN_PROGRESS"
-            )
+            // Don't set terminal ERROR status here — the flow is being restarted, not failed.
+            // Record it as an attribute/event so the span outcome reflects the final result.
+            span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_ALREADY_IN_PROGRESS)
             // Handle scenario where a new browser switch request is received while one is already in progress
             // This can occur when the user initiates another auth request before completing the first one.
             Logger.warn(
@@ -284,22 +298,21 @@ class SwitchBrowserActivity : FragmentActivity() {
             launchBrowser()
             return
         }
-        if (intent.hasExtra(RESUME_REQUEST)) {
-            SpanExtension.current().setStatus(StatusCode.OK)
-            WebViewAuthorizationFragment.setSwitchBrowserBundle(intent.extras)
-            // Clean up: finish this activity and remove it from task stack
-            Logger.info(methodTag, "Finishing activity and removing from task stack")
-            finishAndRemoveTask()
+        if (intent.hasExtra(SWITCH_BROWSER.RESUME_REQUEST)) {
+            span?.setStatus(StatusCode.OK)
+            setResultAndFinish(intent.extras)
             return
         }
-        SpanExtension.current().setStatus(StatusCode.ERROR)
-        SpanExtension.current().setAttribute(
-            AttributeName.error_code.name,
-            "UNEXPECTED_INTENT"
-        )
+        span?.setStatus(StatusCode.ERROR)
+        span?.setAttribute(AttributeName.error_code.name, ErrorStrings.SWITCH_BROWSER_UNEXPECTED_INTENT)
         // Clean up: finish this activity and remove it from task stack
         Logger.info(methodTag, "Unexpected intent - Finishing activity and removing from task stack")
-        finishAndRemoveTask()
+        setResultAndFinish(
+            SwitchBrowserProtocolCoordinator.createErrorBundle(
+                ErrorStrings.SWITCH_BROWSER_UNEXPECTED_INTENT,
+                "Received an intent that does not match expected patterns for switch browser flow"
+            )
+        )
     }
 
     /**
@@ -334,8 +347,20 @@ class SwitchBrowserActivity : FragmentActivity() {
 
         if (cctLaunched && launchStrategy?.handlesCancellationOnResume() == true) {
             // User has returned to this activity after CCT was launched, likely due to backing out
+            val cancellation = ClientException(
+                ErrorStrings.USER_CANCELLED,
+                "User cancelled authentication by returning from browser"
+            )
+            span?.setStatus(StatusCode.ERROR)
+            span?.recordException(cancellation)
             Logger.info(methodTag, "CCT was launched previously and user returned - Assuming cancellation, finishing activity")
-            finishAndRemoveTask()
+            setResultAndFinish(
+                SwitchBrowserProtocolCoordinator.createErrorBundle(
+                    ErrorStrings.USER_CANCELLED,
+                    "User cancelled authentication by returning from browser"
+                )
+            )
+
         } else {
             // First resume after onCreate - mark CCT as launched for future reference
             Logger.info(methodTag, "First resume after onCreate - Marking CCT as launched")
@@ -345,6 +370,10 @@ class SwitchBrowserActivity : FragmentActivity() {
     }
 
     override fun onDestroy() {
+        // Close the Scope before ending the span so the thread-local context is restored
+        // to whatever it was prior to initSpanFromIntent().
+        spanScope?.close()
+        spanScope = null
         span?.end()
         launchStrategy?.cleanup()
         super.onDestroy()
@@ -360,21 +389,36 @@ class SwitchBrowserActivity : FragmentActivity() {
      * [SpanExtension.current] will record attributes on the correct trace.
      */
     private fun initSpanFromIntent() {
-        val extras = intent.extras ?: return
-        val spanContext: SerializableSpanContext? =
+        val extras = intent.extras
+        val spanContext: SerializableSpanContext? = extras?.let {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                extras.getSerializable(
+                it.getSerializable(
                     SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT,
                     SerializableSpanContext::class.java
                 )
             } else {
                 @Suppress("DEPRECATION")
-                extras.getSerializable(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT)
+                it.getSerializable(SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT)
                     as? SerializableSpanContext
             }
+        }
+        // Always create a span — fall back to an unparented span if no context was propagated —
+        // so later code paths never operate on an unset/invalid span.
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserFlow.name, spanContext).let {
             span = it
-            SpanExtension.makeCurrentSpan(it)
+            // Hold onto the Scope so we can close it in onDestroy(); otherwise the span
+            // would remain attached to this thread's context and leak into subsequent work.
+            spanScope = SpanExtension.makeCurrentSpan(it)
         }
+    }
+
+    /**
+     * Returns the authentication result to [WebViewAuthorizationFragment] and finishes this activity.
+     *
+     * @param resultBundle The authentication result bundle (success or error), or `null`.
+     */
+    private fun setResultAndFinish(resultBundle: Bundle?) {
+        WebViewAuthorizationFragment.setSwitchBrowserBundle(resultBundle)
+        finishAndRemoveTask()
     }
 }

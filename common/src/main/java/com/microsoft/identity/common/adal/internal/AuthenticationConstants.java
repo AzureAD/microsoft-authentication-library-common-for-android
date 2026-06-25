@@ -564,6 +564,11 @@ public final class AuthenticationConstants {
          * String Query parameter key for the state blob.
          */
         public static final String STATE = "state";
+
+        /**
+         * Intent extra key indicating a resume request from the browser redirect.
+         */
+        public static final String RESUME_REQUEST = "resume_request";
     }
 
     /**
