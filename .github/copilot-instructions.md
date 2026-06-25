@@ -26,7 +26,7 @@ These rules are calibrated from the team's Copilot Code Review Effectiveness ana
    > Real dismissal: *"UiRequiredException extends ServiceException, so retry logic applies."*
 
 2. **Hypothetical configurations / flight rollout state — don't warn on premises you can't see.**
-   Do not raise a concern whose premise is a flight/configuration *combination* that may not exist in production (e.g. "if flight X is enabled together with cache implementation Y, then…"). You have no visibility into rollout state. Only flag a flag/flight branch when the diff itself introduces an unsafe default or a real, reachable code path. Known production state: the in-memory cache flights for accounts and credentials (e.g. `ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE`) are enabled on 100% of devices, so concerns predicated on a non-memory cache implementation are moot.
+   Do not raise a concern whose premise is a flight/configuration *combination* that may not exist in production (e.g. "if flight X is enabled together with cache implementation Y, then…"). You have no visibility into rollout state, and the in-repo enum/flag default is not the deployed value — do not assume either extreme. Only flag a flag/flight branch when the diff itself introduces an unsafe default or a real, reachable code path. In the dismissed example, the relevant in-memory cache flights for accounts and credentials (e.g. `ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE`) were fully rolled out at the time, so the concern about a non-memory cache implementation did not apply. Rollout state changes over time, so the durable rule is simply: don't gate review feedback on a configuration you cannot verify from the diff.
    > Real dismissal: *"This is fine as the in_memory_cache flight for accounts and credentials are enabled on 100% of the devices."*
 
 3. **Telemetry / instrumentation attachment paths — do not demand unit tests for them.**
@@ -38,7 +38,7 @@ These rules are calibrated from the team's Copilot Code Review Effectiveness ana
    > Real dismissal: *"this change is external to this pr."*
 
 5. **Field / domain semantics — don't assert meaning you can't verify; never hallucinate sources.**
-   Do not assert what a field, parameter, or data source "means", or which endpoint it comes from, unless the diff or quoted context supports it — reasoning from a name is not evidence. If a claim depends on a domain fact you cannot confirm from the changed code, either omit it or state it explicitly as an assumption ("Assumption: … If incorrect, disregard."). Known fact in this codebase: `clientDataInfo` / `BaseException.getClientDataInfo()` can be populated **both** from the `x-ms-clientdata` header **and** from an `/authorize` redirect's `clientdata` parameter — do not claim it originates from only one source.
+   Do not assert what a field, parameter, or data source "means", or which endpoint/source it is populated from, unless the diff or quoted context supports it — reasoning from a name is not evidence. If a claim depends on a domain fact you cannot confirm from the changed code, either omit it or state it explicitly as an assumption ("Assumption: … If incorrect, disregard."). In the dismissed example below, the reviewer made a confident but incorrect claim about which source populated a field; before describing where a value such as `clientDataInfo` / `BaseException.getClientDataInfo()` originates, verify it against the field's actual population logic rather than its name.
    > Real dismissal: *"not correct, both fields are populated from x-ms-clientdata."*
 
 --------------------------------------------------------------------------------
@@ -469,7 +469,7 @@ Do NOT flag (see §0.1 rule 3): code whose only new behavior is attaching attrib
 - Unit tests: pure logic & edge cases.
 - Integration tests: IPC strategies, cache updates, multi-layer token acquisition.
 - Concurrency tests: stress loops or use deterministic virtual time.
-- Telemetry tests: assert span creation & attribute presence (mock or capture exporter).
+- Telemetry tests: for higher-risk instrumentation (span lifecycle, error-status / `recordException` correctness, conditional emission) assert span creation & status (mock or capture exporter). Do NOT require tests merely for attribute/field attachment (see §0.1 rule 3).
 - Security tests: invalid credentials, revoked token, key rotation.
 - E2E / UI tests: critical flows (login, token refresh, public API calls) with real or mocked backend.
 
