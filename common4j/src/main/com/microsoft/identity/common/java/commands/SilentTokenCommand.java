@@ -70,6 +70,19 @@ public class SilentTokenCommand extends TokenCommand {
         span.setAttribute(AttributeName.application_name.name(), getParameters().getApplicationName());
         span.setAttribute(AttributeName.public_api_id.name(), getPublicApiId());
 
+        // Short-circuit if we are in a network-failure cooldown window. This protects against
+        // pathological caller retry loops (e.g. WPAD proxy unreachable) that would otherwise
+        // walk the controller chain, emit telemetry, and write log lines on every retry —
+        // causing excessive eMMC wear on small-storage devices.
+        final NetworkFailureCooldown cooldown = NetworkFailureCooldown.getInstance();
+        if (cooldown.isInCooldown()) {
+            final ClientException suppressed = cooldown.buildCooldownException();
+            Logger.warn(TAG + methodName, suppressed.getMessage());
+            span.setAttribute(AttributeName.error_code.name(), suppressed.getErrorCode());
+            span.setStatus(StatusCode.ERROR, "network_failure_cooldown");
+            throw suppressed;
+        }
+
         final List<BaseController> controllers = getControllerFactory().getAllControllers();
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
@@ -104,6 +117,7 @@ public class SilentTokenCommand extends TokenCommand {
                         );
 
                         span.setStatus(StatusCode.OK);
+                        cooldown.recordOutcome(null);
                         return result;
                     }
                 } catch (final UiRequiredException | ClientException e) {
@@ -116,9 +130,13 @@ public class SilentTokenCommand extends TokenCommand {
                     if (ii + 1 >= controllers.size() || !(OAuth2ErrorCode.INVALID_GRANT.equals(e.getErrorCode())
                             || ErrorStrings.NO_TOKENS_FOUND.equals(e.getErrorCode())
                             || ErrorStrings.NO_ACCOUNT_FOUND.equals(e.getErrorCode()))) {
+                        cooldown.recordOutcome(e);
                         throw exceptionFromFirstController;
                     }
                 } catch (final Throwable e) {
+                    if (e instanceof BaseException) {
+                        cooldown.recordOutcome((BaseException) e);
+                    }
                     if (exceptionFromFirstController != null) {
                         throw exceptionFromFirstController;
                     } else {
