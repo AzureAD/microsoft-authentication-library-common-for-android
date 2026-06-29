@@ -76,16 +76,6 @@ class SwitchBrowserProtocolCoordinator(
         spanContext
     )
 
-    /** Span for the outbound challenge phase. */
-    private val processSpan: Span by lazy {
-        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
-    }
-
-    /** Span for the inbound resume phase. Lazy so test code that never resumes does not allocate it. */
-    private val resumeSpan: Span by lazy {
-        OTelUtility.createSpanFromParent(SpanName.SwitchBrowserResume.name, spanContext)
-    }
-
     @Volatile
     var isSwitchBrowserChallengeActive: Boolean = false
 
@@ -184,14 +174,13 @@ class SwitchBrowserProtocolCoordinator(
     ) {
         val methodTag = "$TAG:processSwitchBrowserRedirectAsync"
         asyncScope.launch {
-            // realize lazy span before IO
-            val span = processSpan
+            val span = OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
             try {
                 // buildProcessUri triggers cloud discovery (sync HTTPS on cold cache).
                 val processUri = withContext(Dispatchers.IO) {
                     SwitchBrowserUriHelper.buildProcessUri(switchBrowserRedirectUrl.toUri())
                 }
-                launchSwitchBrowserActivity(authorizationUrl, baseRedirectUri, processUri)
+                launchSwitchBrowserActivity(authorizationUrl, baseRedirectUri, processUri, span)
                 span.setStatus(StatusCode.OK)
             } catch (ce: CancellationException) {
                 // Flow was cancelled (e.g. fragment destroyed mid cloud-discovery)
@@ -221,26 +210,27 @@ class SwitchBrowserProtocolCoordinator(
     private fun launchSwitchBrowserActivity(
         authorizationUrl: String,
         baseRedirectUri: String,
-        processUri: Uri
+        processUri: Uri,
+        span: Span
     ) {
-        SpanExtension.makeCurrentSpan(processSpan).use {
+        SpanExtension.makeCurrentSpan(span).use {
             val state = processUri.getQueryParameter(SWITCH_BROWSER.STATE)
             SwitchBrowserUriHelper.statesMatch(authorizationUrl, state)
 
-            // Select a browser to handle the switch browser challenge
+            // Select a browser to handle the switch_browser flow.
             val browser = browserSelector.selectBrowser(
                 BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
                 null
             ) ?: throw ClientException(
                 ClientException.NO_BROWSERS_AVAILABLE,
-                "No browser found for SwitchBrowserChallenge."
+                "No browser found to handle the switch_browser flow."
             )
 
-            processSpan.setAttribute(
+            span.setAttribute(
                 AttributeName.browser_package_name.name,
                 browser.packageName
             )
-            processSpan.setAttribute(
+            span.setAttribute(
                 AttributeName.is_custom_tabs_supported.name,
                 browser.isCustomTabsServiceSupported
             )
@@ -250,7 +240,7 @@ class SwitchBrowserProtocolCoordinator(
                 browserPackageName = browser.packageName,
                 browserSupportsCustomTabs = browser.isCustomTabsServiceSupported,
                 processUri = processUri.toString(),
-                spanContext = processSpan.spanContext.toSerializable()
+                spanContext = span.spanContext.toSerializable()
             )
             activity.startActivity(switchBrowserIntent)
             isSwitchBrowserChallengeActive = true
@@ -331,6 +321,7 @@ class SwitchBrowserProtocolCoordinator(
         extras: Bundle
     ): Pair<Uri, HashMap<String, String>> {
         val methodTag = "$TAG:processSwitchBrowserResume"
+        val resumeSpan = OTelUtility.createSpanFromParent(SpanName.SwitchBrowserResume.name, spanContext)
         return SpanExtension.makeCurrentSpan(resumeSpan).use {
             try {
                 throwIfBundleContainsError(extras)
