@@ -422,3 +422,4 @@ class SwitchBrowserActivity : FragmentActivity() {
         finishAndRemoveTask()
     }
 }
+

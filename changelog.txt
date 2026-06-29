@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator
 - [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)
 - [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
 

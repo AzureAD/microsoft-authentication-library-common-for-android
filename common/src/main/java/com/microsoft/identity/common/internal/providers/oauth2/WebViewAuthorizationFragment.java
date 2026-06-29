@@ -159,12 +159,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
-    // This is used by the switch browser protocol to handle the resume of the flow.
+    // The handler that owns the entire switch_browser flow (challenge dispatch + resume).
     private volatile SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @VisibleForTesting
-    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator coordinator) {
-        mSwitchBrowserProtocolCoordinator = coordinator;
+    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator handler) {
+        mSwitchBrowserProtocolCoordinator = handler;
     }
 
     private boolean isBrokerRequest = false;
@@ -253,28 +253,50 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private void resumeSwitchBrowser() {
         final String methodTag = TAG + ":resumeSwitchBrowser";
+        final Bundle switchBrowserBundle;
         try {
-            final Bundle switchBrowserBundle = consumeSwitchBrowserBundle();
+            switchBrowserBundle = consumeSwitchBrowserBundle();
             if (switchBrowserBundle == null) {
                 throw new ClientException(
                         ClientException.NULL_OBJECT,
                         "No switch browser bundle found to resume the flow."
                 );
             }
-            Logger.info(methodTag, "Resuming switch browser flow");
-            getSwitchBrowserCoordinator().processSwitchBrowserResume(
-                    mAuthorizationRequestUrl,
-                    switchBrowserBundle,
-                    (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
-                        launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
-                        return null;
-                    }
-            );
         } catch (final ClientException e) {
-            Logger.error(methodTag, "Error processing switch browser resume", e);
+            Logger.error(methodTag, "Error preparing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
             finish();
+            return;
         }
+        Logger.info(methodTag, "Resuming switch browser flow");
+        // buildResumeUri may hit the network (cloud discovery on cold cache), so use the
+        // async handler to avoid NetworkOnMainThreadException. The WebView was disabled by
+        // AzureActiveDirectoryWebViewClient before SwitchBrowserActivity launched and stays
+        // disabled across the pause/resume — we just re-enable it on the terminal paths.
+        // The page-loaded callback hides the spinner on success; we hide it explicitly on error.
+        mProgressBar.setVisibility(View.VISIBLE);
+        getSwitchBrowserCoordinator().processSwitchBrowserResumeAsync(
+                mAuthorizationRequestUrl,
+                switchBrowserBundle,
+                (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
+                    mWebView.setEnabled(true);
+                    launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
+                    return null;
+                },
+                throwable -> {
+                    Logger.error(methodTag, "Error processing switch browser resume", throwable);
+                    mWebView.setEnabled(true);
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                    final ClientException ce = (throwable instanceof ClientException)
+                            ? (ClientException) throwable
+                            : new ClientException(
+                                    ClientException.UNKNOWN_ERROR,
+                                    throwable.getMessage(),
+                                    throwable);
+                    sendResult(RawAuthorizationResult.fromException(ce));
+                    finish();
+                }
+        );
     }
 
     @Override
@@ -354,7 +376,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
+                getSwitchBrowserCoordinator(),
                 mUtid,
                 isWebViewWebcpEnabledInBrokerlessCase,
                 new IUrlLoadTracker() {
