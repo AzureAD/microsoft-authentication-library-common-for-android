@@ -49,6 +49,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -76,7 +77,7 @@ class SwitchBrowserProtocolCoordinator(
     )
 
     /** Span for the outbound challenge phase. */
-    private val span: Span by lazy {
+    private val processSpan: Span by lazy {
         OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
     }
 
@@ -112,7 +113,7 @@ class SwitchBrowserProtocolCoordinator(
     }
 
     companion object {
-        private val TAG = SwitchBrowserProtocolCoordinator::class.simpleName
+        private const val TAG = "SwitchBrowserProtocolCoordinator"
 
         private const val ERROR_CODE_KEY = "error_code"
         private const val ERROR_MESSAGE_KEY = "error_message"
@@ -183,13 +184,19 @@ class SwitchBrowserProtocolCoordinator(
     ) {
         val methodTag = "$TAG:processSwitchBrowserRedirectAsync"
         asyncScope.launch {
+            // realize lazy span before IO
+            val span = processSpan
             try {
                 // buildProcessUri triggers cloud discovery (sync HTTPS on cold cache).
                 val processUri = withContext(Dispatchers.IO) {
                     SwitchBrowserUriHelper.buildProcessUri(switchBrowserRedirectUrl.toUri())
                 }
                 launchSwitchBrowserActivity(authorizationUrl, baseRedirectUri, processUri)
+                span.setStatus(StatusCode.OK)
             } catch (ce: CancellationException) {
+                // Flow was cancelled (e.g. fragment destroyed mid cloud-discovery)
+                span.setStatus(StatusCode.ERROR, "Switch browser redirect cancelled")
+                span.recordException(ce)
                 throw ce
             } catch (t: Throwable) {
                 Logger.error(
@@ -197,7 +204,11 @@ class SwitchBrowserProtocolCoordinator(
                     "Error while processing switch_browser redirect: ${t.message}",
                     t
                 )
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(t)
                 onError.accept(t)
+            } finally {
+                span.end()
             }
         }
     }
@@ -212,53 +223,38 @@ class SwitchBrowserProtocolCoordinator(
         baseRedirectUri: String,
         processUri: Uri
     ) {
-        val methodTag = "$TAG:launchSwitchBrowserActivity"
-        SpanExtension.makeCurrentSpan(span).use {
-            try {
-                val state = processUri.getQueryParameter(SWITCH_BROWSER.STATE)
-                SwitchBrowserUriHelper.statesMatch(authorizationUrl, state)
+        SpanExtension.makeCurrentSpan(processSpan).use {
+            val state = processUri.getQueryParameter(SWITCH_BROWSER.STATE)
+            SwitchBrowserUriHelper.statesMatch(authorizationUrl, state)
 
-                // Select a browser to handle the switch browser challenge
-                val browser = browserSelector.selectBrowser(
-                    BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
-                    null
-                ) ?: throw ClientException(
-                    ClientException.NO_BROWSERS_AVAILABLE,
-                    "No browser found for SwitchBrowserChallenge."
-                )
+            // Select a browser to handle the switch browser challenge
+            val browser = browserSelector.selectBrowser(
+                BrowserDescriptor.getBrowserSafeListForSwitchBrowser(),
+                null
+            ) ?: throw ClientException(
+                ClientException.NO_BROWSERS_AVAILABLE,
+                "No browser found for SwitchBrowserChallenge."
+            )
 
-                span.setAttribute(
-                    AttributeName.browser_package_name.name,
-                    browser.packageName
-                )
-                span.setAttribute(
-                    AttributeName.is_custom_tabs_supported.name,
-                    browser.isCustomTabsServiceSupported
-                )
-                val switchBrowserIntent = SwitchBrowserActivity.buildSwitchBrowserLaunchIntent(
-                    context = activity,
-                    redirectUri = baseRedirectUri,
-                    browserPackageName = browser.packageName,
-                    browserSupportsCustomTabs = browser.isCustomTabsServiceSupported,
-                    processUri = processUri.toString(),
-                    spanContext = span.spanContext.toSerializable()
-                )
-                activity.startActivity(switchBrowserIntent)
-                span.setStatus(StatusCode.OK)
-                isSwitchBrowserChallengeActive = true
-                wasSwitchBrowserFlowInitiated = true
-            } catch (t: Throwable) {
-                Logger.error(
-                    methodTag,
-                    "Error launching SwitchBrowserActivity: ${t.message}",
-                    t
-                )
-                span.setStatus(StatusCode.ERROR, t.message ?: "")
-                span.recordException(t)
-                throw t
-            } finally {
-                span.end()
-            }
+            processSpan.setAttribute(
+                AttributeName.browser_package_name.name,
+                browser.packageName
+            )
+            processSpan.setAttribute(
+                AttributeName.is_custom_tabs_supported.name,
+                browser.isCustomTabsServiceSupported
+            )
+            val switchBrowserIntent = SwitchBrowserActivity.buildSwitchBrowserLaunchIntent(
+                context = activity,
+                redirectUri = baseRedirectUri,
+                browserPackageName = browser.packageName,
+                browserSupportsCustomTabs = browser.isCustomTabsServiceSupported,
+                processUri = processUri.toString(),
+                spanContext = processSpan.spanContext.toSerializable()
+            )
+            activity.startActivity(switchBrowserIntent)
+            isSwitchBrowserChallengeActive = true
+            wasSwitchBrowserFlowInitiated = true
         }
     }
 
@@ -392,6 +388,11 @@ class SwitchBrowserProtocolCoordinator(
         onError: Consumer<Throwable>
     ) {
         val methodTag = "$TAG:processSwitchBrowserResumeAsync"
+        // Close the re-entrancy window synchronously: if onResume() fires again before the IO
+        // work completes, isExpectingSwitchBrowserResume() must already read false so the flow
+        // is not re-dispatched against the one-shot bundle (which would yield a spurious error +
+        // finish()). The sync resume's finally also calls resetChallengeState() — harmless repeat.
+        resetChallengeState()
         asyncScope.launch {
             try {
                 // buildResumeUri can hit the network (cold cache), so build off the main thread.
@@ -405,6 +406,19 @@ class SwitchBrowserProtocolCoordinator(
                 Logger.error(methodTag, "Async switch browser resume failed: ${t.message}", t)
                 onError.accept(t)
             }
+        }
+    }
+
+    /**
+     * Cancels any in-flight async work so coroutine continuations do not resume against a
+     * destroyed [Activity]/Fragment (which would touch dead UI — `startActivity`, `mWebView`,
+     * `sendResult`, `finish()`). Call from the owning component's teardown
+     * (e.g. `WebViewAuthorizationFragment.onDestroy`). No-op for test-injected scopes.
+     */
+    fun cancel() {
+        // Only cancel the production scope; a test-injected scope is owned by the test.
+        if (asyncScopeOverride == null) {
+            asyncScope.cancel()
         }
     }
 

@@ -277,6 +277,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 switchBrowserBundle,
                 (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
                     mWebView.setEnabled(true);
+                    // Keep the spinner up: launchWebView re-shows it and onPageLoaded hides it
+                    // once the resumed page finishes loading. Hiding here would only flicker.
                     launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
                     return null;
                 },
@@ -724,6 +726,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onDestroy() {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
+        // Cancel any in-flight switch-browser async work so its continuation does not resume
+        // against this destroyed fragment (touching mWebView / mProgressBar / sendResult).
+        if (mSwitchBrowserProtocolCoordinator != null) {
+            mSwitchBrowserProtocolCoordinator.cancel();
+        }
         if (mAADWebViewClient != null) {
             mAADWebViewClient.onDestroy();
         } else {
