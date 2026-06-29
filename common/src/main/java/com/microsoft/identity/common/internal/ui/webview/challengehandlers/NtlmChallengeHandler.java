@@ -34,15 +34,35 @@ import android.widget.TextView;
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
+
+import io.opentelemetry.api.metrics.LongCounter;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
  */
 public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallenge, Void> {
     private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
+
+    /**
+     * Upper bound on the length of a displayed origin value (host/realm). The realm in particular is
+     * server-controlled, so it is capped to keep the dialog readable and bounded.
+     */
+    private static final int MAX_ORIGIN_VALUE_LENGTH = 256;
+
+    /**
+     * Counts how many times the request-origin row was successfully shown in the HTTP auth dialog.
+     * Emitted only when the {@link CommonFlight#ENABLE_HTTP_AUTH_ORIGIN_DISPLAY} flight is on, this is
+     * the signal used to confirm the flighted path is exercising correctly after the flight is ramped.
+     */
+    private static final LongCounter sHttpAuthOriginDisplayedCount = OTelUtility.createLongCounter(
+            "http_auth_origin_displayed_count",
+            "Number of times the request origin row was shown in the HTTP auth dialog"
+    );
+
     private final Activity mActivity;
     private final IAuthorizationCompletionCallback mChallengeCallback;
 
@@ -123,6 +143,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         final TextView originView = (TextView) dialogView.findViewById(R.id.httpAuthOriginText);
         originView.setText(originText);
         originView.setVisibility(View.VISIBLE);
+        sHttpAuthOriginDisplayedCount.add(1);
     }
 
     /**
@@ -133,18 +154,50 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
      */
     String getOriginText(final NtlmChallenge ntlmChallenge) {
         final StringBuilder originText = new StringBuilder();
-        if (!TextUtils.isEmpty(ntlmChallenge.getHost())) {
-            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_host, ntlmChallenge.getHost()));
+        final String host = sanitizeOriginValue(ntlmChallenge.getHost());
+        if (!TextUtils.isEmpty(host)) {
+            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_host, host));
         }
 
-        if (!TextUtils.isEmpty(ntlmChallenge.getRealm())) {
+        final String realm = sanitizeOriginValue(ntlmChallenge.getRealm());
+        if (!TextUtils.isEmpty(realm)) {
             if (originText.length() > 0) {
                 originText.append('\n');
             }
-            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_realm, ntlmChallenge.getRealm()));
+            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_realm, realm));
         }
 
         return originText.toString();
+    }
+
+    /**
+     * Sanitizes a server-supplied origin value (host or realm) before it is rendered in the dialog.
+     * <p>
+     * The realm is taken verbatim from the {@code WWW-Authenticate} response header and is therefore
+     * fully attacker-controlled. Without sanitization a malicious server could embed CR/LF (or other
+     * control characters) in the realm to inject additional lines into the credential dialog and spoof
+     * its content — turning this transparency feature into a phishing surface. Control characters and
+     * line/paragraph separators are collapsed to single spaces so the value stays on one visual line,
+     * and the result is length-capped.
+     *
+     * @param value the raw, untrusted origin value
+     * @return a single-line, length-bounded value safe to display
+     */
+    static String sanitizeOriginValue(final String value) {
+        if (TextUtils.isEmpty(value)) {
+            return "";
+        }
+
+        String sanitized = value
+                .replaceAll("[\\p{Cc}\\p{Zl}\\p{Zp}]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (sanitized.length() > MAX_ORIGIN_VALUE_LENGTH) {
+            sanitized = sanitized.substring(0, MAX_ORIGIN_VALUE_LENGTH);
+        }
+
+        return sanitized;
     }
 
     /**

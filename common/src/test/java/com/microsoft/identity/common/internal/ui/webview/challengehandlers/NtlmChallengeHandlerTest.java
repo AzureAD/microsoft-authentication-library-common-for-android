@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,6 +68,93 @@ public class NtlmChallengeHandlerTest {
 
         assertTrue(originText.contains(TEST_HOST));
         assertTrue(originText.contains(TEST_REALM));
+    }
+
+    @Test
+    public void testGetOriginText_hostOnly() {
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, null);
+
+        final String originText = handler.getOriginText(challenge);
+
+        assertEquals("Host: " + TEST_HOST, originText);
+    }
+
+    @Test
+    public void testGetOriginText_realmOnly() {
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, null, TEST_REALM);
+
+        final String originText = handler.getOriginText(challenge);
+
+        assertEquals("Realm: " + TEST_REALM, originText);
+    }
+
+    @Test
+    public void testGetOriginText_bothEmpty_returnsEmpty() {
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, null, null);
+
+        assertEquals("", handler.getOriginText(challenge));
+    }
+
+    @Test
+    public void testGetOriginText_separatorOnlyBetweenHostAndRealm() {
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, TEST_REALM);
+
+        final String originText = handler.getOriginText(challenge);
+
+        // Exactly one newline should appear — the separator between the host and realm lines.
+        assertEquals(2, originText.split("\n", -1).length);
+    }
+
+    @Test
+    public void testGetOriginText_maliciousRealmDoesNotInjectExtraLines() {
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        // A malicious server packs CR/LF into the realm to forge extra lines in the credential dialog.
+        final String maliciousRealm = "Evil\r\n\r\nEnter your Microsoft password to continue";
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, maliciousRealm);
+
+        final String originText = handler.getOriginText(challenge);
+
+        // Still exactly one newline (the host/realm separator); the injected CR/LF were neutralized.
+        assertEquals(2, originText.split("\n", -1).length);
+        assertFalse(originText.contains("\r"));
+    }
+
+    @Test
+    public void testSanitizeOriginValue_collapsesControlCharsToSingleSpace() {
+        final String sanitized = NtlmChallengeHandler.sanitizeOriginValue("Evil\r\n\t\u0000 Realm");
+
+        assertEquals("Evil Realm", sanitized);
+        assertFalse(sanitized.contains("\n"));
+        assertFalse(sanitized.contains("\r"));
+    }
+
+    @Test
+    public void testSanitizeOriginValue_stripsUnicodeLineSeparators() {
+        // U+2028 LINE SEPARATOR / U+2029 PARAGRAPH SEPARATOR are not matched by \s but must be removed.
+        final String sanitized = NtlmChallengeHandler.sanitizeOriginValue("a\u2028b\u2029c");
+
+        assertEquals("a b c", sanitized);
+    }
+
+    @Test
+    public void testSanitizeOriginValue_capsLength() {
+        final StringBuilder longValue = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longValue.append('a');
+        }
+
+        final String sanitized = NtlmChallengeHandler.sanitizeOriginValue(longValue.toString());
+
+        assertEquals(256, sanitized.length());
+    }
+
+    @Test
+    public void testSanitizeOriginValue_nullReturnsEmpty() {
+        assertEquals("", NtlmChallengeHandler.sanitizeOriginValue(null));
     }
 
     @Test
