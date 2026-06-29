@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.net.Uri
 import android.os.Bundle
-import android.os.Looper
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
@@ -326,16 +325,6 @@ object SwitchBrowserUriHelper {
      */
     private fun validateActionUri(actionUriString: String) {
         val methodTag = "$TAG:validateActionUri"
-        // Cloud discovery below may issue a network call (cache miss). Running it on the
-        // main thread will crash with NetworkOnMainThreadException whenever the AAD cloud
-        // metadata cache is cold. All call paths that reach this helper (buildProcessUri /
-        // buildResumeUri, both invoked from SwitchBrowserProtocolCoordinator) MUST hop to a
-        // background dispatcher before invoking the URI builders. The async entry points
-        // SwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync and
-        // processSwitchBrowserResumeAsync exist for that reason. We log loudly here
-        // (rather than throwing) so callers that happen to be exercising a warm cache still
-        // succeed during rollout, but any regression is visible in logs/telemetry.
-        warnIfOnMainThread(methodTag)
         // Ensure cloud discovery is complete for this authority.
         try {
             val actionUrlForDiscovery = URL(actionUriString)
@@ -359,24 +348,6 @@ object SwitchBrowserUriHelper {
             val exception = ClientException(ClientException.UNKNOWN_AUTHORITY, errorMessage)
             Logger.error(methodTag, errorMessage, exception)
             throw exception
-        }
-    }
-
-    /**
-     * Logs an error if [validateActionUri] runs on the main thread. Cloud discovery
-     * underneath may hit the network on a cold cache. Log-only (not a throw) to preserve
-     * the warm-cache happy path during rollout.
-     */
-    private fun warnIfOnMainThread(methodTag: String) {
-        val mainLooper = Looper.getMainLooper() ?: return // null in unit tests without Robolectric
-        if (mainLooper === Looper.myLooper()) {
-            Logger.error(
-                methodTag,
-                "validateActionUri invoked on the main thread; cloud discovery may trigger " +
-                    "NetworkOnMainThreadException on cache miss. Call sites must hop to a " +
-                    "background dispatcher (see SwitchBrowser*Async methods).",
-                Throwable("Main-thread invocation of SwitchBrowserUriHelper.validateActionUri")
-            )
         }
     }
 }

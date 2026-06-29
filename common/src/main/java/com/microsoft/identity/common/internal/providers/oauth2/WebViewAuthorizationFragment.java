@@ -270,10 +270,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         Logger.info(methodTag, "Resuming switch browser flow");
         // buildResumeUri may hit the network (cloud discovery on cold cache), so use the
-        // async handler to avoid NetworkOnMainThreadException. The WebView was disabled by
-        // AzureActiveDirectoryWebViewClient before SwitchBrowserActivity launched and stays
-        // disabled across the pause/resume — we just re-enable it on the terminal paths.
-        // The page-loaded callback hides the spinner on success; we hide it explicitly on error.
+        // async handler to avoid NetworkOnMainThreadException.
         mProgressBar.setVisibility(View.VISIBLE);
         getSwitchBrowserCoordinator().processSwitchBrowserResumeAsync(
                 mAuthorizationRequestUrl,
