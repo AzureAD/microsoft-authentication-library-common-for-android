@@ -437,13 +437,13 @@ Flag when new code:
 - Adds feature flag branching without tests for each state.
 - Adds new public API methods without tests for expected behavior.
 
-Do NOT flag (see §14 rule 3): code whose only new behavior is attaching attributes/values to telemetry spans, recording exceptions on spans, or populating an instrumentation field. These attachment paths are considered low-risk and a missing test for them is not a defect.
+Do NOT flag (see §14 rule 3): code whose only new behavior is attaching attributes/values to telemetry spans, the bare `recordException(...)` attachment call itself, or populating an instrumentation field. These attachment paths are considered low-risk and a missing test for them is not a defect.
 
 ### 7.2 Test Types & Expectations
 - Unit tests: pure logic & edge cases.
 - Integration tests: IPC strategies, cache updates, multi-layer token acquisition.
 - Concurrency tests: stress loops or use deterministic virtual time.
-- Telemetry tests: for higher-risk instrumentation (span lifecycle, error-status / `recordException` correctness, conditional emission) assert span creation & status (mock or capture exporter). Do NOT require tests merely for attribute/field attachment (see §14 rule 3).
+- Telemetry tests: for higher-risk instrumentation (span lifecycle, whether `recordException` is invoked on the correct error path / with the correct status, conditional emission) assert span creation & status (mock or capture exporter). Do NOT require tests merely for attribute/field attachment or the bare `recordException(...)` call (see §14 rule 3).
 - Security tests: invalid credentials, revoked token, key rotation.
 - E2E / UI tests: critical flows (login, token refresh, public API calls) with real or mocked backend.
 
@@ -606,7 +606,7 @@ These rules are calibrated from the team's Copilot Code Review Effectiveness ana
    When a concern's premise is a flight/configuration *combination* that may not exist in production (e.g. "if flight X is enabled together with cache implementation Y, then…"), do not raise it as a blocking issue — you have no visibility into rollout state, and the in-repo enum/flag default is not the deployed value. If the branch still looks genuinely risky, you may post **at most one** non-blocking note prefixed `Sanity check:` asking the author to confirm the combination is reachable in production, then move on — do not repeat it across the PR. Flag it normally only when the diff itself introduces an unsafe default or a real, reachable code path. (For example, the in-memory cache flights such as `ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE` may already be fully rolled out, making a concern about a non-memory cache implementation moot — and rollout state changes over time.)
 
 3. **Telemetry / instrumentation attachment paths — do not demand unit tests for them.**
-   Don't request a unit test whose sole purpose is to cover instrumentation — setting span attributes, attaching values, recording exceptions on spans, or populating an instrumentation field. These attachment paths are low-risk; this narrows §7.1 only, so keep asking for tests around branching logic, parsing/serialization, error/retry/fallback, concurrency, and public API behavior.
+   Don't request a unit test whose sole purpose is to cover instrumentation — setting span attributes, attaching values, the bare act of recording an exception on a span (the `recordException(...)` attachment call itself), or populating an instrumentation field. These attachment paths are low-risk; this narrows §7.1 only, so keep asking for tests around branching logic, parsing/serialization, error/retry/fallback, concurrency, and public API behavior. (Note the boundary with §7.2: *whether* `recordException` fires on the correct error path or with the correct status is correctness logic and remains test-worthy — only the bare attachment call is exempt.)
 
 4. **Cross-PR / cross-repo scope creep — flag genuine dependencies, not unrelated changes.**
    Don't pad a review with changes that belong in a *different, unrelated* PR or repo and aren't needed for this change to be correct (e.g. "while you're here, also update the companion ADAL feed to consume the new upstream"). That said, if the change genuinely **requires or breaks** something in another repo — a new Common `AttributeName`/`SpanName` that must be mirrored in Broker (see §6.5), a change to a shared contract such as `OneAuthSharedFunctions`, an IPC key consumed downstream — it is correct and valuable to surface it; that's exactly the kind of thing authors miss. When you do, frame it as a clearly-labeled, non-blocking follow-up/dependency note ("Follow-up (separate PR): …") rather than a required change to the current diff. The test is necessity, not location: raise cross-repo work the change actually depends on or invalidates; skip tangential "while you're here" suggestions.
