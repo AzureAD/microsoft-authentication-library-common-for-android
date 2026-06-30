@@ -276,7 +276,20 @@ public enum CommonFlight implements IFlightConfig {
      * ECS to revert to the historical String#startsWith prefix match
      * (FireWatch c1bf88bd / IcM 31000000624712).
      */
-    ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true);
+    ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true),
+
+    /**
+     * Flight to enable the conservative key generation spec for legacy devices (Android API &lt;= 30).
+     * <p>
+     * On API &lt;= 30 the hardware keymaster predates Keystore 2.0 and frequently rejects the
+     * advanced key generation specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1), which causes every
+     * key generation attempt to fail and breaks first-time enrollment. When enabled, advanced specs
+     * are skipped on API &lt;= 30 in favour of a conservative RSA/PKCS1/SHA-256 spec that legacy
+     * keymasters reliably support.
+     * <p>
+     * Enabled by default; can be turned off via ECS to restore the previous behaviour if needed.
+     */
+    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true);
 
     private String key;
     private Object defaultValue;
