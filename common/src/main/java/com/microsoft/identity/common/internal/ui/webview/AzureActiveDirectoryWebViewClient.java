@@ -70,7 +70,11 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.internal.providers.EncryptedBrokerInstallResumeStore;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.providers.BrokerInstallLinkValidator;
+import com.microsoft.identity.common.java.providers.BrokerInstallReferrerBuilder;
+import com.microsoft.identity.common.java.providers.BrokerInstallResumeRequest;
 import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -91,8 +95,7 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -100,8 +103,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -1121,6 +1126,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String appLink = parameters.get(APP_LINK_KEY);
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
+
+        // Broker-install resume (WebView flow): when the user is blocked inside the embedded
+        // WebView to install the broker (Company Portal), persist the in-flight request and carry
+        // a single-use, PII-free correlation pointer on the install referrer so the freshly
+        // installed broker can silently resume it. Feature-flag gated; when off, behavior is
+        // identical to today.
+        //
+        // Persist BEFORE the request is torn down (onChallengeResponseReceived below), matching the
+        // prod ordering: the in-flight request must be captured while it is still live so a crash or
+        // process death between teardown and Play Store launch cannot lose it.
+        String resumeAppLink = appLink;
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)
+                && !StringUtil.isNullOrEmpty(appLink)
+                && BrokerInstallLinkValidator.isSafeBrokerInstallLink(appLink)) {
+            resumeAppLink = persistAndAppendResumePointer(appLink);
+        }
+        final String finalAppLink = resumeAppLink;
+
         getCompletionCallback().onChallengeResponseReceived(result);
 
         final Handler handler = new Handler();
@@ -1128,7 +1152,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                String link = appLink
+                String link = finalAppLink
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 getActivity().startActivity(intent);
@@ -1137,6 +1161,93 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }, threadSleepForCallingActivity);
 
         view.stopLoading();
+    }
+
+    /**
+     * Persists the in-flight interactive request (derived from {@link #mRequestUrl}) into the
+     * encrypted, persistent {@link EncryptedBrokerInstallResumeStore} under a freshly generated
+     * correlation id, and returns the broker-install {@code appLink} with a single-use, PII-free
+     * resume pointer appended to its {@code referrer}. On any failure, returns the original
+     * {@code appLink} unchanged so the install flow proceeds exactly as it does today.
+     *
+     * <p>The **full** original request parameters are captured (authority, clientId, redirectUri,
+     * scopes, extra scopes, loginHint, claims, prompt, extra query params) so the resumed request
+     * faithfully reproduces the original — not a lossy subset.</p>
+     *
+     * <p>No secrets or PII are placed on the referrer — only the correlation id and the calling
+     * (origin) package name. The login hint / username stays on-device inside the encrypted store.</p>
+     *
+     * @param appLink the validated broker-install Play Store link.
+     * @return the appLink with a resume pointer appended, or the original appLink on failure.
+     */
+    private String persistAndAppendResumePointer(@NonNull final String appLink) {
+        final String methodTag = TAG + ":persistAndAppendResumePointer";
+        try {
+            final String correlationId = UUID.randomUUID().toString();
+            final String originPackage =
+                    getActivity() != null ? getActivity().getPackageName() : "";
+
+            final Uri requestUri =
+                    StringUtil.isNullOrEmpty(mRequestUrl) ? null : Uri.parse(mRequestUrl);
+            final String clientId =
+                    requestUri != null ? requestUri.getQueryParameter("client_id") : null;
+            final String redirectUri =
+                    requestUri != null ? requestUri.getQueryParameter("redirect_uri") : null;
+            final String loginHint =
+                    requestUri != null ? requestUri.getQueryParameter("login_hint") : null;
+            final String scopeParam =
+                    requestUri != null ? requestUri.getQueryParameter("scope") : null;
+            final String claims =
+                    requestUri != null ? requestUri.getQueryParameter("claims") : null;
+            final String prompt =
+                    requestUri != null ? requestUri.getQueryParameter("prompt") : null;
+            final String extraQueryParameters =
+                    requestUri != null ? requestUri.getQueryParameter("eqp") : null;
+
+            String authority = "";
+            try {
+                authority = Authority.getAuthorityFromAuthorityUrl(mRequestUrl)
+                        .getAuthorityURL().toString();
+            } catch (final Exception e) {
+                Logger.warn(methodTag, "Unable to derive authority from request url.");
+            }
+
+            final List<String> scopes = StringUtil.isNullOrEmpty(scopeParam)
+                    ? new ArrayList<String>()
+                    : new ArrayList<>(Arrays.asList(scopeParam.trim().split("\\s+")));
+
+            EncryptedBrokerInstallResumeStore.create(getActivity().getApplicationContext())
+                    .save(new BrokerInstallResumeRequest(
+                            correlationId,
+                            authority,
+                            clientId != null ? clientId : "",
+                            redirectUri != null ? redirectUri : "",
+                            scopes,
+                            new ArrayList<String>(),
+                            loginHint,
+                            claims,
+                            prompt,
+                            extraQueryParameters,
+                            System.currentTimeMillis(),
+                            BrokerInstallResumeRequest.DEFAULT_TTL_MS));
+
+            Logger.info(methodTag, "Persisted broker-install resume request; appending referrer pointer.");
+
+            // ----------------------------------------------------------------------------------
+            // POC TEST-ONLY (deviation D8) — REMOVE BEFORE PRODUCTION.
+            // Emits the resume correlation id to logcat so a tester can relay it to the broker
+            // stand-in via `adb` (substituting for the Play Install Referrer auto-relay). A
+            // correlation id must NEVER be logged in production.
+            Logger.warn(methodTag,
+                    "[POC-D8 TEST-ONLY] broker-install resume correlationId=" + correlationId);
+            // ----------------------------------------------------------------------------------
+
+            return BrokerInstallReferrerBuilder.withResumePointer(appLink, correlationId, originPackage);
+        } catch (final Exception e) {
+            Logger.warn(methodTag,
+                    "Failed to persist broker-install resume request; continuing without resume.");
+            return appLink;
+        }
     }
 
     private void processInvalidRedirectUri(@NonNull final WebView view,
