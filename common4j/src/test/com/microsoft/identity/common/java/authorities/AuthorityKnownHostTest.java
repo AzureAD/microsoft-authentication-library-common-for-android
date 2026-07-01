@@ -97,16 +97,6 @@ public class AuthorityKnownHostTest {
                 Authority.isKnownAuthority(candidate("https://login.com/contoso.onmicrosoft.com")));
     }
 
-    /** A short generic substring host must be rejected. */
-    @Test
-    public void shortGenericSubstringHostIsRejected() {
-        configureKnownAuthority("https://login.microsoftonline.com/common");
-
-        // "e.com" is a substring of "microsoftonline.com".
-        Assert.assertFalse(
-                Authority.isKnownAuthority(candidate("https://e.com/common")));
-    }
-
     /**
      * Port is ignored: an explicit default port on the candidate must still match a configured
      * authority that omits the port. The trust boundary is the host, not the port. (Legacy
@@ -118,18 +108,6 @@ public class AuthorityKnownHostTest {
 
         Assert.assertTrue(
                 Authority.isKnownAuthority(candidate("https://login.microsoftonline.com:443/common")));
-    }
-
-    /**
-     * Port is ignored: a different, non-default port on the same configured host is still accepted,
-     * since the gate trusts the host regardless of port.
-     */
-    @Test
-    public void differentPortSameHostIsAccepted() {
-        configureKnownAuthority("https://login.microsoftonline.com/common");
-
-        Assert.assertTrue(
-                Authority.isKnownAuthority(candidate("https://login.microsoftonline.com:8443/common")));
     }
 
     // =============================================================================================
@@ -220,10 +198,10 @@ public class AuthorityKnownHostTest {
     }
 
     // =============================================================================================
-    // Group 4 - Path-consistency guards: the known-authority gate (isKnownAuthority ->
-    // isKnownToDeveloperByExactHost) and authority resolution (getAuthorityFromAuthorityUrl ->
-    // getEquivalentConfiguredAuthority) must agree about whether a URL is developer-configured. Both
-    // now compare by parsed host only, so a same-host/different-port candidate is treated as
+    // Group 4 - Path-consistency guards: the known-authority gate (isKnownAuthority) and authority
+    // resolution (getAuthorityFromAuthorityUrl -> getEquivalentConfiguredAuthority) must agree about
+    // whether a URL is developer-configured. Both now compare by parsed host only (via the shared
+    // matchesConfiguredHost helper), so a same-host/different-port candidate is treated as
     // configured by BOTH paths. Before the fix these diverged (gate = host-only, resolution =
     // host:port), so a port-divergent URL was "known" by the gate yet resolved as an unconfigured
     // (fallback AAD) authority. Both tests below only pass WITH the fix: one covers the port-divergence

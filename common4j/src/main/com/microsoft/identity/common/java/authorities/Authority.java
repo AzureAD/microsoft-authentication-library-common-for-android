@@ -221,8 +221,8 @@ public abstract class Authority {
      * boundary for a developer-configured known authority is the host (DNS/TLS trust is per-host), so
      * {@code https://example.com}, {@code https://example.com:443} and {@code https://example.com:8443}
      * are all treated as the same trusted host. This deliberately mirrors the comparison performed by
-     * {@link #isKnownToDeveloperByExactHost(URL)} (both delegate to {@link #matchesConfiguredHost})
-     * so that the known-authority gate ({@link #isKnownAuthority(Authority)}) and authority resolution
+     * the known-authority gate in {@link #isKnownAuthority(Authority)} (both delegate to
+     * {@link #matchesConfiguredHost}) so that the gate and authority resolution
      * ({@link #getAuthorityFromAuthorityUrl(String, String)}) never disagree about whether a URL is
      * developer-configured.
      *
@@ -388,7 +388,7 @@ public abstract class Authority {
      */
     public static boolean isKnownAuthority(Authority authority) {
         final String methodTag = TAG + ":isKnownAuthority";
-        final boolean knownToDeveloper;
+        boolean knownToDeveloper = false;
         final boolean knownToMicrosoft;
 
         if (authority == null) {
@@ -410,7 +410,23 @@ public abstract class Authority {
             return true; // onebox authorities are always considered to be known.
         }
 
-        knownToDeveloper = isKnownToDeveloperByExactHost(authorityUrl);
+        // Developer-configured known authorities are matched by parsed host only (see
+        // matchesConfiguredHost). Host-only comparison (never substring, never the raw authority
+        // component) prevents an untrusted host from passing this gate merely because it is a
+        // substring of a configured URL, and avoids userinfo confusion such as
+        // "https://contoso.b2clogin.com@evil.com". This shares matchesConfiguredHost with
+        // getEquivalentConfiguredAuthority so the gate and authority resolution never disagree.
+        final String candidateHost = authorityUrl.getHost();
+        if (!StringUtil.isNullOrEmpty(candidateHost)) {
+            synchronized (sLock) {
+                for (final Authority currentAuthority : knownAuthorities) {
+                    if (matchesConfiguredHost(candidateHost, currentAuthority.mAuthorityUrlString, methodTag)) {
+                        knownToDeveloper = true;
+                        break;
+                    }
+                }
+            }
+        }
 
         // Check whether the authority is known to Microsoft or not.  Microsoft can recognize authorities that exist within public clouds.
         // Microsoft does not maintain a list of B2C authorities or a list of ADFS or 3rd party authorities (issuers).
@@ -424,41 +440,6 @@ public abstract class Authority {
                 "Authority is known to Microsoft? [" + knownToMicrosoft + "]");
 
         return isKnown;
-    }
-
-    /**
-     * Compares the candidate authority against each developer-configured known authority by parsed
-     * host (case-insensitive) only. Port and path are intentionally ignored: the trust boundary for
-     * this gate is the host (DNS/TLS trust is per-host), so {@code https://example.com},
-     * {@code https://example.com:443} and {@code https://example.com:8443} are all treated as the
-     * same trusted host.
-     * <p>
-     * Substring matching is never used here, since it would allow an untrusted host (e.g.
-     * "login.com") to pass the gate merely because it is a substring of a configured URL (e.g.
-     * "https://contoso.b2clogin.com/..."). Using the parsed host (rather than the raw authority
-     * component) also avoids userinfo confusion such as "https://contoso.b2clogin.com@evil.com".
-     * <p>
-     * This shares its per-authority comparison with {@link #getEquivalentConfiguredAuthority(String)}
-     * via {@link #matchesConfiguredHost}, guaranteeing that the known-authority gate and authority
-     * resolution stay in agreement about which hosts are developer-configured.
-     *
-     * @param authorityUrl the candidate authority URL whose host is being validated.
-     * @return true if the candidate host matches a developer-configured known authority host.
-     */
-    private static boolean isKnownToDeveloperByExactHost(@NonNull final URL authorityUrl) {
-        final String methodTag = TAG + ":isKnownToDeveloperByExactHost";
-        final String candidateHost = authorityUrl.getHost();
-        if (StringUtil.isNullOrEmpty(candidateHost)) {
-            return false;
-        }
-        synchronized (sLock) {
-            for (final Authority currentAuthority : knownAuthorities) {
-                if (matchesConfiguredHost(candidateHost, currentAuthority.mAuthorityUrlString, methodTag)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public static KnownAuthorityResult getKnownAuthorityResult(Authority authority) {
