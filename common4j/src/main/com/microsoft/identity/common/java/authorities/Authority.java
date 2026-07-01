@@ -213,39 +213,91 @@ public abstract class Authority {
         return authority;
     }
 
+    /**
+     * Returns the developer-configured known authority whose parsed host matches (case-insensitively)
+     * the host of {@code authorityStr}, or {@code null} if none matches.
+     * <p>
+     * Matching is performed by parsed host only; port and path are intentionally ignored. The trust
+     * boundary for a developer-configured known authority is the host (DNS/TLS trust is per-host), so
+     * {@code https://example.com}, {@code https://example.com:443} and {@code https://example.com:8443}
+     * are all treated as the same trusted host. This deliberately mirrors the comparison performed by
+     * {@link #isKnownToDeveloperByExactHost(URL)} (both delegate to {@link #matchesConfiguredHost})
+     * so that the known-authority gate ({@link #isKnownAuthority(Authority)}) and authority resolution
+     * ({@link #getAuthorityFromAuthorityUrl(String, String)}) never disagree about whether a URL is
+     * developer-configured.
+     *
+     * @param authorityStr the candidate authority URL.
+     * @return the matching configured {@link Authority}, or {@code null} if none matches.
+     */
     @Nullable
     private static Authority getEquivalentConfiguredAuthority(@NonNull final String authorityStr) {
-        Authority result = null;
+        final String methodTag = TAG + ":getEquivalentConfiguredAuthority";
 
+        final String candidateHost;
         try {
-            final URL authorityUrl = new URL(authorityStr);
-            final String httpAuthority = authorityUrl.getAuthority();
-
-            // Iterate over all of the developer trusted authorities and check if the authorities
-            // are the same...
-            synchronized (sLock) {
-                for (final Authority currentAuthority : knownAuthorities) {
-                    if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrlString)) {
-                        final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
-                        final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
-
-                        if (httpAuthority.equalsIgnoreCase(currentHttpAuthority)) {
-                            result = currentAuthority;
-                            break;
-                        }
-                    }
-                }
-            }
-        } catch (MalformedURLException e) {
-            // Shouldn't happen
-            Logger.errorPII(
-                    TAG,
-                    "Error parsing authority",
-                    e
-            );
+            candidateHost = new URL(authorityStr).getHost();
+        } catch (final MalformedURLException e) {
+            // Shouldn't happen for a caller-supplied authority URL.
+            logConfiguredAuthorityParseError(methodTag, "Error parsing authority", e);
+            return null;
         }
 
-        return result;
+        if (StringUtil.isNullOrEmpty(candidateHost)) {
+            return null;
+        }
+
+        // Iterate over all of the developer trusted authorities and check if the hosts match...
+        synchronized (sLock) {
+            for (final Authority currentAuthority : knownAuthorities) {
+                if (matchesConfiguredHost(candidateHost, currentAuthority.mAuthorityUrlString, methodTag)) {
+                    return currentAuthority;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Compares a candidate host against a single developer-configured known authority URL by parsed
+     * host, case-insensitively. Port, path and userinfo are ignored (see
+     * {@link #getEquivalentConfiguredAuthority(String)} for the rationale). A malformed or blank
+     * configured URL is treated as a non-match so that one bad entry never aborts the surrounding
+     * scan of the remaining configured authorities.
+     *
+     * @param candidateHost               the already-parsed candidate host (non-null, non-empty).
+     * @param configuredAuthorityUrlString the configured known authority URL string; may be null/blank.
+     * @param methodTag                   caller's log tag, used when a configured URL fails to parse.
+     * @return true if the candidate host equals the configured authority's parsed host.
+     */
+    private static boolean matchesConfiguredHost(@NonNull final String candidateHost,
+                                                 @Nullable final String configuredAuthorityUrlString,
+                                                 @NonNull final String methodTag) {
+        if (StringUtil.isNullOrEmpty(configuredAuthorityUrlString)) {
+            return false;
+        }
+        try {
+            final URL configuredAuthorityUrl = new URL(configuredAuthorityUrlString);
+            return candidateHost.equalsIgnoreCase(configuredAuthorityUrl.getHost());
+        } catch (final MalformedURLException e) {
+            // Skip malformed configured authority URLs; keep checking the rest.
+            logConfiguredAuthorityParseError(methodTag, "Error parsing configured known authority URL", e);
+            return false;
+        }
+    }
+
+    /**
+     * Logs a known-authority URL parse failure without leaking PII by default. The exception (which
+     * may embed the offending URL) is only included when PII logging is explicitly enabled.
+     */
+    private static void logConfiguredAuthorityParseError(@NonNull final String methodTag,
+                                                         @NonNull final String message,
+                                                         @NonNull final MalformedURLException e) {
+        if (Logger.isAllowPii()) {
+            Logger.errorPII(methodTag, message, e);
+        } else {
+            Logger.error(methodTag, message, null);
+        }
     }
 
     private static boolean authorityIsKnownFromConfiguration(@NonNull final String authorityStr) {
@@ -385,8 +437,10 @@ public abstract class Authority {
      * "login.com") to pass the gate merely because it is a substring of a configured URL (e.g.
      * "https://contoso.b2clogin.com/..."). Using the parsed host (rather than the raw authority
      * component) also avoids userinfo confusion such as "https://contoso.b2clogin.com@evil.com".
-     * This is consistent with the host-equality intent of
-     * {@link #getEquivalentConfiguredAuthority(String)}.
+     * <p>
+     * This shares its per-authority comparison with {@link #getEquivalentConfiguredAuthority(String)}
+     * via {@link #matchesConfiguredHost}, guaranteeing that the known-authority gate and authority
+     * resolution stay in agreement about which hosts are developer-configured.
      *
      * @param authorityUrl the candidate authority URL whose host is being validated.
      * @return true if the candidate host matches a developer-configured known authority host.
@@ -399,20 +453,8 @@ public abstract class Authority {
         }
         synchronized (sLock) {
             for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrlString != null) {
-                    try {
-                        final URL knownAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
-                        if (candidateHost.equalsIgnoreCase(knownAuthorityUrl.getHost())) {
-                            return true;
-                        }
-                    } catch (final MalformedURLException e) {
-                        // Skip malformed configured authority URLs.
-                        if (Logger.isAllowPii()) {
-                            Logger.errorPII(methodTag, "Error parsing configured known authority URL", e);
-                        } else {
-                            Logger.error(methodTag, "Error parsing configured known authority URL", null);
-                        }
-                    }
+                if (matchesConfiguredHost(candidateHost, currentAuthority.mAuthorityUrlString, methodTag)) {
+                    return true;
                 }
             }
         }

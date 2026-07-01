@@ -33,16 +33,23 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
- * Regression tests for the security gate in {@link Authority#isKnownAuthority(Authority)}.
+ * Regression tests for the security gate in {@link Authority#isKnownAuthority(Authority)} and for the
+ * agreement between that gate and authority resolution
+ * ({@link Authority#getAuthorityFromAuthorityUrl(String)}).
  *
  * <p>The gate must only accept a candidate authority whose parsed host exactly (case-insensitively)
  * matches the parsed host of a developer-configured known authority. A previous implementation used
  * {@code String.contains()} against the full configured URL string, which allowed an untrusted host
  * (e.g. {@code login.com}) to pass merely because it was a substring of a configured URL
  * (e.g. {@code https://contoso.b2clogin.com/...}). These tests guard against that bypass.</p>
+ *
+ * <p>The gate and authority resolution must also agree about which URLs are developer-configured:
+ * both compare by parsed host only, so a same-host/different-port candidate is treated as configured
+ * by both paths (Group 4).</p>
  */
 public class AuthorityKnownHostTest {
 
@@ -210,6 +217,57 @@ public class AuthorityKnownHostTest {
 
         Assert.assertTrue("Exactly-configured host must remain known", result.getKnown());
         Assert.assertNull(result.getClientException());
+    }
+
+    // =============================================================================================
+    // Group 4 - Path-consistency guards: the known-authority gate (isKnownAuthority ->
+    // isKnownToDeveloperByExactHost) and authority resolution (getAuthorityFromAuthorityUrl ->
+    // getEquivalentConfiguredAuthority) must agree about whether a URL is developer-configured. Both
+    // now compare by parsed host only, so a same-host/different-port candidate is treated as
+    // configured by BOTH paths. Before the fix these diverged (gate = host-only, resolution =
+    // host:port), so a port-divergent URL was "known" by the gate yet resolved as an unconfigured
+    // (fallback AAD) authority. Both tests below only pass WITH the fix: one covers the port-divergence
+    // agreement, the other covers a malformed configured entry being skipped (not aborting) by both paths.
+    // =============================================================================================
+
+    private static final String PORT_DIVERGENT_B2C_URL =
+            "https://contoso.b2clogin.com:8443/contoso.onmicrosoft.com/B2C_1_signin";
+
+    /**
+     * The gate and authority resolution must agree for a same-host/different-port candidate: the gate
+     * reports it as known AND resolution treats it as the configured (B2C) type.
+     */
+    @Test
+    public void gateAndResolutionAgreeForPortDivergentHost() {
+        configureKnownAuthority(CONFIGURED_B2C_URL);
+
+        Assert.assertTrue("Gate must treat the port-divergent host as known",
+                Authority.isKnownAuthority(candidate(PORT_DIVERGENT_B2C_URL)));
+        Assert.assertTrue("Resolution must treat the port-divergent host as configured (B2C)",
+                Authority.getAuthorityFromAuthorityUrl(PORT_DIVERGENT_B2C_URL)
+                        instanceof AzureActiveDirectoryB2CAuthority);
+    }
+
+    /**
+     * A malformed configured known-authority entry must be skipped by BOTH paths without aborting the
+     * scan, so a valid entry later in the list is still matched. This keeps the gate and resolution in
+     * agreement even when the configured list contains an unparseable URL.
+     */
+    @Test
+    public void malformedConfiguredAuthorityIsSkippedByBothPaths() {
+        // A malformed configured URL (no protocol) precedes a valid configured B2C authority.
+        Authority.addKnownAuthorities(Arrays.asList(
+                configuredAuthority("malformed-configured-url"),
+                configuredAuthority(CONFIGURED_B2C_URL)));
+
+        final String validCandidateUrl =
+                "https://contoso.b2clogin.com/contoso.onmicrosoft.com/B2C_1_signin";
+
+        Assert.assertTrue("Gate must still match the valid entry after skipping the malformed one",
+                Authority.isKnownAuthority(candidate(validCandidateUrl)));
+        Assert.assertTrue("Resolution must still match the valid entry after skipping the malformed one",
+                Authority.getAuthorityFromAuthorityUrl(validCandidateUrl)
+                        instanceof AzureActiveDirectoryB2CAuthority);
     }
 
     /**
