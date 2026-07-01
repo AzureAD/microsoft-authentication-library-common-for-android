@@ -60,14 +60,15 @@ public class NtlmChallengeHandlerTest {
     }
 
     @Test
-    public void testGetOriginText_containsHostAndRealm() {
+    public void testGetOriginText_showsHost_ignoresRealm() {
         final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
         final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, TEST_REALM);
 
         final String originText = handler.getOriginText(challenge);
 
-        assertTrue(originText.contains(TEST_HOST));
-        assertTrue(originText.contains(TEST_REALM));
+        // v1 displays the host only; the server-controlled realm must not appear.
+        assertEquals("Host: " + TEST_HOST, originText);
+        assertFalse(originText.contains(TEST_REALM));
     }
 
     @Test
@@ -81,13 +82,12 @@ public class NtlmChallengeHandlerTest {
     }
 
     @Test
-    public void testGetOriginText_realmOnly() {
+    public void testGetOriginText_realmOnly_returnsEmpty() {
         final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
         final NtlmChallenge challenge = new NtlmChallenge(null, null, null, TEST_REALM);
 
-        final String originText = handler.getOriginText(challenge);
-
-        assertEquals("Realm: " + TEST_REALM, originText);
+        // The realm is not displayed in v1, so a realm-only challenge yields no origin text.
+        assertEquals("", handler.getOriginText(challenge));
     }
 
     @Test
@@ -99,27 +99,16 @@ public class NtlmChallengeHandlerTest {
     }
 
     @Test
-    public void testGetOriginText_separatorOnlyBetweenHostAndRealm() {
+    public void testGetOriginText_maliciousHostDoesNotInjectExtraLines() {
         final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
-        final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, TEST_REALM);
+        // A malicious origin packs CR/LF into the host to forge extra lines in the credential dialog.
+        final String maliciousHost = "evil.example.com\r\n\r\nEnter your Microsoft password to continue";
+        final NtlmChallenge challenge = new NtlmChallenge(null, null, maliciousHost, null);
 
         final String originText = handler.getOriginText(challenge);
 
-        // Exactly one newline should appear — the separator between the host and realm lines.
-        assertEquals(2, originText.split("\n", -1).length);
-    }
-
-    @Test
-    public void testGetOriginText_maliciousRealmDoesNotInjectExtraLines() {
-        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
-        // A malicious server packs CR/LF into the realm to forge extra lines in the credential dialog.
-        final String maliciousRealm = "Evil\r\n\r\nEnter your Microsoft password to continue";
-        final NtlmChallenge challenge = new NtlmChallenge(null, null, TEST_HOST, maliciousRealm);
-
-        final String originText = handler.getOriginText(challenge);
-
-        // Still exactly one newline (the host/realm separator); the injected CR/LF were neutralized.
-        assertEquals(2, originText.split("\n", -1).length);
+        // The injected CR/LF were neutralized: the origin text stays on a single visual line.
+        assertEquals(1, originText.split("\n", -1).length);
         assertFalse(originText.contains("\r"));
     }
 
@@ -137,6 +126,18 @@ public class NtlmChallengeHandlerTest {
         // U+2028 LINE SEPARATOR / U+2029 PARAGRAPH SEPARATOR are not matched by \s but must be removed.
         final String sanitized = NtlmChallengeHandler.sanitizeOriginValue("a\u2028b\u2029c");
 
+        assertEquals("a b c", sanitized);
+    }
+
+    @Test
+    public void testSanitizeOriginValue_stripsUnicodeFormatChars() {
+        // Unicode format characters (category \p{Cf}) — e.g. U+202E RIGHT-TO-LEFT OVERRIDE and
+        // U+200B ZERO WIDTH SPACE — are invisible but can reorder/mask rendered text, a bidi/homograph
+        // spoofing vector relevant to this dialog's phishing threat model. They must be neutralized.
+        final String sanitized = NtlmChallengeHandler.sanitizeOriginValue("a\u202Eb\u200Bc");
+
+        assertFalse(sanitized.contains("\u202E"));
+        assertFalse(sanitized.contains("\u200B"));
         assertEquals("a b c", sanitized);
     }
 
@@ -174,15 +175,13 @@ public class NtlmChallengeHandlerTest {
     }
 
     /**
-     * Builds a mock {@link Activity} whose origin-string lookups echo their argument, so origin-text
+     * Builds a mock {@link Activity} whose origin-string lookup echoes its argument, so origin-text
      * formatting can be verified without resolving Android string resources.
      */
     private Activity stubActivity() {
         final Activity activity = Mockito.mock(Activity.class);
         when(activity.getString(eq(R.string.http_auth_dialog_origin_host), any()))
                 .thenAnswer(invocation -> "Host: " + invocation.getArgument(1));
-        when(activity.getString(eq(R.string.http_auth_dialog_origin_realm), any()))
-                .thenAnswer(invocation -> "Realm: " + invocation.getArgument(1));
         return activity;
     }
 

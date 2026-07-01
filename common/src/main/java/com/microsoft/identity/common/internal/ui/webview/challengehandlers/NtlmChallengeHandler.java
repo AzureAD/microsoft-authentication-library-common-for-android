@@ -48,10 +48,17 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
     private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
 
     /**
-     * Upper bound on the length of a displayed origin value (host/realm). The realm in particular is
-     * server-controlled, so it is capped to keep the dialog readable and bounded.
+     * Upper bound on the length of a displayed origin value (the host). The value is server-supplied,
+     * so it is capped to keep the dialog readable and bounded.
      */
     private static final int MAX_ORIGIN_VALUE_LENGTH = 256;
+
+    /**
+     * Multiple of {@link #MAX_ORIGIN_VALUE_LENGTH} to which an untrusted value is truncated <em>before</em>
+     * the sanitization regexes run, so a pathologically large header value cannot cause unnecessary
+     * regex work on the UI thread. The final display cap is applied after sanitization.
+     */
+    private static final int PRE_SANITIZE_CAP = MAX_ORIGIN_VALUE_LENGTH * 4;
 
     /**
      * Counts how many times the request-origin row was successfully shown in the HTTP auth dialog.
@@ -148,37 +155,38 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
 
     /**
      * Gets the request origin text displayed in the dialog.
+     * <p>
+     * v1 displays the <strong>host only</strong>. The realm is fully server-controlled free text, so a
+     * malicious origin could pair a suspicious host with a reassuring realm line (e.g. "Microsoft
+     * Corporate Login") sitting right next to it; displaying the realm is deferred pending security
+     * review (see PR #3171 discussion). The {@link NtlmChallenge#getRealm() realm} is intentionally
+     * not read here.
      *
      * @param ntlmChallenge the challenge containing request origin details
-     * @return the formatted origin text
+     * @return the formatted origin text, or an empty string when no host is available
      */
     String getOriginText(final NtlmChallenge ntlmChallenge) {
-        final StringBuilder originText = new StringBuilder();
         final String host = sanitizeOriginValue(ntlmChallenge.getHost());
-        if (!TextUtils.isEmpty(host)) {
-            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_host, host));
+        if (TextUtils.isEmpty(host)) {
+            return "";
         }
 
-        final String realm = sanitizeOriginValue(ntlmChallenge.getRealm());
-        if (!TextUtils.isEmpty(realm)) {
-            if (originText.length() > 0) {
-                originText.append('\n');
-            }
-            originText.append(mActivity.getString(R.string.http_auth_dialog_origin_realm, realm));
-        }
-
-        return originText.toString();
+        return mActivity.getString(R.string.http_auth_dialog_origin_host, host);
     }
 
     /**
-     * Sanitizes a server-supplied origin value (host or realm) before it is rendered in the dialog.
+     * Sanitizes a server-supplied origin value (the host) before it is rendered in the dialog.
      * <p>
-     * The realm is taken verbatim from the {@code WWW-Authenticate} response header and is therefore
-     * fully attacker-controlled. Without sanitization a malicious server could embed CR/LF (or other
-     * control characters) in the realm to inject additional lines into the credential dialog and spoof
-     * its content — turning this transparency feature into a phishing surface. Control characters and
-     * line/paragraph separators are collapsed to single spaces so the value stays on one visual line,
-     * and the result is length-capped.
+     * The host comes from the challenge and is <em>not</em> fully trusted — a WebView may have been
+     * navigated to a malicious origin, which is exactly the case this transparency feature exists to
+     * expose. Without sanitization a hostile value could embed CR/LF or other control characters to
+     * inject additional lines into the credential dialog and spoof its content, or use invisible
+     * Unicode <em>format</em> characters (category {@code \p{Cf}}, e.g. U+202E RIGHT-TO-LEFT OVERRIDE)
+     * to visually reorder the rendered text — turning this feature into a phishing surface. Control
+     * characters, Unicode format characters, and line/paragraph separators are collapsed to single
+     * spaces so the value stays on one visual line, and the result is length-capped. The input is
+     * pre-capped ({@link #PRE_SANITIZE_CAP}) before the regex passes to bound UI-thread work on very
+     * large values.
      *
      * @param value the raw, untrusted origin value
      * @return a single-line, length-bounded value safe to display
@@ -188,8 +196,15 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
             return "";
         }
 
-        String sanitized = value
-                .replaceAll("[\\p{Cc}\\p{Zl}\\p{Zp}]", " ")
+        // Pre-cap the untrusted input before running the regexes so a very large header value can't
+        // cause unnecessary UI-thread work. A small multiple of the display cap leaves room for the
+        // whitespace-collapse step before the final cap is applied.
+        String sanitized = value.length() > PRE_SANITIZE_CAP
+                ? value.substring(0, PRE_SANITIZE_CAP)
+                : value;
+
+        sanitized = sanitized
+                .replaceAll("[\\p{Cc}\\p{Cf}\\p{Zl}\\p{Zp}]", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
 
