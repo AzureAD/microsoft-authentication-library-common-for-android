@@ -217,14 +217,9 @@ public abstract class Authority {
      * Returns the developer-configured known authority whose parsed host matches (case-insensitively)
      * the host of {@code authorityStr}, or {@code null} if none matches.
      * <p>
-     * Matching is performed by parsed host only; port and path are intentionally ignored. The trust
-     * boundary for a developer-configured known authority is the host (DNS/TLS trust is per-host), so
-     * {@code https://example.com}, {@code https://example.com:443} and {@code https://example.com:8443}
-     * are all treated as the same trusted host. This deliberately mirrors the comparison performed by
-     * the known-authority gate in {@link #isKnownAuthority(Authority)} (both delegate to
-     * {@link #matchesConfiguredHost}) so that the gate and authority resolution
-     * ({@link #getAuthorityFromAuthorityUrl(String, String)}) never disagree about whether a URL is
-     * developer-configured.
+     * Matching is by parsed host only; port and path are ignored (trust is per-host). This uses the
+     * same {@link #matchesConfiguredHost} comparison as the gate in {@link #isKnownAuthority(Authority)},
+     * so resolution and the gate never disagree about whether a URL is developer-configured.
      *
      * @param authorityStr the candidate authority URL.
      * @return the matching configured {@link Authority}, or {@code null} if none matches.
@@ -259,11 +254,9 @@ public abstract class Authority {
     }
 
     /**
-     * Compares a candidate host against a single developer-configured known authority URL by parsed
-     * host, case-insensitively. Port, path and userinfo are ignored (see
-     * {@link #getEquivalentConfiguredAuthority(String)} for the rationale). A malformed or blank
-     * configured URL is treated as a non-match so that one bad entry never aborts the surrounding
-     * scan of the remaining configured authorities.
+     * Compares a candidate host against a single configured known authority URL by parsed host,
+     * case-insensitively (port, path and userinfo ignored). A malformed or blank configured URL is a
+     * non-match, so one bad entry never aborts the scan of the remaining authorities.
      *
      * @param candidateHost               the already-parsed candidate host (non-null, non-empty).
      * @param configuredAuthorityUrlString the configured known authority URL string; may be null/blank.
@@ -410,12 +403,10 @@ public abstract class Authority {
             return true; // onebox authorities are always considered to be known.
         }
 
-        // Developer-configured known authorities are matched by parsed host only (see
-        // matchesConfiguredHost). Host-only comparison (never substring, never the raw authority
-        // component) prevents an untrusted host from passing this gate merely because it is a
-        // substring of a configured URL, and avoids userinfo confusion such as
-        // "https://contoso.b2clogin.com@evil.com". This shares matchesConfiguredHost with
-        // getEquivalentConfiguredAuthority so the gate and authority resolution never disagree.
+        // Match developer-configured authorities by parsed host only, via matchesConfiguredHost
+        // (shared with getEquivalentConfiguredAuthority so the gate and resolution never disagree).
+        // Host-only equality - never substring - stops an untrusted host passing merely by being a
+        // substring of a configured URL (e.g. "login.com" inside "contoso.b2clogin.com").
         final String candidateHost = authorityUrl.getHost();
         if (!StringUtil.isNullOrEmpty(candidateHost)) {
             synchronized (sLock) {

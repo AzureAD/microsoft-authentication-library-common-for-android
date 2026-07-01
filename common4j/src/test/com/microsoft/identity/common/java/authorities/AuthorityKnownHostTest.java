@@ -198,14 +198,11 @@ public class AuthorityKnownHostTest {
     }
 
     // =============================================================================================
-    // Group 4 - Path-consistency guards: the known-authority gate (isKnownAuthority) and authority
-    // resolution (getAuthorityFromAuthorityUrl -> getEquivalentConfiguredAuthority) must agree about
-    // whether a URL is developer-configured. Both now compare by parsed host only (via the shared
-    // matchesConfiguredHost helper), so a same-host/different-port candidate is treated as
-    // configured by BOTH paths. Before the fix these diverged (gate = host-only, resolution =
-    // host:port), so a port-divergent URL was "known" by the gate yet resolved as an unconfigured
-    // (fallback AAD) authority. Both tests below only pass WITH the fix: one covers the port-divergence
-    // agreement, the other covers a malformed configured entry being skipped (not aborting) by both paths.
+    // Group 4 - Path-consistency guards: the gate (isKnownAuthority) and authority resolution
+    // (getAuthorityFromAuthorityUrl) must agree about whether a URL is developer-configured, since
+    // both now compare by parsed host only via the shared matchesConfiguredHost helper. Before the
+    // fix they diverged (gate = host-only, resolution = host:port). Both tests pass only WITH the
+    // fix: one covers same-host/different-port agreement, the other a malformed entry being skipped.
     // =============================================================================================
 
     private static final String PORT_DIVERGENT_B2C_URL =
