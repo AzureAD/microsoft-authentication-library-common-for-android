@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -47,6 +48,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
@@ -311,6 +313,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
+        Logger.info(methodTag, "WebView is navigating to: " + formattedURL.substring(1, formattedURL.length() -2));
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -1046,7 +1049,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+
+            // Resolve the openid-vc handler and verify it is a trusted, signature-pinned wallet
+            // (e.g. Microsoft Authenticator) before handing it the return-to-caller token. We only
+            // attach the broker-minted PendingIntent when the target is verified, so a malicious
+            // app that merely registers the openid-vc:// scheme can never receive the token.
+            final ComponentName resolved = intent.resolveActivity(getActivity().getPackageManager());
+            final String handlerPackage = resolved != null ? resolved.getPackageName() : null;
+            final boolean isTrustedWallet = handlerPackage != null && isTrustedVcWalletPackage(handlerPackage);
+
+            if (isTrustedWallet) {
+                // Target the verified wallet explicitly and attach the return token.
+                intent.setPackage(handlerPackage);
+                attachReturnToCallerToken(intent, methodTag);
+            } else {
+                // Unknown/untrusted resolver: preserve existing dispatch behavior but do NOT
+                // hand it a broker-minted return token.
+                Logger.warn(methodTag, "OpenID VC handler is not a verified wallet; launching without return token.");
+            }
+
+            if (resolved != null) {
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
                 span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
@@ -1065,6 +1087,68 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "Failed to launch handler for the OpenID Verifiable Credentials request.");
         } finally {
             span.end();
+        }
+    }
+
+    /**
+     * Attaches a one-time return token to the openid-vc launch intent so the wallet
+     * (Authenticator) can bring this auth host's task back to the foreground after the VID
+     * hand-off completes.
+     *
+     * <p>The token is an explicit, immutable {@link PendingIntent} targeting
+     * {@link com.microsoft.identity.common.internal.ui.ReturnToCallerActivity} (manifest-merged
+     * into the host app) plus a random correlation state. The PendingIntent is created with the
+     * host activity's application context, so it returns to whichever app currently hosts this
+     * WebView.</p>
+     *
+     * <p>The token carries no result data and is a navigation token only; Authenticator never
+     * treats its invocation as proof of VID/auth success.</p>
+     */
+    private void attachReturnToCallerToken(@NonNull final Intent intent, @NonNull final String methodTag) {
+        try {
+            final android.content.Context context = getActivity().getApplicationContext();
+            final String requestState = java.util.UUID.randomUUID().toString();
+
+            final Intent returnIntent = new Intent(context,
+                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.class);
+            returnIntent.setAction(
+                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.ACTION_RETURN_FROM_VID);
+            returnIntent.putExtra(
+                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.REQUEST_STATE_EXTRA, requestState);
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+            final PendingIntent returnPendingIntent = PendingIntent.getActivity(
+                    context,
+                    requestState.hashCode(),
+                    returnIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            intent.putExtra(
+                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA,
+                    returnPendingIntent);
+            intent.putExtra(
+                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.REQUEST_STATE_EXTRA, requestState);
+            Logger.info(methodTag, "Attached return-to-caller token to openid-vc intent.");
+        } catch (final Exception e) {
+            // Best-effort: if we cannot build the token, still launch the VID flow without it.
+            Logger.warn(methodTag, "Could not attach return-to-caller token: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns true if {@code packageName} is a trusted, signature-pinned wallet allowed to receive
+     * the openid-vc request and the return-to-caller token. Verification uses {@link BrokerValidator},
+     * which checks both the package name and the app's signing certificate against the known broker
+     * apps (e.g. Microsoft Authenticator), so a malicious app that merely claims the openid-vc://
+     * scheme will not pass.
+     */
+    private boolean isTrustedVcWalletPackage(@NonNull final String packageName) {
+        try {
+            return new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
+            return false;
         }
     }
 

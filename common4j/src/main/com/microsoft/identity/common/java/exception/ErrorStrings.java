@@ -321,6 +321,7 @@ public final class ErrorStrings {
      */
     public static final String UNSUPPORTED_BROKER_VERSION_ERROR_CODE = "unsupported_broker_version";
     public static final String UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE = "Please update Intune Company Portal and/or Microsoft Authenticator to the latest version.";
+    public static final String VID_INTERRUPT = "User will be redirected to VerifiedId endpoint to recover account";
 
     /**
      * Decryption failed.

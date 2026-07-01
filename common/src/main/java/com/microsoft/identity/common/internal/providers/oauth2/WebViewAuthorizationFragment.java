@@ -559,11 +559,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
                 mainWebView.loadUrl(targetUrl);
             } else {
-                // TLR page: delegate to system browser so user can view terms externally.
+                // TLR page: load the URL inline in the auth WebView so the flow stays in-app
+                // instead of delegating to an external browser. The inline navigation proceeds
+                // to the openid-vc:// redirect, which AzureActiveDirectoryWebViewClient intercepts
+                // and hands off to the wallet (Authenticator).
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
-                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
-                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                mainWebView.getContext().startActivity(browserIntent);
+                Logger.info(methodTag, "onCreateWindow: TLR page, loading URL inline in WebView.");
+                mainWebView.loadUrl(targetUrl);
             }
             span.setStatus(StatusCode.OK);
         } catch (final Exception e) {

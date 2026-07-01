@@ -181,7 +181,7 @@ public abstract class AbstractMicrosoftStsTokenResponseHandler implements IToken
             tokenErrorResponse.setErrorDescription("Received " + statusCode + " status code from Server ");
         }
         tokenErrorResponse.setStatusCode(response.getStatusCode());
-
+        Logger.info(TAG, "Error response from server: " + tokenErrorResponse.toString());
         if (null != response.getHeaders()) {
             tokenErrorResponse.setResponseHeadersJson(
                     HeaderSerializationUtil.toJson(response.getHeaders())

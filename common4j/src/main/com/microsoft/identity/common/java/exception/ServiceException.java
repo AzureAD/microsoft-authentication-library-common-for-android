@@ -96,6 +96,8 @@ public class ServiceException extends BaseException {
      */
     public static final String MsaGrantedRefreshTokenNotSupportedOnAadTenantErrorCode = "1000030";
 
+    public static final String VidCaBlockError = "AADSTS53015: Additional authentication challenges required. User will be redirected to VerifiedId endpoint";
+
     private int mHttpStatusCode;
 
     private HashMap<String, String> mHttpResponseBody = null;
