@@ -24,6 +24,7 @@
 package com.microsoft.identity.common.java.exception;
 
 import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
@@ -87,13 +88,19 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         final String homeAccountId = originalParameters.getHomeAccountId();
         String tenantId = null;
 
-        if (homeAccountId != null) {
-            tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
+        // Prefer the RESOURCE tenant (the tenant whose policy triggered the challenge) - the MAM SDK
+        // performs enrollment against this tenant id. For guest/B2B this is the resource (guest) tenant.
+        if (authority instanceof AzureActiveDirectoryAuthority) {
+            final String authorityTenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
+            if (!StringUtil.isNullOrEmpty(authorityTenantId)
+                    && !AzureActiveDirectoryAudience.isHomeTenantAlias(authorityTenantId)) {
+                tenantId = authorityTenantId;
+            }
         }
 
-        if (StringUtil.isNullOrEmpty(tenantId) && authority instanceof AzureActiveDirectoryAuthority) {
-            tenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
-
+        // Fallback: home tenant (home request, or alias authority such as common/organizations/consumers).
+        if (StringUtil.isNullOrEmpty(tenantId) && homeAccountId != null) {
+            tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
         }
 
         if (StringUtil.isNullOrEmpty(uId)) {
@@ -143,13 +150,19 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         final String homeAccountId = originalParameters.getHomeAccountId();
         String tenantId = null;
 
-        if (homeAccountId != null) {
-            tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
+        // Prefer the RESOURCE tenant (the tenant whose policy triggered the challenge) - the MAM SDK
+        // performs enrollment against this tenant id. For guest/B2B this is the resource (guest) tenant.
+        if (authority instanceof AzureActiveDirectoryAuthority) {
+            final String authorityTenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
+            if (!StringUtil.isNullOrEmpty(authorityTenantId)
+                    && !AzureActiveDirectoryAudience.isHomeTenantAlias(authorityTenantId)) {
+                tenantId = authorityTenantId;
+            }
         }
 
-        if (StringUtil.isNullOrEmpty(tenantId) && authority instanceof AzureActiveDirectoryAuthority) {
-            tenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
-
+        // Fallback: home tenant (home request, or alias authority such as common/organizations/consumers).
+        if (StringUtil.isNullOrEmpty(tenantId) && homeAccountId != null) {
+            tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
         }
         setTenantId(tenantId);
     }
