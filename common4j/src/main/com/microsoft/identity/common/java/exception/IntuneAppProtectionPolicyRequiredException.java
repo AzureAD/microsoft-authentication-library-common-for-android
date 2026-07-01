@@ -90,11 +90,13 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
 
         // Prefer the RESOURCE tenant (the tenant whose policy triggered the challenge) - the MAM SDK
         // performs enrollment against this tenant id. For guest/B2B this is the resource (guest) tenant.
+        boolean tenantFromAuthority = false;
         if (authority instanceof AzureActiveDirectoryAuthority) {
             final String authorityTenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
             if (!StringUtil.isNullOrEmpty(authorityTenantId)
                     && !AzureActiveDirectoryAudience.isHomeTenantAlias(authorityTenantId)) {
                 tenantId = authorityTenantId;
+                tenantFromAuthority = true;
             }
         }
 
@@ -102,6 +104,10 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         if (StringUtil.isNullOrEmpty(tenantId) && homeAccountId != null) {
             tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
         }
+        Logger.info(TAG, "[MAM] tenantId source: "
+                + (tenantFromAuthority ? "request authority (resource tenant)" : "home account (fallback)"));
+        // TEST ONLY (remove before PR): log the actual tenantId so it's visible on the prod CP test build.
+        Logger.warn(TAG, "[MAM] Interactive exception tenantId=" + tenantId + " (fromAuthority=" + tenantFromAuthority + ")");
 
         if (StringUtil.isNullOrEmpty(uId)) {
             Logger.verbose(TAG, "IntuneAppProtectionPolicyException property user id was null or empty.");
@@ -152,11 +158,13 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
 
         // Prefer the RESOURCE tenant (the tenant whose policy triggered the challenge) - the MAM SDK
         // performs enrollment against this tenant id. For guest/B2B this is the resource (guest) tenant.
+        boolean tenantFromAuthority = false;
         if (authority instanceof AzureActiveDirectoryAuthority) {
             final String authorityTenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
             if (!StringUtil.isNullOrEmpty(authorityTenantId)
                     && !AzureActiveDirectoryAudience.isHomeTenantAlias(authorityTenantId)) {
                 tenantId = authorityTenantId;
+                tenantFromAuthority = true;
             }
         }
 
@@ -164,6 +172,10 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
         if (StringUtil.isNullOrEmpty(tenantId) && homeAccountId != null) {
             tenantId = StringUtil.getTenantInfo(homeAccountId).getValue();
         }
+        Logger.info(TAG, "[MAM] tenantId source: "
+                + (tenantFromAuthority ? "request authority (resource tenant)" : "home account (fallback)"));
+        // TEST ONLY (remove before PR): log the actual tenantId so it's visible on the prod CP test build.
+        Logger.warn(TAG, "[MAM] Silent exception tenantId=" + tenantId + " (fromAuthority=" + tenantFromAuthority + ")");
         setTenantId(tenantId);
     }
 
