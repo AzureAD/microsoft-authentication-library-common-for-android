@@ -35,11 +35,16 @@ import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
@@ -147,10 +152,24 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
             return;
         }
 
-        final TextView originView = (TextView) dialogView.findViewById(R.id.httpAuthOriginText);
-        originView.setText(originText);
-        originView.setVisibility(View.VISIBLE);
-        sHttpAuthOriginDisplayedCount.add(1);
+        // Lightweight span so dashboards can confirm the flighted origin-display path executed
+        // (and succeeded) once the flight is ramped. Linked to the current auth span if present.
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.HttpAuthOriginDisplay.name(),
+                SpanExtension.current().getSpanContext());
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            final TextView originView = (TextView) dialogView.findViewById(R.id.httpAuthOriginText);
+            originView.setText(originText);
+            originView.setVisibility(View.VISIBLE);
+            sHttpAuthOriginDisplayedCount.add(1);
+            span.setStatus(StatusCode.OK);
+        } catch (final RuntimeException e) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(e);
+            throw e;
+        } finally {
+            span.end();
+        }
     }
 
     /**

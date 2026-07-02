@@ -24,12 +24,17 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
+import android.view.View;
+import android.widget.TextView;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
@@ -172,6 +177,52 @@ public class NtlmChallengeHandlerTest {
         final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
 
         assertFalse(handler.isHttpAuthOriginDisplayEnabled());
+    }
+
+    @Test
+    public void testSetOriginTextIfEnabled_flightOn_showsOriginRowAndEmitsSpan() {
+        setHttpAuthOriginDisplayFlight(true);
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final TextView originView = Mockito.mock(TextView.class);
+        final View dialogView = Mockito.mock(View.class);
+        when(dialogView.findViewById(R.id.httpAuthOriginText)).thenReturn(originView);
+
+        // Exercises the flighted span path end to end (span create -> OK -> end). A no-op OTel
+        // provider backs the span in unit tests, so this asserts the render side effects and that
+        // the span-wrapped block completes without throwing.
+        handler.setOriginTextIfEnabled(dialogView, new NtlmChallenge(null, null, TEST_HOST, null));
+
+        verify(originView).setText("Host: " + TEST_HOST);
+        verify(originView).setVisibility(View.VISIBLE);
+    }
+
+    @Test
+    public void testSetOriginTextIfEnabled_flightOff_doesNotTouchDialog() {
+        setHttpAuthOriginDisplayFlight(false);
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final View dialogView = Mockito.mock(View.class);
+
+        handler.setOriginTextIfEnabled(dialogView, new NtlmChallenge(null, null, TEST_HOST, null));
+
+        // Flight off: the origin row is never located or shown (dialog is byte-for-byte unchanged).
+        verify(dialogView, never()).findViewById(R.id.httpAuthOriginText);
+    }
+
+    @Test
+    public void testSetOriginTextIfEnabled_renderFailurePropagatesAndIsRecorded() {
+        setHttpAuthOriginDisplayFlight(true);
+        final NtlmChallengeHandler handler = new NtlmChallengeHandler(stubActivity(), mockCallback());
+        final TextView originView = Mockito.mock(TextView.class);
+        final RuntimeException failure = new RuntimeException("setText blew up");
+        Mockito.doThrow(failure).when(originView).setText(any(CharSequence.class));
+        final View dialogView = Mockito.mock(View.class);
+        when(dialogView.findViewById(R.id.httpAuthOriginText)).thenReturn(originView);
+
+        // A render failure is recorded on the span (ERROR) but must still propagate, matching the
+        // pre-span behavior — no swallowing.
+        final RuntimeException thrown = assertThrows(RuntimeException.class,
+                () -> handler.setOriginTextIfEnabled(dialogView, new NtlmChallenge(null, null, TEST_HOST, null)));
+        assertEquals(failure, thrown);
     }
 
     /**
