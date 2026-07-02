@@ -669,6 +669,13 @@ public enum AttributeName {
      * Indicates if an external handler was found to handle the openid-vc:// URI.
      */
     is_openid_vc_handler_found,
+
+    /**
+     * Indicates whether a broker-install {@code intent://} request was blocked because its target
+     * package was not the allow-listed store. Set on the {@link SpanName#ProcessBrokerInstallIntent}
+     * span (emitted only when the validation flight is enabled).
+     */
+    is_broker_install_intent_blocked,
     
     //endregion
 

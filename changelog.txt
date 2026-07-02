@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Add a gate-only OpenTelemetry span (ProcessBrokerInstallIntent) around the flighted broker-install intent handling path so the validation outcome (launched / blocked / error) can be confirmed in telemetry when the flight is enabled (#3170)
 - [PATCH] Optimize AcquireTokenSilent save path: replace keySet() decrypt-all with in-memory map lookup in removeAccount()/removeCredential(), add telemetry for deleteAccessTokensWithIntersectingScopes, and remove unused elapsed_time_save_account_shared_preferences attribute (#3074)
 - [MINOR] Add DeviceRegistrationClientApplication as public API for OneAuth device registration with mandatory correlationId, DeviceState and DrsDiscoveryEndpoint enums (#3073)
 - [MINOR] Move device registration protocol types, domain types, controller, and packer from broker to common to enable OneAuth device registration support (#3066)

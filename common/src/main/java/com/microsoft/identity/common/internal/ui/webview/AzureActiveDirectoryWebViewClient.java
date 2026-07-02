@@ -1049,11 +1049,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
+        final boolean validationEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION);
+        // Gate-only telemetry: only emit a span when the validation flight is on, so the fix's
+        // outcome (launched / blocked / error) can be confirmed without adding any behavior while
+        // the flight is off. Falls back to a no-op span if OpenTelemetry is not initialized.
+        final Span span = validationEnabled
+                ? createSpanWithAttributesFromParent(SpanName.ProcessBrokerInstallIntent.name())
+                : null;
+        final Scope scope = span != null ? SpanExtension.makeCurrentSpan(span) : null;
         try {
             final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+                if (validationEnabled) {
                     // Clear any explicit component or selector carried by the parsed intent so that
                     // activity resolution is driven solely by the validated package.
                     intent.setComponent(null);
@@ -1063,23 +1071,53 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     if (!isAllowedBrokerInstallIntentTarget(targetPackage)) {
                         Logger.warn(methodTag,
                                 "Blocking intent request to non-allow-listed package: " + targetPackage);
+                        if (span != null) {
+                            span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), true);
+                            span.setStatus(StatusCode.OK);
+                        }
                         return;
                     }
                 }
                 view.getContext().startActivity(intent);
                 Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+                if (span != null) {
+                    span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), false);
+                    span.setStatus(StatusCode.OK);
+                }
             } else {
                 Logger.warn(methodTag, "Unable to parse the intent URI");
+                if (span != null) {
+                    span.setStatus(StatusCode.OK);
+                }
             }
         } catch (final URISyntaxException e) {
             Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            if (span != null) {
+                span.recordException(e);
+                span.setStatus(StatusCode.ERROR, "Failed to parse the intent URI");
+            }
             returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
         } catch (final ActivityNotFoundException e) {
             Logger.error(methodTag, "No activity found to handle the intent.", e);
+            if (span != null) {
+                span.recordException(e);
+                span.setStatus(StatusCode.ERROR, "No activity found to handle the intent");
+            }
             returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
         } catch (final Throwable throwable) {
             Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            if (span != null) {
+                span.recordException(throwable);
+                span.setStatus(StatusCode.ERROR, "Unexpected error while processing the intent URI");
+            }
             returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
+        } finally {
+            if (scope != null) {
+                scope.close();
+            }
+            if (span != null) {
+                span.end();
+            }
         }
     }
 
