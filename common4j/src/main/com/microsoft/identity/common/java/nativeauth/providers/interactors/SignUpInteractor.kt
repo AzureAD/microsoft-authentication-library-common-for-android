@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpChallengeRequest
@@ -53,7 +54,8 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 class SignUpInteractor(
     private val httpClient: UrlConnectionHttpClient,
     private val nativeAuthRequestProvider: NativeAuthRequestProvider,
-    private val nativeAuthResponseHandler: NativeAuthResponseHandler
+    private val nativeAuthResponseHandler: NativeAuthResponseHandler,
+    private val requestInterceptor: OAuth2RequestInterceptor? = null
 ) {
     private val TAG:String = SignUpInteractor::class.java.simpleName
 
@@ -99,7 +101,7 @@ class SignUpInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
@@ -173,7 +175,7 @@ class SignUpInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(
@@ -295,7 +297,7 @@ class SignUpInteractor(
         )
 
         val encodedRequest: String = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-        val headers = request.headers
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val requestUrl = request.requestUrl
 
         val response = httpClient.post(

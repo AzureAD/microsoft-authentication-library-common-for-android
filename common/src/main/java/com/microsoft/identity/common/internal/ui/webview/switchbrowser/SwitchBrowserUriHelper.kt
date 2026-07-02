@@ -23,15 +23,15 @@
 package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
 import android.net.Uri
+import android.os.Bundle
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
-import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
-import io.opentelemetry.api.trace.StatusCode
 import java.net.URL
+import androidx.core.net.toUri
 
 /**
  * SwitchBrowserUriHelper is a helper class to build URIs for the switch browser challenge.
@@ -46,6 +46,56 @@ object SwitchBrowserUriHelper {
             .isFlightEnabled(CommonFlight.SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE)
     }
 
+    /**
+     * Extracts the base redirect URI (scheme + authority + all paths except the last one) from a full URI.
+     *
+     * This is useful for extracting the redirect base before the final path segment (e.g., "switch_browser").
+     *
+     * @param uri The full URI to extract the redirect from.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp/switch_browser?action=1
+     *
+     * @return The base redirect URI containing scheme, authority, and all path segments except the last one.
+     * e.g. https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp
+     *
+     * @throws ClientException if the URI is missing a scheme or authority.
+     */
+    @Throws(ClientException::class)
+    fun extractBaseRedirectUri(uri: Uri): String {
+        val methodTag = "$TAG:extractRedirectUri"
+        val scheme = uri.scheme
+        if (scheme.isNullOrEmpty()) {
+            val errorMessage = "URI is missing a scheme: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+        val authority = uri.authority
+        if (authority.isNullOrEmpty()) {
+            val errorMessage = "URI is missing an authority: '$uri'"
+            val exception = ClientException(ClientException.MALFORMED_URL, errorMessage)
+            Logger.error(methodTag, errorMessage, exception)
+            throw exception
+        }
+
+        // Get the path segments and exclude the last one
+        val path = uri.path
+        val result = if (!path.isNullOrEmpty() && path != "/") {
+            val segments = path.trim('/').split('/')
+            if (segments.size > 1) {
+                // Exclude the last segment (e.g., "switch_browser")
+                val pathWithoutLast = segments.dropLast(1).joinToString("/")
+                "$scheme://$authority/$pathWithoutLast"
+            } else {
+                // Only one segment, return scheme://authority
+                "$scheme://$authority"
+            }
+        } else {
+            // No path, return scheme://authority
+            "$scheme://$authority"
+        }
+
+        return result
+    }
 
     /**
      * Build the process uri for the switch browser challenge.
@@ -53,13 +103,13 @@ object SwitchBrowserUriHelper {
      * @param uri The uri containing the switch browser code and action URL.
      * e.g. msauth://com.microsoft.identity.client/switch_browser?code=code&action_uri=action-uri
      *
-     * @return The process uri constructed from the broker redirect uri.
+     * @return The process uri constructed from the redirect uri.
      * e.g. action_uri?code=code
      */
     @Throws(ClientException::class, IllegalArgumentException::class, NullPointerException::class, UnsupportedOperationException::class)
     fun buildProcessUri(uri: Uri): Uri {
         val methodTag = "$TAG:buildProcessUri"
-        // Get the SwitchBrowser purpose token from the broker redirect uri.
+        // Get the SwitchBrowser purpose token from the redirect uri.
         val code = uri.getQueryParameter(
             SWITCH_BROWSER.CODE
         )
@@ -70,7 +120,7 @@ object SwitchBrowserUriHelper {
             Logger.error(methodTag, errorMessage, exception)
             throw exception
         }
-        // Get the process uri from the broker redirect uri.
+        // Get the process uri from the redirect uri.
         val actionUri = uri.getQueryParameter(
             SWITCH_BROWSER.ACTION_URI
         )
@@ -113,6 +163,52 @@ object SwitchBrowserUriHelper {
     }
 
     /**
+     * Builds the resume browser URI by appending [SWITCH_BROWSER.RESUME_PATH] to the base redirect URI.
+     *
+     * @param redirectUri The base redirect URI.
+     * e.g. msauth://com.microsoft.identity.client
+     *
+     * @return The resume browser URI.
+     * e.g. msauth://com.microsoft.identity.client/switch_browser_resume
+     */
+    fun buildResumeBrowserUri(redirectUri: String): Uri {
+        return "$redirectUri/${SWITCH_BROWSER.RESUME_PATH}".toUri()
+    }
+
+    /**
+     * Extracts switch-browser resume query parameters from a URI and returns them in a Bundle.
+     *
+     * Extracts the following query parameters from the resume redirect URI:
+     * - [SWITCH_BROWSER.ACTION_URI] - The broker action URI from the resume response
+     * - [SWITCH_BROWSER.CODE] - The authorization code from the resume response
+     * - [SWITCH_BROWSER.STATE] - The state parameter from the resume response
+     * - [SWITCH_BROWSER.RESUME_REQUEST] - Set to `true` to indicate this is a resume delivery
+     *
+     * @param uri The resume redirect URI containing authentication response parameters
+     * @return A [Bundle] containing the extracted switch-browser resume parameters
+     */
+    fun extractSwitchBrowserResumeParamsAsBundle(uri: Uri): Bundle {
+        return Bundle().apply {
+            putString(
+                SWITCH_BROWSER.ACTION_URI,
+                uri.getQueryParameter(SWITCH_BROWSER.ACTION_URI)
+            )
+            putString(
+                SWITCH_BROWSER.CODE,
+                uri.getQueryParameter(SWITCH_BROWSER.CODE)
+            )
+            putString(
+                SWITCH_BROWSER.STATE,
+                uri.getQueryParameter(SWITCH_BROWSER.STATE)
+            )
+            putBoolean(
+                SWITCH_BROWSER.RESUME_REQUEST,
+                true
+            )
+        }
+    }
+
+    /**
      * Check if the url is a switch browser redirect url
      *
      * The request is considered "switch_browser" if the URL
@@ -133,45 +229,37 @@ object SwitchBrowserUriHelper {
 
     /**
      * Check if state in the auth request matches the state provided.
+     *
+     * On mismatch this throws a [ClientException] with [ClientException.STATE_MISMATCH].
+     * Span/telemetry concerns are intentionally left to the caller — this helper does
+     * not touch the current OpenTelemetry span. Callers that wrap this in a span scope
+     * are responsible for recording the exception and ending their span exactly once.
      */
+    @Throws(ClientException::class)
     fun statesMatch(authorizationUrl: String, state: String?) {
         val methodTag = "$TAG:statesMatch"
         if (!STATE_VALIDATION_REQUIRED) {
             Logger.info(methodTag, "State validation is not required.")
             return
         }
-        val span = SpanExtension.current()
-        // Validate the state from auth request and redirect URL is the same
         if (state.isNullOrEmpty()) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "State is null."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
-        val authRequestState = Uri.parse(authorizationUrl).getQueryParameter(SWITCH_BROWSER.STATE)
+        val authRequestState = authorizationUrl.toUri().getQueryParameter(SWITCH_BROWSER.STATE)
         if (authRequestState.isNullOrEmpty()) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "Authorization request state is null."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
         if (state != authRequestState) {
-            val clientException = ClientException(
+            throw ClientException(
                 ClientException.STATE_MISMATCH,
                 "State does not match with the auth request state."
             )
-            span.setStatus(StatusCode.ERROR)
-            span.recordException(clientException)
-            span.end()
-            throw clientException
         }
         Logger.info(methodTag, "States match.")
     }
@@ -208,7 +296,7 @@ object SwitchBrowserUriHelper {
         actionUri: String,
         queryParams: HashMap<String, String> = hashMapOf()
     ): Uri {
-        val uri = Uri.parse(actionUri)
+        val uri = actionUri.toUri()
 
         val uriBuilder = uri.buildUpon()
 

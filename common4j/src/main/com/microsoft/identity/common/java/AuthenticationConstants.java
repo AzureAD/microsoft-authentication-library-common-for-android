@@ -624,6 +624,11 @@ public class AuthenticationConstants {
          * Value for nativebroker mode sent in the extra query param by ESTS when the request is from lookup.
          */
         public static final String LOOKUP_MODE_VALUE = "Lookup";
+
+        /**
+         * When a Lookup mode request is forwarded to ESTS, the ID token in the response will have the value "none".
+         */
+        public static final String LOOKUP_MODE_ID_TOKEN_VALUE = "none";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -740,5 +745,11 @@ public class AuthenticationConstants {
          * The associated value should be taken from {@link BrokerResponse}
          */
         public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
+
+        /**
+         * Boolean flag indicating that the switch_browser protocol flow was used.
+         * Present and true when the flow was initiated; absent otherwise.
+         */
+        public static final String IS_SWITCH_BROWSER_FLOW = "com.microsoft.identity.client.is_switch_browser_flow";
     }
 }

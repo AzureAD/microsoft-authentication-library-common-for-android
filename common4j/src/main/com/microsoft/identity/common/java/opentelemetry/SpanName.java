@@ -70,6 +70,7 @@ public enum SpanName {
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
+    PersistToStorageAsync,
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     ProcessOpenIdVcRequest,
@@ -116,5 +117,14 @@ public enum SpanName {
     /**
      * Span name for WebView file upload (onShowFileChooser) operations.
      */
-    WebViewFileUpload
+    WebViewFileUpload,
+    /**
+     * Span name for switching browser flow operations.
+     */
+    SwitchBrowserFlow,
+
+    /**
+     * Span name for the battery optimization exemption prompt.
+     */
+    BatteryOptimizationExemption
 }

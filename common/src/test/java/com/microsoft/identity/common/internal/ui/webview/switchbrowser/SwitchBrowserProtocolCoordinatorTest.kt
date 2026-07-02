@@ -22,17 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.ui.AuthorizationAgent
 import io.mockk.every
 import io.mockk.mockkObject
 import org.junit.Assert
@@ -40,6 +36,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
@@ -205,33 +203,6 @@ class SwitchBrowserProtocolCoordinatorTest {
     }
 
     @Test
-    fun `test getIntentToResumeWebViewAuth`() {
-        // Mock parameters
-        val mockContext = mock(Context::class.java)
-        val actionUri = "mock-action-uri"
-        val code = "mock-code"
-        val state = "mock-state"
-        val intentDataString =
-            "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.RESUME_PATH}?" +
-                    "${SWITCH_BROWSER.ACTION_URI}=$actionUri&" +
-                    "${SWITCH_BROWSER.CODE}=$code&" +
-                    "${SWITCH_BROWSER.STATE}=$state"
-
-        // Call the method to be tested
-        val intent = SwitchBrowserProtocolCoordinator
-            .getIntentToResumeWebViewAuth(mockContext, intentDataString)
-
-        // Verify the result
-        Assert.assertEquals(
-            0,
-            intent.flags
-        )
-        Assert.assertEquals(actionUri, intent.getStringExtra(SWITCH_BROWSER.ACTION_URI))
-        Assert.assertEquals(code, intent.getStringExtra(SWITCH_BROWSER.CODE))
-        Assert.assertEquals(state, intent.getStringExtra(SWITCH_BROWSER.STATE))
-    }
-
-    @Test
     fun `test processSwitchBrowserResume with null action URI`() {
         // Mock parameters
         val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
@@ -306,6 +277,49 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         Assert.assertEquals(ClientException.UNKNOWN_AUTHORITY, exception.errorCode)
         Assert.assertTrue(exception.message!!.contains("Authority 'invalid.authority.com' is not a valid AAD authority"))
+    }
+
+    @Test
+    fun `test createErrorBundle round-trips errorCode and errorMessage via processSwitchBrowserResume`() {
+        // Arrange
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val errorCode = "switch_browser_failed"
+        val errorMessage = "Simulated upstream failure in the switch browser flow."
+        val extras = SwitchBrowserProtocolCoordinator.createErrorBundle(errorCode, errorMessage)
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        // Act + Assert: the exception thrown carries the same code/message the bundle was built with.
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            coordinator.processSwitchBrowserResume("https://auth.com", extras) { _, _ ->
+                Assert.fail("Success callback must not be invoked when the bundle contains an error.")
+            }
+        }
+        Assert.assertEquals(errorCode, exception.errorCode)
+        Assert.assertEquals(errorMessage, exception.message)
+
+        // Reset must run on the error path too — otherwise isSwitchBrowserChallengeActive
+        // stays true and subsequent onResume() calls would re-enter the resume flow with
+        // an already-consumed bundle.
+        verify(mockSwitchBrowserRequestHandler, times(1)).resetChallengeState()
+    }
+
+    @Test
+    fun `test createErrorBundle with only errorCode still throws with that code`() {
+        // Arrange: createErrorBundle does not allow nulls, but the coordinator's error parsing
+        // tolerates an empty message. Use a non-empty code and an empty message to exercise the
+        // "code present, message blank" branch.
+        val mockSwitchBrowserRequestHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val errorCode = "code_only_error"
+        val extras = SwitchBrowserProtocolCoordinator.createErrorBundle(errorCode, "")
+        val coordinator = SwitchBrowserProtocolCoordinator(mockSwitchBrowserRequestHandler)
+
+        val exception = Assert.assertThrows(ClientException::class.java) {
+            coordinator.processSwitchBrowserResume("https://auth.com", extras) { _, _ ->
+                Assert.fail("Success callback must not be invoked when the bundle contains an error.")
+            }
+        }
+        Assert.assertEquals(errorCode, exception.errorCode)
+        verify(mockSwitchBrowserRequestHandler, times(1)).resetChallengeState()
     }
 
     private fun isStateRequired(isStateRequired: Boolean) {

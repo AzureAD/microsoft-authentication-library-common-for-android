@@ -28,7 +28,9 @@ public enum TempUserType {
     MFA_ON_SPO(LabConstants.TempUserType.MFAONSPO),
     MFA_ON_EXO(LabConstants.TempUserType.MFAONEXO),
     MAM_CA(LabConstants.TempUserType.MAMCA),
-    MDM_CA(LabConstants.TempUserType.MDMCA);
+    MDM_CA(LabConstants.TempUserType.MDMCA),
+    AUTHAPP_LBAC(LabConstants.TempUserType.AUTHAPP_LBAC),
+    AUTHAPP_RICH_CONTEXT(LabConstants.TempUserType.AUTHAPP_RICH_CONTEXT);
 
     final String value;
 

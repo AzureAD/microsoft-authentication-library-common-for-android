@@ -59,11 +59,13 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
+        Assert.assertTrue(handler.wasSwitchBrowserFlowInitiated)
     }
 
     @Test
@@ -79,11 +81,13 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
         handler.processChallenge(challenge)
         Assert.assertTrue(activityExecuted)
+        Assert.assertTrue(handler.wasSwitchBrowserFlowInitiated)
     }
 
     @Test
@@ -94,13 +98,32 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = IBrowserSelector { _, _ -> null } // No browser available
         val handler = SwitchBrowserRequestHandler(activity, browserSelector, null)
         val exception = Assert.assertThrows(ClientException::class.java) {
             handler.processChallenge(challenge)
         }
         Assert.assertEquals(ClientException.NO_BROWSERS_AVAILABLE, exception.errorCode)
-        Assert.assertEquals("No browser found for SwitchBrowserChallenge.", exception.message)
+        Assert.assertFalse(handler.wasSwitchBrowserFlowInitiated)
+    }
+
+    @Test
+    fun `test wasSwitchBrowserFlowInitiated survives resetChallengeState`() {
+        isStateRequired(true)
+        val mockActivity = mock<Activity>()
+        doAnswer { null }.whenever(mockActivity).startActivity(any())
+        val challenge = mock(SwitchBrowserChallenge::class.java)
+        `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
+        `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=123")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
+        val browserSelector = IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
+        val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)
+        handler.processChallenge(challenge)
+        Assert.assertTrue(handler.wasSwitchBrowserFlowInitiated)
+        handler.resetChallengeState()
+        Assert.assertFalse(handler.isSwitchBrowserChallengeActive)
+        Assert.assertTrue(handler.wasSwitchBrowserFlowInitiated)
     }
 
     @Test
@@ -111,6 +134,7 @@ class SwitchBrowserRequestHandlerTest {
         val challenge = mock(SwitchBrowserChallenge::class.java)
         `when`(challenge.processUri).thenReturn(Uri.parse("https://login.microsoft.com?state=123"))
         `when`(challenge.authorizationUrl).thenReturn("https://auth.com?state=456")
+        `when`(challenge.redirectUri).thenReturn("https://myapp.example.com/callback")
         val browserSelector = // Browser available
             IBrowserSelector { _, _ -> Browser("fakeBrowser", emptySet(), "browser", false) }
         val handler = SwitchBrowserRequestHandler(mockActivity, browserSelector, null)

@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.annotations.RetryOnFailure;
+import com.microsoft.identity.client.ui.automation.annotations.StressTest;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
@@ -56,6 +57,20 @@ public class RetryTestRule implements TestRule {
                 Logger.i(TAG, "Applying rule....");
                 Throwable caughtThrowable = null;
                 int numAttempts = 1;
+
+                // Stress tests must run exactly once: retrying them hides the very
+                // failures (deadlocks, contention bugs) they exist to surface and
+                // multiplies an already long runtime. Skip retries (and the minimum
+                // attempts floor) when the test or its class is a @StressTest.
+                final boolean isStressTest =
+                        description.getAnnotation(StressTest.class) != null
+                                || description.getTestClass().getAnnotation(StressTest.class) != null;
+
+                if (isStressTest) {
+                    Logger.i(TAG, "StressTest detected - running a single attempt with no retries");
+                    base.evaluate();
+                    return;
+                }
 
                 RetryOnFailure retryOnFailure = description.getAnnotation(RetryOnFailure.class);
 

@@ -266,6 +266,16 @@ public enum AttributeName {
     elapsed_time_cache_get_all_client_ids,
 
     /**
+     * The total number of account records in the in-memory cache at the time of the request.
+     */
+    number_of_accounts_in_cache,
+
+    /**
+     * The total number of credential records in the in-memory cache at the time of the request.
+     */
+    number_of_credentials_in_cache,
+
+    /**
      * The time (in milliseconds) spent on network when acquiring PRT.
      */
     elapsed_time_network_acquire_prt,
@@ -510,11 +520,6 @@ public enum AttributeName {
     is_in_web_cp_flow,
 
     /**
-     * Indicates whether or not in memory cache is used for accounts and credentials.
-     */
-    in_memory_cache_used_for_accounts_and_credentials,
-
-    /**
      * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
      * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
      */
@@ -620,6 +625,12 @@ public enum AttributeName {
      * The time (in nanoseconds) spent on generating a keypair.
      */
     key_pair_gen_elapsed_time,
+
+    /**
+     * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
+     * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
+     */
+    key_pair_gen_conservative_spec_flight_enabled,
 
     //endregion
 

@@ -52,6 +52,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetIns
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetRegistrationStateV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.InstallCertificateSilentlyV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.PreProvisionedBlobV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.ProvisionResourceAccountCredentialsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.UnregisterDeviceV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationPreAuthorizedV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRegistrationWithTokensV0Response
@@ -62,6 +63,9 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.GetInsta
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.InstallCertificateSilentlyV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.PreProvisionedBlobV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.ProvisionResourceAccountCredentialsV0Response
+import com.microsoft.identity.common.java.dto.AccountRecord
+import com.microsoft.identity.common.java.request.SdkType
 import java.util.UUID
 
 /**
@@ -85,11 +89,11 @@ class DeviceRegistrationClientApplication {
      */
     @Throws(ClientException::class)
     constructor(context: Context) {
-        val components = AndroidPlatformComponentsFactory.createFromContext(context)
+        val components = AndroidPlatformComponentsFactory.createFromContextWithKeystoreOnlyEncryptionForStorage(context)
         mController = buildController(
             context,
             components,
-            BrokerDiscoveryClientFactory.Companion.getInstanceForClientSdk(context, components),
+            BrokerDiscoveryClientFactory.getInstanceForClientSdk(context, components),
             DeviceRegistrationIpcStrategiesProvider()
         )
     }
@@ -121,7 +125,7 @@ class DeviceRegistrationClientApplication {
         ): AndroidDeviceRegistrationClientController {
             val cacheUpdater = ActiveBrokerCacheUpdater(
                 context,
-                ClientActiveBrokerCache.Companion.getBrokerSdkCache(components.storageSupplier)
+                ClientActiveBrokerCache.getBrokerSdkCache(components.storageSupplier)
             )
             return AndroidDeviceRegistrationClientController(
                 context,
@@ -431,5 +435,37 @@ class DeviceRegistrationClientApplication {
         Logger.info(methodTag, "Return a device registration record.")
         return GetDeviceRegistrationRecordV0Response.create(responseSerialized)
             .deviceRegistrationRecord
+    }
+
+    /**
+     * Provisions resource account credentials for the specified tenant and resource account object ID.
+     *
+     * @param tenantId             tenant ID for the resource account.
+     * @param raObjectId           resource account object ID (user ID in home tenant).
+     * @param correlationId        correlation ID for request tracing.
+     * @param sdkType              SDK type of the caller (required).
+     * @param sdkVersion           SDK version of the caller (required).
+     * @param drsDiscoveryEndpoint discovery endpoint name. Default is "PROD".
+     * @return [AccountRecord] representing the provisioned resource account credentials.
+     */
+    @JvmOverloads
+    @Throws(BaseException::class)
+    fun provisionResourceAccountCredentials(
+        tenantId: String,
+        raObjectId: String,
+        correlationId: UUID,
+        sdkType: SdkType,
+        sdkVersion: String,
+        drsDiscoveryEndpoint: DrsDiscoveryEndpoint = DrsDiscoveryEndpoint.PROD
+    ): AccountRecord {
+        val methodTag = "$TAG:provisionResourceAccountCredentials"
+        Logger.info(methodTag, "ProvisionResourceAccountCredentials started. CorrelationId: $correlationId")
+        val responseSerialized = mController.execute(
+            ProvisionResourceAccountCredentialsV0Parameters(correlationId, tenantId, raObjectId, sdkType.name, sdkVersion, drsDiscoveryEndpoint.name)
+        )
+        val response = ProvisionResourceAccountCredentialsV0Response.create(responseSerialized)
+        val result = response.accountRecord
+        Logger.info(methodTag, "ProvisionResourceAccountCredentials ended successfully.")
+        return result
     }
 }
