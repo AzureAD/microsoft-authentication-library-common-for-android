@@ -331,6 +331,22 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         data: BrokerData,
         telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?,
     ): Boolean {
+        val timeStartIsPackageInstalled = System.nanoTime()
+        val isPackageInstalled = isPackageInstalled(data)
+        telemetryCallback?.onFinishCheckingIfPackageIsInstalled(System.nanoTime() - timeStartIsPackageInstalled)
+        if (!isPackageInstalled) {
+            return false
+        }
+
+        val timeStartIsSupportedByTargetedBroker = System.nanoTime()
+        val isSupportedByTargetedBroker = ipcStrategy.isSupportedByTargetedBroker(data.packageName)
+        telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(
+            System.nanoTime() - timeStartIsSupportedByTargetedBroker
+        )
+        if (!isSupportedByTargetedBroker) {
+            return false
+        }
+
         val timeStartIsValidBroker = System.nanoTime()
         val isValidBroker = isValidBroker(data)
         telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
@@ -389,6 +405,21 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     Logger.info(
                         methodTag,
                         "Clearing cache as the installed app does not have a matching signature hash."
+                    )
+                    cache.clearCachedActiveBroker()
+                    return@let
+                }
+
+                val timeStartIsSupportedByTargetedBroker = System.nanoTime()
+                val isSupportedByTargetedBroker =
+                    ipcStrategy.isSupportedByTargetedBroker(it.packageName)
+                telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(
+                    System.nanoTime() - timeStartIsSupportedByTargetedBroker
+                )
+                if (!isSupportedByTargetedBroker) {
+                    Logger.info(
+                        methodTag,
+                        "Clearing cache as the installed app cannot service IPC strategy ${ipcStrategy.getType()}."
                     )
                     cache.clearCachedActiveBroker()
                     return@let

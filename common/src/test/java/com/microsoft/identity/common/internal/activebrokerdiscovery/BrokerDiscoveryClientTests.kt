@@ -407,6 +407,59 @@ class BrokerDiscoveryClientTests {
     }
 
     /**
+     * There is already a cached active broker, but it no longer supports the IPC strategy.
+     * The cache should be invalidated and discovery should continue with other broker candidates.
+     **/
+    @Test
+    fun testCache_CachedBrokerNoLongerSupportsIpc() {
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                throw IllegalStateException("AccountManager should not be used when another broker supports IPC.")
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    if (bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+
+                    throw IllegalStateException("Unsupported broker should not be queried.")
+                }
+
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return targetedBrokerPackageName == prodCompanyPortal.packageName
+                }
+
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled = { brokerData ->
+                brokerData == prodMicrosoftAuthenticator || brokerData == prodCompanyPortal
+            },
+            isValidBroker = { true }
+        )
+
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertEquals(prodCompanyPortal, cache.getCachedActiveBroker())
+    }
+
+    /**
      * Authenticator is cached as active broker.
      * If queried, the actual active broker is Company Portal.
      * We're forcing to skip cache in this test.
