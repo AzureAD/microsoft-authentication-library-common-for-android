@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Bump WrappedSecretKeySerializerVersion flight default to 1, switching WrappedSecretKey serialization to the metadata-aware format by default (#3176)
 - [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)
 - [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
 - [PATCH] Harden Authority.isKnownAuthority() to use exact, case-insensitive host matching for developer-configured known authorities (#3165)
