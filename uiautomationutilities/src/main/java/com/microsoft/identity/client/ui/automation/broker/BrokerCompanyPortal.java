@@ -387,36 +387,30 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        // get access screen
+        // Wait for "Get Access" screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
         Assert.assertTrue(
                 "CP - Get Access screen appears",
                 getAccessScreen.waitForExists(TimeUnit.MINUTES.toMillis(2))
         );
 
-        // get access screen - continue
+        // Due to a known issue in Company Portal, the App Protection Policy flow can trigger
+        // twice. The second instance only appears while still on the "Get Access" screen.
+        // Once we click Continue, it won't reappear. By waiting here, we allow the potential
+        // second instance to arrive and merge, so the PIN flow only needs to run once.
+        Logger.i(TAG, "Waiting on Get Access screen to absorb potential second instance..");
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Logger.w(TAG, "Interrupted while waiting on Get Access screen", e);
+        }
+
+        // Click Continue on Get Access
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
-        // handle PIN entry and confirmation
+        // Handle PIN entry and confirmation
         enterAndConfirmPin(device);
-
-        // Brief wait for the first PIN screen to dismiss before checking for a second occurrence.
-        // UiAutomator uses selector-based matching, so without this the next check could
-        // match the still-visible first screen and produce a false positive.
-        UiAutomatorUtils.waitUntilGoneByResourceId(PIN_ENTRY_RESOURCE_ID, TimeUnit.SECONDS.toMillis(5));
-
-        // Due to a known issue, the PIN entry and confirmation screens can appear twice in
-        // succession. If it happens, handle the second occurrence; if not, continue normally.
-        final UiObject secondTimePinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                PIN_ENTRY_RESOURCE_ID, TimeUnit.SECONDS.toMillis(5)
-        );
-
-        if (secondTimePinField.exists()) {
-            Logger.i(TAG, "PIN screen appeared a second time, handling again..");
-            enterAndConfirmPin(device);
-        } else {
-            Logger.i(TAG, "PIN screen did not reappear again - fine, continuing..");
-        }
     }
 
     /**
