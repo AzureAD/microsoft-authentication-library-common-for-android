@@ -300,6 +300,104 @@ class BrokerDiscoveryClientTests {
         Assert.assertEquals(prodMicrosoftAuthenticator, client.getActiveBroker())
     }
 
+    @Test
+    fun testCache_BrokerDoesNotSupportCurrentIpc() {
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                throw IllegalStateException("AccountManager should not be used when another broker supports IPC.")
+            },
+            ipcStrategy = object : AbstractIpcStrategyWithServiceValidation() {
+                override fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle {
+                    if (bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+                    throw IllegalStateException("Unexpected package: ${bundle.targetBrokerAppPackageName}")
+                }
+
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return targetedBrokerPackageName == prodCompanyPortal.packageName
+                }
+
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled = {
+                it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+            },
+            isValidBroker = { true }
+        )
+
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker())
+        Assert.assertEquals(prodCompanyPortal, cache.getCachedActiveBroker())
+    }
+
+    @Test
+    fun testInMemoryCache_BrokerDoesNotSupportCurrentIpc() {
+        val cache = InMemoryActiveBrokerCache()
+        cache.setCachedActiveBroker(prodMicrosoftAuthenticator)
+
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                throw IllegalStateException("AccountManager should not be used when another broker supports IPC.")
+            },
+            ipcStrategy = object : AbstractIpcStrategyWithServiceValidation() {
+                override fun communicateToBrokerAfterValidation(bundle: BrokerOperationBundle): Bundle {
+                    if (bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+                    throw IllegalStateException("Unexpected package: ${bundle.targetBrokerAppPackageName}")
+                }
+
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return targetedBrokerPackageName == prodCompanyPortal.packageName
+                }
+
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled = {
+                it == prodMicrosoftAuthenticator || it == prodCompanyPortal
+            },
+            isValidBroker = { true }
+        )
+        client.cachedData = BrokerDiscoveryClient.CachedBrokerData(prodMicrosoftAuthenticator)
+
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBrokerWithInMemoryCache(null))
+        Assert.assertEquals(prodCompanyPortal, cache.getCachedActiveBroker())
+        Assert.assertEquals(prodCompanyPortal, client.cachedData?.brokerData)
+    }
+
     /**
      * There is already a cached active broker, but all the apps have been uninstalled.
      **/

@@ -334,7 +334,18 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         val timeStartIsValidBroker = System.nanoTime()
         val isValidBroker = isValidBroker(data)
         telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
-        return isValidBroker
+        return isValidBroker && supportsCurrentIpcStrategy(data)
+    }
+
+    private fun supportsCurrentIpcStrategy(data: BrokerData): Boolean {
+        if (!ipcStrategy.isSupportedByTargetedBroker(data.packageName)) {
+            Logger.info(
+                TAG,
+                "Clearing cache as the cached broker no longer supports ${ipcStrategy.getType()}."
+            )
+            return false
+        }
+        return true
     }
 
     override fun getActiveBroker(shouldSkipCache: Boolean): BrokerData? {
@@ -390,6 +401,11 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                         methodTag,
                         "Clearing cache as the installed app does not have a matching signature hash."
                     )
+                    cache.clearCachedActiveBroker()
+                    return@let
+                }
+
+                if (!supportsCurrentIpcStrategy(it)) {
                     cache.clearCachedActiveBroker()
                     return@let
                 }
