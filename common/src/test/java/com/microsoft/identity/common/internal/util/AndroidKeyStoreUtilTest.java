@@ -614,6 +614,52 @@ public class AndroidKeyStoreUtilTest {
         }
     }
 
+    @Test
+    @Config(sdk = Build.VERSION_CODES.P) // API 28, below TIRAMISU
+    public void testGetKeyStoreErrorTransience_ApiBelow33_ReturnsApiTooOld() {
+        final ClientException exception = new ClientException("failed_to_load_key", "wrapper",
+                new java.io.IOException("disk error"));
+
+        assertEquals(AndroidKeyStoreUtil.KeyStoreErrorTransience.API_TOO_OLD,
+                AndroidKeyStoreUtil.getKeyStoreErrorTransience(exception));
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.TIRAMISU) // API 33
+    public void testGetKeyStoreErrorTransience_NoKeyStoreException_ReturnsNotKeystoreError() {
+        final ClientException exception = new ClientException("failed_to_load_key", "wrapper",
+                new java.io.IOException("disk error"));
+
+        assertEquals(AndroidKeyStoreUtil.KeyStoreErrorTransience.NOT_KEYSTORE_ERROR,
+                AndroidKeyStoreUtil.getKeyStoreErrorTransience(exception));
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.TIRAMISU) // API 33
+    public void testGetKeyStoreErrorTransience_TransientKeyStoreException_ReturnsTransient() {
+        final android.security.KeyStoreException keyStoreException =
+                mock(android.security.KeyStoreException.class);
+        when(keyStoreException.isTransientFailure()).thenReturn(true);
+        final ClientException exception =
+                new ClientException("failed_to_load_key", "wrapper", keyStoreException);
+
+        assertEquals(AndroidKeyStoreUtil.KeyStoreErrorTransience.TRANSIENT,
+                AndroidKeyStoreUtil.getKeyStoreErrorTransience(exception));
+    }
+
+    @Test
+    @Config(sdk = Build.VERSION_CODES.TIRAMISU) // API 33
+    public void testGetKeyStoreErrorTransience_PermanentKeyStoreException_ReturnsNotTransient() {
+        final android.security.KeyStoreException keyStoreException =
+                mock(android.security.KeyStoreException.class);
+        when(keyStoreException.isTransientFailure()).thenReturn(false);
+        final ClientException exception =
+                new ClientException("failed_to_load_key", "wrapper", keyStoreException);
+
+        assertEquals(AndroidKeyStoreUtil.KeyStoreErrorTransience.NOT_TRANSIENT,
+                AndroidKeyStoreUtil.getKeyStoreErrorTransience(exception));
+    }
+
     /**
      * Helper method to create a legacy KeyPairGeneratorSpec for testing
      */
