@@ -66,6 +66,7 @@ import com.microsoft.identity.common.java.net.CancellationSignal;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OtelContextExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.BrokerInstallResumeParkRegistry;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -116,6 +117,16 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+
+    /**
+     * Returns the interactive command currently executing on the interactive executor, or null if
+     * none. Exposed for broker-install request resume: when an interactive request is blocked to
+     * install the broker, the WebView client grabs the in-flight command here so its original
+     * callback (and request parameters) can be parked and later resumed in broker context.
+     */
+    public static InteractiveTokenCommand getCommandAtInteractiveExecution() {
+        return sCommand;
+    }
 
     private static final Object mapAccessLock = new Object();
 
@@ -906,6 +917,17 @@ public class CommandDispatcher {
         private static void returnCommandResult (
         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
         @NonNull final CommandResult result){
+
+            // Broker-install request resume: if this interactive request was parked because the user
+            // was blocked to install the broker, do NOT deliver its result (the BROKER_INSTALLATION
+            // interrupt) to the calling app. The original callback is held by the resume coordinator
+            // and will be fired with a token once the request is resumed in broker context.
+            if (command instanceof InteractiveTokenCommand
+                    && BrokerInstallResumeParkRegistry.isParked(command.getParameters().getCorrelationId())) {
+                Logger.info(TAG,
+                        "Interactive request parked for broker-install resume; suppressing callback to caller.");
+                return;
+            }
 
             final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
             platformUtil.onReturnCommandResult(command);

@@ -37,6 +37,7 @@ object BrokerInstallReferrerBuilder {
     private const val PARAM_REFERRER = "referrer"
     private const val POINTER_CORRELATION_ID = "resumeCid"
     private const val POINTER_PACKAGE = "originPkg"
+    private const val POINTER_REDIRECT_URI = "redirectUri"
 
     /**
      * Appends an encoded resume pointer to [installUrl]'s `referrer` parameter.
@@ -44,16 +45,29 @@ object BrokerInstallReferrerBuilder {
      * @param installUrl Allowlisted Play/fwlink install URL.
      * @param correlationId Single-use resume key.
      * @param originPackage Package that triggered the install; used for verification on resume.
+     * @param redirectUri The app's msauth redirect uri; Company Portal uses it to redirect the user
+     *   straight back to the calling app after install (already public — never PII).
      * @return URL with the pointer set, or the original [installUrl] if it cannot be parsed.
      */
     @JvmStatic
-    fun withResumePointer(installUrl: String, correlationId: String, originPackage: String): String {
+    @JvmOverloads
+    fun withResumePointer(
+        installUrl: String,
+        correlationId: String,
+        originPackage: String,
+        redirectUri: String? = null
+    ): String {
         val builder: CommonURIBuilder = try {
             CommonURIBuilder(installUrl)
         } catch (e: URISyntaxException) {
             return installUrl
         }
-        val pointer = "$POINTER_CORRELATION_ID=$correlationId;$POINTER_PACKAGE=$originPackage"
+        val pointer = buildString {
+            append("$POINTER_CORRELATION_ID=$correlationId;$POINTER_PACKAGE=$originPackage")
+            if (!redirectUri.isNullOrBlank()) {
+                append(";$POINTER_REDIRECT_URI=$redirectUri")
+            }
+        }
         builder.setParameter(PARAM_REFERRER, pointer)
         return builder.toString()
     }
