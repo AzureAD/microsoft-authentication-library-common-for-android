@@ -1408,10 +1408,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             mUrlLoadTracker.updateLatestUrlStatus("HTTP Error Code: " + statusCode, null);
         }
 
-        // A server-side error (5xx) on the main frame means the page will never finish loading,
-        // so onPageFinished/onPageLoaded is never invoked and the progress spinner would stay up
-        // indefinitely, blocking the UI. Surface the error to the caller so the user is shown an
-        // informative error instead of being stuck on the login screen.
+        // In the reported main-frame 5xx failure mode, the WebView can get stuck before the normal
+        // page-finished callback unwinds the loading UI. Surface the error to the caller so the
+        // auth flow terminates with a ClientException instead of leaving the user stuck on the
+        // login screen.
         if (statusCode >= HttpURLConnection.HTTP_INTERNAL_ERROR
                 && CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .isFlightEnabled(CommonFlight.FAIL_WEBVIEW_FLOW_ON_SERVER_HTTP_ERROR)) {
