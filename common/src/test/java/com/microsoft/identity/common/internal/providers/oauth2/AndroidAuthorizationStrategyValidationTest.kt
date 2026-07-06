@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
@@ -57,6 +58,7 @@ class AndroidAuthorizationStrategyValidationTest {
         private const val COMPETING_PACKAGE = "com.example.otherapp"
         private const val COMPETING_ACTIVITY = "com.example.otherapp.SomeActivity"
         private const val REDIRECT_URI_VALUE = "msauth://org.robolectric.default/redirect"
+        private const val INTUNE_PACKAGE = "com.microsoft.intune"
     }
 
     private lateinit var activity: Activity
@@ -153,5 +155,47 @@ class AndroidAuthorizationStrategyValidationTest {
 
         // No competing app registered — should not throw (startActivity completes normally).
         strategy.testLaunchIntent(buildIntent())
+    }
+
+    /**
+     * Browser flow with a competing app registered but Intune as the calling package →
+     * multiple-app URL scheme validation is skipped, so no [ClientException] is thrown.
+     * This validates the COBO / COPE exemption where Authenticator also listens for the
+     * broker redirect and would otherwise trigger a false conflict.
+     */
+    @Test
+    fun `launchIntent browser flow skips competing app validation for Intune package`() {
+        registerCompetingApp()
+        val intuneContext = object : ContextWrapper(context) {
+            override fun getPackageName(): String = INTUNE_PACKAGE
+        }
+
+        val strategy = TestBrowserAuthorizationStrategy(intuneContext, activity)
+
+        // A competing app is registered, but because the calling package is Intune the
+        // validation is skipped and launchIntent completes without throwing.
+        strategy.testLaunchIntent(buildIntent())
+    }
+
+    /**
+     * Browser flow with a competing app registered and a non-Intune calling package →
+     * [ClientException] must still be thrown, ensuring the Intune exemption does not
+     * relax validation for other apps.
+     */
+    @Test
+    fun `launchIntent browser flow throws for non-Intune package when competing app is registered`() {
+        registerCompetingApp()
+        val nonIntuneContext = object : ContextWrapper(context) {
+            override fun getPackageName(): String = COMPETING_PACKAGE
+        }
+
+        val strategy = TestBrowserAuthorizationStrategy(nonIntuneContext, activity)
+
+        try {
+            strategy.testLaunchIntent(buildIntent())
+            fail("Expected ClientException")
+        } catch (e: ClientException) {
+            assertEquals(ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME, e.errorCode)
+        }
     }
 }
