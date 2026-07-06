@@ -41,6 +41,7 @@ import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -166,6 +167,14 @@ public abstract class BrowserAuthorizationStrategy<
             if (redirectUri == null) {
                 Logger.warn(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
+            } else if (isIntuneCaller()) {
+                // Intune is the only caller for which the broker takes the system-browser path
+                // (see the broker's isCallingPackageIntune gate). That flow uses the shared broker
+                // redirect, which is handled by the broker's own BrokerBrowserRedirectActivity -- an
+                // activity the multiple-apps guard does not recognize, causing a false positive on the
+                // broker's own package. Skip the check for Intune; it always requires the browser.
+                Logger.info(methodTag,
+                        "Intune caller detected; skipping multiple-app URL scheme validation.");
             } else {
                 BrowserRedirectValidator.validateNoMultipleAppsListening(
                         appContext,
@@ -175,6 +184,35 @@ public abstract class BrowserAuthorizationStrategy<
             }
         }
         super.launchIntent(intent);
+    }
+
+    /**
+     * Determines whether the current authorization request originates from the Intune app.
+     * <p>
+     * The caller package is derived from the request's application identifier, which is formatted
+     * as {@code <callerPackageName>/<callerSignature>}
+     * ({@link com.microsoft.identity.common.java.commands.parameters.CommandParameters#APPLICATION_IDENTIFIER_FORMAT}).
+     * Only the package name is compared, matching the broker's package-only
+     * {@code BrokerUtils.isCallingPackageIntune} gate that routes Intune to the system browser (so a
+     * debug/non-release-signed Intune build is treated the same way the broker treats it). Only
+     * {@link MicrosoftStsAuthorizationRequest} carries an application identifier; for any other
+     * request type this returns {@code false}.
+     *
+     * @return {@code true} if the calling package is {@code com.microsoft.intune}.
+     */
+    private boolean isIntuneCaller() {
+        if (!(mAuthorizationRequest instanceof MicrosoftStsAuthorizationRequest)) {
+            return false;
+        }
+        final String applicationIdentifier =
+                ((MicrosoftStsAuthorizationRequest) mAuthorizationRequest).getApplicationIdentifier();
+        if (applicationIdentifier == null) {
+            return false;
+        }
+        // applicationIdentifier is "<callerPackageName>/<callerSignatureSha512>". The signature is a
+        // base64 SHA-512 hash that itself may contain '/', so split only on the first separator.
+        final String callerPackageName = applicationIdentifier.split("/", 2)[0];
+        return AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME.equalsIgnoreCase(callerPackageName);
     }
 
     protected abstract void setIntentFlag(@NonNull final Intent intent);
