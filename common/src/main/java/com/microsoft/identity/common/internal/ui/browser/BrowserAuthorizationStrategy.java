@@ -168,7 +168,7 @@ public abstract class BrowserAuthorizationStrategy<
             if (redirectUri == null) {
                 Logger.warn(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
-            } else if (isIntuneCaller()) {
+            } else if (isIntuneCaller(mAuthorizationRequest)) {
                 // Intune is the only caller for which the broker takes the system-browser path
                 // (see the broker's isCallingPackageIntune gate). That flow uses the shared broker
                 // redirect, which is handled by the broker's own BrokerBrowserRedirectActivity -- an
@@ -188,7 +188,7 @@ public abstract class BrowserAuthorizationStrategy<
     }
 
     /**
-     * Determines whether the current authorization request originates from the Intune app.
+     * Determines whether the given authorization request originates from the Intune app.
      * <p>
      * The caller package is derived from the request's application identifier via
      * {@link com.microsoft.identity.common.java.commands.parameters.CommandParameters#getPackageNameFromApplicationIdentifier(String)},
@@ -197,15 +197,20 @@ public abstract class BrowserAuthorizationStrategy<
      * that routes Intune to the system browser (so a debug/non-release-signed Intune build is
      * treated the same way the broker treats it). Only {@link MicrosoftStsAuthorizationRequest}
      * carries an application identifier; for any other request type this returns {@code false}.
+     * <p>
+     * Package-private and static so the Intune exemption is covered by unit tests and cannot be
+     * silently removed without failing them (guards against re-introducing the
+     * {@code multiple_apps_listening_url_scheme} regression for Intune).
      *
+     * @param authorizationRequest the authorization request being launched.
      * @return {@code true} if the calling package is {@code com.microsoft.intune}.
      */
-    private boolean isIntuneCaller() {
-        if (!(mAuthorizationRequest instanceof MicrosoftStsAuthorizationRequest)) {
+    static boolean isIntuneCaller(final AuthorizationRequest authorizationRequest) {
+        if (!(authorizationRequest instanceof MicrosoftStsAuthorizationRequest)) {
             return false;
         }
         final String applicationIdentifier =
-                ((MicrosoftStsAuthorizationRequest) mAuthorizationRequest).getApplicationIdentifier();
+                ((MicrosoftStsAuthorizationRequest) authorizationRequest).getApplicationIdentifier();
         final String callerPackageName =
                 CommandParameters.getPackageNameFromApplicationIdentifier(applicationIdentifier);
         return AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME.equalsIgnoreCase(callerPackageName);
