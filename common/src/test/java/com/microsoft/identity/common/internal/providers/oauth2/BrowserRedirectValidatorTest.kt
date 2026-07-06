@@ -27,6 +27,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import com.microsoft.identity.common.internal.broker.IBrokerValidator
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
 import org.junit.Assert.assertEquals
@@ -50,16 +51,34 @@ class BrowserRedirectValidatorTest {
     companion object {
         private const val COMPETING_PACKAGE = "com.example.otherapp"
         private const val COMPETING_ACTIVITY = "com.example.otherapp.SomeActivity"
+        private const val KNOWN_BROKER_PACKAGE = "com.microsoft.windowsintune.companyportal"
+        private const val KNOWN_BROKER_ACTIVITY =
+            "com.microsoft.identity.client.BrokerBrowserRedirectActivity"
     }
 
     private val context: Context = RuntimeEnvironment.getApplication()
     private val redirectUri = "msauth://com.example.myapp/redirect"
     private val appPackageName = context.packageName
 
-    // These must stay in sync with the private constants in BrowserRedirectValidator.
     private val browserTabActivityClass = "com.microsoft.identity.client.BrowserTabActivity"
     private val currentTaskBrowserTabActivityClass =
         "com.microsoft.identity.client.CurrentTaskBrowserTabActivity"
+
+    // The broker registers its OWN redirect handler under this activity for BOTH the msauth
+    // scheme and the App Link host — it must never be flagged as a competing app.
+    private val brokerBrowserRedirectActivityClass =
+        "com.microsoft.identity.client.BrokerBrowserRedirectActivity"
+
+    // A broker validator that recognizes no foreign package as a known broker (fail-closed default).
+    private fun brokerValidatorRecognizing(vararg knownPackages: String): IBrokerValidator {
+        val validator = mock(IBrokerValidator::class.java)
+        `when`(validator.isValidBrokerPackage(org.mockito.ArgumentMatchers.anyString()))
+            .thenReturn(false)
+        for (pkg in knownPackages) {
+            `when`(validator.isValidBrokerPackage(pkg)).thenReturn(true)
+        }
+        return validator
+    }
 
     // ===================== Helper Functions =====================
 
@@ -199,21 +218,55 @@ class BrowserRedirectValidatorTest {
     }
 
     @Test
-    fun `validateNoMultipleAppsListening throws when our CurrentTaskBrowserTabActivity registered but useCurrentTask is false`() {
-        // Registered: CurrentTaskBrowserTabActivity — but validator looks for BrowserTabActivity (useCurrentTask=false).
-        // So this entry is treated as "other" → should throw.
+    fun `validateNoMultipleAppsListening passes when our own package registers a non-BrowserTab activity (broker self-redirect)`() {
+        // Regression test for the broker self-collision: the broker's OWN
+        // BrokerBrowserRedirectActivity handles the redirect. Because it belongs to our own
+        // package it must be treated as legitimate regardless of the activity class name.
         registerResolveInfoForRedirectUri(
-            buildResolveInfo(appPackageName, currentTaskBrowserTabActivityClass)
+            buildResolveInfo(appPackageName, brokerBrowserRedirectActivityClass)
+        )
+
+        // Should not throw — an app never competes with its own activities.
+        BrowserRedirectValidator.validateNoMultipleAppsListening(context, redirectUri, useCurrentTask = false)
+    }
+
+    @Test
+    fun `validateNoMultipleAppsListening passes when a different but known signed broker is registered`() {
+        // A second, signature-verified Microsoft broker (e.g. Company Portal) legitimately
+        // handling the broker redirect must not be treated as an attacker.
+        registerResolveInfoForRedirectUri(
+            buildResolveInfo(KNOWN_BROKER_PACKAGE, KNOWN_BROKER_ACTIVITY)
+        )
+
+        // Should not throw — the foreign package is a known, signature-verified broker.
+        BrowserRedirectValidator.validateNoMultipleAppsListening(
+            context,
+            redirectUri,
+            useCurrentTask = false,
+            brokerValidator = brokerValidatorRecognizing(KNOWN_BROKER_PACKAGE)
+        )
+    }
+
+    @Test
+    fun `validateNoMultipleAppsListening throws when a foreign package is not a known broker (fail closed)`() {
+        registerResolveInfoForRedirectUri(
+            buildResolveInfo(COMPETING_PACKAGE, COMPETING_ACTIVITY)
         )
 
         try {
-            BrowserRedirectValidator.validateNoMultipleAppsListening(context, redirectUri, useCurrentTask = false)
+            BrowserRedirectValidator.validateNoMultipleAppsListening(
+                context,
+                redirectUri,
+                useCurrentTask = false,
+                brokerValidator = brokerValidatorRecognizing() // recognizes nothing
+            )
             fail("Expected ClientException to be thrown")
         } catch (e: ClientException) {
             assertEquals(
                 ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME,
                 e.errorCode
             )
+            assert(e.message!!.contains(COMPETING_PACKAGE))
         }
     }
 

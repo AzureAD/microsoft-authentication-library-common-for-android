@@ -26,38 +26,53 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
+import com.microsoft.identity.common.internal.broker.BrokerValidator
+import com.microsoft.identity.common.internal.broker.IBrokerValidator
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
 
 /**
  * Validates that no other application is registered to handle the same custom URL scheme
- * used for the BrowserTabActivity redirect URI.
+ * used for the redirect URI.
+ *
+ * A resolver is considered legitimate — and therefore skipped — when either:
+ *  1. It belongs to our own application. This covers the MSAL client's
+ *     `BrowserTabActivity` / `CurrentTaskBrowserTabActivity` as well as the broker's own
+ *     `BrokerBrowserRedirectActivity`, which registers intent filters for BOTH the `msauth`
+ *     scheme and the App Link host used for the broker redirect. Because the collision was
+ *     with the app's own redirect handler, the redirect URI type (msauth vs App Link) is
+ *     irrelevant.
+ *  2. It belongs to a different but known, signature-verified Microsoft broker (e.g. a second
+ *     broker such as Company Portal installed alongside Authenticator).
+ *
+ * Any other resolver is treated as an untrusted app listening on the scheme and fails closed.
  */
 object BrowserRedirectValidator {
 
-    private const val BROWSER_TAB_ACTIVITY_CLASS =
-        "com.microsoft.identity.client.BrowserTabActivity"
-    private const val CURRENT_TASK_BROWSER_TAB_ACTIVITY_CLASS =
-        "com.microsoft.identity.client.CurrentTaskBrowserTabActivity"
-
     /**
      * Verifies that no other application is listening on the custom URL scheme defined by
-     * [redirectUri]. If another application's activity is found that handles the same scheme,
-     * a [ClientException] with error code
+     * [redirectUri]. If an untrusted application's activity is found that handles the same
+     * scheme, a [ClientException] with error code
      * [ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME] is thrown.
      *
      * @param context      The Android context used to query the PackageManager.
      * @param redirectUri  The redirect URI whose URL scheme will be checked.
-     * @param useCurrentTask Whether the flow uses [CurrentTaskBrowserTabActivity] (true) or
-     *                       [BrowserTabActivity] (false) as the expected activity class.
-     * @throws ClientException if another application is found listening on the same URL scheme.
+     * @param useCurrentTask Retained for API compatibility; the legitimacy of a resolver is
+     *                       determined by its package (own app or known broker), not by the
+     *                       expected activity class.
+     * @param brokerValidator Validates whether a foreign resolver package is a known,
+     *                        signature-verified broker. Injectable for testing.
+     * @throws ClientException if an untrusted application is found listening on the same URL scheme.
      */
     @JvmStatic
+    @JvmOverloads
     @Throws(ClientException::class)
     fun validateNoMultipleAppsListening(
         context: Context,
         redirectUri: String,
-        useCurrentTask: Boolean
+        @Suppress("UNUSED_PARAMETER") useCurrentTask: Boolean,
+        brokerValidator: IBrokerValidator = BrokerValidator(context)
     ) {
         val packageManager = context.packageManager ?: return
 
@@ -72,26 +87,29 @@ object BrowserRedirectValidator {
             PackageManager.GET_RESOLVED_FILTER
         )
 
-        val expectedActivityClassName = if (useCurrentTask) {
-            CURRENT_TASK_BROWSER_TAB_ACTIVITY_CLASS
-        } else {
-            BROWSER_TAB_ACTIVITY_CLASS
-        }
-
         for (resolveInfo in resolvedActivities) {
             val activityInfo = resolveInfo.activityInfo ?: continue
-            // If this is our own registered BrowserTabActivity, it is expected — skip it.
-            if (activityInfo.name == expectedActivityClassName &&
-                activityInfo.packageName == context.packageName
-            ) {
+            val resolvedPackage = activityInfo.packageName
+
+            // (A) Our own app's activities are never competitors. This covers the MSAL client's
+            // BrowserTabActivity/CurrentTaskBrowserTabActivity and the broker's own
+            // BrokerBrowserRedirectActivity (which handles both the msauth scheme and the
+            // App Link host used for the broker redirect).
+            if (resolvedPackage == context.packageName) {
                 continue
             }
-            // Another application's activity is also listening on this URL scheme.
-            val otherPackage = activityInfo.packageName
+
+            // (B) A different but known, signature-verified Microsoft broker legitimately
+            // handling the broker redirect is not an attacker; only skip when signature-verified.
+            if (brokerValidator.isValidBrokerPackage(resolvedPackage)) {
+                continue
+            }
+
+            // Otherwise an unknown/untrusted app is listening on the scheme — fail closed.
             throw ClientException(
                 ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME,
                 "More than one app is listening for the URL scheme defined for BrowserTabActivity " +
-                    "in the AndroidManifest. The package name of this other app is: $otherPackage"
+                    "in the AndroidManifest. The package name of this other app is: $resolvedPackage"
             )
         }
     }

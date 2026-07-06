@@ -119,28 +119,6 @@ public class CommandParameters {
         return String.format(APPLICATION_IDENTIFIER_FORMAT, this.callerPackageName, this.callerSignature);
     }
 
-    /**
-     * Extracts the caller package name from an application identifier produced by
-     * {@link #getApplicationIdentifier()}.
-     * <p>
-     * The identifier is formatted as {@code <callerPackageName>/<callerSignature>} (see
-     * {@link #APPLICATION_IDENTIFIER_FORMAT}). An Android package name can never contain a
-     * {@code '/'}, whereas the base64 signature can, so only the first separator is significant.
-     * This parser is intentionally kept next to {@link #getApplicationIdentifier()} so that any
-     * change to the identifier format is made — and reviewed — in a single place. Callers that need
-     * the caller package from an application identifier MUST use this method rather than parsing it
-     * inline.
-     *
-     * @param applicationIdentifier the value returned by {@link #getApplicationIdentifier()}; may be null.
-     * @return the caller package name, or {@code null} if {@code applicationIdentifier} is null.
-     */
-    public static String getPackageNameFromApplicationIdentifier(final String applicationIdentifier) {
-        if (applicationIdentifier == null) {
-            return null;
-        }
-        return applicationIdentifier.split("/", 2)[0];
-    }
-
     // Verifies if any nested app parameter is present
     public boolean hasNestedAppParameters() {
         // return true even if one of the nested app params is present
