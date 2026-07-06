@@ -1171,9 +1171,59 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: alternate broker install path (intent-scheme).
         recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
 
-        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
-            // Flight off: original behavior, unchanged. No validation and no telemetry.
+            // Flight ON (new behavior): validate the intent target and record the outcome to a
+            // telemetry span so the fix's behavior (launched / blocked / error) can be confirmed from
+            // android_spans. All of the new, flighted logic and telemetry is isolated in this branch;
+            // the else branch below is the original (flight-off) behavior, byte-for-byte unchanged.
+            // Falls back to a no-op span if OpenTelemetry is not initialized.
+            final Span span = createSpanWithAttributesFromParent(SpanName.ProcessBrokerInstallIntent.name());
+            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+                if (intent != null && intent.getPackage() != null) {
+                    // Clear any explicit component or selector carried by the parsed intent so that
+                    // activity resolution is driven solely by the validated package.
+                    intent.setComponent(null);
+                    intent.setSelector(null);
+
+                    final String targetPackage = intent.getPackage();
+                    if (!isAllowedBrokerInstallIntentTarget(targetPackage)) {
+                        Logger.warn(methodTag,
+                                "Blocking intent request to non-allow-listed package: " + targetPackage);
+                        span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), true);
+                        span.setStatus(StatusCode.OK);
+                        return;
+                    }
+
+                    view.getContext().startActivity(intent);
+                    Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+                    span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), false);
+                    span.setStatus(StatusCode.OK);
+                } else {
+                    Logger.warn(methodTag, "Unable to parse the intent URI");
+                    span.setStatus(StatusCode.OK);
+                }
+            } catch (final Throwable throwable) {
+                // Single generic handler: record the failure to the span once, then route to the same
+                // typed errors as the flight-off path so error handling behavior is preserved.
+                span.recordException(throwable);
+                span.setStatus(StatusCode.ERROR);
+                if (throwable instanceof URISyntaxException) {
+                    Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", throwable);
+                    returnError(ErrorStrings.URI_SYNTAX_ERROR, throwable.getMessage());
+                } else if (throwable instanceof ActivityNotFoundException) {
+                    Logger.error(methodTag, "No activity found to handle the intent.", throwable);
+                    returnError(ErrorStrings.ACTIVITY_NOT_FOUND, throwable.getMessage());
+                } else {
+                    Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+                    returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
+                }
+            } finally {
+                span.end();
+            }
+        } else {
+            // Flight OFF (original behavior): unchanged from dev. No validation and no telemetry.
             try {
                 final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
                 if (intent != null && intent.getPackage() != null) {
@@ -1192,56 +1242,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
                 returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
             }
-            return;
-        }
-
-        // Flight on: validate the intent target and record the outcome to a telemetry span so the
-        // fix's behavior (launched / blocked / error) can be confirmed from android_spans. All of the
-        // flighted logic and telemetry is contained here, so the flight-off path above is unaffected.
-        // Falls back to a no-op span if OpenTelemetry is not initialized.
-        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessBrokerInstallIntent.name());
-        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                // Clear any explicit component or selector carried by the parsed intent so that
-                // activity resolution is driven solely by the validated package.
-                intent.setComponent(null);
-                intent.setSelector(null);
-
-                final String targetPackage = intent.getPackage();
-                if (!isAllowedBrokerInstallIntentTarget(targetPackage)) {
-                    Logger.warn(methodTag,
-                            "Blocking intent request to non-allow-listed package: " + targetPackage);
-                    span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), true);
-                    span.setStatus(StatusCode.OK);
-                    return;
-                }
-
-                view.getContext().startActivity(intent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
-                span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), false);
-                span.setStatus(StatusCode.OK);
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
-                span.setStatus(StatusCode.OK);
-            }
-        } catch (final Throwable throwable) {
-            // Single generic handler: record the failure to the span once, then route to the same
-            // typed errors as the flight-off path so error handling behavior is preserved.
-            span.recordException(throwable);
-            span.setStatus(StatusCode.ERROR);
-            if (throwable instanceof URISyntaxException) {
-                Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", throwable);
-                returnError(ErrorStrings.URI_SYNTAX_ERROR, throwable.getMessage());
-            } else if (throwable instanceof ActivityNotFoundException) {
-                Logger.error(methodTag, "No activity found to handle the intent.", throwable);
-                returnError(ErrorStrings.ACTIVITY_NOT_FOUND, throwable.getMessage());
-            } else {
-                Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
-                returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
-            }
-        } finally {
-            span.end();
         }
     }
 
