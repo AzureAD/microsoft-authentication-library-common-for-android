@@ -163,9 +163,9 @@ public abstract class BrowserAuthorizationStrategy<
                     "Application context is null; skipping multiple-app URL scheme validation.");
         } else {
             // Intune is a special case, this is a locked-down scenario for COBO / COPE. This check fails because authenticator is also installed and is also listening in for the broker redirect, so this conflict will occur.
-            // We skip this check to not force COBO / COPE customers to authenticate an additional time. Check the usage of isCallingPackageIntune() for more details on Intune's special handling in broker code.
+            // We skip this check to not force COBO / COPE customers to authenticate an additional time. Check the usage of isCallingPackageIntune() for more details on Intune's special handling in broker.
             if (PackageUtils.isCallingPackageIntune(appContext.getPackageName())) {
-                Logger.warn(methodTag,
+                Logger.info(methodTag,
                         "Calling package is Intune; skipping multiple-app URL scheme validation.");
             } else {
                 final String redirectUri = intent.getStringExtra(
