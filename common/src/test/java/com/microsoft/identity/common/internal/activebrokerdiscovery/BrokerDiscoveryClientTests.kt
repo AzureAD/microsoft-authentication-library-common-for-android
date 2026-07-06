@@ -437,7 +437,7 @@ class BrokerDiscoveryClientTests {
                         return returnBundle
                     }
 
-                    throw IllegalStateException("Unsupported broker should not be queried.")
+                    throw IllegalStateException("Unsupported broker should not be used as the cached active broker.")
                 }
 
                 override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
