@@ -281,7 +281,20 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Enabled by default; can be turned off via ECS to restore the previous behaviour if needed.
      */
-    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true);
+    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true),
+
+    /**
+     * Flight to skip the multiple-apps URL-scheme validation for the Intune caller in the browser
+     * authorization flow.
+     * <p>
+     * Intune is the only caller that takes the broker system-browser path, and that path uses the
+     * shared broker redirect handled by the broker's own {@code BrokerBrowserRedirectActivity},
+     * which the validator misreports as a conflicting app (error
+     * {@code multiple_apps_listening_url_scheme}). Enabled by default; can be turned off via ECS to
+     * restore the validation for Intune without a code change if the exemption ever needs to be
+     * reverted.
+     */
+    SKIP_MULTIPLE_APPS_VALIDATION_FOR_INTUNE("SkipMultipleAppsValidationForIntune", true);
 
     private String key;
     private Object defaultValue;

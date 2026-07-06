@@ -41,6 +41,8 @@ import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -168,12 +170,15 @@ public abstract class BrowserAuthorizationStrategy<
             if (redirectUri == null) {
                 Logger.warn(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
-            } else if (isIntuneCaller(mAuthorizationRequest)) {
+            } else if (isIntuneCaller(mAuthorizationRequest)
+                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                            .isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APPS_VALIDATION_FOR_INTUNE)) {
                 // Intune is the only caller for which the broker takes the system-browser path
                 // (see the broker's isCallingPackageIntune gate). That flow uses the shared broker
                 // redirect, which is handled by the broker's own BrokerBrowserRedirectActivity -- an
                 // activity the multiple-apps guard does not recognize, causing a false positive on the
                 // broker's own package. Skip the check for Intune; it always requires the browser.
+                // Gated behind SKIP_MULTIPLE_APPS_VALIDATION_FOR_INTUNE so it can be disabled via ECS.
                 Logger.info(methodTag,
                         "Intune caller detected; skipping multiple-app URL scheme validation.");
             } else {
