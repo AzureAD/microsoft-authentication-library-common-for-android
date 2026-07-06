@@ -331,15 +331,6 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
         data: BrokerData,
         telemetryCallback: IBrokerDiscoveryClientTelemetryCallback?,
     ): Boolean {
-        val timeStartIsSupportedByTargetedBroker = System.nanoTime()
-        val isSupportedByTargetedBroker = ipcStrategy.isSupportedByTargetedBroker(data.packageName)
-        telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(
-            System.nanoTime() - timeStartIsSupportedByTargetedBroker
-        )
-        if (!isSupportedByTargetedBroker) {
-            return false
-        }
-
         val timeStartIsValidBroker = System.nanoTime()
         val isValidBroker = isValidBroker(data)
         telemetryCallback?.onFinishCheckingIfValidBroker(System.nanoTime() - timeStartIsValidBroker)
