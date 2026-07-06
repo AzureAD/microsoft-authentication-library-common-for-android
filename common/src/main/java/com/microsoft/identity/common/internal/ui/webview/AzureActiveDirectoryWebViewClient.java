@@ -349,7 +349,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
                 if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(view, url);
+                    processSwitchBrowserRequest(url);
                 } else {
                     Logger.info(methodTag,"It is a redirect request.");
                     processRedirectUrl(view, url);
@@ -657,26 +657,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param view The WebView delivering the switch_browser redirect.
      * @param url  The URL to be opened in the browser.
      */
-    private void processSwitchBrowserRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processSwitchBrowserRequest";
-        // The handler runs cloud discovery (sync HTTPS on cold cache) off the main thread
-        view.setEnabled(false);
-        mSwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync(
-                /* switchBrowserRedirectUrl = */ url,
-                /* authorizationUrl = */ mRequestUrl,
-                /* baseRedirectUri = */ mRedirectUrl,
-                throwable -> {
-                    Logger.error(methodTag, "Switch browser redirect could not be processed.", throwable);
-                    view.setEnabled(true);
-                    final String errorCode;
-                    if (throwable instanceof IErrorInformation) {
-                        errorCode = ((IErrorInformation) throwable).getErrorCode();
-                    } else {
-                        errorCode = UNKNOWN_ERROR;
-                    }
-                    returnError(errorCode, throwable.getMessage());
-                }
-        );
+    private void processSwitchBrowserRequest(@NonNull final String url) {
+        // The coordinator reports UI status + the terminal result to the fragment's listener.
+        mSwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync(url, mRequestUrl, mRedirectUrl);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

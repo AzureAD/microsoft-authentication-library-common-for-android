@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview.switchbrowser
 import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
-import androidx.core.util.Consumer
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.AuthenticationConstants.AAD.AUTHORIZATION
@@ -84,15 +83,36 @@ class SwitchBrowserProtocolCoordinatorTest {
     private val supervisorJob: CompletableJob = SupervisorJob()
     private val testAsyncScope = CoroutineScope(Dispatchers.Unconfined + supervisorJob)
 
+    /** Records the status the coordinator reports so tests can assert on it. */
+    private class RecordingStatusListener : SwitchBrowserStatusCallback {
+        var startedCount = 0
+        var resumedCount = 0
+        var completedUri: Uri? = null
+        var completedHeaders: HashMap<String, String>? = null
+        var failure: Throwable? = null
+
+        override fun onSwitchBrowserStarted() { startedCount++ }
+        override fun onSwitchBrowserResumed() { resumedCount++ }
+        override fun onSwitchBrowserCompleted(uri: Uri, headers: HashMap<String, String>) {
+            completedUri = uri
+            completedHeaders = headers
+        }
+        override fun onSwitchBrowserFailed(error: Throwable) { failure = error }
+    }
+
+    private val statusListener = RecordingStatusListener()
+
     private fun newHandler(
         mockActivity: Activity = mock<Activity>(),
         browserSelector: IBrowserSelector = IBrowserSelector { _, _ ->
             Browser("fakeBrowser", emptySet(), "browser", false)
-        }
+        },
+        listener: SwitchBrowserStatusCallback = statusListener
     ): SwitchBrowserProtocolCoordinator {
         return SwitchBrowserProtocolCoordinator.forTesting(
             mockActivity,
             browserSelector,
+            listener,
             /* spanContext = */ null,
             testAsyncScope
         )
@@ -132,16 +152,15 @@ class SwitchBrowserProtocolCoordinatorTest {
         }.whenever(mockActivity).startActivity(any())
         val handler = newHandler(mockActivity)
 
-        var observedError: Throwable? = null
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = REDIRECT_URL,
             authorizationUrl = AUTH_URL,
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { observedError = it }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
-        Assert.assertNull("onError must not fire on the happy path", observedError)
+        Assert.assertNull("onSwitchBrowserFailed must not fire on the happy path", statusListener.failure)
+        Assert.assertEquals(1, statusListener.startedCount)
         Assert.assertTrue("startActivity must be invoked on success", activityExecuted)
         Assert.assertTrue(handler.wasSwitchBrowserFlowInitiated)
         Assert.assertTrue(handler.isSwitchBrowserChallengeActive)
@@ -164,8 +183,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = REDIRECT_URL,
             authorizationUrl = "https://auth.com",
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { /* unused on happy path */ }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
@@ -187,19 +205,17 @@ class SwitchBrowserProtocolCoordinatorTest {
             browserSelector = IBrowserSelector { _, _ -> null } // No browser available.
         )
 
-        var observedError: Throwable? = null
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = REDIRECT_URL,
             authorizationUrl = AUTH_URL,
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { observedError = it }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
-        Assert.assertTrue(observedError is ClientException)
+        Assert.assertTrue(statusListener.failure is ClientException)
         Assert.assertEquals(
             ClientException.NO_BROWSERS_AVAILABLE,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
         Assert.assertFalse(handler.wasSwitchBrowserFlowInitiated)
     }
@@ -212,20 +228,18 @@ class SwitchBrowserProtocolCoordinatorTest {
 
         val handler = newHandler()
 
-        var observedError: Throwable? = null
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = REDIRECT_URL,
             // authorizationUrl carries state=456 — does not match processUri's state=123.
             authorizationUrl = "https://auth.com?state=456",
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { observedError = it }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
-        Assert.assertTrue(observedError is ClientException)
+        Assert.assertTrue(statusListener.failure is ClientException)
         Assert.assertEquals(
             ClientException.STATE_MISMATCH,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
         Assert.assertFalse(handler.wasSwitchBrowserFlowInitiated)
     }
@@ -239,22 +253,20 @@ class SwitchBrowserProtocolCoordinatorTest {
             "?code=abc123&action_uri=https%3A%2F%2Finvalid.authority.com%2Fpath"
         val handler = newHandler()
 
-        var observedError: Throwable? = null
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = redirectUrl,
             authorizationUrl = "https://auth.com",
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { observedError = it }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
         Assert.assertTrue(
-            "Expected ClientException, got ${observedError?.javaClass?.name}",
-            observedError is ClientException
+            "Expected ClientException, got ${statusListener.failure?.javaClass?.name}",
+            statusListener.failure is ClientException
         )
         Assert.assertEquals(
             ClientException.UNKNOWN_AUTHORITY,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
         Assert.assertFalse(handler.wasSwitchBrowserFlowInitiated)
     }
@@ -265,19 +277,17 @@ class SwitchBrowserProtocolCoordinatorTest {
         val redirectUrl = "msauth://com.microsoft.identity.client/switch_browser?code=abc123"
         val handler = newHandler()
 
-        var observedError: Throwable? = null
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = redirectUrl,
             authorizationUrl = "https://auth.com",
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { observedError = it }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
-        Assert.assertTrue(observedError is ClientException)
+        Assert.assertTrue(statusListener.failure is ClientException)
         Assert.assertEquals(
             ClientException.MALFORMED_URL,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
     }
 
@@ -298,8 +308,7 @@ class SwitchBrowserProtocolCoordinatorTest {
         handler.processSwitchBrowserRedirectAsync(
             switchBrowserRedirectUrl = REDIRECT_URL,
             authorizationUrl = AUTH_URL,
-            baseRedirectUri = BASE_REDIRECT,
-            onError = Consumer { /* unused on happy path */ }
+            baseRedirectUri = BASE_REDIRECT
         )
         runBlocking { awaitWork() }
 
@@ -497,27 +506,19 @@ class SwitchBrowserProtocolCoordinatorTest {
         }
         val handler = newHandler()
 
-        var observedUri: Uri? = null
-        var observedHeaders: HashMap<String, String>? = null
-        var errorObserved: Throwable? = null
         handler.processSwitchBrowserResumeAsync(
             authorizationRequest = "https://auth.com?state=$state",
-            extras = extras,
-            onSuccessAction = { uri, headers ->
-                observedUri = uri
-                observedHeaders = headers
-            },
-            onError = Consumer { errorObserved = it }
+            extras = extras
         )
         runBlocking { awaitWork() }
 
-        Assert.assertNull("onError should not be invoked on the happy path", errorObserved)
-        Assert.assertNotNull(observedUri)
+        Assert.assertNull("onSwitchBrowserFailed should not fire on the happy path", statusListener.failure)
+        Assert.assertNotNull(statusListener.completedUri)
         val parsedActionUri = Uri.parse(actionUrl)
-        Assert.assertEquals(parsedActionUri.scheme, observedUri!!.scheme)
-        Assert.assertEquals(parsedActionUri.host, observedUri!!.host)
-        Assert.assertEquals(parsedActionUri.path, observedUri!!.path)
-        Assert.assertEquals("Bearer $code", observedHeaders!![AUTHORIZATION])
+        Assert.assertEquals(parsedActionUri.scheme, statusListener.completedUri!!.scheme)
+        Assert.assertEquals(parsedActionUri.host, statusListener.completedUri!!.host)
+        Assert.assertEquals(parsedActionUri.path, statusListener.completedUri!!.path)
+        Assert.assertEquals("Bearer $code", statusListener.completedHeaders!![AUTHORIZATION])
     }
 
     @Test
@@ -533,21 +534,17 @@ class SwitchBrowserProtocolCoordinatorTest {
         val handler = newHandler()
         handler.isSwitchBrowserChallengeActive = true
 
-        var successInvoked = false
-        var observedError: Throwable? = null
         handler.processSwitchBrowserResumeAsync(
             authorizationRequest = "",
-            extras = extras,
-            onSuccessAction = { _, _ -> successInvoked = true },
-            onError = Consumer { observedError = it }
+            extras = extras
         )
         runBlocking { awaitWork() }
 
-        Assert.assertFalse("Success callback must not fire on state mismatch", successInvoked)
-        Assert.assertTrue(observedError is ClientException)
+        Assert.assertNull("Completed must not fire on state mismatch", statusListener.completedUri)
+        Assert.assertTrue(statusListener.failure is ClientException)
         Assert.assertEquals(
             ClientException.STATE_MISMATCH,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
         // resetChallengeState must run on the error path so the handler does not get stuck
         // expecting a resume that already failed.
@@ -567,21 +564,17 @@ class SwitchBrowserProtocolCoordinatorTest {
         }
         val handler = newHandler()
 
-        var successInvoked = false
-        var observedError: Throwable? = null
         handler.processSwitchBrowserResumeAsync(
             authorizationRequest = "https://auth.com?state=$state",
-            extras = extras,
-            onSuccessAction = { _, _ -> successInvoked = true },
-            onError = Consumer { observedError = it }
+            extras = extras
         )
         runBlocking { awaitWork() }
 
-        Assert.assertFalse(successInvoked)
-        Assert.assertTrue(observedError is ClientException)
+        Assert.assertNull(statusListener.completedUri)
+        Assert.assertTrue(statusListener.failure is ClientException)
         Assert.assertEquals(
             ClientException.UNKNOWN_AUTHORITY,
-            (observedError as ClientException).errorCode
+            (statusListener.failure as ClientException).errorCode
         )
     }
 

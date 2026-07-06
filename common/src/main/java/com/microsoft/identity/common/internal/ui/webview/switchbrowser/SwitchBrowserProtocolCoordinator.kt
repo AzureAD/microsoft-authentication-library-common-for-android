@@ -27,7 +27,6 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
-import androidx.core.util.Consumer
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector
@@ -60,24 +59,37 @@ import kotlinx.coroutines.withContext
  *
  * Both phases call [SwitchBrowserUriHelper.validateActionUri], which triggers AAD cloud
  * discovery — a synchronous HTTPS call on a cold cache. The async entry points hop off the
- * main thread to avoid [android.os.NetworkOnMainThreadException]. The handler does not
- * touch any UI; callers own enabling/disabling their views around these calls.
+ * main thread to avoid [android.os.NetworkOnMainThreadException]. The coordinator does not
+ * touch UI directly; it reports flow status via [SwitchBrowserStatusCallback] and the host
+ * reacts.
  */
 class SwitchBrowserProtocolCoordinator(
     private val activity: Activity,
     private val browserSelector: IBrowserSelector,
+    private val statusCallback: SwitchBrowserStatusCallback,
     private val spanContext: SpanContext?
 ) {
 
     /** Convenience constructor that uses [AndroidBrowserSelector] by default. */
-    constructor(activity: Activity, spanContext: SpanContext?) : this(
+    constructor(
+        activity: Activity,
+        statusCallback: SwitchBrowserStatusCallback,
+        spanContext: SpanContext?
+    ) : this(
         activity,
         AndroidBrowserSelector(activity.applicationContext),
+        statusCallback,
         spanContext
     )
 
+    /**
+     * True between a successful outbound challenge launch and the resume being consumed (or reset).
+     * Read cross-module via [isExpectingSwitchBrowserResume]; the setter is restricted so external
+     * holders of the coordinator cannot flip the resume state — only this class (and tests) may.
+     */
     @Volatile
     var isSwitchBrowserChallengeActive: Boolean = false
+        @VisibleForTesting internal set
 
     /**
      * Set when the outbound challenge successfully launches the browser activity. Unlike
@@ -134,11 +146,13 @@ class SwitchBrowserProtocolCoordinator(
         internal fun forTesting(
             activity: Activity,
             browserSelector: IBrowserSelector,
+            statusCallback: SwitchBrowserStatusCallback,
             spanContext: SpanContext?,
             asyncScope: CoroutineScope
         ): SwitchBrowserProtocolCoordinator = SwitchBrowserProtocolCoordinator(
             activity,
             browserSelector,
+            statusCallback,
             spanContext
         ).apply { asyncScopeOverride = asyncScope }
     }
@@ -151,8 +165,8 @@ class SwitchBrowserProtocolCoordinator(
      * Returns immediately. [SwitchBrowserUriHelper.buildProcessUri] runs on [Dispatchers.IO];
      * state validation, browser selection, and [Activity.startActivity] run on Main.
      *
-     * On failure [onError] is invoked on Main. Success is observed via the side effect of
-     * [Activity.startActivity].
+     * Status is reported to [SwitchBrowserStatusCallback] (started / failed). Success is observed
+     * via the side effect of [Activity.startActivity].
      *
      * The handler does **not** serialize concurrent invocations. Callers are expected to
      * prevent re-entry themselves — e.g. [AzureActiveDirectoryWebViewClient] disables the
@@ -164,16 +178,15 @@ class SwitchBrowserProtocolCoordinator(
      * @param authorizationUrl Original authorization-request URL — used to validate `state`.
      * @param baseRedirectUri The app's registered redirect URI; routed back via
      *   [SwitchBrowserActivity].
-     * @param onError Invoked on Main if any step fails.
      */
     fun processSwitchBrowserRedirectAsync(
         switchBrowserRedirectUrl: String,
         authorizationUrl: String,
-        baseRedirectUri: String,
-        onError: Consumer<Throwable>
+        baseRedirectUri: String
     ) {
         val methodTag = "$TAG:processSwitchBrowserRedirectAsync"
         asyncScope.launch {
+            statusCallback.onSwitchBrowserStarted()
             val span = OTelUtility.createSpanFromParent(SpanName.SwitchBrowserProcess.name, spanContext)
             try {
                 // buildProcessUri triggers cloud discovery (sync HTTPS on cold cache).
@@ -183,19 +196,15 @@ class SwitchBrowserProtocolCoordinator(
                 launchSwitchBrowserActivity(authorizationUrl, baseRedirectUri, processUri, span)
                 span.setStatus(StatusCode.OK)
             } catch (ce: CancellationException) {
-                // Flow was cancelled (e.g. fragment destroyed mid cloud-discovery)
+                // Cancelled (e.g. fragment destroyed). Host is tearing down — don't report.
                 span.setStatus(StatusCode.ERROR, "Switch browser redirect cancelled")
                 span.recordException(ce)
                 throw ce
             } catch (t: Throwable) {
-                Logger.error(
-                    methodTag,
-                    "Error while processing switch_browser redirect: ${t.message}",
-                    t
-                )
+                Logger.error(methodTag, "Error processing switch_browser redirect: ${t.message}", t)
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(t)
-                onError.accept(t)
+                statusCallback.onSwitchBrowserFailed(t)
             } finally {
                 span.end()
             }
@@ -369,14 +378,10 @@ class SwitchBrowserProtocolCoordinator(
      *
      * @param authorizationRequest Original authorization request URL (for state validation).
      * @param extras               Bundle delivered by the system browser via the resume intent.
-     * @param onSuccessAction      Invoked on Main once the resume URI is built.
-     * @param onError              Invoked on Main if any step fails.
      */
     fun processSwitchBrowserResumeAsync(
         authorizationRequest: String,
-        extras: Bundle,
-        onSuccessAction: (Uri, HashMap<String, String>) -> Unit,
-        onError: Consumer<Throwable>
+        extras: Bundle
     ) {
         val methodTag = "$TAG:processSwitchBrowserResumeAsync"
         // Close the re-entrancy window synchronously: if onResume() fires again before the IO
@@ -385,17 +390,20 @@ class SwitchBrowserProtocolCoordinator(
         // finish()). The sync resume's finally also calls resetChallengeState() — harmless repeat.
         resetChallengeState()
         asyncScope.launch {
+            statusCallback.onSwitchBrowserResumed()
             try {
                 // buildResumeUri can hit the network (cold cache), so build off the main thread.
                 val (uri, headers) = withContext(Dispatchers.IO) {
                     processSwitchBrowserResume(authorizationRequest, extras)
                 }
-                onSuccessAction(uri, headers)
+                statusCallback.onSwitchBrowserCompleted(uri, headers)
             } catch (ce: CancellationException) {
+                // Coroutine cancellation (e.g. fragment destroyed) — rethrow so structured
+                // concurrency can unwind the scope. Not a failure to report to the callback.
                 throw ce
             } catch (t: Throwable) {
                 Logger.error(methodTag, "Async switch browser resume failed: ${t.message}", t)
-                onError.accept(t)
+                statusCallback.onSwitchBrowserFailed(t)
             }
         }
     }
