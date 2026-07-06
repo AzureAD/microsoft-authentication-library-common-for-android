@@ -789,7 +789,7 @@ class BrokerDiscoveryClientTests {
                     throw IllegalStateException("communicateToBroker should not be called when reading from cache")
                 }
                 override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
-                    throw IllegalStateException("isSupportedByTargetedBroker should not be called when reading from cache")
+                    return targetedBrokerPackageName == prodMicrosoftAuthenticator.packageName
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
@@ -1062,7 +1062,8 @@ class BrokerDiscoveryClientTests {
                     throw IllegalStateException("communicateToBroker should not be called when reading from cache")
                 }
                 override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
-                    throw IllegalStateException("isSupportedByTargetedBroker should not be called when reading from cache")
+                    return targetedBrokerPackageName == prodMicrosoftAuthenticator.packageName ||
+                            targetedBrokerPackageName == prodCompanyPortal.packageName
                 }
                 override fun getType(): IIpcStrategy.Type {
                     return IIpcStrategy.Type.CONTENT_PROVIDER
