@@ -265,10 +265,9 @@ public final class PackageUtils {
         }
     }
 
-    /**
-     * Helper method to validate in Broker that the calling package is Microsoft Intune
-     * to allow System Browser Support.
-     */
+/**
+ * Returns true if the provided package name is Microsoft Intune.
+ */
     public static boolean isCallingPackageIntune(@NonNull final String packageName) {
         final String methodName = ":isCallingPackageIntune";
         final String intunePackageName = "com.microsoft.intune";
