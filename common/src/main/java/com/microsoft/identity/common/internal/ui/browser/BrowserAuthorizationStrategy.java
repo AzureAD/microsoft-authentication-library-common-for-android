@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActi
 import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -189,14 +190,13 @@ public abstract class BrowserAuthorizationStrategy<
     /**
      * Determines whether the current authorization request originates from the Intune app.
      * <p>
-     * The caller package is derived from the request's application identifier, which is formatted
-     * as {@code <callerPackageName>/<callerSignature>}
-     * ({@link com.microsoft.identity.common.java.commands.parameters.CommandParameters#APPLICATION_IDENTIFIER_FORMAT}).
-     * Only the package name is compared, matching the broker's package-only
-     * {@code BrokerUtils.isCallingPackageIntune} gate that routes Intune to the system browser (so a
-     * debug/non-release-signed Intune build is treated the same way the broker treats it). Only
-     * {@link MicrosoftStsAuthorizationRequest} carries an application identifier; for any other
-     * request type this returns {@code false}.
+     * The caller package is derived from the request's application identifier via
+     * {@link com.microsoft.identity.common.java.commands.parameters.CommandParameters#getPackageNameFromApplicationIdentifier(String)},
+     * which is the single source of truth for the identifier format. Only the package name is
+     * compared, matching the broker's package-only {@code BrokerUtils.isCallingPackageIntune} gate
+     * that routes Intune to the system browser (so a debug/non-release-signed Intune build is
+     * treated the same way the broker treats it). Only {@link MicrosoftStsAuthorizationRequest}
+     * carries an application identifier; for any other request type this returns {@code false}.
      *
      * @return {@code true} if the calling package is {@code com.microsoft.intune}.
      */
@@ -206,12 +206,8 @@ public abstract class BrowserAuthorizationStrategy<
         }
         final String applicationIdentifier =
                 ((MicrosoftStsAuthorizationRequest) mAuthorizationRequest).getApplicationIdentifier();
-        if (applicationIdentifier == null) {
-            return false;
-        }
-        // applicationIdentifier is "<callerPackageName>/<callerSignatureSha512>". The signature is a
-        // base64 SHA-512 hash that itself may contain '/', so split only on the first separator.
-        final String callerPackageName = applicationIdentifier.split("/", 2)[0];
+        final String callerPackageName =
+                CommandParameters.getPackageNameFromApplicationIdentifier(applicationIdentifier);
         return AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME.equalsIgnoreCase(callerPackageName);
     }
 
