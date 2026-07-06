@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizat
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
+import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
@@ -161,17 +162,24 @@ public abstract class BrowserAuthorizationStrategy<
             Logger.warn(methodTag,
                     "Application context is null; skipping multiple-app URL scheme validation.");
         } else {
-            final String redirectUri = intent.getStringExtra(
-                    AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
-            if (redirectUri == null) {
+            // Intune is a special case, this is a locked-down scenario for COBO / COPE. This check fails because authenticator is also installed and is also listening in for the broker redirect, so this conflict will occur.
+            // We skip this check to not force COBO / COPE customers to authenticate an additional time. Check the usage of isCallingPackageIntune() for more details on Intune's special handling in broker code.
+            if (PackageUtils.isCallingPackageIntune(appContext.getPackageName())) {
                 Logger.warn(methodTag,
-                        "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
+                        "Calling package is Intune; skipping multiple-app URL scheme validation.");
             } else {
-                BrowserRedirectValidator.validateNoMultipleAppsListening(
-                        appContext,
-                        redirectUri,
-                        LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
-                );
+                final String redirectUri = intent.getStringExtra(
+                        AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
+                if (redirectUri == null) {
+                    Logger.warn(methodTag,
+                            "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
+                } else {
+                    BrowserRedirectValidator.validateNoMultipleAppsListening(
+                            appContext,
+                            redirectUri,
+                            LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                    );
+                }
             }
         }
         super.launchIntent(intent);
