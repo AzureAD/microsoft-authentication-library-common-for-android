@@ -175,6 +175,8 @@ public abstract class BrowserAuthorizationStrategy<
                 // These are exclusively COBO / COPE scenarios, since only those have a browser authorization agent under broker requests
                 // (Check MsalAndroidBrokerCommandParameterAdapter).
                 if (ProcessUtil.isRunningOnAuthService(appContext) &&
+                        // TODO: isAppLinkFeatureEnabled is in brokerUtils, not in common, so will need some refactoring
+                        //  Add the remaining possibilities for redirect uri
                         (redirectUri.startsWith("https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp"))
                 ) {
                     Logger.info(methodTag,
