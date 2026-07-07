@@ -33,6 +33,7 @@ import com.microsoft.identity.labapi.utilities.rules.RetryTestRule;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -120,6 +121,8 @@ public class LabClientTest {
     }
 
     @Test
+    // Ignored because the China tenant is being decommissioned.
+    @Ignore
     public void canFetchChinaAccount() {
         try {
             final ILabAccount labAccount = mLabClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.CHINA);
