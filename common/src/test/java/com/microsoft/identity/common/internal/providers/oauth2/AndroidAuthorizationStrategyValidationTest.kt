@@ -29,6 +29,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy
 import com.microsoft.identity.common.java.browser.Browser
@@ -58,7 +59,6 @@ class AndroidAuthorizationStrategyValidationTest {
         private const val COMPETING_PACKAGE = "com.example.otherapp"
         private const val COMPETING_ACTIVITY = "com.example.otherapp.SomeActivity"
         private const val REDIRECT_URI_VALUE = "msauth://org.robolectric.default/redirect"
-        private const val INTUNE_PACKAGE = "com.microsoft.intune"
     }
 
     private lateinit var activity: Activity
@@ -167,7 +167,7 @@ class AndroidAuthorizationStrategyValidationTest {
     fun `launchIntent browser flow skips competing app validation for Intune package`() {
         registerCompetingApp()
         val intuneContext = object : ContextWrapper(context) {
-            override fun getPackageName(): String = INTUNE_PACKAGE
+            override fun getPackageName(): String = AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME
         }
 
         val strategy = TestBrowserAuthorizationStrategy(intuneContext, activity)
