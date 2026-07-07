@@ -49,7 +49,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -615,7 +614,8 @@ public class AndroidKeyStoreUtil {
      * @return List of supported padding names (e.g., "PKCS1", "OAEP"),
      *         or empty list on API < 23 or if retrieval fails
      */
-    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair) {
+    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair)
+        throws ClientException {
         final String methodTag = TAG + ":getKeyPairEncryptionPaddings";
         try {
             final PrivateKey privateKey = keyPair.getPrivate();
@@ -630,8 +630,14 @@ public class AndroidKeyStoreUtil {
             Logger.info(methodTag, "Supported encryption paddings: " + encryptionPaddings);
             return encryptionPaddings;
         } catch (final Exception e) {
+            // Do NOT swallow the failure. Propagate with the cause preserved so callers (and the wipe
+            // telemetry they feed) can see the real KeyStoreException in the cause chain.
             Logger.warn(methodTag, "Failed to retrieve key padding information" + ": " + e.getMessage());
+            throw new ClientException(
+                    UNKNOWN_CRYPTO_ERROR,
+                    "Failed to retrieve key pair encryption paddings: " + e.getMessage(),
+                    e
+            );
         }
-        return Collections.emptyList();
     }
 }
