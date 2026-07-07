@@ -121,6 +121,7 @@ public class LabClientTest {
     }
 
     @Test
+    // Ignored because the China tenant is being decommissioned.
     @Ignore
     public void canFetchChinaAccount() {
         try {
