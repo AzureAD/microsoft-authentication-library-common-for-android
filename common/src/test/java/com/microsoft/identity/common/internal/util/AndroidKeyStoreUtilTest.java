@@ -44,7 +44,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -428,8 +427,7 @@ public class AndroidKeyStoreUtilTest {
             AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
             fail("Expected ClientException to be thrown");
         } catch (final ClientException e) {
-            // Assert - the failure is surfaced (not swallowed) with the original cause preserved so
-            // downstream wipe telemetry can resolve the real root cause.
+            // Assert - failure is surfaced with the original cause preserved.
             assertEquals(ClientException.UNKNOWN_CRYPTO_ERROR, e.getErrorCode());
             assertSame(cause, e.getCause());
         }
@@ -453,30 +451,6 @@ public class AndroidKeyStoreUtilTest {
             // Assert
             assertEquals(ClientException.UNKNOWN_CRYPTO_ERROR, e.getErrorCode());
             assertSame(cause, e.getCause());
-        }
-    }
-
-    @Test
-    @Config(sdk = Build.VERSION_CODES.M) // API 23
-    public void testGetKeyPairEncryptionPaddings_ModernAPI_NestedCause_IsPreservedThroughChain() throws Exception {
-        // Arrange - mirrors the real failure: getKeySpec throws an InvalidKeyException whose cause is a
-        // lower-level keystore fault. The whole chain must survive so findRootCause / findKeyStoreException
-        // can classify transience instead of seeing a causeless "no compatible cipher specs" error.
-        final Exception rootCause = new IllegalStateException("simulated KeyStoreException");
-        final InvalidKeyException cause = new InvalidKeyException("key went bad", rootCause);
-        try (MockedStatic<KeyFactory> keyFactoryMock = mockStatic(KeyFactory.class)) {
-            keyFactoryMock.when(() -> KeyFactory.getInstance(RSA_ALGORITHM, ANDROID_KEYSTORE_PROVIDER))
-                    .thenReturn(mockKeyFactory);
-            when(mockKeyFactory.getKeySpec(mockPrivateKey, KeyInfo.class))
-                    .thenThrow(cause);
-
-            // Act
-            AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
-            fail("Expected ClientException to be thrown");
-        } catch (final ClientException e) {
-            // Assert - both the direct cause and the deepest root cause are reachable from the throw.
-            assertSame(cause, e.getCause());
-            assertSame(rootCause, e.getCause().getCause());
         }
     }
 
@@ -521,15 +495,14 @@ public class AndroidKeyStoreUtilTest {
     }
 
     @Test
-    @Config(sdk = Build.VERSION_CODES.LOLLIPOP) // API 21, below the library min SDK (24)
+    @Config(sdk = Build.VERSION_CODES.LOLLIPOP) // API 21
     public void testGetKeyPairEncryptionPaddings_LegacyAPI_ThrowsClientException() {
-        // Act - Call the REAL method on legacy API. Padding retrieval fails (no AndroidKeyStore
-        // KeyFactory), and the failure is now surfaced rather than swallowed.
+        // Act
         try {
             AndroidKeyStoreUtil.getKeyPairEncryptionPaddings(mockKeyPair);
             fail("Expected ClientException to be thrown");
         } catch (final ClientException e) {
-            // Assert - failure is propagated with the triggering exception preserved as the cause.
+            // Assert
             assertEquals(ClientException.UNKNOWN_CRYPTO_ERROR, e.getErrorCode());
             assertNotNull(e.getCause());
         }
