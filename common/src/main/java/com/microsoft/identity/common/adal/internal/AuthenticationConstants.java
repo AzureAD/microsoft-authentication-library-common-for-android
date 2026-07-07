@@ -1267,6 +1267,8 @@ public final class AuthenticationConstants {
          */
         public static final String REDIRECT_PREFIX = "msauth";
 
+        public static final String APP_LINK_PREFIX = "https://login.microsoftonline.com/androidbroker";
+
         /**
          * Suffix for global AAD urls
          */

@@ -33,6 +33,7 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
@@ -270,7 +271,7 @@ public final class PackageUtils {
      */
     public static boolean isCallingPackageIntune(@NonNull final String packageName) {
         final String methodName = ":isCallingPackageIntune";
-        final String intunePackageName = "com.microsoft.intune";
+        final String intunePackageName = AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
         Logger.info(TAG + methodName, "Calling package name : " + packageName);
         return intunePackageName.equalsIgnoreCase(packageName);
     }

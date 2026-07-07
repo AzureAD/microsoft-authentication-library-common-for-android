@@ -174,11 +174,7 @@ public abstract class BrowserAuthorizationStrategy<
                 // 2. Request has a redirect uri that is a valid app link or msauth
                 // These are exclusively COBO / COPE scenarios, since only those have a browser authorization agent under broker requests
                 // (Check MsalAndroidBrokerCommandParameterAdapter).
-                if (ProcessUtil.isRunningOnAuthService(appContext) &&
-                        // TODO: isAppLinkFeatureEnabled is in brokerUtils, not in common, so will need some refactoring
-                        //  Add the remaining possibilities for redirect uri
-                        (redirectUri.startsWith("https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp"))
-                ) {
+                if (ProcessUtil.isRunningOnAuthService(appContext) && checkIfRedirectUriIsValidAppLinkOrMsauth(redirectUri)) {
                     Logger.info(methodTag,
                             "Broker flow (most likely COBO / COPE); skipping multiple-app URL scheme validation.");
                 } else {
@@ -191,6 +187,17 @@ public abstract class BrowserAuthorizationStrategy<
             }
         }
         super.launchIntent(intent);
+    }
+
+    private boolean checkIfRedirectUriIsValidAppLinkOrMsauth(@NonNull final String redirectUri) {
+        Logger.info(TAG, "Checking if redirect URI is a valid app link or msauth: " + redirectUri);
+
+        return redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME) ||
+                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME) ||
+                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME) ||
+                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME) ||
+                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME) ||
+                redirectUri.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX);
     }
 
     protected abstract void setIntentFlag(@NonNull final Intent intent);
