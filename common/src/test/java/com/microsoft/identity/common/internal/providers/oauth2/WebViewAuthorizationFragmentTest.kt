@@ -30,6 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
@@ -74,6 +75,23 @@ class WebViewAuthorizationFragmentTest {
         val result = RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED)
         val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
 
+        assertNull(propertyBag.get<Boolean>(IS_SWITCH_BROWSER_FLOW))
+    }
+
+    @Test
+    fun testOnDestroyViewCancelsAndClearsSwitchBrowserCoordinator() {
+        val fragment = createFragment()
+        val mockHandler = mock(SwitchBrowserProtocolCoordinator::class.java)
+        whenever(mockHandler.wasSwitchBrowserFlowInitiated).thenReturn(true)
+        fragment.setSwitchBrowserProtocolCoordinator(mockHandler)
+
+        fragment.onDestroyView()
+
+        // In-flight async work bound to the destroyed view is cancelled.
+        verify(mockHandler).cancel()
+        // The coordinator is cleared, so its state is no longer propagated afterwards.
+        val result = RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED)
+        val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
         assertNull(propertyBag.get<Boolean>(IS_SWITCH_BROWSER_FLOW))
     }
 }

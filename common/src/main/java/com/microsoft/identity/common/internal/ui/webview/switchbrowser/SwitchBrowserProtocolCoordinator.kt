@@ -168,10 +168,10 @@ class SwitchBrowserProtocolCoordinator(
      * Status is reported to [SwitchBrowserStatusCallback] (started / failed). Success is observed
      * via the side effect of [Activity.startActivity].
      *
-     * The handler does **not** serialize concurrent invocations. Callers are expected to
-     * prevent re-entry themselves — e.g. [AzureActiveDirectoryWebViewClient] disables the
-     * WebView before calling this method, which suppresses additional `shouldOverrideUrlLoading`
-     * dispatches until the flow resolves.
+     * The handler does **not** serialize concurrent invocations. Re-entry is suppressed because
+     * [SwitchBrowserStatusCallback.onSwitchBrowserStarted] disables the WebView, and it runs
+     * synchronously before this method returns — which holds only because [asyncScope] uses
+     * [Dispatchers.Main.immediate] (plain [Dispatchers.Main] would post the disable and lose the guard).
      *
      * @param switchBrowserRedirectUrl `<redirect>/switch_browser?code=...&action_uri=...`
      *   URL captured by the WebView in `shouldOverrideUrlLoading`.

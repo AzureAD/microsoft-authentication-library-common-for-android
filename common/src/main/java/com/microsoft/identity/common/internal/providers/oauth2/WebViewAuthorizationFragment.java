@@ -698,17 +698,25 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         });
     }
 
+    @Override
+    public void onDestroyView() {
+        // The switch-browser coordinator's callbacks touch view state (mWebView / mProgressBar) and
+        // the terminal result, so tear it down with the view. Cancel in-flight async work so its
+        // continuation does not resume against a destroyed view, and null it so a fresh coordinator
+        // is created if the view is recreated (cancel() permanently ends the scope).
+        if (mSwitchBrowserProtocolCoordinator != null) {
+            mSwitchBrowserProtocolCoordinator.cancel();
+            mSwitchBrowserProtocolCoordinator = null;
+        }
+        super.onDestroyView();
+    }
+
     // For CertBasedAuthChallengeHandler within AADWebViewClient,
     // the smartcard manager needs to stop discovering Usb devices upon fragment destroy.
     @Override
     public void onDestroy() {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
-        // Cancel any in-flight switch-browser async work so its continuation does not resume
-        // against this destroyed fragment (touching mWebView / mProgressBar / sendResult).
-        if (mSwitchBrowserProtocolCoordinator != null) {
-            mSwitchBrowserProtocolCoordinator.cancel();
-        }
         if (mAADWebViewClient != null) {
             mAADWebViewClient.onDestroy();
         } else {
