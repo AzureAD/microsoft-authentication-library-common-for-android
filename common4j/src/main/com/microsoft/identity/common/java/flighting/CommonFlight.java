@@ -133,7 +133,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control the WrappedSecretKey serializer version
      */
-    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
+    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 1),
 
     /**
      * Flight to enable the Web CP in WebView.
