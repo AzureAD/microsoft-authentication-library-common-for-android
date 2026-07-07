@@ -265,9 +265,9 @@ public final class PackageUtils {
         }
     }
 
-/**
- * Returns true if the provided package name is Microsoft Intune.
- */
+    /**
+     * Returns true if the provided package name is Microsoft Intune.
+     */
     public static boolean isCallingPackageIntune(@NonNull final String packageName) {
         final String methodName = ":isCallingPackageIntune";
         final String intunePackageName = "com.microsoft.intune";
