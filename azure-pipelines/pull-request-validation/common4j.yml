@@ -71,7 +71,6 @@ stages:
 
     - job: build_test_dev
       displayName: Dev Branch Testing
-      continueOnError: true
       steps:
         - checkout: common-dev
           clean: true
