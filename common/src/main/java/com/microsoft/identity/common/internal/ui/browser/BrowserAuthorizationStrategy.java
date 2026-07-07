@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizat
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
@@ -159,20 +160,25 @@ public abstract class BrowserAuthorizationStrategy<
         final String methodTag = TAG + ":launchIntent";
         final Context appContext = getApplicationContext();
         if (appContext == null) {
-            Logger.warn(methodTag,
+            Logger.info(methodTag,
                     "Application context is null; skipping multiple-app URL scheme validation.");
         } else {
-            // Intune is a special case, this is a locked-down scenario for COBO / COPE. This check fails because authenticator is also installed and is also listening in for the broker redirect, so this conflict will occur.
-            // We skip this check to not force COBO / COPE customers to authenticate an additional time. Check the usage of isCallingPackageIntune() for more details on Intune's special handling in broker.
-            if (PackageUtils.isCallingPackageIntune(appContext.getPackageName())) {
+            final String redirectUri = intent.getStringExtra(
+                    AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
+            if (redirectUri == null) {
                 Logger.info(methodTag,
-                        "Calling package is Intune; skipping multiple-app URL scheme validation.");
+                        "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
             } else {
-                final String redirectUri = intent.getStringExtra(
-                        AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
-                if (redirectUri == null) {
-                    Logger.warn(methodTag,
-                            "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
+                // COBO/COPE Conditions to skip this check:
+                // 1. Request is running in the auth process (Broker request)
+                // 2. Request has a redirect uri that is a valid app link or msauth
+                // These are exclusively COBO / COPE scenarios, since only those have a browser authorization agent under broker requests
+                // (Check MsalAndroidBrokerCommandParameterAdapter).
+                if (ProcessUtil.isRunningOnAuthService(appContext) &&
+                        (redirectUri.startsWith("https://login.microsoftonline.com/androidbroker/com.microsoft.identity.testuserapp"))
+                ) {
+                    Logger.info(methodTag,
+                            "Broker flow (most likely COBO / COPE); skipping multiple-app URL scheme validation.");
                 } else {
                     BrowserRedirectValidator.validateNoMultipleAppsListening(
                             appContext,
