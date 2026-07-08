@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
@@ -170,15 +171,16 @@ public abstract class BrowserAuthorizationStrategy<
                 Logger.info(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
             } else {
+                // Setup validator
+                final BrokerValidator validator = new BrokerValidator(appContext);
+
                 // Conditions to skip this check (brokered flows only):
                 // 1. Flight SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE is enabled (default: true)
                 // 2. Request is running in the auth process (Broker request)
-                // 3. Request has a redirect uri that is a valid app link or msauth
-                // These conditions are met exclusively in brokered flows (e.g. COBO/COPE/AM API BYOD),
-                // since only those have a browser authorization agent under broker requests
-                // (Check MsalAndroidBrokerCommandParameterAdapter).
+                // 3. the caller is a valid broker package
                 if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
-                        ProcessUtil.isRunningOnAuthService(appContext) && isValidBrokerRedirectUri(redirectUri)) {
+                        ProcessUtil.isRunningOnAuthService(appContext) &&
+                        validator.isValidBrokerPackage(appContext.getPackageName())) {
                     Logger.info(methodTag,
                             "Running in broker auth process; skipping multiple-app URL scheme validation.");
                 } else {
@@ -191,54 +193,6 @@ public abstract class BrowserAuthorizationStrategy<
             }
         }
         super.launchIntent(intent);
-    }
-
-    /**
-     * Checks if the redirect URI matches the expected format for the active broker.
-     * 
-     * When running in the auth service (broker process), this method validates if the provided
-     * redirect URI matches one of the following formats:
-     * 1. Legacy broker redirect URI: msauth://Microsoft.AAD.BrokerPlugin
-     * 2. App link format: https://login.microsoftonline.com/androidbroker/&lt;packageName&gt;
-     * 3. msauth format: msauth://&lt;packageName&gt; (where packageName is the active broker's package)
-     * 
-     * Note: This method assumes appContext is non-null (validated by caller in launchIntent).
-     * 
-     * @param redirectUri The redirect URI to validate
-     * @return true if the redirect URI matches the active broker's expected format
-     */
-    private boolean isValidBrokerRedirectUri(@NonNull final String redirectUri) {
-        final String methodTag = TAG + ":isValidBrokerRedirectUri";
-        Logger.info(methodTag, "Checking if redirect URI is valid for active broker: " + redirectUri);
-
-        final Context appContext = getApplicationContext();
-        final String brokerPackageName = appContext.getPackageName();
-        Logger.info(methodTag, "Active broker package name: " + brokerPackageName);
-
-        // Check for legacy broker redirect URI (msauth://Microsoft.AAD.BrokerPlugin)
-        if (redirectUri.startsWith(AuthenticationConstants.Broker.NEW_BROKER_REDIRECT_URI)) {
-            Logger.info(methodTag, "Redirect URI matches legacy broker format.");
-            return true;
-        }
-
-        // Construct expected redirect URI prefixes for the active broker:
-        // 1. App link format: https://login.microsoftonline.com/androidbroker/<packageName>
-        final String expectedAppLinkPrefix = AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + brokerPackageName;
-        
-        // 2. msauth format: msauth://<packageName>
-        final String expectedMsauthPrefix = AuthenticationConstants.Broker.REDIRECT_PREFIX + "://" + brokerPackageName;
-
-        // Check if redirect URI matches either expected format (short-circuit evaluation)
-        if (redirectUri.startsWith(expectedAppLinkPrefix) || redirectUri.startsWith(expectedMsauthPrefix)) {
-            Logger.info(methodTag, "Redirect URI matches active broker format.");
-            return true;
-        }
-
-        Logger.warn(methodTag, 
-            "Redirect URI does not match active broker format. Expected prefixes: " +
-            expectedAppLinkPrefix + " or " + expectedMsauthPrefix +
-            " or legacy " + AuthenticationConstants.Broker.NEW_BROKER_REDIRECT_URI);
-        return false;
     }
 
     protected abstract void setIntentFlag(@NonNull final Intent intent);
