@@ -265,14 +265,4 @@ public final class PackageUtils {
             return null;
         }
     }
-
-    /**
-     * Returns true if the provided package name is Microsoft Intune.
-     */
-    public static boolean isCallingPackageIntune(@NonNull final String packageName) {
-        final String methodName = ":isCallingPackageIntune";
-        final String intunePackageName = AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
-        Logger.info(TAG + methodName, "Calling package name : " + packageName);
-        return intunePackageName.equalsIgnoreCase(packageName);
-    }
 }

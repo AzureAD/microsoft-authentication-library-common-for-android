@@ -24,20 +24,29 @@ package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil
 import com.microsoft.identity.common.java.browser.Browser
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightConfig
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -68,6 +77,12 @@ class AndroidAuthorizationStrategyValidationTest {
     fun setUp() {
         activity = Robolectric.buildActivity(Activity::class.java).create().get()
         context = RuntimeEnvironment.getApplication()
+    }
+
+    @After
+    fun tearDown() {
+        CommonFlightsManager.resetFlightsManager()
+        unmockkAll()
     }
 
     /**
@@ -125,6 +140,30 @@ class AndroidAuthorizationStrategyValidationTest {
         return intent
     }
 
+    /** Stubs [ProcessUtil.isRunningOnAuthService] to return [value] for any context. */
+    private fun stubIsRunningOnAuthService(value: Boolean) {
+        mockkStatic(ProcessUtil::class)
+        every { ProcessUtil.isRunningOnAuthService(any()) } returns value
+    }
+
+    /**
+     * A [IFlightsManager] that reports every flight as disabled (returns the logical false /
+     * default-off value). Used to verify that disabling
+     * [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE] forces validation to run.
+     */
+    private object AllOffFlightsManager : IFlightsManager {
+        private val provider = object : IFlightsProvider {
+            override fun isFlightEnabled(flightConfig: IFlightConfig): Boolean = false
+            override fun getBooleanValue(flightConfig: IFlightConfig): Boolean = false
+            override fun getIntValue(flightConfig: IFlightConfig): Int = flightConfig.defaultValue as Int
+            override fun getDoubleValue(flightConfig: IFlightConfig): Double = flightConfig.defaultValue as Double
+            override fun getStringValue(flightConfig: IFlightConfig): String = flightConfig.defaultValue as String
+            override fun getJsonValue(flightConfig: IFlightConfig): JSONObject = JSONObject()
+        }
+        override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider = provider
+        override fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long): IFlightsProvider = provider
+    }
+
     // ──────────────────────────────────────────────────────────────────────────────────
     // Tests
     // ──────────────────────────────────────────────────────────────────────────────────
@@ -158,38 +197,37 @@ class AndroidAuthorizationStrategyValidationTest {
     }
 
     /**
-     * Browser flow with a competing app registered but Intune as the calling package →
-     * multiple-app URL scheme validation is skipped, so no [ClientException] is thrown.
-     * This validates the COBO / COPE exemption where Authenticator also listens for the
-     * broker redirect and would otherwise trigger a false conflict.
+     * Brokered flow running in the auth service process with a competing app registered and a
+     * valid msauth redirect URI → multiple-app URL scheme validation is skipped, so no
+     * [ClientException] is thrown. This validates the skip exemption for brokered flows
+     * (e.g. COBO/COPE/AM API) where another Microsoft app legitimately listens for the same
+     * redirect and would otherwise trigger a false conflict.
      */
     @Test
-    fun `launchIntent browser flow skips competing app validation for Intune package`() {
+    fun `launchIntent skips competing app validation when in auth service with msauth redirect`() {
         registerCompetingApp()
-        val intuneContext = object : ContextWrapper(context) {
-            override fun getPackageName(): String = AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME
-        }
+        // Simulate running in the broker auth service process.
+        stubIsRunningOnAuthService(true)
 
-        val strategy = TestBrowserAuthorizationStrategy(intuneContext, activity)
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
-        // A competing app is registered, but because the calling package is Intune the
-        // validation is skipped and launchIntent completes without throwing.
+        // Competing app is registered, but because we're in the auth service with a valid
+        // msauth redirect, validation is skipped and launchIntent completes without throwing.
         strategy.testLaunchIntent(buildIntent())
     }
 
     /**
-     * Browser flow with a competing app registered and a non-Intune calling package →
-     * [ClientException] must still be thrown, ensuring the Intune exemption does not
-     * relax validation for other apps.
+     * Same brokered-flow conditions as above, but with the
+     * [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE] flight disabled → validation
+     * must still run and throw [ClientException], ensuring the exemption can be turned off via ECS.
      */
     @Test
-    fun `launchIntent browser flow throws for non-Intune package when competing app is registered`() {
+    fun `launchIntent validates competing app when skip flight is disabled`() {
         registerCompetingApp()
-        val nonIntuneContext = object : ContextWrapper(context) {
-            override fun getPackageName(): String = COMPETING_PACKAGE
-        }
+        stubIsRunningOnAuthService(true)
+        CommonFlightsManager.initializeCommonFlightsManager(AllOffFlightsManager)
 
-        val strategy = TestBrowserAuthorizationStrategy(nonIntuneContext, activity)
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
         try {
             strategy.testLaunchIntent(buildIntent())

@@ -37,11 +37,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActi
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
-import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -169,14 +170,17 @@ public abstract class BrowserAuthorizationStrategy<
                 Logger.info(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
             } else {
-                // COBO/COPE Conditions to skip this check:
-                // 1. Request is running in the auth process (Broker request)
-                // 2. Request has a redirect uri that is a valid app link or msauth
-                // These are exclusively COBO / COPE scenarios, since only those have a browser authorization agent under broker requests
+                // Conditions to skip this check (brokered flows only):
+                // 1. Flight SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE is enabled (default: true)
+                // 2. Request is running in the auth process (Broker request)
+                // 3. Request has a redirect uri that is a valid app link or msauth
+                // These conditions are met exclusively in brokered flows (e.g. COBO/COPE/AM API),
+                // since only those have a browser authorization agent under broker requests
                 // (Check MsalAndroidBrokerCommandParameterAdapter).
-                if (ProcessUtil.isRunningOnAuthService(appContext) && checkIfRedirectUriIsValidAppLinkOrMsauth(redirectUri)) {
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
+                        ProcessUtil.isRunningOnAuthService(appContext) && checkIfRedirectUriIsValidAppLinkOrMsauth(redirectUri)) {
                     Logger.info(methodTag,
-                            "Broker flow (most likely COBO / COPE); skipping multiple-app URL scheme validation.");
+                            "Running in broker auth process; skipping multiple-app URL scheme validation.");
                 } else {
                     BrowserRedirectValidator.validateNoMultipleAppsListening(
                             appContext,
