@@ -164,8 +164,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private volatile SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @VisibleForTesting
-    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator handler) {
-        mSwitchBrowserProtocolCoordinator = handler;
+    void setSwitchBrowserProtocolCoordinator(@Nullable final SwitchBrowserProtocolCoordinator coordinator) {
+        mSwitchBrowserProtocolCoordinator = coordinator;
     }
 
     private boolean isBrokerRequest = false;
