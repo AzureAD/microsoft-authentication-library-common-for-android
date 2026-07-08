@@ -344,16 +344,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri.");
                 processNonceAndReAttachHeaders(view, url);
-             }
-             else if (isRedirectUrl(formattedURL)) {
-                Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
-                    Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(url);
-                } else {
-                    Logger.info(methodTag,"It is a redirect request.");
-                    processRedirectUrl(view, url);
-                }
+            }
+            // A switch_browser request arrives as {redirectUrl}/switch_browser?code=...&action_uri=...,
+            // whose path no longer equals the registered redirect URI under strict matching. Detect it
+            // here explicitly instead of nesting it behind isRedirectUrl; otherwise it would fall through
+            // to isInstallRequestUrl/processInstallRequest and the switch_browser continuation code would
+            // be delivered to the completion callback as if it were the final auth code.
+            else if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                Logger.info(methodTag,"Request to switch browser.");
+                processSwitchBrowserRequest(url);
+            } else if (isRedirectUrl(formattedURL)) {
+                Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
+                processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);

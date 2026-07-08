@@ -56,6 +56,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
@@ -371,9 +372,76 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_URL));
     }
 
+    /**
+     * A legitimate msauth:// redirect (auth code in the query string) must be delivered through
+     * the redirect path (processRedirectUrl), not the broker-install fallthrough.
+     * <p>
+     * Asserting only that shouldOverrideUrlLoading() returns true is insufficient: any msauth://
+     * URL is also matched by isInstallRequestUrl, so even a broken isRedirectUrl would return true
+     * via processInstallRequest. We therefore pin the redirect path — the completion callback
+     * receives a COMPLETED result AND the onboarding recorder is not marked with the broker-install
+     * step that processInstallRequest would record.
+     */
     @Test
-    public void testUrlOverrideHandlesRedirectUriString() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL));
+    public void testUrlOverrideHandlesRedirectUriString() throws ClientException, org.json.JSONException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, TEST_REDIRECT_URI);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, TEST_REDIRECT_URL);
+
+        assertTrue("msauth redirect must be handled", handled);
+        // Delivered as a completed auth result...
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
+        // ...through the redirect path, not processInstallRequest (which would have recorded the
+        // broker-install onboarding step).
+        assertFalse("msauth redirect must not be handled via the broker-install path",
+                onboardingHasBrokerInstallStep(recorder));
+    }
+
+    /**
+     * Regression test for the switch_browser routing gap that strict redirect matching would
+     * otherwise introduce (raised in PR #3136 review). A switch_browser request arrives as
+     * {redirectUrl}/switch_browser?code=...&action_uri=..., whose path no longer equals the
+     * registered redirect URI. It must still be routed to the switch_browser handler and must NOT
+     * fall through to processRedirectUrl/processInstallRequest, which would deliver the
+     * switch_browser continuation code to the completion callback as if it were the final auth code.
+     */
+    @Test
+    public void testSwitchBrowserRequest_isRoutedToSwitchBrowser_notRedirectOrInstall()
+            throws ClientException, org.json.JSONException {
+        final SwitchBrowserProtocolCoordinator mockCoordinator =
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class);
+        final String switchBrowserUrl = TEST_REDIRECT_URI
+                + "/switch_browser?code=sb_code&action_uri=https://login.microsoftonline.com/x";
+        when(mockCoordinator.isSwitchBrowserRequest(switchBrowserUrl, TEST_REDIRECT_URI))
+                .thenReturn(true);
+
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, mockCallback, url -> { }, TEST_REDIRECT_URI, mockCoordinator, "homeTenantId", false);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, switchBrowserUrl);
+
+        assertTrue("switch_browser request must be handled", handled);
+        // Routed to the switch_browser handler...
+        Mockito.verify(mockCoordinator).processSwitchBrowserRedirectAsync(
+                Mockito.eq(switchBrowserUrl), Mockito.any(), Mockito.eq(TEST_REDIRECT_URI));
+        // ...and never delivered as a final auth result nor recorded as a broker-install step.
+        Mockito.verify(mockCallback, Mockito.never()).onChallengeResponseReceived(Mockito.any());
+        assertFalse("switch_browser must not be handled via the broker-install path",
+                onboardingHasBrokerInstallStep(recorder));
     }
 
     /**
@@ -555,9 +623,34 @@ public class AzureActiveDirectoryWebViewClientTest {
                 completionCallback,
                 url -> { },
                 redirectUri,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
+    }
+
+    private OnboardingTelemetryRecorder newOnboardingRecorder() {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        return new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+    }
+
+    /**
+     * Reads the finalized onboarding blob and reports whether the broker-install step was recorded.
+     * processInstallRequest records this step; processRedirectUrl and processSwitchBrowserRequest do
+     * not, so its presence distinguishes which routing path handleUrl took.
+     */
+    private static boolean onboardingHasBrokerInstallStep(final OnboardingTelemetryRecorder recorder)
+            throws org.json.JSONException {
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        for (int i = 0; i < steps.length(); i++) {
+            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test
