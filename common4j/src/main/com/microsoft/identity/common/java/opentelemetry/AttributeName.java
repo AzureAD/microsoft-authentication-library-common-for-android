@@ -677,6 +677,29 @@ public enum AttributeName {
     secret_key_serialization_duration,
 
     /**
+     * Indicates which check in the secret-key read path triggered a wipe of existing key material
+     * (e.g. an unrecoverable load error, or an orphaned wrapped-key file whose keystore key is gone).
+     * Legitimate first-time reads (no keystore key and no wrapped-key file) are intentionally not recorded.
+     */
+    secret_key_wipe_reason,
+
+    /**
+     * The actual root cause (simple class name + message) of the exception that caused a secret-key
+     * read failure (e.g. "IOException: /data/.../key (No space left on device)"). This is the
+     * underlying failure the ClientException wraps, captured unconditionally so the real reason is
+     * never lost behind the generic wrapper message, even for deeply nested cause chains.
+     */
+    secret_key_read_root_cause,
+
+    /**
+     * Whether the KeyStore failure that triggered a secret-key wipe is transient (retry may succeed)
+     * or permanent. One of TRANSIENT, NOT_TRANSIENT (API 33+, derived from
+     * KeyStoreException.isTransientFailure()), API_TOO_OLD (API < 33, cannot be determined), or
+     * NOT_KEYSTORE_ERROR (no KeyStoreException in the cause chain).
+     */
+    keystore_error_transience,
+
+    /**
      * Indicates if an external handler was found to handle the openid-vc:// URI.
      */
     is_openid_vc_handler_found,
