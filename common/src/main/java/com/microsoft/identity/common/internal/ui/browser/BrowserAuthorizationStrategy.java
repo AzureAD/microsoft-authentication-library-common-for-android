@@ -200,6 +200,8 @@ public abstract class BrowserAuthorizationStrategy<
      * redirect URIs based on the active broker's package name and checks if the provided
      * redirect URI matches either the app link format or msauth format for that specific broker.
      * 
+     * Note: This method assumes appContext is non-null (validated by caller in launchIntent).
+     * 
      * @param redirectUri The redirect URI to validate
      * @return true if the redirect URI matches the active broker's expected format
      */
@@ -208,11 +210,6 @@ public abstract class BrowserAuthorizationStrategy<
         Logger.info(methodTag, "Checking if redirect URI is valid for active broker: " + redirectUri);
 
         final Context appContext = getApplicationContext();
-        if (appContext == null) {
-            Logger.warn(methodTag, "Application context is null; cannot determine active broker package.");
-            return false;
-        }
-
         final String brokerPackageName = appContext.getPackageName();
         Logger.info(methodTag, "Active broker package name: " + brokerPackageName);
 
