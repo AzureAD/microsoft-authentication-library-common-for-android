@@ -201,41 +201,23 @@ class AndroidAuthorizationStrategyValidationTest {
     }
 
     /**
-     * Brokered flow running in the auth service process with a competing app registered and a
-     * valid msauth redirect URI → multiple-app URL scheme validation is skipped, so no
+     * Brokered flow running in the auth service process with a competing app registered → multiple-app 
+     * URL scheme validation is skipped when the running process is a valid broker package, so no
      * [ClientException] is thrown. This validates the skip exemption for brokered flows
-     * (e.g. COBO/COPE/AM API) where another Microsoft app legitimately listens for the same
+     * (e.g. COBO/COPE/AM API BYOD) where another Microsoft app legitimately listens for the same
      * redirect and would otherwise trigger a false conflict.
      */
     @Test
-    fun `launchIntent skips competing app validation when in auth service with msauth redirect`() {
+    fun `launchIntent skips competing app validation when in auth service`() {
         registerCompetingApp()
         // Simulate running in the broker auth service process.
         stubIsRunningOnAuthService(true)
 
         val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
-        // Competing app is registered, but because we're in the auth service with a valid
-        // msauth redirect, validation is skipped and launchIntent completes without throwing.
+        // Competing app is registered, but because we're in the auth service and the running
+        // process is a valid broker package, validation is skipped and launchIntent completes without throwing.
         strategy.testLaunchIntent(buildIntent())
-    }
-
-    /**
-     * Brokered flow running in the auth service process with the legacy broker redirect URI
-     * (msauth://Microsoft.AAD.BrokerPlugin) → validation is skipped, no exception thrown.
-     * This ensures backward compatibility with the legacy redirect URI format.
-     */
-    @Test
-    fun `launchIntent skips competing app validation when in auth service with legacy broker redirect URI`() {
-        registerCompetingApp()
-        // Simulate running in the broker auth service process.
-        stubIsRunningOnAuthService(true)
-
-        val strategy = TestBrowserAuthorizationStrategy(context, activity)
-
-        // Use the legacy broker redirect URI.
-        val legacyBrokerRedirectUri = "msauth://Microsoft.AAD.BrokerPlugin"
-        strategy.testLaunchIntent(buildIntent(legacyBrokerRedirectUri))
     }
 
     /**
