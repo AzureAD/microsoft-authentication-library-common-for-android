@@ -221,6 +221,24 @@ class AndroidAuthorizationStrategyValidationTest {
     }
 
     /**
+     * Brokered flow running in the auth service process with the legacy broker redirect URI
+     * (msauth://Microsoft.AAD.BrokerPlugin) → validation is skipped, no exception thrown.
+     * This ensures backward compatibility with the legacy redirect URI format.
+     */
+    @Test
+    fun `launchIntent skips competing app validation when in auth service with legacy broker redirect URI`() {
+        registerCompetingApp()
+        // Simulate running in the broker auth service process.
+        stubIsRunningOnAuthService(true)
+
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
+
+        // Use the legacy broker redirect URI.
+        val legacyBrokerRedirectUri = "msauth://Microsoft.AAD.BrokerPlugin"
+        strategy.testLaunchIntent(buildIntent(legacyBrokerRedirectUri))
+    }
+
+    /**
      * Same brokered-flow conditions as above, but with the
      * [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE] flight disabled → validation
      * must still run and throw [ClientException], ensuring the exemption can be turned off via ECS.

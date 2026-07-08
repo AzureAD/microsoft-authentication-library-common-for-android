@@ -196,9 +196,11 @@ public abstract class BrowserAuthorizationStrategy<
     /**
      * Checks if the redirect URI matches the expected format for the active broker.
      * 
-     * When running in the auth service (broker process), this method constructs the expected
-     * redirect URIs based on the active broker's package name and checks if the provided
-     * redirect URI matches either the app link format or msauth format for that specific broker.
+     * When running in the auth service (broker process), this method validates if the provided
+     * redirect URI matches one of the following formats:
+     * 1. Legacy broker redirect URI: msauth://Microsoft.AAD.BrokerPlugin
+     * 2. App link format: https://login.microsoftonline.com/androidbroker/&lt;packageName&gt;
+     * 3. msauth format: msauth://&lt;packageName&gt; (where packageName is the active broker's package)
      * 
      * Note: This method assumes appContext is non-null (validated by caller in launchIntent).
      * 
@@ -212,6 +214,12 @@ public abstract class BrowserAuthorizationStrategy<
         final Context appContext = getApplicationContext();
         final String brokerPackageName = appContext.getPackageName();
         Logger.info(methodTag, "Active broker package name: " + brokerPackageName);
+
+        // Check for legacy broker redirect URI (msauth://Microsoft.AAD.BrokerPlugin)
+        if (redirectUri.startsWith(AuthenticationConstants.Broker.NEW_BROKER_REDIRECT_URI)) {
+            Logger.info(methodTag, "Redirect URI matches legacy broker format.");
+            return true;
+        }
 
         // Construct expected redirect URI prefixes for the active broker:
         // 1. App link format: https://login.microsoftonline.com/androidbroker/<packageName>
@@ -230,7 +238,8 @@ public abstract class BrowserAuthorizationStrategy<
 
         Logger.warn(methodTag, 
             "Redirect URI does not match active broker format. Expected prefixes: " +
-            expectedAppLinkPrefix + " or " + expectedMsauthPrefix);
+            expectedAppLinkPrefix + " or " + expectedMsauthPrefix +
+            " or legacy " + AuthenticationConstants.Broker.NEW_BROKER_REDIRECT_URI);
         return false;
     }
 
