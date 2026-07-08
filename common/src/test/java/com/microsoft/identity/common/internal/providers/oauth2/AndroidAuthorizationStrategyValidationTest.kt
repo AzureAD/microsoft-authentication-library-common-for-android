@@ -147,9 +147,13 @@ class AndroidAuthorizationStrategyValidationTest {
     }
 
     /**
-     * A [IFlightsManager] that reports every flight as disabled (returns the logical false /
-     * default-off value). Used to verify that disabling
-     * [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE] forces validation to run.
+     * A [IFlightsManager] that disables every boolean flight (returns `false` from
+     * [IFlightsProvider.isFlightEnabled] and [IFlightsProvider.getBooleanValue]), regardless of
+     * the flight's declared default. Non-boolean accessors delegate to the actual defaults to
+     * satisfy the interface contract, but they are not exercised by the tests in this class.
+     *
+     * Used to verify that disabling [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE]
+     * forces multiple-app URL scheme validation to run even when all other skip conditions hold.
      */
     private object AllOffFlightsManager : IFlightsManager {
         private val provider = object : IFlightsProvider {
