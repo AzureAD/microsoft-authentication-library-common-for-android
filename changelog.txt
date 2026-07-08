@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.1.56-RC1
+----------
 - [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
 - [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator (#3173)
 - [PATCH] Invalidate active broker cache if the cached broker no longer supports the configured IPC strategy (e.g. broker reverted to stub via MDM policy) (#3175)
