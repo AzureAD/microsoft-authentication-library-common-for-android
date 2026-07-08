@@ -178,7 +178,7 @@ public abstract class BrowserAuthorizationStrategy<
                 // since only those have a browser authorization agent under broker requests
                 // (Check MsalAndroidBrokerCommandParameterAdapter).
                 if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
-                        ProcessUtil.isRunningOnAuthService(appContext) && checkIfRedirectUriIsValidAppLinkOrMsauth(redirectUri)) {
+                        ProcessUtil.isRunningOnAuthService(appContext) && isValidBrokerRedirectUri(redirectUri)) {
                     Logger.info(methodTag,
                             "Running in broker auth process; skipping multiple-app URL scheme validation.");
                 } else {
@@ -193,7 +193,7 @@ public abstract class BrowserAuthorizationStrategy<
         super.launchIntent(intent);
     }
 
-    private boolean checkIfRedirectUriIsValidAppLinkOrMsauth(@NonNull final String redirectUri) {
+    private boolean isValidBrokerRedirectUri(@NonNull final String redirectUri) {
         Logger.info(TAG, "Checking if redirect URI is a valid app link or msauth: " + redirectUri);
 
         return redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME) ||
