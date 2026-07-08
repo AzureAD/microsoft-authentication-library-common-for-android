@@ -193,15 +193,48 @@ public abstract class BrowserAuthorizationStrategy<
         super.launchIntent(intent);
     }
 
+    /**
+     * Checks if the redirect URI matches the expected format for the active broker.
+     * 
+     * When running in the auth service (broker process), this method constructs the expected
+     * redirect URIs based on the active broker's package name and checks if the provided
+     * redirect URI matches either the app link format or msauth format for that specific broker.
+     * 
+     * @param redirectUri The redirect URI to validate
+     * @return true if the redirect URI matches the active broker's expected format
+     */
     private boolean isValidBrokerRedirectUri(@NonNull final String redirectUri) {
-        Logger.info(TAG, "Checking if redirect URI is a valid app link or msauth: " + redirectUri);
+        final String methodTag = TAG + ":isValidBrokerRedirectUri";
+        Logger.info(methodTag, "Checking if redirect URI is valid for active broker: " + redirectUri);
 
-        return redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.LTW_APP_PACKAGE_NAME) ||
-                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME) ||
-                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME) ||
-                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME) ||
-                redirectUri.startsWith(AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME) ||
-                redirectUri.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX);
+        final Context appContext = getApplicationContext();
+        if (appContext == null) {
+            Logger.warn(methodTag, "Application context is null; cannot determine active broker package.");
+            return false;
+        }
+
+        final String brokerPackageName = appContext.getPackageName();
+        Logger.info(methodTag, "Active broker package name: " + brokerPackageName);
+
+        // Construct expected redirect URI prefixes for the active broker:
+        // 1. App link format: https://login.microsoftonline.com/androidbroker/<packageName>
+        final String expectedAppLinkPrefix = AuthenticationConstants.Broker.APP_LINK_PREFIX + "/" + brokerPackageName;
+        
+        // 2. msauth format: msauth://<packageName>
+        final String expectedMsauthPrefix = AuthenticationConstants.Broker.REDIRECT_PREFIX + "://" + brokerPackageName;
+
+        final boolean matchesAppLink = redirectUri.startsWith(expectedAppLinkPrefix);
+        final boolean matchesMsauth = redirectUri.startsWith(expectedMsauthPrefix);
+        
+        if (matchesAppLink || matchesMsauth) {
+            Logger.info(methodTag, "Redirect URI matches active broker format.");
+            return true;
+        }
+
+        Logger.warn(methodTag, 
+            "Redirect URI does not match active broker format. Expected prefixes: " +
+            expectedAppLinkPrefix + " or " + expectedMsauthPrefix);
+        return false;
     }
 
     protected abstract void setIntentFlag(@NonNull final Intent intent);
