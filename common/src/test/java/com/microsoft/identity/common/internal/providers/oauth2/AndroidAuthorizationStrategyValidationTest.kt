@@ -29,6 +29,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil
 import com.microsoft.identity.common.java.browser.Browser
@@ -43,6 +44,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import io.mockk.every
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.json.JSONObject
@@ -146,6 +148,15 @@ class AndroidAuthorizationStrategyValidationTest {
         every { ProcessUtil.isRunningOnAuthService(any()) } returns value
     }
 
+    /** 
+     * Mocks [BrokerValidator] constructor and stubs [isValidBrokerPackage] to return [value].
+     * This allows tests to simulate that the running package is (or is not) a valid broker.
+     */
+    private fun stubBrokerValidatorIsValidBrokerPackage(value: Boolean) {
+        mockkConstructor(BrokerValidator::class)
+        every { anyConstructed<BrokerValidator>().isValidBrokerPackage(any()) } returns value
+    }
+
     /**
      * A [IFlightsManager] that disables every boolean flight (returns `false` from
      * [IFlightsProvider.isFlightEnabled] and [IFlightsProvider.getBooleanValue]), regardless of
@@ -212,6 +223,8 @@ class AndroidAuthorizationStrategyValidationTest {
         registerCompetingApp()
         // Simulate running in the broker auth service process.
         stubIsRunningOnAuthService(true)
+        // Mock BrokerValidator to return true for isValidBrokerPackage so the skip branch fires.
+        stubBrokerValidatorIsValidBrokerPackage(true)
 
         val strategy = TestBrowserAuthorizationStrategy(context, activity)
 
@@ -229,6 +242,9 @@ class AndroidAuthorizationStrategyValidationTest {
     fun `launchIntent validates competing app when skip flight is disabled`() {
         registerCompetingApp()
         stubIsRunningOnAuthService(true)
+        // Mock BrokerValidator to return true, showing that even with a valid broker package,
+        // validation still runs when the flight is disabled.
+        stubBrokerValidatorIsValidBrokerPackage(true)
         CommonFlightsManager.initializeCommonFlightsManager(AllOffFlightsManager)
 
         val strategy = TestBrowserAuthorizationStrategy(context, activity)
