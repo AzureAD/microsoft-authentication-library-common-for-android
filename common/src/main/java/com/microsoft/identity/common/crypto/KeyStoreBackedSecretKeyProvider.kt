@@ -36,9 +36,12 @@ import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import com.microsoft.identity.common.java.opentelemetry.SpanName
 import com.microsoft.identity.common.java.util.FileUtil
 import com.microsoft.identity.common.logging.Logger
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import java.io.File
 import java.security.KeyPair
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import javax.crypto.SecretKey
@@ -74,10 +77,38 @@ class KeyStoreBackedSecretKeyProvider(
         @VisibleForTesting
         const val KEY_FILE_SIZE: Int = 1024
 
+        /** [AttributeName.secret_key_wipe_reason]: wrapped-key file present but its keystore key is gone. */
+        private const val WIPE_REASON_KEYSTORE_KEY_ABSENT_ORPHANED_FILE: String =
+            "keystore_key_absent_orphaned_file"
+
+        /** [AttributeName.secret_key_wipe_reason]: unrecoverable error while reading existing key material. */
+        private const val WIPE_REASON_LOAD_ERROR: String = "load_error"
+
+        /** [AttributeName.secret_key_wipe_reason]: wrapped-key file exists but is empty (silent re-key). */
+        private const val WIPE_REASON_EMPTY_KEY_FILE_REKEY: String = "empty_key_file_rekey"
+
         /**
          * SecretKey cache. Maps wrapped secret key file path to the SecretKey.
          */
         private val sKeyCacheMap: ConcurrentMap<String, SecretKey> = ConcurrentHashMap()
+
+        /**
+         * Walks [throwable]'s cause chain down to its root cause and returns it. Identity tracking
+         * guarantees termination even for self-referential or multi-node cause cycles, so no depth
+         * cap is needed.
+         */
+        @VisibleForTesting
+        fun findRootCause(throwable: Throwable): Throwable {
+            val seen = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+            var current = throwable
+            seen.add(current)
+            var next = current.cause
+            while (next != null && seen.add(next)) {
+                current = next
+                next = current.cause
+            }
+            return current
+        }
     }
 
     override val keyTypeIdentifier = KEY_TYPE_IDENTIFIER
@@ -230,38 +261,107 @@ class KeyStoreBackedSecretKeyProvider(
     @Throws(ClientException::class)
     fun readSecretKeyFromStorage(): SecretKey? {
         val methodTag = "$TAG:readSecretKeyFromStorage"
-        try {
-            // Load KeyPair from Android KeyStore
-            val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
-                Logger.info(methodTag, "key does not exist in keystore")
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.SecretKeyRetrieval.name,
+            SpanExtension.current().spanContext
+        )
+        SpanExtension.makeCurrentSpan(span).use { _ ->
+            try {
+                // Load KeyPair from Android KeyStore
+                val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
+                    Logger.info(methodTag, "key does not exist in keystore")
+                    // Orphaned wrapped-key file with no keystore key = discarding undecryptable data,
+                    // so record it. No file = legitimate first-time read, not recorded.
+                    if (keyFile.exists()) {
+                        recordWipe(span, WIPE_REASON_KEYSTORE_KEY_ABSENT_ORPHANED_FILE)
+                    }
+                    deleteSecretKeyFromStorage()
+                    span.setStatus(StatusCode.OK)
+                    return null
+                }
+                // Load wrapped secret key from file
+                val rawWrappedSecretKey = readRawWrappedSecretKeyFromFile() ?: run {
+                    Logger.warn(methodTag, "Key file is empty")
+                    // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
+                    // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
+                    // An existing-but-empty file is a silent re-key of undecryptable data, so record it; an absent
+                    // file is the legitimate first-time / sharedUserId read and is not recorded.
+                    if (keyFile.exists()) {
+                        recordWipe(span, WIPE_REASON_EMPTY_KEY_FILE_REKEY)
+                    }
+                    FileUtil.deleteFile(keyFile)
+                    clearKeyFromCache()
+                    span.setStatus(StatusCode.OK)
+                    return null
+                }
+                // Deserialize and unwrap the secret key
+                val secretKey = deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
+                span.setStatus(StatusCode.OK)
+                return secretKey
+            } catch (e: ClientException) {
+                // Reset KeyPair info so that new request will generate correct KeyPairs.
+                // All tokens with previous SecretKey are not possible to decrypt.
+                Logger.warn(
+                    methodTag, "Error when loading key from Storage, " +
+                            "wipe all existing key data "
+                )
+                recordWipe(span, WIPE_REASON_LOAD_ERROR, e)
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(e)
                 deleteSecretKeyFromStorage()
-                return null
+                throw e
+            } catch (e: Exception) {
+                // Non-ClientException failures are recorded but not wiped (only ClientException wipes).
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(e)
+                throw e
+            } finally {
+                span.end()
             }
-            // Load wrapped secret key from file
-            val rawWrappedSecretKey = readRawWrappedSecretKeyFromFile() ?: run {
-                Logger.warn(methodTag, "Key file is empty")
-                // Do not delete the KeyStoreKeyPair even if the key file is empty. This caused credential cache
-                // to be deleted in Office because of sharedUserId allowing keystore to be shared amongst apps.
-                FileUtil.deleteFile(keyFile)
-                clearKeyFromCache()
-                return null
+        }
+    }
+
+    /**
+     * Records telemetry for a genuine wipe / silent re-key of EXISTING secret-key material onto the
+     * current [SpanName.SecretKeyRetrieval] span. Never called for legitimate first-time reads. Any
+     * failure here is swallowed so telemetry can never break the read/wipe path.
+     *
+     * @param span the active SecretKeyRetrieval span.
+     * @param reason a stable identifier for which check triggered the wipe.
+     * @param exception the failure that triggered the wipe, when caused by an exception.
+     */
+    private fun recordWipe(span: Span, reason: String, exception: ClientException? = null) {
+        try {
+            span.setAttribute(AttributeName.secret_key_wipe_reason.name, reason)
+            if (exception != null) {
+                // Record the true root cause, not the generic ClientException wrapper.
+                val rootCause = findRootCause(exception)
+                span.setAttribute(
+                    AttributeName.secret_key_read_root_cause.name,
+                    "${rootCause.javaClass.simpleName}: ${rootCause.message ?: "null"}"
+                )
+                // Exact platform error code, when a KeyStoreException is present (API 33+).
+                AndroidKeyStoreUtil.getKeyStoreExceptionNumericErrorCode(exception)?.let { numericCode ->
+                    span.setAttribute(AttributeName.keystore_numeric_error_code.name, numericCode)
+                }
+                // Whether the failure is transient/permanent (API 33+) so a retryable error is
+                // distinguishable from genuine data loss.
+                span.setAttribute(
+                    AttributeName.keystore_error_transience.name,
+                    AndroidKeyStoreUtil.getKeyStoreErrorTransience(exception).name
+                )
             }
-            // Deserialize and unwrap the secret key
-            return deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
-        } catch (e: ClientException) {
-            // Reset KeyPair info so that new request will generate correct KeyPairs.
-            // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.warn(
-                methodTag, "Error when loading key from Storage, " +
-                        "wipe all existing key data "
-            )
-            deleteSecretKeyFromStorage()
-            throw e
+        } catch (e: Exception) {
+            Logger.warn("$TAG:recordWipe", "Failed to record wipe telemetry: ${e.message}")
         }
     }
 
     /**
      * Deserializes the raw wrapped secret key data and unwraps it using the provided KeyPair.
+     *
+     * Runs under the [SpanName.SecretKeyRetrieval] span created by [readSecretKeyFromStorage]. Telemetry
+     * recorded here (and inside [WrappedSecretKey]) via [SpanExtension.current] therefore lands on that
+     * span, and any failure propagates to [readSecretKeyFromStorage] where the wipe is recorded.
      *
      * @param rawWrappedSecretKey The raw byte array of the wrapped secret key.
      * @param keyPair The KeyPair used to unwrap the secret key.
@@ -272,31 +372,9 @@ class KeyStoreBackedSecretKeyProvider(
         rawWrappedSecretKey: ByteArray,
         keyPair: KeyPair
     ): SecretKey {
-        val methodTag = "$TAG:deserializeAndUnwrapSecretKey"
-        val span = OTelUtility.createSpanFromParent(
-            SpanName.SecretKeyRetrieval.name,
-            SpanExtension.current().spanContext
-        )
-        SpanExtension.makeCurrentSpan(span).use { _ ->
-            try {
-                val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
-                recordSecretKey(wrappedSecretKey)
-                val secretKey = unwrapSecretKey(wrappedSecretKey, keyPair)
-                span.setStatus(StatusCode.OK)
-                return secretKey
-            } catch (exception: Exception) {
-                Logger.error(
-                    methodTag,
-                    "Failed to deserialize and unwrap secret key",
-                    exception
-                )
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(exception)
-                throw exception
-            } finally {
-                span.end()
-            }
-        }
+        val wrappedSecretKey = WrappedSecretKey.deserialize(rawWrappedSecretKey)
+        recordSecretKey(wrappedSecretKey)
+        return unwrapSecretKey(wrappedSecretKey, keyPair)
     }
 
     /**
