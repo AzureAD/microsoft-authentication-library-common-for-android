@@ -228,10 +228,8 @@ public abstract class BrowserAuthorizationStrategy<
         // 2. msauth format: msauth://<packageName>
         final String expectedMsauthPrefix = AuthenticationConstants.Broker.REDIRECT_PREFIX + "://" + brokerPackageName;
 
-        final boolean matchesAppLink = redirectUri.startsWith(expectedAppLinkPrefix);
-        final boolean matchesMsauth = redirectUri.startsWith(expectedMsauthPrefix);
-        
-        if (matchesAppLink || matchesMsauth) {
+        // Check if redirect URI matches either expected format (short-circuit evaluation)
+        if (redirectUri.startsWith(expectedAppLinkPrefix) || redirectUri.startsWith(expectedMsauthPrefix)) {
             Logger.info(methodTag, "Redirect URI matches active broker format.");
             return true;
         }
