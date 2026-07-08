@@ -174,7 +174,7 @@ public abstract class BrowserAuthorizationStrategy<
                 // 1. Flight SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE is enabled (default: true)
                 // 2. Request is running in the auth process (Broker request)
                 // 3. Request has a redirect uri that is a valid app link or msauth
-                // These conditions are met exclusively in brokered flows (e.g. COBO/COPE/AM API),
+                // These conditions are met exclusively in brokered flows (e.g. COBO/COPE/AM API BYOD),
                 // since only those have a browser authorization agent under broker requests
                 // (Check MsalAndroidBrokerCommandParameterAdapter).
                 if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
