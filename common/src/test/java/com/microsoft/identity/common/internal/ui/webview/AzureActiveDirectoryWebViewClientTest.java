@@ -58,7 +58,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -196,7 +196,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
         HashMap<String, String> dummyHeaders = new HashMap<>();
@@ -254,7 +254,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -288,7 +288,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -717,7 +717,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 true);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
@@ -790,7 +790,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         }
                     },
                     TEST_REDIRECT_URI,
-                    Mockito.mock(SwitchBrowserRequestHandler.class),
+                    Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                     "homeTenantId",
                     false);
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
@@ -818,7 +818,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
         final WebView mockWebView = new WebView(mContext);
@@ -847,7 +847,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -889,7 +889,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -917,7 +917,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -950,7 +950,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -990,7 +990,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -1030,7 +1030,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(IAuthorizationCompletionCallback.class),
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false,
                 tracker);
@@ -1055,7 +1055,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(IAuthorizationCompletionCallback.class),
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
 
@@ -1409,3 +1409,4 @@ public class AzureActiveDirectoryWebViewClientTest {
                 blob.has("last_loaded_domain"));
     }
 }
+
