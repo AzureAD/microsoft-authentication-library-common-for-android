@@ -73,6 +73,7 @@ import com.microsoft.identity.common.internal.ui.webview.IUrlLoadTracker;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserStatusCallback;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.FidoConstants;
@@ -159,7 +160,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     // This is used by LegacyFido2ApiManager to launch a PendingIntent received by the legacy API.
     private ActivityResultLauncher<LegacyFido2ApiObject> mFidoLauncher;
-    // This is used by the switch browser protocol to handle the resume of the flow.
+    // The handler that owns the entire switch_browser flow (challenge dispatch + resume).
     private volatile SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator = null;
 
     @VisibleForTesting
@@ -253,28 +254,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private void resumeSwitchBrowser() {
         final String methodTag = TAG + ":resumeSwitchBrowser";
+        final Bundle switchBrowserBundle;
         try {
-            final Bundle switchBrowserBundle = consumeSwitchBrowserBundle();
+            switchBrowserBundle = consumeSwitchBrowserBundle();
             if (switchBrowserBundle == null) {
                 throw new ClientException(
                         ClientException.NULL_OBJECT,
                         "No switch browser bundle found to resume the flow."
                 );
             }
-            Logger.info(methodTag, "Resuming switch browser flow");
-            getSwitchBrowserCoordinator().processSwitchBrowserResume(
-                    mAuthorizationRequestUrl,
-                    switchBrowserBundle,
-                    (switchBrowserResumeUri, switchBrowserResumeHeaders) -> {
-                        launchWebView(switchBrowserResumeUri.toString(), switchBrowserResumeHeaders);
-                        return null;
-                    }
-            );
         } catch (final ClientException e) {
-            Logger.error(methodTag, "Error processing switch browser resume", e);
+            Logger.error(methodTag, "Error preparing switch browser resume", e);
             sendResult(RawAuthorizationResult.fromException(e));
             finish();
+            return;
         }
+        Logger.info(methodTag, "Resuming switch browser flow");
+        // buildResumeUri may hit the network (cold cache); the coordinator reports status to the callback.
+        getSwitchBrowserCoordinator().processSwitchBrowserResumeAsync(
+                mAuthorizationRequestUrl,
+                switchBrowserBundle);
     }
 
     @Override
@@ -354,7 +353,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 },
                 mRedirectUri,
-                getSwitchBrowserCoordinator().getSwitchBrowserRequestHandler(),
+                getSwitchBrowserCoordinator(),
                 mUtid,
                 isWebViewWebcpEnabledInBrokerlessCase,
                 new IUrlLoadTracker() {
@@ -705,6 +704,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public void onDestroy() {
         super.onDestroy();
         final String methodTag = TAG + ":onDestroy";
+        // Cancel any in-flight switch-browser async work so its continuation does not resume
+        // against this destroyed fragment (touching mWebView / mProgressBar / sendResult).
+        if (mSwitchBrowserProtocolCoordinator != null) {
+            mSwitchBrowserProtocolCoordinator.cancel();
+        }
         if (mAADWebViewClient != null) {
             mAADWebViewClient.onDestroy();
         } else {
@@ -786,7 +790,61 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private SwitchBrowserProtocolCoordinator getSwitchBrowserCoordinator() {
         if (mSwitchBrowserProtocolCoordinator == null) {
             final SpanContext spanContext = requireActivity() instanceof AuthorizationActivity ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
-            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(requireActivity(), spanContext);
+            // Coordinator reports switch_browser status; the fragment reacts (UI + terminal result).
+            mSwitchBrowserProtocolCoordinator = new SwitchBrowserProtocolCoordinator(
+                    requireActivity(),
+                    new SwitchBrowserStatusCallback() {
+                        @Override
+                        public void onSwitchBrowserStarted() {
+                            // The coordinator's async continuation resumes on the main thread; if the
+                            // fragment has since detached, its views are gone. Short-circuit to avoid
+                            // touching a dead UI.
+                            if (!isAdded()) {
+                                return;
+                            }
+                            mWebView.setEnabled(false);
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onSwitchBrowserResumed() {
+                            if (!isAdded()) {
+                                return;
+                            }
+                            mWebView.setEnabled(false);
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onSwitchBrowserCompleted(@NonNull final Uri uri,
+                                                             @NonNull final HashMap<String, String> headers) {
+                            if (!isAdded()) {
+                                return;
+                            }
+                            mWebView.setEnabled(true);
+                            // Do not hide the progress bar here (unlike the error path): launchWebView
+                            // re-shows it and onPageLoaded hides it once the resumed page loads.
+                            // Hiding it now would only cause a flicker.
+                            launchWebView(uri.toString(), headers);
+                        }
+
+                        @Override
+                        public void onSwitchBrowserFailed(@NonNull final Throwable error) {
+                            final String methodTag = TAG + ":onSwitchBrowserFailed";
+                            Logger.error(methodTag, "Switch browser flow failed.", error);
+                            if (!isAdded()) {
+                                // Fragment is gone — there is no UI to update and no host to deliver
+                                // the result to. The failure has already been logged above.
+                                Logger.warn(methodTag, "Fragment no longer attached; skipping result delivery.");
+                                return;
+                            }
+                            mWebView.setEnabled(true);
+                            mProgressBar.setVisibility(View.INVISIBLE);
+                            sendResult(RawAuthorizationResult.fromThrowable(error));
+                            finish();
+                        }
+                    },
+                    spanContext);
         }
         return mSwitchBrowserProtocolCoordinator;
     }

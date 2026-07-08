@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator (#3173)
 - [PATCH] Invalidate active broker cache if the cached broker no longer supports the configured IPC strategy (e.g. broker reverted to stub via MDM policy) (#3175)
 - [PATCH] Bump WrappedSecretKeySerializerVersion flight default to 1, switching WrappedSecretKey serialization to the metadata-aware format by default (#3176)
 - [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)

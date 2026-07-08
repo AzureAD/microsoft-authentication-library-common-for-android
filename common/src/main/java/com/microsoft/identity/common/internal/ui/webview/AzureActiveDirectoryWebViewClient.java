@@ -61,8 +61,7 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractS
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.broker.CommonTenantInfoProvider;
@@ -149,7 +148,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-    private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
+    private final SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
@@ -180,14 +179,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
@@ -198,10 +197,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -348,7 +347,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
              }
              else if (isRedirectUrl(formattedURL)) {
                 Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
                     Logger.info(methodTag,"Request to switch browser.");
                     processSwitchBrowserRequest(url);
                 } else {
@@ -651,29 +650,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Launch the browser with the given action URI and code.
-     * <p>
-     * From the query parameters, extract the action URI and code,
-     * The constructs the URI with the action URI and code.
+     * Launch the browser with the given action URI and code. Disables the WebView until the
+     * async handler resolves so the user cannot interact with a page that is about to be
+     * replaced by SwitchBrowserActivity.
      *
-     * @param url The URL to be opened in the browser.
+     * @param view The WebView delivering the switch_browser redirect.
+     * @param url  The URL to be opened in the browser.
      */
     private void processSwitchBrowserRequest(@NonNull final String url) {
-        final String methodTag = TAG + ":processSwitchBrowserRequest";
-        try {
-            mSwitchBrowserRequestHandler.processChallenge(
-                    SwitchBrowserChallenge.constructFromRedirectUrl(url, mRequestUrl)
-            );
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
-            final String errorCode;
-            if (throwable instanceof IErrorInformation) {
-                errorCode = ((IErrorInformation) throwable).getErrorCode();
-            } else {
-                errorCode = UNKNOWN_ERROR;
-            }
-            returnError(errorCode, throwable.getMessage());
-        }
+        // The coordinator reports UI status + the terminal result to the fragment's listener.
+        mSwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync(url, mRequestUrl, mRedirectUrl);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
