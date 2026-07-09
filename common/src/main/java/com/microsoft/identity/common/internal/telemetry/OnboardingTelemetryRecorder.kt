@@ -187,7 +187,7 @@ class OnboardingTelemetryRecorder(
      *
      * @return Populated blob JSON string, or empty string if [sessionCorrelationId] is empty
      */
-    fun finalizeBlob(): String {
+    override fun finalizeBlob(): String {
         if (sessionCorrelationId.isEmpty()) {
             Logger.warn(
                 TAG,

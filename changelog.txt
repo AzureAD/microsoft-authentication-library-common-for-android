@@ -2,6 +2,7 @@ vNext
 ----------
 - [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)
 - [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
+- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#TBD)
 
 Version 24.4.0
 ----------
