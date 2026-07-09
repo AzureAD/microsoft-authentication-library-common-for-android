@@ -247,6 +247,12 @@ object SwitchBrowserUriHelper {
             return url.startsWith(expectedUrl, ignoreCase = true)
         }
 
+        // Compare scheme + authority + path explicitly rather than
+        // buildUpon().clearQuery().fragment(null) + Uri.equals(). Uri.equals is exact and
+        // case-sensitive, so it would reject a legitimate single trailing-slash difference and a
+        // mixed-case registered URI; and for opaque urn: redirects clearQuery() does not strip the
+        // auth code (it lives in the scheme-specific part, not the query), which would collapse the
+        // check to a scheme-only match and reopen the prefix-confusion hole for urn: redirects.
         return try {
             val actual = url.toUri()
             val expected = expectedUrl.toUri()

@@ -522,6 +522,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
         }
 
+        // Compare scheme + authority + path explicitly rather than
+        // Uri#buildUpon().clearQuery().fragment(null) + Uri#equals(). Uri#equals is exact and
+        // case-sensitive, so it would reject a legitimate single trailing-slash difference and a
+        // mixed-case registered URI; and for opaque urn: redirects clearQuery() does not strip the
+        // auth code (it lives in the scheme-specific part, not the query), which would collapse the
+        // check to a scheme-only match and reopen the prefix-confusion hole for urn: redirects.
         try {
             final Uri actual = Uri.parse(url);
             final Uri expected = Uri.parse(mRedirectUrl);
