@@ -88,10 +88,12 @@ class WebAppsUtil {
          */
         @JvmStatic
         fun createErrorResponseBundle(t: Throwable, description: String?): Bundle {
+            val errorResponseString = createErrorResponseString(t, description)
+            Logger.info("$TAG:createErrorResponseBundle", "[PROXY-DEBUG] WebApps error response: $errorResponseString")
             return Bundle().apply {
                 putString(
                     AuthenticationConstants.Broker.BROKER_WEB_APPS_ERROR_RESULT,
-                    createErrorResponseString(t, description)
+                    errorResponseString
                 )
             }
         }
