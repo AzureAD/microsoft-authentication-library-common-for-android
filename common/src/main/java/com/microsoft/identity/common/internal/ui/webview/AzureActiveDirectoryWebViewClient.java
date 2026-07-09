@@ -589,12 +589,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Removes a single trailing slash so "/auth" and "/auth/" compare equal.
-     * Root "/" and empty paths are unchanged; only one slash is stripped.
+     * Removes a single trailing slash so "/auth" and "/auth/" compare equal. The empty
+     * path (path-less redirect URI) and root "/" also normalize to the same value, so a
+     * path-less registered URI still matches an incoming redirect with a trailing slash.
      */
     private static String normalizePath(@Nullable final String path) {
         final String p = nullToEmpty(path);
-        if (p.length() > 1 && p.endsWith("/")) {
+        if (p.endsWith("/")) {
             return p.substring(0, p.length() - 1);
         }
         return p;

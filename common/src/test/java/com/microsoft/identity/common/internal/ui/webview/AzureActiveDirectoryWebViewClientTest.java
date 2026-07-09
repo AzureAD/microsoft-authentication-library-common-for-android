@@ -128,6 +128,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Differs only by a trailing slash — must still match.
     private static final String HTTPS_REDIRECT_TRAILING_SLASH =
             "https://login.contoso.com/auth/?code=AUTH_CODE&state=xyz";
+    // Path-less registered redirect URI, and an incoming redirect that adds a root "/" before
+    // the query. The empty configured path and the incoming "/" must normalize equal.
+    private static final String HTTPS_REDIRECT_URI_NO_PATH = "https://login.contoso.com";
+    private static final String HTTPS_REDIRECT_NO_PATH_ROOT_SLASH =
+            "https://login.contoso.com/?code=AUTH_CODE&state=xyz";
     // Opaque (urn:) redirect URI — the broker OOB redirect. Authority/path are
     // null, so the matcher must compare the scheme-specific part.
     private static final String OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
@@ -135,6 +140,11 @@ public class AzureActiveDirectoryWebViewClientTest {
             "urn:ietf:wg:oauth:2.0:oob?code=AUTH_CODE&state=xyz";
     private static final String OOB_REDIRECT_SPOOFED_SSP_SUFFIX =
             "urn:ietf:wg:oauth:2.0:oobstolen?code=STOLEN&state=xyz";
+    // Hierarchical urn (authority "evil", path "/oob") spoofing the opaque OOB redirect.
+    // The registered URI is opaque, this one is not, so the opaque/hierarchical mismatch
+    // must be rejected rather than compared on scheme alone.
+    private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
+            "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -496,6 +506,27 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
+     * A path-less registered redirect URI (no path component) must still match an incoming
+     * redirect that carries a root "/" before the query string. The configured empty path and
+     * the incoming "/" normalize to the same value, so the auth code is delivered via the
+     * redirect path. Guards against normalizePath rejecting the "" vs "/" difference.
+     */
+    @Test
+    public void testStrictMatching_acceptsRootSlashForPathLessRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI_NO_PATH);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_NO_PATH_ROOT_SLASH);
+
+        assertTrue("Path-less redirect with root slash must be handled", handled);
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
      * Opaque redirect URI (broker OOB, urn:ietf:wg:oauth:2.0:oob): a legitimate
      * redirect with the same scheme-specific part (auth code in query) is
      * accepted and delivered as a completed auth result.
@@ -540,6 +571,30 @@ public class AzureActiveDirectoryWebViewClientTest {
         // error path, so any delivered result must NOT be a completed auth result.
         for (final RawAuthorizationResult result : captureAllResults(mockCallback, captor)) {
             assertNotEquals("Spoofed opaque redirect must not deliver an auth code",
+                    RawAuthorizationResult.ResultCode.COMPLETED, result.getResultCode());
+        }
+    }
+
+    /**
+     * Opaque vs hierarchical mismatch: the registered redirect URI is opaque
+     * (urn:ietf:wg:oauth:2.0:oob) but the incoming URL is a hierarchical urn
+     * (urn://evil/oob). Comparing only the scheme would accept it; the matcher must
+     * reject the mismatch so the auth code is never delivered as a completed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsHierarchicalUrnSpoofingOpaqueOob() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_SPOOFED_HIERARCHICAL);
+
+        for (final RawAuthorizationResult result : captureAllResults(mockCallback, captor)) {
+            assertNotEquals("Hierarchical urn spoofing the opaque OOB redirect must not deliver an auth code",
                     RawAuthorizationResult.ResultCode.COMPLETED, result.getResultCode());
         }
     }

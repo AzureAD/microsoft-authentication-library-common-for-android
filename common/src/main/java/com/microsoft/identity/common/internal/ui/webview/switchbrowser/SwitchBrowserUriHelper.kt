@@ -287,10 +287,10 @@ object SwitchBrowserUriHelper {
         return r
     }
 
-    /** Removes a single trailing slash so "/a" and "/a/" compare equal. */
+    /** Removes a single trailing slash so "/a" and "/a/" — and "" (no path) and "/" — compare equal. */
     private fun normalizePath(path: String?): String {
         val p = path ?: return ""
-        return if (p.length > 1 && p.endsWith("/")) p.substring(0, p.length - 1) else p
+        return if (p.endsWith("/")) p.substring(0, p.length - 1) else p
     }
 
     /**
