@@ -133,6 +133,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String HTTPS_REDIRECT_URI_NO_PATH = "https://login.contoso.com";
     private static final String HTTPS_REDIRECT_NO_PATH_ROOT_SLASH =
             "https://login.contoso.com/?code=AUTH_CODE&state=xyz";
+    // Scheme-less registered redirect URI (defensive branch; not used in practice). The incoming
+    // URL still carries the auth code in the query, which must be stripped before comparison.
+    private static final String SCHEMELESS_REDIRECT_URI = "login.contoso.com/auth";
+    private static final String SCHEMELESS_REDIRECT_LEGIT =
+            "login.contoso.com/auth?code=AUTH_CODE&state=xyz";
     // Opaque (urn:) redirect URI — the broker OOB redirect. Authority/path are
     // null, so the matcher must compare the scheme-specific part.
     private static final String OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
@@ -524,6 +529,33 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue("Path-less redirect with root slash must be handled", handled);
         Mockito.verify(mockCallback, Mockito.times(1))
                 .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * Scheme-less registered redirect URI (defensive branch, unused in practice since all
+     * redirect URIs carry a scheme): the incoming URL still carries the auth code in the query,
+     * so the query/fragment must be stripped before the equality check — mirroring the scheme-less
+     * branch of the Kotlin isSwitchBrowserRedirectUrl. Without stripping, the full url (with
+     * ?code=...) would not equal the registered URI and the redirect would fall through to the
+     * SSL-protection path instead of being delivered as a completed auth result.
+     */
+    @Test
+    public void testStrictMatching_acceptsSchemelessRedirectStrippingQuery() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, SCHEMELESS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, SCHEMELESS_REDIRECT_LEGIT);
+
+        assertTrue("Scheme-less redirect must be handled", handled);
+        // Delivered via the redirect path as a completed auth result (not the SSL-protection path
+        // that a non-match would take).
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
     }
 
     /**

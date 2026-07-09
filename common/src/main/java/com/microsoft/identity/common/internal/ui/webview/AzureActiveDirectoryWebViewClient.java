@@ -533,9 +533,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Uri expected = Uri.parse(mRedirectUrl);
             final String expectedScheme = expected.getScheme();
 
-            // Scheme-less configured URI: fall back to strict equality.
+            // Scheme-less configured URI: fall back to strict equality after stripping any
+            // query/fragment from the incoming URL (it still carries ?code=...). Mirrors the
+            // scheme-less branch of the Kotlin isSwitchBrowserRedirectUrl so both matchers agree.
             if (expectedScheme == null || expectedScheme.isEmpty()) {
-                return url.equalsIgnoreCase(mRedirectUrl);
+                return stripQueryAndFragment(url).equalsIgnoreCase(mRedirectUrl);
             }
             if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
                 return false;
