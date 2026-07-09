@@ -29,13 +29,26 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil
 import com.microsoft.identity.common.java.browser.Browser
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightConfig
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
+import io.mockk.every
+import io.mockk.mockkConstructor
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -66,6 +79,12 @@ class AndroidAuthorizationStrategyValidationTest {
     fun setUp() {
         activity = Robolectric.buildActivity(Activity::class.java).create().get()
         context = RuntimeEnvironment.getApplication()
+    }
+
+    @After
+    fun tearDown() {
+        CommonFlightsManager.resetFlightsManager()
+        unmockkAll()
     }
 
     /**
@@ -123,6 +142,43 @@ class AndroidAuthorizationStrategyValidationTest {
         return intent
     }
 
+    /** Stubs [ProcessUtil.isRunningOnAuthService] to return [value] for any context. */
+    private fun stubIsRunningOnAuthService(value: Boolean) {
+        mockkStatic(ProcessUtil::class)
+        every { ProcessUtil.isRunningOnAuthService(any()) } returns value
+    }
+
+    /** 
+     * Mocks [BrokerValidator] constructor and stubs [isValidBrokerPackage] to return [value].
+     * This allows tests to simulate that the running package is (or is not) a valid broker.
+     */
+    private fun stubBrokerValidatorIsValidBrokerPackage(value: Boolean) {
+        mockkConstructor(BrokerValidator::class)
+        every { anyConstructed<BrokerValidator>().isValidBrokerPackage(any()) } returns value
+    }
+
+    /**
+     * A [IFlightsManager] that disables every boolean flight (returns `false` from
+     * [IFlightsProvider.isFlightEnabled] and [IFlightsProvider.getBooleanValue]), regardless of
+     * the flight's declared default. Non-boolean accessors delegate to the actual defaults to
+     * satisfy the interface contract, but they are not exercised by the tests in this class.
+     *
+     * Used to verify that disabling [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE]
+     * forces multiple-app URL scheme validation to run even when all other skip conditions hold.
+     */
+    private object AllOffFlightsManager : IFlightsManager {
+        private val provider = object : IFlightsProvider {
+            override fun isFlightEnabled(flightConfig: IFlightConfig): Boolean = false
+            override fun getBooleanValue(flightConfig: IFlightConfig): Boolean = false
+            override fun getIntValue(flightConfig: IFlightConfig): Int = flightConfig.defaultValue as Int
+            override fun getDoubleValue(flightConfig: IFlightConfig): Double = flightConfig.defaultValue as Double
+            override fun getStringValue(flightConfig: IFlightConfig): String = flightConfig.defaultValue as String
+            override fun getJsonValue(flightConfig: IFlightConfig): JSONObject = JSONObject()
+        }
+        override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider = provider
+        override fun getFlightsProviderForTenant(tenantId: String, waitForConfigsWithTimeoutInMs: Long): IFlightsProvider = provider
+    }
+
     // ──────────────────────────────────────────────────────────────────────────────────
     // Tests
     // ──────────────────────────────────────────────────────────────────────────────────
@@ -153,5 +209,51 @@ class AndroidAuthorizationStrategyValidationTest {
 
         // No competing app registered — should not throw (startActivity completes normally).
         strategy.testLaunchIntent(buildIntent())
+    }
+
+    /**
+     * Brokered flow running in the auth service process with a competing app registered → multiple-app 
+     * URL scheme validation is skipped when the running process is a valid broker package, so no
+     * [ClientException] is thrown. This validates the skip exemption for brokered flows
+     * (e.g. COBO/COPE/AM API BYOD) where another Microsoft app legitimately listens for the same
+     * redirect and would otherwise trigger a false conflict.
+     */
+    @Test
+    fun `launchIntent skips competing app validation when in auth service`() {
+        registerCompetingApp()
+        // Simulate running in the broker auth service process.
+        stubIsRunningOnAuthService(true)
+        // Mock BrokerValidator to return true for isValidBrokerPackage so the skip branch fires.
+        stubBrokerValidatorIsValidBrokerPackage(true)
+
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
+
+        // Competing app is registered, but because we're in the auth service and the running
+        // process is a valid broker package, validation is skipped and launchIntent completes without throwing.
+        strategy.testLaunchIntent(buildIntent())
+    }
+
+    /**
+     * Same brokered-flow conditions as above, but with the
+     * [CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE] flight disabled → validation
+     * must still run and throw [ClientException], ensuring the exemption can be turned off via ECS.
+     */
+    @Test
+    fun `launchIntent validates competing app when skip flight is disabled`() {
+        registerCompetingApp()
+        stubIsRunningOnAuthService(true)
+        // Mock BrokerValidator to return true, showing that even with a valid broker package,
+        // validation still runs when the flight is disabled.
+        stubBrokerValidatorIsValidBrokerPackage(true)
+        CommonFlightsManager.initializeCommonFlightsManager(AllOffFlightsManager)
+
+        val strategy = TestBrowserAuthorizationStrategy(context, activity)
+
+        try {
+            strategy.testLaunchIntent(buildIntent())
+            fail("Expected ClientException")
+        } catch (e: ClientException) {
+            assertEquals(ErrorStrings.MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME, e.errorCode)
+        }
     }
 }
