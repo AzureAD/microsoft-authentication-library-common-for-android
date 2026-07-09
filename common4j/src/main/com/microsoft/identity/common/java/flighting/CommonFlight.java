@@ -291,7 +291,12 @@ public enum CommonFlight implements IFlightConfig {
      * where a broker app's redirect URI is legitimately handled by multiple installed Microsoft
      * apps. Disable via ECS to force the validation for all flows if needed.
      */
-    SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE("SkipMultipleAppValidationInAuthService", true);
+    SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE("SkipMultipleAppValidationInAuthService", true),
+
+    /**
+     * Flight to enable request origin display in the HTTP authentication dialog.
+     */
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
 
     private String key;
     private Object defaultValue;
