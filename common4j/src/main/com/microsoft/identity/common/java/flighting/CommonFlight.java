@@ -271,6 +271,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
 
     /**
+     * Kill switch for strict redirect-URI matching in
+     * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
+     * ECS to revert to the historical String#startsWith prefix match
+     * (FireWatch c1bf88bd / IcM 31000000624712).
+     */
+    ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true),
+
+    /**
      * Flight to enable the conservative key generation spec for legacy devices (Android API &lt;= 30).
      * <p>
      * On API &lt;= 30 the hardware keymaster predates Keystore 2.0 and frequently rejects the
