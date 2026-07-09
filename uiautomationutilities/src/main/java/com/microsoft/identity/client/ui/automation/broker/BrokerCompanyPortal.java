@@ -65,7 +65,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
     public final static String OLD_COMPANY_PORTAL_APK = "OldCompanyPortal.apk";
-    private final static int PASSWORD_UI_ATTEMPT_COUNT = 3;
+    private final static String PIN_ENTRY_RESOURCE_ID = "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView";
 
     // Timeout to wait for complete enrollment page to appear
     final static long COMPLETE_ENROLLMENT_PAGE_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
@@ -387,20 +387,41 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        // get access screen
+        // Wait for "Get Access" screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
         Assert.assertTrue(
                 "CP - Get Access screen appears",
                 getAccessScreen.waitForExists(TimeUnit.MINUTES.toMillis(2))
         );
 
-        // get access screen - continue
+        // Due to a known issue in Company Portal, the App Protection Policy flow can trigger
+        // twice. The second instance only appears while still on the "Get Access" screen.
+        // Once we click Continue, it won't reappear. By waiting here, we allow the potential
+        // second instance to arrive and merge, so the PIN flow only needs to run once.
+        Logger.i(TAG, "Waiting on Get Access screen to absorb potential second instance..");
+        try {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Logger.w(TAG, "Interrupted while waiting on Get Access screen", e);
+        }
+
+        // Click Continue on Get Access
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
-        // handle PIN
+        // Handle PIN entry and confirmation
+        enterAndConfirmPin(device);
+    }
+
+    /**
+     * Enters the PIN and confirms it on the App Protection Policy PIN screens.
+     *
+     * @param device the UiDevice instance used to interact with the device
+     */
+    private void enterAndConfirmPin(@NonNull final UiDevice device) {
         Logger.i(TAG, "Handle PIN to enable App Protection Policy..");
         final UiObject pinField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+                PIN_ENTRY_RESOURCE_ID
         );
 
         try {
@@ -413,7 +434,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // confirm PIN
         final UiObject pinConfirmField = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "com.microsoft.windowsintune.companyportal:id/pin_entry_passcodeEditView"
+                PIN_ENTRY_RESOURCE_ID
         );
 
         try {

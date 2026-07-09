@@ -57,7 +57,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -170,7 +170,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
         HashMap<String, String> dummyHeaders = new HashMap<>();
@@ -183,6 +183,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+        // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
+        // OnboardingTelemetryRecorder.addBlockingError persists to this store.
+        if (mContext != null) {
+            new com.microsoft.identity.common.internal.telemetry.OnboardingSessionCorrelationStore(mContext)
+                    .save("");
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -222,7 +228,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -256,7 +262,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -501,7 +507,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     }
                 },
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 true);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
@@ -574,7 +580,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         }
                     },
                     TEST_REDIRECT_URI,
-                    Mockito.mock(SwitchBrowserRequestHandler.class),
+                    Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                     "homeTenantId",
                     false);
             mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL);
@@ -602,7 +608,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
         final WebView mockWebView = new WebView(mContext);
@@ -631,7 +637,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -673,7 +679,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -701,7 +707,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -734,7 +740,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         );
@@ -774,7 +780,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mockCallback,
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false
         ));
@@ -814,7 +820,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(IAuthorizationCompletionCallback.class),
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false,
                 tracker);
@@ -839,7 +845,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(IAuthorizationCompletionCallback.class),
                 url -> {},
                 TEST_REDIRECT_URI,
-                Mockito.mock(SwitchBrowserRequestHandler.class),
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
 
@@ -1095,4 +1101,102 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue("MFA activation intent must carry FLAG_ACTIVITY_NEW_TASK",
                 (launched.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
     }
+
+    // -----------------------------------------------------------------------
+    // Onboarding telemetry hooks
+    // -----------------------------------------------------------------------
+
+    /**
+     * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
+     * a broker install request URL produces a populated blob containing the
+     * {@code BrokerInstallPrompted} step. We construct a recorder with a synthetic seed
+     * containing a session correlation id and a blocking error so {@code finalizeBlob}
+     * returns non-empty.
+     */
+    @Test
+    public void testProcessInstallRequest_RecordsBrokerInstallPromptedStep() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        // Record a blocking error so finalizeBlob() emits a populated blob.
+        recorder.addBlockingError(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // Trigger a broker install URL through the WebView client (delegates to processInstallRequest).
+        mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL);
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        boolean foundStep = false;
+        for (int i = 0; i < steps.length(); i++) {
+            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+                foundStep = true;
+                break;
+            }
+        }
+        assertTrue("Expected BrokerInstallPrompted step in onboarding blob", foundStep);
+    }
+
+    /**
+     * No recorder attached → no crash, hook is a no-op.
+     */
+    @Test
+    public void testProcessInstallRequest_NoRecorder_IsNoOp() {
+        // Default mWebViewClient has no recorder attached. This must not throw.
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+    }
+
+    /**
+     * Verifies that {@code onPageFinished} extracts the host from a real URL and stores it on
+     * the recorder as {@code lastLoadedDomain}. Requires a blocking error to have been recorded
+     * so the finalized blob is non-empty.
+     */
+    @Test
+    public void testOnPageFinished_RecordsLastLoadedDomain() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        recorder.addBlockingError(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.onPageFinished(mMockWebView, "https://login.microsoftonline.com/common/oauth2/authorize");
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals("login.microsoftonline.com", blob.getString(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_LOADED_DOMAIN));
+    }
+
+    /**
+     * onPageFinished with a URL that has no host (e.g. about:blank) does not throw and
+     * does not set lastLoadedDomain.
+     */
+    @Test
+    public void testOnPageFinished_BlankUrl_DoesNotSetDomain() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        recorder.addBlockingError(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.onPageFinished(mMockWebView, TEST_BLANK_PAGE_REQUEST_URL);
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertFalse("blank URL should not produce a last_loaded_domain entry",
+                blob.has("last_loaded_domain"));
+    }
 }
+

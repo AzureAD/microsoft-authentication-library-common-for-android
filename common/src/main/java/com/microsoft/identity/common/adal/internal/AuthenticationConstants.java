@@ -548,7 +548,7 @@ public final class AuthenticationConstants {
         /**
          * String Query parameter key to indicate support for SWITCH_BROWSER protocol.
          */
-        public static final String CLIENT_SUPPORTS_FLOW = "switch_browser";
+        public static final String SWITCH_BROWSER_EXTRA_QUERY_PARAM = "switch_browser";
 
         /**
          * String Query parameter key for the purpose token.
@@ -564,6 +564,11 @@ public final class AuthenticationConstants {
          * String Query parameter key for the state blob.
          */
         public static final String STATE = "state";
+
+        /**
+         * Intent extra key indicating a resume request from the browser redirect.
+         */
+        public static final String RESUME_REQUEST = "resume_request";
     }
 
     /**

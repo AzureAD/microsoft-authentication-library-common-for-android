@@ -745,5 +745,11 @@ public class AuthenticationConstants {
          * The associated value should be taken from {@link BrokerResponse}
          */
         public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
+
+        /**
+         * Boolean flag indicating that the switch_browser protocol flow was used.
+         * Present and true when the flow was initiated; absent otherwise.
+         */
+        public static final String IS_SWITCH_BROWSER_FLOW = "com.microsoft.identity.client.is_switch_browser_flow";
     }
 }

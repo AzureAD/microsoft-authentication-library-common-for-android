@@ -138,6 +138,14 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             }
         }
 
+        if (parameters.isBatteryOptimizationIgnoreSystemPromptExpected()) {
+            // The 'ignore battery optimizations' OS dialog is fired by the broker right after
+            // enrollment is accepted (currently used by the StrongKey WPJ upgrade flow). It must
+            // be handled before any subsequent in-WebView page (update password, second password,
+            // etc.) because the OS dialog steals focus from the embedded WebView.
+            aadLoginComponentHandler.handleBatteryOptimizationIgnoreSystemPrompt();
+        }
+
         if (parameters.isUpdateYourPasswordExpected()) {
             aadLoginComponentHandler.handlePasswordUpdate(password, parameters.getNewPasswordForUpdateScenario());
         }
