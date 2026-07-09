@@ -145,6 +145,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
     private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
+    @NonNull
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
@@ -507,7 +508,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *            case-insensitive so mixed-case registered URIs still match.
      */
     private boolean isRedirectUrl(@NonNull final String url) {
-        if (mRedirectUrl == null || mRedirectUrl.isEmpty()) {
+        // mRedirectUrl is @NonNull (set from a @NonNull constructor arg), so only the empty
+        // case needs guarding here.
+        if (mRedirectUrl.isEmpty()) {
             return false;
         }
 
