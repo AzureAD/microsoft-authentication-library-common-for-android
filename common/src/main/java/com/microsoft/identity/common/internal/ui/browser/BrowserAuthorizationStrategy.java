@@ -32,14 +32,18 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -158,20 +162,40 @@ public abstract class BrowserAuthorizationStrategy<
         final String methodTag = TAG + ":launchIntent";
         final Context appContext = getApplicationContext();
         if (appContext == null) {
-            Logger.warn(methodTag,
+            Logger.info(methodTag,
                     "Application context is null; skipping multiple-app URL scheme validation.");
         } else {
             final String redirectUri = intent.getStringExtra(
                     AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
             if (redirectUri == null) {
-                Logger.warn(methodTag,
+                Logger.info(methodTag,
                         "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
             } else {
-                BrowserRedirectValidator.validateNoMultipleAppsListening(
-                        appContext,
-                        redirectUri,
-                        LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
-                );
+                // Conditions to skip this check (brokered flows only):
+                // 1. Flight SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE is enabled (default: true)
+                // 2. Request is running in the auth process (Broker request)
+                // 3. the caller is a valid broker package
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
+                        ProcessUtil.isRunningOnAuthService(appContext)) {
+                    // Setup validator inside the flight gate to avoid unnecessary instantiation
+                    final BrokerValidator validator = new BrokerValidator(appContext);
+                    if (validator.isValidBrokerPackage(appContext.getPackageName())) {
+                        Logger.info(methodTag,
+                                "Running in broker auth process; skipping multiple-app URL scheme validation.");
+                    } else {
+                        BrowserRedirectValidator.validateNoMultipleAppsListening(
+                                appContext,
+                                redirectUri,
+                                LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                        );
+                    }
+                } else {
+                    BrowserRedirectValidator.validateNoMultipleAppsListening(
+                            appContext,
+                            redirectUri,
+                            LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                    );
+                }
             }
         }
         super.launchIntent(intent);

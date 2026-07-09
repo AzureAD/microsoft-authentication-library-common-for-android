@@ -289,7 +289,22 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * Enabled by default; can be turned off via ECS to restore the previous behaviour if needed.
      */
-    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true);
+    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true),
+
+    /**
+     * Flight to skip the multiple-app URL scheme validation when running in the broker
+     * authentication service process with a valid broker redirect URI.
+     * <p>
+     * When enabled (default), the check is bypassed for brokered flows (e.g. COBO/COPE/AM API)
+     * where a broker app's redirect URI is legitimately handled by multiple installed Microsoft
+     * apps. Disable via ECS to force the validation for all flows if needed.
+     */
+    SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE("SkipMultipleAppValidationInAuthService", true),
+
+    /**
+     * Flight to enable request origin display in the HTTP authentication dialog.
+     */
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
 
     private String key;
     private Object defaultValue;
