@@ -61,8 +61,7 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractS
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.broker.CommonTenantInfoProvider;
@@ -153,10 +152,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
     private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
+    @NonNull
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-    private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
+    private final SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
@@ -187,14 +187,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
@@ -205,10 +205,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -352,16 +352,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri.");
                 processNonceAndReAttachHeaders(view, url);
-             }
-             else if (isRedirectUrl(formattedURL)) {
-                Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
-                    Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(url);
-                } else {
-                    Logger.info(methodTag,"It is a redirect request.");
-                    processRedirectUrl(view, url);
-                }
+            }
+            // A switch_browser request arrives as {redirectUrl}/switch_browser?code=...&action_uri=...,
+            // whose path no longer equals the registered redirect URI under strict matching. Detect it
+            // here explicitly instead of nesting it behind isRedirectUrl; otherwise it would fall through
+            // to isInstallRequestUrl/processInstallRequest and the switch_browser continuation code would
+            // be delivered to the completion callback as if it were the final auth code.
+            else if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                Logger.info(methodTag,"Request to switch browser.");
+                processSwitchBrowserRequest(url);
+            } else if (isRedirectUrl(formattedURL)) {
+                Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
+                processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
@@ -499,8 +501,119 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Returns true if {@code url} is the OAuth2 redirect carrying the auth code
+     * back to the configured redirect URI.
+     * <p>
+     * Matches scheme + authority + path exactly (query/fragment ignored — they
+     * carry the code/state). Replaces a prior {@code String#startsWith} prefix
+     * match that let attacker-controlled path suffixes through
+     * (FireWatch c1bf88bd / IcM 31000000624712); defense-in-depth, since eSTS
+     * already validates the redirect URI exactly server-side.
+     *
+     * @param url lowercased URL from {@link #handleUrl}; comparison is
+     *            case-insensitive so mixed-case registered URIs still match.
+     */
     private boolean isRedirectUrl(@NonNull final String url) {
-        return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        // mRedirectUrl is @NonNull (set from a @NonNull constructor arg), so only the empty
+        // case needs guarding here.
+        if (mRedirectUrl.isEmpty()) {
+            return false;
+        }
+
+        // Kill switch: revert to the prior prefix match if disabled via ECS.
+        final boolean strictMatchingEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING);
+        if (!strictMatchingEnabled) {
+            return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        }
+
+        // Compare scheme + authority + path explicitly rather than
+        // Uri#buildUpon().clearQuery().fragment(null) + Uri#equals(). Uri#equals is exact and
+        // case-sensitive, so it would reject a legitimate single trailing-slash difference and a
+        // mixed-case registered URI; and for opaque urn: redirects clearQuery() does not strip the
+        // auth code (it lives in the scheme-specific part, not the query), which would collapse the
+        // check to a scheme-only match and reopen the prefix-confusion hole for urn: redirects.
+        try {
+            final Uri actual = Uri.parse(url);
+            final Uri expected = Uri.parse(mRedirectUrl);
+            final String expectedScheme = expected.getScheme();
+
+            // Scheme-less configured URI: fall back to strict equality after stripping any
+            // query/fragment from the incoming URL (it still carries ?code=...). Mirrors the
+            // scheme-less branch of the Kotlin isSwitchBrowserRedirectUrl so both matchers agree.
+            if (expectedScheme == null || expectedScheme.isEmpty()) {
+                return stripQueryAndFragment(url).equalsIgnoreCase(mRedirectUrl);
+            }
+            if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
+                return false;
+            }
+
+            // Opaque URIs (e.g. the broker OOB redirect urn:ietf:wg:oauth:2.0:oob)
+            // have null authority/path, so the hierarchical comparison below would
+            // degenerate to scheme-only and accept any same-scheme URI. Compare the
+            // scheme-specific part instead, minus any appended query/fragment.
+            if (expected.isOpaque() || actual.isOpaque()) {
+                if (expected.isOpaque() != actual.isOpaque()) {
+                    return false;
+                }
+                return stripQueryAndFragment(actual.getSchemeSpecificPart())
+                        .equalsIgnoreCase(stripQueryAndFragment(expected.getSchemeSpecificPart()));
+            }
+
+            if (!equalsIgnoreCaseNullSafe(actual.getAuthority(), expected.getAuthority())) {
+                return false;
+            }
+            // Single trailing slash is normalized so "/auth" matches "/auth/".
+            return normalizePath(actual.getPath())
+                    .equalsIgnoreCase(normalizePath(expected.getPath()));
+        } catch (final Throwable t) {
+            // Fail closed on unparseable URLs. Log only the exception type — its
+            // message could embed the URL (and thus the auth code).
+            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: "
+                    + t.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    private static boolean equalsIgnoreCaseNullSafe(@Nullable final String a,
+                                                    @Nullable final String b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equalsIgnoreCase(b);
+    }
+
+    private static String nullToEmpty(@Nullable final String s) {
+        return s == null ? "" : s;
+    }
+
+    /** Strips a trailing {@code ?query} and/or {@code #fragment} from {@code s}. */
+    private static String stripQueryAndFragment(@Nullable final String s) {
+        String r = nullToEmpty(s);
+        final int q = r.indexOf('?');
+        if (q >= 0) {
+            r = r.substring(0, q);
+        }
+        final int h = r.indexOf('#');
+        if (h >= 0) {
+            r = r.substring(0, h);
+        }
+        return r;
+    }
+
+    /**
+     * Removes a single trailing slash so "/auth" and "/auth/" compare equal. The empty
+     * path (path-less redirect URI) and root "/" also normalize to the same value, so a
+     * path-less registered URI still matches an incoming redirect with a trailing slash.
+     */
+    private static String normalizePath(@Nullable final String path) {
+        final String p = nullToEmpty(path);
+        if (p.endsWith("/")) {
+            return p.substring(0, p.length() - 1);
+        }
+        return p;
     }
 
     private boolean isNonceRedirect(@NonNull final String url) {
@@ -658,29 +771,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Launch the browser with the given action URI and code.
-     * <p>
-     * From the query parameters, extract the action URI and code,
-     * The constructs the URI with the action URI and code.
+     * Launch the browser with the given action URI and code. Disables the WebView until the
+     * async handler resolves so the user cannot interact with a page that is about to be
+     * replaced by SwitchBrowserActivity.
      *
-     * @param url The URL to be opened in the browser.
+     * @param view The WebView delivering the switch_browser redirect.
+     * @param url  The URL to be opened in the browser.
      */
     private void processSwitchBrowserRequest(@NonNull final String url) {
-        final String methodTag = TAG + ":processSwitchBrowserRequest";
-        try {
-            mSwitchBrowserRequestHandler.processChallenge(
-                    SwitchBrowserChallenge.constructFromRedirectUrl(url, mRequestUrl)
-            );
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
-            final String errorCode;
-            if (throwable instanceof IErrorInformation) {
-                errorCode = ((IErrorInformation) throwable).getErrorCode();
-            } else {
-                errorCode = UNKNOWN_ERROR;
-            }
-            returnError(errorCode, throwable.getMessage());
-        }
+        // The coordinator reports UI status + the terminal result to the fragment's listener.
+        mSwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync(url, mRequestUrl, mRedirectUrl);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

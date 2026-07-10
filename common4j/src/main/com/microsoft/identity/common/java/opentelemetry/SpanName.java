@@ -126,5 +126,12 @@ public enum SpanName {
     /**
      * Span name for the battery optimization exemption prompt.
      */
-    BatteryOptimizationExemption
+    BatteryOptimizationExemption,
+
+    /**
+     * Span name for rendering the request-origin row in the HTTP authentication dialog. Emitted only
+     * when the {@code EnableHttpAuthOriginDisplay} flight is on; used to confirm the flighted path is
+     * executing successfully in dashboards after the flight is ramped.
+     */
+    HttpAuthOriginDisplay
 }
