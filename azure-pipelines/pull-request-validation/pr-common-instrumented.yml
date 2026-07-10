@@ -24,11 +24,13 @@ resources:
     ref: dev
     endpoint: ANDROID_GITHUB
 
-# Instrumented tests require a Linux agent with KVM/nested virtualization for the emulator.
+# Instrumented tests need a Linux agent with KVM for the emulator. Microsoft-hosted ubuntu-latest
+# ships the Android SDK and supports nested virtualization.
+# NOTE: pool image/os sub-properties only take effect when a pipeline extends the 1ES template. A
+# standalone PR pipeline must select the OS via vmImage, otherwise a named 1ES pool returns its
+# default (Windows) agent and the bash emulator steps fail under cmd.exe.
 pool:
-  name: MSSecurity-1ES-Build-Agents-Pool
-  image: MSSecurity-1ES-Ubuntu-2204
-  os: linux
+  vmImage: ubuntu-latest
 
 stages:
   - stage: instrumented_tests
@@ -49,43 +51,33 @@ stages:
       - template: ../templates/steps/automation-cert.yml
       - script: echo "##vso[build.addbuildtag]AndroidSystemImage=$(android.system.image)"
         displayName: Tag build with system image
-      - script: |
-          #!/usr/bin/env bash
+      - bash: |
           set -e
-          echo "Starting android emulator"
-          echo "See https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/android?view=azure-devops#test-on-the-android-emulator"
+          echo "Preparing Android emulator (system image: $ANDROID_SYSTEM_IMAGE)"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
 
-          # Need to install missing packages onto linux agent
-          sudo apt update && sudo apt install -y android-sdk android-tools-adb
+          # Grant the agent user access to /dev/kvm so the emulator can use hardware acceleration.
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
-          cd $ANDROID_HOME
-          sudo wget -q https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
-          sudo unzip -q commandlinetools-linux-6609375_latest.zip -d cmdline-tools
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          echo "y" | "$SDKMANAGER" --install "$ANDROID_SYSTEM_IMAGE" "platform-tools" "emulator"
 
-          # Install AVD system image
-          echo "Install AVD system image"
-          yes | sudo $ANDROID_HOME/cmdline-tools/tools/bin/sdkmanager --install "$ANDROID_SYSTEM_IMAGE"
-
-          # Create emulator
-          echo "Create emulator"
-          echo "no" | sudo $ANDROID_HOME/cmdline-tools/tools/bin/avdmanager create avd -n android_emulator -k "$ANDROID_SYSTEM_IMAGE" --force
-
-          # Confirm KVM availability
-          sudo apt-get install -y cpu-checker
-          sudo /usr/sbin/kvm-ok
+          echo "no" | "$AVDMANAGER" create avd -n android_emulator -k "$ANDROID_SYSTEM_IMAGE" --force
 
           echo "Starting emulator"
-          sudo nohup $ANDROID_HOME/emulator/emulator -avd android_emulator -no-window -no-audio -wipe-data -no-snapshot -no-boot-anim > /dev/null 2>&1 &
+          nohup "$ANDROID_HOME/emulator/emulator" -avd android_emulator -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot > /dev/null 2>&1 &
 
-          echo "Wait for device to finish booting"
-          sudo $ANDROID_HOME/platform-tools/adb wait-for-device shell "while [[ -z \$(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82"
-          sudo $ANDROID_HOME/platform-tools/adb devices
-          echo "Emulator started"
+          echo "Waiting for device to finish booting"
+          "$ANDROID_HOME/platform-tools/adb" wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
+          "$ANDROID_HOME/platform-tools/adb" devices
+          echo "Emulator ready"
         displayName: 'Start Android emulator'
-      - script: |
-          #!/usr/bin/env bash
+      - bash: |
           echo "Push certificate to emulator"
-          adb push 'LabAuth.pfx' '/data/local/tmp/LabAuth.pfx'
+          "$ANDROID_HOME/platform-tools/adb" push 'LabAuth.pfx' '/data/local/tmp/LabAuth.pfx'
         displayName: 'Push certificate to emulator'
       - bash: |
           mkdir -p $(Build.ArtifactStagingDirectory)/common_logs
