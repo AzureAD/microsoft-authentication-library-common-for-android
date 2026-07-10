@@ -78,7 +78,7 @@ stages:
           sudo nohup $ANDROID_HOME/emulator/emulator -avd android_emulator -no-window -no-audio -wipe-data -no-snapshot -no-boot-anim > /dev/null 2>&1 &
 
           echo "Wait for device to finish booting"
-          sudo $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
+          sudo $ANDROID_HOME/platform-tools/adb wait-for-device shell "while [[ -z \$(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82"
           sudo $ANDROID_HOME/platform-tools/adb devices
           echo "Emulator started"
         displayName: 'Start Android emulator'
