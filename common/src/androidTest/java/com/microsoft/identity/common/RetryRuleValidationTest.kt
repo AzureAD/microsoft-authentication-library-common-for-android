@@ -26,6 +26,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.microsoft.identity.internal.testutils.annotations.RetryFlakyTest
 import com.microsoft.identity.internal.testutils.rules.FlakyTestRetryRule
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,5 +64,35 @@ class RetryRuleValidationTest {
             "Simulated flaky failure on attempt $attempt (designed to pass on attempt 3)",
             attempt >= 3
         )
+    }
+
+    // Counter persists across retries because the rule re-invokes on the same test instance.
+    private var assumptionAttempts = 0
+
+    /**
+     * Verifies that a test skipped via [Assume] is **not** retried, even when [RetryFlakyTest] is
+     * present.
+     *
+     * Behaviour when the rule is correct:
+     * 1. `assumptionAttempts` is incremented to 1.
+     * 2. The assertion `assumptionAttempts == 1` passes.
+     * 3. `Assume.assumeTrue(false)` throws [org.junit.AssumptionViolatedException].
+     * 4. The rule catches it and re-throws immediately → the test is reported as SKIPPED/IGNORED,
+     *    **not** retried.
+     *
+     * Behaviour if the rule were broken (retrying on assumption violation):
+     * - On the second invocation `assumptionAttempts` would be 2, the assertion would **fail**
+     *   (2 ≠ 1), and the test would be reported as FAILED rather than SKIPPED — surfacing the
+     *   regression.
+     */
+    @Test
+    @RetryFlakyTest(retryCount = 3)
+    fun assumptionViolated_isSkippedWithoutRetry() {
+        assumptionAttempts++
+        Assert.assertEquals(
+            "AssumptionViolatedException must not trigger a retry: test body should execute exactly once",
+            1, assumptionAttempts
+        )
+        Assume.assumeTrue("Simulated skip via Assume (should never retry)", false)
     }
 }
