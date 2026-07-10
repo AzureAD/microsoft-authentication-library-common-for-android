@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 24.5.0-RC1
+----------
 - [PATCH] Security: match redirect URI and switch_browser routing by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
 - [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
 - [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator (#3173)
