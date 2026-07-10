@@ -278,6 +278,13 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
     // Instrumented dependencies
+    // testutils is pulled in solely for FlakyTestRetryRule + @RetryFlakyTest (retrying flaky
+    // instrumented tests; the org.gradle.test-retry plugin only covers JVM/Robolectric unit tests).
+    // transitive = false keeps only the rule's classes and avoids dragging testutils' whole
+    // transitive graph onto the androidTest classpath.
+    androidTestImplementation(project(path: ':testutils')) {
+        transitive = false
+    }
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
     androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
     androidTestImplementation("androidx.test.espresso:espresso-core:$rootProject.ext.espressoCoreVersion", {
