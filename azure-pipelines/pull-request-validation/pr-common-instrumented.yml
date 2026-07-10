@@ -48,7 +48,22 @@ stages:
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
           echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
         displayName: 'Set VSTS Fields in Environment'
-      - template: ../templates/steps/automation-cert.yml
+      # The repo's automation-cert.yml installs the pfx into a Windows cert store via
+      # Import-PfxCertificate (Windows-only). Instrumented tests run on Linux and only need the
+      # pfx file on disk to adb-push it, so we download the secret and write the file directly.
+      - task: AzureKeyVault@2
+        displayName: 'Azure Key Vault: download LabAuth cert'
+        inputs:
+          azureSubscription: 'AuthSdkResourceManager'
+          KeyVaultName: 'msidlabs'
+          SecretsFilter: 'LabAuth'
+      - bash: |
+          set -e
+          echo "$LAB_AUTH_B64" | base64 --decode > "$(Build.SourcesDirectory)/LabAuth.pfx"
+          ls -l "$(Build.SourcesDirectory)/LabAuth.pfx"
+        displayName: 'Write LabAuth cert to workspace'
+        env:
+          LAB_AUTH_B64: $(LabAuth)
       - script: echo "##vso[build.addbuildtag]AndroidSystemImage=$(android.system.image)"
         displayName: Tag build with system image
       - bash: |
