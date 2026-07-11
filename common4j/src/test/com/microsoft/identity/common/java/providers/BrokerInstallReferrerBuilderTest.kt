@@ -24,47 +24,46 @@ package com.microsoft.identity.common.java.providers
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BrokerInstallReferrerBuilderTest {
 
     @Test
-    fun withResumePointer_roundTrips() {
-        val url = BrokerInstallReferrerBuilder.withResumePointer(
+    fun withInstallReferrer_setsBarePackage() {
+        val url = BrokerInstallReferrerBuilder.withInstallReferrer(
             "https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal",
-            correlationId = "abc-123",
             originPackage = "com.contoso.app"
         )
-        val parsed = BrokerInstallReferrerBuilder.parseResumePointer(
-            url.substringAfter("referrer=").substringBefore("&").let { decode(it) }
-        )
-        assertEquals("abc-123" to "com.contoso.app", parsed)
+        // Company Portal's InstallReferrerReceiver reads the referrer as a bare package string, so the
+        // referrer value must be exactly the origin package (no key=value pointer).
+        val referrer = decode(url.substringAfter("referrer=").substringBefore("&"))
+        assertEquals("com.contoso.app", referrer)
     }
 
     @Test
-    fun withResumePointer_keepsDestination() {
-        val url = BrokerInstallReferrerBuilder.withResumePointer(
+    fun withInstallReferrer_keepsDestination() {
+        val url = BrokerInstallReferrerBuilder.withInstallReferrer(
             "https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal",
-            "cid", "pkg"
+            "com.contoso.app"
         )
         assertTrue(url.contains("id=com.microsoft.windowsintune.companyportal"))
     }
 
     @Test
-    fun withResumePointer_carriesNoLoginHint() {
-        val url = BrokerInstallReferrerBuilder.withResumePointer(
+    fun withInstallReferrer_carriesNoCorrelationIdOrRedirectUri() {
+        val url = BrokerInstallReferrerBuilder.withInstallReferrer(
             "https://play.google.com/store/apps/details?id=com.azure.authenticator",
-            "cid", "pkg"
+            "com.contoso.app"
         )
-        assertFalse(url.contains("@"))
+        assertFalse(url.contains("resumeCid"))
+        assertFalse(url.contains("redirectUri"))
     }
 
     @Test
-    fun parseResumePointer_rejectsNonResumeReferrer() {
-        assertNull(BrokerInstallReferrerBuilder.parseResumePointer("com.contoso.app"))
-        assertNull(BrokerInstallReferrerBuilder.parseResumePointer(null))
+    fun withInstallReferrer_returnsOriginalOnUnparseableUrl() {
+        val bad = "::not a uri::"
+        assertEquals(bad, BrokerInstallReferrerBuilder.withInstallReferrer(bad, "com.contoso.app"))
     }
 
     private fun decode(s: String) = java.net.URLDecoder.decode(s, "UTF-8")

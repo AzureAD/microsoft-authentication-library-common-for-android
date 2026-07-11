@@ -51,25 +51,6 @@
             android:taskAffinity=""
             android:exported="false" />
 
-        <!-- Broker-install request resume: common-provided deep-link receiver. The broker deep-links
-             back to msauth://<originPkg>/resume?resume=<cid> after install. The host equals the
-             consuming app's package (== ${applicationId}), so this receiver + intent-filter auto-merge
-             into every consumer — consumers register nothing of their own. See BrokerInstallResumeActivity. -->
-        <activity
-            android:name="com.microsoft.identity.common.internal.providers.BrokerInstallResumeActivity"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:excludeFromRecents="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="msauth"
-                    android:host="${applicationId}"
-                    android:pathPrefix="/resume" />
-            </intent-filter>
-        </activity>
-
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to

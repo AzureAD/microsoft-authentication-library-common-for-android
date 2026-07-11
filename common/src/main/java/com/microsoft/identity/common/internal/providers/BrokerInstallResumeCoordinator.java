@@ -72,10 +72,13 @@ import java.util.concurrent.TimeoutException;
  * thread on an in-memory {@link ResultFuture}, keeping the request's original djinni sink pending.
  * No token or PII leaves the device; nothing is persisted.
  *
- * <p><strong>Resume</strong> (post-install): after the broker is installed and Company Portal
- * redirects back to {@code msauth://<pkg>/resume?resume=<id>}, {@link BrokerInstallResumeActivity}
- * (running in the <em>original app process</em>) calls {@link #resume(Activity, String)}. This
- * re-runs the acquire in broker context via the caller-supplied {@link IBrokerInstallResumeRetry}
+ * <p><strong>Resume</strong> (post-install): Company Portal's existing install-referrer flow brings
+ * the origin app back to the foreground after install (no Company Portal change, and no correlation
+ * id or deep link round-tripped — the resume id is held here in-process). A
+ * {@link ForegroundCpSupportWatcher} registered while parked detects that return: if Company Portal
+ * is present and resume-capable it self-resumes via {@link #resumeParkedOnForeground(Activity, String)}
+ * (BAL-safe because an activity just resumed); if it is present but too old it fails the request fast.
+ * Resume re-runs the acquire in broker context via the caller-supplied {@link IBrokerInstallResumeRetry}
  * — which now routes to the freshly installed broker — and completes the parked future, unblocking
  * the original thread so OneAuth delivers the token on its original sink with no app-side resume code.
  *
@@ -103,14 +106,14 @@ public final class BrokerInstallResumeCoordinator {
 
     /**
      * Upper bound on how long the parked {@code acquireToken} thread blocks awaiting resume. Sized to
-     * cover a user-paced Play Store install + Company Portal round-trip, but deliberately short so that
-     * when Company Portal does not fire the post-install resume deep link (e.g. a CP build that has not
-     * implemented the redirect), the request fails back to the caller's normal terminal broker-install
-     * behavior in a few minutes instead of holding the thread/sink for a long time. On timeout the user
-     * can simply retry: Company Portal is installed by then, so a fresh request takes the normal broker
-     * path and succeeds.
+     * cover a user-paced Play Store install + Company Portal return, but deliberately short: past this
+     * window the user has almost certainly abandoned the install, so the request fails back to the
+     * caller's normal terminal broker-install behavior instead of holding the interactive slot/sink. On
+     * timeout the user can simply retry: Company Portal is installed by then, so a fresh request takes
+     * the normal broker path and succeeds. Blocking here does not starve background silent-token
+     * requests (interactive requests do not use OneAuth's background thread pool).
      */
-    private static final long INSTALL_RESUME_TIMEOUT_MINUTES = 3;
+    private static final long INSTALL_RESUME_TIMEOUT_SECONDS = 90;
 
     /**
      * Minimum Company Portal {@code versionCode} that implements the post-install resume redirect.
@@ -209,10 +212,10 @@ public final class BrokerInstallResumeCoordinator {
         final ResultFuture<AcquireTokenResult> future = new ResultFuture<>();
         mBrokerParked.put(resumeId, new BrokerParkedEntry(retry, parameters, future));
 
-        // Watch for the user returning to the app after the Play Store. If Company Portal is installed
-        // but too old to ever fire the post-install resume deep link, fail the request fast on the next
-        // foreground instead of blocking until the park timeout. A supported CP is left to drive its own
-        // redirect (BrokerInstallResumeActivity -> resume), keeping a single consistent resume path.
+        // Watch for the user returning to the app after the Play Store (Company Portal's existing
+        // install-referrer flow redirects them back). On that foreground, a present-and-supported
+        // Company Portal self-resumes the parked request in broker context; a present-but-too-old
+        // Company Portal fails the request fast instead of blocking until the park timeout.
         final Application application = asApplication(appContext);
         final ForegroundCpSupportWatcher foregroundWatcher =
                 (application == null) ? null : new ForegroundCpSupportWatcher(application, resumeId);
@@ -220,11 +223,9 @@ public final class BrokerInstallResumeCoordinator {
             application.registerActivityLifecycleCallbacks(foregroundWatcher);
         }
 
-        final String referrerUrl = BrokerInstallReferrerBuilder.withResumePointer(
+        final String referrerUrl = BrokerInstallReferrerBuilder.withInstallReferrer(
                 installUrl,
-                resumeId,
-                appContext.getPackageName(),
-                parameters.getRedirectUri());
+                appContext.getPackageName());
 
         Log.i(POC_TAG, "RESUME-PARKED broker-path request parked in common; resumeId=" + resumeId);
         Logger.info(methodTag, "Parked broker-install request; launching Company Portal install.");
@@ -233,8 +234,8 @@ public final class BrokerInstallResumeCoordinator {
         launchInstall(appContext, referrerUrl);
 
         try {
-            // Block the OneAuth acquireToken thread until the deep-link resume completes the future.
-            return future.get(INSTALL_RESUME_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            // Block the OneAuth acquireToken thread until the foreground self-resume completes the future.
+            return future.get(INSTALL_RESUME_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (final TimeoutException e) {
             Logger.warn(methodTag, "Timed out awaiting broker-install resume; failing back to caller.");
             return null;
@@ -309,25 +310,24 @@ public final class BrokerInstallResumeCoordinator {
 
     /**
      * One-shot {@link Application.ActivityLifecycleCallbacks} registered while a broker request is
-     * parked, used <em>only</em> to fail the request fast when the installed Company Portal is too old
-     * to ever fire the post-install resume deep link. The user returns to the app manually after the
-     * Play Store, and app-foreground is the reliable signal for that return. On the next foreground:
+     * parked. Company Portal's existing install-referrer flow redirects the user back to the origin
+     * app after install, and app-foreground is the reliable signal for that return. On the next
+     * foreground:
      *
      * <ul>
      *   <li>CP absent -> install not finished (or user bailed); keep waiting, re-check next foreground.</li>
      *   <li>CP present but below {@link #MIN_CP_VERSION_SUPPORTING_RESUME} -> fail fast with the
-     *       terminal broker error instead of blocking until the park timeout, since that CP build will
-     *       never redirect.</li>
-     *   <li>CP present and supported -> do nothing: a supported CP implements the redirect, so we let
-     *       CP's deep link ({@link BrokerInstallResumeActivity} -> {@link #resume(Activity, String)})
-     *       drive the resume. This keeps a single, consistent resume trigger across the MSAL and
-     *       OneAuth flows and avoids a self-resume racing CP's redirect. If a supported CP somehow
-     *       fails to redirect, the park timeout is the safety net (user retries -> CP is installed ->
-     *       normal broker path succeeds).</li>
+     *       terminal broker error instead of blocking until the park timeout, since that CP build
+     *       cannot complete the resume.</li>
+     *   <li>CP present and supported -> self-resume the parked request in broker context via
+     *       {@link #resumeParkedOnForeground(Activity, String)} on a background thread (the acquire
+     *       is blocking/interactive and must not run on the main thread). BAL-safe because an activity
+     *       just resumed, so the app is in the foreground.</li>
      * </ul>
      *
-     * <p>Deduped against CP's redirect through {@code mBrokerParked.remove}: whichever path removes the
-     * entry first wins, so a fail-fast and a late deep link cannot both drive the same request.
+     * <p>One-shot via {@code mHandled}, and deduped through {@code mBrokerParked.remove}: whichever
+     * path removes the entry first wins, so a fail-fast, a self-resume, and the park timeout cannot
+     * drive the same request twice.
      */
     private static final class ForegroundCpSupportWatcher implements Application.ActivityLifecycleCallbacks {
         private final Application mApplication;
@@ -345,21 +345,35 @@ public final class BrokerInstallResumeCoordinator {
                 return;
             }
             if (!INSTANCE.mBrokerParked.containsKey(mResumeId)) {
-                // Resolved by another path (CP deep-link resume or park timeout); stop watching.
+                // Resolved by another path (self-resume already ran, or park timeout); stop watching.
                 unregister();
                 return;
             }
-            // Only act on a present-but-unsupported CP. ABSENT (install in progress) and SUPPORTED
-            // (CP will fire its own redirect) both keep waiting.
-            if (checkCompanyPortalSupport(activity) != CpSupport.UNSUPPORTED) {
+            final CpSupport support = checkCompanyPortalSupport(activity);
+            if (support == CpSupport.ABSENT) {
+                // Play Store install not finished yet; re-check on the next foreground.
                 return;
             }
             if (!mHandled.compareAndSet(false, true)) {
                 return;
             }
             unregister();
-            Log.i(POC_TAG, "RESUME-FOREGROUND CP below resume-support floor; failing fast; resumeId=" + mResumeId);
-            INSTANCE.failFastBrokerParked(mResumeId);
+            if (support == CpSupport.UNSUPPORTED) {
+                Log.i(POC_TAG, "RESUME-FOREGROUND CP below resume-support floor; failing fast; resumeId=" + mResumeId);
+                INSTANCE.failFastBrokerParked(mResumeId);
+                return;
+            }
+            // SUPPORTED: broker is installed and can resume. The app is in the foreground (an activity
+            // just resumed), so launching the broker interactive UI now is BAL-safe. Run the blocking
+            // acquire off the main thread.
+            Log.i(POC_TAG, "RESUME-FOREGROUND CP installed and supported; self-resuming; resumeId=" + mResumeId);
+            final Activity foregroundActivity = activity;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    INSTANCE.resumeParkedOnForeground(foregroundActivity, mResumeId);
+                }
+            }, "broker-install-foreground-resume").start();
         }
 
         private void unregister() {
@@ -386,24 +400,25 @@ public final class BrokerInstallResumeCoordinator {
     }
 
     /**
-     * Resumes a parked broker-path (OneAuth) request in broker context and delivers the token on the
-     * original djinni sink by completing the parked future (see {@link #resumeBrokerParked}).
+     * Resumes a parked broker-path (OneAuth) request when the origin app returns to the foreground
+     * after Company Portal is installed. Re-runs the acquire in broker context and delivers the token
+     * on the original djinni sink by completing the parked future (see {@link #resumeBrokerParked}).
+     * The resume id is the in-process correlation id captured at park time — nothing is round-tripped
+     * through Company Portal.
      *
-     * @param activity the (foreground) deep-link activity used to launch the broker UI (BAL-safe).
-     * @param resumeId the resume key carried back on the Company Portal redirect.
-     * @return true if a parked request was found and resume was dispatched; false otherwise.
+     * @param activity the foreground app activity used to launch the broker UI (BAL-safe).
+     * @param resumeId the in-process resume key (request correlation id).
+     * @return true if a parked request was found and resumed; false otherwise.
      */
-    public boolean resume(@NonNull final Activity activity, @NonNull final String resumeId) {
-        // Complete the blocked OneAuth acquireToken thread by re-running the acquire in broker context
-        // and delivering the result on its future. Remove (not peek) so a duplicate resume deep-link
-        // cannot re-launch the broker UI twice.
+    boolean resumeParkedOnForeground(@NonNull final Activity activity, @NonNull final String resumeId) {
+        // Remove (not peek) so a duplicate foreground signal cannot re-launch the broker UI twice.
         final BrokerParkedEntry brokerEntry = mBrokerParked.remove(resumeId);
         if (brokerEntry != null) {
             return resumeBrokerParked(activity, resumeId, brokerEntry);
         }
 
         Log.w(POC_TAG, "RESUME-NO-PARKED no parked request for resumeId=" + resumeId);
-        Logger.warn(TAG, "No parked request found to resume (expired process or unknown id).");
+        Logger.warn(TAG, "No parked request found to resume (expired process or already resumed).");
         return false;
     }
 
@@ -429,37 +444,14 @@ public final class BrokerInstallResumeCoordinator {
     }
 
     /**
-     * Hands terminal-result handling to the deep-link host activity, which lands the user back in
-     * the origin app from a foreground-safe moment (see
-     * {@link BrokerInstallResumeActivity#onResumedRequestTerminated()}). Falls back to simply
-     * finishing the host if it is not the expected resume activity.
-     */
-    private static void returnToOriginApp(@Nullable final Activity activity) {
-        if (activity instanceof BrokerInstallResumeActivity) {
-            ((BrokerInstallResumeActivity) activity).onResumedRequestTerminated();
-        } else {
-            finishHost(activity);
-        }
-    }
-
-    private static void finishHost(@Nullable final Activity activity) {
-        if (activity != null && !activity.isFinishing()) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    activity.finish();
-                }
-            });
-        }
-    }
-
-    /**
      * Resumes a broker-path (OneAuth) parked request: re-runs {@code acquireToken} in broker context
      * (broker is now installed) and completes the parked {@link ResultFuture}, which unblocks the
-     * original {@code acquireToken} thread so OneAuth delivers the token on its original sink.
+     * original {@code acquireToken} thread so OneAuth delivers the token on its original sink. The
+     * interactive broker UI launches on top of the foreground app activity and returns to it on
+     * completion, so there is no host activity to finish here.
      *
-     * @param activity the foreground deep-link activity used to launch the broker UI (BAL-safe).
-     * @param resumeId the resume key carried back on the Company Portal redirect.
+     * @param activity the foreground app activity used to launch the broker UI (BAL-safe).
+     * @param resumeId the in-process resume key (request correlation id).
      * @param entry    the parked broker request.
      * @return true (a broker-path request was found and its resume was driven).
      */
@@ -468,7 +460,7 @@ public final class BrokerInstallResumeCoordinator {
                                        @NonNull final BrokerParkedEntry entry) {
         final String methodTag = TAG + ":resumeBrokerParked";
 
-        Log.i(POC_TAG, "RESUME-DEEPLINK broker-path resume; resumeId=" + resumeId);
+        Log.i(POC_TAG, "RESUME-FOREGROUND broker-path resume; resumeId=" + resumeId);
         showStep(activity,
                 "Broker-install resume \u2461/\u2463: Company Portal installed \u2192 resuming request");
 
@@ -505,8 +497,6 @@ public final class BrokerInstallResumeCoordinator {
             // Unblocks the parked thread with the failure so the OneAuth sink surfaces a real error
             // rather than hanging until the install-resume timeout elapses.
             entry.future.setException(e);
-        } finally {
-            returnToOriginApp(activity);
         }
         return true;
     }

@@ -26,62 +26,41 @@ import com.microsoft.identity.common.java.util.CommonURIBuilder
 import java.net.URISyntaxException
 
 /**
- * Adds the broker-install-resume **pointer** to a Play Store install link. Only the correlation id
- * (and origin package) ride the install referrer — never the request payload or PII such as the
- * login hint — so nothing sensitive transits the Play Store. The freshly installed broker reads the
- * referrer to look up the request locally and resume it. The link must already be allowlisted by
- * [BrokerInstallLinkValidator]; this builder does not alter the destination.
+ * Sets the Play Store **install referrer** to the calling app's package, matching Company Portal's
+ * existing {@code InstallReferrerReceiver} contract: CP reads the referrer as a bare origin-package
+ * string, stores it, and on foreground redirects the user back to that app after install.
+ *
+ * <p>No correlation id or redirect uri is sent through the referrer. The referrer is a one-way
+ * channel (app -> Google Play -> Company Portal) and CP's redirect is package-based, so nothing can
+ * round-trip back to us here. The resume correlation id is held in-process by
+ * [BrokerInstallResumeCoordinator], and the resume is driven by the app returning to the foreground
+ * after CP's redirect — so the referrer only needs to tell CP which app to send the user back to.
+ * The link must already be allowlisted by [BrokerInstallLinkValidator]; this builder does not alter
+ * the destination.
  */
 object BrokerInstallReferrerBuilder {
 
     private const val PARAM_REFERRER = "referrer"
-    private const val POINTER_CORRELATION_ID = "resumeCid"
-    private const val POINTER_PACKAGE = "originPkg"
-    private const val POINTER_REDIRECT_URI = "redirectUri"
 
     /**
-     * Appends an encoded resume pointer to [installUrl]'s `referrer` parameter.
+     * Sets [installUrl]'s `referrer` parameter to [originPackage].
      *
      * @param installUrl Allowlisted Play/fwlink install URL.
-     * @param correlationId Single-use resume key.
-     * @param originPackage Package that triggered the install; used for verification on resume.
-     * @param redirectUri The app's msauth redirect uri; Company Portal uses it to redirect the user
-     *   straight back to the calling app after install (already public — never PII).
-     * @return URL with the pointer set, or the original [installUrl] if it cannot be parsed.
+     * @param originPackage Package that triggered the install; Company Portal uses it to redirect the
+     *   user back to the calling app after install.
+     * @return URL with the referrer set, or the original [installUrl] if it cannot be parsed.
      */
     @JvmStatic
-    @JvmOverloads
-    fun withResumePointer(
+    fun withInstallReferrer(
         installUrl: String,
-        correlationId: String,
-        originPackage: String,
-        redirectUri: String? = null
+        originPackage: String
     ): String {
         val builder: CommonURIBuilder = try {
             CommonURIBuilder(installUrl)
         } catch (e: URISyntaxException) {
             return installUrl
         }
-        val pointer = buildString {
-            append("$POINTER_CORRELATION_ID=$correlationId;$POINTER_PACKAGE=$originPackage")
-            if (!redirectUri.isNullOrBlank()) {
-                append(";$POINTER_REDIRECT_URI=$redirectUri")
-            }
-        }
-        builder.setParameter(PARAM_REFERRER, pointer)
+        builder.setParameter(PARAM_REFERRER, originPackage)
         return builder.toString()
-    }
-
-    /** Parses a referrer pointer into [correlationId, originPackage], or null if not a resume pointer. */
-    @JvmStatic
-    fun parseResumePointer(referrer: String?): Pair<String, String>? {
-        if (referrer.isNullOrBlank()) return null
-        val parts = referrer.split(";").mapNotNull {
-            val kv = it.split("=", limit = 2)
-            if (kv.size == 2) kv[0] to kv[1] else null
-        }.toMap()
-        val cid = parts[POINTER_CORRELATION_ID] ?: return null
-        val pkg = parts[POINTER_PACKAGE] ?: return null
-        return cid to pkg
     }
 }
