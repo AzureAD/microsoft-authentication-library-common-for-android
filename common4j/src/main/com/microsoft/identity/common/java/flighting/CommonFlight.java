@@ -80,13 +80,6 @@ public enum CommonFlight implements IFlightConfig {
     STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
 
     /**
-     * Flight to enable resuming an in-flight interactive request after a CA-triggered broker install
-     * (Company Portal). When on, the request is persisted before install and resumed in broker
-     * context afterwards. Off by default; full fallback to current behavior when disabled.
-     */
-    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false),
-
-    /**
      * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
      */
     ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),

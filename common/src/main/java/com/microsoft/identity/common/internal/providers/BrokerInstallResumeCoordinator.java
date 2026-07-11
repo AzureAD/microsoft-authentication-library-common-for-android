@@ -23,9 +23,13 @@
 package com.microsoft.identity.common.internal.providers;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -33,53 +37,47 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.pm.PackageInfoCompat;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
-import com.microsoft.identity.common.java.commands.CommandCallback;
-import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
-import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.java.controllers.CommandDispatcher;
-import com.microsoft.identity.common.java.controllers.IControllerFactory;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.BrokerInstallLinkValidator;
 import com.microsoft.identity.common.java.providers.BrokerInstallReferrerBuilder;
-import com.microsoft.identity.common.java.providers.BrokerInstallResumeParkRegistry;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeoutException;
 
 /**
- * In-memory coordinator for broker-install request resume, owned entirely by {@code common}.
+ * In-memory coordinator for broker-install request resume, owned entirely by {@code common} and
+ * driven by OneAuth's {@code BrokerClient}.
  *
- * <p><strong>Park</strong> (pre-install): when an interactive request is blocked by a
- * Conditional-Access policy that requires installing the broker (Company Portal), the WebView client
- * parks the in-flight {@link InteractiveTokenCommand} here — holding its original callback, request
- * parameters, controller factory, and the UPN extracted from the CA redirect — and registers its
- * correlation id in {@link BrokerInstallResumeParkRegistry} so {@code CommandDispatcher} suppresses
- * the {@code BROKER_INSTALLATION} error rather than returning it to the app. No token or PII leaves
- * the device; nothing is persisted.
+ * <p><strong>Park</strong> (pre-install): when an interactive OneAuth request is blocked by a
+ * Conditional-Access policy that requires installing the broker (Company Portal),
+ * {@code BrokerClient} calls {@link #installParkAndAwait} <em>before</em> any broker controller
+ * exists. That launches the Company Portal install and blocks the calling {@code acquireToken}
+ * thread on an in-memory {@link ResultFuture}, keeping the request's original djinni sink pending.
+ * No token or PII leaves the device; nothing is persisted.
  *
  * <p><strong>Resume</strong> (post-install): after the broker is installed and Company Portal
  * redirects back to {@code msauth://<pkg>/resume?resume=<id>}, {@link BrokerInstallResumeActivity}
  * (running in the <em>original app process</em>) calls {@link #resume(Activity, String)}. This
- * re-dispatches the request through the same {@code MSALControllerFactory} — which now routes to the
- * broker because it is installed — with the UPN prepopulated, and forwards the token result to the
- * <em>original</em> callback. The calling app therefore receives the token on its original
- * {@code acquireToken} callback with no app-side resume code.
+ * re-runs the acquire in broker context via the caller-supplied {@link IBrokerInstallResumeRetry}
+ * — which now routes to the freshly installed broker — and completes the parked future, unblocking
+ * the original thread so OneAuth delivers the token on its original sink with no app-side resume code.
  *
  * <p>Because state is in-memory and process-scoped, a process death during the Play Store install
  * loses the parked request (an accepted trade-off for this design).
@@ -93,24 +91,42 @@ public final class BrokerInstallResumeCoordinator {
 
     public static final BrokerInstallResumeCoordinator INSTANCE = new BrokerInstallResumeCoordinator();
 
-    private final ConcurrentMap<String, ParkedEntry> mParked = new ConcurrentHashMap<>();
-
     /**
-     * Broker-path (OneAuth) parked requests, keyed by correlation id. Distinct from {@link #mParked}
-     * (the MSAL embedded-WebView / {@code CommandDispatcher} path): OneAuth drives its own djinni
-     * {@code BrokerEventSink} through a <em>blocking</em> {@code BrokerMsalController.acquireToken}
-     * call on a background thread, not a {@code CommandCallback}. Parking that request therefore means
-     * holding a {@link ResultFuture} the blocked thread is waiting on; resume re-runs the broker
-     * acquire and completes the future, which returns the token on the original OneAuth sink.
+     * Broker-path (OneAuth) parked requests, keyed by correlation id. OneAuth drives its own djinni
+     * {@code BrokerEventSink} through a <em>blocking</em> {@code BrokerClient.getTokenInteractivelyInternal}
+     * call on a background thread. Parking that request therefore means holding a {@link ResultFuture}
+     * the blocked thread is waiting on; resume invokes the caller's {@link IBrokerInstallResumeRetry}
+     * (fresh broker discovery + re-acquire) and completes the future, which returns the token on the
+     * original OneAuth sink.
      */
     private final ConcurrentMap<String, BrokerParkedEntry> mBrokerParked = new ConcurrentHashMap<>();
 
     /**
-     * Upper bound on how long the parked {@code acquireToken} thread blocks awaiting resume. Covers a
-     * user-paced Play Store install + Company Portal round-trip; on timeout the request fails back to
-     * the caller's normal terminal broker-installation behavior rather than blocking forever.
+     * Upper bound on how long the parked {@code acquireToken} thread blocks awaiting resume. Sized to
+     * cover a user-paced Play Store install + Company Portal round-trip, but deliberately short so that
+     * when Company Portal does not fire the post-install resume deep link (e.g. a CP build that has not
+     * implemented the redirect), the request fails back to the caller's normal terminal broker-install
+     * behavior in a few minutes instead of holding the thread/sink for a long time. On timeout the user
+     * can simply retry: Company Portal is installed by then, so a fresh request takes the normal broker
+     * path and succeeds.
      */
-    private static final long INSTALL_RESUME_TIMEOUT_MINUTES = 10;
+    private static final long INSTALL_RESUME_TIMEOUT_MINUTES = 3;
+
+    /**
+     * Minimum Company Portal {@code versionCode} that implements the post-install resume redirect.
+     * When the app returns to the foreground after the Play Store install, the parked request checks
+     * the installed CP against this floor: below it we fail the request fast (that CP build will never
+     * fire the resume deep link, so waiting out the park timeout is pointless); at/above it we do
+     * nothing and let CP's own redirect drive the resume, keeping a single consistent resume path.
+     *
+     * <p>TODO: set this to the first Company Portal {@code versionCode} that ships the redirect once
+     * that build is released. Left at {@code 0} for now so any installed CP is treated as supported
+     * (the version gate never fails fast until the real floor is known).
+     */
+    private static final long MIN_CP_VERSION_SUPPORTING_RESUME = 0L;
+
+    /** Outcome of inspecting the installed Company Portal for resume support on foreground. */
+    private enum CpSupport { ABSENT, UNSUPPORTED, SUPPORTED }
 
     private BrokerInstallResumeCoordinator() {
         // singleton
@@ -143,31 +159,40 @@ public final class BrokerInstallResumeCoordinator {
      * {@code acquireToken} thread until the freshly installed broker resumes the request, returning
      * the token on the caller's original (OneAuth) sink.
      *
-     * <p>Unlike {@link #park(String, InteractiveTokenCommand, String)} (the MSAL embedded-WebView /
-     * {@code CommandDispatcher} path), this is driven from {@code BrokerMsalController.acquireToken}
-     * on the broker path — where real 1P (OneAuth) apps actually receive the Conditional-Access
-     * install challenge. OneAuth's {@code BrokerClient} calls {@code acquireToken} synchronously on a
-     * background thread and delivers whatever it returns on its djinni {@code BrokerEventSink}; so we
-     * "keep the sink pending" simply by blocking that thread on a {@link ResultFuture} until resume.
+     * <p>This is driven from OneAuth's {@code BrokerClient} on the broker path — where real 1P
+     * (OneAuth) apps actually receive the Conditional-Access install challenge. Because the broker
+     * (Company Portal) is not installed yet, no broker controller
+     * exists, so {@code BrokerClient} parks here <em>before</em> any controller call and supplies a
+     * {@link IBrokerInstallResumeRetry} to rebind + re-acquire once it is. {@code BrokerClient} calls
+     * {@code getTokenInteractivelyInternal} synchronously on a background thread and delivers whatever
+     * it returns on its djinni {@code BrokerEventSink}; so we "keep the sink pending" simply by
+     * blocking that thread on a {@link ResultFuture} until resume.
      *
      * <p>Nothing is persisted (in-memory only, by design): a process death during the Play Store
      * install loses the parked request and the caller falls back to today's blocked-install behavior.
      *
-     * @param controller  the broker controller to re-run the acquire on once the broker is installed.
+     * @param retry       rebuilds a broker-bound controller (fresh, cache-skipping discovery now that
+     *                    Company Portal is installed) and re-acquires the token; see
+     *                    {@link IBrokerInstallResumeRetry}. Supplied by the caller because only it can
+     *                    rebind the broker — the original request had no broker controller.
      * @param appContext  application context used to launch the Play Store and read the origin package.
      * @param parameters  the in-flight interactive request (carries correlation id, login hint/UPN,
      *                    and redirect uri). Must be an Android interactive request.
      * @param installUrl  the broker-install (Play Store) URL captured from the CA challenge.
      * @return the token result once resumed in broker context, or {@code null} if the request could
-     * not be parked (unsafe link, missing correlation id, timeout, or interruption) — in which case
-     * the caller should fall through to today's terminal broker-installation behavior.
+     * not be parked or resolved without a broker acquire (unsafe link, missing correlation id, park
+     * timeout, or interruption) — in which case the caller should fall through to today's terminal
+     * broker-installation behavior.
+     * @throws Exception if the resumed broker acquire itself failed; the original cause is rethrown
+     * (a service/CA error, broker-side failure, cancellation, or a rebind failure from the retry
+     * callback) so the caller surfaces the real error instead of a generic "no broker" result.
      */
     @Nullable
     public AcquireTokenResult installParkAndAwait(
-            @NonNull final BrokerMsalController controller,
+            @NonNull final IBrokerInstallResumeRetry retry,
             @NonNull final Context appContext,
             @NonNull final AndroidInteractiveTokenCommandParameters parameters,
-            @NonNull final String installUrl) {
+            @NonNull final String installUrl) throws Exception {
         final String methodTag = TAG + ":installParkAndAwait";
 
         if (!BrokerInstallLinkValidator.isSafeBrokerInstallLink(installUrl)) {
@@ -182,9 +207,18 @@ public final class BrokerInstallResumeCoordinator {
         }
 
         final ResultFuture<AcquireTokenResult> future = new ResultFuture<>();
-        mBrokerParked.put(resumeId, new BrokerParkedEntry(controller, parameters, future));
-        // Suppress any parallel CommandDispatcher-path error for the same correlation id.
-        BrokerInstallResumeParkRegistry.park(resumeId);
+        mBrokerParked.put(resumeId, new BrokerParkedEntry(retry, parameters, future));
+
+        // Watch for the user returning to the app after the Play Store. If Company Portal is installed
+        // but too old to ever fire the post-install resume deep link, fail the request fast on the next
+        // foreground instead of blocking until the park timeout. A supported CP is left to drive its own
+        // redirect (BrokerInstallResumeActivity -> resume), keeping a single consistent resume path.
+        final Application application = asApplication(appContext);
+        final ForegroundCpSupportWatcher foregroundWatcher =
+                (application == null) ? null : new ForegroundCpSupportWatcher(application, resumeId);
+        if (foregroundWatcher != null) {
+            application.registerActivityLifecycleCallbacks(foregroundWatcher);
+        }
 
         final String referrerUrl = BrokerInstallReferrerBuilder.withResumePointer(
                 installUrl,
@@ -209,11 +243,22 @@ public final class BrokerInstallResumeCoordinator {
             Logger.warn(methodTag, "Interrupted awaiting broker-install resume; failing back to caller.");
             return null;
         } catch (final ExecutionException e) {
-            Logger.warn(methodTag, "Broker-install resume failed: " + e.getMessage());
-            return null;
+            // The resumed broker acquire ran but failed with a real error (a service/CA error from
+            // eSTS, a broker-side failure, user cancellation, or a rebind failure from the retry
+            // callback). Surface the real cause to the caller, whose catch blocks map BaseException/
+            // service errors correctly, rather than collapsing it into a generic "no broker" terminal
+            // error that hides what actually went wrong on the resume.
+            final Throwable cause = e.getCause();
+            Logger.warn(methodTag, "Broker-install resume failed; surfacing the real error to the caller.");
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            }
+            throw e;
         } finally {
             mBrokerParked.remove(resumeId);
-            BrokerInstallResumeParkRegistry.unpark(resumeId);
+            if (application != null && foregroundWatcher != null) {
+                application.unregisterActivityLifecycleCallbacks(foregroundWatcher);
+            }
         }
     }
 
@@ -227,156 +272,139 @@ public final class BrokerInstallResumeCoordinator {
         context.getApplicationContext().startActivity(intent);
     }
 
-    /**
-     * Parks the in-flight interactive request so its result is suppressed and can be resumed after
-     * the broker is installed.
-     *
-     * @param resumeId single-use resume key (the command's correlation id).
-     * @param command  the interactive command currently blocked to install the broker.
-     * @param upn      the user's UPN extracted from the CA redirect (used to prepopulate the resume);
-     *                 may be null, in which case the original request's login hint is used.
-     * @return true if the command was parked; false if it could not be parked (e.g. not an Android
-     * interactive request), in which case the caller should fall back to today's behavior.
-     */
-    public boolean park(@NonNull final String resumeId,
-                        @NonNull final InteractiveTokenCommand command,
-                        @Nullable final String upn) {
-        if (!(command.getParameters() instanceof AndroidInteractiveTokenCommandParameters)) {
-            Logger.warn(TAG, "In-flight request is not an Android interactive request; cannot park.");
-            return false;
+    /** Returns the process {@link Application} for lifecycle registration, or null if unavailable. */
+    @Nullable
+    private static Application asApplication(@NonNull final Context context) {
+        final Context appContext = context.getApplicationContext();
+        return (appContext instanceof Application) ? (Application) appContext : null;
+    }
+
+    /** Reads the installed Company Portal and classifies it against {@link #MIN_CP_VERSION_SUPPORTING_RESUME}. */
+    private static CpSupport checkCompanyPortalSupport(@NonNull final Context context) {
+        try {
+            final PackageInfo info = context.getPackageManager().getPackageInfo(
+                    AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
+            final long versionCode = PackageInfoCompat.getLongVersionCode(info);
+            return (versionCode < MIN_CP_VERSION_SUPPORTING_RESUME)
+                    ? CpSupport.UNSUPPORTED : CpSupport.SUPPORTED;
+        } catch (final PackageManager.NameNotFoundException e) {
+            return CpSupport.ABSENT;
         }
-        mParked.put(resumeId, new ParkedEntry(
-                command.getCallback(),
-                (AndroidInteractiveTokenCommandParameters) command.getParameters(),
-                command.getControllerFactory(),
-                command.getPublicApiId(),
-                upn));
-        BrokerInstallResumeParkRegistry.park(resumeId);
-        Log.i(POC_TAG, "RESUME-PARKED request parked in common; resumeId=" + resumeId);
-        Logger.info(TAG, "Parked interactive request for broker-install resume.");
-        return true;
     }
 
     /**
-     * Resumes a parked request in broker context and delivers the token to the original callback.
-     * Runs the interactive retry via {@link CommandDispatcher#beginInteractive(InteractiveTokenCommand)}
-     * so all normal result-conversion machinery is reused.
+     * Fails a parked broker request fast (without waiting for the park timeout) when Company Portal is
+     * installed but below the resume-support floor. Completes the blocked {@code acquireToken} thread
+     * exceptionally with the terminal "no valid broker" error so the caller surfaces it immediately.
+     */
+    private void failFastBrokerParked(@NonNull final String resumeId) {
+        final BrokerParkedEntry entry = mBrokerParked.remove(resumeId);
+        if (entry != null) {
+            entry.future.setException(new ClientException(
+                    ClientException.NOT_VALID_BROKER_FOUND,
+                    "Company Portal is installed but below the resume-support version; "
+                            + "cannot auto-resume the broker-install request."));
+        }
+    }
+
+    /**
+     * One-shot {@link Application.ActivityLifecycleCallbacks} registered while a broker request is
+     * parked, used <em>only</em> to fail the request fast when the installed Company Portal is too old
+     * to ever fire the post-install resume deep link. The user returns to the app manually after the
+     * Play Store, and app-foreground is the reliable signal for that return. On the next foreground:
+     *
+     * <ul>
+     *   <li>CP absent -> install not finished (or user bailed); keep waiting, re-check next foreground.</li>
+     *   <li>CP present but below {@link #MIN_CP_VERSION_SUPPORTING_RESUME} -> fail fast with the
+     *       terminal broker error instead of blocking until the park timeout, since that CP build will
+     *       never redirect.</li>
+     *   <li>CP present and supported -> do nothing: a supported CP implements the redirect, so we let
+     *       CP's deep link ({@link BrokerInstallResumeActivity} -> {@link #resume(Activity, String)})
+     *       drive the resume. This keeps a single, consistent resume trigger across the MSAL and
+     *       OneAuth flows and avoids a self-resume racing CP's redirect. If a supported CP somehow
+     *       fails to redirect, the park timeout is the safety net (user retries -> CP is installed ->
+     *       normal broker path succeeds).</li>
+     * </ul>
+     *
+     * <p>Deduped against CP's redirect through {@code mBrokerParked.remove}: whichever path removes the
+     * entry first wins, so a fail-fast and a late deep link cannot both drive the same request.
+     */
+    private static final class ForegroundCpSupportWatcher implements Application.ActivityLifecycleCallbacks {
+        private final Application mApplication;
+        private final String mResumeId;
+        private final AtomicBoolean mHandled = new AtomicBoolean(false);
+
+        ForegroundCpSupportWatcher(@NonNull final Application application, @NonNull final String resumeId) {
+            mApplication = application;
+            mResumeId = resumeId;
+        }
+
+        @Override
+        public void onActivityResumed(@NonNull final Activity activity) {
+            if (mHandled.get()) {
+                return;
+            }
+            if (!INSTANCE.mBrokerParked.containsKey(mResumeId)) {
+                // Resolved by another path (CP deep-link resume or park timeout); stop watching.
+                unregister();
+                return;
+            }
+            // Only act on a present-but-unsupported CP. ABSENT (install in progress) and SUPPORTED
+            // (CP will fire its own redirect) both keep waiting.
+            if (checkCompanyPortalSupport(activity) != CpSupport.UNSUPPORTED) {
+                return;
+            }
+            if (!mHandled.compareAndSet(false, true)) {
+                return;
+            }
+            unregister();
+            Log.i(POC_TAG, "RESUME-FOREGROUND CP below resume-support floor; failing fast; resumeId=" + mResumeId);
+            INSTANCE.failFastBrokerParked(mResumeId);
+        }
+
+        private void unregister() {
+            mApplication.unregisterActivityLifecycleCallbacks(this);
+        }
+
+        @Override
+        public void onActivityCreated(@NonNull final Activity activity, @Nullable final Bundle savedInstanceState) { }
+
+        @Override
+        public void onActivityStarted(@NonNull final Activity activity) { }
+
+        @Override
+        public void onActivityPaused(@NonNull final Activity activity) { }
+
+        @Override
+        public void onActivityStopped(@NonNull final Activity activity) { }
+
+        @Override
+        public void onActivitySaveInstanceState(@NonNull final Activity activity, @NonNull final Bundle outState) { }
+
+        @Override
+        public void onActivityDestroyed(@NonNull final Activity activity) { }
+    }
+
+    /**
+     * Resumes a parked broker-path (OneAuth) request in broker context and delivers the token on the
+     * original djinni sink by completing the parked future (see {@link #resumeBrokerParked}).
      *
      * @param activity the (foreground) deep-link activity used to launch the broker UI (BAL-safe).
      * @param resumeId the resume key carried back on the Company Portal redirect.
      * @return true if a parked request was found and resume was dispatched; false otherwise.
      */
     public boolean resume(@NonNull final Activity activity, @NonNull final String resumeId) {
-        // Broker-path (OneAuth) parked requests take priority: complete the blocked acquireToken
-        // thread by re-running the acquire in broker context and delivering the result on its future.
-        // Remove (not peek) so a duplicate resume deep-link cannot re-launch the broker UI twice.
+        // Complete the blocked OneAuth acquireToken thread by re-running the acquire in broker context
+        // and delivering the result on its future. Remove (not peek) so a duplicate resume deep-link
+        // cannot re-launch the broker UI twice.
         final BrokerParkedEntry brokerEntry = mBrokerParked.remove(resumeId);
         if (brokerEntry != null) {
             return resumeBrokerParked(activity, resumeId, brokerEntry);
         }
 
-        final ParkedEntry entry = mParked.remove(resumeId);
-        // No longer suppress: the resumed request must deliver its result to the (wrapped) callback.
-        BrokerInstallResumeParkRegistry.unpark(resumeId);
-
-        if (entry == null) {
-            Log.w(POC_TAG, "RESUME-NO-PARKED no parked request for resumeId=" + resumeId);
-            Logger.warn(TAG, "No parked request found to resume (expired process or unknown id).");
-            return false;
-        }
-
-        final String loginHint = !StringUtil.isNullOrEmpty(entry.upn)
-                ? entry.upn
-                : entry.params.getLoginHint();
-
-        final IPlatformComponents components =
-                AndroidPlatformComponentsFactory.createFromActivity(activity, null);
-
-        // The original request ran before the broker was installed, so client-side broker discovery
-        // cached a "no active broker" result and started a ~60-minute AccountManager-only backoff.
-        // Clear that stale state now (a single clear also removes the backoff key) so the resumed
-        // request performs a fresh IPC discovery, finds the just-installed Company Portal, and routes
-        // through the broker rather than falling back to the local controller.
-        invalidateBrokerDiscoveryCache(components);
-
-        final AndroidInteractiveTokenCommandParameters resumeParams = entry.params.toBuilder()
-                .activity(activity)
-                .platformComponents(components)
-                .loginHint(loginHint)
-                .build();
-
-        final CommandCallback wrappedCallback = new CommandCallback() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onTaskCompleted(final Object result) {
-                Log.i(POC_TAG, "RESUME-COMPLETED token delivered to original callback; resumeId=" + resumeId);
-                Logger.info(TAG, "Resumed request completed; delivering token to original caller.");
-                showStep(activity, "Broker-install resume \u2463/\u2463: Token returned successfully \u2705");
-                // Deliver the token to the app's original callback first (the app updates its own
-                // UI/state), then land the user back in the origin app so they actually see the
-                // signed-in result instead of the leftover broker / eSTS Custom Tab.
-                entry.callback.onTaskCompleted(result);
-                returnToOriginApp(activity);
-            }
-
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onError(final Object error) {
-                Log.w(POC_TAG, "RESUME-ERROR resumed request failed; resumeId=" + resumeId);
-                Logger.warn(TAG, "Resumed request failed; forwarding error to original caller.");
-                entry.callback.onError(error);
-                returnToOriginApp(activity);
-            }
-
-            @Override
-            public void onCancel() {
-                Log.w(POC_TAG, "RESUME-CANCEL resumed request cancelled; resumeId=" + resumeId);
-                Logger.warn(TAG, "Resumed request cancelled; forwarding cancel to original caller.");
-                entry.callback.onCancel();
-                returnToOriginApp(activity);
-            }
-        };
-
-        final InteractiveTokenCommand resumeCommand = new InteractiveTokenCommand(
-                resumeParams,
-                brokerForcingFactory(entry.controllerFactory),
-                wrappedCallback,
-                entry.publicApiId);
-
-        Log.i(POC_TAG, "RESUME-DISPATCH re-dispatching in broker context; resumeId=" + resumeId
-                + " loginHintPresent=" + !StringUtil.isNullOrEmpty(loginHint));
-        Logger.info(TAG, "Re-dispatching parked request; forcing broker controller.");
-        showStep(activity, "Broker-install resume \u2462/\u2463: Retrying token in broker context");
-        CommandDispatcher.beginInteractive(resumeCommand);
-        return true;
-    }
-
-    /**
-     * Wraps the original request's controller factory so the resumed request is guaranteed to run in
-     * broker context: {@code getDefaultController()} returns the {@link BrokerMsalController} if the
-     * factory offers one (it will, now that Company Portal is installed and the app opted into
-     * broker). Falls back to the delegate's default only if no broker controller is available.
-     */
-    private static IControllerFactory brokerForcingFactory(@NonNull final IControllerFactory delegate) {
-        return new IControllerFactory() {
-            @NonNull
-            @Override
-            public BaseController getDefaultController() {
-                for (final BaseController controller : delegate.getAllControllers()) {
-                    if (controller instanceof BrokerMsalController) {
-                        return controller;
-                    }
-                }
-                Logger.warn(TAG, "No broker controller available for resume; falling back to default.");
-                return delegate.getDefaultController();
-            }
-
-            @NonNull
-            @Override
-            public List<BaseController> getAllControllers() {
-                return delegate.getAllControllers();
-            }
-        };
+        Log.w(POC_TAG, "RESUME-NO-PARKED no parked request for resumeId=" + resumeId);
+        Logger.warn(TAG, "No parked request found to resume (expired process or unknown id).");
+        return false;
     }
 
     /**
@@ -439,8 +467,6 @@ public final class BrokerInstallResumeCoordinator {
                                        @NonNull final String resumeId,
                                        @NonNull final BrokerParkedEntry entry) {
         final String methodTag = TAG + ":resumeBrokerParked";
-        // The waiting thread is unblocked via the future; drop the suppression marker now.
-        BrokerInstallResumeParkRegistry.unpark(resumeId);
 
         Log.i(POC_TAG, "RESUME-DEEPLINK broker-path resume; resumeId=" + resumeId);
         showStep(activity,
@@ -466,7 +492,9 @@ public final class BrokerInstallResumeCoordinator {
         try {
             Log.i(POC_TAG, "RESUME-DISPATCH re-running acquire in broker context; resumeId=" + resumeId);
             showStep(activity, "Broker-install resume \u2462/\u2463: Retrying token in broker context");
-            final AcquireTokenResult result = entry.controller.acquireToken(resumeParams);
+            // The caller re-discovers the freshly installed broker (cache-skipping) and rebuilds a
+            // broker-bound controller before acquiring — the pre-install request had none.
+            final AcquireTokenResult result = entry.retry.retryInBrokerContext(resumeParams);
             // Unblocks the parked OneAuth acquireToken thread, which returns this result on its sink.
             entry.future.setResult(result);
             Log.i(POC_TAG, "RESUME-COMPLETED token delivered to original OneAuth sink; resumeId=" + resumeId);
@@ -483,43 +511,21 @@ public final class BrokerInstallResumeCoordinator {
         return true;
     }
 
-    /** Immutable snapshot of a parked interactive request. Holds no persisted state. */
-    private static final class ParkedEntry {
-        @SuppressWarnings("rawtypes")
-        final CommandCallback callback;
-        final AndroidInteractiveTokenCommandParameters params;
-        final IControllerFactory controllerFactory;
-        final String publicApiId;
-        @Nullable
-        final String upn;
-
-        ParkedEntry(@SuppressWarnings("rawtypes") final CommandCallback callback,
-                    final AndroidInteractiveTokenCommandParameters params,
-                    final IControllerFactory controllerFactory,
-                    final String publicApiId,
-                    @Nullable final String upn) {
-            this.callback = callback;
-            this.params = params;
-            this.controllerFactory = controllerFactory;
-            this.publicApiId = publicApiId;
-            this.upn = upn;
-        }
-    }
-
     /**
-     * Immutable snapshot of a broker-path (OneAuth) parked request. Holds the controller to re-run the
-     * acquire, the original request parameters, and the {@link ResultFuture} the blocked
-     * {@code acquireToken} thread is waiting on. No persisted state; no PII on the referrer.
+     * Immutable snapshot of a broker-path (OneAuth) parked request. Holds the retry callback that
+     * rebuilds a broker-bound controller and re-acquires the token, the original request parameters,
+     * and the {@link ResultFuture} the blocked {@code acquireToken} thread is waiting on. No persisted
+     * state; no PII on the referrer.
      */
     private static final class BrokerParkedEntry {
-        final BrokerMsalController controller;
+        final IBrokerInstallResumeRetry retry;
         final AndroidInteractiveTokenCommandParameters params;
         final ResultFuture<AcquireTokenResult> future;
 
-        BrokerParkedEntry(final BrokerMsalController controller,
+        BrokerParkedEntry(final IBrokerInstallResumeRetry retry,
                           final AndroidInteractiveTokenCommandParameters params,
                           final ResultFuture<AcquireTokenResult> future) {
-            this.controller = controller;
+            this.retry = retry;
             this.params = params;
             this.future = future;
         }

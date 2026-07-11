@@ -73,7 +73,6 @@ import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache;
 import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.cache.HelloCacheResult;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.providers.BrokerInstallResumeCoordinator;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -352,29 +351,6 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
             throws BaseException, InterruptedException, ExecutionException {
-        // MAM-CA "Install CP -> Auto-Redirect -> Silent-Broker Retry" auto-resume (Android-only). When
-        // the OneAuth Android glue stamped a broker-install URL onto the request (eSTS Conditional-Access
-        // challenge marked intuneAppProtection=1) and no broker is installed yet, do not fail the request
-        // back to the caller. Install Company Portal, park this in-flight request in-memory, and block
-        // until the freshly installed broker resumes it -> returning the token on the SAME OneAuth sink.
-        // Scoped by install-URL presence (only the Android MAM-CA path stamps it), so every other request
-        // is untouched. The resumed retry clears the install URL, so it runs the normal broker path below
-        // and never re-enters this branch.
-        final String brokerInstallUrl = parameters.getBrokerInstallationUrl();
-        if (!StringUtil.isNullOrEmpty(brokerInstallUrl)
-                && parameters instanceof AndroidInteractiveTokenCommandParameters) {
-            final AcquireTokenResult resumed = BrokerInstallResumeCoordinator.INSTANCE.installParkAndAwait(
-                    this,
-                    mApplicationContext,
-                    (AndroidInteractiveTokenCommandParameters) parameters,
-                    brokerInstallUrl);
-            if (resumed != null) {
-                return resumed;
-            }
-            // Park/await failed (unsafe link, missing correlation id, timeout, or process constraints);
-            // fall through to today's behavior so the caller still receives the normal terminal error.
-        }
-
         final AcquireTokenResult result;
         try {
             //Get the broker interactive parameters intent

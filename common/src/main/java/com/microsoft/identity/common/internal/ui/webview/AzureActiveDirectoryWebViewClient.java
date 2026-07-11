@@ -70,12 +70,7 @@ import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.IErrorInformation;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.internal.providers.BrokerInstallResumeCoordinator;
-import com.microsoft.identity.common.java.controllers.CommandDispatcher;
-import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
-import com.microsoft.identity.common.java.providers.BrokerInstallLinkValidator;
-import com.microsoft.identity.common.java.providers.BrokerInstallReferrerBuilder;
 import com.microsoft.identity.common.java.opentelemetry.BaggageExtension;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
@@ -96,7 +91,8 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
-import com.microsoft.identity.common.java.util.StringUtil;import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -104,10 +100,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -1127,27 +1121,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String appLink = parameters.get(APP_LINK_KEY);
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
-
-        // Broker-install request resume (WebView flow): when the user is blocked inside the embedded
-        // WebView to install the broker (Company Portal), do NOT fail the request back to the calling
-        // app. Instead PARK the in-flight interactive request in memory (holding its original
-        // callback) and carry a single-use, PII-free resume pointer + the app's msauth redirect uri
-        // on the install referrer, so the freshly installed broker can redirect the user straight
-        // back and common can resume the request in broker context — delivering the token to the
-        // original callback. Feature-flag gated; when off, behavior is identical to today.
-        //
-        // Park BEFORE the request is torn down (onChallengeResponseReceived below) so the parked
-        // command's correlation id is registered and its BROKER_INSTALLATION error is suppressed
-        // (not returned to the app) by CommandDispatcher.
-        String resumeAppLink = appLink;
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)
-                && !StringUtil.isNullOrEmpty(appLink)
-                && BrokerInstallLinkValidator.isSafeBrokerInstallLink(appLink)) {
-            resumeAppLink = parkAndAppendResumePointer(appLink, url);
-        }
-        final String finalAppLink = resumeAppLink;
-
         getCompletionCallback().onChallengeResponseReceived(result);
 
         final Handler handler = new Handler();
@@ -1155,7 +1128,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                String link = finalAppLink
+                String link = appLink
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 getActivity().startActivity(intent);
@@ -1164,60 +1137,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }, threadSleepForCallingActivity);
 
         view.stopLoading();
-    }
-
-    /**
-     * Parks the in-flight interactive request in memory (holding its original callback via
-     * {@link BrokerInstallResumeCoordinator}) and returns the broker-install {@code appLink} with a
-     * single-use resume pointer and the app's msauth redirect uri appended to its {@code referrer}.
-     * On any failure, returns the original {@code appLink} unchanged so the install flow proceeds
-     * exactly as it does today.
-     *
-     * <p>Nothing is persisted to disk (in-memory only, by design — a process death during the Play
-     * Store install simply loses the parked request). The UPN is extracted from the CA redirect
-     * ({@code url}) and handed to the coordinator so the resumed request is prepopulated with it; the
-     * UPN is never placed on the referrer. Only the resume id, origin package, and the app's own
-     * (already public) redirect uri ride the install referrer.</p>
-     *
-     * @param appLink the validated broker-install Play Store link.
-     * @param url     the CA install-request redirect (i.e. {@code msauth://wpj/?username=...&app_link=...}).
-     * @return the appLink with a resume pointer appended, or the original appLink on failure.
-     */
-    private String parkAndAppendResumePointer(@NonNull final String appLink, @NonNull final String url) {
-        final String methodTag = TAG + ":parkAndAppendResumePointer";
-        try {
-            final InteractiveTokenCommand command =
-                    CommandDispatcher.getCommandAtInteractiveExecution();
-            if (command == null) {
-                Logger.warn(methodTag, "No in-flight interactive command to park; continuing without resume.");
-                return appLink;
-            }
-
-            final String resumeId = command.getParameters().getCorrelationId();
-            final String originPackage =
-                    getActivity() != null ? getActivity().getPackageName() : "";
-            final String redirectUri = command.getParameters().getRedirectUri();
-
-            // UPN comes from the CA install redirect (msauth://wpj/?username=...). It stays on-device;
-            // it is handed to the coordinator to prepopulate the resumed request, never to the referrer.
-            final String upn = StringExtensions.getUrlParameters(url).get("username");
-
-            final boolean parked = BrokerInstallResumeCoordinator.INSTANCE.park(resumeId, command, upn);
-            if (!parked) {
-                Logger.warn(methodTag, "Unable to park in-flight request; continuing without resume.");
-                return appLink;
-            }
-
-            Logger.info(methodTag, "Parked broker-install resume request; appending referrer pointer.");
-            BrokerInstallResumeCoordinator.showStep(getActivity(),
-                    "Broker-install resume \u2460/\u2463: Sign-in blocked \u2192 parking request, installing Company Portal");
-            return BrokerInstallReferrerBuilder.withResumePointer(
-                    appLink, resumeId, originPackage, redirectUri);
-        } catch (final Exception e) {
-            Logger.warn(methodTag,
-                    "Failed to park broker-install resume request; continuing without resume.");
-            return appLink;
-        }
     }
 
     private void processInvalidRedirectUri(@NonNull final WebView view,
