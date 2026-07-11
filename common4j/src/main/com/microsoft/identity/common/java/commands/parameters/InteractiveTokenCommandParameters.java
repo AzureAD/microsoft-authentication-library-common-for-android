@@ -94,6 +94,18 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Nullable
     private final String onboardingSeedJson;
 
+    /**
+     * MAM-CA "Install CP -> Auto-Redirect -> Silent-Broker Retry" auto-resume (Android-only).
+     * The broker-install (Play Store) URL captured from the eSTS Conditional-Access challenge
+     * ({@code msauth://wpj/?...&app_link=...}, marked {@code intuneAppProtection=1}) and stamped by
+     * the OneAuth Android glue onto the request. Non-null only on the Android MAM-CA auto-resume path.
+     * When present and no broker is installed yet, {@code BrokerMsalController} installs the broker,
+     * parks this in-flight request in-memory, and resumes it in broker context instead of failing the
+     * request back to the caller with a terminal broker-installation error.
+     */
+    @Nullable
+    private final String brokerInstallationUrl;
+
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;
     }
