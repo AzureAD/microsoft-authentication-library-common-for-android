@@ -226,6 +226,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
 
     /**
+     * Flight to enable the OpenID-VC return-to-caller PendingIntent. When enabled, the openid-vc
+     * launch intent handed to Microsoft Authenticator carries a return PendingIntent that brings
+     * the caller's task back to the foreground after the VID flow completes. When disabled, the
+     * pre-existing behavior applies: the openid-vc handler is launched without a return PendingIntent.
+     */
+    ENABLE_OPEN_ID_VC_RETURN_TO_CALLER("EnableOpenIdVcReturnToCaller", true),
+
+    /**
      * Flight to enable sovereign cloud instance discovery routing.
      * When enabled, discovery requests for known sovereign cloud hosts are routed
      * through host of passed in authority if part of known cloud list.
