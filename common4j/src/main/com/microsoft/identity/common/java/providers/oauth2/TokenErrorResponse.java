@@ -51,6 +51,15 @@ public class TokenErrorResponse implements IErrorResponse {
     @SerializedName("error_uri")
     private String mErrorUri;
 
+    // eSTS-echoed account object id (oid) returned on a protection_policy_required challenge.
+    // Used for cross-tenant guest MAM: at cold start the broker only knows the request (home) account's
+    // OID, but Intune keys policy off the GUEST OID. When eSTS echoes the guest oid here, the broker
+    // stamps it onto IntuneAppProtectionPolicyRequiredException.
+    // NOTE: the claim name is pending confirmation with eSTS ("oid" is the current placeholder).
+    @Expose()
+    @SerializedName("oid")
+    private String mOid;
+
     /**
      * @return mError of the token error response.
      */
@@ -105,6 +114,22 @@ public class TokenErrorResponse implements IErrorResponse {
      */
     public void setErrorUri(final String errorUri) {
         mErrorUri = errorUri;
+    }
+
+    /**
+     * @return the eSTS-echoed account object id (oid) on a protection_policy_required response, or null
+     * if not present. For cross-tenant guest MAM this carries the GUEST oid so the broker can key the
+     * MAM enrollment off the correct identity.
+     */
+    public String getOid() {
+        return mOid;
+    }
+
+    /**
+     * @param oid the eSTS-echoed account object id (oid).
+     */
+    public void setOid(final String oid) {
+        mOid = oid;
     }
 
     /**

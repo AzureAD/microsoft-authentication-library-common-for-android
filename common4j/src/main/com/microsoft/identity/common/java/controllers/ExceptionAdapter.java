@@ -338,6 +338,19 @@ public class ExceptionAdapter {
                     );
                 }
                 policyRequiredException.setSubErrorCode(errorResponse.getSubError());
+
+                // Intune keys the MAM policy off the account OID. The constructor derived accountUserId
+                // from the request account, which at cold start is the HOME OID even for a guest request
+                // (no resource-tenant token yet). eSTS echoes the OID it actually resolved for this
+                // request on the protection_policy_required response: the GUEST OID for a guest/cross-
+                // tenant request, or the HOME OID for a home-tenant request. Prefer it when present
+                // (authoritative, server-resolved); for home requests it matches the existing value, so
+                // this is a no-op there. If absent (echo not shipped), keep the constructor's fallback.
+                final String echoedAccountOid = errorResponse.getOid();
+                if (!StringUtil.isNullOrEmpty(echoedAccountOid)) {
+                    policyRequiredException.setAccountUserId(echoedAccountOid);
+                }
+
                 setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
                 return policyRequiredException;
