@@ -3,13 +3,17 @@
 ext {
     // SDK
     minSdkVersion = 24
-    targetSdkVersion = 35
-    compileSdkVersion = 36
-    buildToolsVersion = "36.0.0"
+    targetSdkVersion = 36
+    compileSdkVersion = 37
+    buildToolsVersion = "37.0.0"
 
     // Plugins
-    gradleVersion = '8.10.0'
-    kotlinVersion = '1.8.0'
+    gradleVersion = '9.1.1'
+    // Kotlin 1.8.x had no Gradle 9 support (crashed on removed SelfResolvingDependency).
+    kotlinVersion = '2.2.21'
+    // NOTE: not consumed by this repo's build scripts. The SpotBugs Gradle plugin
+    // version is baked into the com.microsoft.identity.buildsystem plugin's POM;
+    // change it there, not here. Kept for parity with android-complete.
     spotBugsGradlePluginVersion = '4.7.1'
     jupiterApiVersion = '5.6.0'
 
@@ -42,7 +46,11 @@ ext {
     powerMockVersion = "2.0.9"
     runnerVersion = "1.2.0"
     rulesVersion = "1.2.0"
-    robolectricVersion = "4.14"
+    // 4.16.1 supports Android SDK 36 and the FingerprintManager deletion in API 37's
+    // android.jar (4.14/4.14.1 hard-reference the removed class via Shadows.shadowOf,
+    // breaking test compilation against compileSdk 37). Robolectric 4.16 needs JDK 21
+    // when emulating SDK 36. Robolectric cannot emulate API 37 yet (max = 36).
+    robolectricVersion = "4.16.1"
     uiAutomatorVersion = "2.2.0"
     daggerVersion = "2.31.2"
     daggerCompilerVersion = "2.31.2"

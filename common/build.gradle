@@ -1,10 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id 'com.microsoft.identity.buildsystem' version '0.2.5'
+    id 'com.microsoft.identity.buildsystem' version '0.2.6-dev'
     id 'com.android.library'
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
-    id 'kotlin-android'
     id 'jacoco'
 
     // Test retries
@@ -13,6 +14,14 @@ plugins {
 }
 
 apply from: '../versioning/version_tasks.gradle'
+
+// Built-in Kotlin (AGP 9): replaces the android { kotlinOptions { } } block that the
+// removed 'kotlin-android' plugin previously provided.
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_1_8
+    }
+}
 
 buildSystem {
     desugar = false
@@ -109,7 +118,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode getAppVersionCode()
         versionName getAppVersionName()
-        project.archivesBaseName = "common"
+        project.base.archivesName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //Languages Common supports.
@@ -126,6 +135,13 @@ android {
         buildConfig = true
         aidl = true
     }
+
+    // AGP 9: software components for publishing are no longer auto-created; each
+    // variant that is published via `from components.<name>` must be declared here.
+    publishing {
+        singleVariant("distRelease") {}
+        singleVariant("distDebug") {}
+    }
     buildTypes {
         debug {
             testCoverageEnabled enableCodeCoverage
@@ -134,7 +150,7 @@ android {
         release {
             minifyEnabled false
             debuggable false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
         }
     }
@@ -142,10 +158,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
     }
 
     lintOptions {
@@ -201,7 +213,7 @@ android {
 
     libraryVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${archivesBaseName}-${version}.aar"
+            outputFileName = "${project.base.archivesName.get()}-${version}.aar"
         }
     }
 }

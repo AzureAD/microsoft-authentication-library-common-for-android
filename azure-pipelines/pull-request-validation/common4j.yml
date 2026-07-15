@@ -42,7 +42,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: clean common4j:assemble
           javaHomeOption: JDKVersion
-          jdkVersionOption: 1.17
+          jdkVersionOption: 1.21
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: common4j
@@ -54,7 +54,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
           javaHomeOption: JDKVersion
-          jdkVersionOption: 1.17
+          jdkVersionOption: 1.21
       - script: tree "$(Build.SourcesDirectory)" /F /A
         displayName: 'Print File Structure Tree'
       - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
@@ -89,7 +89,7 @@ stages:
             cwd: $(Build.SourcesDirectory)/common-java-root
             tasks: clean common4j:assemble
             javaHomeOption: JDKVersion
-            jdkVersionOption: 1.17
+            jdkVersionOption: 1.21
         - template: ../templates/steps/spotbugs.yml
           parameters:
             project: common4j
@@ -101,7 +101,7 @@ stages:
             cwd: $(Build.SourcesDirectory)/common-java-root
             tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
             javaHomeOption: JDKVersion
-            jdkVersionOption: 1.17
+            jdkVersionOption: 1.21
         - script: tree "$(Build.SourcesDirectory)" /F /A
           displayName: 'Print File Structure Tree'
         - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml

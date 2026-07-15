@@ -123,7 +123,7 @@ stages:
       displayName: Assemble msal
       inputs:
         jdkArchitecture: x64
-        jdkVersionOption: "1.17"
+        jdkVersionOption: "1.21"
         tasks: clean msal:assembleLocal
     - template: ../templates/steps/automation-cert.yml
     - task: Gradle@3
@@ -131,7 +131,7 @@ stages:
       inputs:
         tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         jdkArchitecture: x64
-        jdkVersionOption: "1.17"
+        jdkVersionOption: "1.21"
   # msalautomationapp
   - job: msalAutomationAppValidation
     displayName: MSAL Automation App
@@ -161,7 +161,7 @@ stages:
       displayName: Assemble msalautomationapp
       inputs:
         jdkArchitecture: x64
-        jdkVersionOption: "1.17"
+        jdkVersionOption: "1.21"
         tasks: clean msalautomationapp:assembleLocal
   # broker
   - job: brokerValidation
@@ -204,10 +204,10 @@ stages:
         tasks: AADAuthenticator:clean AADAuthenticator:assembleLocal --build-cache --info
         publishJUnitResults: false
         jdkArchitecture: x64
-        jdkVersionOption: "1.17"
+        jdkVersionOption: "1.21"
     - task: Gradle@3
       displayName: Run broker Unit tests
       inputs:
         tasks: AADAuthenticator:localDebugAADAuthenticatorUnitTestCoverageReport --build-cache --info -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PpowerLiftApiKey=$(powerliftApiKey) -PcodeCoverageEnabled=true ${{variables.shouldSkipLongRunningTest}}
         jdkArchitecture: x64
-        jdkVersionOption: "1.17"
+        jdkVersionOption: "1.21"

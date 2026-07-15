@@ -9,8 +9,8 @@ pluginManagement {
             name "vsts-maven-adal-android"
             url "https://identitydivision.pkgs.visualstudio.com/_packaging/NewAndroid/maven/v1"
             credentials {
-                username System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : project.findProperty("vstsUsername")
-                password System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+                username System.getenv("ENV_VSTS_MVN_CRED_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_CRED_USERNAME") : providers.gradleProperty("vstsUsername").getOrNull()
+                password System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_CRED_ACCESSTOKEN") : providers.gradleProperty("vstsMavenAccessToken").getOrNull()
             }
         }
     }
