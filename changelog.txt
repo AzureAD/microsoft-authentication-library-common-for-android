@@ -1,6 +1,6 @@
 vNext
 ----------
-- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
+- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface (as a binary-compatible default method) so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
 
 Version 24.5.0
 ----------

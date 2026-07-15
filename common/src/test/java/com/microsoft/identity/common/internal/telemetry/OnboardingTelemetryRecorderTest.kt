@@ -93,6 +93,21 @@ class OnboardingTelemetryRecorderTest {
     }
 
     @Test
+    fun testFinalizeBlob_DefaultMethod_ReturnsEmptyBlobForMinimalImplementer() {
+        // finalizeBlob() is a default method on IOnboardingTelemetryRecorder (AB#3647677) so that
+        // adding it to the already-released interface stays binary-compatible: an implementation
+        // that only implements the recording surface (addStep / addBlockingError) inherits the
+        // default, which returns the documented empty-blob sentinel instead of throwing
+        // AbstractMethodError. Verify a minimal implementer round-trips through finalizeBlob().
+        val minimalRecorder = object : IOnboardingTelemetryRecorder {
+            override fun addStep(stepId: String) = Unit
+            override fun addBlockingError(errorCode: String) = Unit
+        }
+
+        Assert.assertEquals("", minimalRecorder.finalizeBlob())
+    }
+
+    @Test
     fun testFinalizeBlob_NoBlockingErrors_StillEmitsBlobWithSeedFields() {
         // When a valid seed was provided but no blocking errors occurred (smooth-success
         // flow), the recorder still emits a populated blob so consumers (OneAuth) can

@@ -74,9 +74,19 @@ public interface IOnboardingTelemetryRecorder {
      * no-op / null-object recorder — participates in finalization explicitly rather than being
      * silently skipped.
      *
+     * <p>Declared as a {@code default} method (returning the empty-blob sentinel) rather than an
+     * abstract one to preserve binary compatibility: {@code IOnboardingTelemetryRecorder} ships in
+     * released {@code common4j} artifacts (since 24.3.0), so adding an abstract method would break
+     * any downstream implementation compiled against an earlier version (surfacing as an
+     * {@link AbstractMethodError} at runtime) and would make this a MAJOR rather than a MINOR
+     * change. The concrete {@code OnboardingTelemetryRecorder} overrides this to emit the real
+     * blob; the default simply yields the documented "nothing worth emitting" result.
+     *
      * @return The populated blob JSON string, or an empty string when there is nothing worth
      *         emitting (e.g. the session correlation id is missing). Never {@code null}.
      */
     @NonNull
-    String finalizeBlob();
+    default String finalizeBlob() {
+        return "";
+    }
 }
