@@ -55,13 +55,13 @@
              not need to declare it. Authenticator invokes an explicit, immutable PendingIntent
              targeting this activity after VID completes to reveal the caller's task.
              Transparent, no-history, not exported; finishes immediately. It is ONLY a navigation
-             token and never marks VID/auth as successful. -->
+             signal and never marks VID/auth as successful. -->
         <activity
             android:name="com.microsoft.identity.common.internal.ui.ReturnToCallerActivity"
             android:exported="false"
             android:noHistory="true"
             android:excludeFromRecents="true"
-            android:theme="@style/Theme.Transparent.NoAnimation" />
+            android:theme="@style/ReturnToCallerActivityTheme" />
 
     </application>
 

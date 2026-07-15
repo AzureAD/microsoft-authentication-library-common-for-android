@@ -337,8 +337,13 @@ public class AzureActiveDirectoryWebViewClientTest {
         resolveInfo.activityInfo.packageName = packageName;
         resolveInfo.activityInfo.name = packageName + ".OpenIdVcActivity";
         final ShadowPackageManager shadowPackageManager = Shadows.shadowOf(mContext.getPackageManager());
+        // Register for the implicit intent (used by queryIntentActivities to discover handlers) and
+        // for the package-pinned intent (used by resolveActivity after the launch is pinned to a
+        // specific handler, which is how the production code resolves the final intent).
         shadowPackageManager.addResolveInfoForIntent(
                 new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)), resolveInfo);
+        shadowPackageManager.addResolveInfoForIntent(
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)).setPackage(packageName), resolveInfo);
     }
 
     @Test

@@ -60,14 +60,16 @@
     <!--
         Transparent, animation-free theme for ReturnToCallerActivity. Uses a non-AppCompat
         translucent parent so the trampoline can extend android.app.Activity without requiring
-        AppCompat inflation, and suppresses all window animation so the return is instantaneous.
+        AppCompat inflation, and points windowAnimationStyle at BrokerNoWindowAnimation so every
+        activity/task/window transition slot is suppressed (including across the :auth process
+        boundary), making the return instantaneous.
     -->
-    <style name="Theme.Transparent.NoAnimation" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="ReturnToCallerActivityTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowAnimationStyle">@style/BrokerNoWindowAnimation</item>
     </style>
 
     <!-- Theme for DualScreenActivity.
