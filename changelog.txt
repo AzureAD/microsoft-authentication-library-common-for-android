@@ -1,8 +1,20 @@
 vNext
 ----------
+- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
+
+Version 24.5.0
+----------
+- [PATCH] Security: match redirect URI and switch_browser routing by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
+- [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
+- [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator (#3173)
+- [PATCH] Invalidate active broker cache if the cached broker no longer supports the configured IPC strategy (e.g. broker reverted to stub via MDM policy) (#3175)
+- [PATCH] Bump WrappedSecretKeySerializerVersion flight default to 1, switching WrappedSecretKey serialization to the metadata-aware format by default (#3176)
 - [PATCH] Fix KeyStore key generation failures on API <= 30 by adding a conservative RSA/PKCS1/SHA-256 spec (ECS kill-switch flighted) (#3167)
 - [PATCH] Add moshi-adapters dependency to Common module so downstream consumers like OneAuth do not have to add it explicitly (#3168)
-- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#TBD)
+- [MINOR] Add flighted request-origin (host) display to the HTTP auth dialog, with input sanitization and OTel telemetry; default OFF via EnableHttpAuthOriginDisplay flight (#3171)
+- [PATCH] Harden Authority.isKnownAuthority() to use exact, case-insensitive host matching for developer-configured known authorities (#3165)
+- [PATCH] Exempt the Intune package from the multiple-apps-listening browser redirect validation to support COBO/COPE/AM API BYOD locked-down scenarios (#3177)
+- [PATCH] Record root-cause telemetry (secret_key_wipe_reason, secret_key_read_root_cause, keystore_numeric_error_code, keystore_error_transience) on KeyStore secret-key wipes/re-keys to diagnose cache-wipe data loss, without changing wipe behavior (#3174)
 
 Version 24.4.0
 ----------

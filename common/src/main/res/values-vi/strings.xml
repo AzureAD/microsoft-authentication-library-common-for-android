@@ -6,6 +6,7 @@
     <string name="http_auth_dialog_username">Tên người dùng</string>
     <string name="http_auth_dialog_password">Mật khẩu</string>
     <string name="http_auth_dialog_title">Nhập thông tin đăng nhập</string>
+    <string name="http_auth_dialog_origin_host">Máy chủ: %1$s</string>
     <string name="http_auth_dialog_login">Đăng nhập</string>
     <string name="http_auth_dialog_cancel">Hủy</string>
 

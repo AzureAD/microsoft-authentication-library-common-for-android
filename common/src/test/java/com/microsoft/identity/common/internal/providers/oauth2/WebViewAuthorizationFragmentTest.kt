@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2
 
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
 import com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.IS_SWITCH_BROWSER_FLOW
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult
@@ -44,10 +43,9 @@ class WebViewAuthorizationFragmentTest {
     @Test
     fun testPropertyBagContainsFlagWhenFlowWasInitiated() {
         val fragment = createFragment()
-        val mockHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val mockHandler = mock(SwitchBrowserProtocolCoordinator::class.java)
         whenever(mockHandler.wasSwitchBrowserFlowInitiated).thenReturn(true)
-        val coordinator = SwitchBrowserProtocolCoordinator(mockHandler)
-        fragment.setSwitchBrowserProtocolCoordinator(coordinator)
+        fragment.setSwitchBrowserProtocolCoordinator(mockHandler)
 
         val result = RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED)
         val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
@@ -58,10 +56,9 @@ class WebViewAuthorizationFragmentTest {
     @Test
     fun testPropertyBagDoesNotContainFlagWhenFlowWasNotInitiated() {
         val fragment = createFragment()
-        val mockHandler = mock(SwitchBrowserRequestHandler::class.java)
+        val mockHandler = mock(SwitchBrowserProtocolCoordinator::class.java)
         whenever(mockHandler.wasSwitchBrowserFlowInitiated).thenReturn(false)
-        val coordinator = SwitchBrowserProtocolCoordinator(mockHandler)
-        fragment.setSwitchBrowserProtocolCoordinator(coordinator)
+        fragment.setSwitchBrowserProtocolCoordinator(mockHandler)
 
         val result = RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED)
         val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
@@ -70,9 +67,9 @@ class WebViewAuthorizationFragmentTest {
     }
 
     @Test
-    fun testPropertyBagDoesNotContainFlagWhenCoordinatorIsNull() {
+    fun testPropertyBagDoesNotContainFlagWhenHandlerIsNull() {
         val fragment = createFragment()
-        // coordinator is null by default
+        // handler is null by default
 
         val result = RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED)
         val propertyBag = fragment.propertyBagFromAuthorizationResult(result)
