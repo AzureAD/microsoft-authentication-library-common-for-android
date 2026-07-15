@@ -1151,7 +1151,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            final ComponentName resolved = intent.resolveActivity(getActivity().getPackageManager());
+            // Resolve after any pinning so the handler check matches the final intent we will launch.
+            final android.content.pm.PackageManager pm = getActivity().getPackageManager();
 
             // Return-to-caller is gated by its own flight so it can be rolled back to the
             // pre-existing behavior (launch the openid-vc handler without a return PendingIntent).
@@ -1173,6 +1174,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
 
+            final ComponentName resolved = intent.resolveActivity(pm);
             if (resolved != null) {
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
