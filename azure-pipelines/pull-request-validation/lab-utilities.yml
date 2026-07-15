@@ -36,7 +36,7 @@ jobs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
           javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.17"
+          jdkVersionOption: "1.21"
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: LabApiUtilities
@@ -48,5 +48,5 @@ jobs:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true -PlabSecret=$(LabVaultAppCert)
           javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.17"
+          jdkVersionOption: "1.21"
 ...
