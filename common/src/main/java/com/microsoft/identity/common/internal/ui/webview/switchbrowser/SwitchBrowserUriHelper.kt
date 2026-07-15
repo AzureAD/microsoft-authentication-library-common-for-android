@@ -47,6 +47,18 @@ object SwitchBrowserUriHelper {
     }
 
     /**
+     * Whether strict (structured) switch_browser redirect matching is enabled. Shares the
+     * [CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING] kill switch with
+     * `AzureActiveDirectoryWebViewClient.isRedirectUrl`, so the redirect and switch_browser
+     * matchers tighten — or roll back to the historical `String#startsWith` behavior — together.
+     * Read fresh on each call so an ECS change (or a test override) takes effect immediately.
+     */
+    private val strictRedirectMatchingEnabled: Boolean
+        get() = CommonFlightsManager
+            .getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING)
+
+    /**
      * Extracts the base redirect URI (scheme + authority + all paths except the last one) from a full URI.
      *
      * This is useful for extracting the redirect base before the final path segment (e.g., "switch_browser").
@@ -209,10 +221,15 @@ object SwitchBrowserUriHelper {
     }
 
     /**
-     * Check if the url is a switch browser redirect url
+     * Check if the url is a switch browser redirect url.
      *
-     * The request is considered "switch_browser" if the URL
-     * starts with the following pattern: {redirectUrl}/{switchBrowserPath}
+     * The URL is a switch_browser redirect when it matches {redirectUrl}/{switchBrowserPath} by
+     * scheme + authority + path (query/fragment ignored, since they carry code/state/action_uri).
+     * This mirrors the strict matching in `AzureActiveDirectoryWebViewClient.isRedirectUrl` so a
+     * prefix-confusion URL such as `{redirectUrl}/switch_browser.evil.com/x?code=...` is not
+     * treated as a switch_browser request. Gated by [strictRedirectMatchingEnabled]; when the kill
+     * switch is off this reverts to the historical `String#startsWith` prefix match. Defense in
+     * depth — eSTS validates the redirect URI exactly server-side.
      *
      * @param url The URL to be checked.
      * @param redirectUrl The redirect URL to be checked against.
@@ -224,7 +241,62 @@ object SwitchBrowserUriHelper {
             return false
         }
         val expectedUrl = "$redirectUrl/$switchBrowserPath"
-        return url.startsWith(expectedUrl, ignoreCase = true)
+
+        // Kill switch: revert to the historical prefix match when strict matching is disabled.
+        if (!strictRedirectMatchingEnabled) {
+            return url.startsWith(expectedUrl, ignoreCase = true)
+        }
+
+        // Compare scheme + authority + path explicitly rather than
+        // buildUpon().clearQuery().fragment(null) + Uri.equals(). Uri.equals is exact and
+        // case-sensitive, so it would reject a legitimate single trailing-slash difference and a
+        // mixed-case registered URI; and for opaque urn: redirects clearQuery() does not strip the
+        // auth code (it lives in the scheme-specific part, not the query), which would collapse the
+        // check to a scheme-only match and reopen the prefix-confusion hole for urn: redirects.
+        return try {
+            val actual = url.toUri()
+            val expected = expectedUrl.toUri()
+            val expectedScheme = expected.scheme
+            when {
+                // Scheme-less configured URI: fall back to strict equality (minus query/fragment).
+                expectedScheme.isNullOrEmpty() ->
+                    stripQueryAndFragment(url).equals(expectedUrl, ignoreCase = true)
+                !expectedScheme.equals(actual.scheme, ignoreCase = true) -> false
+                // Opaque URIs (e.g. urn:...) have null authority/path, so compare the
+                // scheme-specific part instead, minus any appended query/fragment.
+                expected.isOpaque || actual.isOpaque ->
+                    expected.isOpaque == actual.isOpaque &&
+                        stripQueryAndFragment(actual.schemeSpecificPart)
+                            .equals(stripQueryAndFragment(expected.schemeSpecificPart), ignoreCase = true)
+                !actual.authority.equals(expected.authority, ignoreCase = true) -> false
+                else -> normalizePath(actual.path).equals(normalizePath(expected.path), ignoreCase = true)
+            }
+        } catch (t: Throwable) {
+            // Fail closed on unparseable URLs. Log only the exception type — its message could
+            // embed the URL (and thus the auth code).
+            Logger.warn(TAG, "Failed to parse switch_browser redirect URL: ${t.javaClass.simpleName}")
+            false
+        }
+    }
+
+    /** Strips a trailing `?query` and/or `#fragment` from [s]. */
+    private fun stripQueryAndFragment(s: String?): String {
+        var r = s ?: return ""
+        val q = r.indexOf('?')
+        if (q >= 0) {
+            r = r.substring(0, q)
+        }
+        val h = r.indexOf('#')
+        if (h >= 0) {
+            r = r.substring(0, h)
+        }
+        return r
+    }
+
+    /** Removes a single trailing slash so "/a" and "/a/" — and "" (no path) and "/" — compare equal. */
+    private fun normalizePath(path: String?): String {
+        val p = path ?: return ""
+        return if (p.endsWith("/")) p.substring(0, p.length - 1) else p
     }
 
     /**

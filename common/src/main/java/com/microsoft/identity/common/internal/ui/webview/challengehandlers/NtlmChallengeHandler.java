@@ -25,20 +25,56 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
+
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
  */
 public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallenge, Void> {
     private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
+
+    /**
+     * Upper bound on the length of a displayed origin value (the host). The value is server-supplied,
+     * so it is capped to keep the dialog readable and bounded.
+     */
+    private static final int MAX_ORIGIN_VALUE_LENGTH = 256;
+
+    /**
+     * Multiple of {@link #MAX_ORIGIN_VALUE_LENGTH} to which an untrusted value is truncated <em>before</em>
+     * the sanitization regexes run, so a pathologically large header value cannot cause unnecessary
+     * regex work on the UI thread. The final display cap is applied after sanitization.
+     */
+    private static final int PRE_SANITIZE_CAP = MAX_ORIGIN_VALUE_LENGTH * 4;
+
+    /**
+     * Counts how many times the request-origin row was successfully shown in the HTTP auth dialog.
+     * Emitted only when the {@link CommonFlight#ENABLE_HTTP_AUTH_ORIGIN_DISPLAY} flight is on, this is
+     * the signal used to confirm the flighted path is exercising correctly after the flight is ramped.
+     */
+    private static final LongCounter sHttpAuthOriginDisplayedCount = OTelUtility.createLongCounter(
+            "http_auth_origin_displayed_count",
+            "Number of times the request origin row was shown in the HTTP auth dialog"
+    );
+
     private final Activity mActivity;
     private final IAuthorizationCompletionCallback mChallengeCallback;
 
@@ -72,6 +108,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
         final View v = factory.inflate(mActivity.getResources().getLayout(R.layout.http_auth_dialog), null);
         final EditText usernameView = (EditText) v.findViewById(R.id.editUserName);
         final EditText passwordView = (EditText) v.findViewById(R.id.editPassword);
+        setOriginTextIfEnabled(v, ntlmChallenge);
         final String title = mActivity.getText(R.string.http_auth_dialog_title).toString();
         final AlertDialog.Builder httpAuthDialog = new AlertDialog.Builder(mActivity);
         httpAuthDialog.setTitle(title)
@@ -97,6 +134,114 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
                                 cancelRequest();
                             }
                         }).create().show();
+    }
+
+    /**
+     * Sets the request origin details on the dialog when the flight is enabled.
+     *
+     * @param dialogView    the inflated dialog view
+     * @param ntlmChallenge the challenge containing request origin details
+     */
+    void setOriginTextIfEnabled(final View dialogView, final NtlmChallenge ntlmChallenge) {
+        if (!isHttpAuthOriginDisplayEnabled()) {
+            return;
+        }
+
+        final String originText = getOriginText(ntlmChallenge);
+        if (TextUtils.isEmpty(originText)) {
+            return;
+        }
+
+        // Lightweight span so dashboards can confirm the flighted origin-display path executed
+        // (and succeeded) once the flight is ramped. Linked to the current auth span if present.
+        final Span span = OTelUtility.createSpanFromParent(
+                SpanName.HttpAuthOriginDisplay.name(),
+                SpanExtension.current().getSpanContext());
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            final TextView originView = (TextView) dialogView.findViewById(R.id.httpAuthOriginText);
+            originView.setText(originText);
+            originView.setVisibility(View.VISIBLE);
+            sHttpAuthOriginDisplayedCount.add(1);
+            span.setStatus(StatusCode.OK);
+        } catch (final RuntimeException e) {
+            span.setStatus(StatusCode.ERROR);
+            span.recordException(e);
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+
+    /**
+     * Gets the request origin text displayed in the dialog.
+     * <p>
+     * v1 displays the <strong>host only</strong>. The realm is fully server-controlled free text, so a
+     * malicious origin could pair a suspicious host with a reassuring realm line (e.g. "Microsoft
+     * Corporate Login") sitting right next to it; displaying the realm is deferred pending security
+     * review (see PR #3171 discussion). The {@link NtlmChallenge#getRealm() realm} is intentionally
+     * not read here.
+     *
+     * @param ntlmChallenge the challenge containing request origin details
+     * @return the formatted origin text, or an empty string when no host is available
+     */
+    String getOriginText(final NtlmChallenge ntlmChallenge) {
+        final String host = sanitizeOriginValue(ntlmChallenge.getHost());
+        if (TextUtils.isEmpty(host)) {
+            return "";
+        }
+
+        return mActivity.getString(R.string.http_auth_dialog_origin_host, host);
+    }
+
+    /**
+     * Sanitizes a server-supplied origin value (the host) before it is rendered in the dialog.
+     * <p>
+     * The host comes from the challenge and is <em>not</em> fully trusted — a WebView may have been
+     * navigated to a malicious origin, which is exactly the case this transparency feature exists to
+     * expose. Without sanitization a hostile value could embed CR/LF or other control characters to
+     * inject additional lines into the credential dialog and spoof its content, or use invisible
+     * Unicode <em>format</em> characters (category {@code \p{Cf}}, e.g. U+202E RIGHT-TO-LEFT OVERRIDE)
+     * to visually reorder the rendered text — turning this feature into a phishing surface. Control
+     * characters, Unicode format characters, and line/paragraph separators are collapsed to single
+     * spaces so the value stays on one visual line, and the result is length-capped. The input is
+     * pre-capped ({@link #PRE_SANITIZE_CAP}) before the regex passes to bound UI-thread work on very
+     * large values.
+     *
+     * @param value the raw, untrusted origin value
+     * @return a single-line, length-bounded value safe to display
+     */
+    static String sanitizeOriginValue(final String value) {
+        if (TextUtils.isEmpty(value)) {
+            return "";
+        }
+
+        // Pre-cap the untrusted input before running the regexes so a very large header value can't
+        // cause unnecessary UI-thread work. A small multiple of the display cap leaves room for the
+        // whitespace-collapse step before the final cap is applied.
+        String sanitized = value.length() > PRE_SANITIZE_CAP
+                ? value.substring(0, PRE_SANITIZE_CAP)
+                : value;
+
+        sanitized = sanitized
+                .replaceAll("[\\p{Cc}\\p{Cf}\\p{Zl}\\p{Zp}]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (sanitized.length() > MAX_ORIGIN_VALUE_LENGTH) {
+            sanitized = sanitized.substring(0, MAX_ORIGIN_VALUE_LENGTH);
+        }
+
+        return sanitized;
+    }
+
+    /**
+     * Checks whether the request origin display flight is enabled.
+     *
+     * @return true if the request origin should be shown
+     */
+    boolean isHttpAuthOriginDisplayEnabled() {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_HTTP_AUTH_ORIGIN_DISPLAY);
     }
 
     private void cancelRequest() {

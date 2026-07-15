@@ -626,6 +626,12 @@ public enum AttributeName {
      */
     key_pair_gen_elapsed_time,
 
+    /**
+     * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
+     * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
+     */
+    key_pair_gen_conservative_spec_flight_enabled,
+
     //endregion
 
     //region Secret Key Wrapping
@@ -669,6 +675,29 @@ public enum AttributeName {
      * The time (in milliseconds) spent on secret key serialization/deserialization.
      */
     secret_key_serialization_duration,
+
+    /**
+     * Indicates which check in the secret-key read path triggered a wipe of existing key material
+     * (e.g. an unrecoverable load error, or an orphaned wrapped-key file whose keystore key is gone).
+     * Legitimate first-time reads (no keystore key and no wrapped-key file) are intentionally not recorded.
+     */
+    secret_key_wipe_reason,
+
+    /**
+     * The actual root cause (simple class name + message) of the exception that caused a secret-key
+     * read failure (e.g. "IOException: /data/.../key (No space left on device)"). This is the
+     * underlying failure the ClientException wraps, captured unconditionally so the real reason is
+     * never lost behind the generic wrapper message, even for deeply nested cause chains.
+     */
+    secret_key_read_root_cause,
+
+    /**
+     * Whether the KeyStore failure that triggered a secret-key wipe is transient (retry may succeed)
+     * or permanent. One of TRANSIENT, NOT_TRANSIENT (API 33+, derived from
+     * KeyStoreException.isTransientFailure()), API_TOO_OLD (API < 33, cannot be determined), or
+     * NOT_KEYSTORE_ERROR (no KeyStoreException in the cause chain).
+     */
+    keystore_error_transience,
 
     /**
      * Indicates if an external handler was found to handle the openid-vc:// URI.

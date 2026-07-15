@@ -6,6 +6,7 @@
     <string name="http_auth_dialog_username">Nome de usuario</string>
     <string name="http_auth_dialog_password">Contrasinal</string>
     <string name="http_auth_dialog_title">Introduza as credenciais</string>
+    <string name="http_auth_dialog_origin_host">Computador servidor: %1$s</string>
     <string name="http_auth_dialog_login">Iniciar sesión</string>
     <string name="http_auth_dialog_cancel">Cancelar</string>
 
