@@ -40,7 +40,7 @@ import com.microsoft.identity.common.logging.Logger;
  * immutable {@code PendingIntent} targeting this class and passes it to Authenticator as part
  * of the VID launch intent.</p>
  *
-     * <p><b>This activity is purely a return / navigation signal.</b> It does NOT mark VID or auth
+ * <p><b>This activity is purely a return / navigation signal.</b> It does NOT mark VID or auth
  * as successful just because it was invoked. VID/auth success must be validated through the
  * normal trusted continuation state / broker / server validation. This activity only reveals
  * the previous activity in the caller's task and finishes immediately.</p>
