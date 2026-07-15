@@ -847,6 +847,11 @@ public class BrokerOAuth2TokenCache
     }
 
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
+        return getTokenCachesForClientId(clientId, true);
+    }
+
+    private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId,
+                                                             final boolean callerAuthorizedForFoci) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
         boolean containsFoci = false;
@@ -855,9 +860,13 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
                 if (null != metadata.getFoci() && !containsFoci) {
-                    // Add the foci cache, but only once...
-                    result.add(mFociCache);
-                    containsFoci = true;
+                    // Add the shared FoCI cache, but only once, and only when the calling app is authorized
+                    // to share FoCI tokens (AB#3687466). An unauthorized caller must not enumerate the
+                    // device-wide shared FoCI accounts; its own UID-partitioned cache (below) is unaffected.
+                    if (callerAuthorizedForFoci) {
+                        result.add(mFociCache);
+                        containsFoci = true;
+                    }
                 } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
                     final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
@@ -1063,6 +1072,32 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
                                                                    @NonNull String clientId) {
+        // Existing callers are treated as authorized to access the shared FoCI cache, preserving
+        // pre-existing behavior. Callers that must gate shared-FoCI access on the calling app's
+        // authorization use the overload below.
+        return getAccountsWithAggregatedAccountData(environment, clientId, true);
+    }
+
+    /**
+     * Broker-specific overload of {@link #getAccountsWithAggregatedAccountData(String, String)} that gates
+     * inclusion of the device-wide shared family-of-client-id (FoCI) cache on whether the calling app is
+     * authorized to share FoCI tokens.
+     * <p>
+     * A caller's own UID-partitioned accounts are always returned; only the shared FoCI accounts are
+     * withheld from unauthorized callers. When the caller is not FoCI-authorized and no client-specific
+     * cache exists, this returns an empty list rather than falling back to the shared FoCI cache
+     * (fail-closed). See AB#3687466.
+     *
+     * @param environment             environment to scope the lookup to, or {@code null} to return
+     *                                accounts across all environments.
+     * @param clientId                the client id to look up accounts for.
+     * @param callerAuthorizedForFoci {@code true} if the calling app may access the shared FoCI cache;
+     *                                when {@code false}, the shared FoCI cache is excluded.
+     * @return the accounts with aggregated account data visible to the caller.
+     */
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
+                                                                   @NonNull String clientId,
+                                                                   boolean callerAuthorizedForFoci) {
         final String methodName = ":getAccountsWithAggregatedAccountData";
 
         final List<ICacheRecord> result;
@@ -1076,6 +1111,16 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
+                if (!callerAuthorizedForFoci) {
+                    // Fail closed: do NOT fall back to the shared FoCI cache for a caller that is not
+                    // authorized to share FoCI tokens. Return only what the caller's own cache provided.
+                    Logger.verbose(
+                            TAG + methodName,
+                            "No client-specific cache; caller is not FoCI-authorized, skipping FoCI fallback."
+                    );
+                    return new ArrayList<>();
+                }
+
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
@@ -1092,7 +1137,7 @@ public class BrokerOAuth2TokenCache
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
-            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId, callerAuthorizedForFoci);
 
             // Declare a new List to which we will add all of our results...
             result = new ArrayList<>();
