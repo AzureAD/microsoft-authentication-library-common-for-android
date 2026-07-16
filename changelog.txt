@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Add a gate-only OpenTelemetry span (ProcessBrokerInstallIntent) around the flighted broker-install intent handling path so the validation outcome (launched / blocked / error) can be confirmed in telemetry when the flight is enabled (#3170)
+- [PATCH] Security: validate the target of WebView broker-install intent-scheme redirects against an allow-list (Google Play Store only), clearing any explicit component/selector so resolution is driven solely by the validated package; gated by ENABLE_BROKER_INSTALL_INTENT_VALIDATION CommonFlight and instrumented with a ProcessBrokerInstallIntent OTel span for the launched / blocked / error outcome (#3170)
 - [PATCH] Security: match redirect URI and switch_browser routing by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
 - [MINOR] Add OnboardingBlockingErrorParser bridging x-ms-clitelem and OAuth error_codes into the onboarding telemetry blob, with non-onboarding AADSTS filtering and a multi-value Path B overload (#3122)
 - [PATCH] Move SwitchBrowser cloud discovery off the WebView main thread to prevent NetworkOnMainThreadException; consolidate SwitchBrowserChallenge and SwitchBrowserRequestHandler into SwitchBrowserProtocolCoordinator (#3173)

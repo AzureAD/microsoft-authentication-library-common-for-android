@@ -65,6 +65,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -1006,6 +1007,15 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private void setBrokerInstallIntentValidationFlight(final boolean enabled) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        // Default any unstubbed flight to its real default value so these tests don't silently
+        // depend on Mockito's boolean default (false) as the WebViewClient evolves.
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        // Override only the flight under test.
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION))
                 .thenReturn(enabled);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
