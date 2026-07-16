@@ -862,7 +862,9 @@ public class BrokerOAuth2TokenCache
                 if (null != metadata.getFoci() && !containsFoci) {
                     // Add the shared FoCI cache, but only once, and only when the calling app is authorized
                     // to share FoCI tokens (AB#3687466). An unauthorized caller must not enumerate the
-                    // device-wide shared FoCI accounts; its own UID-partitioned cache (below) is unaffected.
+                    // device-wide shared FoCI accounts. This gate suppresses only the shared FoCI cache;
+                    // the caller's own app-specific / UID-partitioned cache is added independently by the
+                    // non-FoCI metadata branch below and is never affected by this check.
                     if (callerAuthorizedForFoci) {
                         result.add(mFociCache);
                         containsFoci = true;
@@ -1118,7 +1120,7 @@ public class BrokerOAuth2TokenCache
                             TAG + methodName,
                             "No client-specific cache; caller is not FoCI-authorized, skipping FoCI fallback."
                     );
-                    return new ArrayList<>();
+                    return Collections.emptyList();
                 }
 
                 Logger.verbose(
