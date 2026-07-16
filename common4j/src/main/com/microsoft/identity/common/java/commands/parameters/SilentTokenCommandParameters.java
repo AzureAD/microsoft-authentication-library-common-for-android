@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -41,6 +42,19 @@ import lombok.experimental.SuperBuilder;
 public class SilentTokenCommandParameters extends TokenCommandParameters {
 
     private static final String TAG = SilentTokenCommandParameters.class.getSimpleName();
+
+    /**
+     * Whether the calling app is authorized to redeem the device-wide shared family-of-client-id (FoCI)
+     * refresh token. When {@code false}, the controller must not redeem the shared FoCI refresh token on
+     * this caller's behalf and falls through to the caller's own UID-partitioned cache only.
+     * <p>
+     * Defaults to {@code true} (permissive) so non-brokered silent flows (e.g. {@code LocalMSALController},
+     * which owns its tokens and has no cross-app "authorized to share" concept) are unaffected. The Broker
+     * explicitly sets this from {@code isAuthorizedToShareTokens(callingUid)} for brokered silent requests.
+     * See AB#3687466.
+     */
+    @Builder.Default
+    private boolean callerAuthorizedForFoci = true;
 
     @Override
     public void validate() throws ArgumentException, ClientException {

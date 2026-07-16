@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add SilentTokenCommandParameters.callerAuthorizedForFoci (default true) and gate shared FoCI refresh-token redemption in BaseController.getAccountWithFRTIfAvailable on it: an unauthorized caller no longer has the device-wide shared family refresh token redeemed on its behalf (falls through to its own UID-partitioned cache). Default true keeps non-brokered callers unaffected (AB#3687466) (#TBD)
 
 Version 24.5.0
 ----------

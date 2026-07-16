@@ -1086,6 +1086,16 @@ public abstract class BaseController {
                 .getFamilyRefreshTokenForHomeAccountId(homeAccountId);
 
         if (refreshTokenRecord != null) {
+            // Gate the device-wide shared FoCI refresh-token redemption: an unauthorized caller must not
+            // have the shared family refresh token redeemed on its behalf. Fall through to the caller's own
+            // UID-partitioned cache only (return null, same as the "no FRT found" path). The Broker sets
+            // this flag from isAuthorizedToShareTokens(callingUid); non-brokered callers default to true and
+            // are unaffected. See AB#3687466.
+            if (!parameters.isCallerAuthorizedForFoci()) {
+                Logger.info(methodTag,
+                        "Caller not authorized to share FoCI tokens; skipping shared FoCI RT redemption.");
+                return null;
+            }
             try {
                 // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
                 FociQueryUtilities.tryFociTokenWithGivenClientId(
