@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -88,6 +89,16 @@ import java.util.concurrent.TimeoutException;
 public final class BrokerInstallResumeCoordinator {
 
     private static final String TAG = BrokerInstallResumeCoordinator.class.getSimpleName();
+
+    /**
+     * Google Play Store package. The broker-install intent is explicitly targeted at this package for
+     * {@code play.google.com} links so the Play Store (not a browser) records the install referrer;
+     * matches Company Portal's own supported install launch ({@code AppStoreUtils}).
+     */
+    private static final String GOOGLE_PLAY_STORE_PACKAGE = "com.android.vending";
+
+    /** Host of an allowlisted Google Play broker-install link. */
+    private static final String PLAY_STORE_HOST = "play.google.com";
 
     /** E2E-only logcat tag mirroring key milestones; safe to strip for production. */
     private static final String POC_TAG = "ResumePOC";
@@ -263,14 +274,54 @@ public final class BrokerInstallResumeCoordinator {
         }
     }
 
-    /** Launches the Play Store to the (validated) broker-install link. BAL-safe from app context. */
+    /**
+     * Launches the Play Store to the (validated) broker-install link. BAL-safe from app context.
+     *
+     * <p>For a {@code play.google.com} link we explicitly target the Google Play Store package
+     * ({@link #GOOGLE_PLAY_STORE_PACKAGE}) rather than letting the system resolve the {@code https}
+     * URL. This mirrors Company Portal's own supported install path ({@code AppStoreUtils}) and is
+     * what makes the {@code &referrer=<originPackage>} reach Company Portal: only when the Play Store
+     * app (not a browser) handles the intent does Google Play record the install referrer and later
+     * fire {@code com.android.vending.INSTALL_REFERRER} to Company Portal, which drives its MDM-less
+     * redirect back to the origin app. An unresolved-URL {@code https} launch can be caught by a
+     * browser, in which case the referrer is silently dropped and no auto-redirect happens.
+     *
+     * <p>The China {@code go.microsoft.com/fwlink} fallback (also allowlisted) is left un-targeted:
+     * the Play Store cannot resolve it, and that path does not rely on the referrer.
+     */
     private static void launchInstall(@NonNull final Context context, @NonNull final String installUrl) {
         final String link = installUrl.replace(
                 AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
         // OneAuth may be initialized without an Activity, so launch as a new task from app context.
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.getApplicationContext().startActivity(intent);
+        // Force the Play Store app to handle Play links so the install referrer is actually captured.
+        if (isPlayStoreLink(link)) {
+            intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE);
+        }
+        try {
+            context.getApplicationContext().startActivity(intent);
+        } catch (final ActivityNotFoundException e) {
+            // Play Store not present/enabled to service the explicit-package intent. Best-effort:
+            // retry letting the system resolve the link (the referrer may not be captured, but the
+            // user still reaches a store). If this also fails, the parked request times out and
+            // falls back to the caller's normal terminal broker-install behavior.
+            Logger.warn(TAG + ":launchInstall",
+                    "Play Store package not available; retrying store launch without an explicit package.");
+            intent.setPackage(null);
+            try {
+                context.getApplicationContext().startActivity(intent);
+            } catch (final ActivityNotFoundException retryError) {
+                Logger.warn(TAG + ":launchInstall",
+                        "No activity available to handle the broker-install link.");
+            }
+        }
+    }
+
+    /** True when the (https) install link targets the Google Play listing, so Play should handle it. */
+    private static boolean isPlayStoreLink(@NonNull final String link) {
+        final String host = Uri.parse(link).getHost();
+        return PLAY_STORE_HOST.equalsIgnoreCase(host);
     }
 
     /** Returns the process {@link Application} for lifecycle registration, or null if unavailable. */
