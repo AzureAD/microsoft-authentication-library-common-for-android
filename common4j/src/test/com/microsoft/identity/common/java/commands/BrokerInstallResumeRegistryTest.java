@@ -204,5 +204,32 @@ public class BrokerInstallResumeRegistryTest {
         assertSame(BrokerInstallResumeRegistry.getInstance(), BrokerInstallResumeRegistry.getInstance());
     }
 
+    @Test
+    public void claimAllPending_removesAndReturnsEveryRecord() {
+        final BrokerInstallResumeRegistry registry = new BrokerInstallResumeRegistry();
+        registry.park(UUID.randomUUID().toString(), record("a@contoso.com", Long.MAX_VALUE));
+        registry.park(UUID.randomUUID().toString(), record("b@contoso.com", Long.MAX_VALUE));
+
+        final List<ParkedRecord> claimed = registry.claimAllPending();
+
+        assertEquals(2, claimed.size());
+        assertTrue("all records are claimed and removed", registry.isEmpty());
+    }
+
+    @Test
+    public void claimAllPending_isSingleUse_secondCallReturnsEmpty() {
+        final BrokerInstallResumeRegistry registry = new BrokerInstallResumeRegistry();
+        registry.park(UUID.randomUUID().toString(), record("a@contoso.com", Long.MAX_VALUE));
+
+        assertEquals(1, registry.claimAllPending().size());
+        assertTrue("second claim finds nothing", registry.claimAllPending().isEmpty());
+    }
+
+    @Test
+    public void claimAllPending_whenEmpty_returnsEmptyList() {
+        final BrokerInstallResumeRegistry registry = new BrokerInstallResumeRegistry();
+        assertTrue(registry.claimAllPending().isEmpty());
+    }
+
     // endregion
 }
