@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BrokerInstallationRequiredException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.DeviceRegistrationRequiredException;
 import com.microsoft.identity.common.java.exception.InsufficientDeviceRegistrationException;
@@ -160,6 +161,20 @@ public class ExceptionAdapter {
                                 microsoftAuthorizationErrorResponse.getError(),
                                 microsoftAuthorizationErrorResponse.getErrorDescription(),
                                 microsoftAuthorizationErrorResponse.getUpnToWpj()
+                        );
+                    } else if (MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED.equals(
+                            microsoftAuthorizationErrorResponse.getError())
+                            && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                                    .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)) {
+                        // MAM broker-install request-resume engine: return a dedicated exception that
+                        // carries the WPJ username (UPN) so the request can be parked and later replayed
+                        // silently through the freshly installed broker. Only produced when the flight is
+                        // on; with the flight off the generic ServiceException below is returned unchanged.
+                        return new BrokerInstallationRequiredException(
+                                microsoftAuthorizationErrorResponse.getError(),
+                                microsoftAuthorizationErrorResponse.getErrorDescription(),
+                                microsoftAuthorizationErrorResponse.getUpnToWpj(),
+                                null /* installLink is not carried on the error response today */
                         );
                     }
                 }

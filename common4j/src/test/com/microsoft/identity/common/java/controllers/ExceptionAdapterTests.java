@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenC
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BrokerInstallationRequiredException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -47,6 +48,7 @@ import com.microsoft.identity.common.java.flighting.MockFlightsManager;
 import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
@@ -83,6 +85,57 @@ public class ExceptionAdapterTests {
         flightsManager.setMockBrokerFlightsProvider(flightsProvider);
 
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
+
+    private static void setBrokerInstallResumeFlight(final boolean enabled) {
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_BROKER_INSTALL_RESUME.getKey(), String.valueOf(enabled));
+
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
+
+    private static MicrosoftStsAuthorizationResult brokerInstallRequiredResult(final String upn) {
+        final MicrosoftStsAuthorizationErrorResponse errorResponse = new MicrosoftStsAuthorizationErrorResponse(
+                MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED,
+                MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION);
+        errorResponse.setUpnToWpj(upn);
+
+        final MicrosoftStsAuthorizationResult authResult = mock(MicrosoftStsAuthorizationResult.class);
+        when(authResult.getAuthorizationStatus()).thenReturn(AuthorizationStatus.FAIL);
+        when(authResult.getAuthorizationErrorResponse()).thenReturn(errorResponse);
+        return authResult;
+    }
+
+    @Test
+    public void testBrokerInstallRequired_flightOn_returnsBrokerInstallationRequiredException_withUpn() {
+        setBrokerInstallResumeFlight(true);
+        final String upn = "idlab1@msidlab4.onmicrosoft.com";
+
+        final BaseException exception = ExceptionAdapter.exceptionFromAuthorizationResult(
+                brokerInstallRequiredResult(upn), null);
+
+        assertTrue("Expected BrokerInstallationRequiredException when the flight is on",
+                exception instanceof BrokerInstallationRequiredException);
+        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, exception.getErrorCode());
+        assertEquals("UPN must be carried on the exception for login_hint on resume",
+                upn, exception.getUsername());
+    }
+
+    @Test
+    public void testBrokerInstallRequired_flightOff_returnsPlainServiceException_unchanged() {
+        setBrokerInstallResumeFlight(false);
+
+        final BaseException exception = ExceptionAdapter.exceptionFromAuthorizationResult(
+                brokerInstallRequiredResult("idlab1@msidlab4.onmicrosoft.com"), null);
+
+        assertFalse("Must NOT be the resume exception when the flight is off",
+                exception instanceof BrokerInstallationRequiredException);
+        assertTrue("Existing terminal behavior: a plain ServiceException",
+                exception instanceof ServiceException);
+        assertEquals(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, exception.getErrorCode());
     }
 
     @Test
