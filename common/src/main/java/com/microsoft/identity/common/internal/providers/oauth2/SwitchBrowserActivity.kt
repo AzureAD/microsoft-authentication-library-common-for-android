@@ -229,6 +229,16 @@ class SwitchBrowserActivity : FragmentActivity() {
         val extras = this.intent.extras ?: Bundle()
         val browserPackageName = extras.getString(BROWSER_PACKAGE_NAME).orEmpty()
         val isAuthTabSupported = AuthTabStrategyProvider.isAuthTabSupported(this, browserPackageName)
+        Logger.info(
+            methodTag,
+            "Auth Tab decision inputs: flightEnabled=$isAuthTabFlightEnabled, " +
+                "browserPackagePresent=${browserPackageName.isNotBlank()}, " +
+                "isAuthTabSupported=$isAuthTabSupported"
+        )
+        Logger.info(
+            methodTag,
+            "Auth Tab decision browser package: $browserPackageName"
+        )
         span?.setAttribute(
             AttributeName.browser_package_name.name,
             browserPackageName
