@@ -116,6 +116,17 @@ public final class BrokerInstallResumeCoordinator {
     private final ConcurrentMap<String, BrokerParkedEntry> mBrokerParked = new ConcurrentHashMap<>();
 
     /**
+     * Correlation ids of broker-install requests that are in flight for the <em>entire</em>
+     * park-through-resume window. Unlike {@link #mBrokerParked} — which is emptied at the <em>start</em>
+     * of {@link #resumeParkedOnForeground} (so it is already empty while the resumed broker acquire is
+     * running) — an id stays here from park until the parked future finally completes in
+     * {@link #installParkAndAwait}. This is the signal OneAuth's UI consults to know it must not cancel
+     * the original interactive request when the foreground app/Company Portal takes focus mid-resume:
+     * that focus change is the expected broker-install hand-off, not a user cancellation.
+     */
+    private final java.util.Set<String> mBrokerInstallInFlight = ConcurrentHashMap.newKeySet();
+
+    /**
      * Upper bound on how long the parked {@code acquireToken} thread blocks awaiting resume. Sized to
      * cover a user-paced Play Store install + Company Portal return, but deliberately short: past this
      * window the user has almost certainly abandoned the install, so the request fails back to the
@@ -124,7 +135,7 @@ public final class BrokerInstallResumeCoordinator {
      * the normal broker path and succeeds. Blocking here does not starve background silent-token
      * requests (interactive requests do not use OneAuth's background thread pool).
      */
-    private static final long INSTALL_RESUME_TIMEOUT_SECONDS = 90;
+    private static final long INSTALL_RESUME_TIMEOUT_SECONDS = 120;
 
     /**
      * Minimum Company Portal {@code versionCode} that implements the post-install resume redirect.
@@ -169,7 +180,27 @@ public final class BrokerInstallResumeCoordinator {
     }
 
     /**
-     * Broker-path (OneAuth) park: installs the broker (Company Portal) and blocks the calling
+     * Whether any broker-install request is currently in flight — i.e. parked awaiting the Company
+     * Portal install, or actively being resumed in broker context — anywhere in this process.
+     *
+     * <p>OneAuth's Android sign-in UI consults this before translating a "host activity lost focus /
+     * is finishing" signal into an interactive-request cancellation. During a broker-install park the
+     * origin app is deliberately backgrounded (Play Store install) and then re-foregrounded while the
+     * freshly installed Company Portal drives the resume; those focus changes must <em>not</em> cancel
+     * the original request, whose token is delivered on its own sink once resume completes. The window
+     * spans park through resume completion (see {@link #mBrokerInstallInFlight}), so it stays {@code
+     * true} even while {@link #mBrokerParked} is momentarily empty during the resumed acquire.
+     *
+     * <p>Interactive OneAuth sign-in is modal (a single interactive UI at a time), so a process-wide
+     * check is sufficient and avoids brittle correlation-id string matching across layers.
+     *
+     * @return {@code true} if a broker-install park/resume is in flight; {@code false} otherwise.
+     */
+    public boolean isBrokerInstallInFlight() {
+        return !mBrokerInstallInFlight.isEmpty();
+    }
+
+    /**
      * {@code acquireToken} thread until the freshly installed broker resumes the request, returning
      * the token on the caller's original (OneAuth) sink.
      *
@@ -222,6 +253,7 @@ public final class BrokerInstallResumeCoordinator {
 
         final ResultFuture<AcquireTokenResult> future = new ResultFuture<>();
         mBrokerParked.put(resumeId, new BrokerParkedEntry(retry, parameters, future));
+        mBrokerInstallInFlight.add(resumeId);
 
         // Watch for the user returning to the app after the Play Store (Company Portal's existing
         // install-referrer flow redirects them back). On that foreground, a present-and-supported
@@ -268,6 +300,7 @@ public final class BrokerInstallResumeCoordinator {
             throw e;
         } finally {
             mBrokerParked.remove(resumeId);
+            mBrokerInstallInFlight.remove(resumeId);
             if (application != null && foregroundWatcher != null) {
                 application.unregisterActivityLifecycleCallbacks(foregroundWatcher);
             }
