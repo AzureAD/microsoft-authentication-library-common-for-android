@@ -27,6 +27,33 @@ buildSystem {
     desugar = false
 }
 
+// --- SpotBugs 6.x adjustments (repo-local; NOT in the shared buildsystem plugin) ---
+// The Gradle 9 upgrade forced spotbugs-gradle-plugin 4.7.x -> 6.x, which changed two things.
+// Both fixes are kept here (repo-scoped) rather than in the shared buildsystem plugin, so other
+// consumers (msal, broker) are unaffected until they upgrade.
+//
+// 1) Windows-only launch fix: the Android SpotBugs task factory sets
+//    sourceDirs = javaCompile.getSource() (~225 .java files), and SpotBugsRunner emits
+//    `-sourcepath <all those files>`, which exceeds the Windows ~32,767-char command-line limit
+//    (CreateProcess error=206) so the analysis process fails to start. Clearing sourceDirs drops
+//    -sourcepath (it only enriches report rendering, not the analysis). Gated to Windows so
+//    CI (Linux) is unchanged; run in afterEvaluate so it wins over the factory.
+if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+    afterEvaluate {
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { t ->
+            t.sourceDirs.setFrom()
+        }
+    }
+}
+
+// 2) Report level: 6.x reports medium-confidence findings on pre-existing (unchanged) code that
+//    4.7.x did not, newly failing the build. Restoring the high-confidence threshold keeps
+//    SpotBugs behaviour consistent with the pre-upgrade baseline. Single-rule suppressions still
+//    belong in config/spotbugs/exclude.xml.
+spotbugs {
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf("HIGH")
+}
+
 def enableCodeCoverage = false
 
 if (project.hasProperty("codeCoverageEnabled")) {
