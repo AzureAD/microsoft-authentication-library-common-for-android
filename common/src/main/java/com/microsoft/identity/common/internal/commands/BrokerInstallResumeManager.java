@@ -175,7 +175,7 @@ public final class BrokerInstallResumeManager {
                              @NonNull final IFlightsProvider flights,
                              @NonNull final ICompanyPortalTrust cpTrust,
                              @NonNull final BrokerInstallResumeRegistry registry) {
-        if (!isEnabled(flights)) {
+        if (!isEnabled(flights) || StringUtil.isNullOrEmpty(correlationId)) {
             return false;
         }
         // Trust anchor: only Company Portal may trigger a resume redirect (§7 caller validation).
@@ -202,7 +202,7 @@ public final class BrokerInstallResumeManager {
                                          @NonNull final IFlightsProvider flights,
                                          @NonNull final ICompanyPortalTrust cpTrust,
                                          @NonNull final BrokerInstallResumeRegistry registry) {
-        if (!isEnabled(flights)) {
+        if (!isEnabled(flights) || StringUtil.isNullOrEmpty(correlationId)) {
             return false;
         }
         // Capability trust: only proceed if Company Portal is now a valid broker. The cid match below is

@@ -147,6 +147,17 @@ public class BrokerInstallResumeManagerTest {
     }
 
     @Test
+    public void onResumeRedirect_emptyCid_returnsFalse_withoutTouchingRegistry() {
+        final BrokerInstallResumeManager mgr = BrokerInstallResumeManager.newInstanceForTesting();
+        final BrokerInstallResumeRegistry registry = freshRegistry();
+        registry.park("cid", parkedRecord(mock(CommandCallback.class)));
+
+        assertFalse(mgr.onResumeRedirect("", CP, flights(true), cpTrust(true, true), registry));
+        assertFalse(mgr.onResumeRedirectByCapability("", flights(true), cpTrust(false, true), registry));
+        assertEquals("empty cid must not disturb parked records", 1, registry.size());
+    }
+
+    @Test
     public void onResumeRedirectByCapability_cpNotInstalled_isRejected() {
         final BrokerInstallResumeManager mgr = BrokerInstallResumeManager.newInstanceForTesting();
         final BrokerInstallResumeRegistry registry = freshRegistry();
