@@ -154,6 +154,40 @@ public final class MamInstallReferrerBuilder {
     }
 
     /**
+     * CP-compatible launch form (confirmed by the Company Portal team, Veena Soman, 2026-07-17): appends a
+     * single bare {@code referrer=<originPkg>} to the eSTS-provided {@code app_link}, matching the
+     * {@code &referrer=<originAppPackage>} pattern Company Portal already supports today. This is the form
+     * used at the production launch site: it lets Company Portal identify — and redirect back to — the
+     * calling app, which (combined with the in-process park registry + foreground-fallback resume) is
+     * sufficient to resume without Company Portal having to round-trip the correlation id. The richer
+     * {@link #decorateAppLinkWithReferrer} form is reserved for the automatic {@code mam_resume=<cid>} path
+     * once Company Portal confirms it passes the full referrer value through to first launch.
+     * <p>
+     * Safe by design: if the {@code app_link} or {@code originPkg} is null/blank, or the link cannot be
+     * parsed, the original {@code app_link} is returned unchanged so the existing install flow is never
+     * broken.
+     *
+     * @param appLink   the server-provided Play Store install link.
+     * @param originPkg the calling app package name.
+     * @return the decorated link, or the original {@code app_link} if decoration is not possible.
+     */
+    public static String decorateAppLinkWithOriginReferrer(final String appLink, final String originPkg) {
+        if (StringUtil.isNullOrEmpty(appLink) || StringUtil.isNullOrEmpty(originPkg)) {
+            return appLink;
+        }
+        try {
+            return new CommonURIBuilder(appLink)
+                    .setParameter(REFERRER_QUERY_PARAM, originPkg)
+                    .build()
+                    .toString();
+        } catch (final URISyntaxException e) {
+            Logger.warn(TAG + ":decorateAppLinkWithOriginReferrer",
+                    "Could not parse app_link to append the install referrer; launching it unchanged.");
+            return appLink;
+        }
+    }
+
+    /**
      * Parses a packed referrer value back into its key/value pairs. This mirrors the parse Company
      * Portal performs on first launch (blueprint: OneAuth {@code AccountTransfer}).
      *

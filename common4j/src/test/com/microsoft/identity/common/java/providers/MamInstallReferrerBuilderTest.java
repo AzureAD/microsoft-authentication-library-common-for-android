@@ -156,4 +156,37 @@ public class MamInstallReferrerBuilderTest {
     }
 
     // endregion
+
+    // region decorateAppLinkWithOriginReferrer (CP-compatible bare-origin form)
+
+    @Test
+    public void originReferrer_appendsBarePackage_andStaysAllowlisted() throws Exception {
+        final String decorated =
+                MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG);
+
+        assertTrue("decorated app_link must remain allow-listed:\n" + decorated,
+                BrokerInstallLinkValidator.isSafeBrokerInstallLink(decorated));
+
+        String deliveredReferrer = null;
+        int referrerCount = 0;
+        for (final NameValuePair p : new CommonURIBuilder(decorated).getQueryParams()) {
+            if (MamInstallReferrerBuilder.REFERRER_QUERY_PARAM.equals(p.getName())) {
+                deliveredReferrer = p.getValue();
+                referrerCount++;
+            }
+        }
+        assertEquals("exactly one referrer parameter", 1, referrerCount);
+        assertEquals("referrer value is the bare origin package", ORIGIN_PKG, deliveredReferrer);
+    }
+
+    @Test
+    public void originReferrer_returnsOriginalUnchanged_whenAnyInputMissing() {
+        assertEquals(CP_APP_LINK,
+                MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, null));
+        assertEquals(CP_APP_LINK,
+                MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ""));
+        assertNull(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(null, ORIGIN_PKG));
+    }
+
+    // endregion
 }

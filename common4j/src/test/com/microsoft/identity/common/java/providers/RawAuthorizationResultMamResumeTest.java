@@ -27,19 +27,46 @@ import static com.microsoft.identity.common.java.providers.RawAuthorizationResul
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.BROKER_INSTALL_RESUME;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.COMPLETED;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Unit tests for the MAM broker-install resume detection in {@link RawAuthorizationResult} (PBI-3):
- * classifying a {@code mam_resume=<cid>} redirect and extracting the parked correlation id.
+ * classifying a {@code mam_resume=<cid>} redirect and extracting the parked correlation id. The
+ * classification is flight-gated, so the tests enable {@link CommonFlight#ENABLE_BROKER_INSTALL_RESUME}.
  */
 public class RawAuthorizationResultMamResumeTest {
 
     private static final String CID = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
     private static final String APP_LINK_ENCODED =
             "https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+
+    @Before
+    public void setUp() {
+        setBrokerInstallResumeFlight(true);
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    private static void setBrokerInstallResumeFlight(final boolean enabled) {
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(CommonFlight.ENABLE_BROKER_INSTALL_RESUME.getKey(), String.valueOf(enabled));
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
 
     @Test
     public void mamResumeRedirect_isClassifiedAsBrokerInstallResume() {
@@ -100,5 +127,17 @@ public class RawAuthorizationResultMamResumeTest {
 
         assertEquals(COMPLETED, result.getResultCode());
         assertNull(result.getMamResumeCorrelationId());
+    }
+
+    @Test
+    public void mamResumeRedirect_withFlightOff_isNotClassifiedAsResume() {
+        // With the flight off, a mam_resume-bearing redirect must be classified exactly as before the
+        // feature existed (never routed into the resume branch).
+        setBrokerInstallResumeFlight(false);
+        final String redirect = "msauth://com.contoso.app/signaturehash?mam_resume=" + CID;
+
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(redirect);
+
+        assertNotEquals(BROKER_INSTALL_RESUME, result.getResultCode());
     }
 }
