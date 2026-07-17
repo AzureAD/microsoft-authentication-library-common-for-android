@@ -43,6 +43,8 @@ import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.BrokerInstallResumeParker;
+import com.microsoft.identity.common.java.commands.BrokerInstallResumeRegistry;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowTokenResultCommand;
@@ -873,6 +875,19 @@ public class CommandDispatcher {
         // set correlation id on Local Authentication Result
         setCorrelationIdOnResult(commandResult, correlationId);
         setTelemetryOnResultAndFlush(commandResult, correlationId);
+
+        // MAM broker-install request resume (flight-gated): if this is an interactive request blocked
+        // by a Conditional-Access "install broker" response, park it in-memory instead of surfacing the
+        // terminal error. The terminal callback is then suppressed in returnCommandResult; the request
+        // is resumed and delivered after the broker is installed.
+        BrokerInstallResumeParker.parkIfEligible(
+                command,
+                commandResult,
+                CommonFlightsManager.INSTANCE.getFlightsProvider(),
+                BrokerInstallResumeRegistry.getInstance(),
+                BrokerInstallResumeRegistry.DEFAULT_PARK_TTL_MILLISECONDS,
+                System.currentTimeMillis());
+
         return commandResult;
     }
 
@@ -906,6 +921,19 @@ public class CommandDispatcher {
         private static void returnCommandResult (
         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
         @NonNull final CommandResult result){
+
+            // MAM broker-install request resume (flight-gated): if this request has been parked while
+            // the user installs the broker, suppress its terminal callback. The pending sink is fired
+            // later by the resume path (on success) or by the TTL sweep (with the original error).
+            if (BrokerInstallResumeParker.isCallbackSuppressed(
+                    command.getParameters().getCorrelationId(),
+                    CommonFlightsManager.INSTANCE.getFlightsProvider(),
+                    BrokerInstallResumeRegistry.getInstance())) {
+                Logger.info(TAG + ":returnCommandResult",
+                        "Interactive request is parked for broker-install resume; suppressing the "
+                                + "terminal callback.");
+                return;
+            }
 
             final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
             platformUtil.onReturnCommandResult(command);
