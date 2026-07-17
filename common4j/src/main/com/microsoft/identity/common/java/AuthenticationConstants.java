@@ -498,6 +498,14 @@ public class AuthenticationConstants {
         public static final String APP_LINK_KEY = "app_link";
 
         /**
+         * Redirect URI parameter key carrying the parked-request correlation id on the MAM
+         * broker-install resume redirect. Company Portal redirects back to the calling app via
+         * {@code <redirectUri>?mam_resume=<cid>} after reading the install referrer; the presence of
+         * this parameter is the discriminator for the resume branch.
+         */
+        public static final String MAM_RESUME_KEY = "mam_resume";
+
+        /**
          * Broker redirect prefix.
          */
         public static final String REDIRECT_PREFIX = "msauth";

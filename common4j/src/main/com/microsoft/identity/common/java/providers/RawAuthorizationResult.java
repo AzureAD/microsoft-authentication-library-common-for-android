@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.providers;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.MAM_RESUME_KEY;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.REDIRECT_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPGRADE_DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Browser.RESPONSE_EXCEPTION;
@@ -121,7 +122,14 @@ public class RawAuthorizationResult {
         /**
          * This is used to indicate that the authorization was cancelled due to timeout.
          */
-        TIMED_OUT(2011);
+        TIMED_OUT(2011),
+
+        /**
+         * MAM broker-install request resume: Company Portal redirected back to the calling app with a
+         * {@code mam_resume=<cid>} parameter after the broker was installed. The parked interactive
+         * request identified by {@code cid} should be resumed silently through the broker.
+         */
+        BROKER_INSTALL_RESUME(2012);
 
         private final int mCode;
 
@@ -210,6 +218,18 @@ public class RawAuthorizationResult {
         return propertyBag;
     }
 
+    /**
+     * @return the parked-request correlation id carried on a {@link ResultCode#BROKER_INSTALL_RESUME}
+     *         redirect (the {@code mam_resume} parameter value), or {@code null} if the final redirect
+     *         is absent or carries no {@code mam_resume} parameter.
+     */
+    public String getMamResumeCorrelationId() {
+        if (mAuthorizationFinalUri == null) {
+            return null;
+        }
+        return UrlUtil.getParameters(mAuthorizationFinalUri).get(MAM_RESUME_KEY);
+    }
+
     @NonNull
     public static RawAuthorizationResult fromPropertyBag(@NonNull final PropertyBag propertyBag) {
         return RawAuthorizationResult.builder()
@@ -224,6 +244,14 @@ public class RawAuthorizationResult {
         final Map<String, String> parameters = UrlUtil.getParameters(uri);
 
         if (REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme())) {
+            // MAM broker-install resume: Company Portal redirects back to the calling app with
+            // msauth://<app>/<hash>?mam_resume=<cid> after the broker is installed. The presence of the
+            // mam_resume parameter is the discriminator; it takes precedence over other classifications.
+            if (parameters.containsKey(MAM_RESUME_KEY)) {
+                Logger.info(methodTag, "Detected MAM broker-install resume redirect (mam_resume).");
+                return ResultCode.BROKER_INSTALL_RESUME;
+            }
+
             // i.e. (Browser) msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator
             //      (WebView) msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
             if (parameters.containsKey(APP_LINK_KEY)) {
