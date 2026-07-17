@@ -97,6 +97,33 @@ public class BrokerInstallResumeRegistry {
     }
 
     /**
+     * Foreground-fallback lookup for the cid-less resume path (§16 item 13). When Company Portal's
+     * install redirect does not carry a {@code mam_resume=<cid>} (e.g. it only brings the app back to the
+     * foreground), we resume every still-parked request in this process. Each returned record is atomically
+     * removed so it is claimed at most once; the caller is responsible for resolving each record's sink.
+     * <p>
+     * In practice an app has at most one outstanding interactive request, so this typically returns a
+     * single record; returning the full set keeps the contract correct if multiple were parked.
+     *
+     * @return the list of claimed-and-removed parked records (never {@code null}; possibly empty).
+     */
+    @NonNull
+    public List<ParkedRecord> claimAllPending() {
+        final List<ParkedRecord> claimed = new ArrayList<>();
+        for (final Map.Entry<String, ParkedRecord> entry : mParkedByCorrelationId.entrySet()) {
+            // remove(key, value) so we only claim the exact record we observed.
+            if (mParkedByCorrelationId.remove(entry.getKey(), entry.getValue())) {
+                claimed.add(entry.getValue());
+            }
+        }
+        if (!claimed.isEmpty()) {
+            Logger.info(TAG + ":claimAllPending", "Claimed " + claimed.size()
+                    + " parked request(s) for foreground-fallback resume.");
+        }
+        return claimed;
+    }
+
+    /**
      * Non-destructive lookup.
      *
      * @param correlationId the correlation id.
