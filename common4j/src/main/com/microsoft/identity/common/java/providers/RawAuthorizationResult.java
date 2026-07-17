@@ -36,6 +36,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.
 import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
@@ -247,7 +249,10 @@ public class RawAuthorizationResult {
             // MAM broker-install resume: Company Portal redirects back to the calling app with
             // msauth://<app>/<hash>?mam_resume=<cid> after the broker is installed. The presence of the
             // mam_resume parameter is the discriminator; it takes precedence over other classifications.
-            if (parameters.containsKey(MAM_RESUME_KEY)) {
+            // Flight-gated so that with the flight off the redirect is classified exactly as before.
+            if (parameters.containsKey(MAM_RESUME_KEY)
+                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                            .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)) {
                 Logger.info(methodTag, "Detected MAM broker-install resume redirect (mam_resume).");
                 return ResultCode.BROKER_INSTALL_RESUME;
             }
