@@ -57,11 +57,11 @@
              Transparent, no-history, not exported; finishes immediately. It is ONLY a navigation
              signal and never marks VID/auth as successful. -->
         <activity
-            android:name="com.microsoft.identity.common.internal.ui.ReturnToCallerActivity"
+            android:name="com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity"
             android:exported="false"
             android:noHistory="true"
             android:excludeFromRecents="true"
-            android:theme="@style/ReturnToCallerActivityTheme" />
+            android:theme="@style/OpenIdVcReturnActivityTheme" />
 
     </application>
 

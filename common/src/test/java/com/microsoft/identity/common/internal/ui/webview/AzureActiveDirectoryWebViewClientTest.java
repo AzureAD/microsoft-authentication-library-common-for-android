@@ -62,7 +62,7 @@ import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
-import com.microsoft.identity.common.internal.ui.ReturnToCallerActivity;
+import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -286,7 +286,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("Launch intent must be pinned to Authenticator",
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
-                started.hasExtra(ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA));
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     @Test
@@ -303,7 +303,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertNotNull("Expected the openid-vc handler to be started", started);
         assertFalse("Untrusted handler must NOT receive the return-to-caller PendingIntent",
-                started.hasExtra(ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA));
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     @Test
@@ -328,7 +328,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("Multi-handler launch must be pinned to Authenticator (no chooser)",
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertTrue("Pinned Authenticator must receive the return PendingIntent",
-                started.hasExtra(ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA));
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     private void registerOpenIdVcHandler(final String packageName) {
@@ -365,7 +365,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertNotNull("Expected the openid-vc handler to be started", started);
         assertFalse("Return-to-caller flight OFF must not attach the return PendingIntent",
-                started.hasExtra(ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA));
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
     private void enableOpenIdVcReturnToCallerFlight() {

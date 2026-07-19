@@ -1203,7 +1203,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * hand-off completes.
      *
      * <p>It is an explicit, immutable {@link PendingIntent} targeting
-     * {@link com.microsoft.identity.common.internal.ui.ReturnToCallerActivity} (manifest-merged
+     * {@link com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity} (manifest-merged
      * into the host app). The PendingIntent is created with the host activity's application
      * context, so it returns to whichever app currently hosts this WebView.</p>
      *
@@ -1215,9 +1215,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final android.content.Context context = getActivity().getApplicationContext();
 
             final Intent returnIntent = new Intent(context,
-                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.class);
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.class);
             returnIntent.setAction(
-                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.ACTION_RETURN_FROM_VID);
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.ACTION_RETURN_FROM_VID);
             // NEW_TASK is required for a PendingIntent.getActivity launch fired from another
             // process. Combined with the trampoline's default taskAffinity (the host app's
             // package), it reuses and foregrounds the caller's existing task rather than creating
@@ -1238,7 +1238,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
             intent.putExtra(
-                    com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA,
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA,
                     returnPendingIntent);
             Logger.info(methodTag, "Attached return PendingIntent to openid-vc intent.");
         } catch (final Exception e) {

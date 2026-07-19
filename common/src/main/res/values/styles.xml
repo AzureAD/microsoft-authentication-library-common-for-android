@@ -58,13 +58,13 @@
     </style>
 
     <!--
-        Transparent, animation-free theme for ReturnToCallerActivity. Uses a non-AppCompat
+        Transparent, animation-free theme for OpenIdVcReturnActivity. Uses a non-AppCompat
         translucent parent so the trampoline can extend android.app.Activity without requiring
         AppCompat inflation, and points windowAnimationStyle at BrokerNoWindowAnimation so every
         activity/task/window transition slot is suppressed (including across the :auth process
         boundary), making the return instantaneous.
     -->
-    <style name="ReturnToCallerActivityTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="OpenIdVcReturnActivityTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsTranslucent">true</item>
