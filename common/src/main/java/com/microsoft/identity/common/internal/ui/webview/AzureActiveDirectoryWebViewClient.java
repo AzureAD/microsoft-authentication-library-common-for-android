@@ -1227,11 +1227,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             returnIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             returnIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
+            // ONE_SHOT: the wallet consumes this exactly once, so the framework auto-cancels it
+            // after send() and it can never be replayed. IMMUTABLE: the recipient cannot mutate the
+            // intent. The returnIntent carries no per-request extras, so FLAG_UPDATE_CURRENT is not
+            // needed.
             final PendingIntent returnPendingIntent = PendingIntent.getActivity(
                     context,
                     0,
                     returnIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
             intent.putExtra(
                     com.microsoft.identity.common.internal.ui.ReturnToCallerActivity.RETURN_PENDING_INTENT_EXTRA,
