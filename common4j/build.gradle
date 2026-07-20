@@ -41,6 +41,26 @@ buildSystem {
     desugar = false
 }
 
+// --- SpotBugs 6.x adjustments (repo-local; NOT in the shared buildsystem plugin) ---
+// The Gradle 9 upgrade forced spotbugs-gradle-plugin 4.7.x -> 6.x, whose detectors report
+// findings on pre-existing (unchanged) code that 4.7.x did not, failing :common4j:spotbugsMain.
+// Those specific patterns are suppressed repo-locally in config/spotbugs/exclude.xml (see its
+// "SpotBugs 6.x" section) so behaviour matches the pre-upgrade baseline while leaving all other
+// detectors active. Kept out of the shared buildsystem plugin so other consumers are unaffected.
+
+// Windows-only launch fix: SpotBugs emits `-sourcepath <all source files>` on the command line,
+// which can exceed the Windows ~32,767-char limit (CreateProcess error=206) and stop the process
+// from starting. Clearing sourceDirs drops -sourcepath (it only enriches report rendering, not
+// the analysis). Gated to Windows so CI (Linux) is unchanged; afterEvaluate so it wins over the
+// task factory.
+if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+    afterEvaluate {
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { t ->
+            t.sourceDirs.setFrom()
+        }
+    }
+}
+
 def enableCodeCoverage = false
 
 if (project.hasProperty("codeCoverageEnabled")) {

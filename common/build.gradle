@@ -46,13 +46,11 @@ if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
     }
 }
 
-// 2) Report level: 6.x reports medium-confidence findings on pre-existing (unchanged) code that
-//    4.7.x did not, newly failing the build. Restoring the high-confidence threshold keeps
-//    SpotBugs behaviour consistent with the pre-upgrade baseline. Single-rule suppressions still
-//    belong in config/spotbugs/exclude.xml.
-spotbugs {
-    reportLevel = com.github.spotbugs.snom.Confidence.valueOf("HIGH")
-}
+// 2) SpotBugs 6.x reports medium-confidence findings on pre-existing (unchanged) code that
+//    4.7.x did not, which would newly fail the build. Those specific detectors are suppressed
+//    repo-locally in config/spotbugs/exclude.xml (see its "SpotBugs 6.x" section) so behaviour
+//    matches the pre-upgrade baseline while leaving all other detectors active. Kept out of the
+//    shared buildsystem plugin so other consumers are unaffected until they upgrade.
 
 def enableCodeCoverage = false
 
