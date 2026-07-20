@@ -339,16 +339,33 @@ public class ExceptionAdapter {
                 }
                 policyRequiredException.setSubErrorCode(errorResponse.getSubError());
 
-                // Intune keys the MAM policy off the account OID. The constructor derived accountUserId
-                // from the request account, which at cold start is the HOME OID even for a guest request
-                // (no resource-tenant token yet). eSTS echoes the OID it actually resolved for this
-                // request on the protection_policy_required response: the GUEST OID for a guest/cross-
-                // tenant request, or the HOME OID for a home-tenant request. Prefer it when present
-                // (authoritative, server-resolved); for home requests it matches the existing value, so
-                // this is a no-op there. If absent (echo not shipped), keep the constructor's fallback.
+                // ===== PROTOTYPE / TEST-ONLY — simulate the eSTS echo. REMOVE BEFORE MERGE. =====
+                // eSTS does not yet echo the guest oid/tid on protection_policy_required. Inject the known
+                // test guest identity (mam-guest-rz@id4slab2.onmicrosoft.com, tenant B) onto the response
+                // so the REAL consumption below (getOid/getTid -> setAccountUserId/setTenantId) is
+                // exercised end-to-end.
+                if (StringUtil.isNullOrEmpty(errorResponse.getOid())) {
+                    errorResponse.setOid("f642790f-66ac-4934-93d4-0791192581df");
+                }
+                if (StringUtil.isNullOrEmpty(errorResponse.getTid())) {
+                    errorResponse.setTid("84c85289-d108-4fff-97c4-ed6ca0813513");
+                }
+                Logger.warn(TAG, "[MAM][PROTOTYPE] Simulated eSTS echo: injected guest oid/tid onto TokenErrorResponse");
+                // ===== END PROTOTYPE =====
+
+                // Consume the eSTS echo (oid + tid). Intune keys the MAM policy off the account OID; the
+                // constructor derived accountUserId/tenantId from the request account + authority, which at
+                // cold start is the HOME identity even for a guest request. eSTS echoes the resolved GUEST
+                // oid + tid on the protection_policy_required response — a coherent pair — so prefer them
+                // when present (authoritative, server-resolved). For home requests they match the existing
+                // values, so this is a no-op there.
                 final String echoedAccountOid = errorResponse.getOid();
                 if (!StringUtil.isNullOrEmpty(echoedAccountOid)) {
                     policyRequiredException.setAccountUserId(echoedAccountOid);
+                }
+                final String echoedTenantId = errorResponse.getTid();
+                if (!StringUtil.isNullOrEmpty(echoedTenantId)) {
+                    policyRequiredException.setTenantId(echoedTenantId);
                 }
 
                 setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);

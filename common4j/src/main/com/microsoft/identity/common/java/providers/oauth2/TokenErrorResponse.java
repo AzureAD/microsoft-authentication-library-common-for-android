@@ -60,6 +60,14 @@ public class TokenErrorResponse implements IErrorResponse {
     @SerializedName("oid")
     private String mOid;
 
+    // eSTS-echoed tenant id (tid) returned on a protection_policy_required challenge (cross-tenant
+    // guest MAM). Pairs with mOid: eSTS resolves both for the same request, so they are a coherent
+    // (oid, tid) pair. Consumed to stamp IntuneAppProtectionPolicyRequiredException.tenantId.
+    // NOTE: the claim name is pending confirmation with eSTS ("tid" is the current placeholder).
+    @Expose()
+    @SerializedName("tid")
+    private String mTid;
+
     /**
      * @return mError of the token error response.
      */
@@ -130,6 +138,21 @@ public class TokenErrorResponse implements IErrorResponse {
      */
     public void setOid(final String oid) {
         mOid = oid;
+    }
+
+    /**
+     * @return the eSTS-echoed tenant id (tid) on a protection_policy_required response, or null if not
+     * present. For cross-tenant guest MAM this carries the GUEST/resource tenant, paired with getOid().
+     */
+    public String getTid() {
+        return mTid;
+    }
+
+    /**
+     * @param tid the eSTS-echoed tenant id (tid).
+     */
+    public void setTid(final String tid) {
+        mTid = tid;
     }
 
     /**
