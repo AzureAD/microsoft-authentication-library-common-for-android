@@ -97,7 +97,7 @@ stages:
           displayName: Assemble Local
           inputs:
             javaHomeSelection: JDKVersion
-            jdkVersionOption: "1.21"
+            jdkVersionOption: "1.17"
             tasks: clean common:assembleLocal
             publishJUnitResults: false
             jdkArchitecture: x64
@@ -107,14 +107,14 @@ stages:
           displayName: Run Unit tests
           inputs:
             javaHomeSelection: JDKVersion
-            jdkVersionOption: "1.21"
+            jdkVersionOption: "1.17"
             tasks: common:jacocoTestReport -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         - task: Gradle@3
           displayName: Check Dependencies size
           condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
           inputs:
             tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-            jdkVersionOption: "1.21"
+            jdkVersionOption: "1.17"
         - script: tree "$(Build.SourcesDirectory)" /F /A
           displayName: 'Print File Structure Tree'
         - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
