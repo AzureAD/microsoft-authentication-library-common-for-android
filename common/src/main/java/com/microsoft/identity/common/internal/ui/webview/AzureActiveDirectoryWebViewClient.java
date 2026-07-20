@@ -634,8 +634,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
             return false;
         }
-        // Check if the intent request is for the google play store app
-        if (!url.contains(";package=com.android.vending;")) {
+        // Check if the intent request is for the google play store app. Build the match off the
+        // shared package constant so this gate and the allow-list check cannot drift apart.
+        if (!url.contains(";package=" + GOOGLE_PLAY_STORE_PACKAGE_NAME + ";")) {
             return false;
         }
         // Check if the url query parameter is for a broker app.
@@ -1273,54 +1274,39 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
-            // Flight ON (new behavior): validate the intent target and record the outcome to a
-            // telemetry span so the fix's behavior (launched / blocked / error) can be confirmed from
-            // android_spans. All of the new, flighted logic and telemetry is isolated in this branch;
-            // the else branch below is the original (flight-off) behavior, byte-for-byte unchanged.
-            // Falls back to a no-op span if OpenTelemetry is not initialized.
-            final Span span = createSpanWithAttributesFromParent(SpanName.ProcessBrokerInstallIntent.name());
-            try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            // Flight ON (new behavior): validate the intent target before launching and record the
+            // outcome as an attribute on the current span so the fix's behavior (launched / blocked)
+            // can be confirmed from android_spans. All of the new, flighted logic is isolated in this
+            // branch; the else branch below is the original (flight-off) behavior, byte-for-byte
+            // unchanged.
+            try {
                 final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
                 if (intent != null && intent.getPackage() != null) {
-                    // Clear any explicit component or selector carried by the parsed intent so that
-                    // activity resolution is driven solely by the validated package.
-                    intent.setComponent(null);
-                    intent.setSelector(null);
-
-                    final String targetPackage = intent.getPackage();
-                    if (!isAllowedBrokerInstallIntentTarget(targetPackage)) {
+                    final Intent sanitizedIntent = sanitizeAndValidateBrokerInstallIntent(intent);
+                    if (sanitizedIntent == null) {
                         Logger.warn(methodTag,
-                                "Blocking intent request to non-allow-listed package: " + targetPackage);
-                        span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), true);
-                        span.setStatus(StatusCode.OK);
+                                "Blocking intent request to non-allow-listed package: " + intent.getPackage());
+                        SpanExtension.current().setAttribute(
+                                AttributeName.is_broker_install_intent_blocked.name(), true);
                         return;
                     }
 
-                    view.getContext().startActivity(intent);
-                    Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
-                    span.setAttribute(AttributeName.is_broker_install_intent_blocked.name(), false);
-                    span.setStatus(StatusCode.OK);
+                    view.getContext().startActivity(sanitizedIntent);
+                    Logger.info(methodTag, "Intent request sent to launch the app: " + sanitizedIntent.getPackage());
+                    SpanExtension.current().setAttribute(
+                            AttributeName.is_broker_install_intent_blocked.name(), false);
                 } else {
                     Logger.warn(methodTag, "Unable to parse the intent URI");
-                    span.setStatus(StatusCode.OK);
                 }
+            } catch (final URISyntaxException e) {
+                Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+                returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+            } catch (final ActivityNotFoundException e) {
+                Logger.error(methodTag, "No activity found to handle the intent.", e);
+                returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
             } catch (final Throwable throwable) {
-                // Single generic handler: record the failure to the span once, then route to the same
-                // typed errors as the flight-off path so error handling behavior is preserved.
-                span.recordException(throwable);
-                span.setStatus(StatusCode.ERROR);
-                if (throwable instanceof URISyntaxException) {
-                    Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", throwable);
-                    returnError(ErrorStrings.URI_SYNTAX_ERROR, throwable.getMessage());
-                } else if (throwable instanceof ActivityNotFoundException) {
-                    Logger.error(methodTag, "No activity found to handle the intent.", throwable);
-                    returnError(ErrorStrings.ACTIVITY_NOT_FOUND, throwable.getMessage());
-                } else {
-                    Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
-                    returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
-                }
-            } finally {
-                span.end();
+                Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+                returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
             }
         } else {
             // Flight OFF (original behavior): unchanged from dev. No validation and no telemetry.
@@ -1343,6 +1329,44 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
             }
         }
+    }
+
+    /**
+     * Sanitizes and validates a parsed broker-install intent before it is launched. Any explicit
+     * component or selector is cleared so that activity resolution is driven solely by the target
+     * package; the package is then checked against the allow-list. For an allow-listed target, the
+     * URI-permission grant flags are stripped and {@link Intent#CATEGORY_BROWSABLE} is added,
+     * mirroring the platform's standard WebView intent handling so the launched intent can't carry
+     * an unexpected grant into the store app.
+     * <p>
+     * Package-private so it can be unit-tested directly with a hand-built intent (a selector cannot
+     * be injected through the {@code intent://} URL scheme, so it is not reachable via the public
+     * navigation path).
+     *
+     * @param intent The parsed intent to sanitize; its package must already be non-null.
+     * @return the sanitized intent when its target package is allow-listed, or {@code null} when the
+     *         target is not allow-listed and therefore must not be launched.
+     */
+    @Nullable
+    Intent sanitizeAndValidateBrokerInstallIntent(@NonNull final Intent intent) {
+        // Clear any explicit component or selector carried by the parsed intent so that activity
+        // resolution is driven solely by the validated package.
+        intent.setComponent(null);
+        intent.setSelector(null);
+
+        if (!isAllowedBrokerInstallIntentTarget(intent.getPackage())) {
+            return null;
+        }
+
+        // Strip any URI-permission grant flags that rode in on the parsed intent and add
+        // CATEGORY_BROWSABLE, matching the platform's standard WebView intent handling.
+        intent.setFlags(intent.getFlags()
+                & ~Intent.FLAG_GRANT_READ_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        return intent;
     }
 
     /**

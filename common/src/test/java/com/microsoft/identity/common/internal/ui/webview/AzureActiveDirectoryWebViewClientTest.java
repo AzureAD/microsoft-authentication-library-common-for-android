@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.providers.RawAuthorizationResul
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -1003,6 +1004,65 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
         Mockito.verify(mockContext).startActivity(any(Intent.class));
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    /**
+     * A selector cannot be injected through the {@code intent://} URL scheme (Android does not
+     * (de)serialize a selector via parseUri/toUri), so the selector-clearing defense is exercised
+     * directly on the sanitizer. On Android a top-level package and a selector are mutually
+     * exclusive, so an intent that smuggles the store package inside a selector has a {@code null}
+     * top-level package: the sanitizer nulls the selector (verified on the mutated intent) and then
+     * blocks the intent because the validated package is null.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_clearsSelectorAndBlocks() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        final Intent selector = new Intent(Intent.ACTION_VIEW);
+        selector.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.setSelector(selector);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNull(result);
+        // The selector was cleared before the null-package block, so it can never redirect resolution.
+        assertNull(intent.getSelector());
+    }
+
+    /**
+     * When the validated (top-level) package is not allow-listed, the intent must be blocked
+     * (returns {@code null}) so it is never launched.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_returnsNullForNonAllowlistedPackage() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage("com.example.unrelatedapp");
+
+        assertNull(mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent));
+    }
+
+    /**
+     * For an allow-listed target, URI-permission grant flags are stripped and CATEGORY_BROWSABLE is
+     * added, while unrelated flags (e.g. FLAG_ACTIVITY_NEW_TASK) are preserved.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_stripsGrantFlagsAndAddsBrowsable() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNotNull(result);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        assertNotEquals(0, result.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
+        assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
     }
 
     private void setBrokerInstallIntentValidationFlight(final boolean enabled) {

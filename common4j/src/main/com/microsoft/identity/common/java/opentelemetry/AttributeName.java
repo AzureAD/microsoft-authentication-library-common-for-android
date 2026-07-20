@@ -706,8 +706,11 @@ public enum AttributeName {
 
     /**
      * Indicates whether a broker-install {@code intent://} request was blocked because its target
-     * package was not the allow-listed store. Set on the {@link SpanName#ProcessBrokerInstallIntent}
-     * span (emitted only when the validation flight is enabled).
+     * package was not the allow-listed store. Set on the current WebView-processing span (emitted
+     * only when the broker-install intent validation flight is enabled).
+     * <p>
+     * Note: this attribute must also be kept in sync with the {@code AttributeName} enum in the
+     * broker repository (AzureAD/ad-accounts-for-android) for cross-repo telemetry consistency.
      */
     is_broker_install_intent_blocked,
     

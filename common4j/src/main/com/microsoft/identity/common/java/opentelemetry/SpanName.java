@@ -74,11 +74,6 @@ public enum SpanName {
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     ProcessOpenIdVcRequest,
-    /**
-     * Span name for the flighted broker-install {@code intent://} handling path in the AAD
-     * WebView client. Emitted only when the broker-install intent validation flight is enabled.
-     */
-    ProcessBrokerInstallIntent,
     PasskeyWebListener,
     InstallCertOnWpj,
     /**
