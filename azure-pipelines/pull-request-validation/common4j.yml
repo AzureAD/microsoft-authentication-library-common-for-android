@@ -105,11 +105,14 @@ stages:
         # SpotBugs runs LAST on the dev baseline: this job's only deliverable is jacocoReportDev
         # for the coverage comparison, so a SpotBugs failure on dev's (pre-upgrade) code must not
         # halt the job before the coverage artifact is published.
+        # javaVersion pinned to 1.17: dev's pre-upgrade SpotBugs (4.7.x) crashes under JDK 21
+        # (System.setSecurityManager UnsupportedOperationException); JDK 17 lets it run cleanly.
         - template: ../templates/steps/spotbugs.yml
           parameters:
             project: common4j
             cwd: $(Build.SourcesDirectory)/common-java-root
             spotbugsCommand: spotbugsMain
+            javaVersion: "1.17"
 
   - template: ../code-coverage/compare-code-coverage.yml
     parameters:
