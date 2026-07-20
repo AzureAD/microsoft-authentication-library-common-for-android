@@ -1086,9 +1086,10 @@ public class BrokerOAuth2TokenCache
      * authorized to share FoCI tokens.
      * <p>
      * A caller's own UID-partitioned accounts are always returned; only the shared FoCI accounts are
-     * withheld from unauthorized callers. When the caller is not FoCI-authorized and no client-specific
-     * cache exists, this returns an empty list rather than falling back to the shared FoCI cache
-     * (fail-closed). See AB#3687466.
+     * withheld from unauthorized callers. When the caller is not FoCI-authorized, this returns an
+     * empty list on the environment-scoped path whenever the resolved cache is the shared FoCI cache
+     * (including the case where the caller has its own FoCI metadata row for the client id) or when
+     * no client-specific cache exists (fail-closed). See AB#3687466.
      *
      * @param environment             environment to scope the lookup to, or {@code null} to return
      *                                accounts across all environments.
@@ -1112,17 +1113,21 @@ public class BrokerOAuth2TokenCache
                     mUid
             );
 
-            if (null == targetCache) {
-                if (!callerAuthorizedForFoci) {
-                    // Fail closed: do NOT fall back to the shared FoCI cache for a caller that is not
-                    // authorized to share FoCI tokens. Return only what the caller's own cache provided.
-                    Logger.verbose(
-                            TAG + methodName,
-                            "No client-specific cache; caller is not FoCI-authorized, skipping FoCI fallback."
-                    );
-                    return Collections.emptyList();
-                }
+            // Fail closed: an unauthorized caller must never read from the shared FoCI cache,
+            // regardless of how it was resolved. getTokenCacheForClient can return mFociCache
+            // directly when the caller has its own FoCI metadata row for (clientId, environment,
+            // uid), which would otherwise bypass the gate below and expose the device-wide shared
+            // FoCI accounts. This also subsumes the prior null-targetCache fail-closed case, since
+            // the only fallback previously assigned there was mFociCache. See AB#3687466.
+            if (!callerAuthorizedForFoci && (targetCache == mFociCache || null == targetCache)) {
+                Logger.verbose(
+                        TAG + methodName,
+                        "Caller is not FoCI-authorized; skipping shared FoCI cache read."
+                );
+                return Collections.emptyList();
+            }
 
+            if (null == targetCache) {
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."

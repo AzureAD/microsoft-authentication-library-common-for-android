@@ -612,6 +612,43 @@ public class BrokerOAuth2TokenCacheTest {
         assertFalse(accounts.isEmpty());
     }
 
+    /**
+     * Regression test for AB#3687466: an unauthorized caller that has its own FoCI metadata row for
+     * the requested client id must still be blocked from enumerating the device-wide shared FoCI
+     * cache on the environment-scoped path. Prior to the fix, {@code getTokenCacheForClient(id, env,
+     * uid)} would resolve directly to {@code mFociCache} for such a caller, bypassing the null-fallback
+     * gate and returning shared FoCI accounts.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetAccountsWithAggregatedAccountDataFociUnauthorizedWithOwnFociRowExcludesSharedAccounts()
+            throws ClientException {
+        // App A (TEST_APP_UID) saves a FoCI account -> populates the shared FoCI cache and its own
+        // FoCI metadata row.
+        configureMocksForFoci();
+        final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+        final String clientId = saved.getRefreshToken().getClientId();
+
+        // App B (TEST_APP_UID + 1) also saves a FoCI account under the same client id, so it too
+        // owns a FoCI metadata row for (clientId, ENVIRONMENT, TEST_APP_UID + 1). This is the
+        // combination that made getTokenCacheForClient(id, env, uid) resolve to mFociCache and
+        // bypass the prior null-targetCache gate.
+        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
+        callerCache.save(mockStrategy, mockRequest, mockResponse);
+
+        // Unauthorized caller, environment-scoped read: must return empty (fail-closed).
+        final List<ICacheRecord> unauthorized =
+                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, false);
+        assertNotNull(unauthorized);
+        assertTrue(unauthorized.isEmpty());
+
+        // Sanity: authorized caller in the same setup still receives the shared FoCI accounts.
+        final List<ICacheRecord> authorized =
+                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, true);
+        assertNotNull(authorized);
+        assertFalse(authorized.isEmpty());
+    }
+
     // endregion
 
     @Test
