@@ -316,6 +316,14 @@ configurations {
 
 configurations.testFixturesImplementation.extendsFrom(configurations.resolvableTestFixturesImplementation);
 
+// Robolectric 4.16.1 -> Guava 33.4.8-jre pulls org.jspecify:jspecify:1.0.0, which is not mirrored
+// in the internal Maven feed (CI fails to resolve the jar). jspecify provides compile-time-only
+// nullability annotations for Guava's API; they are not required to compile or run against Guava,
+// so we exclude the transitive rather than block on the feed. Remove this once the feed mirrors it.
+configurations.all {
+    exclude group: 'org.jspecify', module: 'jspecify'
+}
+
 idea {
     module {
         // This is needed to get Android Studio to resolve test fixtures dependencies

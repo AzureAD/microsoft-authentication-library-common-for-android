@@ -27,6 +27,14 @@ buildSystem {
     desugar = false
 }
 
+// Robolectric 4.16.1 -> Guava 33.4.8-jre pulls org.jspecify:jspecify:1.0.0, which is not mirrored
+// in the internal Maven feed (CI fails to resolve the jar). jspecify provides compile-time-only
+// nullability annotations for Guava's API; they are not required to compile or run against Guava,
+// so we exclude the transitive rather than block on the feed. Remove this once the feed mirrors it.
+configurations.all {
+    exclude group: 'org.jspecify', module: 'jspecify'
+}
+
 // --- SpotBugs 6.x adjustments (repo-local; NOT in the shared buildsystem plugin) ---
 // The Gradle 9 upgrade forced spotbugs-gradle-plugin 4.7.x -> 6.x, which changed two things.
 // Both fixes are kept here (repo-scoped) rather than in the shared buildsystem plugin, so other
