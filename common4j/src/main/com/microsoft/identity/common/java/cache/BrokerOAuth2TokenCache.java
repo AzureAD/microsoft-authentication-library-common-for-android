@@ -1119,7 +1119,7 @@ public class BrokerOAuth2TokenCache
             // uid), which would otherwise bypass the gate below and expose the device-wide shared
             // FoCI accounts. This also subsumes the prior null-targetCache fail-closed case, since
             // the only fallback previously assigned there was mFociCache. See AB#3687466.
-            if (!callerAuthorizedForFoci && (targetCache == mFociCache || null == targetCache)) {
+            if (!callerAuthorizedForFoci && (targetCache == mFociCache || targetCache == null)) {
                 Logger.verbose(
                         TAG + methodName,
                         "Caller is not FoCI-authorized; skipping shared FoCI cache read."
