@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -190,5 +191,68 @@ public class UrlUtilTest {
                 "BZyO5nRGwV_nfq-7yN-Yabvu-3x-EfrvD2D3TWA9WPW2xHqUtAreWtjosHbRxf_vusvWGB4f8RVmSEU" +
                 "QSRLgqSU0FN1Wtczha5jk37o8D9PFsLhNAJuQzgcuEQiYUM6GUCSOZUM6ESibwmXDmNw2",
                 queryParams.get("SubmitUrl"));
+    }
+
+    @Test
+    public void testGetParametersFromValidUrlString() throws ClientException {
+        final Map<String, String> params = UrlUtil.getParameters(
+                "https://www.test.com/path?param1=value1&param2=value2");
+        Assert.assertEquals(2, params.size());
+        Assert.assertEquals("value1", params.get("param1"));
+        Assert.assertEquals("value2", params.get("param2"));
+    }
+
+    @Test
+    public void testGetParametersFromNullUrlStringReturnsEmpty() throws ClientException {
+        Assert.assertTrue(UrlUtil.getParameters((String) null).isEmpty());
+    }
+
+    @Test(expected = ClientException.class)
+    public void testGetParametersFromMalformedUrlStringThrows() throws ClientException {
+        // A space is an illegal URI character, forcing a URISyntaxException -> ClientException.
+        UrlUtil.getParameters("https://www.test.com/pa th?a=b");
+    }
+
+    @Test
+    public void testGetParametersFromNullUriReturnsEmpty() {
+        Assert.assertTrue(UrlUtil.getParameters((URI) null).isEmpty());
+    }
+
+    @Test
+    public void testGetParametersIgnoresFragmentAndReturnsQuery() throws URISyntaxException {
+        final Map<String, String> params = UrlUtil.getParameters(
+                new URI("https://www.test.com/path?a=b#c=d"));
+        Assert.assertEquals(1, params.size());
+        Assert.assertEquals("b", params.get("a"));
+    }
+
+    @Test
+    public void testUrlFormDecodeDataWithBareKeyUsesEmptyValue() {
+        final Map<String, String> params = UrlUtil.urlFormDecodeData("flag&key=val", "&");
+        Assert.assertEquals(2, params.size());
+        Assert.assertEquals("", params.get("flag"));
+        Assert.assertEquals("val", params.get("key"));
+    }
+
+    @Test
+    public void testMakeUrlReturnsUrlForValidString() throws ClientException, MalformedURLException {
+        Assert.assertEquals(new URL("https://www.test.com"),
+                UrlUtil.makeUrl("https://www.test.com"));
+    }
+
+    @Test(expected = ClientException.class)
+    public void testMakeUrlThrowsForMalformedString() throws ClientException {
+        UrlUtil.makeUrl("not a valid url");
+    }
+
+    @Test
+    public void testMakeUrlSilentReturnsUrlForValidString() throws MalformedURLException {
+        Assert.assertEquals(new URL("https://www.test.com"),
+                UrlUtil.makeUrlSilent("https://www.test.com"));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testMakeUrlSilentThrowsForMalformedString() {
+        UrlUtil.makeUrlSilent("not a valid url");
     }
 }
