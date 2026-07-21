@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import com.google.gson.annotations.Expose;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,11 +49,14 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
      * refresh token. When {@code false}, the controller must not redeem the shared FoCI refresh token on
      * this caller's behalf and falls through to the caller's own UID-partitioned cache only.
      * <p>
-     * Defaults to {@code true} (permissive) so non-brokered silent flows (e.g. {@code LocalMSALController},
-     * which owns its tokens and has no cross-app "authorized to share" concept) are unaffected. The Broker
-     * explicitly sets this from {@code isAuthorizedToShareTokens(callingUid)} for brokered silent requests.
+     * Defaults to {@code true} (permissive). The redemption gate lives in shared {@code BaseController}
+     * code that non-brokered silent flows (e.g. {@code LocalMSALController}, which owns its tokens and has
+     * no cross-app "authorized to share" concept) also execute; those callers never set this flag and
+     * inherit the permissive default, so the gate is a no-op for them. The Broker explicitly sets this from
+     * {@code isAuthorizedToShareTokens(callingUid)} for brokered silent requests.
      * See AB#3687466.
      */
+    @Expose()
     @Builder.Default
     private boolean callerAuthorizedForFoci = true;
 

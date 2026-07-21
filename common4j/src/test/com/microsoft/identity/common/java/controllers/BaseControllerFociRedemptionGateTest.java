@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.controllers;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -107,5 +109,20 @@ public class BaseControllerFociRedemptionGateTest {
                     () -> FociQueryUtilities.tryFociTokenWithGivenClientId(any(), any(), any(), any(), any()),
                     Mockito.times(1));
         }
+    }
+
+    /**
+     * Guards the secure-by-default invariant: a real {@link SilentTokenCommandParameters} built without
+     * explicitly setting caller-auth must report {@code true}. If {@code @Builder.Default = true} were
+     * dropped, Lombok's generated builder would default the primitive to {@code false} and silent FoCI
+     * redemption would start failing closed for every non-brokered caller. AB#3687466.
+     */
+    @Test
+    public void silentTokenCommandParameters_builtWithoutCallerAuth_defaultsToAuthorized() {
+        final SilentTokenCommandParameters parameters = SilentTokenCommandParameters.builder()
+                .platformComponents(Mockito.mock(IPlatformComponents.class))
+                .build();
+
+        assertTrue(parameters.isCallerAuthorizedForFoci());
     }
 }
