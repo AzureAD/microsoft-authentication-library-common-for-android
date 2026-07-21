@@ -1268,17 +1268,32 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
-
         // Onboarding telemetry: alternate broker install path (intent-scheme).
         recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
-
-        // Flight ON routes to the new, validated path; flight OFF keeps the original (byte-for-byte
-        // unchanged) behavior. The two paths are isolated in their own methods below.
         if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+            // Flight ON (new behavior): validated launch path, isolated in its own method. When the
+            // flight is off we fall through to the original behavior below, which is unchanged from dev.
             launchValidatedBrokerInstallIntent(view, intentUrl, methodTag);
-        } else {
-            launchBrokerInstallIntentLegacy(view, intentUrl, methodTag);
+            return;
+        }
+        try {
+            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+            if (intent != null && intent.getPackage() != null) {
+                view.getContext().startActivity(intent);
+                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            } else {
+                Logger.warn(methodTag, "Unable to parse the intent URI");
+            }
+        } catch (final URISyntaxException e) {
+            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "No activity found to handle the intent.", e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
         }
     }
 
@@ -1311,37 +1326,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Intent request sent to launch the app: " + sanitizedIntent.getPackage());
                 SpanExtension.current().setAttribute(
                         AttributeName.is_broker_install_intent_blocked.name(), false);
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
-            }
-        } catch (final URISyntaxException e) {
-            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
-            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(methodTag, "No activity found to handle the intent.", e);
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
-            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
-        }
-    }
-
-    /**
-     * Flight-OFF broker-install path: the original (pre-fix) behavior, unchanged from dev. Parses the
-     * intent URI and launches it with no validation and no telemetry.
-     *
-     * @param view      The WebView whose context is used to launch the intent.
-     * @param intentUrl The {@code intent://} URL to be parsed and launched.
-     * @param methodTag Logging tag propagated from the caller.
-     */
-    private void launchBrokerInstallIntentLegacy(@NonNull final WebView view,
-                                                 @NonNull final String intentUrl,
-                                                 @NonNull final String methodTag) {
-        try {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                view.getContext().startActivity(intent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
             } else {
                 Logger.warn(methodTag, "Unable to parse the intent URI");
             }
