@@ -1,6 +1,9 @@
 vNext
 ----------
 
+Version 0.0012.445345636-RC1
+----------
+
 Version 24.5.0
 ----------
 - [PATCH] Security: match redirect URI and switch_browser routing by scheme + authority + path instead of String#startsWith to prevent prefix-confusion auth-code leakage; gated by ENABLE_STRICT_REDIRECT_URI_MATCHING CommonFlight (default on) (#3136)
