@@ -233,11 +233,8 @@ class SwitchBrowserActivity : FragmentActivity() {
             methodTag,
             "Auth Tab decision inputs: flightEnabled=$isAuthTabFlightEnabled, " +
                 "browserPackagePresent=${browserPackageName.isNotBlank()}, " +
-                "isAuthTabSupported=$isAuthTabSupported"
-        )
-        Logger.info(
-            methodTag,
-            "Auth Tab decision browser package: $browserPackageName"
+                "isAuthTabSupported=$isAuthTabSupported, " +
+                "browserPackage=$browserPackageName"
         )
         span?.setAttribute(
             AttributeName.browser_package_name.name,
@@ -359,7 +356,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             // User has returned to this activity after CCT was launched, likely due to backing out
             val cancellation = ClientException(
                 ErrorStrings.USER_CANCELLED,
-                "User cancelled authentication by returning from browser"
+                ErrorStrings.AUTH_TAB_CANCELED_MESSAGE
             )
             span?.setStatus(StatusCode.ERROR)
             span?.recordException(cancellation)
@@ -367,7 +364,7 @@ class SwitchBrowserActivity : FragmentActivity() {
             setResultAndFinish(
                 SwitchBrowserProtocolCoordinator.createErrorBundle(
                     ErrorStrings.USER_CANCELLED,
-                    "User cancelled authentication by returning from browser"
+                    ErrorStrings.AUTH_TAB_CANCELED_MESSAGE
                 )
             )
 
