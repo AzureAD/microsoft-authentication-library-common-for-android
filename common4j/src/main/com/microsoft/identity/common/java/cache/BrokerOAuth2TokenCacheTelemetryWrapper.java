@@ -277,6 +277,22 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
     }
 
     @Override
+    public List<ICacheRecord> getAccountsWithAggregatedAccountData(String environment, String clientId, boolean callerAuthorizedForFoci) {
+        final long startTime = System.currentTimeMillis();
+
+        try {
+            return mCacheToWrap.getAccountsWithAggregatedAccountData(environment, clientId, callerAuthorizedForFoci);
+        } finally {
+            final long endTime = System.currentTimeMillis();
+            final long elapsedTime = endTime - startTime;
+            SpanExtension.current().setAttribute(
+                    AttributeName.elapsed_time_cache_get_accounts_with_aggregated_account_data.name(),
+                    elapsedTime
+            );
+        }
+    }
+
+    @Override
     public List<IdTokenRecord> getIdTokensForAccountRecord(String clientId, AccountRecord accountRecord) {
         final long startTime = System.currentTimeMillis();
 
