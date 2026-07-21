@@ -83,9 +83,16 @@ class FlakyTestRetryRule : TestRule {
                     try {
                         base.evaluate()
                         if (attempt > 1) {
-                            Log.i(
+                            // A test that only passed on a retry is still flaky. The JUnit result is
+                            // binary (pass/fail), so a Rule cannot report a "flaky" status the way the
+                            // Gradle test-retry plugin does — the run stays green. To keep the
+                            // flakiness discoverable rather than buried, emit a distinctive WARN
+                            // marker ([FLAKY_PASS_MARKER]) that CI log scanning / dashboards can grep
+                            // for to surface tests that are still flaking.
+                            Log.w(
                                 TAG,
-                                "${description.methodName}: passed on attempt $attempt of $totalAttempts"
+                                "$FLAKY_PASS_MARKER ${description.className}#${description.methodName} " +
+                                    "passed on attempt $attempt of $totalAttempts (flaked ${attempt - 1} time(s))"
                             )
                         }
                         return
@@ -118,5 +125,12 @@ class FlakyTestRetryRule : TestRule {
 
     private companion object {
         private val TAG = FlakyTestRetryRule::class.java.simpleName
+
+        /**
+         * Stable, greppable marker logged (at WARN) whenever a test passes only after one or more
+         * retries. CI log scanning / dashboards can grep for this token to surface tests that are
+         * still flaking even though the run reported green.
+         */
+        private const val FLAKY_PASS_MARKER = "FLAKY_TEST_PASSED_AFTER_RETRY:"
     }
 }

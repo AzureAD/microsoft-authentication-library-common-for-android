@@ -80,13 +80,11 @@ jobs:
       - name: Final status reporting
         if: always()
         run: |
-          # Consider the run successful if either title was updated or the PR was skipped due to missing AB ID
+          # A missing AB ID is a hard failure, enforced earlier by the "Abort if no AB ID found"
+          # step (exit 1). That failure cannot be rescued here, so this step never treats an empty
+          # AB ID as success — it only reports the outcome when an AB ID is present.
           if [ "${{ steps.decide.outputs.update_required }}" == "true" ]; then
             echo "PR title updated to include AB ID."
-            exit 0
-          fi
-          if [ "${{ steps.extract-ab.outputs.abid }}" == "" ]; then
-            echo "No AB ID found; validation skipped by design."
             exit 0
           fi
           echo "No change required or validation passed." 

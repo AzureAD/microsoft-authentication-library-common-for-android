@@ -43,6 +43,13 @@ package com.microsoft.identity.internal.testutils.annotations
  * annotation, together with [com.microsoft.identity.internal.testutils.rules.FlakyTestRetryRule],
  * provides the equivalent behaviour on-device (works both locally and in CI/Firebase Test Lab).
  *
+ * > **Retries reuse the same test instance.** Unlike the Gradle `org.gradle.test-retry` plugin —
+ * > which constructs a fresh test instance for each attempt — this rule re-invokes the test body on
+ * > the *same* instance. `@Before`/`@After` still run on every attempt, but any field initialised at
+ * > its declaration (rather than in `@Before`) is **not** reset between attempts and its mutated
+ * > state carries over. Keep retried tests self-contained: reset mutable state in `@Before`, not at
+ * > field declaration, so each attempt starts from a clean slate.
+ *
  * A method-level annotation takes precedence over a class-level annotation.
  *
  * Usage (from a Java or Kotlin instrumented test):

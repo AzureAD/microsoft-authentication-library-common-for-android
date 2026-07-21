@@ -278,10 +278,14 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
     // Instrumented dependencies
-    // testutils is pulled in solely for FlakyTestRetryRule + @RetryFlakyTest (retrying flaky
+    // testutils is pulled in for FlakyTestRetryRule + @RetryFlakyTest (retrying flaky
     // instrumented tests; the org.gradle.test-retry plugin only covers JVM/Robolectric unit tests).
-    // transitive = false keeps only the rule's classes and avoids dragging testutils' whole
-    // transitive graph onto the androidTest classpath.
+    // NOTE: transitive = false does NOT trim testutils down to just the rule classes — all of
+    // testutils' own classes remain on the androidTest classpath. It only excludes testutils'
+    // transitive dependencies (gson, nimbus, robolectric, etc.) so they don't leak onto the
+    // instrumented classpath. Today common's androidTest suite consumes testutils solely for the
+    // retry rule; if it starts using other testutils helpers whose deps are excluded here, those
+    // will fail at runtime (NoClassDefFoundError) and this exclusion will need revisiting.
     androidTestImplementation(project(path: ':testutils')) {
         transitive = false
     }
