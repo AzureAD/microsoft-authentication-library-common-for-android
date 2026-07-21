@@ -709,8 +709,12 @@ public enum AttributeName {
      * package was not the allow-listed store. Set on the current WebView-processing span (emitted
      * only when the broker-install intent validation flight is enabled).
      * <p>
-     * Note: this attribute must also be kept in sync with the {@code AttributeName} enum in the
-     * broker repository (AzureAD/ad-accounts-for-android) for cross-repo telemetry consistency.
+     * Note: this attribute name MUST also be added to the {@code AttributeName} enum in the broker
+     * repository ({@code identity-authnz-teams/ad-accounts-for-android}). This is functionally
+     * required, not just for consistency: the broker's OpenTelemetry exporter drops any attribute
+     * whose name does not resolve in broker's own {@code AttributeName} enum, so if this attribute is
+     * ever set on a span emitted from the broker process it will be silently discarded until it is
+     * mirrored there.
      */
     is_broker_install_intent_blocked,
     
