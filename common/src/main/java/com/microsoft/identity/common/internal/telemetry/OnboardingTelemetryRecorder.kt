@@ -194,7 +194,7 @@ class OnboardingTelemetryRecorder(
                 "finalizeBlob: sessionCorrelationId is empty; returning empty blob (skipping MATS emission) " +
                     "to avoid emitting telemetry that cannot be joined with the broker side or with retries"
             )
-            return EMPTY_BLOB
+            return IOnboardingTelemetryRecorder.EMPTY_BLOB
         }
 
         return try {
@@ -256,7 +256,7 @@ class OnboardingTelemetryRecorder(
             blob.toString()
         } catch (e: JSONException) {
             Logger.error(TAG, sessionCorrelationId, "Failed to serialize onboarding blob", e)
-            EMPTY_BLOB
+            IOnboardingTelemetryRecorder.EMPTY_BLOB
         }
     }
 
@@ -301,7 +301,6 @@ class OnboardingTelemetryRecorder(
     companion object {
         private val TAG = OnboardingTelemetryRecorder::class.java.simpleName
         private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
-        private const val EMPTY_BLOB = ""
         private const val ISO_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
         // Seed field key constants — must match OnboardingBlobConstants (Djinni-generated).

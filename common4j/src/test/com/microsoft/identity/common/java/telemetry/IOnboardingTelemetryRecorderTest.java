@@ -75,7 +75,9 @@ public class IOnboardingTelemetryRecorderTest {
         recorder.addStep("AuthenticationStarted");
         recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED");
 
-        assertEquals("", recorder.finalizeBlob());
+        // Assert against the contract's own sentinel (not a bare literal) so the constant's
+        // identity — not just its current value — is pinned by this test.
+        assertEquals(IOnboardingTelemetryRecorder.EMPTY_BLOB, recorder.finalizeBlob());
     }
 
     @Test

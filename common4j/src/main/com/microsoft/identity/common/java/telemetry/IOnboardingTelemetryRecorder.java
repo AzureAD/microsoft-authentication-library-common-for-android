@@ -44,6 +44,20 @@ import lombok.NonNull;
 public interface IOnboardingTelemetryRecorder {
 
     /**
+     * Sentinel returned by {@link #finalizeBlob()} when there is nothing worth emitting (e.g. the
+     * session correlation id is missing, so the blob could not be joined with the broker side or
+     * with retries).
+     *
+     * <p>Because {@link #finalizeBlob()} is {@code @NonNull}, this "nothing to emit" value is part
+     * of the interface contract, not an implementation detail: callers decide whether to skip MATS
+     * emission with {@code blob.isEmpty()} (or equivalent), which only holds if every implementation
+     * agrees the vacuum value is exactly {@code ""}. Exposing it here gives every implementation
+     * (the concrete {@code OnboardingTelemetryRecorder}, a no-op / null-object recorder, test
+     * doubles) one canonical constant to return instead of re-declaring the magic string.
+     */
+    @NonNull String EMPTY_BLOB = "";
+
+    /**
      * Record a step in the onboarding flow. The implementation captures a timestamp
      * for each step internally.
      *
@@ -82,11 +96,11 @@ public interface IOnboardingTelemetryRecorder {
      * change. The concrete {@code OnboardingTelemetryRecorder} overrides this to emit the real
      * blob; the default simply yields the documented "nothing worth emitting" result.
      *
-     * @return The populated blob JSON string, or an empty string when there is nothing worth
+     * @return The populated blob JSON string, or {@link #EMPTY_BLOB} when there is nothing worth
      *         emitting (e.g. the session correlation id is missing). Never {@code null}.
      */
     @NonNull
     default String finalizeBlob() {
-        return "";
+        return EMPTY_BLOB;
     }
 }
