@@ -26,6 +26,8 @@ import android.net.Uri
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.SWITCH_BROWSER
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
@@ -134,6 +136,59 @@ class SwitchBrowserUriHelperTest {
         val path = "path"
         Assert.assertTrue(
             SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(url, redirectUrl, path)
+        )
+    }
+
+    @Test
+    fun `test isSwitchBrowserRedirectUrl accepts legit url with query params`() {
+        // Query params (code/action_uri) are ignored — only scheme + authority + path are matched.
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.REQUEST_PATH}" +
+                "?${SWITCH_BROWSER.CODE}=$CODE&${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+        Assert.assertTrue(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(
+                url, Broker.NEW_BROKER_REDIRECT_URI, SWITCH_BROWSER.REQUEST_PATH
+            )
+        )
+    }
+
+    @Test
+    fun `test isSwitchBrowserRedirectUrl rejects suffixed host spoof`() {
+        // Prefix-confusion vector: startsWith("{redirect}/switch_browser") accepts this, but the
+        // structured match must reject the attacker-controlled path suffix.
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.REQUEST_PATH}.evil.com/x" +
+                "?${SWITCH_BROWSER.CODE}=STOLEN&${SWITCH_BROWSER.ACTION_URI}=$ACTION_URI"
+        Assert.assertFalse(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(
+                url, Broker.NEW_BROKER_REDIRECT_URI, SWITCH_BROWSER.REQUEST_PATH
+            )
+        )
+    }
+
+    @Test
+    fun `test isSwitchBrowserRedirectUrl rejects path suffix spoof`() {
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.REQUEST_PATH}stolen" +
+                "?${SWITCH_BROWSER.CODE}=STOLEN"
+        Assert.assertFalse(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(
+                url, Broker.NEW_BROKER_REDIRECT_URI, SWITCH_BROWSER.REQUEST_PATH
+            )
+        )
+    }
+
+    @Test
+    fun `test isSwitchBrowserRedirectUrl killSwitch reverts to prefix match`() {
+        mockkObject(CommonFlightsManager)
+        every {
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING)
+        } returns false
+        // With strict matching disabled, the historical prefix match accepts the suffixed URL again.
+        val url = "${Broker.NEW_BROKER_REDIRECT_URI}/${SWITCH_BROWSER.REQUEST_PATH}.evil.com/x" +
+                "?${SWITCH_BROWSER.CODE}=STOLEN"
+        Assert.assertTrue(
+            SwitchBrowserUriHelper.isSwitchBrowserRedirectUrl(
+                url, Broker.NEW_BROKER_REDIRECT_URI, SWITCH_BROWSER.REQUEST_PATH
+            )
         )
     }
 

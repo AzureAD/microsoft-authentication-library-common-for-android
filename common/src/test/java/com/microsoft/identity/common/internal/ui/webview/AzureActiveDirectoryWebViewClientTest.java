@@ -30,6 +30,7 @@ import static com.microsoft.identity.common.java.providers.RawAuthorizationResul
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -55,6 +56,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
@@ -94,7 +96,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private AzureActiveDirectoryWebViewClient mWebViewClient;
     private Context mContext;
     private Activity mActivity;
-    private static final String TEST_REDIRECT_URI = "abc12";
+    private static final String TEST_REDIRECT_URI = "msauth://com.example.app/somehash=";
 
     // Test strings initialized.
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
@@ -107,7 +109,47 @@ public class AzureActiveDirectoryWebViewClientTest {
             AUTHENTICATOR_MFA_LINKING_PREFIX + "xyz";
     private static final String TEST_SSL_PROTECTION_HTTP_URL = "http://foo";
     private static final String TEST_SSL_PROTECTION_FTP_URL = "ftp://foo";
-    private static final String TEST_REDIRECT_URL = "ABC12/xyz";
+    private static final String TEST_REDIRECT_URL = "msauth://com.example.app/somehash=?code=AUTH_CODE&state=xyz";
+    private static final String TEST_REDIRECT_URL_WITH_FRAGMENT =
+            "msauth://com.example.app/somehash=?code=AUTH_CODE#fragment";
+
+    // isRedirectUrl spoofing-attack vectors (FireWatch c1bf88bd). These use an https://
+    // redirect URI on purpose: any msauth:// URL is also caught downstream by
+    // isInstallRequestUrl, so https:// isolates the isRedirectUrl behavior. The msauth://
+    // install-path gap is tracked separately (see PR description).
+    private static final String HTTPS_REDIRECT_URI = "https://login.contoso.com/auth";
+    private static final String HTTPS_REDIRECT_LEGIT =
+            "https://login.contoso.com/auth?code=AUTH_CODE&state=xyz";
+    // Suffixes that would pass a startsWith() check but differ in path.
+    private static final String HTTPS_REDIRECT_SPOOFED_SUFFIX_HOST =
+            "https://login.contoso.com/auth.attacker.com/x?code=STOLEN&state=xyz";
+    private static final String HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX =
+            "https://login.contoso.com/authstolen?code=STOLEN&state=xyz";
+    // Differs only by a trailing slash — must still match.
+    private static final String HTTPS_REDIRECT_TRAILING_SLASH =
+            "https://login.contoso.com/auth/?code=AUTH_CODE&state=xyz";
+    // Path-less registered redirect URI, and an incoming redirect that adds a root "/" before
+    // the query. The empty configured path and the incoming "/" must normalize equal.
+    private static final String HTTPS_REDIRECT_URI_NO_PATH = "https://login.contoso.com";
+    private static final String HTTPS_REDIRECT_NO_PATH_ROOT_SLASH =
+            "https://login.contoso.com/?code=AUTH_CODE&state=xyz";
+    // Scheme-less registered redirect URI (defensive branch; not used in practice). The incoming
+    // URL still carries the auth code in the query, which must be stripped before comparison.
+    private static final String SCHEMELESS_REDIRECT_URI = "login.contoso.com/auth";
+    private static final String SCHEMELESS_REDIRECT_LEGIT =
+            "login.contoso.com/auth?code=AUTH_CODE&state=xyz";
+    // Opaque (urn:) redirect URI — the broker OOB redirect. Authority/path are
+    // null, so the matcher must compare the scheme-specific part.
+    private static final String OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+    private static final String OOB_REDIRECT_LEGIT =
+            "urn:ietf:wg:oauth:2.0:oob?code=AUTH_CODE&state=xyz";
+    private static final String OOB_REDIRECT_SPOOFED_SSP_SUFFIX =
+            "urn:ietf:wg:oauth:2.0:oobstolen?code=STOLEN&state=xyz";
+    // Hierarchical urn (authority "evil", path "/oob") spoofing the opaque OOB redirect.
+    // The registered URI is opaque, this one is not, so the opaque/hierarchical mismatch
+    // must be rejected rather than compared on scheme alone.
+    private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
+            "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
 
@@ -345,9 +387,357 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_WEB_CP_URL));
     }
 
+    /**
+     * A legitimate msauth:// redirect (auth code in the query string) must be delivered through
+     * the redirect path (processRedirectUrl), not the broker-install fallthrough.
+     * <p>
+     * Asserting only that shouldOverrideUrlLoading() returns true is insufficient: any msauth://
+     * URL is also matched by isInstallRequestUrl, so even a broken isRedirectUrl would return true
+     * via processInstallRequest. We therefore pin the redirect path — the completion callback
+     * receives a COMPLETED result AND the onboarding recorder is not marked with the broker-install
+     * step that processInstallRequest would record.
+     */
     @Test
-    public void testUrlOverrideHandlesRedirectUriString() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL));
+    public void testUrlOverrideHandlesRedirectUriString() throws ClientException, org.json.JSONException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, TEST_REDIRECT_URI);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, TEST_REDIRECT_URL);
+
+        assertTrue("msauth redirect must be handled", handled);
+        // Delivered as a completed auth result...
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
+        // ...through the redirect path, not processInstallRequest (which would have recorded the
+        // broker-install onboarding step).
+        assertFalse("msauth redirect must not be handled via the broker-install path",
+                onboardingHasBrokerInstallStep(recorder));
+    }
+
+    /**
+     * Regression test for the switch_browser routing gap that strict redirect matching would
+     * otherwise introduce (raised in PR #3136 review). A switch_browser request arrives as
+     * {redirectUrl}/switch_browser?code=...&action_uri=..., whose path no longer equals the
+     * registered redirect URI. It must still be routed to the switch_browser handler and must NOT
+     * fall through to processRedirectUrl/processInstallRequest, which would deliver the
+     * switch_browser continuation code to the completion callback as if it were the final auth code.
+     */
+    @Test
+    public void testSwitchBrowserRequest_isRoutedToSwitchBrowser_notRedirectOrInstall()
+            throws ClientException, org.json.JSONException {
+        final SwitchBrowserProtocolCoordinator mockCoordinator =
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class);
+        final String switchBrowserUrl = TEST_REDIRECT_URI
+                + "/switch_browser?code=sb_code&action_uri=https://login.microsoftonline.com/x";
+        when(mockCoordinator.isSwitchBrowserRequest(switchBrowserUrl, TEST_REDIRECT_URI))
+                .thenReturn(true);
+
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, mockCallback, url -> { }, TEST_REDIRECT_URI, mockCoordinator, "homeTenantId", false);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        client.setOnboardingTelemetryRecorder(recorder);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, switchBrowserUrl);
+
+        assertTrue("switch_browser request must be handled", handled);
+        // Routed to the switch_browser handler...
+        Mockito.verify(mockCoordinator).processSwitchBrowserRedirectAsync(
+                Mockito.eq(switchBrowserUrl), Mockito.any(), Mockito.eq(TEST_REDIRECT_URI));
+        // ...and never delivered as a final auth result nor recorded as a broker-install step.
+        Mockito.verify(mockCallback, Mockito.never()).onChallengeResponseReceived(Mockito.any());
+        assertFalse("switch_browser must not be handled via the broker-install path",
+                onboardingHasBrokerInstallStep(recorder));
+    }
+
+    /**
+     * URL with auth code in the fragment instead of query string is still a
+     * legitimate redirect — only scheme, authority and path are matched.
+     */
+    @Test
+    public void testUrlOverrideHandlesRedirectUriWithFragment() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL_WITH_FRAGMENT));
+    }
+
+    /**
+     * Positive control for the strict-matching change: a legitimate redirect to
+     * the configured https redirect URI (auth code in the query string) is still
+     * recognized and delivered to the completion callback.
+     */
+    @Test
+    public void testStrictMatching_acceptsLegitimateHttpsRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_LEGIT);
+
+        assertTrue("Legitimate redirect must be handled", handled);
+        // The auth code is delivered exactly once via the redirect path.
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * A redirect that differs from the registered URI only by a single trailing
+     * slash on the path (registered "/auth" vs incoming "/auth/") denotes the
+     * same resource and must still be accepted. normalizePath() collapses the
+     * single trailing slash before comparison.
+     */
+    @Test
+    public void testStrictMatching_acceptsTrailingSlashPathDifference() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_TRAILING_SLASH);
+
+        assertTrue("Trailing-slash redirect must be handled", handled);
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * A path-less registered redirect URI (no path component) must still match an incoming
+     * redirect that carries a root "/" before the query string. The configured empty path and
+     * the incoming "/" normalize to the same value, so the auth code is delivered via the
+     * redirect path. Guards against normalizePath rejecting the "" vs "/" difference.
+     */
+    @Test
+    public void testStrictMatching_acceptsRootSlashForPathLessRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI_NO_PATH);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_NO_PATH_ROOT_SLASH);
+
+        assertTrue("Path-less redirect with root slash must be handled", handled);
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * Scheme-less registered redirect URI (defensive branch, unused in practice since all
+     * redirect URIs carry a scheme): the incoming URL still carries the auth code in the query,
+     * so the query/fragment must be stripped before the equality check — mirroring the scheme-less
+     * branch of the Kotlin isSwitchBrowserRedirectUrl. Without stripping, the full url (with
+     * ?code=...) would not equal the registered URI and the redirect would fall through to the
+     * SSL-protection path instead of being delivered as a completed auth result.
+     */
+    @Test
+    public void testStrictMatching_acceptsSchemelessRedirectStrippingQuery() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, SCHEMELESS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, SCHEMELESS_REDIRECT_LEGIT);
+
+        assertTrue("Scheme-less redirect must be handled", handled);
+        // Delivered via the redirect path as a completed auth result (not the SSL-protection path
+        // that a non-match would take).
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
+    }
+
+    /**
+     * Opaque redirect URI (broker OOB, urn:ietf:wg:oauth:2.0:oob): a legitimate
+     * redirect with the same scheme-specific part (auth code in query) is
+     * accepted and delivered as a completed auth result.
+     */
+    @Test
+    public void testStrictMatching_acceptsLegitimateOpaqueOobRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        final boolean handled = client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_LEGIT);
+
+        assertTrue("Legitimate OOB redirect must be handled", handled);
+        Mockito.verify(mockCallback).onChallengeResponseReceived(captor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED, captor.getValue().getResultCode());
+    }
+
+    /**
+     * Opaque redirect URI: an attacker-controlled urn with an extra suffix on the
+     * scheme-specific part (urn:...:oobstolen) must NOT be accepted as the OOB
+     * redirect. Without comparing the scheme-specific part, the null authority /
+     * path would make this match on scheme alone. The auth code must never be
+     * delivered as a completed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsSpoofedOpaqueOobRedirect() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_SPOOFED_SSP_SUFFIX);
+
+        // The spoofed urn is not the redirect; it falls through to the SSL-protection
+        // error path, so any delivered result must NOT be a completed auth result.
+        for (final RawAuthorizationResult result : captureAllResults(mockCallback, captor)) {
+            assertNotEquals("Spoofed opaque redirect must not deliver an auth code",
+                    RawAuthorizationResult.ResultCode.COMPLETED, result.getResultCode());
+        }
+    }
+
+    /**
+     * Opaque vs hierarchical mismatch: the registered redirect URI is opaque
+     * (urn:ietf:wg:oauth:2.0:oob) but the incoming URL is a hierarchical urn
+     * (urn://evil/oob). Comparing only the scheme would accept it; the matcher must
+     * reject the mismatch so the auth code is never delivered as a completed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsHierarchicalUrnSpoofingOpaqueOob() throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> captor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, OOB_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, OOB_REDIRECT_SPOOFED_HIERARCHICAL);
+
+        for (final RawAuthorizationResult result : captureAllResults(mockCallback, captor)) {
+            assertNotEquals("Hierarchical urn spoofing the opaque OOB redirect must not deliver an auth code",
+                    RawAuthorizationResult.ResultCode.COMPLETED, result.getResultCode());
+        }
+    }
+
+    private static java.util.List<RawAuthorizationResult> captureAllResults(
+            final IAuthorizationCompletionCallback mockCallback,
+            final ArgumentCaptor<RawAuthorizationResult> captor) {
+        Mockito.verify(mockCallback, Mockito.atLeast(0)).onChallengeResponseReceived(captor.capture());
+        return captor.getAllValues();
+    }
+
+    /**
+     * Regression test for the FireWatch finding c1bf88bd-5fce-454c-a028-cbfe176639e0.
+     * <p>
+     * Historically {@code isRedirectUrl} used {@code String#startsWith}, so a URL
+     * that contained the registered redirect URI as a prefix but had an
+     * attacker-controlled suffix would be accepted as a redirect and the auth code
+     * delivered to the completion callback. The strict scheme + authority + path
+     * comparison must reject these, so the completion callback is never invoked
+     * with the spoofed result.
+     */
+    @Test
+    public void testStrictMatching_rejectsSpoofedRedirectWithSuffixHost() throws ClientException {
+        assertSpoofedRedirectNotDelivered(HTTPS_REDIRECT_SPOOFED_SUFFIX_HOST);
+    }
+
+    @Test
+    public void testStrictMatching_rejectsSpoofedRedirectWithPathSuffix() throws ClientException {
+        assertSpoofedRedirectNotDelivered(HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX);
+    }
+
+    private void assertSpoofedRedirectNotDelivered(@NonNull final String spoofedUrl)
+            throws ClientException {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, spoofedUrl);
+
+        // The spoofed URL must NOT be treated as a redirect that delivers an auth code.
+        Mockito.verify(mockCallback, Mockito.never())
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    /**
+     * Kill-switch test: with ENABLE_STRICT_REDIRECT_URI_MATCHING disabled via ECS,
+     * isRedirectUrl falls back to the historical prefix match, so the spoofed
+     * suffix URL is (incorrectly) accepted again and its code delivered. This
+     * proves the flag fully disables the new behavior, allowing a config-only
+     * rollback.
+     */
+    @Test
+    public void testKillSwitch_disablesStrictMatching_revertsToPrefixMatch() throws ClientException {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING))
+                .thenReturn(false);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(mockCallback, HTTPS_REDIRECT_URI);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        client.shouldOverrideUrlLoading(mockWebView, HTTPS_REDIRECT_SPOOFED_PATH_SUFFIX);
+
+        // Prefix match is back: spoofed URL is treated as a redirect and delivered.
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(Mockito.any());
+    }
+
+    private AzureActiveDirectoryWebViewClient buildClientWithRedirectUri(
+            @NonNull final IAuthorizationCompletionCallback completionCallback,
+            @NonNull final String redirectUri) throws ClientException {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                completionCallback,
+                url -> { },
+                redirectUri,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false);
+    }
+
+    private OnboardingTelemetryRecorder newOnboardingRecorder() {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        return new OnboardingTelemetryRecorder(seedJson, "client-id", "scope1", mContext);
+    }
+
+    /**
+     * Reads the finalized onboarding blob and reports whether the broker-install step was recorded.
+     * processInstallRequest records this step; processRedirectUrl and processSwitchBrowserRequest do
+     * not, so its presence distinguishes which routing path handleUrl took.
+     */
+    private static boolean onboardingHasBrokerInstallStep(final OnboardingTelemetryRecorder recorder)
+            throws org.json.JSONException {
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray steps = blob.getJSONArray("steps_list");
+        for (int i = 0; i < steps.length(); i++) {
+            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test
