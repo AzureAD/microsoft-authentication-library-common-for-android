@@ -368,6 +368,17 @@ public class ExceptionAdapter {
                     policyRequiredException.setTenantId(echoedTenantId);
                 }
 
+                // ===== PROTOTYPE / TEST-ONLY — verify the identity handed off to OneAuth/Teams. REMOVE BEFORE MERGE. =====
+                // This is the exact IntuneAppProtectionPolicyRequiredException that gets marshalled to the
+                // client (OneAuth/Teams). If accountUserId is the guest OID + tenantId is the guest tenant
+                // here, the broker did its job; a blank AAD ID in Intune afterward is an enrollment-side issue.
+                Logger.warn(TAG, "[MAM][PROTOTYPE] Exception handoff to OneAuth/Teams: accountUserId="
+                        + policyRequiredException.getAccountUserId()
+                        + ", tenantId=" + policyRequiredException.getTenantId()
+                        + ", accountUpn=" + policyRequiredException.getAccountUpn()
+                        + ", authorityUrl=" + policyRequiredException.getAuthorityUrl());
+                // ===== END PROTOTYPE =====
+
                 setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
                 return policyRequiredException;
