@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Security: validate the target of WebView broker-install intent-scheme redirects against an allow-list (Google Play Store only), clearing any explicit component/selector and stripping URI-permission grant flags so resolution is driven solely by the validated package; gated by ENABLE_BROKER_INSTALL_INTENT_VALIDATION CommonFlight (default off) and recording the launched / blocked outcome via the is_broker_install_intent_blocked span attribute (#3170)
+- [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
 
 Version 24.5.0
 ----------
