@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
 
 Version 24.5.0
 ----------
