@@ -28,7 +28,7 @@ import com.google.gson.annotations.SerializedName
  * This class represents an error that occurs during WebApps operations.
  */
 data class WebAppError(
-    @SerializedName(FIELD_ERROR)
+    @SerializedName(FIELD_CODE)
     val errorCode: String? = BROKER_ERROR_CODE,
 
     @SerializedName(FIELD_DESCRIPTION)
@@ -38,7 +38,7 @@ data class WebAppError(
     val extra: WebAppErrorDetails
 ) {
     companion object {
-        const val FIELD_ERROR = "error"
+        const val FIELD_CODE = "code"
         const val FIELD_DESCRIPTION = "description"
         const val FIELD_EXTRA = "ext"
         const val BROKER_ERROR_CODE = "OSError" // Per the protocol, this is the dedicated error code for broker-related errors.
