@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Attach an immutable, one-shot return PendingIntent to the openid-vc:// hand-off so a signature-pinned Microsoft Authenticator (VID wallet) can bring the calling app's task back to the foreground after VID completes, via a transparent no-history OpenIdVcReturnActivity trampoline; gated by ENABLE_OPEN_ID_VC_RETURN_TO_CALLER CommonFlight (default on) (#3184)
 
 Version 24.5.0
 ----------
