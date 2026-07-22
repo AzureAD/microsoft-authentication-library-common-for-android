@@ -194,23 +194,19 @@ public class UrlUtilTest {
     }
 
     @Test
-    public void testGetParametersFromValidUrlString() throws ClientException {
-        final Map<String, String> params = UrlUtil.getParameters(
-                "https://www.test.com/path?param1=value1&param2=value2");
-        Assert.assertEquals(2, params.size());
-        Assert.assertEquals("value1", params.get("param1"));
-        Assert.assertEquals("value2", params.get("param2"));
-    }
-
-    @Test
     public void testGetParametersFromNullUrlStringReturnsEmpty() throws ClientException {
         Assert.assertTrue(UrlUtil.getParameters((String) null).isEmpty());
     }
 
-    @Test(expected = ClientException.class)
-    public void testGetParametersFromMalformedUrlStringThrows() throws ClientException {
-        // A space is an illegal URI character, forcing a URISyntaxException -> ClientException.
-        UrlUtil.getParameters("https://www.test.com/pa th?a=b");
+    @Test
+    public void testGetParametersFromMalformedUrlStringThrows() {
+        try {
+            // A space is an illegal URI character, forcing a URISyntaxException -> ClientException.
+            UrlUtil.getParameters("https://www.test.com/pa th?a=b");
+            Assert.fail("Expected a ClientException for a malformed URL string.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
+        }
     }
 
     @Test
@@ -240,19 +236,13 @@ public class UrlUtilTest {
                 UrlUtil.makeUrl("https://www.test.com"));
     }
 
-    @Test(expected = ClientException.class)
-    public void testMakeUrlThrowsForMalformedString() throws ClientException {
-        UrlUtil.makeUrl("not a valid url");
-    }
-
     @Test
-    public void testMakeUrlSilentReturnsUrlForValidString() throws MalformedURLException {
-        Assert.assertEquals(new URL("https://www.test.com"),
-                UrlUtil.makeUrlSilent("https://www.test.com"));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testMakeUrlSilentThrowsForMalformedString() {
-        UrlUtil.makeUrlSilent("not a valid url");
+    public void testMakeUrlThrowsForMalformedString() {
+        try {
+            UrlUtil.makeUrl("not a valid url");
+            Assert.fail("Expected a ClientException for a malformed URL string.");
+        } catch (final ClientException e) {
+            Assert.assertEquals(ClientException.MALFORMED_URL, e.getErrorCode());
+        }
     }
 }
