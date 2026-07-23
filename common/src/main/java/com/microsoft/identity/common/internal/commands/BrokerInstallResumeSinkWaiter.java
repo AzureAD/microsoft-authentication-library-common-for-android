@@ -82,7 +82,7 @@ public final class BrokerInstallResumeSinkWaiter {
      * {@link #POC_TTL_MILLISECONDS} so a slow install has room to finish and the foreground resume fires.
      * Production keeps the bounded {@link #DEFAULT_TTL_MILLISECONDS}.
      */
-    public static final boolean EXTEND_TTL_FOR_POC = true;
+    public static final boolean EXTEND_TTL_FOR_POC = false;
 
     /** Long backstop TTL used when {@link #EXTEND_TTL_FOR_POC} is set (still bounded so it never hangs forever). */
     public static final long POC_TTL_MILLISECONDS = 24L * 60L * 60L * 1000L;

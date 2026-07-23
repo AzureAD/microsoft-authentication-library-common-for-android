@@ -319,7 +319,7 @@ public enum CommonFlight implements IFlightConfig {
      * enabled in OneAuthTestApp, which does not initialize CommonFlightsManager and therefore reads the
      * DefaultValueFlightsProvider (i.e. this default). Production default must remain false.
      */
-    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", true);
+    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false);
 
     private String key;
     private Object defaultValue;

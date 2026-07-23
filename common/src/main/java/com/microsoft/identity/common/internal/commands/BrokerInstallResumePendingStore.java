@@ -75,7 +75,7 @@ public final class BrokerInstallResumePendingStore {
      * the durable park would otherwise expire before the resume runs. When {@code true} the persisted TTL
      * is <b>ignored</b> so a pending resume never expires. Production should keep a bounded TTL.
      */
-    public static final boolean DISABLE_EXPIRY_FOR_POC = true;
+    public static final boolean DISABLE_EXPIRY_FOR_POC = false;
 
     /**
      * Default durable TTL (long, so even without {@link #DISABLE_EXPIRY_FOR_POC} a slow CP install fits).
