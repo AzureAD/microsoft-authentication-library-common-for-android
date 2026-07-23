@@ -51,6 +51,17 @@
             android:taskAffinity=""
             android:exported="false" />
 
+        <!-- MAM broker-install request-resume "durability follow-up" (AB#3676213 / AB#3686091).
+             Auto-init ContentProvider (Firebase/androidx-startup pattern) that ships in the Common AAR and
+             merges into every consuming app. On a fresh process it re-drives a persisted broker-install
+             onboarding via the SDK-registered IBrokerInstallResumeReDriver, with no code in the calling app.
+             Inert until a re-driver is registered and a durable park exists. -->
+        <provider
+            android:name="com.microsoft.identity.common.internal.commands.BrokerInstallResumeAutoInitProvider"
+            android:authorities="${applicationId}.identity.brokerinstallresume.autoinit"
+            android:exported="false"
+            android:initOrder="10" />
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to
