@@ -28,6 +28,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -64,6 +66,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -169,6 +172,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_PUBLIC_CLOUD_REDIRECT_URL = "https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?x=10";
     private static final String TEST_PASSKEY_REDIRECT_URL = "http-auth:PassKey?challenge=challenge&version=1.0&submitUrl=https://login.microsoftonline.com/common/credential?passKeyAuth=1.0%2fpasskey&context=&relyingPartyIdentifier=login.microsoft.com&allowedCredentials=somevalue";
     private static final String TEST_INTENT_INSTALL_BROKER_REDIRECT_URL = "intent://play.google.com/store/apps/details?id=com.azure.authenticator&referrer=%20adjust_reftag%3Dc6f1p4ErudH2C%26utm_source%3DLanding%2BPage%2BOrganic%2B-%2Bapp%2Bstore%2Bbadges%26utm_campaign%3Dappstore_android&pcampaignid=web_auto_redirect&web_logged_in=0&redirect_entry_point=dp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+    // Intent fixtures whose effective parsed target differs from the allow-listed Play Store package,
+    // used to verify the post-parse validation step.
+    private static final String TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE = "intent://play.google.com/store/apps/details?referrer=;package=com.android.vending;&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.example.unrelatedapp;end";
+    private static final String TEST_INTENT_WITH_EXPLICIT_COMPONENT = "intent://play.google.com/store/apps/details?id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;component=com.example.unrelatedapp/.SampleActivity;end";
+    private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
@@ -937,8 +946,141 @@ public class AzureActiveDirectoryWebViewClientTest {
         }
     }
 
+    @Test
     public void testUrlOverrideHandlesIntentRedirectUrl() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INTENT_INSTALL_BROKER_REDIRECT_URL));
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_INSTALL_BROKER_REDIRECT_URL));
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
+        assertNull(intentCaptor.getValue().getComponent());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksNonAllowlistedPackage_whenValidationEnabled() {
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        // The request passes the install-intent gate (so it is "handled") ...
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
+        // ... but a parsed target package that is not on the allow-list must not be launched.
+        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_clearsExplicitComponent_whenValidationEnabled() {
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_EXPLICIT_COMPONENT));
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+        // Any explicit component is cleared; only the allow-listed package remains.
+        assertNull(intentCaptor.getValue().getComponent());
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_legacyBehavior_whenValidationDisabled() {
+        setBrokerInstallIntentValidationFlight(false);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        // With the validation flight off, the legacy launch behavior is preserved (rollback switch).
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
+        Mockito.verify(mockContext).startActivity(any(Intent.class));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    /**
+     * A selector cannot be injected through the {@code intent://} URL scheme (Android does not
+     * (de)serialize a selector via parseUri/toUri), so the selector-clearing defense is exercised
+     * directly on the sanitizer. On Android a top-level package and a selector are mutually
+     * exclusive, so an intent that smuggles the store package inside a selector has a {@code null}
+     * top-level package: the sanitizer nulls the selector (verified on the mutated intent) and then
+     * blocks the intent because the validated package is null.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_clearsSelectorAndBlocks() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        final Intent selector = new Intent(Intent.ACTION_VIEW);
+        selector.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.setSelector(selector);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNull(result);
+        // The selector was cleared before the null-package block, so it can never redirect resolution.
+        assertNull(intent.getSelector());
+    }
+
+    /**
+     * When the validated (top-level) package is not allow-listed, the intent must be blocked
+     * (returns {@code null}) so it is never launched.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_returnsNullForNonAllowlistedPackage() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage("com.example.unrelatedapp");
+
+        assertNull(mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent));
+    }
+
+    /**
+     * For an allow-listed target, URI-permission grant flags are stripped and CATEGORY_BROWSABLE is
+     * added, while unrelated flags (e.g. FLAG_ACTIVITY_NEW_TASK) are preserved.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_stripsGrantFlagsAndAddsBrowsable() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNotNull(result);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        assertNotEquals(0, result.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
+        assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
+    }
+
+    private void setBrokerInstallIntentValidationFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        // Default any unstubbed flight to its real default value so these tests don't silently
+        // depend on Mockito's boolean default (false) as the WebViewClient evolves.
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        // Override only the flight under test.
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION))
+                .thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     public void setTestPasskeyRedirectUrl() {
