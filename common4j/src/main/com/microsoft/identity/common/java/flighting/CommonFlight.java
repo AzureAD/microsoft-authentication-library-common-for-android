@@ -315,9 +315,9 @@ public enum CommonFlight implements IFlightConfig {
      * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off, the pre-existing
      * terminal install-required behavior is unchanged.
      *
-     * TODO(TEMPORARY - E2E TEST ONLY - REVERT BEFORE MERGE): default flipped to true so the feature is
-     * enabled in OneAuthTestApp, which does not initialize CommonFlightsManager and therefore reads the
-     * DefaultValueFlightsProvider (i.e. this default). Production default must remain false.
+     * Note: OneAuthTestApp does not initialize CommonFlightsManager, so it reads this default via
+     * DefaultValueFlightsProvider. To exercise the feature in that test app, flip this default to true in a
+     * local build only (do not commit); the production default must remain false.
      */
     ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false);
 
