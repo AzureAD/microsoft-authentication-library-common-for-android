@@ -106,6 +106,15 @@ public class BrokerOAuth2TokenCache
     private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
+    /**
+     * Whether the calling app (identified by {@link #mUid}) is authorized to read the shared,
+     * device-wide FoCI cache. Set once at construction from broker policy (flight +
+     * isAuthorizedToShareTokens). When {@code false}, reads that would otherwise expose
+     * {@link #mFociCache} to an unauthorized caller are short-circuited to an empty result.
+     * Defaults to {@code true} via the ctors that omit it, preserving pre-existing behavior
+     * for non-broker call paths and existing tests. See AB#3687466.
+     */
+    private final boolean mCallerAuthorizedForFoci;
     private ProcessUidCacheFactory mDelegate = null;
 
     /**
@@ -149,6 +158,25 @@ public class BrokerOAuth2TokenCache
     public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
                                   int uid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
+        this(components, uid, applicationMetadataCache, /* callerAuthorizedForFoci= */ true);
+    }
+
+    /**
+     * Constructs a new BrokerOAuth2TokenCache with an explicit FoCI-read authorization gate.
+     * The gate is set by the broker at construction time (typically
+     * {@code !VALIDATE_GET_ACCOUNTS_FOCI_CALLER_flight || isAuthorizedToShareTokens(uid)}).
+     * When {@code callerAuthorizedForFoci} is {@code false}, this instance will not return
+     * shared-FoCI accounts on the environment-scoped read path (fail-closed). AB#3687466.
+     *
+     * @param components               The current platform components.
+     * @param uid                      UID of the current unix user.
+     * @param applicationMetadataCache The metadata cache to use.
+     * @param callerAuthorizedForFoci  Whether the calling app may read the shared FoCI cache.
+     */
+    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
+                                  int uid,
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  final boolean callerAuthorizedForFoci) {
         super(components);
 
         Logger.verbose(
@@ -159,6 +187,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mFociCache = initializeFociCache(getComponents());
         mApplicationMetadataCache = applicationMetadataCache;
+        mCallerAuthorizedForFoci = callerAuthorizedForFoci;
     }
 
     /**
@@ -192,6 +221,22 @@ public class BrokerOAuth2TokenCache
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
+        this(components, uid, applicationMetadataCache, delegate, fociCache,
+                /* callerAuthorizedForFoci= */ true);
+    }
+
+    /**
+     * Test-only constructor that also lets the caller set the FoCI-read authorization gate.
+     * Used to reproduce broker's secure-by-default gate (AB#3687466) without booting a full
+     * broker platform-components stack.
+     */
+    //@VisibleForTesting
+    public BrokerOAuth2TokenCache(@NonNull IPlatformComponents components,
+                                  final int uid,
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  @NonNull ProcessUidCacheFactory delegate,
+                                  @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache,
+                                  final boolean callerAuthorizedForFoci) {
         // This cannot call the other constructors, since they unconditionally initialize
         // the foci cache, and this one uses the value passed in for testing.
         super(components);
@@ -205,6 +250,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mDelegate = delegate;
         mFociCache = fociCache;
+        mCallerAuthorizedForFoci = callerAuthorizedForFoci;
     }
 
     /**
@@ -846,12 +892,16 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    /**
+     * SECURITY CHOKEPOINT (AB#3687466): this helper is the sole enforcement point for
+     * {@link #mCallerAuthorizedForFoci} across every public reader that iterates FoCI +
+     * UID caches. Downstream beneficiaries include {@code getAccount},
+     * {@code getAccountByLocalAccountId}, {@code getAccountByHomeAccountId},
+     * {@code getAccounts(env, clientId)}, {@code getAccountsWithAggregatedAccountData}, and
+     * {@code getAccountWithAggregatedAccountDataByLocalAccountId}. Weakening or removing
+     * the gate here silently regresses all of them.
+     */
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
-        return getTokenCachesForClientId(clientId, true);
-    }
-
-    private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId,
-                                                             final boolean callerAuthorizedForFoci) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
         boolean containsFoci = false;
@@ -865,7 +915,7 @@ public class BrokerOAuth2TokenCache
                     // device-wide shared FoCI accounts. This gate suppresses only the shared FoCI cache;
                     // the caller's own app-specific / UID-partitioned cache is added independently by the
                     // non-FoCI metadata branch below and is never affected by this check.
-                    if (callerAuthorizedForFoci) {
+                    if (mCallerAuthorizedForFoci) {
                         result.add(mFociCache);
                         containsFoci = true;
                     }
@@ -1071,36 +1121,26 @@ public class BrokerOAuth2TokenCache
         return tenantAccountsForAccountByClientId;
     }
 
+    /**
+     * Returns the accounts (with aggregated account data) visible to the calling app for the given
+     * client id.
+     * <p>
+     * Shared-FoCI access is gated by the {@code mCallerAuthorizedForFoci} invariant set at
+     * construction time (see the class-level ctor accepting {@code callerAuthorizedForFoci}).
+     * A caller's own UID-partitioned accounts are always returned; only shared-FoCI accounts are
+     * withheld from unauthorized callers. When the caller is not FoCI-authorized, the
+     * environment-scoped path fail-closes to an empty list whenever the resolved cache is the
+     * shared FoCI cache (including the case where the caller has its own FoCI metadata row for
+     * the client id) or when no client-specific cache exists. See AB#3687466.
+     *
+     * @param environment environment to scope the lookup to, or {@code null} to return accounts
+     *                    across all environments.
+     * @param clientId    the client id to look up accounts for.
+     * @return the accounts with aggregated account data visible to the caller.
+     */
     @Override
     public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
                                                                    @NonNull String clientId) {
-        // Existing callers are treated as authorized to access the shared FoCI cache, preserving
-        // pre-existing behavior. Callers that must gate shared-FoCI access on the calling app's
-        // authorization use the overload below.
-        return getAccountsWithAggregatedAccountData(environment, clientId, true);
-    }
-
-    /**
-     * Broker-specific overload of {@link #getAccountsWithAggregatedAccountData(String, String)} that gates
-     * inclusion of the device-wide shared family-of-client-id (FoCI) cache on whether the calling app is
-     * authorized to share FoCI tokens.
-     * <p>
-     * A caller's own UID-partitioned accounts are always returned; only the shared FoCI accounts are
-     * withheld from unauthorized callers. When the caller is not FoCI-authorized, this returns an
-     * empty list on the environment-scoped path whenever the resolved cache is the shared FoCI cache
-     * (including the case where the caller has its own FoCI metadata row for the client id) or when
-     * no client-specific cache exists (fail-closed). See AB#3687466.
-     *
-     * @param environment             environment to scope the lookup to, or {@code null} to return
-     *                                accounts across all environments.
-     * @param clientId                the client id to look up accounts for.
-     * @param callerAuthorizedForFoci {@code true} if the calling app may access the shared FoCI cache;
-     *                                when {@code false}, the shared FoCI cache is excluded.
-     * @return the accounts with aggregated account data visible to the caller.
-     */
-    public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
-                                                                   @NonNull String clientId,
-                                                                   boolean callerAuthorizedForFoci) {
         final String methodName = ":getAccountsWithAggregatedAccountData";
 
         final List<ICacheRecord> result;
@@ -1119,7 +1159,7 @@ public class BrokerOAuth2TokenCache
             // uid), which would otherwise bypass the gate below and expose the device-wide shared
             // FoCI accounts. This also subsumes the prior null-targetCache fail-closed case, since
             // the only fallback previously assigned there was mFociCache. See AB#3687466.
-            if (!callerAuthorizedForFoci && (targetCache == mFociCache || targetCache == null)) {
+            if (!mCallerAuthorizedForFoci && (targetCache == mFociCache || targetCache == null)) {
                 Logger.verbose(
                         TAG + methodName,
                         "Caller is not FoCI-authorized; skipping shared FoCI cache read."
@@ -1127,7 +1167,7 @@ public class BrokerOAuth2TokenCache
                 return Collections.emptyList();
             }
 
-            if (null == targetCache) {
+            if (targetCache == null) {
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
@@ -1144,7 +1184,7 @@ public class BrokerOAuth2TokenCache
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
-            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId, callerAuthorizedForFoci);
+            final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
 
             // Declare a new List to which we will add all of our results...
             result = new ArrayList<>();

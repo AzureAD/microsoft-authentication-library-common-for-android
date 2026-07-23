@@ -477,9 +477,12 @@ public class BrokerOAuth2TokenCacheTest {
 
     /**
      * Builds a BrokerOAuth2TokenCache scoped to a different unix uid, sharing the same application
-     * metadata cache and FoCI cache, to simulate a caller other than the app that saved the account.
+     * metadata cache and FoCI cache, with an explicit FoCI-read authorization gate — used to
+     * simulate broker's secure-by-default construction of unauthorized vs authorized caller caches
+     * (AB#3687466).
      */
-    private BrokerOAuth2TokenCache newBrokerCacheForUid(final int uid) {
+    private BrokerOAuth2TokenCache newBrokerCacheForUid(final int uid,
+                                                        final boolean callerAuthorizedForFoci) {
         return new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 uid,
@@ -491,13 +494,15 @@ public class BrokerOAuth2TokenCacheTest {
                         return initAppUidCache(context, bindingProcessUid);
                     }
                 },
-                mFociCache
+                mFociCache,
+                callerAuthorizedForFoci
         );
     }
 
     /**
-     * An authorized caller (callerAuthorizedForFoci == true) receives the device-wide shared FoCI
-     * accounts. This is the pre-fix behavior preserved for authorized (family) apps.
+     * An authorized caller (cache built with callerAuthorizedForFoci == true) receives the
+     * device-wide shared FoCI accounts. This is the pre-fix behavior preserved for authorized
+     * (family) apps.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -507,11 +512,11 @@ public class BrokerOAuth2TokenCacheTest {
         final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
         final String clientId = saved.getRefreshToken().getClientId();
 
-        // Simulate a different app (uid) than the one that saved the FoCI account.
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
+        // Simulate a different app (uid) than the one that saved the FoCI account; authorized.
+        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1, true);
 
         final List<ICacheRecord> accounts =
-                callerCache.getAccountsWithAggregatedAccountData(null, clientId, true);
+                callerCache.getAccountsWithAggregatedAccountData(null, clientId);
 
         assertNotNull(accounts);
         assertFalse(accounts.isEmpty());
@@ -522,8 +527,9 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     /**
-     * Core fix (AB#3687466): an unauthorized caller (callerAuthorizedForFoci == false) that has no
-     * FoCI token of its own must NOT be able to enumerate another app's shared FoCI accounts.
+     * Core fix (AB#3687466): an unauthorized caller (cache built with callerAuthorizedForFoci ==
+     * false) that has no FoCI token of its own must NOT be able to enumerate another app's shared
+     * FoCI accounts.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -533,10 +539,10 @@ public class BrokerOAuth2TokenCacheTest {
         final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
         final String clientId = saved.getRefreshToken().getClientId();
 
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
+        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1, false);
 
         final List<ICacheRecord> accounts =
-                callerCache.getAccountsWithAggregatedAccountData(null, clientId, false);
+                callerCache.getAccountsWithAggregatedAccountData(null, clientId);
 
         assertNotNull(accounts);
         assertTrue(accounts.isEmpty());
@@ -554,22 +560,25 @@ public class BrokerOAuth2TokenCacheTest {
         final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
         final String clientId = saved.getRefreshToken().getClientId();
 
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
-
+        final BrokerOAuth2TokenCache unauthorizedCallerCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, false);
         final List<ICacheRecord> unauthorized =
-                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, false);
+                unauthorizedCallerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId);
         assertNotNull(unauthorized);
         assertTrue(unauthorized.isEmpty());
 
+        final BrokerOAuth2TokenCache authorizedCallerCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
         final List<ICacheRecord> authorized =
-                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, true);
+                authorizedCallerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId);
         assertNotNull(authorized);
         assertFalse(authorized.isEmpty());
     }
 
     /**
      * Critical guardrail: gating only affects shared FoCI accounts. A caller's own (non-FoCI,
-     * UID-partitioned) accounts are always returned, even when callerAuthorizedForFoci == false.
+     * UID-partitioned) accounts are always returned, even when the cache was built with
+     * callerAuthorizedForFoci == false.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -579,9 +588,12 @@ public class BrokerOAuth2TokenCacheTest {
         final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
         final String clientId = saved.getRefreshToken().getClientId();
 
-        // Same uid (TEST_APP_UID) that owns the account; unauthorized flag must not withhold own accounts.
+        // Same uid (TEST_APP_UID) that owns the account, but build the cache as unauthorized to
+        // prove the gate does not withhold own (non-FoCI) accounts.
+        final BrokerOAuth2TokenCache unauthorizedOwnerCache =
+                newBrokerCacheForUid(TEST_APP_UID, false);
         final List<ICacheRecord> accounts =
-                mBrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(null, clientId, false);
+                unauthorizedOwnerCache.getAccountsWithAggregatedAccountData(null, clientId);
 
         assertNotNull(accounts);
         assertFalse(accounts.isEmpty());
@@ -592,18 +604,19 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     /**
-     * Backward-compatibility: the pre-existing 2-arg overload delegates with callerAuthorizedForFoci
-     * == true, so shared FoCI accounts remain visible to existing callers.
+     * Backward-compatibility: existing (pre-fix) construction paths default the gate to true, so
+     * shared FoCI accounts remain visible to callers built via the legacy constructors.
      */
     @Test
     @SuppressWarnings("unchecked")
-    public void testGetAccountsWithAggregatedAccountDataTwoArgOverloadIncludesSharedFociAccounts()
+    public void testGetAccountsWithAggregatedAccountDataLegacyCtorDefaultIncludesSharedFociAccounts()
             throws ClientException {
         configureMocksForFoci();
         final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
         final String clientId = saved.getRefreshToken().getClientId();
 
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
+        // Cache built with the legacy 5-arg test ctor -> gate defaults to true.
+        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1, true);
 
         final List<ICacheRecord> accounts =
                 callerCache.getAccountsWithAggregatedAccountData(null, clientId);
@@ -632,19 +645,23 @@ public class BrokerOAuth2TokenCacheTest {
         // App B (TEST_APP_UID + 1) also saves a FoCI account under the same client id, so it too
         // owns a FoCI metadata row for (clientId, ENVIRONMENT, TEST_APP_UID + 1). This is the
         // combination that made getTokenCacheForClient(id, env, uid) resolve to mFociCache and
-        // bypass the prior null-targetCache gate.
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1);
-        callerCache.save(mockStrategy, mockRequest, mockResponse);
+        // bypass the prior null-targetCache gate. First save via an authorized instance so the
+        // save-time FoCI path is not itself gated.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        authorizedAppBCache.save(mockStrategy, mockRequest, mockResponse);
 
-        // Unauthorized caller, environment-scoped read: must return empty (fail-closed).
+        // Now attack: App B built as unauthorized, environment-scoped read must return empty.
+        final BrokerOAuth2TokenCache unauthorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, false);
         final List<ICacheRecord> unauthorized =
-                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, false);
+                unauthorizedAppBCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId);
         assertNotNull(unauthorized);
         assertTrue(unauthorized.isEmpty());
 
         // Sanity: authorized caller in the same setup still receives the shared FoCI accounts.
         final List<ICacheRecord> authorized =
-                callerCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId, true);
+                authorizedAppBCache.getAccountsWithAggregatedAccountData(ENVIRONMENT, clientId);
         assertNotNull(authorized);
         assertFalse(authorized.isEmpty());
     }
