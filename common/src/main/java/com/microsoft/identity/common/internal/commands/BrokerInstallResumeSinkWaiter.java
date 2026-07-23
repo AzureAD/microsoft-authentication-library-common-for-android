@@ -128,8 +128,10 @@ public final class BrokerInstallResumeSinkWaiter {
         try {
             final IPlatformComponents components =
                     AndroidPlatformComponentsFactory.createFromContext(appContext);
-            BrokerDiscoveryClientFactory.getInstanceForClientSdk(appContext, components)
+            final Object elected = BrokerDiscoveryClientFactory.getInstanceForClientSdk(appContext, components)
                     .getActiveBroker(true /* shouldSkipCache */);
+            Logger.info(TAG + ":forceRefreshBrokerDiscovery",
+                    "Force-fresh discovery elected active broker: " + (elected != null ? elected : "<none>"));
         } catch (final Throwable t) {
             Logger.warn(TAG + ":forceRefreshBrokerDiscovery",
                     "Best-effort fresh broker discovery failed; native retry will re-discover.");
