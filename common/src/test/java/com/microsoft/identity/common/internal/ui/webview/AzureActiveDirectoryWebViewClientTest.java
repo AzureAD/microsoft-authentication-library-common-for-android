@@ -315,6 +315,32 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    public void testOpenIdVcUrl_AuthenticatorFailsSignatureVerification_DoesNotPinOrAttach() {
+        // Arrange: the return-to-caller flight is on and the resolved handler IS Microsoft
+        // Authenticator by package name, but it FAILS BrokerValidator signature verification -
+        // e.g. a re-signed / repackaged look-alike claiming com.azure.authenticator. The signature
+        // gate (not just the package-name check) must prevent both package-pinning and attaching.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(false))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: the handler is still launched, but the intent is neither pinned to Authenticator
+        // nor carries the return PendingIntent - the signature gate rejected it.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertNotEquals("Signature-failing Authenticator must NOT be package-pinned",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
     public void testOpenIdVcUrl_MultipleHandlers_PinsToAuthenticatorAndAttaches() {
         // Arrange: the return-to-caller flight is on, and TWO apps claim openid-vc:// - a
         // third-party wallet and Microsoft Authenticator. resolveActivity() would return the
