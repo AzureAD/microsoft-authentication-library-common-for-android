@@ -42,6 +42,8 @@ import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -99,6 +101,7 @@ public final class BrokerInstallResumeAutoInitProvider extends ContentProvider {
 
     private final AtomicBoolean mResumeStarted = new AtomicBoolean(false);
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService mDiscoveryExecutor = Executors.newSingleThreadExecutor();
     private WeakReference<Activity> mForegroundActivity = new WeakReference<>(null);
 
     @Override
@@ -169,7 +172,33 @@ public final class BrokerInstallResumeAutoInitProvider extends ContentProvider {
         }
         // Consume the record up-front so a later foreground/retry can never re-drive it again.
         BrokerInstallResumePendingStore.clear(appContext);
-        driveResume(reDriver, activity, record);
+        refreshDiscoveryThenDrive(appContext, reDriver, record);
+    }
+
+    /**
+     * Force-fresh broker discovery (off the main thread), then re-drive the interactive sign-in back on the
+     * main thread. The refresh is essential: when the broker-install detour began, discovery cached a
+     * "no broker / use AccountManager" result; without discarding it the resume would run <b>brokerless</b>
+     * — skipping the device-registration (WPJ) step and failing token redemption (e.g. AADSTS7000218) — so
+     * we re-discover so the just-installed Company Portal becomes the active broker before re-driving.
+     */
+    private void refreshDiscoveryThenDrive(@NonNull final Context appContext,
+                                           @NonNull final IBrokerInstallResumeReDriver reDriver,
+                                           @NonNull final BrokerInstallResumePendingStore.Record record) {
+        mDiscoveryExecutor.execute(() -> {
+            Logger.info(TAG + ":refreshDiscovery",
+                    "Forcing fresh broker discovery before the durable resume so Company Portal is used.");
+            BrokerInstallResumeSinkWaiter.forceRefreshBrokerDiscovery(appContext);
+            mMainHandler.post(() -> {
+                final Activity activity = mForegroundActivity.get();
+                if (activity == null || activity.isFinishing()) {
+                    Logger.warn(TAG + ":refreshDiscovery",
+                            "No live foreground activity after discovery; cannot host the durable resume.");
+                    return;
+                }
+                driveResume(reDriver, activity, record);
+            });
+        });
     }
 
     private void retryOrGiveUp(@NonNull final Context appContext, final int attempt, final String why) {

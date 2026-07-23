@@ -112,6 +112,31 @@ public final class BrokerInstallResumeSinkWaiter {
     }
 
     /**
+     * Force-fresh broker discovery so a stale "no broker / use AccountManager" result — cached when the
+     * broker-install detour began, before Company Portal was installed — is discarded and the
+     * just-installed Company Portal becomes the active broker. Uses the shared client-SDK
+     * {@code BrokerDiscoveryClient} (the same instance the SDK's {@code BrokerClient} reads); on
+     * {@code shouldSkipCache=true} it re-discovers and writes back the freshly discovered broker, so a
+     * subsequent interactive request routes through the broker instead of running brokerless.
+     * <p>
+     * Blocking IPC — call off the main thread. Best-effort: a failure is non-fatal (the native retry runs
+     * its own discovery).
+     *
+     * @param appContext any Android context.
+     */
+    public static void forceRefreshBrokerDiscovery(@NonNull final Context appContext) {
+        try {
+            final IPlatformComponents components =
+                    AndroidPlatformComponentsFactory.createFromContext(appContext);
+            BrokerDiscoveryClientFactory.getInstanceForClientSdk(appContext, components)
+                    .getActiveBroker(true /* shouldSkipCache */);
+        } catch (final Throwable t) {
+            Logger.warn(TAG + ":forceRefreshBrokerDiscovery",
+                    "Best-effort fresh broker discovery failed; native retry will re-discover.");
+        }
+    }
+
+    /**
      * Abstracts the "is Company Portal a valid broker now?" and "force fresh discovery" steps so the
      * orchestration can be unit-tested without Android framework dependencies.
      */
@@ -317,16 +342,7 @@ public final class BrokerInstallResumeSinkWaiter {
 
         @Override
         public void refreshBrokerDiscovery() {
-            try {
-                final IPlatformComponents components =
-                        AndroidPlatformComponentsFactory.createFromContext(mAppContext);
-                BrokerDiscoveryClientFactory.getInstanceForClientSdk(mAppContext, components)
-                        .getActiveBroker(true /* shouldSkipCache */);
-            } catch (final Throwable t) {
-                // Best-effort: the native retry runs its own discovery; a failure here is non-fatal.
-                Logger.warn(TAG + ":refreshBrokerDiscovery",
-                        "Best-effort fresh broker discovery failed; native retry will re-discover.");
-            }
+            forceRefreshBrokerDiscovery(mAppContext);
         }
     }
 }
