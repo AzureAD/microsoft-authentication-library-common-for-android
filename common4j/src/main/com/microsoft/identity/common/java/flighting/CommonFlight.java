@@ -319,7 +319,7 @@ public enum CommonFlight implements IFlightConfig {
      * DefaultValueFlightsProvider. To exercise the feature in that test app, flip this default to true in a
      * local build only (do not commit); the production default must remain false.
      */
-    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false);
+    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", true);
 
     private String key;
     private Object defaultValue;
