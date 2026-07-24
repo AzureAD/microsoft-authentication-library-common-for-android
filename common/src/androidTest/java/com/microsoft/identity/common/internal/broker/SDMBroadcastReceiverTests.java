@@ -37,7 +37,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SDMBroadcastReceiverTests {
 
-    String actualCallbackReceived;
+    // volatile: written by the receiver on the main thread, read by the test on the instrumentation thread.
+    volatile String actualCallbackReceived;
 
     @Before
     public void setup() {
@@ -61,12 +62,23 @@ public class SDMBroadcastReceiverTests {
     @Test
     public void testSDMBroadcast() throws InterruptedException {
         sendBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_SDM_REGISTRATION_START);
-        Thread.sleep(100);
-        Assert.assertEquals(SharedDeviceModeConstants.BROADCAST_TYPE_SDM_REGISTRATION_START, actualCallbackReceived);
+        awaitCallback(SharedDeviceModeConstants.BROADCAST_TYPE_SDM_REGISTRATION_START);
 
         sendBroadcast(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT);
-        Thread.sleep(100);
-        Assert.assertEquals(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT, actualCallbackReceived);
+        awaitCallback(SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT);
+    }
+
+    /**
+     * Waits (up to ~5s) for the broadcast callback to set {@link #actualCallbackReceived} to the
+     * expected value before asserting. Global broadcast delivery is asynchronous and its latency
+     * varies with device/emulator speed, so a fixed sleep is racy (it flakes on slower CI
+     * emulators). Polling makes the test robust while still returning quickly on fast devices.
+     */
+    private void awaitCallback(final String expected) throws InterruptedException {
+        for (int i = 0; i < 50 && !expected.equals(actualCallbackReceived); i++) {
+            Thread.sleep(100);
+        }
+        Assert.assertEquals(expected, actualCallbackReceived);
     }
 
     private void sendBroadcast(String broadcastType) {
