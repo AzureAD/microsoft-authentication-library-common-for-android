@@ -666,6 +666,135 @@ public class BrokerOAuth2TokenCacheTest {
         assertFalse(authorized.isEmpty());
     }
 
+    /**
+     * Regression tests for AB#3687466 chokepoint #2: verify each env-scoped reader that resolves
+     * its target cache via {@link BrokerOAuth2TokenCache#getTokenCacheForClient} (the env!=null
+     * path) fail-closes on the shared FoCI cache for an unauthorized caller. Each test seeds a
+     * shared FoCI account for App A, seeds an owning FoCI metadata row for App B via an authorized
+     * instance, then attacks with App B constructed as unauthorized. Prior to the chokepoint fix,
+     * {@code getTokenCacheForClient(clientId, env, uid)} would resolve directly to {@code mFociCache}
+     * for such a caller, silently exposing the device-wide shared FoCI accounts on the env-scoped
+     * variants of getAccount / getAccountByLocalAccountId / getAccountByHomeAccountId /
+     * getAccounts(env, clientId) / getAccountsWithAggregatedAccountData(env, clientId, hai) /
+     * getAccountWithAggregatedAccountDataByLocalAccountId.
+     */
+    private BrokerOAuth2TokenCache seedFociAndReturnUnauthorizedAppBCache() throws ClientException {
+        configureMocksForFoci();
+        mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        authorizedAppBCache.save(mockStrategy, mockRequest, mockResponse);
+        return newBrokerCacheForUid(TEST_APP_UID + 1, false);
+    }
+
+    @Test
+    public void testGetAccountEnvScopedFociUnauthorizedReturnsNull() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final AccountRecord account = unauthorizedAppBCache.getAccount(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID,
+                REALM
+        );
+        assertNull(account);
+
+        // Positive control: authorized caller in the same setup still gets the account.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        assertNotNull(authorizedAppBCache.getAccount(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID, REALM));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetAccountsWithAggregatedAccountDataThreeArgEnvScopedFociUnauthorizedReturnsEmpty()
+            throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final List<ICacheRecord> unauthorized = unauthorizedAppBCache.getAccountsWithAggregatedAccountData(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID
+        );
+        assertNotNull(unauthorized);
+        assertTrue(unauthorized.isEmpty());
+
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final List<ICacheRecord> authorized = authorizedAppBCache.getAccountsWithAggregatedAccountData(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID
+        );
+        assertNotNull(authorized);
+        assertFalse(authorized.isEmpty());
+    }
+
+    @Test
+    public void testGetAccountByLocalAccountIdEnvScopedFociUnauthorizedReturnsNull() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final AccountRecord account = unauthorizedAppBCache.getAccountByLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+        assertNull(account);
+
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        assertNotNull(
+                authorizedAppBCache.getAccountByLocalAccountId(ENVIRONMENT, CLIENT_ID, LOCAL_ACCOUNT_ID)
+        );
+    }
+
+    @Test
+    public void testGetAccountWithAggregatedAccountDataByLocalAccountIdEnvScopedFociUnauthorizedReturnsNull()
+            throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final ICacheRecord record = unauthorizedAppBCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                LOCAL_ACCOUNT_ID
+        );
+        assertNull(record);
+
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        assertNotNull(
+                authorizedAppBCache.getAccountWithAggregatedAccountDataByLocalAccountId(
+                        ENVIRONMENT, CLIENT_ID, LOCAL_ACCOUNT_ID)
+        );
+    }
+
+    @Test
+    public void testGetAccountsEnvScopedFociUnauthorizedReturnsEmpty() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final List<AccountRecord> unauthorized = unauthorizedAppBCache.getAccounts(ENVIRONMENT, CLIENT_ID);
+        assertNotNull(unauthorized);
+        assertTrue(unauthorized.isEmpty());
+
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final List<AccountRecord> authorized = authorizedAppBCache.getAccounts(ENVIRONMENT, CLIENT_ID);
+        assertNotNull(authorized);
+        assertFalse(authorized.isEmpty());
+    }
+
+    @Test
+    public void testGetAccountByHomeAccountIdEnvScopedFociUnauthorizedReturnsNull() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final AccountRecord account = unauthorizedAppBCache.getAccountByHomeAccountId(
+                ENVIRONMENT,
+                CLIENT_ID,
+                HOME_ACCOUNT_ID
+        );
+        assertNull(account);
+
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        assertNotNull(
+                authorizedAppBCache.getAccountByHomeAccountId(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID)
+        );
+    }
+
     // endregion
 
     @Test
