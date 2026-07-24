@@ -37,6 +37,9 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -181,7 +184,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             case BROKER_INSTALLATION_TRIGGERED:
                 final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
-                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+                        decorateInstallLinkWithReferrer(appLink)));
                 startActivity(browserIntent);
                 break;
 
@@ -199,5 +203,22 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
 
         sendResult(data);
         finish();
+    }
+
+    /**
+     * MAM broker-install request-resume: when the flight is on, tag the Company Portal install link with
+     * the calling app package as the Play install referrer so Company Portal can redirect back to us after
+     * install (CP-confirmed {@code &referrer=<originPkg>} pattern). Flight-gated and null-safe; with the
+     * flight off (or no context) the original link is returned unchanged.
+     */
+    private String decorateInstallLinkWithReferrer(final String appLink) {
+        final Context context = getContext();
+        if (context != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)) {
+            return MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(
+                    appLink, context.getPackageName());
+        }
+        return appLink;
     }
 }
