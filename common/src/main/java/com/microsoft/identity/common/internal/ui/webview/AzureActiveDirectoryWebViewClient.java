@@ -1162,9 +1162,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // Resolve after any pinning so the handler check matches the final intent we will launch.
             final android.content.pm.PackageManager pm = getActivity().getPackageManager();
 
-            // Return-to-caller is gated by its own flight so it can be rolled back to the
-            // pre-existing behavior (launch the openid-vc handler without a return PendingIntent).
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)) {
+            // Return-to-caller is wired ONLY for the brokered flow, i.e. when this WebView is
+            // hosted in the broker's auth-service process (Authenticator / Company Portal / Link to
+            // Windows). In the brokerless/embedded case we fall back to the pre-existing behavior
+            // (launch the openid-vc handler without a return PendingIntent) - identical to
+            // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
+            // validated. It is also gated by its own flight so it can be rolled back entirely.
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
+                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
                 // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
                 // rely on resolveActivity() here: when more than one app claims the scheme it returns
@@ -1226,19 +1231,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.class);
             returnIntent.setAction(
                     com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.ACTION_RETURN_FROM_VID);
-            // NEW_TASK is required for a PendingIntent.getActivity launch fired from another
-            // process. Combined with the trampoline's default taskAffinity (the host app's
-            // package), it reuses and foregrounds the caller's existing task rather than creating
-            // a duplicate. NO_ANIMATION suppresses the launch transition so the return is a clean
-            // cut with no jarring flash (and, if the caller's task no longer exists, the transparent
-            // no-history trampoline simply finishes without a visible artifact).
+            // NEW_TASK is mandatory for a PendingIntent.getActivity launch fired from another
+            // process. The trampoline declares android:taskAffinity="", so this NEW_TASK launch
+            // lands in an isolated throwaway task instead of an affinity-matched (forgeable) task;
+            // it then finishes itself, letting the broker host's own task surface. NO_ANIMATION
+            // keeps it a clean cut.
             returnIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             returnIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
             // ONE_SHOT: the wallet consumes this exactly once, so the framework auto-cancels it
             // after send() and it can never be replayed. IMMUTABLE: the recipient cannot mutate the
-            // intent. The returnIntent carries no per-request extras, so FLAG_UPDATE_CURRENT is not
-            // needed.
+            // intent (including the request-state nonce).
             final PendingIntent returnPendingIntent = PendingIntent.getActivity(
                     context,
                     0,

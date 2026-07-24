@@ -275,6 +275,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testOpenIdVcUrl_TrustedAuthenticator_AttachesReturnPendingIntent() {
         // Arrange: the return-to-caller flight is on, and Microsoft Authenticator is the resolved handler...
         enableOpenIdVcReturnToCallerFlight();
@@ -298,6 +299,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testOpenIdVcUrl_UntrustedHandler_DoesNotAttachReturnPendingIntent() {
         // Arrange: the return-to-caller flight is on, but a non-Authenticator app claims the scheme.
         enableOpenIdVcReturnToCallerFlight();
@@ -315,6 +317,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testOpenIdVcUrl_AuthenticatorFailsSignatureVerification_DoesNotPinOrAttach() {
         // Arrange: the return-to-caller flight is on and the resolved handler IS Microsoft
         // Authenticator by package name, but it FAILS BrokerValidator signature verification -
@@ -341,6 +344,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testOpenIdVcUrl_MultipleHandlers_PinsToAuthenticatorAndAttaches() {
         // Arrange: the return-to-caller flight is on, and TWO apps claim openid-vc:// - a
         // third-party wallet and Microsoft Authenticator. resolveActivity() would return the
@@ -365,6 +369,29 @@ public class AzureActiveDirectoryWebViewClientTest {
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
     }
 
+    @Test
+    public void testOpenIdVcUrl_BrokerlessHost_DoesNotAttachReturnPendingIntent() {
+        // Arrange: return-to-caller flight is on and Microsoft Authenticator is the verified
+        // handler, but this WebView is NOT hosted in the broker's auth-service process (brokerless
+        // / embedded case - no ShadowProcessUtil applied, so ProcessUtil.isRunningOnAuthService is
+        // false). Return-to-caller must be wired only for the brokered flow.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: brokerless host falls back to the pre-existing dispatch - no return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Brokerless host must NOT attach the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
     private void registerOpenIdVcHandler(final String packageName) {
         final ResolveInfo resolveInfo = new ResolveInfo();
         resolveInfo.activityInfo = new ActivityInfo();
@@ -381,6 +408,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+    @Config(shadows = {ShadowProcessUtil.class})
     public void testOpenIdVcUrl_ReturnToCallerFlightDisabled_DoesNotAttachReturnPendingIntent() {
         // Arrange: openid-vc redirect handling is on, but the return-to-caller flight is OFF.
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
