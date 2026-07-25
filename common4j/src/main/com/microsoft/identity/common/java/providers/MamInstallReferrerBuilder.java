@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.java.providers;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -185,6 +187,31 @@ public final class MamInstallReferrerBuilder {
                     "Could not parse app_link to append the install referrer; launching it unchanged.");
             return appLink;
         }
+    }
+
+    /**
+     * Flight-gated entry point for the broker-install redirect: the single place the
+     * {@link CommonFlight#ENABLE_BROKER_INSTALL_RESUME} gate is evaluated. Every broker-install launch site
+     * (the embedded WebView and the custom-tab/browser authorization fragments) funnels through here, so the
+     * decision "should we tag this Company Portal install link with the calling app as the Play install
+     * referrer?" lives in one place instead of being copy-pasted per call site.
+     * <p>
+     * Returns the {@code appLink} unchanged when the flight is off or {@code originPkg} is null/blank, so the
+     * existing install launch is never altered unless the feature is explicitly enabled. Delegates the actual
+     * decoration (and its own null-safety) to {@link #decorateAppLinkWithOriginReferrer(String, String)}.
+     *
+     * @param appLink   the server-provided Play Store install link.
+     * @param originPkg the calling app package name (typically {@code Context#getPackageName()}).
+     * @return the decorated link when the flight is on, otherwise the original {@code appLink}.
+     */
+    public static String decorateAppLinkWithOriginReferrerIfEnabled(final String appLink,
+                                                                    final String originPkg) {
+        if (StringUtil.isNullOrEmpty(originPkg)
+                || !CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)) {
+            return appLink;
+        }
+        return decorateAppLinkWithOriginReferrer(appLink, originPkg);
     }
 
     /**

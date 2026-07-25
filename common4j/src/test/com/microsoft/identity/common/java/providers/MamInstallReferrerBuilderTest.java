@@ -28,8 +28,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
+import org.junit.After;
 import org.junit.Test;
 
 import java.util.List;
@@ -189,4 +194,64 @@ public class MamInstallReferrerBuilderTest {
     }
 
     // endregion
+
+    // region decorateAppLinkWithOriginReferrerIfEnabled (the single flight-gate)
+
+    @Test
+    public void ifEnabled_flightOn_decoratesIdenticallyToUngatedForm() {
+        setBrokerInstallResumeFlight(true);
+
+        final String gated = MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG);
+
+        // The gate must add nothing of its own: on the enabled path it is exactly the ungated decoration.
+        assertEquals(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG),
+                gated);
+        assertTrue("flight-on path must actually decorate", gated.contains("referrer=" + ORIGIN_PKG));
+        assertTrue("decorated app_link must remain allow-listed:\n" + gated,
+                BrokerInstallLinkValidator.isSafeBrokerInstallLink(gated));
+    }
+
+    @Test
+    public void ifEnabled_flightOff_returnsOriginalUnchanged() {
+        setBrokerInstallResumeFlight(false);
+
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG));
+    }
+
+    @Test
+    public void ifEnabled_noFlightsManager_defaultsOff_returnsOriginalUnchanged() {
+        // With no flights manager initialized, the CommonFlight default (false) applies.
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG));
+    }
+
+    @Test
+    public void ifEnabled_flightOn_butPackageMissing_returnsOriginalUnchanged() {
+        setBrokerInstallResumeFlight(true);
+
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, null));
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ""));
+        assertNull(MamInstallReferrerBuilder
+                .decorateAppLinkWithOriginReferrerIfEnabled(null, ORIGIN_PKG));
+    }
+
+    // endregion
+
+    /** Enables or disables the {@code ENABLE_BROKER_INSTALL_RESUME} flight for the duration of a test. */
+    private static void setBrokerInstallResumeFlight(final boolean enabled) {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.ENABLE_BROKER_INSTALL_RESUME.getKey(), Boolean.toString(enabled));
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+    }
+
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
 }

@@ -1241,12 +1241,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 // MAM broker-install request-resume: tag the Company Portal install launch with the
                 // calling app package as the Play install referrer so Company Portal can redirect back
-                // to us after install (CP-confirmed &referrer=<originPkg> pattern). Flight-gated; with
-                // the flight off the link is launched exactly as before.
-                if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)
-                        && getActivity() != null) {
-                    link = MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(
+                // to us after install (CP-confirmed &referrer=<originPkg> pattern). The flight-gate lives
+                // in MamInstallReferrerBuilder; with the flight off the link is launched exactly as before.
+                if (getActivity() != null) {
+                    link = MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrerIfEnabled(
                             link, getActivity().getPackageName());
                 }
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));

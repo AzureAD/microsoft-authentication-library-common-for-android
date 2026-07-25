@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
@@ -37,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
@@ -216,6 +218,24 @@ public abstract class AuthorizationFragment extends Fragment {
 
     public void handleBackButtonPressed() {
         cancelAuthorization(true);
+    }
+
+    /**
+     * MAM broker-install request-resume: when the {@code ENABLE_BROKER_INSTALL_RESUME} flight is on, tag
+     * the Company Portal install link with this app's package as the Play install referrer so Company Portal
+     * can redirect back to us after install (CP-confirmed {@code &referrer=<originPkg>} pattern).
+     * <p>
+     * Shared by every {@link AuthorizationFragment} subclass that launches the broker install so the
+     * flight-gate is evaluated in exactly one place ({@link MamInstallReferrerBuilder}). Null-safe: with the
+     * flight off (or no attached context) the original link is returned unchanged.
+     *
+     * @param appLink the server-provided Play Store install link.
+     * @return the decorated link when the flight is on, otherwise the original {@code appLink}.
+     */
+    protected String decorateInstallLinkWithReferrer(final String appLink) {
+        final Context context = getContext();
+        return MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrerIfEnabled(
+                appLink, context == null ? null : context.getPackageName());
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
