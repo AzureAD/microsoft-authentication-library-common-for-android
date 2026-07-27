@@ -312,7 +312,18 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Flight for the MAM broker-install onboarding improvement: remember the UPN across a
+     * Conditional-Access "install Company Portal" interruption so the interactive request the user
+     * makes after installing the broker can pre-fill it, instead of asking them to type their
+     * address a second time.
+     * <p>
+     * With the flight off no UPN is stored and no {@code login_hint} is ever added, so the existing
+     * behavior is unchanged. Default off for safe rollout; ramp / kill-switch via ECS.
+     */
+    ENABLE_BROKER_INSTALL_UPN_HINT("EnableBrokerInstallUpnHint", false);
 
     private String key;
     private Object defaultValue;

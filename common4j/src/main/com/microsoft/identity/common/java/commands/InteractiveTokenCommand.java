@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
@@ -77,12 +78,19 @@ public class InteractiveTokenCommand extends TokenCommand {
 
                 span.setAttribute(AttributeName.controller_name.name(), mController.getClass().getSimpleName());
 
-                final AcquireTokenResult result = mController.acquireToken((InteractiveTokenCommandParameters) getParameters());
+                final InteractiveTokenCommandParameters interactiveParameters =
+                        MamUpnHintStore.applyStoredUpnHintIfAbsent(
+                                (InteractiveTokenCommandParameters) getParameters());
+
+                final AcquireTokenResult result = mController.acquireToken(interactiveParameters);
 
                 if (result == null) {
                     span.setStatus(StatusCode.ERROR, "empty result");
                 } else if (result.getSucceeded()) {
                     span.setStatus(StatusCode.OK);
+                    // The user is signed in, so any UPN we remembered for a broker-install
+                    // interruption has served its purpose and should not linger.
+                    MamUpnHintStore.clearUpnHint(interactiveParameters.getPlatformComponents());
                 } else {
                     final BaseException exception = ExceptionAdapter.exceptionFromAcquireTokenResult(result, getParameters());
                     if (exception != null) {

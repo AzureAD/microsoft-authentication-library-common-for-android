@@ -62,11 +62,13 @@ import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
@@ -173,6 +175,19 @@ public class LocalMSALController extends BaseController {
         acquireTokenResult.setAuthorizationResult(result);
 
         ResultUtil.logResult(TAG, result);
+
+        // MAM broker-install onboarding: if Conditional Access blocked this request until Company
+        // Portal is installed, remember the UPN the server sent back. Installing the broker usually
+        // kills this process, so the hint is persisted and pre-filled on the interactive request the
+        // user makes once they return. No-op unless the flight is on and this is that failure.
+        final AuthorizationErrorResponse authorizationErrorResponse = result.getAuthorizationErrorResponse();
+        if (authorizationErrorResponse != null) {
+            MamUpnHintStore.saveUpnHintForBrokerInstall(
+                    parametersWithScopes.getPlatformComponents(),
+                    authorizationErrorResponse.getError(),
+                    authorizationErrorResponse.getUpnToWpj()
+            );
+        }
 
         if (result.getAuthorizationStatus().equals(AuthorizationStatus.SUCCESS)) {
             //3) Exchange authorization code for token
