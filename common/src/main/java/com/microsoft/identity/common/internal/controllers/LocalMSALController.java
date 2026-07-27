@@ -107,9 +107,15 @@ public class LocalMSALController extends BaseController {
 
     @Override
     public AcquireTokenResult acquireToken(
-            @NonNull final InteractiveTokenCommandParameters parameters)
+            @NonNull final InteractiveTokenCommandParameters requestParameters)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodTag = TAG + ":acquireToken";
+
+        // MAM broker-install onboarding: if this request was interrupted earlier by a Conditional
+        // Access "install Company Portal" block, pre-fill the UPN the user already gave us. No-op
+        // unless the flight is on, the caller left login_hint blank, and a hint is still valid.
+        final InteractiveTokenCommandParameters parameters =
+                MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
 
         Logger.verbose(
                 methodTag,

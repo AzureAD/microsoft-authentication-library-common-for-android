@@ -105,6 +105,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -349,8 +350,14 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters requestParameters)
             throws BaseException, InterruptedException, ExecutionException {
+        // MAM broker-install onboarding: this is the request the user makes after installing the
+        // broker, so pre-fill the UPN they already gave us before being interrupted. No-op unless
+        // the flight is on, the caller left login_hint blank, and a stored hint is still valid.
+        final InteractiveTokenCommandParameters parameters =
+                MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
+
         final AcquireTokenResult result;
         try {
             //Get the broker interactive parameters intent
@@ -381,6 +388,11 @@ public class BrokerMsalController extends BaseController {
                         .putResult(result)
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
+
+        if (result != null && result.getSucceeded()) {
+            // Signed in, so the remembered UPN has served its purpose and should not linger.
+            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents());
+        }
 
         return result;
     }

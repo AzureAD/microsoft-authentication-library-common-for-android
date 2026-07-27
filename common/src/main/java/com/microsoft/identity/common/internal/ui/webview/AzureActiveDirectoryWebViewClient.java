@@ -45,6 +45,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
@@ -83,6 +84,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
@@ -115,6 +117,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPN_TO_WPJ_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
@@ -1227,6 +1230,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
+
+        // MAM broker-install onboarding: the service tells us which account is being onboarded on
+        // this redirect. Installing the broker usually kills this process, so remember the UPN now
+        // and pre-fill it on the request the user makes when they come back, instead of asking them
+        // to type their address again. No-op unless the flight is on.
+        final Activity installRequestActivity = getActivity();
+        if (installRequestActivity != null) {
+            MamUpnHintStore.saveUpnHint(
+                    AndroidPlatformComponentsFactory.createFromContext(
+                            installRequestActivity.getApplicationContext()),
+                    parameters.get(UPN_TO_WPJ_KEY)
+            );
+        }
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
         getCompletionCallback().onChallengeResponseReceived(result);
