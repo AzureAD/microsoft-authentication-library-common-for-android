@@ -1237,18 +1237,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                String link = appLink
-                        .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                // This fires ~1s later, by which point the fragment may have detached. Cache the
+                // Activity once and bail out if it (or the app_link) is gone, so we never NPE on
+                // getActivity() / startActivity() or on a missing app_link.
+                final Activity activity = getActivity();
+                if (activity == null || appLink == null) {
+                    Logger.warn(methodTag,
+                            "Activity or app_link no longer available; skipping broker install launch.");
+                    view.stopLoading();
+                    return;
+                }
                 // MAM broker-install request-resume: tag the Company Portal install launch with the
                 // calling app package as the Play install referrer so Company Portal can redirect back
                 // to us after install (CP-confirmed &referrer=<originPkg> pattern). The flight-gate lives
                 // in MamInstallReferrerBuilder; with the flight off the link is launched exactly as before.
-                if (getActivity() != null) {
-                    link = MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrerIfEnabled(
-                            link, getActivity().getPackageName());
-                }
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                getActivity().startActivity(intent);
+                final String link = MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrerIfEnabled(
+                        appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                        activity.getPackageName());
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                activity.startActivity(intent);
                 view.stopLoading();
             }
         }, threadSleepForCallingActivity);

@@ -156,14 +156,15 @@ public final class MamInstallReferrerBuilder {
     }
 
     /**
-     * CP-compatible launch form (confirmed by the Company Portal team, Veena Soman, 2026-07-17): appends a
-     * single bare {@code referrer=<originPkg>} to the eSTS-provided {@code app_link}, matching the
-     * {@code &referrer=<originAppPackage>} pattern Company Portal already supports today. This is the form
-     * used at the production launch site: it lets Company Portal identify — and redirect back to — the
-     * calling app, which (combined with the in-process park registry + foreground-fallback resume) is
-     * sufficient to resume without Company Portal having to round-trip the correlation id. The richer
-     * {@link #decorateAppLinkWithReferrer} form is reserved for the automatic {@code mam_resume=<cid>} path
-     * once Company Portal confirms it passes the full referrer value through to first launch.
+     * CP-compatible launch form (behavior confirmed with the Company Portal team; tracked in Feature
+     * 3676213): appends a single bare {@code referrer=<originPkg>} to the server-provided
+     * {@code app_link}, matching the {@code &referrer=<originAppPackage>} pattern Company Portal already
+     * supports today. This is the form used at the production launch site: it lets Company Portal
+     * identify — and redirect back to — the calling app, which (combined with the in-process park
+     * registry + foreground-fallback resume) is sufficient to resume without Company Portal having to
+     * round-trip the correlation id. The richer {@link #decorateAppLinkWithReferrer} form is reserved for
+     * the automatic {@code mam_resume=<cid>} path once Company Portal confirms it passes the full
+     * referrer value through to first launch.
      * <p>
      * Safe by design: if the {@code app_link} or {@code originPkg} is null/blank, or the link cannot be
      * parsed, the original {@code app_link} is returned unchanged so the existing install flow is never
@@ -254,7 +255,10 @@ public final class MamInstallReferrerBuilder {
         }
         try {
             return URLDecoder.decode(value, UTF_8);
-        } catch (final UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException | IllegalArgumentException e) {
+            // UTF-8 is always supported; IllegalArgumentException guards against malformed
+            // percent-encoding (e.g. a lone '%' or '%zz'). Return the raw value defensively so
+            // parseReferrer never crashes on bad input.
             return value;
         }
     }

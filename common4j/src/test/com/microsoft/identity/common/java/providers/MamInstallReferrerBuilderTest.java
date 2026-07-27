@@ -141,6 +141,17 @@ public class MamInstallReferrerBuilderTest {
         assertTrue(MamInstallReferrerBuilder.parseReferrer("").isEmpty());
     }
 
+    @Test
+    public void parseReferrer_malformedPercentEncoding_doesNotThrow_keepsRawValue() {
+        // URLDecoder.decode throws IllegalArgumentException on malformed percent-encoding (a lone
+        // '%' or bad hex like '%zz'); parseReferrer must stay defensive and never crash on bad input,
+        // returning the raw (un-decoded) value instead.
+        final Map<String, String> parsed = MamInstallReferrerBuilder.parseReferrer(
+                MamInstallReferrerBuilder.KEY_ORIGIN_PKG + "=bad%zz&" + MamInstallReferrerBuilder.KEY_CID + "=100%");
+        assertEquals("bad%zz", parsed.get(MamInstallReferrerBuilder.KEY_ORIGIN_PKG));
+        assertEquals("100%", parsed.get(MamInstallReferrerBuilder.KEY_CID));
+    }
+
     // endregion
 
     // region market:// fallback

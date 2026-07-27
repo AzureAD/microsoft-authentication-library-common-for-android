@@ -315,11 +315,15 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
 
     /**
-     * Flight to enable the MAM broker-install request-resume engine. When enabled, an interactive
-     * request blocked by a Conditional-Access "install broker" (Company Portal) response is parked
-     * in-memory instead of returning the terminal install-required error; after the broker is
-     * installed the request is replayed silently and the token delivered on the original callback.
-     * <p>
+     * Master gate for the multi-phase MAM broker-install onboarding improvement. Delivered in phases:
+     * <ul>
+     *   <li><b>Phase 1 (the behavior this flag gates today):</b> when an interactive request is blocked
+     *       by a Conditional-Access "install broker" (Company Portal) response, the Company Portal
+     *       install launch is tagged with the calling app package as the Play install referrer so
+     *       Company Portal can redirect the user straight back to the calling app after install.</li>
+     *   <li><b>Later phases:</b> park the blocked request in-memory and, once the broker is installed,
+     *       replay it silently and deliver the token on the original callback.</li>
+     * </ul>
      * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off, the pre-existing
      * terminal install-required behavior is unchanged.
      */
