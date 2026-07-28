@@ -327,11 +327,14 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * How long a stored MAM Conditional Access UPN hint stays usable, in seconds.
      * <p>
-     * Long enough to cover a Company Portal download, install and first launch on a slow network
-     * plus a little user think-time, and no longer - the hint is a UI convenience, so it should not
-     * sit at rest beyond the window the flow needs. Hints are additionally single-use.
+     * The window has to span a Company Portal download and install from the Play Store, Company
+     * Portal's first launch and redirect back, the calling app restarting, and the user reaching
+     * their "add account" screen. An end-to-end measurement on a fast Wi-Fi connection spent 2m08s
+     * on the download and install alone, so this is sized to leave real headroom on a slower or
+     * metered connection rather than to be as short as possible. Hints are additionally single-use
+     * and are cleared as soon as they are read, so a hint rarely lives anywhere near this long.
      */
-    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 180),
+    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 900),
 
     /**
      * Treats a broker-install redirect that carries no {@code intuneAppProtection=1} marker as a
