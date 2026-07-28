@@ -35,7 +35,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
@@ -57,9 +59,11 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -80,6 +84,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -267,6 +272,171 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesOpenIdVcUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_TrustedAuthenticator_AttachesReturnPendingIntent() {
+        // Arrange: the return-to-caller flight is on, and Microsoft Authenticator is the resolved handler...
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        // ...and it passes BrokerValidator signature-pinning.
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: the launch intent is pinned to Authenticator and carries the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertEquals("Launch intent must be pinned to Authenticator",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_UntrustedHandler_DoesNotAttachReturnPendingIntent() {
+        // Arrange: the return-to-caller flight is on, but a non-Authenticator app claims the scheme.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler("com.example.malicious");
+
+        // Act: the untrusted package fails the Authenticator check before BrokerValidator is even consulted.
+        final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+        assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+
+        // Assert: the handler is still launched (existing dispatch behavior) but WITHOUT the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Untrusted handler must NOT receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_AuthenticatorFailsSignatureVerification_DoesNotPinOrAttach() {
+        // Arrange: the return-to-caller flight is on and the resolved handler IS Microsoft
+        // Authenticator by package name, but it FAILS BrokerValidator signature verification -
+        // e.g. a re-signed / repackaged look-alike claiming com.azure.authenticator. The signature
+        // gate (not just the package-name check) must prevent both package-pinning and attaching.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(false))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: the handler is still launched, but the intent is neither pinned to Authenticator
+        // nor carries the return PendingIntent - the signature gate rejected it.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertNotEquals("Signature-failing Authenticator must NOT be package-pinned",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_MultipleHandlers_PinsToAuthenticatorAndAttaches() {
+        // Arrange: the return-to-caller flight is on, and TWO apps claim openid-vc:// - a
+        // third-party wallet and Microsoft Authenticator. resolveActivity() would return the
+        // system chooser here; the implementation must instead target Authenticator directly.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler("com.example.otherwallet");
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: no chooser - the launch is pinned to Authenticator and carries the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertEquals("Multi-handler launch must be pinned to Authenticator (no chooser)",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertTrue("Pinned Authenticator must receive the return PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    public void testOpenIdVcUrl_BrokerlessHost_DoesNotAttachReturnPendingIntent() {
+        // Arrange: return-to-caller flight is on and Microsoft Authenticator is the verified
+        // handler, but this WebView is NOT hosted in the broker's auth-service process (brokerless
+        // / embedded case - no ShadowProcessUtil applied, so ProcessUtil.isRunningOnAuthService is
+        // false). Return-to-caller must be wired only for the brokered flow.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: brokerless host falls back to the pre-existing dispatch - no return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Brokerless host must NOT attach the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    private void registerOpenIdVcHandler(final String packageName) {
+        final ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.packageName = packageName;
+        resolveInfo.activityInfo.name = packageName + ".OpenIdVcActivity";
+        final ShadowPackageManager shadowPackageManager = Shadows.shadowOf(mContext.getPackageManager());
+        // Register for the implicit intent (used by queryIntentActivities to discover handlers) and
+        // for the package-pinned intent (used by resolveActivity after the launch is pinned to a
+        // specific handler, which is how the production code resolves the final intent).
+        shadowPackageManager.addResolveInfoForIntent(
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)), resolveInfo);
+        shadowPackageManager.addResolveInfoForIntent(
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)).setPackage(packageName), resolveInfo);
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_ReturnToCallerFlightDisabled_DoesNotAttachReturnPendingIntent() {
+        // Arrange: openid-vc redirect handling is on, but the return-to-caller flight is OFF.
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)).thenReturn(false);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        // Even with Authenticator as the resolved handler, the flight being off means no attach.
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+        assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Return-to-caller flight OFF must not attach the return PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    private void enableOpenIdVcReturnToCallerFlight() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)).thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     @Test
