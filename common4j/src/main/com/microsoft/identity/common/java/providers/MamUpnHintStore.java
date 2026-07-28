@@ -217,15 +217,22 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Returns {@code clientId}'s stored UPN if - and only if - it is still within its TTL, and
-     * deletes it in the same call so it is used at most once. Also sweeps out every expired or
-     * half-written record, for every client id.
+     * Returns {@code clientId}'s stored UPN if - and only if - it is still within its TTL. Also
+     * sweeps out every expired or half-written record, for every client id.
      * <p>
      * <b>Call this when the account-entry screen is shown, not only when the process starts.</b>
      * Installing the broker does not reliably kill the calling app: when the process survives, the
      * user returns to an already-created screen, so a hint read wired to process or view creation
-     * never runs and the field is left empty. Reading on every presentation is safe - the hint is
-     * single-use and self-clearing, so a read that finds nothing simply returns {@code null}.
+     * never runs and the field is left empty.
+     * <p>
+     * <b>Reading does not spend the hint.</b> Handling the install redirect tears down the
+     * authorization activity before the store listing is launched, which briefly resumes the
+     * caller's own account screen while the flow is still in progress. A read that consumed the
+     * hint would therefore destroy it seconds before the app restart it exists to survive, and the
+     * damage would be invisible - the field would look pre-filled right up until the process died.
+     * The hint is retired instead when it is actually used: {@link #applyStoredUpnHintIfAbsent}
+     * clears it once it has been attached to a request, and its TTL bounds it either way. Callers
+     * that pre-fill their own UI may call {@link #clearUpnHint} once the user commits.
      * <p>
      * Apps whose interactive requests flow through {@link InteractiveTokenCommandParameters} do not
      * need this at all; {@link #applyStoredUpnHintIfAbsent} already applies the hint for them.
@@ -250,7 +257,8 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Storage-level read with an injectable clock and TTL.
+     * Storage-level read with an injectable clock and TTL. Non-destructive; see
+     * {@link #getValidUpnHint(IPlatformComponents, String)} for why.
      *
      * @param storage   the backing store.
      * @param clientId  client id to read the hint for.
@@ -274,9 +282,7 @@ public final class MamUpnHintStore {
             return null;
         }
 
-        // Single-use: whether or not the caller ends up showing it, this hint is now spent.
-        clearUpnHint(storage, clientId);
-        Logger.info(methodTag, "Returning the stored MAM-CA UPN hint and clearing it.");
+        Logger.info(methodTag, "Returning the stored MAM-CA UPN hint.");
         return upn;
     }
 
@@ -375,7 +381,8 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Returns {@code parameters} with {@code login_hint} pre-filled from a still-valid stored UPN.
+     * Returns {@code parameters} with {@code login_hint} pre-filled from a still-valid stored UPN,
+     * spending the hint in the process so it cannot be replayed onto a later, unrelated sign-in.
      * <p>
      * An explicit {@code login_hint} from the caller always wins - it is never overwritten - and the
      * original instance is returned untouched whenever there is nothing useful to add, so this is
@@ -383,7 +390,8 @@ public final class MamUpnHintStore {
      * <p>
      * Host SDKs that render their own account-entry UI (rather than going straight to the
      * authorization request) should call {@link #getValidUpnHint(IPlatformComponents, String)}
-     * directly to pre-fill that field.
+     * directly to pre-fill that field; that read leaves the hint in place, so it survives the app
+     * restart that installing the broker can cause.
      *
      * @param parameters the interactive request parameters.
      * @return the same instance, or a copy carrying the pre-filled {@code login_hint}.
@@ -402,6 +410,10 @@ public final class MamUpnHintStore {
         if (StringUtil.isNullOrEmpty(upn)) {
             return parameters;
         }
+
+        // The hint has now been carried into a real request, which is what it was stored for, so
+        // retire it here rather than on every read.
+        clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
 
         Logger.info(methodTag, "Pre-filling login_hint from the stored MAM-CA UPN hint.");
         return parameters.toBuilder().loginHint(upn).build();

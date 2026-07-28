@@ -73,14 +73,31 @@ public class MamUpnHintStoreTest {
     }
 
     @Test
-    public void read_isSingleUse_secondReadReturnsNull() {
+    public void read_doesNotSpendTheHint_secondReadStillReturnsIt() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
         MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
-        assertNull("a hint must not be replayable onto a later request",
-                MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
-        assertRecordAbsent(storage, CLIENT_ID);
+        assertEquals("reading must not destroy a hint that has not been used yet",
+                UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+    }
+
+    /**
+     * Regression: handling the install redirect finishes the authorization activity before the store
+     * listing is launched, which resumes the caller's own account screen mid-flow. That screen reads
+     * the hint. If the read spent it, the hint would be gone before the app restart it exists to
+     * survive - which is exactly the failure this pins.
+     */
+    @Test
+    public void read_whileStillInTheInstallHandoff_leavesTheHintForTheReadAfterTheRestart() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+
+        // The transient resume, a few tens of millis after the write.
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 34L, TTL));
+
+        // The read that actually matters, after the broker install killed and restarted the app.
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 60_000L, TTL));
     }
 
     @Test
@@ -463,15 +480,25 @@ public class MamUpnHintStoreTest {
     // region round trip through a real (mock-backed) store
 
     @Test
-    public void roundTrip_throughPlatformComponents_isSingleUseAndScoped() {
+    public void roundTrip_throughPlatformComponents_isSpentOnUseAndScoped() {
         setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
         assertTrue(storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
 
+        // Reads leave the record in place so it survives the restart the broker install can cause.
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
-        assertFalse("the record must be gone once handed out",
+        assertTrue("a read must not spend the hint",
+                storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
+
+        // Carrying it into a request is what retires it.
+        assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(
+                InteractiveTokenCommandParameters.builder()
+                        .platformComponents(components)
+                        .clientId(CLIENT_ID)
+                        .build()).getLoginHint());
+        assertFalse("the record must be gone once it has been used",
                 storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
