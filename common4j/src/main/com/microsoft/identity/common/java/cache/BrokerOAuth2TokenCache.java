@@ -1445,6 +1445,15 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
+     * Returns whether the caller that constructed this cache is authorized to share FoCI
+     * tokens. Used by broker orchestration to short-circuit shared-FoCI fallback paths
+     * (AB#3687466).
+     */
+    public boolean isCallerAuthorizedForFoci() {
+        return mCallerAuthorizedForFoci;
+    }
+
+    /**
      * Returns the List of FoCI users in the cache. This API is provided so that the broker may
      * **internally** query the cache for known users, such that the broker may verify an
      * unknown clientId is a part of the FoCI family.
@@ -1458,6 +1467,14 @@ public class BrokerOAuth2TokenCache
     @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> getFociCacheRecords() {
         final String methodName = ":getFociCacheRecords";
+
+        // Fail closed for callers not authorized to share FoCI tokens (AB#3687466). Paired
+        // with the chokepoints in getTokenCachesForClientId and getTokenCacheForClient.
+        if (!mCallerAuthorizedForFoci) {
+            Logger.info(TAG + methodName,
+                    "Caller not authorized for FoCI; skipping shared-FoCI enumeration.");
+            return Collections.emptyList();
+        }
 
         final List<ICacheRecord> result = new ArrayList<>();
 

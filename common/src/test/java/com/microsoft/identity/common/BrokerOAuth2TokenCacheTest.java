@@ -53,6 +53,7 @@ import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCacheTelemetryWrapper;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
@@ -793,6 +794,40 @@ public class BrokerOAuth2TokenCacheTest {
         assertNotNull(
                 authorizedAppBCache.getAccountByHomeAccountId(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID)
         );
+    }
+
+    /**
+     * Regression: BrokerOAuth2TokenCacheTelemetryWrapper must delegate getFociCacheRecords()
+     * (and isCallerAuthorizedForFoci()) to the wrapped cache. Without the override the wrapper's
+     * inherited default authorization (true) would apply, defeating the caller-authorized gate
+     * that broker orchestration configured on the wrapped instance and allowing device-wide
+     * shared FoCI enumeration through the wrapper (AB#3687466).
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final BrokerOAuth2TokenCacheTelemetryWrapper wrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
+                mPlatformComponents,
+                TEST_APP_UID + 1,
+                mApplicationMetadataCache,
+                unauthorizedAppBCache
+        );
+
+        assertFalse(wrapper.isCallerAuthorizedForFoci());
+        assertTrue(wrapper.getFociCacheRecords().isEmpty());
+
+        // Positive control: wrapper around an authorized cache exposes the shared FoCI records.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final BrokerOAuth2TokenCacheTelemetryWrapper authorizedWrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
+                mPlatformComponents,
+                TEST_APP_UID + 1,
+                mApplicationMetadataCache,
+                authorizedAppBCache
+        );
+        assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
+        assertFalse(authorizedWrapper.getFociCacheRecords().isEmpty());
     }
 
     // endregion

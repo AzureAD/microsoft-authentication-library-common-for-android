@@ -371,4 +371,17 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
             );
         }
     }
+
+    // Delegate FoCI-cache reads/authorization to the wrapped instance so the caller-authorized
+    // gate configured at construction of mCacheToWrap is honored. Without these overrides the
+    // wrapper's own (default-true) authorization state would apply (AB#3687466).
+    @Override
+    public List<ICacheRecord> getFociCacheRecords() {
+        return mCacheToWrap.getFociCacheRecords();
+    }
+
+    @Override
+    public boolean isCallerAuthorizedForFoci() {
+        return mCacheToWrap.isCallerAuthorizedForFoci();
+    }
 }
