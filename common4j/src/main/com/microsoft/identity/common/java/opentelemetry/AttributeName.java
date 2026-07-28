@@ -436,6 +436,11 @@ public enum AttributeName {
     auth_tab_fallback_to_custom_tabs,
 
     /**
+     * Records the version of the browser package handling the switch browser flow.
+     */
+    browser_version,
+
+    /**
      * The tenant id for the home tenant of the account for which PRT is required.
      */
     tenant_id,
