@@ -352,7 +352,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters requestParameters)
             throws BaseException, InterruptedException, ExecutionException {
-        // MAM broker-install onboarding: this is the request the user makes after installing the
+        // MAM Conditional Access onboarding: this is the request the user makes after installing the
         // broker, so pre-fill the UPN they already gave us before being interrupted. No-op unless
         // the flight is on, the caller left login_hint blank, and a stored hint is still valid.
         final InteractiveTokenCommandParameters parameters =
@@ -390,8 +390,10 @@ public class BrokerMsalController extends BaseController {
         );
 
         if (result != null && result.getSucceeded()) {
-            // Signed in, so the remembered UPN has served its purpose and should not linger.
-            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents());
+            // Signed in, so any remembered UPN has served its purpose and should not linger. (A hint
+            // that was actually used is already cleared by the single-use read above; this covers
+            // the case where the caller supplied their own login_hint.)
+            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
         }
 
         return result;

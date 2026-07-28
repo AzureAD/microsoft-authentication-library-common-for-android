@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.MamCaRedirect;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.util.UrlUtil;
@@ -108,6 +109,10 @@ public abstract class AuthorizationResultFactory
                 // Set username returned from the service. We're not currently using it though, but the server returns it.
                 final Map<String, String> urlParameters = UrlUtil.getParameters(url);
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
+                // Surface whether this install was triggered by MAM Conditional Access, so callers
+                // can scope MAM-CA onboarding behavior to it without re-parsing the redirect.
+                result.getAuthorizationErrorResponse().setMamCaInstall(
+                        MamCaRedirect.hasIntuneAppProtectionMarker(urlParameters));
                 return result;
             }
 

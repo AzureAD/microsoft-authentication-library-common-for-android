@@ -30,15 +30,22 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.util.StringUtil;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * Remembers the UPN across a Conditional-Access "install the broker" interruption, so that the next
- * interactive request can pre-fill it instead of asking the user to type their address again
- * (Feature AB#3676213).
+ * Remembers the UPN across a MAM Conditional-Access "install Company Portal" interruption, so that
+ * the next interactive request can pre-fill it instead of asking the user to type their address
+ * again (Feature AB#3676213).
  * <p>
  * <b>Why this needs to be persisted.</b> When Conditional Access blocks an interactive request until
  * Company Portal is installed, the user leaves for the Play Store. Installing Company Portal very
@@ -46,23 +53,29 @@ import lombok.NonNull;
  * survive process death. It is therefore written to the platform's <em>encrypted</em> name-value
  * store, which is private to the calling app.
  * <p>
- * <b>Where the UPN comes from.</b> The server already returns it on the broker-install redirect
- * ({@code msauth://wpj/?username=<upn>&app_link=...}); {@code AuthorizationResultFactory} parses it
- * onto {@link com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse#getUpnToWpj()}.
- * Nothing is inferred or collected here beyond what the server already told us.
+ * <b>Where the UPN comes from.</b> The server returns it on the broker-install redirect
+ * ({@code msauth://wpj/?username=<upn>&app_link=...&intuneAppProtection=1}). Nothing is inferred or
+ * collected here beyond what the server already told us, and only the MAM-CA path is recorded - an
+ * ordinary device-registration broker install stores nothing (see {@link MamCaRedirect}).
  * <p>
- * <b>Lifetime.</b> A hint is only ever a short-lived UI convenience, so every record carries an
- * absolute expiry ({@link #DEFAULT_TTL_MILLISECONDS}). Reads are TTL-validated: an expired - or
- * half-written - record is never returned and is deleted in place, so the UPN is not kept at rest
- * any longer than the flow needs it. A hint is also dropped once it has served its purpose (see
- * {@link #clearUpnHint(IPlatformComponents)}).
+ * <b>Lifetime.</b> The hint is a short-lived UI convenience and is treated as such:
+ * <ul>
+ *   <li>Each record stores <em>when it was written</em>, and validity is decided at read time
+ *       against {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}. Storing the write time rather than
+ *       an absolute expiry means changing that flight also governs records already on disk.</li>
+ *   <li>Reads are <b>single-use</b>: a hint that is handed out is deleted in the same call, so it
+ *       can never be replayed onto a later, unrelated request.</li>
+ *   <li>Every read also sweeps out <em>all</em> expired or half-written records, for every client
+ *       id, so nothing lingers at rest beyond the window the flow needs.</li>
+ * </ul>
  * <p>
- * <b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_BROKER_INSTALL_UPN_HINT}
- * (default off), so with the flight off nothing is ever stored and behavior is unchanged. Note that
- * disabling the flight while a hint is already stored leaves that single record on disk until the
- * next read with the flight on (which will find it expired and delete it); it can never be returned
- * in the meantime. {@link #clearUpnHint(IPlatformComponents)} is deliberately <em>not</em> gated so
- * that cleanup always works.
+ * <b>Keying.</b> The store is app-private, and records are additionally keyed by client id so that
+ * two clients hosted in the same app cannot read each other's hint.
+ * <p>
+ * <b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
+ * (default off), so with the flight off nothing is ever stored and behavior is unchanged.
+ * {@link #clearUpnHint(IPlatformComponents, String)} is deliberately <em>not</em> gated so that
+ * cleanup always works, including after the flight has been turned off.
  * <p>
  * Every operation is best-effort: this is a convenience hint, so a storage failure is logged and
  * swallowed rather than allowed to fail the authentication request.
@@ -77,18 +90,20 @@ public final class MamUpnHintStore {
      */
     static final String STORE_NAME = "com.microsoft.identity.common.broker_install_upn_hint";
 
-    /** Key holding the UPN itself. */
-    static final String KEY_UPN = "upn";
-
-    /** Key holding the absolute expiry of the UPN, in epoch milliseconds, as a decimal string. */
-    static final String KEY_EXPIRES_AT = "expires_at";
+    /** Prefix of the key holding the UPN; the client id is appended. */
+    static final String KEY_PREFIX_UPN = "upn.";
 
     /**
-     * How long a stored UPN stays usable: 7 minutes, matching the broker-install park TTL. It covers
-     * a Company Portal download + install + first launch on a slow network plus a little user
-     * think-time, while keeping the UPN at rest for a bounded, short window.
+     * Prefix of the key holding when the UPN was written, in epoch milliseconds, as a decimal
+     * string; the client id is appended.
      */
-    public static final long DEFAULT_TTL_MILLISECONDS = 7L * 60L * 1000L;
+    static final String KEY_PREFIX_WRITTEN_AT = "written_at.";
+
+    /**
+     * Fallback client id for callers that cannot supply one, so such records are still keyed
+     * consistently rather than colliding with a real client id.
+     */
+    static final String UNKNOWN_CLIENT_ID = "unknown";
 
     private MamUpnHintStore() {
         // Utility class.
@@ -96,35 +111,79 @@ public final class MamUpnHintStore {
 
     private static boolean isEnabled() {
         return CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_UPN_HINT);
+                .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_UPN_HINT);
     }
 
     /**
-     * Remembers {@code upn}, but only when the interactive request actually failed because the
-     * broker still needs to be installed. Any other failure leaves the store untouched.
+     * How long a stored UPN stays usable, in milliseconds, per
+     * {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}.
      *
-     * @param components             platform components of the failed request.
-     * @param authorizationErrorCode the error code from the authorization error response.
-     * @param upn                    the UPN the server returned on the broker-install redirect.
+     * @return the TTL in milliseconds.
      */
-    public static void saveUpnHintForBrokerInstall(@Nullable final IPlatformComponents components,
-                                                   @Nullable final String authorizationErrorCode,
-                                                   @Nullable final String upn) {
-        if (!MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED
-                .equals(authorizationErrorCode)) {
+    public static long getTtlMillis() {
+        return 1000L * CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .getIntValue(CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS);
+    }
+
+    /**
+     * Remembers the UPN the server returned on a MAM Conditional Access broker-install redirect.
+     * <p>
+     * No-op unless the redirect is marked as the MAM-CA path, so an ordinary device-registration
+     * broker install stores nothing.
+     *
+     * @param components         platform components providing the storage.
+     * @param clientId           client id of the request being interrupted.
+     * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
+     */
+    public static void saveUpnHintForMamCaInstall(@Nullable final IPlatformComponents components,
+                                                  @Nullable final String clientId,
+                                                  @Nullable final Map<String, String> redirectParameters) {
+        if (!isEnabled() || !MamCaRedirect.isMamCaInstall(redirectParameters)) {
             return;
         }
-        saveUpnHint(components, upn);
+        saveUpnHint(components, clientId, MamCaRedirect.getUsername(redirectParameters));
     }
 
     /**
-     * Stores {@code upn} with a {@link #DEFAULT_TTL_MILLISECONDS} expiry. No-op when the flight is
-     * off, when {@code upn} is null/blank, or when the store cannot be opened.
+     * Remembers the UPN the server returned on a MAM Conditional Access broker-install redirect,
+     * given an already-parsed authorization error response.
+     * <p>
+     * No-op unless the request actually failed because the broker still needs to be installed
+     * <em>and</em> the redirect was marked as the MAM-CA path.
+     *
+     * @param components   platform components providing the storage.
+     * @param clientId     client id of the request being interrupted.
+     * @param errorResponse the authorization error response.
+     */
+    public static void saveUpnHintForMamCaInstall(@Nullable final IPlatformComponents components,
+                                                  @Nullable final String clientId,
+                                                  @Nullable final AuthorizationErrorResponse errorResponse) {
+        if (errorResponse == null
+                || !MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED
+                        .equals(errorResponse.getError())) {
+            return;
+        }
+
+        if (!errorResponse.isMamCaInstall()
+                && !CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER)) {
+            // An ordinary device-registration broker install; nothing to remember.
+            return;
+        }
+
+        saveUpnHint(components, clientId, errorResponse.getUpnToWpj());
+    }
+
+    /**
+     * Stores {@code upn} for {@code clientId}, stamped with the current time. No-op when the flight
+     * is off, when {@code upn} is null/blank, or when the store cannot be opened.
      *
      * @param components platform components providing the storage.
+     * @param clientId   client id the hint belongs to.
      * @param upn        the UPN to remember.
      */
     public static void saveUpnHint(@Nullable final IPlatformComponents components,
+                                   @Nullable final String clientId,
                                    @Nullable final String upn) {
         final String methodTag = TAG + ":saveUpnHint";
 
@@ -137,36 +196,40 @@ public final class MamUpnHintStore {
             return;
         }
 
-        saveUpnHint(storage, upn, System.currentTimeMillis(), DEFAULT_TTL_MILLISECONDS);
-        Logger.info(methodTag, "Stored a UPN hint for the broker-install flow; it is usable for "
-                + (DEFAULT_TTL_MILLISECONDS / 1000L) + "s.");
+        saveUpnHint(storage, clientId, upn, System.currentTimeMillis());
+        Logger.info(methodTag, "Stored a UPN hint for the MAM-CA broker-install flow; it is usable for "
+                + (getTtlMillis() / 1000L) + "s and only once.");
     }
 
     /**
-     * Storage-level write with an injectable clock and TTL.
+     * Storage-level write with an injectable clock.
      *
-     * @param storage    the backing store.
-     * @param upn        the UPN to remember.
-     * @param nowMillis  the current time in epoch millis.
-     * @param ttlMillis  how long the hint stays usable, in millis.
+     * @param storage   the backing store.
+     * @param clientId  client id the hint belongs to.
+     * @param upn       the UPN to remember.
+     * @param nowMillis the current time in epoch millis.
      */
     static void saveUpnHint(@NonNull final INameValueStorage<String> storage,
+                            @Nullable final String clientId,
                             @NonNull final String upn,
-                            final long nowMillis,
-                            final long ttlMillis) {
-        storage.put(KEY_EXPIRES_AT, String.valueOf(nowMillis + ttlMillis));
-        storage.put(KEY_UPN, upn);
+                            final long nowMillis) {
+        final String suffix = keySuffix(clientId);
+        storage.put(KEY_PREFIX_WRITTEN_AT + suffix, String.valueOf(nowMillis));
+        storage.put(KEY_PREFIX_UPN + suffix, upn);
     }
 
     /**
-     * Returns the stored UPN if - and only if - it is still within its TTL. An expired or
-     * half-written record is deleted rather than returned.
+     * Returns {@code clientId}'s stored UPN if - and only if - it is still within its TTL, and
+     * deletes it in the same call so it is used at most once. Also sweeps out every expired or
+     * half-written record, for every client id.
      *
      * @param components platform components providing the storage.
+     * @param clientId   client id to read the hint for.
      * @return the UPN to pre-fill, or {@code null} if there is no usable hint.
      */
     @Nullable
-    public static String getValidUpnHint(@Nullable final IPlatformComponents components) {
+    public static String getValidUpnHint(@Nullable final IPlatformComponents components,
+                                         @Nullable final String clientId) {
         if (!isEnabled()) {
             return null;
         }
@@ -176,73 +239,132 @@ public final class MamUpnHintStore {
             return null;
         }
 
-        return getValidUpnHint(storage, System.currentTimeMillis());
+        return getValidUpnHint(storage, clientId, System.currentTimeMillis(), getTtlMillis());
     }
 
     /**
-     * Storage-level read with an injectable clock.
+     * Storage-level read with an injectable clock and TTL.
      *
      * @param storage   the backing store.
+     * @param clientId  client id to read the hint for.
      * @param nowMillis the current time in epoch millis.
+     * @param ttlMillis how long a hint stays usable, in millis.
      * @return the UPN if still valid, otherwise {@code null}.
      */
     @Nullable
     static String getValidUpnHint(@NonNull final INameValueStorage<String> storage,
-                                  final long nowMillis) {
+                                  @Nullable final String clientId,
+                                  final long nowMillis,
+                                  final long ttlMillis) {
         final String methodTag = TAG + ":getValidUpnHint";
 
-        final String upn = storage.get(KEY_UPN);
-        final String expiresAtRaw = storage.get(KEY_EXPIRES_AT);
+        final String suffix = keySuffix(clientId);
+        // Sweep first, so a hint that is itself stale is dropped rather than returned below.
+        sweepUnusableRecords(storage, nowMillis, ttlMillis);
 
-        if (StringUtil.isNullOrEmpty(upn) || StringUtil.isNullOrEmpty(expiresAtRaw)) {
-            if (!StringUtil.isNullOrEmpty(upn) || !StringUtil.isNullOrEmpty(expiresAtRaw)) {
-                // Only half of the record is present - e.g. the process died between the two
-                // writes. Without a trustworthy expiry we must not hand the UPN out, so drop it.
-                Logger.warn(methodTag, "Found an incomplete UPN hint; discarding it.");
-                clearUpnHint(storage);
-            }
+        final String upn = storage.get(KEY_PREFIX_UPN + suffix);
+        if (StringUtil.isNullOrEmpty(upn)) {
             return null;
         }
 
-        final long expiresAtMillis;
-        try {
-            expiresAtMillis = Long.parseLong(expiresAtRaw);
-        } catch (final NumberFormatException e) {
-            Logger.warn(methodTag, "Stored UPN hint expiry is not a number; discarding the hint.");
-            clearUpnHint(storage);
-            return null;
-        }
-
-        if (nowMillis >= expiresAtMillis) {
-            Logger.info(methodTag, "The stored UPN hint has expired; discarding it.");
-            clearUpnHint(storage);
-            return null;
-        }
-
+        // Single-use: whether or not the caller ends up showing it, this hint is now spent.
+        clearUpnHint(storage, clientId);
+        Logger.info(methodTag, "Returning the stored MAM-CA UPN hint and clearing it.");
         return upn;
     }
 
     /**
-     * Deletes any stored UPN. Deliberately not flight-gated so that cleanup always works, including
-     * after the flight has been turned off.
+     * Deletes every record that can no longer be handed out: expired, half-written (the process died
+     * between the two writes), or carrying an unparseable timestamp. Runs across all client ids so a
+     * hint written for a client that is never asked for again does not linger at rest.
+     *
+     * @param storage   the backing store.
+     * @param nowMillis the current time in epoch millis.
+     * @param ttlMillis how long a hint stays usable, in millis.
+     */
+    private static void sweepUnusableRecords(@NonNull final INameValueStorage<String> storage,
+                                             final long nowMillis,
+                                             final long ttlMillis) {
+        final String methodTag = TAG + ":sweepUnusableRecords";
+
+        final Map<String, String> all = storage.getAll();
+        final Set<String> suffixes = new HashSet<>();
+        for (final String key : all.keySet()) {
+            if (key.startsWith(KEY_PREFIX_UPN)) {
+                suffixes.add(key.substring(KEY_PREFIX_UPN.length()));
+            } else if (key.startsWith(KEY_PREFIX_WRITTEN_AT)) {
+                suffixes.add(key.substring(KEY_PREFIX_WRITTEN_AT.length()));
+            }
+        }
+
+        final List<String> unusable = new ArrayList<>();
+        for (final String suffix : suffixes) {
+            if (!isUsable(all.get(KEY_PREFIX_UPN + suffix),
+                    all.get(KEY_PREFIX_WRITTEN_AT + suffix), nowMillis, ttlMillis)) {
+                unusable.add(suffix);
+            }
+        }
+
+        if (unusable.isEmpty()) {
+            return;
+        }
+
+        Logger.info(methodTag, "Discarding " + unusable.size()
+                + " expired or incomplete UPN hint record(s).");
+        for (final String suffix : unusable) {
+            storage.remove(KEY_PREFIX_UPN + suffix);
+            storage.remove(KEY_PREFIX_WRITTEN_AT + suffix);
+        }
+    }
+
+    private static boolean isUsable(@Nullable final String upn,
+                                    @Nullable final String writtenAtRaw,
+                                    final long nowMillis,
+                                    final long ttlMillis) {
+        if (StringUtil.isNullOrEmpty(upn) || StringUtil.isNullOrEmpty(writtenAtRaw)) {
+            // A record is only trustworthy with both halves present; without a timestamp we cannot
+            // know how old the UPN is, so it must not be handed out.
+            return false;
+        }
+
+        final long writtenAtMillis;
+        try {
+            writtenAtMillis = Long.parseLong(writtenAtRaw);
+        } catch (final NumberFormatException e) {
+            return false;
+        }
+
+        // writtenAt > now means the clock moved backwards; treat it as untrustworthy rather than
+        // letting the hint outlive its window.
+        return writtenAtMillis <= nowMillis && nowMillis - writtenAtMillis < ttlMillis;
+    }
+
+    /**
+     * Deletes {@code clientId}'s stored UPN. Deliberately not flight-gated so that cleanup always
+     * works, including after the flight has been turned off.
      *
      * @param components platform components providing the storage.
+     * @param clientId   client id whose hint should be dropped.
      */
-    public static void clearUpnHint(@Nullable final IPlatformComponents components) {
+    public static void clearUpnHint(@Nullable final IPlatformComponents components,
+                                    @Nullable final String clientId) {
         final INameValueStorage<String> storage = getStorage(components);
         if (storage != null) {
-            clearUpnHint(storage);
+            clearUpnHint(storage, clientId);
         }
     }
 
     /**
      * Storage-level delete.
      *
-     * @param storage the backing store.
+     * @param storage  the backing store.
+     * @param clientId client id whose hint should be dropped.
      */
-    static void clearUpnHint(@NonNull final INameValueStorage<String> storage) {
-        storage.remove(KEY_UPN);
-        storage.remove(KEY_EXPIRES_AT);
+    static void clearUpnHint(@NonNull final INameValueStorage<String> storage,
+                             @Nullable final String clientId) {
+        final String suffix = keySuffix(clientId);
+        storage.remove(KEY_PREFIX_UPN + suffix);
+        storage.remove(KEY_PREFIX_WRITTEN_AT + suffix);
     }
 
     /**
@@ -251,6 +373,10 @@ public final class MamUpnHintStore {
      * An explicit {@code login_hint} from the caller always wins - it is never overwritten - and the
      * original instance is returned untouched whenever there is nothing useful to add, so this is
      * safe to call on every interactive request.
+     * <p>
+     * Host SDKs that render their own account-entry UI (rather than going straight to the
+     * authorization request) should call {@link #getValidUpnHint(IPlatformComponents, String)}
+     * directly to pre-fill that field.
      *
      * @param parameters the interactive request parameters.
      * @return the same instance, or a copy carrying the pre-filled {@code login_hint}.
@@ -265,13 +391,17 @@ public final class MamUpnHintStore {
             return parameters;
         }
 
-        final String upn = getValidUpnHint(parameters.getPlatformComponents());
+        final String upn = getValidUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
         if (StringUtil.isNullOrEmpty(upn)) {
             return parameters;
         }
 
-        Logger.info(methodTag, "Pre-filling login_hint from the stored broker-install UPN hint.");
+        Logger.info(methodTag, "Pre-filling login_hint from the stored MAM-CA UPN hint.");
         return parameters.toBuilder().loginHint(upn).build();
+    }
+
+    private static String keySuffix(@Nullable final String clientId) {
+        return StringUtil.isNullOrEmpty(clientId) ? UNKNOWN_CLIENT_ID : clientId;
     }
 
     @Nullable

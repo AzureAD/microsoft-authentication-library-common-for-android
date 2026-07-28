@@ -315,15 +315,34 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
 
     /**
-     * Flight for the MAM broker-install onboarding improvement: remember the UPN across a
-     * Conditional-Access "install Company Portal" interruption so the interactive request the user
-     * makes after installing the broker can pre-fill it, instead of asking them to type their
-     * address a second time.
+     * MAM Conditional Access onboarding: remember the UPN across a Conditional-Access "install
+     * Company Portal" interruption, so the interactive request the user makes after installing the
+     * broker can pre-fill it instead of asking them to type their address a second time.
      * <p>
      * With the flight off no UPN is stored and no {@code login_hint} is ever added, so the existing
      * behavior is unchanged. Default off for safe rollout; ramp / kill-switch via ECS.
      */
-    ENABLE_BROKER_INSTALL_UPN_HINT("EnableBrokerInstallUpnHint", false);
+    ENABLE_MAM_CA_UPN_HINT("EnableMamCaUpnHint", false),
+
+    /**
+     * How long a stored MAM Conditional Access UPN hint stays usable, in seconds.
+     * <p>
+     * Long enough to cover a Company Portal download, install and first launch on a slow network
+     * plus a little user think-time, and no longer - the hint is a UI convenience, so it should not
+     * sit at rest beyond the window the flow needs. Hints are additionally single-use.
+     */
+    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 180),
+
+    /**
+     * Treats a broker-install redirect that carries no {@code intuneAppProtection=1} marker as a
+     * MAM Conditional Access install anyway.
+     * <p>
+     * The MAM-CA onboarding behaviors are scoped to the MAM-CA path by that server-side marker. This
+     * flight exists only so the client behavior can be validated and rolled out before the marker is
+     * live; it must be turned off once the server emits it, otherwise the MAM-CA behaviors also
+     * apply to ordinary (non-MAM) broker installs. Default off.
+     */
+    ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER("EnableMamCaInstallWithoutMarker", false);
 
     private String key;
     private Object defaultValue;

@@ -95,6 +95,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CLIENT_ID;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
@@ -371,12 +372,34 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public Map<Integer, UrlStatus> getUrlStatusMap() {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
-                }
+                },
+                getClientIdFromRequestUrl()
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
+    }
+
+    /**
+     * Reads {@code client_id} off the authorization request URL, so the WebView client can scope
+     * per-app state to the app being authorized.
+     *
+     * @return the client id, or null when it cannot be determined.
+     */
+    @Nullable
+    private String getClientIdFromRequestUrl() {
+        final String methodTag = TAG + ":getClientIdFromRequestUrl";
+        if (StringUtil.isNullOrEmpty(mAuthorizationRequestUrl)) {
+            return null;
+        }
+
+        try {
+            return Uri.parse(mAuthorizationRequestUrl).getQueryParameter(CLIENT_ID);
+        } catch (final UnsupportedOperationException e) {
+            Logger.warn(methodTag, "Could not read the client id off the request url.");
+            return null;
+        }
     }
 
     @Override

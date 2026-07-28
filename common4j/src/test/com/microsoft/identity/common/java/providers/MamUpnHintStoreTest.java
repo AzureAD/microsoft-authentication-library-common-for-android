@@ -24,9 +24,11 @@
 package com.microsoft.identity.common.java.providers;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -37,241 +39,359 @@ import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.After;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Unit tests for {@link MamUpnHintStore}: the TTL-bounded, self-cleaning UPN hint that lets an
- * interactive request made after a Conditional-Access broker-install interruption pre-fill the
- * address the user already typed (Feature AB#3676213).
+ * Unit tests for {@link MamUpnHintStore}: the TTL-bounded, single-use, per-client UPN hint that lets
+ * the interactive request made after a MAM Conditional Access broker-install interruption pre-fill
+ * the address the user already typed (Feature AB#3676213).
  */
 public class MamUpnHintStoreTest {
 
     private static final String UPN = "user@contoso.onmicrosoft.com";
     private static final String OTHER_UPN = "someone.else@contoso.onmicrosoft.com";
+    private static final String CLIENT_ID = "a-client-id";
+    private static final String OTHER_CLIENT_ID = "another-client-id";
     private static final long NOW = 1_700_000_000_000L;
+    private static final long TTL = 180_000L;
 
     // region storage-level read/write (injected clock)
 
     @Test
-    public void save_thenGetWithinTtl_returnsUpn() {
+    public void save_thenReadWithinTtl_returnsUpn() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, NOW));
-        assertEquals("a hint must stay usable right up to the last millisecond of its TTL",
-                UPN,
-                MamUpnHintStore.getValidUpnHint(
-                        storage, NOW + MamUpnHintStore.DEFAULT_TTL_MILLISECONDS - 1));
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL - 1, TTL));
     }
 
     @Test
-    public void get_atExactExpiry_returnsNullAndSweepsRecord() {
+    public void read_isSingleUse_secondReadReturnsNull() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertNull("expiry is exclusive - at the expiry instant the hint is gone",
-                MamUpnHintStore.getValidUpnHint(
-                        storage, NOW + MamUpnHintStore.DEFAULT_TTL_MILLISECONDS));
-        assertStoreIsEmpty(storage);
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertNull("a hint must not be replayable onto a later request",
+                MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void get_afterExpiry_returnsNullAndSweepsRecord() {
+    public void read_exactlyAtTtl_isExpired() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertNull(MamUpnHintStore.getValidUpnHint(
-                storage, NOW + MamUpnHintStore.DEFAULT_TTL_MILLISECONDS + 1));
-        assertStoreIsEmpty(storage);
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void get_upnWithoutExpiry_returnsNullAndSweepsRecord() {
-        // Simulates the process dying between the two writes: a UPN we cannot age out must not be
-        // handed back, because it would then live forever.
+    public void read_afterTtl_returnsNullAndDeletesRecord() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        storage.put(MamUpnHintStore.KEY_UPN, UPN);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, NOW));
-        assertStoreIsEmpty(storage);
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL + 1, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void get_expiryWithoutUpn_returnsNullAndSweepsRecord() {
+    public void read_clockWentBackwards_returnsNullAndDeletesRecord() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        storage.put(MamUpnHintStore.KEY_EXPIRES_AT, String.valueOf(NOW + 1000L));
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, NOW));
-        assertStoreIsEmpty(storage);
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW - 1, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void get_corruptExpiry_returnsNullAndSweepsRecord() {
+    public void read_halfWrittenRecord_returnsNullAndDeletesRecord() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        storage.put(MamUpnHintStore.KEY_UPN, UPN);
-        storage.put(MamUpnHintStore.KEY_EXPIRES_AT, "not-a-number");
+        // The two keys are written non-atomically, so a crash in between can leave just the UPN.
+        storage.put(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID, UPN);
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, NOW));
-        assertStoreIsEmpty(storage);
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void get_emptyStore_returnsNull() {
-        assertNull(MamUpnHintStore.getValidUpnHint(new InMemoryStorage<String>(), NOW));
+    public void read_nonNumericWrittenAt_returnsNullAndDeletesRecord() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        storage.put(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID, UPN);
+        storage.put(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + CLIENT_ID, "not-a-number");
+
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertRecordAbsent(storage, CLIENT_ID);
     }
 
     @Test
-    public void save_overwritesPreviousHint() {
-        final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
-        MamUpnHintStore.saveUpnHint(storage, OTHER_UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
-
-        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, NOW));
+    public void read_missingRecord_returnsNull() {
+        assertNull(MamUpnHintStore.getValidUpnHint(new InMemoryStorage<String>(), CLIENT_ID, NOW, TTL));
     }
 
     @Test
-    public void clear_removesBothKeys() {
+    public void save_overwritesPreviousHintForSameClient() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, UPN, NOW, MamUpnHintStore.DEFAULT_TTL_MILLISECONDS);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, OTHER_UPN, NOW + 1);
 
-        MamUpnHintStore.clearUpnHint(storage);
-
-        assertStoreIsEmpty(storage);
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, NOW));
+        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 1, TTL));
     }
 
     // endregion
 
-    // region flight gate
+    // region per-client keying
+
+    @Test
+    public void read_isScopedToClientId() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+
+        assertNull("one client must not see another client's hint",
+                MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL));
+        assertEquals("and the owning client's hint must survive that read",
+                UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+    }
+
+    @Test
+    public void save_twoClients_areStoredIndependently() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW);
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL));
+    }
+
+    @Test
+    public void save_nullClientId_isKeyedConsistently() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, null, UPN, NOW);
+
+        assertNotNull("a null client id must fall back to a stable key",
+                storage.get(MamUpnHintStore.KEY_PREFIX_UPN + MamUpnHintStore.UNKNOWN_CLIENT_ID));
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, null, NOW, TTL));
+    }
+
+    @Test
+    public void clear_removesOnlyTheGivenClientsRecord() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW);
+
+        MamUpnHintStore.clearUpnHint(storage, CLIENT_ID);
+
+        assertRecordAbsent(storage, CLIENT_ID);
+        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL));
+    }
+
+    // endregion
+
+    // region sweep
+
+    @Test
+    public void read_sweepsExpiredRecordsBelongingToOtherClients() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW + TTL);
+
+        // Reading our own fresh hint must also take out the other client's stale one.
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL));
+        assertRecordAbsent(storage, OTHER_CLIENT_ID);
+    }
+
+    @Test
+    public void read_sweepsHalfWrittenRecordsBelongingToOtherClients() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        // A dangling timestamp with no UPN - the other half of a torn write.
+        storage.put(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + OTHER_CLIENT_ID, Long.toString(NOW));
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertRecordAbsent(storage, OTHER_CLIENT_ID);
+    }
+
+    @Test
+    public void read_leavesOtherClientsStillValidRecordsAlone() {
+        final INameValueStorage<String> storage = new InMemoryStorage<>();
+        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL));
+    }
+
+    // endregion
+
+    // region MAM-CA marker gate
+
+    @Test
+    public void saveForMamCaInstall_markedRedirect_isStored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true));
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_unmarkedRedirect_isIgnored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, false));
+
+        assertNull("an ordinary device-registration install must not store a hint",
+                MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_unmarkedRedirect_withoutMarkerFlightOn_isStored() {
+        setFlights(true, true);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, false));
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_flightOff_isIgnored() {
+        setFlights(false, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true));
+
+        setFlights(true, false);
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_errorResponse_brokerInstallAndMarked_isStored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
+                errorResponse(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, UPN, true));
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_errorResponse_brokerInstallButUnmarked_isIgnored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
+                errorResponse(MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, UPN, false));
+
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_errorResponse_otherError_isIgnored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
+                errorResponse("some_other_error", UPN, true));
+
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void saveForMamCaInstall_errorResponse_null_isIgnored() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, (AuthorizationErrorResponse) null);
+
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    // endregion
+
+    // region flighting
 
     @Test
     public void save_flightOff_storesNothing() {
-        setUpnHintFlight(false);
+        setFlights(false, false);
         final IPlatformComponents components = components();
 
-        MamUpnHintStore.saveUpnHint(components, UPN);
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        assertStoreIsEmpty(storageOf(components));
+        setFlights(true, false);
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
-    public void saveAndGet_flightOn_roundTripsThroughPlatformStorage() {
-        setUpnHintFlight(true);
+    public void read_flightOff_returnsNull() {
+        setFlights(true, false);
         final IPlatformComponents components = components();
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        MamUpnHintStore.saveUpnHint(components, UPN);
+        setFlights(false, false);
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components));
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
-    public void get_flightOff_neverReturnsAnExistingHint() {
-        setUpnHintFlight(true);
+    public void clear_isNotGatedOnTheFlight() {
+        setFlights(true, false);
         final IPlatformComponents components = components();
-        MamUpnHintStore.saveUpnHint(components, UPN);
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        setUpnHintFlight(false);
+        setFlights(false, false);
+        MamUpnHintStore.clearUpnHint(components, CLIENT_ID);
 
-        assertNull(MamUpnHintStore.getValidUpnHint(components));
+        setFlights(true, false);
+        assertNull("cleanup must work even after the flight is turned off",
+                MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
-    public void clear_worksEvenWithFlightOff() {
-        // Cleanup is deliberately ungated so a hint stored before the flight was turned off can
-        // still be removed.
-        setUpnHintFlight(true);
-        final IPlatformComponents components = components();
-        MamUpnHintStore.saveUpnHint(components, UPN);
+    public void ttl_isReadFromTheFlight() {
+        setFlights(true, false);
 
-        setUpnHintFlight(false);
-        MamUpnHintStore.clearUpnHint(components);
-
-        setUpnHintFlight(true);
-        assertNull(MamUpnHintStore.getValidUpnHint(components));
+        assertEquals(1000L * (Integer) CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS.getDefaultValue(),
+                MamUpnHintStore.getTtlMillis());
     }
 
     @Test
-    public void save_noFlightsManager_defaultsOffAndStoresNothing() {
+    public void save_blankUpn_storesNothing() {
+        setFlights(true, false);
         final IPlatformComponents components = components();
 
-        MamUpnHintStore.saveUpnHint(components, UPN);
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, "   ");
 
-        assertStoreIsEmpty(storageOf(components));
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void save_nullComponents_isSwallowed() {
+        setFlights(true, false);
+
+        MamUpnHintStore.saveUpnHint(null, CLIENT_ID, UPN);
+        assertNull(MamUpnHintStore.getValidUpnHint(null, CLIENT_ID));
+        MamUpnHintStore.clearUpnHint((IPlatformComponents) null, CLIENT_ID);
     }
 
     // endregion
 
-    // region null / blank tolerance
+    // region parameter pre-fill
 
     @Test
-    public void save_blankUpnOrNullComponents_isANoOp() {
-        setUpnHintFlight(true);
-        final IPlatformComponents components = components();
-
-        MamUpnHintStore.saveUpnHint(components, null);
-        MamUpnHintStore.saveUpnHint(components, "");
-        MamUpnHintStore.saveUpnHint(null, UPN);
-
-        assertStoreIsEmpty(storageOf(components));
-    }
-
-    @Test
-    public void get_nullComponents_returnsNull() {
-        setUpnHintFlight(true);
-        assertNull(MamUpnHintStore.getValidUpnHint(null));
-    }
-
-    @Test
-    public void clear_nullComponents_doesNotThrow() {
-        MamUpnHintStore.clearUpnHint((IPlatformComponents) null);
-    }
-
-    // endregion
-
-    // region saveUpnHintForBrokerInstall
-
-    @Test
-    public void saveForBrokerInstall_brokerInstallError_storesUpn() {
-        setUpnHintFlight(true);
-        final IPlatformComponents components = components();
-
-        MamUpnHintStore.saveUpnHintForBrokerInstall(components,
-                MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, UPN);
-
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components));
-    }
-
-    @Test
-    public void saveForBrokerInstall_anyOtherError_storesNothing() {
-        setUpnHintFlight(true);
-        final IPlatformComponents components = components();
-
-        MamUpnHintStore.saveUpnHintForBrokerInstall(components, "access_denied", UPN);
-        MamUpnHintStore.saveUpnHintForBrokerInstall(components, null, UPN);
-
-        assertStoreIsEmpty(storageOf(components));
-    }
-
-    // endregion
-
-    // region applyStoredUpnHintIfAbsent
-
-    @Test
-    public void apply_noStoredHint_returnsSameInstance() {
-        setUpnHintFlight(true);
+    public void apply_absentLoginHint_isFilledFromTheStore() {
+        setFlights(true, false);
         final InteractiveTokenCommandParameters parameters = parameters(null);
-
-        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
-    }
-
-    @Test
-    public void apply_storedHintAndNoLoginHint_prefillsLoginHint() {
-        setUpnHintFlight(true);
-        final InteractiveTokenCommandParameters parameters = parameters(null);
-        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), UPN);
+        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
 
         final InteractiveTokenCommandParameters updated =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters);
@@ -282,9 +402,9 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_callerSuppliedLoginHint_isNeverOverwritten() {
-        setUpnHintFlight(true);
+        setFlights(true, false);
         final InteractiveTokenCommandParameters parameters = parameters(OTHER_UPN);
-        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), UPN);
+        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
 
         final InteractiveTokenCommandParameters updated =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters);
@@ -294,34 +414,76 @@ public class MamUpnHintStoreTest {
     }
 
     @Test
-    public void apply_flightOff_returnsSameInstance() {
-        setUpnHintFlight(true);
+    public void apply_hintStoredByAnotherClient_isNotUsed() {
+        setFlights(true, false);
         final InteractiveTokenCommandParameters parameters = parameters(null);
-        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), UPN);
-
-        setUpnHintFlight(false);
+        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), OTHER_CLIENT_ID, UPN);
 
         assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
     }
 
     @Test
+    public void apply_flightOff_returnsSameInstance() {
+        setFlights(true, false);
+        final InteractiveTokenCommandParameters parameters = parameters(null);
+        MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
+
+        setFlights(false, false);
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
+    }
+
+    @Test
+    public void apply_isSingleUse_secondRequestIsNotPreFilled() {
+        setFlights(true, false);
+        final InteractiveTokenCommandParameters first = parameters(null);
+        MamUpnHintStore.saveUpnHint(first.getPlatformComponents(), CLIENT_ID, UPN);
+
+        assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(first).getLoginHint());
+
+        final InteractiveTokenCommandParameters second = InteractiveTokenCommandParameters.builder()
+                .platformComponents(first.getPlatformComponents())
+                .clientId(CLIENT_ID)
+                .build();
+        assertSame(second, MamUpnHintStore.applyStoredUpnHintIfAbsent(second));
+    }
+
+    @Test
     public void apply_preservesOtherParameters() {
-        setUpnHintFlight(true);
+        setFlights(true, false);
         final IPlatformComponents components = components();
         final InteractiveTokenCommandParameters parameters = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
-                .clientId("a-client-id")
+                .clientId(CLIENT_ID)
                 .redirectUri("msauth://com.contoso.app/signature")
                 .build();
-        MamUpnHintStore.saveUpnHint(components, UPN);
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
         final InteractiveTokenCommandParameters updated =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters);
 
         assertEquals(UPN, updated.getLoginHint());
-        assertEquals("a-client-id", updated.getClientId());
+        assertEquals(CLIENT_ID, updated.getClientId());
         assertEquals("msauth://com.contoso.app/signature", updated.getRedirectUri());
         assertSame(components, updated.getPlatformComponents());
+    }
+
+    // endregion
+
+    // region round trip through a real (mock-backed) store
+
+    @Test
+    public void roundTrip_throughPlatformComponents_isSingleUseAndScoped() {
+        setFlights(true, false);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
+        assertTrue(storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
+
+        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+        assertFalse("the record must be gone once handed out",
+                storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
+        assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     // endregion
@@ -340,20 +502,50 @@ public class MamUpnHintStoreTest {
     private static InteractiveTokenCommandParameters parameters(final String loginHint) {
         return InteractiveTokenCommandParameters.builder()
                 .platformComponents(components())
+                .clientId(CLIENT_ID)
                 .loginHint(loginHint)
                 .build();
     }
 
-    private static void assertStoreIsEmpty(final INameValueStorage<String> storage) {
-        assertNull(storage.get(MamUpnHintStore.KEY_UPN));
-        assertNull(storage.get(MamUpnHintStore.KEY_EXPIRES_AT));
+    /** Builds the query parameters of a {@code msauth://wpj} broker-install redirect. */
+    private static Map<String, String> redirect(final String upn, final boolean mamCaMarked) {
+        final Map<String, String> parameters = new HashMap<>();
+        parameters.put(MamCaRedirect.KEY_USERNAME, upn);
+        parameters.put("app_link", "https://play.google.com/store/apps/details?id=com.contoso.cp");
+        if (mamCaMarked) {
+            parameters.put(MamCaRedirect.KEY_INTUNE_APP_PROTECTION,
+                    MamCaRedirect.VALUE_INTUNE_APP_PROTECTION_ENABLED);
+        }
+        return parameters;
     }
 
-    /** Enables or disables the {@code ENABLE_BROKER_INSTALL_UPN_HINT} flight for one test. */
-    private static void setUpnHintFlight(final boolean enabled) {
+    private static AuthorizationErrorResponse errorResponse(final String error,
+                                                            final String upn,
+                                                            final boolean mamCaInstall) {
+        final AuthorizationErrorResponse response = new AuthorizationErrorResponse(error, "description");
+        response.setUpnToWpj(upn);
+        response.setMamCaInstall(mamCaInstall);
+        return response;
+    }
+
+    private static void assertRecordAbsent(final INameValueStorage<String> storage,
+                                           final String clientId) {
+        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_UPN + clientId));
+        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + clientId));
+    }
+
+    /**
+     * Sets the two flights this store reads for one test.
+     *
+     * @param upnHintEnabled      value of {@code ENABLE_MAM_CA_UPN_HINT}.
+     * @param withoutMarkerEnabled value of {@code ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER}.
+     */
+    private static void setFlights(final boolean upnHintEnabled, final boolean withoutMarkerEnabled) {
         final MockFlightsProvider provider = new MockFlightsProvider();
-        provider.addFlight(CommonFlight.ENABLE_BROKER_INSTALL_UPN_HINT.getKey(),
-                Boolean.toString(enabled));
+        provider.addFlight(CommonFlight.ENABLE_MAM_CA_UPN_HINT.getKey(),
+                Boolean.toString(upnHintEnabled));
+        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER.getKey(),
+                Boolean.toString(withoutMarkerEnabled));
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);

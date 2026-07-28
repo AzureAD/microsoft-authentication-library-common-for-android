@@ -117,7 +117,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
-import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.UPN_TO_WPJ_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
@@ -169,6 +168,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SpanContext mSpanContext;
     private final String mUtid;
 
+    /**
+     * Client id of the request being authorized, when known. Used to scope the MAM Conditional
+     * Access UPN hint to the app that was interrupted.
+     */
+    @Nullable
+    private final String mClientId;
+
     private String mPasskeyRegistrationScript;
 
     /**
@@ -194,6 +200,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl,
+                switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase,
+                urlLoadTracker, null);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String clientId) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
@@ -202,6 +222,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mUrlLoadTracker = urlLoadTracker;
+        mClientId = clientId;
     }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -1231,16 +1252,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
 
-        // MAM broker-install onboarding: the service tells us which account is being onboarded on
-        // this redirect. Installing the broker usually kills this process, so remember the UPN now
-        // and pre-fill it on the request the user makes when they come back, instead of asking them
-        // to type their address again. No-op unless the flight is on.
+        // MAM Conditional Access onboarding: the service tells us which account is being onboarded
+        // on this redirect. Installing Company Portal usually kills this process, so remember the UPN
+        // now and pre-fill it on the request the user makes when they come back, instead of asking
+        // them to type their address again. No-op unless the flight is on and the redirect is marked
+        // as the MAM-CA path.
         final Activity installRequestActivity = getActivity();
         if (installRequestActivity != null) {
-            MamUpnHintStore.saveUpnHint(
+            MamUpnHintStore.saveUpnHintForMamCaInstall(
                     AndroidPlatformComponentsFactory.createFromContext(
                             installRequestActivity.getApplicationContext()),
-                    parameters.get(UPN_TO_WPJ_KEY)
+                    mClientId,
+                    parameters
             );
         }
 

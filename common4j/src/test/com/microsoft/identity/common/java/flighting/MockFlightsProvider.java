@@ -51,22 +51,27 @@ public class MockFlightsProvider implements IFlightsProvider {
 
     @Override
     public boolean getBooleanValue(IFlightConfig flightConfig) {
-        return false;
+        return isFlightEnabled(flightConfig);
     }
 
     @Override
     public int getIntValue(IFlightConfig flightConfig) {
-        return 0;
+        return Integer.parseInt(
+                mFlights.getOrDefault(
+                        flightConfig.getKey(), flightConfig.getDefaultValue().toString()));
     }
 
     @Override
     public double getDoubleValue(IFlightConfig flightConfig) {
-        return 0;
+        return Double.parseDouble(
+                mFlights.getOrDefault(
+                        flightConfig.getKey(), flightConfig.getDefaultValue().toString()));
     }
 
     @Override
     public String getStringValue(IFlightConfig flightConfig) {
-        return null;
+        return mFlights.getOrDefault(
+                flightConfig.getKey(), flightConfig.getDefaultValue().toString());
     }
 
     @Override
