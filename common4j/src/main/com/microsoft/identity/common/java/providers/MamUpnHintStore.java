@@ -63,8 +63,9 @@ import lombok.NonNull;
  *   <li>Each record stores <em>when it was written</em>, and validity is decided at read time
  *       against {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}. Storing the write time rather than
  *       an absolute expiry means changing that flight also governs records already on disk.</li>
- *   <li>Reads are <b>single-use</b>: a hint that is handed out is deleted in the same call, so it
- *       can never be replayed onto a later, unrelated request.</li>
+ *   <li>A hint is <b>spent when it is used</b>, not when it is read, so it can never be replayed onto
+ *       a later, unrelated request. Reads are deliberately non-destructive because this flow reaches
+ *       the caller's account screen more than once - see {@link #getValidUpnHint}.</li>
  *   <li>Every read also sweeps out <em>all</em> expired or half-written records, for every client
  *       id, so nothing lingers at rest beyond the window the flow needs.</li>
  * </ul>
@@ -196,7 +197,7 @@ public final class MamUpnHintStore {
 
         saveUpnHint(storage, clientId, upn, System.currentTimeMillis());
         Logger.info(methodTag, "Stored a UPN hint for the MAM-CA broker-install flow; it is usable for "
-                + (getTtlMillis() / 1000L) + "s and only once.");
+                + (getTtlMillis() / 1000L) + "s, until it is carried into a request.");
     }
 
     /**
