@@ -220,6 +220,15 @@ public final class MamUpnHintStore {
      * Returns {@code clientId}'s stored UPN if - and only if - it is still within its TTL, and
      * deletes it in the same call so it is used at most once. Also sweeps out every expired or
      * half-written record, for every client id.
+     * <p>
+     * <b>Call this when the account-entry screen is shown, not only when the process starts.</b>
+     * Installing the broker does not reliably kill the calling app: when the process survives, the
+     * user returns to an already-created screen, so a hint read wired to process or view creation
+     * never runs and the field is left empty. Reading on every presentation is safe - the hint is
+     * single-use and self-clearing, so a read that finds nothing simply returns {@code null}.
+     * <p>
+     * Apps whose interactive requests flow through {@link InteractiveTokenCommandParameters} do not
+     * need this at all; {@link #applyStoredUpnHintIfAbsent} already applies the hint for them.
      *
      * @param components platform components providing the storage.
      * @param clientId   client id to read the hint for.
