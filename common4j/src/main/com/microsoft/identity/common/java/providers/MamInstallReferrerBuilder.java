@@ -45,9 +45,9 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * the app that caused the install when the Play install referrer names it, so this is the whole of
  * the client-side change: append {@code referrer=<callingAppPackage>}.
  * <p>
- * <b>Scope.</b> Only the MAM-CA install path is tagged. The same {@code msauth://wpj} redirect also
- * drives ordinary device-registration installs, which must keep their existing behavior, so the
- * decoration is gated on {@link MamCaRedirect#isMamCaInstall(Map)} as well as on
+ * <b>Scope.</b> Only the MAM-CA install path is tagged. The same broker-install redirect also drives
+ * ordinary device-registration installs, which must keep their existing behavior, so the decoration
+ * is gated on {@link MamCaRedirect#isMamCaInstall(Map)} as well as on
  * {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER}.
  * <p>
  * <b>Safety.</b> Every entry point returns the original {@code app_link} unchanged if anything is
@@ -75,7 +75,7 @@ public final class MamInstallReferrerBuilder {
      *
      * @param appLink            the server-provided Play Store install link.
      * @param originPkg          the calling app package name (typically {@code Context#getPackageName()}).
-     * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
+     * @param redirectParameters query parameters of the broker-install redirect.
      * @return the decorated link when MAM-CA referrer tagging applies, otherwise the original {@code appLink}.
      */
     public static String decorateAppLinkForMamCaInstall(final String appLink,

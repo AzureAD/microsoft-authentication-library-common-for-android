@@ -326,18 +326,7 @@ public enum CommonFlight implements IFlightConfig {
      * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off the install
      * launch is unchanged.
      */
-    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false),
-
-    /**
-     * Treats a broker-install redirect that carries no {@code intuneAppProtection=1} marker as a
-     * MAM Conditional Access install anyway.
-     * <p>
-     * The MAM-CA onboarding behaviors are scoped to the MAM-CA path by that server-side marker. This
-     * flight exists only so the client behavior can be validated and rolled out before the marker is
-     * live; it must be turned off once the server emits it, otherwise the MAM-CA behaviors also
-     * apply to ordinary (non-MAM) broker installs. Default off.
-     */
-    ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER("EnableMamCaInstallWithoutMarker", false);
+    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false);
 
     private String key;
     private Object defaultValue;

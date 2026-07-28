@@ -143,16 +143,6 @@ public class MamInstallReferrerBuilderTest {
     }
 
     @Test
-    public void gated_flightOnAndNoMarker_butWithoutMarkerFlightOn_decorates() {
-        // The rollout escape hatch: validate the client behavior before the server marker ships.
-        setFlights(true, true);
-
-        assertEquals(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG),
-                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
-                        CP_APP_LINK, ORIGIN_PKG, new HashMap<String, String>()));
-    }
-
-    @Test
     public void gated_nullRedirectParameters_returnsOriginalUnchanged() {
         setMamCaReferrerFlight(true);
 
@@ -208,15 +198,9 @@ public class MamInstallReferrerBuilderTest {
 
     /** Enables or disables the MAM-CA install referrer flight for the duration of a test. */
     private static void setMamCaReferrerFlight(final boolean enabled) {
-        setFlights(enabled, false);
-    }
-
-    private static void setFlights(final boolean referrerEnabled, final boolean withoutMarkerEnabled) {
         final MockFlightsProvider provider = new MockFlightsProvider();
         provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER.getKey(),
-                Boolean.toString(referrerEnabled));
-        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER.getKey(),
-                Boolean.toString(withoutMarkerEnabled));
+                Boolean.toString(enabled));
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
