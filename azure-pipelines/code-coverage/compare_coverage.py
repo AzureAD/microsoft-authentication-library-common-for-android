@@ -61,16 +61,17 @@ def _aggregate(paths, metric):
 VALID_METRICS = {"INSTRUCTION", "LINE", "BRANCH", "COMPLEXITY", "METHOD", "CLASS"}
 
 
-def _write_skip(args, metric, reason):
-    """Write a 'skipped/not gating' Markdown + JSON so downstream publish steps that
-    always run (succeededOrFailed) still find the expected output files."""
+def _write_status(args, metric, status, reason, failed):
+    """Write a status-only ('SKIPPED' or 'ERROR') Markdown + JSON so downstream publish
+    steps that always run (succeededOrFailed) still find the expected output files, and
+    so the published report matches the job outcome (skipped vs failed)."""
     if args.out_md:
         with open(args.out_md, "w", encoding="utf-8") as handle:
-            handle.write(f"# Code Coverage Comparison ({metric}) - SKIPPED\n\n{reason}\n")
+            handle.write(f"# Code Coverage Comparison ({metric}) - {status}\n\n{reason}\n")
     if args.out_json:
         with open(args.out_json, "w", encoding="utf-8") as handle:
-            json.dump({"metric": metric, "skipped": True, "reason": reason,
-                       "failed": False}, handle, indent=2)
+            json.dump({"metric": metric, "status": status.lower(), "reason": reason,
+                       "failed": failed}, handle, indent=2)
 
 
 def main():
@@ -112,9 +113,11 @@ def main():
         pr_paths.extend(glob.glob(pattern, recursive=True))
 
     if not pr_paths:
+        # PR coverage is required; a missing PR report is an error, not a skip.
+        reason = ("No PR coverage report was found, so no comparison could be made. "
+                  "PR coverage is required - failing.")
         sys.stderr.write(f"ERROR: no PR coverage files matched: {', '.join(args.pr)}\n")
-        _write_skip(args, metric, "No PR coverage report was found, so no comparison "
-                    "could be made (not gating).")
+        _write_status(args, metric, "ERROR", reason, failed=True)
         return 2
     if not base_paths:
         # No baseline (e.g. new module / first run): don't block the PR.
@@ -122,11 +125,28 @@ def main():
                   "compare against; skipping the coverage gate (not gating).")
         sys.stderr.write("WARNING: no base coverage files matched: "
                          f"{', '.join(args.base)}; skipping comparison (not gating).\n")
-        _write_skip(args, metric, reason)
+        _write_status(args, metric, "SKIPPED", reason, failed=False)
         return 0
 
     base = _aggregate(base_paths, metric)
     pr = _aggregate(pr_paths, metric)
+
+    # _aggregate() only warns on unreadable/invalid XML. If every report failed to
+    # parse the aggregate is empty, which would otherwise score 0% and produce a
+    # misleading PASS/FAIL - so treat an empty aggregate explicitly.
+    if not pr:
+        reason = ("PR coverage report(s) matched but none could be parsed (empty/invalid "
+                  f"JaCoCo XML or no '{metric}' counters). Failing.")
+        sys.stderr.write("ERROR: " + reason + "\n")
+        _write_status(args, metric, "ERROR", reason, failed=True)
+        return 2
+    if not base:
+        reason = ("Base (dev) coverage report(s) matched but none could be parsed "
+                  f"(empty/invalid JaCoCo XML or no '{metric}' counters); skipping the "
+                  "coverage gate (not gating).")
+        sys.stderr.write("WARNING: " + reason + "\n")
+        _write_status(args, metric, "SKIPPED", reason, failed=False)
+        return 0
 
     base_cov = sum(v["Covered"] for v in base.values())
     base_miss = sum(v["Missed"] for v in base.values())

@@ -54,7 +54,7 @@ stages:
           continueOnError: true
         - bash: |
             set -e
-            python "$(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py" \
+            python3 "$(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py" \
               --pr   "$(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/jacocoTestReport.xml" \
               --base "$(Pipeline.Workspace)/${{ parameters.devBranchReportArtifact }}/jacocoTestReport.xml" \
               --metric ${{ parameters.metric }} \
