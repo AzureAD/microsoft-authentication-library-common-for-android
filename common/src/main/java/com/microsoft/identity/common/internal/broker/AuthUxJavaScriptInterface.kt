@@ -73,6 +73,12 @@ class AuthUxJavaScriptInterface {
 
             val host = uri.host
 
+            // A scheme-only URI (e.g. "openid-vc://?request_uri=...") has a null host. Such URIs
+            // are not AAD interface URIs, so reject them instead of throwing on a null host.
+            if (host == null) {
+                return false
+            }
+
             // Otherwise, make sure uri is a valid uri
             // We only want to allow URIs that have the AAD uri hosts
             return host.endsWith(AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX) ||
