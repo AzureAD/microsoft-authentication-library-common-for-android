@@ -83,6 +83,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.MamCaRedirect;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
@@ -1229,6 +1230,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
 
+        // Names only - the redirect carries the user's UPN, so the URL itself is never logged. This
+        // is what tells us in the field whether the server is marking the MAM-CA install path yet.
+        MamCaRedirect.logRedirectParameterNames(methodTag, parameters);
+
         Logger.info(methodTag,"Launching the link to app:" + appLink);
         getCompletionCallback().onChallengeResponseReceived(result);
 
@@ -1247,13 +1252,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     view.stopLoading();
                     return;
                 }
-                // MAM broker-install request-resume: tag the Company Portal install launch with the
-                // calling app package as the Play install referrer so Company Portal can redirect back
-                // to us after install (CP-confirmed &referrer=<originPkg> pattern). The flight-gate lives
-                // in MamInstallReferrerBuilder; with the flight off the link is launched exactly as before.
-                final String link = MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrerIfEnabled(
+                // MAM Conditional Access onboarding: tag the Company Portal install launch with the
+                // calling app package as the Play install referrer, so Company Portal skips its own
+                // sign-in UX and redirects back to us after install. The flight- and MAM-CA-gates live
+                // in MamInstallReferrerBuilder; when they don't apply the link is launched as before.
+                final String link = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
                         appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
-                        activity.getPackageName());
+                        activity.getPackageName(),
+                        parameters);
                 final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 activity.startActivity(intent);
                 view.stopLoading();

@@ -182,7 +182,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
                 final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(
-                        decorateInstallLinkWithReferrer(appLink)));
+                        decorateInstallLinkWithReferrer(appLink, urlQueryParameters)));
                 startActivity(browserIntent);
                 break;
 

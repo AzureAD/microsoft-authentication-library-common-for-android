@@ -24,7 +24,6 @@
 package com.microsoft.identity.common.java.providers;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -34,228 +33,190 @@ import com.microsoft.identity.common.java.flighting.MockFlightsManager;
 import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
+import org.apache.hc.core5.http.NameValuePair;
 import org.junit.After;
 import org.junit.Test;
 
-import java.util.List;
+import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hc.core5.http.NameValuePair;
-
 /**
- * Unit tests for {@link MamInstallReferrerBuilder} (PBI-2). These graduate the earlier proof-of-concept
- * into production coverage: they build the packed referrer, prove it keeps the Company Portal Play link
- * on the real {@link BrokerInstallLinkValidator} allow-list, prove the encode/decode round-trip recovers
- * a base64 redirect URI byte-for-byte, and prove the decoration is null-safe (never breaks the existing
- * install launch).
+ * Tests for {@link MamInstallReferrerBuilder} - the MAM Conditional Access Phase 1 install-referrer
+ * decoration.
  */
 public class MamInstallReferrerBuilderTest {
 
     private static final String CP_ID = "com.microsoft.windowsintune.companyportal";
     private static final String CP_APP_LINK = "https://play.google.com/store/apps/details?id=" + CP_ID;
     private static final String ORIGIN_PKG = "com.microsoft.office.outlook";
-    // Realistic msauth redirect: base64 SHA-1 signature contains the tricky '+', '/', '=' characters.
-    private static final String REDIRECT_URI = "msauth://com.microsoft.office.outlook/GC+pJ8k9dItg3F1lZ7q2rY0aBcD=";
-    private static final String CID = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
 
-    // region buildReferrerValue
+    // region decorateAppLinkWithOriginReferrer (ungated)
 
     @Test
-    public void buildReferrerValue_startsWithSrcMamCa_andIsBoundedLength() {
-        final String referrer = MamInstallReferrerBuilder.buildReferrerValue(ORIGIN_PKG, REDIRECT_URI, CID);
-        assertTrue("src=mamca must be the discriminator", referrer.startsWith("src=mamca"));
-        assertTrue(referrer.contains("originPkg="));
-        assertTrue(referrer.contains("redirectUri="));
-        assertTrue(referrer.contains("cid=" + CID));
-        assertTrue("referrer must be comfortably under Play's practical limit",
-                referrer.length() < 1024);
-    }
-
-    // endregion
-
-    // region decorateAppLinkWithReferrer
-
-    @Test
-    public void decorate_keepsCompanyPortalLinkOnAllowlist() {
-        final String decorated = MamInstallReferrerBuilder.decorateAppLinkWithReferrer(
-                CP_APP_LINK, ORIGIN_PKG, REDIRECT_URI, CID);
-
-        assertTrue("decorated app_link must remain allow-listed:\n" + decorated,
-                BrokerInstallLinkValidator.isSafeBrokerInstallLink(decorated));
-    }
-
-    @Test
-    public void decorate_addsExactlyOneReferrerParam() throws Exception {
-        final String decorated = MamInstallReferrerBuilder.decorateAppLinkWithReferrer(
-                CP_APP_LINK, ORIGIN_PKG, REDIRECT_URI, CID);
-
-        int referrerCount = 0;
-        final List<NameValuePair> params = new CommonURIBuilder(decorated).getQueryParams();
-        for (final NameValuePair p : params) {
-            if (MamInstallReferrerBuilder.REFERRER_QUERY_PARAM.equals(p.getName())) {
-                referrerCount++;
-            }
-        }
-        assertEquals("exactly one referrer parameter", 1, referrerCount);
-    }
-
-    @Test
-    public void decorate_returnsOriginalUnchanged_whenAnyInputMissing() {
-        assertEquals(CP_APP_LINK,
-                MamInstallReferrerBuilder.decorateAppLinkWithReferrer(CP_APP_LINK, null, REDIRECT_URI, CID));
-        assertEquals(CP_APP_LINK,
-                MamInstallReferrerBuilder.decorateAppLinkWithReferrer(CP_APP_LINK, ORIGIN_PKG, "", CID));
-        assertEquals(CP_APP_LINK,
-                MamInstallReferrerBuilder.decorateAppLinkWithReferrer(CP_APP_LINK, ORIGIN_PKG, REDIRECT_URI, null));
-        assertNull(MamInstallReferrerBuilder.decorateAppLinkWithReferrer(null, ORIGIN_PKG, REDIRECT_URI, CID));
-    }
-
-    // endregion
-
-    // region round-trip (simulated Play delivery -> Company Portal parse)
-
-    @Test
-    public void referrer_roundTrips_recoveringBase64RedirectByteForByte() throws Exception {
-        final String decorated = MamInstallReferrerBuilder.decorateAppLinkWithReferrer(
-                CP_APP_LINK, ORIGIN_PKG, REDIRECT_URI, CID);
-
-        // The value Google Play hands to the installed app is the referrer param value, decoded once.
-        String deliveredReferrer = null;
-        for (final NameValuePair p : new CommonURIBuilder(decorated).getQueryParams()) {
-            if (MamInstallReferrerBuilder.REFERRER_QUERY_PARAM.equals(p.getName())) {
-                deliveredReferrer = p.getValue();
-            }
-        }
-
-        final Map<String, String> parsed = MamInstallReferrerBuilder.parseReferrer(deliveredReferrer);
-        assertEquals(MamInstallReferrerBuilder.SRC_MAM_CA, parsed.get(MamInstallReferrerBuilder.KEY_SRC));
-        assertEquals(ORIGIN_PKG, parsed.get(MamInstallReferrerBuilder.KEY_ORIGIN_PKG));
-        assertEquals(CID, parsed.get(MamInstallReferrerBuilder.KEY_CID));
-        assertEquals("base64 redirect (with + / =) must survive the round-trip",
-                REDIRECT_URI, parsed.get(MamInstallReferrerBuilder.KEY_REDIRECT_URI));
-    }
-
-    @Test
-    public void parseReferrer_emptyOrNull_returnsEmptyMap() {
-        assertTrue(MamInstallReferrerBuilder.parseReferrer(null).isEmpty());
-        assertTrue(MamInstallReferrerBuilder.parseReferrer("").isEmpty());
-    }
-
-    @Test
-    public void parseReferrer_malformedPercentEncoding_doesNotThrow_keepsRawValue() {
-        // URLDecoder.decode throws IllegalArgumentException on malformed percent-encoding (a lone
-        // '%' or bad hex like '%zz'); parseReferrer must stay defensive and never crash on bad input,
-        // returning the raw (un-decoded) value instead.
-        final Map<String, String> parsed = MamInstallReferrerBuilder.parseReferrer(
-                MamInstallReferrerBuilder.KEY_ORIGIN_PKG + "=bad%zz&" + MamInstallReferrerBuilder.KEY_CID + "=100%");
-        assertEquals("bad%zz", parsed.get(MamInstallReferrerBuilder.KEY_ORIGIN_PKG));
-        assertEquals("100%", parsed.get(MamInstallReferrerBuilder.KEY_CID));
-    }
-
-    // endregion
-
-    // region market:// fallback
-
-    @Test
-    public void marketFallback_carriesReferrer_targetsBroker_andIsNotHttps() {
-        final String market = MamInstallReferrerBuilder.buildMarketFallbackUri(CP_ID, ORIGIN_PKG, REDIRECT_URI, CID);
-
-        assertTrue(market.startsWith("market://details?id=" + CP_ID));
-        assertTrue(market.contains("referrer="));
-        // Not https, so it must be launched directly and never fed to the https-only allow-list validator.
-        assertFalse(BrokerInstallLinkValidator.isSafeBrokerInstallLink(market));
-    }
-
-    @Test
-    public void marketFallback_nullPackageId_returnsNull() {
-        assertNull(MamInstallReferrerBuilder.buildMarketFallbackUri(null, ORIGIN_PKG, REDIRECT_URI, CID));
-    }
-
-    // endregion
-
-    // region decorateAppLinkWithOriginReferrer (CP-compatible bare-origin form)
-
-    @Test
-    public void originReferrer_appendsBarePackage_andStaysAllowlisted() throws Exception {
+    public void decorate_appendsBareOriginReferrer() throws URISyntaxException {
         final String decorated =
                 MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG);
 
-        assertTrue("decorated app_link must remain allow-listed:\n" + decorated,
-                BrokerInstallLinkValidator.isSafeBrokerInstallLink(decorated));
-
-        String deliveredReferrer = null;
-        int referrerCount = 0;
-        for (final NameValuePair p : new CommonURIBuilder(decorated).getQueryParams()) {
-            if (MamInstallReferrerBuilder.REFERRER_QUERY_PARAM.equals(p.getName())) {
-                deliveredReferrer = p.getValue();
-                referrerCount++;
-            }
-        }
-        assertEquals("exactly one referrer parameter", 1, referrerCount);
-        assertEquals("referrer value is the bare origin package", ORIGIN_PKG, deliveredReferrer);
+        final Map<String, String> params = queryParametersOf(decorated);
+        assertEquals(CP_ID, params.get("id"));
+        assertEquals(ORIGIN_PKG, params.get(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM));
+        assertTrue("The Play Store path must be preserved.",
+                decorated.startsWith("https://play.google.com/store/apps/details"));
     }
 
     @Test
-    public void originReferrer_returnsOriginalUnchanged_whenAnyInputMissing() {
+    public void decorate_replacesAnyExistingReferrer_soExactlyOneResults() throws URISyntaxException {
+        final String linkWithReferrer = CP_APP_LINK + "&referrer=com.some.other.app";
+
+        final String decorated =
+                MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(linkWithReferrer, ORIGIN_PKG);
+
+        assertEquals(ORIGIN_PKG,
+                queryParametersOf(decorated).get(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM));
+        assertEquals("Exactly one referrer must survive.",
+                1, countOccurrences(decorated, "referrer="));
+    }
+
+    @Test
+    public void decorate_missingInputs_returnsOriginalUnchanged() {
+        assertNull(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(null, ORIGIN_PKG));
         assertEquals(CP_APP_LINK,
                 MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, null));
         assertEquals(CP_APP_LINK,
                 MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ""));
-        assertNull(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(null, ORIGIN_PKG));
+        assertEquals("", MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer("", ORIGIN_PKG));
+    }
+
+    @Test
+    public void decorate_unparseableAppLink_returnsOriginalUnchanged() {
+        // A broker install must never be broken by referrer decoration.
+        final String malformed = "https://play.google.com/store/apps/details?id=x^y|z";
+
+        assertEquals(malformed,
+                MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(malformed, ORIGIN_PKG));
     }
 
     // endregion
 
-    // region decorateAppLinkWithOriginReferrerIfEnabled (the single flight-gate)
+    // region decorateAppLinkForMamCaInstall (flight- and marker-gated)
 
     @Test
-    public void ifEnabled_flightOn_decoratesIdenticallyToUngatedForm() {
-        setBrokerInstallResumeFlight(true);
+    public void gated_flightOnAndMarkerPresent_decorates() {
+        setMamCaReferrerFlight(true);
 
-        final String gated = MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG);
-
-        // The gate must add nothing of its own: on the enabled path it is exactly the ungated decoration.
         assertEquals(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG),
-                gated);
-        assertTrue("flight-on path must actually decorate", gated.contains("referrer=" + ORIGIN_PKG));
-        assertTrue("decorated app_link must remain allow-listed:\n" + gated,
-                BrokerInstallLinkValidator.isSafeBrokerInstallLink(gated));
+                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                        CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()));
     }
 
     @Test
-    public void ifEnabled_flightOff_returnsOriginalUnchanged() {
-        setBrokerInstallResumeFlight(false);
+    public void gated_flightOff_returnsOriginalUnchanged() {
+        setMamCaReferrerFlight(false);
 
-        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG));
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()));
     }
 
     @Test
-    public void ifEnabled_noFlightsManager_defaultsOff_returnsOriginalUnchanged() {
+    public void gated_flightOnButNotAMamCaInstall_returnsOriginalUnchanged() {
+        // An ordinary device-registration broker install must keep behaving exactly as it does today.
+        setMamCaReferrerFlight(true);
+
+        final Map<String, String> plainInstall = new HashMap<>();
+        plainInstall.put("username", "user@contoso.com");
+        plainInstall.put("app_link", CP_APP_LINK);
+
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, ORIGIN_PKG, plainInstall));
+    }
+
+    @Test
+    public void gated_flightOnButMarkerNotEnabledValue_returnsOriginalUnchanged() {
+        setMamCaReferrerFlight(true);
+
+        final Map<String, String> disabledMarker = new HashMap<>();
+        disabledMarker.put(MamCaRedirect.KEY_INTUNE_APP_PROTECTION, "0");
+
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, ORIGIN_PKG, disabledMarker));
+    }
+
+    @Test
+    public void gated_flightOnAndNoMarker_butWithoutMarkerFlightOn_decorates() {
+        // The rollout escape hatch: validate the client behavior before the server marker ships.
+        setFlights(true, true);
+
+        assertEquals(MamInstallReferrerBuilder.decorateAppLinkWithOriginReferrer(CP_APP_LINK, ORIGIN_PKG),
+                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                        CP_APP_LINK, ORIGIN_PKG, new HashMap<String, String>()));
+    }
+
+    @Test
+    public void gated_nullRedirectParameters_returnsOriginalUnchanged() {
+        setMamCaReferrerFlight(true);
+
+        assertEquals(CP_APP_LINK,
+                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(CP_APP_LINK, ORIGIN_PKG, null));
+    }
+
+    @Test
+    public void gated_missingPackage_returnsOriginalUnchanged() {
+        setMamCaReferrerFlight(true);
+
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, null, mamCaRedirectParameters()));
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, "", mamCaRedirectParameters()));
+    }
+
+    @Test
+    public void gated_noFlightsManager_defaultsOff_returnsOriginalUnchanged() {
         // With no flights manager initialized, the CommonFlight default (false) applies.
-        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ORIGIN_PKG));
-    }
-
-    @Test
-    public void ifEnabled_flightOn_butPackageMissing_returnsOriginalUnchanged() {
-        setBrokerInstallResumeFlight(true);
-
-        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, null));
-        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(CP_APP_LINK, ""));
-        assertNull(MamInstallReferrerBuilder
-                .decorateAppLinkWithOriginReferrerIfEnabled(null, ORIGIN_PKG));
+        assertEquals(CP_APP_LINK, MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()));
     }
 
     // endregion
 
-    /** Enables or disables the {@code ENABLE_BROKER_INSTALL_RESUME} flight for the duration of a test. */
-    private static void setBrokerInstallResumeFlight(final boolean enabled) {
+    private static Map<String, String> mamCaRedirectParameters() {
+        final Map<String, String> parameters = new HashMap<>();
+        parameters.put("username", "user@contoso.com");
+        parameters.put("app_link", CP_APP_LINK);
+        parameters.put(MamCaRedirect.KEY_INTUNE_APP_PROTECTION,
+                MamCaRedirect.VALUE_INTUNE_APP_PROTECTION_ENABLED);
+        return parameters;
+    }
+
+    private static Map<String, String> queryParametersOf(final String url) throws URISyntaxException {
+        final Map<String, String> parameters = new HashMap<>();
+        for (final NameValuePair pair : new CommonURIBuilder(url).getQueryParams()) {
+            parameters.put(pair.getName(), pair.getValue());
+        }
+        return parameters;
+    }
+
+    private static int countOccurrences(final String haystack, final String needle) {
+        int count = 0;
+        int index = haystack.indexOf(needle);
+        while (index >= 0) {
+            count++;
+            index = haystack.indexOf(needle, index + needle.length());
+        }
+        return count;
+    }
+
+    /** Enables or disables the MAM-CA install referrer flight for the duration of a test. */
+    private static void setMamCaReferrerFlight(final boolean enabled) {
+        setFlights(enabled, false);
+    }
+
+    private static void setFlights(final boolean referrerEnabled, final boolean withoutMarkerEnabled) {
         final MockFlightsProvider provider = new MockFlightsProvider();
-        provider.addFlight(CommonFlight.ENABLE_BROKER_INSTALL_RESUME.getKey(), Boolean.toString(enabled));
+        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER.getKey(),
+                Boolean.toString(referrerEnabled));
+        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER.getKey(),
+                Boolean.toString(withoutMarkerEnabled));
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);

@@ -29,146 +29,81 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.StringUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 /**
- * Builds the Play Store install referrer for the MAM broker-install request-resume flow, and decorates
- * the broker install link with it (PBI-2, Feature AB#3676213).
+ * Tags the Company Portal install launch with the calling app package as the Play install referrer,
+ * for the MAM Conditional Access onboarding flow (Feature AB#3676213, Phase 1).
  * <p>
- * The referrer carries routing data only — {@code src=mamca}, the calling app package, the app's
- * redirect URI, and the parked request correlation id — so Company Portal can, on first launch, skip
- * its sign-in UX and redirect back to {@code <redirectUri>?mam_resume=<cid>}. It carries no UPN or
- * secrets (the UPN is out-of-band; see the resume engine).
+ * <b>Why.</b> When Conditional Access blocks an interactive request until Company Portal is
+ * installed, the user is sent to the Play Store. Without a referrer, Company Portal opens its own
+ * sign-in UX on first launch - which is both an extra sign-in and a way for the user to accidentally
+ * enrol the device into MDM. Company Portal already knows how to skip that UX and redirect back to
+ * the app that caused the install when the Play install referrer names it, so this is the whole of
+ * the client-side change: append {@code referrer=<callingAppPackage>}.
  * <p>
- * Wire contract (frozen): {@code src=mamca&originPkg=<pkg>&redirectUri=<uri>&cid=<cid>}, URL-encoded,
- * {@code &}-delimited {@code key=value}; parsed with {@code URLDecoder.decode} then
- * {@code Uri.parse("?"+s).getQueryParameter(k)} (the OneAuth {@code AccountTransfer} convention).
+ * <b>Scope.</b> Only the MAM-CA install path is tagged. The same {@code msauth://wpj} redirect also
+ * drives ordinary device-registration installs, which must keep their existing behavior, so the
+ * decoration is gated on {@link MamCaRedirect#isMamCaInstall(Map)} as well as on
+ * {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER}.
  * <p>
- * Two launch forms are supported: the primary decorates the eSTS-provided {@code https://play.google.com}
- * {@code app_link} with a single {@code referrer} parameter (kept on the {@code BrokerInstallLinkValidator}
- * allow-list); the fallback builds a {@code market://details?id=<pkg>&referrer=<...>} URI. Both feed the
- * same Play Install Referrer API on the installed app.
+ * <b>Safety.</b> Every entry point returns the original {@code app_link} unchanged if anything is
+ * missing or unparseable, so a broker install is never broken by referrer decoration.
  */
 public final class MamInstallReferrerBuilder {
 
     private static final String TAG = MamInstallReferrerBuilder.class.getSimpleName();
 
-    /** Referrer discriminator key. */
-    public static final String KEY_SRC = "src";
-    /** Calling app package name key. */
-    public static final String KEY_ORIGIN_PKG = "originPkg";
-    /** App redirect URI key (Company Portal appends {@code ?mam_resume=<cid>} to this). */
-    public static final String KEY_REDIRECT_URI = "redirectUri";
-    /** Parked request correlation id key. */
-    public static final String KEY_CID = "cid";
-
-    /** Locked discriminator value; Company Portal branches on {@code src == mamca}. */
-    public static final String SRC_MAM_CA = "mamca";
-
     /** The Play install referrer query-parameter name. */
     public static final String REFERRER_QUERY_PARAM = "referrer";
 
-    private static final String MARKET_DETAILS_PREFIX = "market://details?id=";
-    private static final String UTF_8 = "UTF-8";
-
     private MamInstallReferrerBuilder() {
+        // Utility class.
     }
 
     /**
-     * Builds the packed referrer value {@code src=mamca&originPkg=..&redirectUri=..&cid=..} with each
-     * value URL-encoded.
-     *
-     * @param originPkg   the calling app package name.
-     * @param redirectUri the app's redirect URI.
-     * @param cid         the parked request correlation id.
-     * @return the packed, inner-encoded referrer value.
-     */
-    public static String buildReferrerValue(final String originPkg,
-                                            final String redirectUri,
-                                            final String cid) {
-        return KEY_SRC + "=" + SRC_MAM_CA
-                + "&" + KEY_ORIGIN_PKG + "=" + encode(originPkg)
-                + "&" + KEY_REDIRECT_URI + "=" + encode(redirectUri)
-                + "&" + KEY_CID + "=" + encode(cid);
-    }
-
-    /**
-     * Primary launch form: appends the packed referrer as a single {@code referrer} parameter to the
-     * eSTS-provided {@code app_link}. Uses {@link CommonURIBuilder} so the outer percent-encoding is
-     * applied consistently and exactly one {@code referrer} parameter results.
+     * The single place the MAM-CA install-referrer decision is made: should this Company Portal
+     * install link be tagged with the calling app as the Play install referrer?
      * <p>
-     * Safe by design: if the {@code app_link} or any referrer input is null/blank, or the link cannot be
-     * parsed, the original {@code app_link} is returned unchanged so the existing install flow is never
-     * broken.
+     * Every broker-install launch site (the embedded WebView and the custom-tab / browser
+     * authorization fragments) funnels through here, so the gate is evaluated once rather than being
+     * copy-pasted per call site. Returns {@code appLink} unchanged when the flight is off, when the
+     * redirect is not a MAM-CA install, or when {@code originPkg} is missing.
      *
-     * @param appLink     the server-provided Play Store install link.
-     * @param originPkg   the calling app package name.
-     * @param redirectUri the app's redirect URI.
-     * @param cid         the parked request correlation id.
-     * @return the decorated link, or the original {@code app_link} if decoration is not possible.
+     * @param appLink            the server-provided Play Store install link.
+     * @param originPkg          the calling app package name (typically {@code Context#getPackageName()}).
+     * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
+     * @return the decorated link when MAM-CA referrer tagging applies, otherwise the original {@code appLink}.
      */
-    public static String decorateAppLinkWithReferrer(final String appLink,
-                                                     final String originPkg,
-                                                     final String redirectUri,
-                                                     final String cid) {
-        if (StringUtil.isNullOrEmpty(appLink)
-                || StringUtil.isNullOrEmpty(originPkg)
-                || StringUtil.isNullOrEmpty(redirectUri)
-                || StringUtil.isNullOrEmpty(cid)) {
+    public static String decorateAppLinkForMamCaInstall(final String appLink,
+                                                        final String originPkg,
+                                                        @Nullable final Map<String, String> redirectParameters) {
+        final String methodTag = TAG + ":decorateAppLinkForMamCaInstall";
+
+        if (StringUtil.isNullOrEmpty(originPkg)
+                || !CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER)
+                || !MamCaRedirect.isMamCaInstall(redirectParameters)) {
             return appLink;
         }
-        try {
-            return new CommonURIBuilder(appLink)
-                    .setParameter(REFERRER_QUERY_PARAM, buildReferrerValue(originPkg, redirectUri, cid))
-                    .build()
-                    .toString();
-        } catch (final URISyntaxException e) {
-            Logger.warn(TAG + ":decorateAppLinkWithReferrer",
-                    "Could not parse app_link to append the install referrer; launching it unchanged.");
-            return appLink;
-        }
+
+        final String decorated = decorateAppLinkWithOriginReferrer(appLink, originPkg);
+        Logger.info(methodTag,
+                "Tagged the Company Portal install launch with the calling app as the install referrer.");
+        return decorated;
     }
 
     /**
-     * Fallback launch form: builds {@code market://details?id=<playStoreId>&referrer=<encoded>} for use
-     * when appending to the {@code app_link} does not reliably reach Play.
-     *
-     * @param playStoreId the broker Play Store package id (e.g. Company Portal).
-     * @param originPkg   the calling app package name.
-     * @param redirectUri the app's redirect URI.
-     * @param cid         the parked request correlation id.
-     * @return the {@code market://} install URI, or {@code null} if the package id is null/blank.
-     */
-    public static String buildMarketFallbackUri(final String playStoreId,
-                                                final String originPkg,
-                                                final String redirectUri,
-                                                final String cid) {
-        if (StringUtil.isNullOrEmpty(playStoreId)) {
-            return null;
-        }
-        return MARKET_DETAILS_PREFIX + playStoreId
-                + "&" + REFERRER_QUERY_PARAM + "=" + encode(buildReferrerValue(originPkg, redirectUri, cid));
-    }
-
-    /**
-     * CP-compatible launch form (behavior confirmed with the Company Portal team; tracked in Feature
-     * 3676213): appends a single bare {@code referrer=<originPkg>} to the server-provided
-     * {@code app_link}, matching the {@code &referrer=<originAppPackage>} pattern Company Portal already
-     * supports today. This is the form used at the production launch site: it lets Company Portal
-     * identify — and redirect back to — the calling app, which (combined with the in-process park
-     * registry + foreground-fallback resume) is sufficient to resume without Company Portal having to
-     * round-trip the correlation id. The richer {@link #decorateAppLinkWithReferrer} form is reserved for
-     * the automatic {@code mam_resume=<cid>} path once Company Portal confirms it passes the full
-     * referrer value through to first launch.
+     * Appends a single {@code referrer=<originPkg>} to the server-provided {@code app_link}, the form
+     * Company Portal already recognises to skip its sign-in UX and redirect back to the calling app.
      * <p>
-     * Safe by design: if the {@code app_link} or {@code originPkg} is null/blank, or the link cannot be
-     * parsed, the original {@code app_link} is returned unchanged so the existing install flow is never
-     * broken.
+     * Ungated - callers decide whether decoration applies; use
+     * {@link #decorateAppLinkForMamCaInstall(String, String, Map)} for the gated entry point. Safe by
+     * design: if the {@code app_link} or {@code originPkg} is null/blank, or the link cannot be
+     * parsed, the original {@code app_link} is returned unchanged.
      *
      * @param appLink   the server-provided Play Store install link.
      * @param originPkg the calling app package name.
@@ -179,6 +114,8 @@ public final class MamInstallReferrerBuilder {
             return appLink;
         }
         try {
+            // setParameter (not addParameter) so exactly one referrer results, whatever the link
+            // already carried.
             return new CommonURIBuilder(appLink)
                     .setParameter(REFERRER_QUERY_PARAM, originPkg)
                     .build()
@@ -187,79 +124,6 @@ public final class MamInstallReferrerBuilder {
             Logger.warn(TAG + ":decorateAppLinkWithOriginReferrer",
                     "Could not parse app_link to append the install referrer; launching it unchanged.");
             return appLink;
-        }
-    }
-
-    /**
-     * Flight-gated entry point for the broker-install redirect: the single place the
-     * {@link CommonFlight#ENABLE_BROKER_INSTALL_RESUME} gate is evaluated. Every broker-install launch site
-     * (the embedded WebView and the custom-tab/browser authorization fragments) funnels through here, so the
-     * decision "should we tag this Company Portal install link with the calling app as the Play install
-     * referrer?" lives in one place instead of being copy-pasted per call site.
-     * <p>
-     * Returns the {@code appLink} unchanged when the flight is off or {@code originPkg} is null/blank, so the
-     * existing install launch is never altered unless the feature is explicitly enabled. Delegates the actual
-     * decoration (and its own null-safety) to {@link #decorateAppLinkWithOriginReferrer(String, String)}.
-     *
-     * @param appLink   the server-provided Play Store install link.
-     * @param originPkg the calling app package name (typically {@code Context#getPackageName()}).
-     * @return the decorated link when the flight is on, otherwise the original {@code appLink}.
-     */
-    public static String decorateAppLinkWithOriginReferrerIfEnabled(final String appLink,
-                                                                    final String originPkg) {
-        if (StringUtil.isNullOrEmpty(originPkg)
-                || !CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_RESUME)) {
-            return appLink;
-        }
-        return decorateAppLinkWithOriginReferrer(appLink, originPkg);
-    }
-
-    /**
-     * Parses a packed referrer value back into its key/value pairs. This mirrors the parse Company
-     * Portal performs on first launch (blueprint: OneAuth {@code AccountTransfer}).
-     *
-     * @param referrer the packed referrer value (as delivered by the Play Install Referrer API).
-     * @return an ordered map of the decoded key/value pairs (never {@code null}).
-     */
-    public static Map<String, String> parseReferrer(final String referrer) {
-        final Map<String, String> out = new LinkedHashMap<>();
-        if (StringUtil.isNullOrEmpty(referrer)) {
-            return out;
-        }
-        for (final String pair : referrer.split("&")) {
-            final int idx = pair.indexOf('=');
-            if (idx <= 0) {
-                continue;
-            }
-            out.put(pair.substring(0, idx), decode(pair.substring(idx + 1)));
-        }
-        return out;
-    }
-
-    private static String encode(final String value) {
-        if (value == null) {
-            return "";
-        }
-        try {
-            return URLEncoder.encode(value, UTF_8);
-        } catch (final UnsupportedEncodingException e) {
-            // UTF-8 is always supported; return the raw value defensively.
-            return value;
-        }
-    }
-
-    private static String decode(final String value) {
-        if (value == null) {
-            return "";
-        }
-        try {
-            return URLDecoder.decode(value, UTF_8);
-        } catch (final UnsupportedEncodingException | IllegalArgumentException e) {
-            // UTF-8 is always supported; IllegalArgumentException guards against malformed
-            // percent-encoding (e.g. a lone '%' or '%zz'). Return the raw value defensively so
-            // parseReferrer never crashes on bad input.
-            return value;
         }
     }
 }

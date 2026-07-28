@@ -315,19 +315,29 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
 
     /**
-     * Master gate for the multi-phase MAM broker-install onboarding improvement. Delivered in phases:
-     * <ul>
-     *   <li><b>Phase 1 (the behavior this flag gates today):</b> when an interactive request is blocked
-     *       by a Conditional-Access "install broker" (Company Portal) response, the Company Portal
-     *       install launch is tagged with the calling app package as the Play install referrer so
-     *       Company Portal can redirect the user straight back to the calling app after install.</li>
-     *   <li><b>Later phases:</b> park the blocked request in-memory and, once the broker is installed,
-     *       replay it silently and deliver the token on the original callback.</li>
-     * </ul>
-     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off, the pre-existing
-     * terminal install-required behavior is unchanged.
+     * MAM Conditional Access onboarding, Phase 1 - Company Portal auto-redirect.
+     * <p>
+     * When an interactive request is blocked by a Conditional-Access "install Company Portal"
+     * response marked {@code intuneAppProtection=1}, the Play Store install launch is tagged with
+     * the calling app package as the install referrer, so Company Portal skips its own sign-in UX
+     * and redirects the user straight back to the calling app. That avoids the user signing in to
+     * Company Portal and accidentally enrolling into MDM.
+     * <p>
+     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off the install
+     * launch is unchanged.
      */
-    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false);
+    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false),
+
+    /**
+     * Treats a broker-install redirect that carries no {@code intuneAppProtection=1} marker as a
+     * MAM Conditional Access install anyway.
+     * <p>
+     * The MAM-CA onboarding behaviors are scoped to the MAM-CA path by that server-side marker. This
+     * flight exists only so the client behavior can be validated and rolled out before the marker is
+     * live; it must be turned off once the server emits it, otherwise the MAM-CA behaviors also
+     * apply to ordinary (non-MAM) broker installs. Default off.
+     */
+    ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER("EnableMamCaInstallWithoutMarker", false);
 
     private String key;
     private Object defaultValue;
