@@ -233,7 +233,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void saveForMamCaInstall_markedRedirect_isStored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true));
@@ -243,7 +243,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void saveForMamCaInstall_unmarkedRedirect_isIgnored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, false));
@@ -253,29 +253,19 @@ public class MamUpnHintStoreTest {
     }
 
     @Test
-    public void saveForMamCaInstall_unmarkedRedirect_withoutMarkerFlightOn_isStored() {
-        setFlights(true, true);
-        final IPlatformComponents components = components();
-
-        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, false));
-
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
-    }
-
-    @Test
     public void saveForMamCaInstall_flightOff_isIgnored() {
-        setFlights(false, false);
+        setFlights(false);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true));
 
-        setFlights(true, false);
+        setFlights(true);
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
     public void saveForMamCaInstall_errorResponse_brokerInstallAndMarked_isStored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
@@ -286,7 +276,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void saveForMamCaInstall_errorResponse_brokerInstallButUnmarked_isIgnored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
@@ -297,7 +287,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void saveForMamCaInstall_errorResponse_otherError_isIgnored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID,
@@ -308,7 +298,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void saveForMamCaInstall_errorResponse_null_isIgnored() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, (AuthorizationErrorResponse) null);
@@ -322,43 +312,43 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void save_flightOff_storesNothing() {
-        setFlights(false, false);
+        setFlights(false);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        setFlights(true, false);
+        setFlights(true);
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
     public void read_flightOff_returnsNull() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        setFlights(false, false);
+        setFlights(false);
 
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
     public void clear_isNotGatedOnTheFlight() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
 
-        setFlights(false, false);
+        setFlights(false);
         MamUpnHintStore.clearUpnHint(components, CLIENT_ID);
 
-        setFlights(true, false);
+        setFlights(true);
         assertNull("cleanup must work even after the flight is turned off",
                 MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
     @Test
     public void ttl_isReadFromTheFlight() {
-        setFlights(true, false);
+        setFlights(true);
 
         assertEquals(1000L * (Integer) CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS.getDefaultValue(),
                 MamUpnHintStore.getTtlMillis());
@@ -366,7 +356,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void save_blankUpn_storesNothing() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, "   ");
@@ -376,7 +366,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void save_nullComponents_isSwallowed() {
-        setFlights(true, false);
+        setFlights(true);
 
         MamUpnHintStore.saveUpnHint(null, CLIENT_ID, UPN);
         assertNull(MamUpnHintStore.getValidUpnHint(null, CLIENT_ID));
@@ -389,7 +379,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_absentLoginHint_isFilledFromTheStore() {
-        setFlights(true, false);
+        setFlights(true);
         final InteractiveTokenCommandParameters parameters = parameters(null);
         MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
 
@@ -402,7 +392,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_callerSuppliedLoginHint_isNeverOverwritten() {
-        setFlights(true, false);
+        setFlights(true);
         final InteractiveTokenCommandParameters parameters = parameters(OTHER_UPN);
         MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
 
@@ -415,7 +405,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_hintStoredByAnotherClient_isNotUsed() {
-        setFlights(true, false);
+        setFlights(true);
         final InteractiveTokenCommandParameters parameters = parameters(null);
         MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), OTHER_CLIENT_ID, UPN);
 
@@ -424,18 +414,18 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_flightOff_returnsSameInstance() {
-        setFlights(true, false);
+        setFlights(true);
         final InteractiveTokenCommandParameters parameters = parameters(null);
         MamUpnHintStore.saveUpnHint(parameters.getPlatformComponents(), CLIENT_ID, UPN);
 
-        setFlights(false, false);
+        setFlights(false);
 
         assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
     }
 
     @Test
     public void apply_isSingleUse_secondRequestIsNotPreFilled() {
-        setFlights(true, false);
+        setFlights(true);
         final InteractiveTokenCommandParameters first = parameters(null);
         MamUpnHintStore.saveUpnHint(first.getPlatformComponents(), CLIENT_ID, UPN);
 
@@ -450,7 +440,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void apply_preservesOtherParameters() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
         final InteractiveTokenCommandParameters parameters = InteractiveTokenCommandParameters.builder()
                 .platformComponents(components)
@@ -474,7 +464,7 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void roundTrip_throughPlatformComponents_isSingleUseAndScoped() {
-        setFlights(true, false);
+        setFlights(true);
         final IPlatformComponents components = components();
 
         MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
@@ -535,17 +525,14 @@ public class MamUpnHintStoreTest {
     }
 
     /**
-     * Sets the two flights this store reads for one test.
+     * Sets the flight this store reads for one test.
      *
-     * @param upnHintEnabled      value of {@code ENABLE_MAM_CA_UPN_HINT}.
-     * @param withoutMarkerEnabled value of {@code ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER}.
+     * @param upnHintEnabled value of {@code ENABLE_MAM_CA_UPN_HINT}.
      */
-    private static void setFlights(final boolean upnHintEnabled, final boolean withoutMarkerEnabled) {
+    private static void setFlights(final boolean upnHintEnabled) {
         final MockFlightsProvider provider = new MockFlightsProvider();
         provider.addFlight(CommonFlight.ENABLE_MAM_CA_UPN_HINT.getKey(),
                 Boolean.toString(upnHintEnabled));
-        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER.getKey(),
-                Boolean.toString(withoutMarkerEnabled));
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);

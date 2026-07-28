@@ -28,19 +28,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsManager;
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
-
-import org.junit.After;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Tests for {@link MamCaRedirect} - reading the MAM Conditional Access markers off the
+ * Tests for {@link MamCaRedirect} - reading the MAM Conditional Access marker off the
  * broker-install redirect.
  */
 public class MamCaRedirectTest {
@@ -48,46 +42,40 @@ public class MamCaRedirectTest {
     private static final String UPN = "user@contoso.com";
 
     @Test
-    public void hasMarker_onlyWhenExplicitlyEnabled() {
-        assertTrue(MamCaRedirect.hasIntuneAppProtectionMarker(markedRedirect()));
-
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(null));
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(new HashMap<String, String>()));
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(redirectWithMarkerValue("0")));
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(redirectWithMarkerValue("true")));
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(redirectWithMarkerValue("")));
-    }
-
-    @Test
-    public void hasMarker_ignoresTheWithoutMarkerFlight() {
-        // hasIntuneAppProtectionMarker reports what the server actually sent, so it must be
-        // unaffected by the rollout escape hatch.
-        setWithoutMarkerFlight(true);
-
-        assertFalse(MamCaRedirect.hasIntuneAppProtectionMarker(new HashMap<String, String>()));
-    }
-
-    @Test
-    public void isMamCaInstall_markerPresent_isTrue() {
+    public void isMamCaInstall_onlyWhenMarkerIsExactlyOne() {
         assertTrue(MamCaRedirect.isMamCaInstall(markedRedirect()));
+
+        assertFalse(MamCaRedirect.isMamCaInstall(null));
+        assertFalse(MamCaRedirect.isMamCaInstall(new HashMap<String, String>()));
+        assertFalse(MamCaRedirect.isMamCaInstall(redirectWithMarkerValue("0")));
+        assertFalse(MamCaRedirect.isMamCaInstall(redirectWithMarkerValue("true")));
+        assertFalse(MamCaRedirect.isMamCaInstall(redirectWithMarkerValue("")));
     }
 
     @Test
-    public void isMamCaInstall_noMarker_isFalseByDefault() {
+    public void isMamCaInstall_plainBrokerInstall_isFalse() {
         // An ordinary device-registration broker install must not pick up MAM-CA behaviors.
         final Map<String, String> plainInstall = new HashMap<>();
         plainInstall.put(MamCaRedirect.KEY_USERNAME, UPN);
 
         assertFalse(MamCaRedirect.isMamCaInstall(plainInstall));
-        assertFalse(MamCaRedirect.isMamCaInstall(null));
     }
 
     @Test
-    public void isMamCaInstall_noMarker_butWithoutMarkerFlightOn_isTrue() {
-        setWithoutMarkerFlight(true);
+    public void isMamCaInstall_readsTheServerInstallLinkShape() {
+        // Mirrors what the service appends to the broker-install link when it fails the request
+        // with AADSTS50127 for MAM: intuneAppProtection is a top-level parameter alongside
+        // app_link, not something nested inside it.
+        final Map<String, String> redirect = new HashMap<>();
+        redirect.put("wpj", "1");
+        redirect.put(MamCaRedirect.KEY_USERNAME, UPN);
+        redirect.put("app_link",
+                "https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal");
+        redirect.put(MamCaRedirect.KEY_INTUNE_APP_PROTECTION,
+                MamCaRedirect.VALUE_INTUNE_APP_PROTECTION_ENABLED);
 
-        assertTrue(MamCaRedirect.isMamCaInstall(new HashMap<String, String>()));
-        assertTrue(MamCaRedirect.isMamCaInstall(null));
+        assertTrue(MamCaRedirect.isMamCaInstall(redirect));
+        assertEquals(UPN, MamCaRedirect.getUsername(redirect));
     }
 
     @Test
@@ -119,19 +107,5 @@ public class MamCaRedirectTest {
         final Map<String, String> parameters = new HashMap<>();
         parameters.put(MamCaRedirect.KEY_INTUNE_APP_PROTECTION, value);
         return parameters;
-    }
-
-    private static void setWithoutMarkerFlight(final boolean enabled) {
-        final MockFlightsProvider provider = new MockFlightsProvider();
-        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER.getKey(),
-                Boolean.toString(enabled));
-        final MockFlightsManager manager = new MockFlightsManager();
-        manager.setMockBrokerFlightsProvider(provider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
-    }
-
-    @After
-    public void tearDown() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 }

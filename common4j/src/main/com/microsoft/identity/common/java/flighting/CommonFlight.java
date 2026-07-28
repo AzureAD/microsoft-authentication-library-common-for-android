@@ -334,18 +334,7 @@ public enum CommonFlight implements IFlightConfig {
      * metered connection rather than to be as short as possible. Hints are additionally single-use
      * and are cleared as soon as they are read, so a hint rarely lives anywhere near this long.
      */
-    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 900),
-
-    /**
-     * Treats a broker-install redirect that carries no {@code intuneAppProtection=1} marker as a
-     * MAM Conditional Access install anyway.
-     * <p>
-     * The MAM-CA onboarding behaviors are scoped to the MAM-CA path by that server-side marker. This
-     * flight exists only so the client behavior can be validated and rolled out before the marker is
-     * live; it must be turned off once the server emits it, otherwise the MAM-CA behaviors also
-     * apply to ordinary (non-MAM) broker installs. Default off.
-     */
-    ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER("EnableMamCaInstallWithoutMarker", false);
+    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 900);
 
     private String key;
     private Object defaultValue;

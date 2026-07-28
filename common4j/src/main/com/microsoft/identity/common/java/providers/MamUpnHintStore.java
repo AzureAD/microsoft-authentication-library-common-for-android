@@ -164,9 +164,7 @@ public final class MamUpnHintStore {
             return;
         }
 
-        if (!errorResponse.isMamCaInstall()
-                && !CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_WITHOUT_MARKER)) {
+        if (!errorResponse.isMamCaInstall()) {
             // An ordinary device-registration broker install; nothing to remember.
             return;
         }

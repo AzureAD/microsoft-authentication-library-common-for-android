@@ -112,7 +112,7 @@ public abstract class AuthorizationResultFactory
                 // Surface whether this install was triggered by MAM Conditional Access, so callers
                 // can scope MAM-CA onboarding behavior to it without re-parsing the redirect.
                 result.getAuthorizationErrorResponse().setMamCaInstall(
-                        MamCaRedirect.hasIntuneAppProtectionMarker(urlParameters));
+                        MamCaRedirect.isMamCaInstall(urlParameters));
                 return result;
             }
 
