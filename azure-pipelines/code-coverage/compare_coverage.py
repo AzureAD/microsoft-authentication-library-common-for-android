@@ -56,6 +56,23 @@ def _aggregate(paths, metric):
     return agg
 
 
+# JaCoCo <counter type="..."> values. Guards against silent 0% when a caller passes
+# a typo'd or wrong-cased metric (which would otherwise match no counters).
+VALID_METRICS = {"INSTRUCTION", "LINE", "BRANCH", "COMPLEXITY", "METHOD", "CLASS"}
+
+
+def _write_skip(args, metric, reason):
+    """Write a 'skipped/not gating' Markdown + JSON so downstream publish steps that
+    always run (succeededOrFailed) still find the expected output files."""
+    if args.out_md:
+        with open(args.out_md, "w", encoding="utf-8") as handle:
+            handle.write(f"# Code Coverage Comparison ({metric}) - SKIPPED\n\n{reason}\n")
+    if args.out_json:
+        with open(args.out_json, "w", encoding="utf-8") as handle:
+            json.dump({"metric": metric, "skipped": True, "reason": reason,
+                       "failed": False}, handle, indent=2)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -80,6 +97,14 @@ def main():
     args = parser.parse_args()
 
     metric = args.metric.upper()
+    if metric not in VALID_METRICS:
+        sys.stderr.write(f"ERROR: --metric must be one of {sorted(VALID_METRICS)}; "
+                         f"got {args.metric!r}\n")
+        return 2
+    if args.tolerance < 0 or args.unit_tolerance < 0:
+        sys.stderr.write("ERROR: --tolerance and --unit-tolerance must be "
+                         "non-negative percentage points.\n")
+        return 2
     base_paths, pr_paths = [], []
     for pattern in args.base:
         base_paths.extend(glob.glob(pattern, recursive=True))
@@ -88,11 +113,16 @@ def main():
 
     if not pr_paths:
         sys.stderr.write(f"ERROR: no PR coverage files matched: {', '.join(args.pr)}\n")
+        _write_skip(args, metric, "No PR coverage report was found, so no comparison "
+                    "could be made (not gating).")
         return 2
     if not base_paths:
         # No baseline (e.g. new module / first run): don't block the PR.
+        reason = ("No base (dev) coverage report was found, so there is nothing to "
+                  "compare against; skipping the coverage gate (not gating).")
         sys.stderr.write("WARNING: no base coverage files matched: "
                          f"{', '.join(args.base)}; skipping comparison (not gating).\n")
+        _write_skip(args, metric, reason)
         return 0
 
     base = _aggregate(base_paths, metric)
@@ -106,18 +136,24 @@ def main():
     pr_pct = _pct(pr_cov, pr_miss)
     delta = round(pr_pct - base_pct, 2)
 
-    regressed, new_gaps = [], []
+    regressed, new_gaps, removed = [], [], 0
     for unit in sorted(set(base) | set(pr)):
         b = base.get(unit)
-        p = pr.get(unit, {"Covered": 0, "Missed": 0})
-        p_pct = _pct(p["Covered"], p["Missed"])
+        p = pr.get(unit)
         if b is None:
+            # New class in the PR: report it as a gap if it lacks coverage.
+            p_pct = _pct(p["Covered"], p["Missed"])
             if p["Missed"] >= args.min_missed:
                 new_gaps.append({"Unit": unit, "Percentage": p_pct,
                                  "Missed": p["Missed"],
                                  "Total": p["Covered"] + p["Missed"]})
             continue
+        if p is None:
+            # Class removed in the PR: not a coverage regression, so don't list it.
+            removed += 1
+            continue
         b_pct = _pct(b["Covered"], b["Missed"])
+        p_pct = _pct(p["Covered"], p["Missed"])
         d = round(p_pct - b_pct, 2)
         if d < -args.unit_tolerance:
             regressed.append({"Unit": unit, "BasePct": b_pct, "PrPct": p_pct,
@@ -178,6 +214,7 @@ def main():
             json.dump({"metric": metric, "basePercentage": base_pct,
                        "prPercentage": pr_pct, "deltaPp": delta,
                        "tolerancePp": args.tolerance, "failed": failed,
+                       "removedClasses": removed,
                        "regressed": regressed, "newGaps": new_gaps}, handle, indent=2)
 
     print(markdown)

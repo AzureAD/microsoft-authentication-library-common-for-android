@@ -65,13 +65,22 @@ stages:
           displayName: Compare Jacoco Coverage
         - bash: |
             # Surface the per-class breakdown in the build's Extensions/Summary tab even
-            # when the comparison step failed the build on a coverage drop.
-            echo "##vso[task.uploadsummary]$(Build.ArtifactStagingDirectory)/coverage-comparison.md"
+            # when the comparison step failed the build on a coverage drop. Guard on the
+            # file existing so this step can't fail/obscure the real error if the compare
+            # script exited before writing it.
+            summary="$(Build.ArtifactStagingDirectory)/coverage-comparison.md"
+            if [ -f "$summary" ]; then
+              echo "##vso[task.uploadsummary]$summary"
+            else
+              echo "No coverage-comparison.md was produced; nothing to upload to summary."
+            fi
           displayName: Publish comparison to build summary
           condition: succeededOrFailed()
         - task: PublishPipelineArtifact@1
           displayName: Publish coverage comparison
           condition: succeededOrFailed()
           inputs:
-            targetPath: '$(Build.ArtifactStagingDirectory)/coverage-comparison.md'
+            # Publish the staging directory (not the single .md) so publishing still
+            # succeeds when only the JSON exists (or the comparison was skipped).
+            targetPath: '$(Build.ArtifactStagingDirectory)'
             artifactName: coverage-comparison
