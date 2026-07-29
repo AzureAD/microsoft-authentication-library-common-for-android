@@ -55,6 +55,54 @@ object MamInstallReferrerBuilder {
     const val REFERRER_QUERY_PARAM = "referrer"
 
     /**
+     * Why a Company Portal install link was, or was not, tagged with an install referrer.
+     *
+     * The [tag] is reported as an onboarding UX-flow variant (MATS `mo_ux_flow_used`) so the rollout
+     * can be read off telemetry rather than off device logs. Two questions have to be answerable
+     * before the flight is ramped past 0%, and each maps to a value here:
+     * - *Is the server marking MAM-CA installs yet?* - [NOT_MAM_CA] versus everything below it.
+     * - *Of the marked ones, how many actually got tagged?* - [DECORATED] versus the bail-outs.
+     *
+     * @property tag the value reported as a UX-flow variant, or `null` for outcomes that are not
+     * reported at all.
+     */
+    enum class Outcome(val tag: String?) {
+
+        /**
+         * The flight is off, so nothing was evaluated. Deliberately not reported: with the flight
+         * off this feature is meant to be indistinguishable from its absence, telemetry included.
+         */
+        FLIGHT_OFF(null),
+
+        /** The redirect carried no MAM-CA marker, so it is an ordinary broker install. */
+        NOT_MAM_CA("MamCaInstallReferrer_NotMamCa"),
+
+        /** A MAM-CA install, but the host package name was unavailable to name as the referrer. */
+        NO_ORIGIN_PKG("MamCaInstallReferrer_NoOriginPkg"),
+
+        /** A MAM-CA install, but the redirect carried no `app_link` to decorate. */
+        NO_APP_LINK("MamCaInstallReferrer_NoAppLink"),
+
+        /** A MAM-CA install whose `app_link` already named a referrer; the server's wins. */
+        SERVER_REFERRER("MamCaInstallReferrer_ServerReferrer"),
+
+        /** A MAM-CA install whose `app_link` could not be parsed; launched unchanged. */
+        LINK_UNPARSEABLE("MamCaInstallReferrer_LinkUnparseable"),
+
+        /** A MAM-CA install that was tagged with the host package as the install referrer. */
+        DECORATED("MamCaInstallReferrer_Decorated")
+    }
+
+    /**
+     * The link to launch, and why it did or did not get an install referrer.
+     *
+     * @property appLink the link to launch - decorated only when [outcome] is [Outcome.DECORATED],
+     * and otherwise the caller's original `app_link`, unchanged.
+     * @property outcome why decoration did or did not happen.
+     */
+    data class Decoration(val appLink: String?, val outcome: Outcome)
+
+    /**
      * The single place the MAM-CA install-referrer decision is made: should this Company Portal
      * install link be tagged with the calling app as the Play install referrer?
      *
@@ -69,6 +117,8 @@ object MamInstallReferrerBuilder {
      * exactly the thing being rolled out, and it cannot be read off a log that only fires once the
      * marker is already there.
      *
+     * Use [decorateAppLinkForMamCaInstallWithOutcome] where the outcome is worth reporting.
+     *
      * @param appLink            the server-provided Play Store install link.
      * @param originPkg          the calling app package name (typically `Context#getPackageName()`).
      * @param redirectParameters query parameters of the broker-install redirect.
@@ -80,23 +130,48 @@ object MamInstallReferrerBuilder {
         appLink: String?,
         originPkg: String?,
         redirectParameters: Map<String, String>?
-    ): String? {
+    ): String? =
+        decorateAppLinkForMamCaInstallWithOutcome(appLink, originPkg, redirectParameters).appLink
+
+    /**
+     * [decorateAppLinkForMamCaInstall], additionally reporting *why* the link was or was not
+     * decorated, for call sites that can attach the answer to onboarding telemetry.
+     *
+     * The MAM-CA marker is checked before [originPkg] so that a missing package name is reported as
+     * a bail-out on a *marked* redirect rather than hiding whether the marker was there at all -
+     * the marker is the thing being rolled out, so it is the more valuable of the two signals.
+     * Both cases return the link unchanged, so the ordering affects only reporting.
+     *
+     * @param appLink            the server-provided Play Store install link.
+     * @param originPkg          the calling app package name (typically `Context#getPackageName()`).
+     * @param redirectParameters query parameters of the broker-install redirect.
+     * @return the link to launch, and the outcome that produced it.
+     */
+    @JvmStatic
+    fun decorateAppLinkForMamCaInstallWithOutcome(
+        appLink: String?,
+        originPkg: String?,
+        redirectParameters: Map<String, String>?
+    ): Decoration {
         val methodTag = "$TAG:decorateAppLinkForMamCaInstall"
 
         if (!CommonFlightsManager.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER)
         ) {
-            return appLink
+            return Decoration(appLink, Outcome.FLIGHT_OFF)
         }
 
         // Names only - the redirect carries the user's UPN, so the URL itself is never logged.
         MamCaRedirect.logRedirectParameterNames(methodTag, redirectParameters)
 
-        if (originPkg.isNullOrEmpty() || !MamCaRedirect.isMamCaInstall(redirectParameters)) {
-            return appLink
+        if (!MamCaRedirect.isMamCaInstall(redirectParameters)) {
+            return Decoration(appLink, Outcome.NOT_MAM_CA)
+        }
+        if (originPkg.isNullOrEmpty()) {
+            return Decoration(appLink, Outcome.NO_ORIGIN_PKG)
         }
 
-        return decorateAppLinkWithOriginReferrer(appLink, originPkg)
+        return decorateWithOutcome(appLink, originPkg)
     }
 
     /**
@@ -120,19 +195,35 @@ object MamInstallReferrerBuilder {
      */
     @JvmStatic
     fun decorateAppLinkWithOriginReferrer(appLink: String?, originPkg: String?): String? {
+        if (originPkg.isNullOrEmpty()) {
+            return appLink
+        }
+        return decorateWithOutcome(appLink, originPkg).appLink
+    }
+
+    /**
+     * [decorateAppLinkWithOriginReferrer] with the reason attached. Assumes [originPkg] is present;
+     * the gated entry point has already established that.
+     */
+    private fun decorateWithOutcome(appLink: String?, originPkg: String): Decoration {
         val methodTag = "$TAG:decorateAppLinkWithOriginReferrer"
 
-        if (appLink.isNullOrEmpty() || originPkg.isNullOrEmpty()) {
-            return appLink
+        if (appLink.isNullOrEmpty()) {
+            return Decoration(appLink, Outcome.NO_APP_LINK)
         }
         return try {
             val builder = CommonURIBuilder(appLink)
+            // This check must stay ahead of addParameterIfAbsent, but not for case-handling reasons:
+            // CommonURIBuilder.containsParam already compares with equalsIgnoreCase, so both agree on
+            // a mixed-case `Referrer=`. What the explicit branch earns is the two things
+            // addParameterIfAbsent cannot express - returning the caller's original string rather
+            // than a re-serialised build(), and logging "left it alone" rather than "tagged it".
             if (builder.queryParams.any { REFERRER_QUERY_PARAM.equals(it.name, ignoreCase = true) }) {
                 Logger.info(
                     methodTag,
                     "The install link already names an install referrer; leaving it as it is."
                 )
-                appLink
+                Decoration(appLink, Outcome.SERVER_REFERRER)
             } else {
                 val decorated = builder
                     .addParameterIfAbsent(REFERRER_QUERY_PARAM, originPkg)
@@ -142,14 +233,14 @@ object MamInstallReferrerBuilder {
                     methodTag,
                     "Tagged the Company Portal install launch with the calling app as the install referrer."
                 )
-                decorated
+                Decoration(decorated, Outcome.DECORATED)
             }
         } catch (e: URISyntaxException) {
             Logger.warn(
                 methodTag,
                 "Could not parse app_link to append the install referrer; launching it unchanged."
             )
-            appLink
+            Decoration(appLink, Outcome.LINK_UNPARSEABLE)
         }
     }
 }

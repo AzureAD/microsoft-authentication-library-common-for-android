@@ -957,6 +957,25 @@ public class AzureActiveDirectoryWebViewClientTest {
         return false;
     }
 
+    /**
+     * Reads the finalized onboarding blob and returns the UX-flow variants that were reported.
+     * The key is omitted entirely when nothing was reported, which is what makes "the flight left
+     * no trace in telemetry" assertable.
+     */
+    private static java.util.List<String> onboardingUxFlows(final OnboardingTelemetryRecorder recorder)
+            throws org.json.JSONException {
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final java.util.List<String> flows = new java.util.ArrayList<>();
+        final org.json.JSONArray reported = blob.optJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.UX_FLOW_USED);
+        if (reported != null) {
+            for (int i = 0; i < reported.length(); i++) {
+                flows.add(reported.getString(i));
+            }
+        }
+        return flows;
+    }
+
     @Test
     public void testUrlOverrideHandlesPlayStoreRedirect() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PLAY_STORE_INSTALL_AUTH_APP_URL));
@@ -2025,6 +2044,99 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse("An unmarked install must not be tagged as MAM-CA, but was: "
                         + launched.getDataString(),
                 launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
+    }
+
+    /**
+     * The ramp-safety signal: a decorated install reports why it was decorated, so the rollout can
+     * be read off telemetry (MATS {@code mo_ux_flow_used}) rather than off device logs.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_reportsDecoratedOutcomeToTelemetry()
+            throws org.json.JSONException {
+        setMamCaInstallReferrerFlight(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertTrue("A decorated MAM-CA install must report that it was decorated, but reported: "
+                        + onboardingUxFlows(recorder),
+                onboardingUxFlows(recorder).contains(
+                        MamInstallReferrerBuilder.Outcome.DECORATED.getTag()));
+    }
+
+    /**
+     * The other half of the rollout question - whether the server has started marking MAM-CA
+     * installs at all - has to be distinguishable from "marked but not decorated", or the funnel
+     * cannot be sliced.
+     */
+    @Test
+    public void testProcessInstallRequest_notMamCaInstall_reportsTheMissingMarkerToTelemetry()
+            throws org.json.JSONException {
+        setMamCaInstallReferrerFlight(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        launchInstallAndCaptureIntent(TEST_PLAIN_INSTALL_REQUEST_URL);
+
+        assertTrue("An unmarked install must report the missing marker, but reported: "
+                        + onboardingUxFlows(recorder),
+                onboardingUxFlows(recorder).contains(
+                        MamInstallReferrerBuilder.Outcome.NOT_MAM_CA.getTag()));
+    }
+
+    /**
+     * A server-chosen referrer wins over ours, and that has to be reported as its own outcome
+     * rather than as a decoration - otherwise the "how many did we actually tag?" count is wrong.
+     */
+    @Test
+    public void testProcessInstallRequest_serverSuppliedReferrer_reportsThatTheServerChoseIt()
+            throws org.json.JSONException {
+        setMamCaInstallReferrerFlight(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER);
+
+        assertTrue("A server-chosen referrer must not be counted as a decoration, but reported: "
+                        + onboardingUxFlows(recorder),
+                onboardingUxFlows(recorder).contains(
+                        MamInstallReferrerBuilder.Outcome.SERVER_REFERRER.getTag()));
+    }
+
+    /**
+     * The flight is a complete kill switch, telemetry included: with it off the install reports no
+     * UX-flow variant at all, so turning it off leaves the onboarding blob exactly as it was.
+     */
+    @Test
+    public void testProcessInstallRequest_flightOff_reportsNothingToTelemetry()
+            throws org.json.JSONException {
+        setMamCaInstallReferrerFlight(false);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertTrue("With the flight off nothing may be reported, but reported: "
+                        + onboardingUxFlows(recorder),
+                onboardingUxFlows(recorder).isEmpty());
+    }
+
+    /**
+     * Telemetry is best-effort: the install must still launch when no recorder has been attached,
+     * which is the common case outside the onboarding-instrumented flows.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_noRecorderAttached_stillLaunches() {
+        setMamCaInstallReferrerFlight(true);
+
+        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("The install must launch with no telemetry recorder attached", launched);
+        assertTrue("The link must still be decorated without a recorder, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
     }
 
     /**

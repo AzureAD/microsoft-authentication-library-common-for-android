@@ -1379,11 +1379,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // calling app package as the Play install referrer, so Company Portal skips its own
                 // sign-in UX and redirects back to us after install. The flight- and MAM-CA-gates live
                 // in MamInstallReferrerBuilder; when they don't apply the link is launched as before.
-                final String link = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
-                        appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
-                        activity.getPackageName(),
-                        parameters);
-                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                final MamInstallReferrerBuilder.Decoration decoration =
+                        MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
+                                appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                                activity.getPackageName(),
+                                parameters);
+                recordMamCaReferrerOutcome(decoration.getOutcome());
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(decoration.getAppLink()));
                 activity.startActivity(intent);
                 view.stopLoading();
             }
@@ -1852,6 +1854,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             recorder.addStep(stepId);
         } catch (final Throwable t) {
             Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
+        }
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook: reports why the Company Portal install link was or was
+     * not tagged with an install referrer, as a UX-flow variant (MATS {@code mo_ux_flow_used}).
+     * <p>
+     * This is the ramp-safety signal for {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER}: it is
+     * what makes "has the server started marking MAM-CA installs, and are we tagging them?"
+     * answerable from telemetry instead of from device logs.
+     * <p>
+     * No-op when no recorder is attached, and - deliberately - when the flight is off, so that
+     * turning the flight off leaves no trace in telemetry either. Never throws.
+     */
+    private void recordMamCaReferrerOutcome(@NonNull final MamInstallReferrerBuilder.Outcome outcome) {
+        final String tag = outcome.getTag();
+        if (tag == null) {
+            return;
+        }
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            return;
+        }
+        try {
+            recorder.addUxFlowUsed(tag);
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record UX flow " + tag + ": " + t.getMessage());
         }
     }
 

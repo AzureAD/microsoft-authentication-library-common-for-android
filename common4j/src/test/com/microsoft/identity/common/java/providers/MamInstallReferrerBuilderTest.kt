@@ -290,10 +290,121 @@ class MamInstallReferrerBuilderTest {
 
     // endregion
 
+    // region outcome reporting
+
+    /**
+     * The outcome is the ramp-safety signal for this flight: it is what makes "has the server
+     * started marking MAM-CA installs, and are we tagging the marked ones?" answerable from
+     * telemetry rather than from device logs. Each bail-out therefore has to be distinguishable
+     * from the others, not collapsed into a single "not decorated".
+     */
+    @Test
+    fun outcome_reportsWhyTheLinkWasOrWasNotDecorated() {
+        setMamCaReferrerFlight(true)
+
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.DECORATED,
+            outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
+        )
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.NOT_MAM_CA,
+            outcomeOf(CP_APP_LINK, ORIGIN_PKG, mapOf("username" to "user@contoso.com"))
+        )
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.NO_ORIGIN_PKG,
+            outcomeOf(CP_APP_LINK, null, mamCaRedirectParameters())
+        )
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.NO_APP_LINK,
+            outcomeOf(null, ORIGIN_PKG, mamCaRedirectParameters())
+        )
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.SERVER_REFERRER,
+            outcomeOf("$CP_APP_LINK&referrer=com.server.chose.this", ORIGIN_PKG, mamCaRedirectParameters())
+        )
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.LINK_UNPARSEABLE,
+            outcomeOf("not a uri at all", ORIGIN_PKG, mamCaRedirectParameters())
+        )
+    }
+
+    /**
+     * The marker is checked before the package name, so a host that cannot name itself is still
+     * reported as a bail-out on a *marked* redirect. Collapsing the two would hide whether the
+     * server marking had arrived, which is the more valuable of the two signals.
+     */
+    @Test
+    fun outcome_missingPackageOnAnUnmarkedInstall_reportsTheMarkerNotThePackage() {
+        setMamCaReferrerFlight(true)
+
+        assertEquals(
+            MamInstallReferrerBuilder.Outcome.NOT_MAM_CA,
+            outcomeOf(CP_APP_LINK, null, mapOf("username" to "user@contoso.com"))
+        )
+    }
+
+    /**
+     * With the flight off nothing is evaluated and nothing is reported - the null tag is what keeps
+     * the kill switch complete, telemetry included.
+     */
+    @Test
+    fun outcome_flightOff_isNotReportedAtAll() {
+        setMamCaReferrerFlight(false)
+
+        val outcome = outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
+        assertEquals(MamInstallReferrerBuilder.Outcome.FLIGHT_OFF, outcome)
+        assertNull("The flight-off outcome must not be reportable.", outcome.tag)
+    }
+
+    /** Every reported outcome needs a distinct, non-blank tag, or the funnel cannot be sliced. */
+    @Test
+    fun outcome_reportableTagsAreDistinctAndNonBlank() {
+        val tags = MamInstallReferrerBuilder.Outcome.values().mapNotNull { it.tag }
+
+        assertEquals(
+            "Every outcome except FLIGHT_OFF is reportable.",
+            MamInstallReferrerBuilder.Outcome.values().size - 1,
+            tags.size
+        )
+        assertTrue("Tags must not be blank: $tags", tags.none { it.isBlank() })
+        assertEquals("Tags must be distinct: $tags", tags.size, tags.toSet().size)
+    }
+
+    /** The reporting overload must not change what is actually launched. */
+    @Test
+    fun outcome_overloadReturnsTheSameLinkAsTheStringEntryPoint() {
+        setMamCaReferrerFlight(true)
+
+        for (params in listOf(mamCaRedirectParameters(), mapOf("username" to "user@contoso.com"))) {
+            assertEquals(
+                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(CP_APP_LINK, ORIGIN_PKG, params),
+                outcomeDecorationOf(CP_APP_LINK, ORIGIN_PKG, params).appLink
+            )
+        }
+    }
+
+    // endregion
+
     @After
     fun tearDown() {
         CommonFlightsManager.resetFlightsManager()
     }
+
+    private fun outcomeDecorationOf(
+        appLink: String?,
+        originPkg: String?,
+        redirectParameters: Map<String, String>?
+    ): MamInstallReferrerBuilder.Decoration =
+        MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
+            appLink, originPkg, redirectParameters
+        )
+
+    private fun outcomeOf(
+        appLink: String?,
+        originPkg: String?,
+        redirectParameters: Map<String, String>?
+    ): MamInstallReferrerBuilder.Outcome =
+        outcomeDecorationOf(appLink, originPkg, redirectParameters).outcome
 
     private fun mamCaRedirectParameters(): Map<String, String> = mapOf(
         "username" to "user@contoso.com",
