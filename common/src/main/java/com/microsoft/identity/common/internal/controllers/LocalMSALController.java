@@ -255,7 +255,9 @@ public class LocalMSALController extends BaseController {
         );
 
         if (acquireTokenResult.getSucceeded()) {
-            // Signed in, so any remembered UPN has served its purpose and should not linger.
+            // Signed in, so any remembered UPN has served its purpose and should not linger. This is
+            // where a hint is retired: applying one does not delete it, because the request it was
+            // attached to can still fail.
             MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
         }
 

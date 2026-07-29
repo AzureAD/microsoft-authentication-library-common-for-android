@@ -243,7 +243,7 @@ public final class MamUpnHintStore {
         }
 
         Logger.info(methodTag, "Stored a UPN hint for the MAM-CA broker-install flow; it is usable for "
-                + (getTtlMillis() / 1000L) + "s, until it is carried into a request.");
+                + (getTtlMillis() / 1000L) + "s, or until sign-in succeeds.");
 
         if (normalizedHost == null) {
             // Still worth storing: a host SDK can offer it in its own account field, where the user
@@ -288,9 +288,10 @@ public final class MamUpnHintStore {
      * caller's own account screen while the flow is still in progress. A read that consumed the
      * hint would therefore destroy it seconds before the app restart it exists to survive, and the
      * damage would be invisible - the field would look pre-filled right up until the process died.
-     * The hint is retired instead when it is actually used: {@link #applyStoredUpnHintIfAbsent}
-     * clears it once it has been attached to a request, and its TTL bounds it either way. Callers
-     * that pre-fill their own UI may call {@link #clearUpnHint} once the user commits.
+     * The hint is retired instead on a successful sign-in, by an explicit {@link #clearUpnHint}, or
+     * by its TTL. Note that {@link #applyStoredUpnHintIfAbsent} does not delete it either: the
+     * request it was attached to can still fail, and the hint has to outlive that. Callers that
+     * pre-fill their own UI may call {@link #clearUpnHint} once the user commits.
      * <p>
      * <b>This overload is not bound to an authority</b>, because there is not one yet: it exists to
      * fill in a text box the user is looking at and can edit, which transmits nothing. The authority
