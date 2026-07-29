@@ -24,9 +24,11 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -47,6 +49,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
@@ -119,6 +122,7 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_LEGACY_HOST;
 import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
@@ -1155,7 +1159,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+
+            // Resolve after any pinning so the handler check matches the final intent we will launch.
+            final android.content.pm.PackageManager pm = getActivity().getPackageManager();
+
+            // Return-to-caller is wired ONLY for the brokered flow, i.e. when this WebView is
+            // hosted in the broker's auth-service process (Authenticator / Company Portal / Link to
+            // Windows). In the brokerless/embedded case we fall back to the pre-existing behavior
+            // (launch the openid-vc handler without a return PendingIntent) - identical to
+            // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
+            // validated. It is also gated by its own flight so it can be rolled back entirely.
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
+                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+                // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
+                // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
+                // rely on resolveActivity() here: when more than one app claims the scheme it returns
+                // the system chooser (package "android"), which would drop the return PendingIntent
+                // even if the user then picked Authenticator. Pinning to a verified Authenticator
+                // fixes that and avoids showing a wallet chooser for a request only it can fulfill.
+                if (isAuthenticatorOpenIdVcHandler(intent)
+                        && isTrustedVcWalletPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+                    intent.setPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+                    attachReturnPendingIntent(intent, methodTag);
+                } else {
+                    // Authenticator is not an installed/verified openid-vc handler: preserve the
+                    // existing dispatch behavior but do NOT attach a return PendingIntent.
+                    Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
+                }
+            }
+
+            final ComponentName resolved = intent.resolveActivity(pm);
+            if (resolved != null) {
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
                 span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
@@ -1175,6 +1209,94 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } finally {
             span.end();
         }
+    }
+
+    /**
+     * Attaches the return {@link PendingIntent} to the openid-vc launch intent so the wallet
+     * (Authenticator) can bring this auth host's task back to the foreground after the VID
+     * hand-off completes.
+     *
+     * <p>It is an explicit, immutable {@link PendingIntent} targeting
+     * {@link com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity} (manifest-merged
+     * into the host app). The PendingIntent is created with the host activity's application
+     * context, so it returns to whichever app currently hosts this WebView.</p>
+     *
+     * <p>It carries no result data and is a navigation signal only; Authenticator never
+     * treats its invocation as proof of VID/auth success.</p>
+     */
+    private void attachReturnPendingIntent(@NonNull final Intent intent, @NonNull final String methodTag) {
+        try {
+            final android.content.Context context = getActivity().getApplicationContext();
+
+            final Intent returnIntent = new Intent(context,
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.class);
+            returnIntent.setAction(
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.ACTION_RETURN_FROM_VID);
+            // NEW_TASK is mandatory for a PendingIntent.getActivity launch fired from another
+            // process. The trampoline declares android:taskAffinity="", so this NEW_TASK launch
+            // lands in an isolated throwaway task instead of an affinity-matched (forgeable) task;
+            // it then finishes itself, letting the broker host's own task surface. NO_ANIMATION
+            // keeps it a clean cut.
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+
+            // ONE_SHOT: the wallet consumes this exactly once, so the framework auto-cancels it
+            // after send() and it can never be replayed. IMMUTABLE: the recipient cannot mutate the
+            // intent (including the request-state nonce).
+            final PendingIntent returnPendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    returnIntent,
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+
+            intent.putExtra(
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA,
+                    returnPendingIntent);
+            Logger.info(methodTag, "Attached return PendingIntent to openid-vc intent.");
+        } catch (final Exception e) {
+            // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
+            Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns true if {@code packageName} is Microsoft Authenticator AND passes signature-pinned
+     * verification via {@link BrokerValidator}. The VID wallet is specifically Authenticator, so we
+     * restrict to its package name in addition to the certificate check — this prevents any other
+     * signed broker (e.g. Company Portal) or a look-alike app that merely claims the openid-vc://
+     * scheme from receiving the return PendingIntent.
+     */
+    private boolean isTrustedVcWalletPackage(@NonNull final String packageName) {
+        if (!AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName)) {
+            return false;
+        }
+        try {
+            return new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Returns true if Microsoft Authenticator is among the apps that can handle {@code intent}
+     * (an openid-vc:// launch intent). Uses {@link android.content.pm.PackageManager#queryIntentActivities}
+     * rather than {@code resolveActivity()}, which returns the system chooser (package "android")
+     * when multiple apps claim the scheme. Authenticator's package is declared in the manifest
+     * {@code <queries>}, so it is visible to the query on API 30+.
+     */
+    private boolean isAuthenticatorOpenIdVcHandler(@NonNull final Intent intent) {
+        final String authenticatorPackage = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+        try {
+            for (final ResolveInfo info : getActivity().getPackageManager().queryIntentActivities(intent, 0)) {
+                if (info.activityInfo != null && authenticatorPackage.equals(info.activityInfo.packageName)) {
+                    return true;
+                }
+            }
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
+        }
+        return false;
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
