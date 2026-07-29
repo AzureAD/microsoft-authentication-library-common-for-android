@@ -83,7 +83,6 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.providers.MamCaRedirect;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
@@ -1230,10 +1229,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
 
-        // Names only - the redirect carries the user's UPN, so the URL itself is never logged. This
-        // is what tells us in the field whether the server is marking the MAM-CA install path yet.
-        MamCaRedirect.logRedirectParameterNames(methodTag, parameters);
-
         Logger.info(methodTag,"Launching the link to app:" + appLink);
         getCompletionCallback().onChallengeResponseReceived(result);
 
@@ -1242,9 +1237,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                // This fires ~1s later, by which point the fragment may have detached. Cache the
-                // Activity once and bail out if it (or the app_link) is gone, so we never NPE on
-                // getActivity() / startActivity() or on a missing app_link.
+                // Cache the Activity once rather than calling getActivity() repeatedly. Neither
+                // branch below is expected to trigger - the Activity reference is final and the
+                // app_link was validated upstream - but a null here would crash the install launch,
+                // so it is worth a cheap check.
+                //
+                // Deliberately no isFinishing()/isDestroyed() check: the result callback above
+                // finishes the AuthorizationActivity, so by the time this fires a second later the
+                // Activity is normally already finishing. Skipping the launch in that state would
+                // suppress the install in the healthy path, which is the whole feature.
                 final Activity activity = getActivity();
                 if (activity == null || appLink == null) {
                     Logger.warn(methodTag,
