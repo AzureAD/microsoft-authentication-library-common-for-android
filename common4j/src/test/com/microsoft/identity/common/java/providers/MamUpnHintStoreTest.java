@@ -371,6 +371,15 @@ public class MamUpnHintStoreTest {
                 MamUpnHintStore.getTtlMillis());
     }
 
+    /**
+     * The three-minute window is the agreed default for this feature. It is tunable through ECS, so
+     * this only guards the shipped default against drifting by accident.
+     */
+    @Test
+    public void ttl_defaultsToThreeMinutes() {
+        assertEquals(180, CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS.getDefaultValue());
+    }
+
     @Test
     public void save_blankUpn_storesNothing() {
         setFlights(true);

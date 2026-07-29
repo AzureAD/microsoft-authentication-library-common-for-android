@@ -329,12 +329,13 @@ public enum CommonFlight implements IFlightConfig {
      * <p>
      * The window has to span a Company Portal download and install from the Play Store, Company
      * Portal's first launch and redirect back, the calling app restarting, and the user reaching
-     * their "add account" screen. An end-to-end measurement on a fast Wi-Fi connection spent 2m08s
-     * on the download and install alone, so this is sized to leave real headroom on a slower or
-     * metered connection rather than to be as short as possible. Hints are additionally single-use
-     * and are cleared as soon as they are read, so a hint rarely lives anywhere near this long.
+     * their "add account" screen. Three minutes covers that on a normal connection: a hint is only
+     * a pre-fill convenience, so erring short simply means the user types their address, whereas
+     * erring long leaves a stale address on disk for no benefit. Tune per-population via ECS if
+     * real-world telemetry says otherwise - the expiry is evaluated at read time against the write
+     * time, so changing this flight also governs hints already on disk.
      */
-    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 900);
+    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 180);
 
     private String key;
     private Object defaultValue;
