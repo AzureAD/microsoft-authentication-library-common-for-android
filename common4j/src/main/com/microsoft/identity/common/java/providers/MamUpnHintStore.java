@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -63,15 +64,20 @@ import lombok.NonNull;
  *   <li>Each record stores <em>when it was written</em>, and validity is decided at read time
  *       against {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}. Storing the write time rather than
  *       an absolute expiry means changing that flight also governs records already on disk.</li>
- *   <li>A hint is <b>spent when it is used</b>, not when it is read, so it can never be replayed onto
- *       a later, unrelated request. Reads are deliberately non-destructive because this flow reaches
- *       the caller's account screen more than once - see {@link #getValidUpnHint}.</li>
- *   <li>Every read also sweeps out <em>all</em> expired or half-written records, for every client
- *       id, so nothing lingers at rest beyond the window the flow needs.</li>
+ *   <li>Reads are non-destructive, because this flow reaches the caller's account screen more than
+ *       once - see {@link #getValidUpnHint}. A record is retired on a successful sign-in, by an
+ *       explicit {@link #clearUpnHint}, or by its TTL. The TTL is what bounds replay, so it is kept
+ *       short; within that window a hint may be offered to more than one request for the same
+ *       client, which is why {@link #applyStoredUpnHintIfAbsent} declines to answer a request that
+ *       explicitly asked the user to choose an account.</li>
+ *   <li>Every read sweeps out <em>all</em> expired or half-written records, for every client id, so
+ *       nothing lingers at rest beyond the window the flow needs. The sweep runs whether or not the
+ *       flight is on, so turning the flight off cannot strand records already written.</li>
  * </ul>
  * <p>
  * <b>Keying.</b> The store is app-private, and records are additionally keyed by client id so that
- * two clients hosted in the same app cannot read each other's hint.
+ * two clients hosted in the same app cannot read each other's hint. A hint whose client id cannot be
+ * determined is not stored at all, rather than being pooled under a shared key.
  * <p>
  * <b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
  * (default off), so with the flight off nothing is ever stored and behavior is unchanged.
@@ -181,12 +187,21 @@ public final class MamUpnHintStore {
      * @param clientId   client id the hint belongs to.
      * @param upn        the UPN to remember.
      */
-    public static void saveUpnHint(@Nullable final IPlatformComponents components,
-                                   @Nullable final String clientId,
-                                   @Nullable final String upn) {
+    static void saveUpnHint(@Nullable final IPlatformComponents components,
+                            @Nullable final String clientId,
+                            @Nullable final String upn) {
         final String methodTag = TAG + ":saveUpnHint";
 
         if (!isEnabled() || StringUtil.isNullOrEmpty(upn)) {
+            return;
+        }
+
+        if (StringUtil.isNullOrEmpty(clientId)) {
+            // Records are keyed by client id so that two clients in one app cannot read each other's
+            // hint. Writing under the placeholder key would put every client that failed resolution
+            // into one shared bucket, and no reader ever asks for it - readers always have a real
+            // client id - so the record would simply sit there. Drop it instead.
+            Logger.warn(methodTag, "Not storing a UPN hint: the client id could not be determined.");
             return;
         }
 
@@ -195,7 +210,13 @@ public final class MamUpnHintStore {
             return;
         }
 
-        saveUpnHint(storage, clientId, upn, System.currentTimeMillis());
+        try {
+            saveUpnHint(storage, clientId, upn, System.currentTimeMillis());
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Could not store the UPN hint: " + e.getClass().getSimpleName());
+            return;
+        }
+
         Logger.info(methodTag, "Stored a UPN hint for the MAM-CA broker-install flow; it is usable for "
                 + (getTtlMillis() / 1000L) + "s, until it is carried into a request.");
     }
@@ -213,8 +234,13 @@ public final class MamUpnHintStore {
                             @NonNull final String upn,
                             final long nowMillis) {
         final String suffix = keySuffix(clientId);
-        storage.put(KEY_PREFIX_WRITTEN_AT + suffix, String.valueOf(nowMillis));
+        // The UPN goes first, deliberately. These are two independent asynchronous writes, so a
+        // process death between them tears the record. Writing the UPN first means a tear pairs the
+        // new UPN with the previous timestamp, which at worst expires early. The other order pairs
+        // the *previous* UPN with a fresh timestamp, which would hand one user's address to the next
+        // and silently restart the clock on it.
         storage.put(KEY_PREFIX_UPN + suffix, upn);
+        storage.put(KEY_PREFIX_WRITTEN_AT + suffix, String.valueOf(nowMillis));
     }
 
     /**
@@ -245,16 +271,29 @@ public final class MamUpnHintStore {
     @Nullable
     public static String getValidUpnHint(@Nullable final IPlatformComponents components,
                                          @Nullable final String clientId) {
-        if (!isEnabled()) {
-            return null;
-        }
-
         final INameValueStorage<String> storage = getStorage(components);
         if (storage == null) {
             return null;
         }
 
-        return getValidUpnHint(storage, clientId, System.currentTimeMillis(), getTtlMillis());
+        try {
+            // Sweep before consulting the flight, not after. Expiry is driven entirely by reads, so
+            // gating this behind isEnabled() would mean that turning the flight off - the kill
+            // switch - stranded every UPN already on disk permanently. Only handing a hint out is
+            // a feature decision; clearing one out is hygiene and has to keep working.
+            sweepUnusableRecords(storage, System.currentTimeMillis(), getTtlMillis());
+
+            if (!isEnabled()) {
+                return null;
+            }
+
+            return getValidUpnHint(storage, clientId, System.currentTimeMillis(), getTtlMillis());
+        } catch (final Exception e) {
+            // A pre-filled text box must never be the reason an authentication request fails.
+            Logger.warn(TAG + ":getValidUpnHint",
+                    "Could not read the stored UPN hint: " + e.getClass().getSimpleName());
+            return null;
+        }
     }
 
     /**
@@ -352,8 +391,14 @@ public final class MamUpnHintStore {
         }
 
         // writtenAt > now means the clock moved backwards; treat it as untrustworthy rather than
-        // letting the hint outlive its window.
-        return writtenAtMillis <= nowMillis && nowMillis - writtenAtMillis < ttlMillis;
+        // letting the hint outlive its window. The lower bound matters just as much: a corrupted
+        // negative timestamp would make the subtraction below overflow and wrap positive, which
+        // reads as "written moments ago" and would keep the record alive forever.
+        if (writtenAtMillis < 0L || writtenAtMillis > nowMillis) {
+            return false;
+        }
+
+        return nowMillis - writtenAtMillis < ttlMillis;
     }
 
     /**
@@ -366,8 +411,15 @@ public final class MamUpnHintStore {
     public static void clearUpnHint(@Nullable final IPlatformComponents components,
                                     @Nullable final String clientId) {
         final INameValueStorage<String> storage = getStorage(components);
-        if (storage != null) {
+        if (storage == null) {
+            return;
+        }
+
+        try {
             clearUpnHint(storage, clientId);
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":clearUpnHint",
+                    "Could not clear the stored UPN hint: " + e.getClass().getSimpleName());
         }
     }
 
@@ -385,17 +437,25 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Returns {@code parameters} with {@code login_hint} pre-filled from a still-valid stored UPN,
-     * spending the hint in the process so it cannot be replayed onto a later, unrelated sign-in.
+     * Returns {@code parameters} with {@code login_hint} pre-filled from a still-valid stored UPN.
      * <p>
      * An explicit {@code login_hint} from the caller always wins - it is never overwritten - and the
      * original instance is returned untouched whenever there is nothing useful to add, so this is
      * safe to call on every interactive request.
      * <p>
+     * The hint is deliberately <em>not</em> applied when the caller asked to pick or create an
+     * account. Setting {@code login_hint} is not merely cosmetic: {@code BaseController} suppresses
+     * the account-picker page whenever a hint is present, and on the broker path the hint becomes the
+     * account-resolution field. Injecting a remembered address there would silently answer a question
+     * the caller explicitly wanted to put to the user.
+     * <p>
+     * Applying a hint does not delete it; it is retired on a successful sign-in, or by its TTL. The
+     * request it was attached to may still fail - a flaky network right after a large broker install
+     * is exactly the case this feature exists for - and the hint has to outlive that to be useful.
+     * <p>
      * Host SDKs that render their own account-entry UI (rather than going straight to the
      * authorization request) should call {@link #getValidUpnHint(IPlatformComponents, String)}
-     * directly to pre-fill that field; that read leaves the hint in place, so it survives the app
-     * restart that installing the broker can cause.
+     * directly to pre-fill that field.
      *
      * @param parameters the interactive request parameters.
      * @return the same instance, or a copy carrying the pre-filled {@code login_hint}.
@@ -410,14 +470,18 @@ public final class MamUpnHintStore {
             return parameters;
         }
 
+        final OpenIdConnectPromptParameter prompt = parameters.getPrompt();
+        if (prompt == OpenIdConnectPromptParameter.SELECT_ACCOUNT
+                || prompt == OpenIdConnectPromptParameter.CREATE) {
+            Logger.info(methodTag,
+                    "Not pre-filling login_hint: the caller asked the user to choose or create an account.");
+            return parameters;
+        }
+
         final String upn = getValidUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
         if (StringUtil.isNullOrEmpty(upn)) {
             return parameters;
         }
-
-        // The hint has now been carried into a real request, which is what it was stored for, so
-        // retire it here rather than on every read.
-        clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
 
         Logger.info(methodTag, "Pre-filling login_hint from the stored MAM-CA UPN hint.");
         return parameters.toBuilder().loginHint(upn).build();

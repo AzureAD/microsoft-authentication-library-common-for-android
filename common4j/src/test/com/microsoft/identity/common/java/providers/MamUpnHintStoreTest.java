@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.After;
@@ -372,6 +373,31 @@ public class MamUpnHintStoreTest {
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
     }
 
+    /**
+     * Turning the flight off is the kill switch, and expiry is driven entirely by reads. If the
+     * flight gate also skipped the sweep, throwing that switch would strand every UPN already on
+     * disk for good - the one action taken to reduce exposure would maximise it instead.
+     */
+    @Test
+    public void read_flightOff_stillSweepsRecordsAlreadyOnDisk() {
+        setFlights(true);
+        final IPlatformComponents components = components();
+        final INameValueStorage<String> storage =
+                components.getStorageSupplier().getEncryptedNameValueStore(
+                        MamUpnHintStore.STORE_NAME, String.class);
+        // Written far enough in the past that it is expired under any sane TTL.
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN,
+                System.currentTimeMillis() - (10L * 60L * 1000L));
+        assertNotNull(storage.get(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
+
+        setFlights(false);
+        MamUpnHintStore.getValidUpnHint(components, CLIENT_ID);
+
+        assertNull("an expired record must still be swept once the flight is off",
+                storage.get(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
+        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + CLIENT_ID));
+    }
+
     @Test
     public void clear_isNotGatedOnTheFlight() {
         setFlights(true);
@@ -388,10 +414,10 @@ public class MamUpnHintStoreTest {
 
     @Test
     public void ttl_isReadFromTheFlight() {
-        setFlights(true);
+        // Deliberately not the default, so this fails if the TTL stops honouring an ECS override.
+        setFlights(true, 5);
 
-        assertEquals(1000L * (Integer) CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS.getDefaultValue(),
-                MamUpnHintStore.getTtlMillis());
+        assertEquals(5000L, MamUpnHintStore.getTtlMillis());
     }
 
     /**
@@ -472,19 +498,63 @@ public class MamUpnHintStoreTest {
         assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
     }
 
+    /**
+     * The request an applied hint is attached to can still fail - a flaky network right after a
+     * ~100 MB broker install is exactly the case this feature exists for. If applying spent the
+     * hint, that failure would leave the user with the empty field the feature is meant to avoid,
+     * with nothing left to recover from.
+     */
     @Test
-    public void apply_isSingleUse_secondRequestIsNotPreFilled() {
+    public void apply_doesNotSpendTheHint_soARetryIsStillPreFilled() {
         setFlights(true);
         final InteractiveTokenCommandParameters first = parameters(null);
         MamUpnHintStore.saveUpnHint(first.getPlatformComponents(), CLIENT_ID, UPN);
 
         assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(first).getLoginHint());
 
-        final InteractiveTokenCommandParameters second = InteractiveTokenCommandParameters.builder()
+        final InteractiveTokenCommandParameters retry = InteractiveTokenCommandParameters.builder()
                 .platformComponents(first.getPlatformComponents())
                 .clientId(CLIENT_ID)
                 .build();
-        assertSame(second, MamUpnHintStore.applyStoredUpnHintIfAbsent(second));
+        assertEquals("the hint must survive a failed request", UPN,
+                MamUpnHintStore.applyStoredUpnHintIfAbsent(retry).getLoginHint());
+    }
+
+    /**
+     * Setting {@code login_hint} is not cosmetic: {@code BaseController} drops the {@code prompt}
+     * when a hint is present, so injecting a remembered address here would silently suppress the
+     * account picker the caller explicitly asked for and sign the user into somebody else's account.
+     */
+    @Test
+    public void apply_callerAskedForTheAccountPicker_hintIsNotInjected() {
+        setFlights(true);
+        final IPlatformComponents components = components();
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
+
+        final InteractiveTokenCommandParameters parameters = InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .clientId(CLIENT_ID)
+                .prompt(OpenIdConnectPromptParameter.SELECT_ACCOUNT)
+                .build();
+
+        assertSame("an explicit account picker must never be pre-answered",
+                parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
+        assertNull(MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters).getLoginHint());
+    }
+
+    @Test
+    public void apply_callerAskedToCreateAnAccount_hintIsNotInjected() {
+        setFlights(true);
+        final IPlatformComponents components = components();
+        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN);
+
+        final InteractiveTokenCommandParameters parameters = InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .clientId(CLIENT_ID)
+                .prompt(OpenIdConnectPromptParameter.CREATE)
+                .build();
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters));
     }
 
     @Test
@@ -512,7 +582,7 @@ public class MamUpnHintStoreTest {
     // region round trip through a real (mock-backed) store
 
     @Test
-    public void roundTrip_throughPlatformComponents_isSpentOnUseAndScoped() {
+    public void roundTrip_throughPlatformComponents_isScopedAndClearable() {
         setFlights(true);
         final IPlatformComponents components = components();
 
@@ -524,15 +594,29 @@ public class MamUpnHintStoreTest {
         assertTrue("a read must not spend the hint",
                 storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
 
-        // Carrying it into a request is what retires it.
+        // Nor does carrying it into a request; the request may still fail.
         assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(
                 InteractiveTokenCommandParameters.builder()
                         .platformComponents(components)
                         .clientId(CLIENT_ID)
                         .build()).getLoginHint());
-        assertFalse("the record must be gone once it has been used",
+
+        // Signing in successfully is what retires it - see the controllers' clear-on-success.
+        MamUpnHintStore.clearUpnHint(components, CLIENT_ID);
+        assertFalse("the record must be gone once sign-in has succeeded",
                 storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID));
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID));
+    }
+
+    @Test
+    public void save_clientIdUnknown_storesNothing() {
+        setFlights(true);
+        final IPlatformComponents components = components();
+
+        MamUpnHintStore.saveUpnHint(components, null, UPN);
+
+        assertTrue("a hint with no client id must not be pooled under a shared key",
+                storageOf(components).keySet().isEmpty());
     }
 
     // endregion
@@ -592,6 +676,17 @@ public class MamUpnHintStoreTest {
         final MockFlightsProvider provider = new MockFlightsProvider();
         provider.addFlight(CommonFlight.ENABLE_MAM_CA_UPN_HINT.getKey(),
                 Boolean.toString(upnHintEnabled));
+        final MockFlightsManager manager = new MockFlightsManager();
+        manager.setMockBrokerFlightsProvider(provider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);
+    }
+
+    private static void setFlights(final boolean upnHintEnabled, final int ttlSeconds) {
+        final MockFlightsProvider provider = new MockFlightsProvider();
+        provider.addFlight(CommonFlight.ENABLE_MAM_CA_UPN_HINT.getKey(),
+                Boolean.toString(upnHintEnabled));
+        provider.addFlight(CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS.getKey(),
+                Integer.toString(ttlSeconds));
         final MockFlightsManager manager = new MockFlightsManager();
         manager.setMockBrokerFlightsProvider(provider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(manager);

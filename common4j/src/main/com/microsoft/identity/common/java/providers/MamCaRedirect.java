@@ -27,7 +27,9 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -55,6 +57,12 @@ public final class MamCaRedirect {
 
     /** Query-parameter name carrying the UPN of the user who was blocked. */
     public static final String KEY_USERNAME = "username";
+
+    /**
+     * The shape of an ordinary query-parameter name. Used to keep values that the parser mistook for
+     * names - a trailing token with no {@code =} - out of the logs, since one of them could be a UPN.
+     */
+    private static final Pattern PARAMETER_NAME = Pattern.compile("[A-Za-z0-9_.\\-]{1,64}");
 
     private MamCaRedirect() {
         // Utility class.
@@ -93,9 +101,14 @@ public final class MamCaRedirect {
     /**
      * Logs which parameters the broker-install redirect carried, by <em>name</em> only.
      * <p>
-     * The redirect carries the user's UPN, so the URL itself is never logged. The key names are not
+     * The redirect carries the user's UPN, so the URL itself is never logged. Names alone are not
      * user data, and they are what tells us in the field whether a given install was marked with
      * {@link #KEY_INTUNE_APP_PROTECTION}.
+     * <p>
+     * Names are not simply trusted to <em>be</em> names, though. The query parser turns a token with
+     * no {@code =} into a key with a null value, so a redirect ending in a bare
+     * {@code ?user@contoso.com} would present the UPN itself as a key. Only names matching an
+     * ordinary parameter shape are printed; anything else is counted rather than logged.
      *
      * @param callerTag          the caller's method tag, used as the log tag.
      * @param redirectParameters query parameters of the broker-install redirect.
@@ -105,8 +118,28 @@ public final class MamCaRedirect {
         if (redirectParameters == null) {
             return;
         }
-        // Sorted so the line is stable and diffable across runs.
-        Logger.info(callerTag, "Broker-install redirect carried parameters: "
-                + new TreeSet<>(redirectParameters.keySet()));
+
+        final Set<String> names = printableParameterNames(redirectParameters.keySet());
+        final int withheld = redirectParameters.size() - names.size();
+
+        Logger.info(callerTag, "Broker-install redirect carried parameters: " + names
+                + (withheld > 0 ? " (" + withheld + " withheld)" : ""));
+    }
+
+    /**
+     * The subset of {@code keys} that is safe to log, sorted so the line is stable across runs.
+     *
+     * @param keys parameter names as the query parser produced them.
+     * @return only those matching an ordinary parameter-name shape.
+     */
+    @NonNull
+    static Set<String> printableParameterNames(@NonNull final Set<String> keys) {
+        final Set<String> printable = new TreeSet<>();
+        for (final String key : keys) {
+            if (key != null && PARAMETER_NAME.matcher(key).matches()) {
+                printable.add(key);
+            }
+        }
+        return printable;
     }
 }

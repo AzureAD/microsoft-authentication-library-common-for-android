@@ -253,6 +253,11 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
         );
 
+        if (acquireTokenResult.getSucceeded()) {
+            // Signed in, so any remembered UPN has served its purpose and should not linger.
+            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
+        }
+
         return acquireTokenResult;
     }
 
