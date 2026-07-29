@@ -352,30 +352,6 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Storage-level read with an injectable clock and TTL. Non-destructive; see
-     * {@link #getValidUpnHint(IPlatformComponents, String)} for why.
-     *
-     * @param storage   the backing store.
-     * @param clientId  client id to read the hint for.
-     * @param nowMillis the current time in epoch millis.
-     * @param ttlMillis how long a hint stays usable, in millis.
-     * @return the UPN if still valid, otherwise {@code null}.
-     */
-    @Nullable
-    static String getValidUpnHint(@NonNull final INameValueStorage<String> storage,
-                                  @Nullable final String clientId,
-                                  final long nowMillis,
-                                  final long ttlMillis) {
-        final Record record = getValidRecord(storage, clientId, nowMillis, ttlMillis);
-        if (record == null) {
-            return null;
-        }
-
-        Logger.info(TAG + ":getValidUpnHint", "Returning the stored MAM-CA UPN hint.");
-        return record.getUpn();
-    }
-
-    /**
      * Storage-level read of the whole record, with an injectable clock and TTL. Non-destructive.
      *
      * @param storage   the backing store.

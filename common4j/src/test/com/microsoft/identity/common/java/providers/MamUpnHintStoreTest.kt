@@ -59,7 +59,7 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL - 1, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW + TTL - 1, TTL))
     }
 
     @Test
@@ -67,10 +67,10 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
             "reading must not destroy a hint that has not been used yet",
-            UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL)
+            UPN, readUpn(storage, CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -86,10 +86,10 @@ class MamUpnHintStoreTest {
         save(storage, CLIENT_ID, UPN, NOW)
 
         // The transient resume, a few tens of millis after the write.
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 34L, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW + 34L, TTL))
 
         // The read that actually matters, after the broker install killed and restarted the app.
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 60_000L, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW + 60_000L, TTL))
     }
 
     @Test
@@ -97,7 +97,7 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL))
+        assertNull(readUpn(storage, CLIENT_ID, NOW + TTL, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
@@ -106,7 +106,7 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL + 1, TTL))
+        assertNull(readUpn(storage, CLIENT_ID, NOW + TTL + 1, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
@@ -115,7 +115,7 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW - 1, TTL))
+        assertNull(readUpn(storage, CLIENT_ID, NOW - 1, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
@@ -134,11 +134,11 @@ class MamUpnHintStoreTest {
 
         assertEquals(
             "a fresh hint is still readable",
-            UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL)
+            UPN, readUpn(storage, CLIENT_ID, NOW, TTL)
         )
         assertNull(
             "an expired hint must not be returned just because the sweep could not see it",
-            MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL)
+            readUpn(storage, CLIENT_ID, NOW + TTL, TTL)
         )
     }
 
@@ -148,7 +148,7 @@ class MamUpnHintStoreTest {
         // A record written by a future (or corrupted) build that this one cannot parse.
         storage.put(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID, "not-a-record")
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertNull(readUpn(storage, CLIENT_ID, NOW, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
@@ -158,13 +158,13 @@ class MamUpnHintStoreTest {
         // Parses, but carries no write time - its age cannot be judged, so it cannot be trusted.
         storage.put(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID, "{\"upn\":\"$UPN\"}")
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertNull(readUpn(storage, CLIENT_ID, NOW, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
     @Test
     fun read_missingRecord_returnsNull() {
-        assertNull(MamUpnHintStore.getValidUpnHint(InMemoryStorage(), CLIENT_ID, NOW, TTL))
+        assertNull(readUpn(InMemoryStorage(), CLIENT_ID, NOW, TTL))
     }
 
     @Test
@@ -173,7 +173,7 @@ class MamUpnHintStoreTest {
         save(storage, CLIENT_ID, UPN, NOW)
         save(storage, CLIENT_ID, OTHER_UPN, NOW + 1)
 
-        assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 1, TTL))
+        assertEquals(OTHER_UPN, readUpn(storage, CLIENT_ID, NOW + 1, TTL))
     }
 
     // endregion
@@ -187,11 +187,11 @@ class MamUpnHintStoreTest {
 
         assertNull(
             "one client must not see another client's hint",
-            MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL)
+            readUpn(storage, OTHER_CLIENT_ID, NOW, TTL)
         )
         assertEquals(
             "and the owning client's hint must survive that read",
-            UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL)
+            UPN, readUpn(storage, CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -201,10 +201,10 @@ class MamUpnHintStoreTest {
         save(storage, CLIENT_ID, UPN, NOW)
         save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
             OTHER_UPN,
-            MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL)
+            readUpn(storage, OTHER_CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -218,15 +218,15 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = InMemoryStorage()
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, null, NOW, TTL))
-        assertNull(MamUpnHintStore.getValidUpnHint(storage, "", NOW, TTL))
+        assertNull(readUpn(storage, null, NOW, TTL))
+        assertNull(readUpn(storage, "", NOW, TTL))
 
         MamUpnHintStore.clearUpnHint(storage, null)
         MamUpnHintStore.clearUpnHint(storage, "")
 
         assertEquals(
             "another client's hint must be untouched",
-            UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL)
+            UPN, readUpn(storage, CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -241,7 +241,7 @@ class MamUpnHintStoreTest {
         assertRecordAbsent(storage, CLIENT_ID)
         assertEquals(
             OTHER_UPN,
-            MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL)
+            readUpn(storage, OTHER_CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -256,7 +256,7 @@ class MamUpnHintStoreTest {
         save(storage, CLIENT_ID, UPN, NOW + TTL)
 
         // Reading our own fresh hint must also take out the other client's stale one.
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW + TTL, TTL))
         assertRecordAbsent(storage, OTHER_CLIENT_ID)
     }
 
@@ -268,7 +268,7 @@ class MamUpnHintStoreTest {
         storage.put("written_at.$OTHER_CLIENT_ID", NOW.toString())
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW, TTL))
         assertNull(
             "anything that is not a readable record must be swept",
             storage.get("upn.$OTHER_CLIENT_ID")
@@ -282,10 +282,10 @@ class MamUpnHintStoreTest {
         save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
         save(storage, CLIENT_ID, UPN, NOW)
 
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
+        assertEquals(UPN, readUpn(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
             OTHER_UPN,
-            MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL)
+            readUpn(storage, OTHER_CLIENT_ID, NOW, TTL)
         )
     }
 
@@ -877,6 +877,14 @@ class MamUpnHintStoreTest {
     /** An authority whose url parses; only its host matters here. */
     private fun authority(host: String = HOST): Authority =
         Authority.getAuthorityFromAuthorityUrl("https://$host/common")
+
+    /** Storage-level read with an injected clock, unwrapped to the UPN the assertions care about. */
+    private fun readUpn(
+        storage: INameValueStorage<String>,
+        clientId: String?,
+        nowMillis: Long,
+        ttlMillis: Long
+    ): String? = MamUpnHintStore.getValidRecord(storage, clientId, nowMillis, ttlMillis)?.upn
 
     private fun storageOf(components: IPlatformComponents): INameValueStorage<String> {
         val storage = components.storageSupplier
