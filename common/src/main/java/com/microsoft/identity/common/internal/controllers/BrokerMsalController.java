@@ -391,8 +391,8 @@ public class BrokerMsalController extends BaseController {
 
         if (result != null && result.getSucceeded()) {
             // Signed in, so any remembered UPN has served its purpose and should not linger. (A hint
-            // that was actually used is already cleared by the single-use read above; this covers
-            // the case where the caller supplied their own login_hint.)
+            // that was carried into this request was already retired when it was applied above; this
+            // covers the case where the caller supplied their own login_hint.)
             MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
         }
 

@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 import org.junit.After;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,6 +126,28 @@ public class MamUpnHintStoreTest {
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW - 1, TTL));
         assertRecordAbsent(storage, CLIENT_ID);
+    }
+
+    /**
+     * The other expiry tests all pass through the sweep, which is what normally deletes stale
+     * records. This pins that the read validates the record it is about to return in its own right:
+     * against a store that cannot enumerate itself the sweep sees nothing, and an expired UPN must
+     * still not be handed out.
+     */
+    @Test
+    public void read_whenTheStoreCannotEnumerateItself_stillEnforcesTheTtl() {
+        final INameValueStorage<String> storage = new InMemoryStorage<String>() {
+            @Override
+            public Map<String, String> getAll() {
+                return Collections.emptyMap();
+            }
+        };
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
+
+        assertEquals("a fresh hint is still readable",
+                UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
+        assertNull("an expired hint must not be returned just because the sweep could not see it",
+                MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL));
     }
 
     @Test

@@ -106,7 +106,7 @@ public abstract class AuthorizationResultFactory
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED,
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION);
 
-                // Set username returned from the service. We're not currently using it though, but the server returns it.
+                // Username returned by the service, identifying the account that must onboard.
                 final Map<String, String> urlParameters = UrlUtil.getParameters(url);
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
                 // Surface whether this install was triggered by MAM Conditional Access, so callers

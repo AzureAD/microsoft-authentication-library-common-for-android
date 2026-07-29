@@ -279,7 +279,10 @@ public final class MamUpnHintStore {
         sweepUnusableRecords(storage, nowMillis, ttlMillis);
 
         final String upn = storage.get(KEY_PREFIX_UPN + suffix);
-        if (StringUtil.isNullOrEmpty(upn)) {
+        // Re-check this record rather than trusting the sweep to have removed it: the sweep depends
+        // on the store being able to enumerate itself, and an expired UPN must never be handed out
+        // just because a listing came back short.
+        if (!isUsable(upn, storage.get(KEY_PREFIX_WRITTEN_AT + suffix), nowMillis, ttlMillis)) {
             return null;
         }
 
