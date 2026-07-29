@@ -49,6 +49,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Looper;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -73,6 +74,7 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -91,6 +93,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
+import java.time.Duration;
 import java.util.HashMap;
 
 import io.opentelemetry.api.trace.Span;
@@ -185,6 +188,41 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
+
+    // ---------------------------------------------------------------------------
+    // MAM Conditional Access broker-install fixtures.
+    //
+    // All four are the same msauth://wpj broker-install redirect; they differ only in whether the
+    // server marked the install as MAM-CA (intuneAppProtection=1) and whether the app_link already
+    // names an install referrer. The app_link is percent-encoded exactly as it arrives on the wire.
+    // ---------------------------------------------------------------------------
+
+    /** Play link for Company Portal with no referrer of its own; the client-side decoration applies. */
+    private static final String SERVER_SUPPLIED_REFERRER = "com.contoso.serverpicked";
+    private static final String ENCODED_CP_APP_LINK =
+            "https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+    /** The same link, but the server already named an install referrer on it. */
+    private static final String ENCODED_CP_APP_LINK_WITH_SERVER_REFERRER =
+            ENCODED_CP_APP_LINK + "%26referrer%3d" + SERVER_SUPPLIED_REFERRER;
+    /** The same link delivered over the browser:// extension prefix, which the allowlist rejects. */
+    private static final String ENCODED_CP_APP_LINK_BROWSER_PREFIX =
+            "browser%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+
+    private static final String MAM_CA_REDIRECT_PREFIX =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&intuneAppProtection=1&app_link=";
+
+    /** MAM-CA install: marked by the server, app_link carries no referrer. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK;
+    /** MAM-CA install where the server already picked the referrer. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK_WITH_SERVER_REFERRER;
+    /** MAM-CA install whose app_link arrives over the browser:// extension prefix. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX =
+            MAM_CA_REDIRECT_PREFIX + ENCODED_CP_APP_LINK_BROWSER_PREFIX;
+    /** Ordinary device-registration install: no MAM-CA marker, so it must keep its existing behavior. */
+    private static final String TEST_PLAIN_INSTALL_REQUEST_URL =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&app_link=" + ENCODED_CP_APP_LINK;
 
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
     private static final String TEST_OPENID_VC_URL = "openid-vc://credential-offer?credential_issuer=https%3A%2F%2Fexample.com&credential_configuration_ids=VerifiedEmployee";
@@ -1899,6 +1937,135 @@ public class AzureActiveDirectoryWebViewClientTest {
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertFalse("blank URL should not produce a last_loaded_domain entry",
                 blob.has("last_loaded_domain"));
+    }
+
+    // -----------------------------------------------------------------------
+    // MAM Conditional Access: install-referrer decoration on the broker install
+    // -----------------------------------------------------------------------
+
+    /**
+     * Points the flights manager at a provider whose only opinion is the MAM-CA install-referrer
+     * flight, so each test states the gate it is exercising. {@code cleanUp} resets the manager.
+     *
+     * @param enabled whether {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER} should report on.
+     */
+    private void setMamCaInstallReferrerFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER))
+                .thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    /**
+     * Drives a broker-install redirect and returns the install {@link Intent} that was launched.
+     * <p>
+     * The launch is deliberately posted a second out so the calling activity can register its
+     * broker-result receiver first, so the main looper has to be advanced past that delay before
+     * the intent exists. Robolectric pauses the looper by default, which is what makes this
+     * observable at all.
+     *
+     * @param installRedirectUrl the {@code msauth://wpj} redirect to feed the WebView client.
+     * @return the launched install intent, or null if none was launched.
+     */
+    private Intent launchInstallAndCaptureIntent(final String installRedirectUrl) {
+        assertTrue("A broker-install redirect must be handled by the WebView client",
+                mWebViewClient.shouldOverrideUrlLoading(mMockWebView, installRedirectUrl));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
+        return Shadows.shadowOf(mActivity).getNextStartedActivity();
+    }
+
+    /**
+     * The feature itself: a server-marked MAM-CA install is launched with the calling app named as
+     * the Play install referrer, which is what lets Company Portal skip its own sign-in UX and
+     * redirect back here after install.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_tagsCallingAppAsInstallReferrer() {
+        setMamCaInstallReferrerFlight(true);
+
+        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("Expected the Company Portal install link to be launched", launched);
+        assertEquals(Intent.ACTION_VIEW, launched.getAction());
+        assertTrue("A MAM-CA install must name the calling app as the install referrer, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
+    }
+
+    /**
+     * The flight is a complete kill switch: with it off the install link is launched byte-for-byte
+     * as the server sent it.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_flightOff_leavesLinkUnchanged() {
+        setMamCaInstallReferrerFlight(false);
+
+        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("The install must still be launched with the flight off", launched);
+        assertFalse("With the flight off nothing may be appended to the install link, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
+    }
+
+    /**
+     * The same broker-install redirect also drives ordinary device-registration installs. Without
+     * the server's MAM-CA marker those must keep their existing, undecorated behavior.
+     */
+    @Test
+    public void testProcessInstallRequest_notMamCaInstall_leavesLinkUnchanged() {
+        setMamCaInstallReferrerFlight(true);
+
+        final Intent launched = launchInstallAndCaptureIntent(TEST_PLAIN_INSTALL_REQUEST_URL);
+
+        assertNotNull("A device-registration install must still be launched", launched);
+        assertFalse("An unmarked install must not be tagged as MAM-CA, but was: "
+                        + launched.getDataString(),
+                launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
+    }
+
+    /**
+     * The decoration is a fallback, not an override. The server names the calling app directly,
+     * whereas the client can only ever name the process hosting the sign-in UI, so where the two
+     * disagree the server wins.
+     */
+    @Test
+    public void testProcessInstallRequest_serverSuppliedReferrer_isNotOverridden() {
+        setMamCaInstallReferrerFlight(true);
+
+        final Intent launched =
+                launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER);
+
+        assertNotNull(launched);
+        final String launchedLink = launched.getDataString();
+        assertTrue("A referrer the server already set must be preserved, but was: " + launchedLink,
+                launchedLink.contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + SERVER_SUPPLIED_REFERRER));
+        assertFalse("The client must not add a second referrer, but was: " + launchedLink,
+                launchedLink.contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
+    }
+
+    /**
+     * A {@code browser://}-prefixed app_link never reaches the install launch at all:
+     * {@code BrokerInstallLinkValidator} requires the scheme to be exactly https, so the redirect is
+     * not classified as a broker install and nothing is started. This pins the allowlist as the gate
+     * in front of the install launch, and makes the {@code browser://} rewrite further down
+     * demonstrably unreachable for app_links.
+     */
+    @Test
+    public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist() {
+        setMamCaInstallReferrerFlight(true);
+
+        final Intent launched =
+                launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
+
+        assertNull("An app_link that is not https must never be launched, but was: "
+                        + (launched == null ? "" : launched.getDataString()),
+                launched);
     }
 }
 
