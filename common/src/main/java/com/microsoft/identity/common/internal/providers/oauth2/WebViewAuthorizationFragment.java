@@ -373,8 +373,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
                 },
-                getClientIdFromRequestUrl(),
-                getAuthorityHostFromRequestUrl()
+                getClientIdFromRequestUrl(mAuthorizationRequestUrl),
+                getAuthorityHostFromRequestUrl(mAuthorizationRequestUrl)
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
@@ -383,20 +383,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Reads {@code client_id} off the authorization request URL, so the WebView client can scope
+     * Reads {@code client_id} off an authorization request URL, so the WebView client can scope
      * per-app state to the app being authorized.
      *
+     * @param requestUrl the authorization request URL.
      * @return the client id, or null when it cannot be determined.
      */
     @Nullable
-    private String getClientIdFromRequestUrl() {
+    @VisibleForTesting
+    static String getClientIdFromRequestUrl(@Nullable final String requestUrl) {
         final String methodTag = TAG + ":getClientIdFromRequestUrl";
-        if (StringUtil.isNullOrEmpty(mAuthorizationRequestUrl)) {
+        if (StringUtil.isNullOrEmpty(requestUrl)) {
             return null;
         }
 
         try {
-            return Uri.parse(mAuthorizationRequestUrl).getQueryParameter(CLIENT_ID);
+            return Uri.parse(requestUrl).getQueryParameter(CLIENT_ID);
         } catch (final UnsupportedOperationException e) {
             Logger.warn(methodTag, "Could not read the client id off the request url.");
             return null;
@@ -404,20 +406,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     }
 
     /**
-     * Reads the host off the authorization request URL, so state captured mid-flow can be bound to
+     * Reads the host off an authorization request URL, so state captured mid-flow can be bound to
      * the authority it came from.
      *
+     * @param requestUrl the authorization request URL.
      * @return the authority host, or null when it cannot be determined.
      */
     @Nullable
-    private String getAuthorityHostFromRequestUrl() {
+    @VisibleForTesting
+    static String getAuthorityHostFromRequestUrl(@Nullable final String requestUrl) {
         final String methodTag = TAG + ":getAuthorityHostFromRequestUrl";
-        if (StringUtil.isNullOrEmpty(mAuthorizationRequestUrl)) {
+        if (StringUtil.isNullOrEmpty(requestUrl)) {
             return null;
         }
 
         try {
-            return Uri.parse(mAuthorizationRequestUrl).getHost();
+            return Uri.parse(requestUrl).getHost();
         } catch (final Exception e) {
             Logger.warn(methodTag, "Could not read the authority host off the request url.");
             return null;
