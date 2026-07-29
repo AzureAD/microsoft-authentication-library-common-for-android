@@ -89,6 +89,14 @@ import lombok.NonNull;
  * Every operation is best-effort: this is a convenience hint, so a storage failure is logged and
  * swallowed rather than allowed to fail the authentication request.
  */
+// Deliberately Java, not Kotlin. In this module compileKotlin runs before compileJava, so Lombok has
+// not generated its accessors yet and Kotlin cannot see them. This class reads Lombok-generated
+// members of same-module classes - InteractiveTokenCommandParameters#getLoginHint()/getPrompt()/
+// toBuilder() and AuthorizationErrorResponse#isMamCaInstall()/getUpnToWpj() - which is exactly what
+// applyStoredUpnHintIfAbsent and the error-response overload exist to do, so it cannot be factored
+// out. Converting this file needs the org.jetbrains.kotlin.plugin.lombok compiler plugin added to
+// common4j first; that is a build change for the whole module, not for a feature PR. The tests are
+// Kotlin because compileTestKotlin runs after main's Java and therefore does see those accessors.
 public final class MamUpnHintStore {
 
     private static final String TAG = MamUpnHintStore.class.getSimpleName();
