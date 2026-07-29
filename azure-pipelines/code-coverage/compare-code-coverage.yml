@@ -25,15 +25,35 @@ parameters:
 - name: dependsOn
   type: object
   default: []
+# PR label that, when applied, SKIPS the coverage gate (the compare job does not run).
+# Escape hatch for emergencies or when the coverage check itself is broken; remove the
+# label to re-enable the gate. Matched case-insensitively as a substring of the PR's
+# GitHub labels, mirroring the skipConsumerValidationLabel pattern in build-consumers.yml.
+- name: skipLabel
+  type: string
+  default: skip-coverage-check
 
 stages:
+# Fetch the PR's GitHub labels first so the compare job can opt out when skipLabel is set.
+# On non-PR runs fetch-pr-labels.yml leaves prLabels empty, so the gate still runs.
+- stage: coverage_get_label
+  displayName: Check for PR Label (coverage)
+  dependsOn: []
+  jobs:
+    - template: ../templates/steps/fetch-pr-labels.yml
 - stage: compare_coverage
   displayName: Compare Code Coverage
-  dependsOn: ${{ parameters.dependsOn }}
+  dependsOn:
+  - coverage_get_label
+  - ${{ each stage in parameters.dependsOn }}:
+    - ${{ stage }}
   jobs:
     - job: compare
       displayName: PR VS. Dev
+      # Skip the whole comparison when the PR carries the skip label.
+      condition: and( succeeded(), not( contains( variables['prLabels'], '${{ parameters.skipLabel }}' ) ) )
       variables:
+        prLabels: $[ stageDependencies.coverage_get_label.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
         # Report-only mode passes --no-fail-on-drop so the diff is surfaced without gating.
         ${{ if parameters.failOnDrop }}:
           noFailFlag: ''
