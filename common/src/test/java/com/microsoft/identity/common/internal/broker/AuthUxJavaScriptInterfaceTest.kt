@@ -116,6 +116,14 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test isValidUrlForInterface with scheme-only null-host URI`() {
+        // A scheme-only URI (e.g. an openid-vc:// redirect) parses with a null host. It must be
+        // rejected rather than throwing on the null-host AAD suffix check.
+        val schemeOnlyUrl = "openid-vc://?request_uri=https://verifiedid.did.msidentity.com/x"
+        Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(schemeOnlyUrl))
+    }
+
+    @Test
     fun `test isValidUrlForInterface with empty URL`() {
         val emptyUrl = ""
         Assert.assertFalse(AuthUxJavaScriptInterface.isValidUriForInterface(emptyUrl))
