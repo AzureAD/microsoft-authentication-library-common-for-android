@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.providers
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory
+import com.microsoft.identity.common.java.authorities.Authority
+import com.microsoft.identity.common.java.authorities.UnknownAuthority
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
@@ -55,7 +57,7 @@ class MamUpnHintStoreTest {
     @Test
     fun save_thenReadWithinTtl_returnsUpn() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL - 1, TTL))
     }
@@ -63,7 +65,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_doesNotSpendTheHint_secondReadStillReturnsIt() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
@@ -81,7 +83,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_whileStillInTheInstallHandoff_leavesTheHintForTheReadAfterTheRestart() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         // The transient resume, a few tens of millis after the write.
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 34L, TTL))
@@ -93,7 +95,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_exactlyAtTtl_isExpired() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
@@ -102,7 +104,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_afterTtl_returnsNullAndDeletesRecord() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL + 1, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
@@ -111,7 +113,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_clockWentBackwards_returnsNullAndDeletesRecord() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW - 1, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
@@ -128,7 +130,7 @@ class MamUpnHintStoreTest {
         val storage: INameValueStorage<String> = object : InMemoryStorage<String>() {
             override fun getAll(): Map<String, String> = emptyMap()
         }
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertEquals(
             "a fresh hint is still readable",
@@ -141,20 +143,20 @@ class MamUpnHintStoreTest {
     }
 
     @Test
-    fun read_halfWrittenRecord_returnsNullAndDeletesRecord() {
+    fun read_unreadableRecord_returnsNullAndDeletesRecord() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        // The two keys are written non-atomically, so a crash in between can leave just the UPN.
-        storage.put(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID, UPN)
+        // A record written by a future (or corrupted) build that this one cannot parse.
+        storage.put(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID, "not-a-record")
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
     }
 
     @Test
-    fun read_nonNumericWrittenAt_returnsNullAndDeletesRecord() {
+    fun read_recordWithNoTimestamp_returnsNullAndDeletesRecord() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        storage.put(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID, UPN)
-        storage.put(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + CLIENT_ID, "not-a-number")
+        // Parses, but carries no write time - its age cannot be judged, so it cannot be trusted.
+        storage.put(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID, "{\"upn\":\"$UPN\"}")
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
         assertRecordAbsent(storage, CLIENT_ID)
@@ -168,8 +170,8 @@ class MamUpnHintStoreTest {
     @Test
     fun save_overwritesPreviousHintForSameClient() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, OTHER_UPN, NOW + 1)
+        save(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, OTHER_UPN, NOW + 1)
 
         assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + 1, TTL))
     }
@@ -181,7 +183,7 @@ class MamUpnHintStoreTest {
     @Test
     fun read_isScopedToClientId() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertNull(
             "one client must not see another client's hint",
@@ -196,8 +198,8 @@ class MamUpnHintStoreTest {
     @Test
     fun save_twoClients_areStoredIndependently() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
-        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
+        save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
@@ -214,7 +216,7 @@ class MamUpnHintStoreTest {
     @Test
     fun readAndClear_withoutAClientId_areSafeNoOps() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertNull(MamUpnHintStore.getValidUpnHint(storage, null, NOW, TTL))
         assertNull(MamUpnHintStore.getValidUpnHint(storage, "", NOW, TTL))
@@ -231,8 +233,8 @@ class MamUpnHintStoreTest {
     @Test
     fun clear_removesOnlyTheGivenClientsRecord() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
-        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
+        save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
 
         MamUpnHintStore.clearUpnHint(storage, CLIENT_ID)
 
@@ -250,8 +252,8 @@ class MamUpnHintStoreTest {
     @Test
     fun read_sweepsExpiredRecordsBelongingToOtherClients() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW + TTL)
+        save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW + TTL)
 
         // Reading our own fresh hint must also take out the other client's stale one.
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW + TTL, TTL))
@@ -259,21 +261,26 @@ class MamUpnHintStoreTest {
     }
 
     @Test
-    fun read_sweepsHalfWrittenRecordsBelongingToOtherClients() {
+    fun read_sweepsResidueLeftByAnEarlierFormat() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        // A dangling timestamp with no UPN - the other half of a torn write.
-        storage.put(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + OTHER_CLIENT_ID, NOW.toString())
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        // Keys written by a build that split the record across two entries.
+        storage.put("upn.$OTHER_CLIENT_ID", OTHER_UPN)
+        storage.put("written_at.$OTHER_CLIENT_ID", NOW.toString())
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
-        assertRecordAbsent(storage, OTHER_CLIENT_ID)
+        assertNull(
+            "anything that is not a readable record must be swept",
+            storage.get("upn.$OTHER_CLIENT_ID")
+        )
+        assertNull(storage.get("written_at.$OTHER_CLIENT_ID"))
     }
 
     @Test
     fun read_leavesOtherClientsStillValidRecordsAlone() {
         val storage: INameValueStorage<String> = InMemoryStorage()
-        MamUpnHintStore.saveUpnHint(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
-        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW)
+        save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW)
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL))
         assertEquals(
@@ -291,7 +298,7 @@ class MamUpnHintStoreTest {
         setFlights(true)
         val components = components()
 
-        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true))
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, HOST, redirect(UPN, true))
 
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
     }
@@ -301,7 +308,9 @@ class MamUpnHintStoreTest {
         setFlights(true)
         val components = components()
 
-        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, false))
+        MamUpnHintStore.saveUpnHintForMamCaInstall(
+            components, CLIENT_ID, HOST, redirect(UPN, false)
+        )
 
         assertNull(
             "an ordinary device-registration install must not store a hint",
@@ -314,7 +323,7 @@ class MamUpnHintStoreTest {
         setFlights(false)
         val components = components()
 
-        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, redirect(UPN, true))
+        MamUpnHintStore.saveUpnHintForMamCaInstall(components, CLIENT_ID, HOST, redirect(UPN, true))
 
         setFlights(true)
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
@@ -326,7 +335,7 @@ class MamUpnHintStoreTest {
         val components = components()
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(
-            components, CLIENT_ID,
+            components, CLIENT_ID, authority(),
             errorResponse(
                 MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, UPN, true
             )
@@ -341,7 +350,7 @@ class MamUpnHintStoreTest {
         val components = components()
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(
-            components, CLIENT_ID,
+            components, CLIENT_ID, authority(),
             errorResponse(
                 MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED, UPN, false
             )
@@ -356,7 +365,7 @@ class MamUpnHintStoreTest {
         val components = components()
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(
-            components, CLIENT_ID, errorResponse("some_other_error", UPN, true)
+            components, CLIENT_ID, authority(), errorResponse("some_other_error", UPN, true)
         )
 
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
@@ -368,7 +377,7 @@ class MamUpnHintStoreTest {
         val components = components()
 
         MamUpnHintStore.saveUpnHintForMamCaInstall(
-            components, CLIENT_ID, null as AuthorizationErrorResponse?
+            components, CLIENT_ID, authority(), null as AuthorizationErrorResponse?
         )
 
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
@@ -383,7 +392,7 @@ class MamUpnHintStoreTest {
         setFlights(false)
         val components = components()
 
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         setFlights(true)
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
@@ -393,7 +402,7 @@ class MamUpnHintStoreTest {
     fun read_flightOff_returnsNull() {
         setFlights(true)
         val components = components()
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         setFlights(false)
 
@@ -412,26 +421,25 @@ class MamUpnHintStoreTest {
         val storage = components.storageSupplier
             .getEncryptedNameValueStore(MamUpnHintStore.STORE_NAME, String::class.java)
         // Written far enough in the past that it is expired under any sane TTL.
-        MamUpnHintStore.saveUpnHint(
+        save(
             storage, CLIENT_ID, UPN, System.currentTimeMillis() - (10L * 60L * 1000L)
         )
-        assertNotNull(storage.get(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID))
+        assertNotNull(storage.get(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID))
 
         setFlights(false)
         MamUpnHintStore.getValidUpnHint(components, CLIENT_ID)
 
         assertNull(
             "an expired record must still be swept once the flight is off",
-            storage.get(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID)
+            storage.get(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID)
         )
-        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + CLIENT_ID))
     }
 
     @Test
     fun clear_isNotGatedOnTheFlight() {
         setFlights(true)
         val components = components()
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         setFlights(false)
         MamUpnHintStore.clearUpnHint(components, CLIENT_ID)
@@ -465,7 +473,7 @@ class MamUpnHintStoreTest {
         setFlights(true)
         val components = components()
 
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, "   ")
+        save(components, CLIENT_ID, "   ")
 
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
     }
@@ -474,7 +482,7 @@ class MamUpnHintStoreTest {
     fun save_nullComponents_isSwallowed() {
         setFlights(true)
 
-        MamUpnHintStore.saveUpnHint(null, CLIENT_ID, UPN)
+        save(null as IPlatformComponents?, CLIENT_ID, UPN)
         assertNull(MamUpnHintStore.getValidUpnHint(null, CLIENT_ID))
         MamUpnHintStore.clearUpnHint(null as IPlatformComponents?, CLIENT_ID)
     }
@@ -487,7 +495,7 @@ class MamUpnHintStoreTest {
     fun apply_absentLoginHint_isFilledFromTheStore() {
         setFlights(true)
         val parameters = parameters(null)
-        MamUpnHintStore.saveUpnHint(parameters.platformComponents, CLIENT_ID, UPN)
+        save(parameters.platformComponents, CLIENT_ID, UPN)
 
         val updated = MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters)
 
@@ -499,7 +507,7 @@ class MamUpnHintStoreTest {
     fun apply_callerSuppliedLoginHint_isNeverOverwritten() {
         setFlights(true)
         val parameters = parameters(OTHER_UPN)
-        MamUpnHintStore.saveUpnHint(parameters.platformComponents, CLIENT_ID, UPN)
+        save(parameters.platformComponents, CLIENT_ID, UPN)
 
         val updated = MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters)
 
@@ -511,7 +519,7 @@ class MamUpnHintStoreTest {
     fun apply_hintStoredByAnotherClient_isNotUsed() {
         setFlights(true)
         val parameters = parameters(null)
-        MamUpnHintStore.saveUpnHint(parameters.platformComponents, OTHER_CLIENT_ID, UPN)
+        save(parameters.platformComponents, OTHER_CLIENT_ID, UPN)
 
         assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters))
     }
@@ -520,7 +528,7 @@ class MamUpnHintStoreTest {
     fun apply_flightOff_returnsSameInstance() {
         setFlights(true)
         val parameters = parameters(null)
-        MamUpnHintStore.saveUpnHint(parameters.platformComponents, CLIENT_ID, UPN)
+        save(parameters.platformComponents, CLIENT_ID, UPN)
 
         setFlights(false)
 
@@ -537,13 +545,14 @@ class MamUpnHintStoreTest {
     fun apply_doesNotSpendTheHint_soARetryIsStillPreFilled() {
         setFlights(true)
         val first = parameters(null)
-        MamUpnHintStore.saveUpnHint(first.platformComponents, CLIENT_ID, UPN)
+        save(first.platformComponents, CLIENT_ID, UPN)
 
         assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(first).loginHint)
 
         val retry = InteractiveTokenCommandParameters.builder()
             .platformComponents(first.platformComponents)
             .clientId(CLIENT_ID)
+            .authority(authority())
             .build()
         assertEquals(
             "the hint must survive a failed request", UPN,
@@ -560,11 +569,12 @@ class MamUpnHintStoreTest {
     fun apply_callerAskedForTheAccountPicker_hintIsNotInjected() {
         setFlights(true)
         val components = components()
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         val parameters = InteractiveTokenCommandParameters.builder()
             .platformComponents(components)
             .clientId(CLIENT_ID)
+            .authority(authority())
             .prompt(OpenIdConnectPromptParameter.SELECT_ACCOUNT)
             .build()
 
@@ -579,11 +589,12 @@ class MamUpnHintStoreTest {
     fun apply_callerAskedToCreateAnAccount_hintIsNotInjected() {
         setFlights(true)
         val components = components()
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         val parameters = InteractiveTokenCommandParameters.builder()
             .platformComponents(components)
             .clientId(CLIENT_ID)
+            .authority(authority())
             .prompt(OpenIdConnectPromptParameter.CREATE)
             .build()
 
@@ -597,9 +608,10 @@ class MamUpnHintStoreTest {
         val parameters = InteractiveTokenCommandParameters.builder()
             .platformComponents(components)
             .clientId(CLIENT_ID)
+            .authority(authority())
             .redirectUri("msauth://com.contoso.app/signature")
             .build()
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
+        save(components, CLIENT_ID, UPN)
 
         val updated = MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters)
 
@@ -611,6 +623,178 @@ class MamUpnHintStoreTest {
 
     // endregion
 
+    // region authority binding
+
+    /**
+     * A UPN is only known to the authority that returned it. Sending it to a different one - most
+     * sharply, a different sovereign cloud - would hand an address to a service that never had it,
+     * so the hint is bound to the authority host it was captured against.
+     */
+    @Test
+    fun apply_hintStoredAgainstAnotherAuthority_isNotUsed() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, OTHER_HOST)
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(authority(HOST))
+            .build()
+
+        assertSame(
+            "a hint must not cross an authority boundary",
+            parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters)
+        )
+    }
+
+    /**
+     * Declining is not the same as discarding. An unrelated request to another authority in the
+     * middle of the install detour must not wipe the hint the user is coming back for; the TTL
+     * already bounds how long it lives.
+     */
+    @Test
+    fun apply_authorityMismatch_leavesTheHintForTheAuthorityThatOwnsIt() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, HOST)
+
+        MamUpnHintStore.applyStoredUpnHintIfAbsent(
+            InteractiveTokenCommandParameters.builder()
+                .platformComponents(components)
+                .clientId(CLIENT_ID)
+                .authority(authority(OTHER_HOST))
+                .build()
+        )
+
+        assertEquals(
+            "a request to another authority must not consume the hint", UPN,
+            MamUpnHintStore.applyStoredUpnHintIfAbsent(
+                InteractiveTokenCommandParameters.builder()
+                    .platformComponents(components)
+                    .clientId(CLIENT_ID)
+                    .authority(authority(HOST))
+                    .build()
+            ).loginHint
+        )
+    }
+
+    /**
+     * The capture happens against `/common` and the request that follows is usually against the
+     * resolved tenant. Binding on the host - rather than the whole url - is what lets the hint
+     * survive that, which is the entire flow this feature ships for.
+     */
+    @Test
+    fun apply_sameHostDifferentTenant_isStillUsed() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, HOST)
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(
+                Authority.getAuthorityFromAuthorityUrl(
+                    "https://$HOST/72f988bf-86f1-41af-91ab-2d7cd011db47"
+                )
+            )
+            .build()
+
+        assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters).loginHint)
+    }
+
+    @Test
+    fun apply_authorityHostComparisonIgnoresCase() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, HOST.uppercase())
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(authority(HOST))
+            .build()
+
+        assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters).loginHint)
+    }
+
+    @Test
+    fun apply_requestHasNoAuthority_isNotUsed() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, HOST)
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .build()
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters))
+    }
+
+    /**
+     * [UnknownAuthority.getAuthorityUri] throws by design. Failing to read a host must decline the
+     * hint, not fail the sign-in it was only ever meant to make more convenient.
+     */
+    @Test
+    fun apply_authorityThatCannotProduceAHost_isNotUsedAndDoesNotThrow() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, HOST)
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(UnknownAuthority())
+            .build()
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters))
+    }
+
+    /**
+     * A record written without a host cannot be shown to belong to the authority being called, so
+     * it is never put on the wire. It stays readable for the local, user-visible pre-fill, which
+     * happens before there is any authority to check it against.
+     */
+    @Test
+    fun apply_recordWithNoAuthorityHost_isNotUsedButStaysReadable() {
+        setFlights(true)
+        val components = components()
+        save(components, CLIENT_ID, UPN, null)
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(authority(HOST))
+            .build()
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters))
+        assertEquals(
+            "the account screen pre-fill must still work",
+            UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID)
+        )
+    }
+
+    @Test
+    fun saveForMamCaInstall_bindsTheHintToTheAuthorityOfTheRedirect() {
+        setFlights(true)
+        val components = components()
+
+        MamUpnHintStore.saveUpnHintForMamCaInstall(
+            components, CLIENT_ID, OTHER_HOST, redirect(UPN, true)
+        )
+
+        val parameters = InteractiveTokenCommandParameters.builder()
+            .platformComponents(components)
+            .clientId(CLIENT_ID)
+            .authority(authority(HOST))
+            .build()
+
+        assertSame(parameters, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters))
+    }
+
+    // endregion
+
     // region round trip through a real (mock-backed) store
 
     @Test
@@ -618,16 +802,18 @@ class MamUpnHintStoreTest {
         setFlights(true)
         val components = components()
 
-        MamUpnHintStore.saveUpnHint(components, CLIENT_ID, UPN)
-        assertTrue(
-            storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID)
+        save(components, CLIENT_ID, UPN)
+        assertEquals(
+            "the record must live under exactly one key",
+            setOf(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID),
+            storageOf(components).keySet()
         )
 
         // Reads leave the record in place so it survives the restart the broker install can cause.
         assertEquals(UPN, MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
         assertTrue(
             "a read must not spend the hint",
-            storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID)
+            storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID)
         )
 
         // Nor does carrying it into a request; the request may still fail.
@@ -637,6 +823,7 @@ class MamUpnHintStoreTest {
                 InteractiveTokenCommandParameters.builder()
                     .platformComponents(components)
                     .clientId(CLIENT_ID)
+                    .authority(authority())
                     .build()
             ).loginHint
         )
@@ -645,7 +832,7 @@ class MamUpnHintStoreTest {
         MamUpnHintStore.clearUpnHint(components, CLIENT_ID)
         assertFalse(
             "the record must be gone once sign-in has succeeded",
-            storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_UPN + CLIENT_ID)
+            storageOf(components).keySet().contains(MamUpnHintStore.KEY_PREFIX_RECORD + CLIENT_ID)
         )
         assertNull(MamUpnHintStore.getValidUpnHint(components, CLIENT_ID))
     }
@@ -655,7 +842,7 @@ class MamUpnHintStoreTest {
         setFlights(true)
         val components = components()
 
-        MamUpnHintStore.saveUpnHint(components, null, UPN)
+        save(components, null, UPN)
 
         assertTrue(
             "a hint with no client id must not be pooled under a shared key",
@@ -668,6 +855,29 @@ class MamUpnHintStoreTest {
     private fun components(): IPlatformComponents =
         MockPlatformComponentsFactory.getNonFunctionalBuilder().build()
 
+    /**
+     * Storage-level write. Records are bound to an authority host, so tests that do not care which
+     * one get [HOST]; the binding tests pass it explicitly.
+     */
+    private fun save(
+        storage: INameValueStorage<String>,
+        clientId: String,
+        upn: String,
+        nowMillis: Long,
+        authorityHost: String? = HOST
+    ) = MamUpnHintStore.saveUpnHint(storage, clientId, upn, authorityHost, nowMillis)
+
+    private fun save(
+        components: IPlatformComponents?,
+        clientId: String?,
+        upn: String?,
+        authorityHost: String? = HOST
+    ) = MamUpnHintStore.saveUpnHint(components, clientId, upn, authorityHost)
+
+    /** An authority whose url parses; only its host matters here. */
+    private fun authority(host: String = HOST): Authority =
+        Authority.getAuthorityFromAuthorityUrl("https://$host/common")
+
     private fun storageOf(components: IPlatformComponents): INameValueStorage<String> {
         val storage = components.storageSupplier
             .getEncryptedNameValueStore(MamUpnHintStore.STORE_NAME, String::class.java)
@@ -679,6 +889,7 @@ class MamUpnHintStoreTest {
         InteractiveTokenCommandParameters.builder()
             .platformComponents(components())
             .clientId(CLIENT_ID)
+            .authority(authority())
             .loginHint(loginHint)
             .build()
 
@@ -706,8 +917,7 @@ class MamUpnHintStoreTest {
     }
 
     private fun assertRecordAbsent(storage: INameValueStorage<String>, clientId: String) {
-        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_UPN + clientId))
-        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_WRITTEN_AT + clientId))
+        assertNull(storage.get(MamUpnHintStore.KEY_PREFIX_RECORD + clientId))
     }
 
     /**
@@ -750,5 +960,9 @@ class MamUpnHintStoreTest {
         private const val OTHER_CLIENT_ID = "another-client-id"
         private const val NOW = 1_700_000_000_000L
         private const val TTL = 180_000L
+        private const val HOST = "login.microsoftonline.com"
+
+        /** A different sovereign cloud - the boundary the authority binding exists to hold. */
+        private const val OTHER_HOST = "login.microsoftonline.us"
     }
 }

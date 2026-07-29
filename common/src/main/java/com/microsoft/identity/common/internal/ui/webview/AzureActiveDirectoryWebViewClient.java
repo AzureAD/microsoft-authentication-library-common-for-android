@@ -179,6 +179,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Nullable
     private final String mClientId;
 
+    /**
+     * Host of the authority this WebView is talking to, so a UPN captured mid-flow can be bound to
+     * it. Null when it could not be determined from the authorization request url.
+     */
+    @Nullable
+    private final String mAuthorityHost;
+
     private String mPasskeyRegistrationScript;
 
     /**
@@ -218,6 +225,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker,
                                              @Nullable final String clientId) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl,
+                switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase,
+                urlLoadTracker, clientId, null);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String clientId,
+                                             @Nullable final String authorityHost) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
@@ -227,6 +249,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mUrlLoadTracker = urlLoadTracker;
         mClientId = clientId;
+        mAuthorityHost = authorityHost;
     }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -1385,6 +1408,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     AndroidPlatformComponentsFactory.createFromContext(
                             installRequestActivity.getApplicationContext()),
                     mClientId,
+                    mAuthorityHost,
                     parameters
             );
         }

@@ -189,6 +189,7 @@ public class LocalMSALController extends BaseController {
         MamUpnHintStore.saveUpnHintForMamCaInstall(
                 parametersWithScopes.getPlatformComponents(),
                 parametersWithScopes.getClientId(),
+                parametersWithScopes.getAuthority(),
                 result.getAuthorizationErrorResponse()
         );
 

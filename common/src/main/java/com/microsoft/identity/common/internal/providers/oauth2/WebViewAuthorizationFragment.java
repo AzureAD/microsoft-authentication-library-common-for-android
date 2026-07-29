@@ -373,7 +373,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
                 },
-                getClientIdFromRequestUrl()
+                getClientIdFromRequestUrl(),
+                getAuthorityHostFromRequestUrl()
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
@@ -398,6 +399,27 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return Uri.parse(mAuthorizationRequestUrl).getQueryParameter(CLIENT_ID);
         } catch (final UnsupportedOperationException e) {
             Logger.warn(methodTag, "Could not read the client id off the request url.");
+            return null;
+        }
+    }
+
+    /**
+     * Reads the host off the authorization request URL, so state captured mid-flow can be bound to
+     * the authority it came from.
+     *
+     * @return the authority host, or null when it cannot be determined.
+     */
+    @Nullable
+    private String getAuthorityHostFromRequestUrl() {
+        final String methodTag = TAG + ":getAuthorityHostFromRequestUrl";
+        if (StringUtil.isNullOrEmpty(mAuthorizationRequestUrl)) {
+            return null;
+        }
+
+        try {
+            return Uri.parse(mAuthorizationRequestUrl).getHost();
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Could not read the authority host off the request url.");
             return null;
         }
     }
