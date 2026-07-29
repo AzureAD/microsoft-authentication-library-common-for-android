@@ -29,9 +29,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Tests for {@link MamCaRedirect} - reading the MAM Conditional Access marker off the
@@ -94,6 +96,30 @@ public class MamCaRedirectTest {
     public void logRedirectParameterNames_isNullSafe() {
         MamCaRedirect.logRedirectParameterNames("test", null);
         MamCaRedirect.logRedirectParameterNames("test", markedRedirect());
+    }
+
+    /**
+     * A trailing token with no {@code =} is parsed as a key with no value, so a malformed redirect
+     * can present a UPN as a parameter name. Names are logged on the non-PII channel, so anything
+     * that is not shaped like a parameter name has to be held back.
+     */
+    @Test
+    public void printableParameterNames_withholdsAnythingThatIsNotAName() {
+        final Set<String> keys = new HashSet<>(Arrays.asList(
+                "app_link",
+                MamCaRedirect.KEY_INTUNE_APP_PROTECTION,
+                MamCaRedirect.KEY_USERNAME,
+                UPN,
+                "someone else@contoso.com"));
+
+        final Set<String> printable = MamCaRedirect.printableParameterNames(keys);
+
+        assertTrue(printable.contains("app_link"));
+        assertTrue(printable.contains(MamCaRedirect.KEY_INTUNE_APP_PROTECTION));
+        assertTrue(printable.contains(MamCaRedirect.KEY_USERNAME));
+        assertFalse("a UPN must never reach the log line", printable.contains(UPN));
+        assertFalse(printable.contains("someone else@contoso.com"));
+        assertEquals(3, printable.size());
     }
 
     private static Map<String, String> markedRedirect() {
