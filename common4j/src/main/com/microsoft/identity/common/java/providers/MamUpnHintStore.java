@@ -75,9 +75,11 @@ import lombok.NonNull;
  *       flight is on, so turning the flight off cannot strand records already written.</li>
  * </ul>
  * <p>
- * <b>Keying.</b> The store is app-private, and records are additionally keyed by client id so that
- * two clients hosted in the same app cannot read each other's hint. A hint whose client id cannot be
- * determined is not stored at all, rather than being pooled under a shared key.
+ * <b>Keying.</b> The store is app-private, so it is already isolated between apps. Records are
+ * <em>additionally</em> keyed by client id because "one process, one client id" does not hold: a
+ * broker hosts the authorization WebView in its own process on behalf of every calling app, and a
+ * single app may run more than one client. This mirrors the credential cache, whose keys include the
+ * client id for the same reason. A hint whose client id cannot be determined is not stored at all.
  * <p>
  * <b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
  * (default off), so with the flight off nothing is ever stored and behavior is unchanged.
@@ -105,12 +107,6 @@ public final class MamUpnHintStore {
      * string; the client id is appended.
      */
     static final String KEY_PREFIX_WRITTEN_AT = "written_at.";
-
-    /**
-     * Fallback client id for callers that cannot supply one, so such records are still keyed
-     * consistently rather than colliding with a real client id.
-     */
-    static final String UNKNOWN_CLIENT_ID = "unknown";
 
     private MamUpnHintStore() {
         // Utility class.
@@ -197,10 +193,9 @@ public final class MamUpnHintStore {
         }
 
         if (StringUtil.isNullOrEmpty(clientId)) {
-            // Records are keyed by client id so that two clients in one app cannot read each other's
-            // hint. Writing under the placeholder key would put every client that failed resolution
-            // into one shared bucket, and no reader ever asks for it - readers always have a real
-            // client id - so the record would simply sit there. Drop it instead.
+            // A record is addressed by client id, so one written without a real client id could only
+            // be found under a shared key - which is precisely the cross-client bleed the keying
+            // exists to prevent. Drop it instead; the cost is one un-prefilled field.
             Logger.warn(methodTag, "Not storing a UPN hint: the client id could not be determined.");
             return;
         }
@@ -230,17 +225,16 @@ public final class MamUpnHintStore {
      * @param nowMillis the current time in epoch millis.
      */
     static void saveUpnHint(@NonNull final INameValueStorage<String> storage,
-                            @Nullable final String clientId,
+                            @NonNull final String clientId,
                             @NonNull final String upn,
                             final long nowMillis) {
-        final String suffix = keySuffix(clientId);
         // The UPN goes first, deliberately. These are two independent asynchronous writes, so a
         // process death between them tears the record. Writing the UPN first means a tear pairs the
         // new UPN with the previous timestamp, which at worst expires early. The other order pairs
         // the *previous* UPN with a fresh timestamp, which would hand one user's address to the next
         // and silently restart the clock on it.
-        storage.put(KEY_PREFIX_UPN + suffix, upn);
-        storage.put(KEY_PREFIX_WRITTEN_AT + suffix, String.valueOf(nowMillis));
+        storage.put(KEY_PREFIX_UPN + clientId, upn);
+        storage.put(KEY_PREFIX_WRITTEN_AT + clientId, String.valueOf(nowMillis));
     }
 
     /**
@@ -313,15 +307,20 @@ public final class MamUpnHintStore {
                                   final long ttlMillis) {
         final String methodTag = TAG + ":getValidUpnHint";
 
-        final String suffix = keySuffix(clientId);
-        // Sweep first, so a hint that is itself stale is dropped rather than returned below.
+        // Sweep first, so a hint that is itself stale is dropped rather than returned below. This
+        // runs before the client-id check because it is not scoped to one client.
         sweepUnusableRecords(storage, nowMillis, ttlMillis);
 
-        final String upn = storage.get(KEY_PREFIX_UPN + suffix);
+        if (StringUtil.isNullOrEmpty(clientId)) {
+            // Records are only ever written under a real client id, so there is nothing to look up.
+            return null;
+        }
+
+        final String upn = storage.get(KEY_PREFIX_UPN + clientId);
         // Re-check this record rather than trusting the sweep to have removed it: the sweep depends
         // on the store being able to enumerate itself, and an expired UPN must never be handed out
         // just because a listing came back short.
-        if (!isUsable(upn, storage.get(KEY_PREFIX_WRITTEN_AT + suffix), nowMillis, ttlMillis)) {
+        if (!isUsable(upn, storage.get(KEY_PREFIX_WRITTEN_AT + clientId), nowMillis, ttlMillis)) {
             return null;
         }
 
@@ -431,9 +430,13 @@ public final class MamUpnHintStore {
      */
     static void clearUpnHint(@NonNull final INameValueStorage<String> storage,
                              @Nullable final String clientId) {
-        final String suffix = keySuffix(clientId);
-        storage.remove(KEY_PREFIX_UPN + suffix);
-        storage.remove(KEY_PREFIX_WRITTEN_AT + suffix);
+        if (StringUtil.isNullOrEmpty(clientId)) {
+            // Records are only ever written under a real client id, so there is nothing to delete.
+            return;
+        }
+
+        storage.remove(KEY_PREFIX_UPN + clientId);
+        storage.remove(KEY_PREFIX_WRITTEN_AT + clientId);
     }
 
     /**
@@ -485,10 +488,6 @@ public final class MamUpnHintStore {
 
         Logger.info(methodTag, "Pre-filling login_hint from the stored MAM-CA UPN hint.");
         return parameters.toBuilder().loginHint(upn).build();
-    }
-
-    private static String keySuffix(@Nullable final String clientId) {
-        return StringUtil.isNullOrEmpty(clientId) ? UNKNOWN_CLIENT_ID : clientId;
     }
 
     @Nullable

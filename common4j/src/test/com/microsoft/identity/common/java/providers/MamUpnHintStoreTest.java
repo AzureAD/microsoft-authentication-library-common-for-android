@@ -210,14 +210,24 @@ public class MamUpnHintStoreTest {
         assertEquals(OTHER_UPN, MamUpnHintStore.getValidUpnHint(storage, OTHER_CLIENT_ID, NOW, TTL));
     }
 
+    /**
+     * A record is only ever written under a real client id, so a read or a clear that cannot supply
+     * one has nothing to address. It must be a safe no-op rather than falling back to a shared key -
+     * a shared key would let two callers that both failed client-id resolution see each other's hint.
+     */
     @Test
-    public void save_nullClientId_isKeyedConsistently() {
+    public void readAndClear_withoutAClientId_areSafeNoOps() {
         final INameValueStorage<String> storage = new InMemoryStorage<>();
-        MamUpnHintStore.saveUpnHint(storage, null, UPN, NOW);
+        MamUpnHintStore.saveUpnHint(storage, CLIENT_ID, UPN, NOW);
 
-        assertNotNull("a null client id must fall back to a stable key",
-                storage.get(MamUpnHintStore.KEY_PREFIX_UPN + MamUpnHintStore.UNKNOWN_CLIENT_ID));
-        assertEquals(UPN, MamUpnHintStore.getValidUpnHint(storage, null, NOW, TTL));
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, null, NOW, TTL));
+        assertNull(MamUpnHintStore.getValidUpnHint(storage, "", NOW, TTL));
+
+        MamUpnHintStore.clearUpnHint(storage, null);
+        MamUpnHintStore.clearUpnHint(storage, "");
+
+        assertEquals("another client's hint must be untouched",
+                UPN, MamUpnHintStore.getValidUpnHint(storage, CLIENT_ID, NOW, TTL));
     }
 
     @Test
