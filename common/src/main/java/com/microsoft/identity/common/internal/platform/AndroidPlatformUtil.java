@@ -62,6 +62,8 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -166,6 +168,37 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     public void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException {
         // This operation is not supported in non-broker contexts.
         throw new UnsupportedOperationException("WebApp APIs are not functional in non-broker scenarios.");
+    }
+
+    @Override
+    public void validateSilentCaller(final int osAttestedUid,
+                                     @Nullable final String callerPackageName,
+                                     @Nullable final String applicationName) throws ClientException {
+        final String methodTag = TAG + ":validateSilentCaller";
+        final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(osAttestedUid);
+        final List<String> ownedPackages =
+                uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);
+        if (ownedPackages.isEmpty()) {
+            Logger.error(methodTag,
+                    "No package could be resolved for the OS-attested calling uid. Rejecting request.",
+                    null);
+            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
+                    "Unable to resolve the calling package from the OS-attested calling uid.");
+        }
+        if (!ownedPackages.contains(callerPackageName)) {
+            Logger.error(methodTag,
+                    "Caller package in request bundle is not owned by the OS-attested calling uid. "
+                            + "Rejecting potential impersonation.", null);
+            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
+                    "Caller package does not match the OS-attested calling app.");
+        }
+        if (!StringUtil.isNullOrEmpty(applicationName) && !ownedPackages.contains(applicationName)) {
+            Logger.error(methodTag,
+                    "Application name in request bundle is not owned by the OS-attested calling uid. "
+                            + "Rejecting potential impersonation.", null);
+            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
+                    "Application name does not match the OS-attested calling app.");
+        }
     }
     @Override
     @Nullable

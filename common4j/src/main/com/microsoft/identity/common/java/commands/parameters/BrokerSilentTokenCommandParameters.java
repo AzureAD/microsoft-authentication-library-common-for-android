@@ -37,6 +37,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
@@ -69,6 +71,16 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     // Optional field to persist nonce for WebApps token requests.
     private final String webAppsNonce;
+
+    /**
+     * The kernel-attested calling uid ({@code Binder.getCallingUid()}), stamped by the broker only on the
+     * silent MSAL IPC paths that must defend against request-bundle caller spoofing (AB#3687466). Transient
+     * and NOT {@code @Expose}d so an untrusted caller cannot supply it over IPC. When non-null,
+     * {@link #validate()} delegates to {@link IPlatformUtil#validateSilentCaller} to reject a spoofed
+     * caller; null means enforcement is off (ADAL / AccountChooser / WebApps / kill-switch disabled).
+     */
+    @Nullable
+    private final Integer osAttestedUid;
 
     @Expose
     private final String homeTenantId;
@@ -128,6 +140,15 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             // Instead, we will check the package thumbprint against our static allowed list of apps for this feature.
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
+        }
+        // SECURITY (AB#3687466): when the broker has supplied the kernel-attested calling uid, reject any
+        // self-reported caller identity from the (untrusted) request bundle that the uid does not own,
+        // before the redirect-URI check below runs against the verified caller. The uid->package
+        // resolution + rejection lives behind IPlatformUtil (mirroring isValidCallingApp /
+        // isValidCallingAppForWebApps); no override is performed - a request that passes has proven its
+        // bundle identity is genuine. Throws unknown_caller (ClientException).
+        if (osAttestedUid != null) {
+            platformUtil.validateSilentCaller(osAttestedUid, getCallerPackageName(), getApplicationName());
         }
         if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
             throw new ArgumentException(

@@ -77,6 +77,24 @@ public interface IPlatformUtil {
     void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException;
 
     /**
+     * Validates that the self-reported caller identity of a silent broker token request belongs to the
+     * app that owns the kernel-attested calling uid, rejecting request-bundle caller spoofing
+     * (AB#3687466). The supplied {@code callerPackageName} (and {@code applicationName} when present)
+     * must be a package owned by {@code osAttestedUid}; otherwise the request is rejected fail-closed.
+     * Mirrors {@link #isValidCallingApp} / {@link #isValidCallingAppForWebApps} by keeping the
+     * platform-specific caller resolution behind the platform util rather than in the parameters.
+     *
+     * @param osAttestedUid     the kernel-attested calling uid ({@code Binder.getCallingUid()}).
+     * @param callerPackageName the self-reported caller package from the (untrusted) request bundle.
+     * @param applicationName   the self-reported application name from the (untrusted) request bundle.
+     * @throws ClientException with {@code unknown_caller} if the identity does not match the uid's
+     *                         packages, or the uid resolves to no package.
+     */
+    void validateSilentCaller(int osAttestedUid,
+                              @Nullable String callerPackageName,
+                              @Nullable String applicationName) throws ClientException;
+
+    /**
      * Retrieve the Intune MAM enrollment id for the given user and package from
      * the Intune Company Portal, if available.
      *

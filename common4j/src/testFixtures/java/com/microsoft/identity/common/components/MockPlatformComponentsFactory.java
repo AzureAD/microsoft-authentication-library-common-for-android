@@ -155,6 +155,11 @@ public class MockPlatformComponentsFactory {
         public void isValidCallingAppForWebApps(int callingUid) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public void validateSilentCaller(int osAttestedUid, String callerPackageName, String applicationName) {
+            throw new UnsupportedOperationException();
+        }
         @Nullable
         @Override
         public String getEnrollmentId(@NonNull String userId, @NonNull String packageName) {
