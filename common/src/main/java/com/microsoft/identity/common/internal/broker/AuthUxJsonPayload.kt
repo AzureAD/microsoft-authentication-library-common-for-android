@@ -45,21 +45,47 @@ data class AuthUxJsonPayload(
 )
 
 /**
- * Data class representing the parameters for the action, including function and data.
+ * Data class representing the parameters (`params`) object of an AuthUX bridge message.
  *
- * @property operation The operation to be executed.
- * @property sessionId
- * @property codeMatch
+ * Every field is optional/nullable so the same model can carry different actions and so that an
+ * absent field never breaks parsing. Unknown JSON fields added by future Auth UX versions are
+ * tolerated and ignored by Gson.
+ *
+ * @property operation The operation to be executed on the number-match / `write_data` path
+ *  (e.g. `number_matching`).
+ * @property sessionId Session identifier (`sessionID`).
+ * @property codeMatch Number-match value (`code_match`).
+ * @property version Payload schema version (`v`) of the telemetry contract.
+ * @property errorCode Opaque Auth UX server error code (e.g. an STS error code such as "530003")
+ *  carried by the `log_telemetry` action. Treated as an opaque telemetry value only; it is never
+ *  used to drive client behavior. Optional/nullable — its absence results in a no-op. Captured as a
+ *  string even when sent as a JSON number.
+ * @property pageId Auth UX page identifier (`pageId`, e.g. "ConvergedTFA"); telemetry context for
+ *  the downstream onboarding sink (AB#3688632).
+ * @property trackingId Auth UX tracking identifier (`trackingId`); telemetry context for the
+ *  downstream onboarding sink (AB#3688632).
  */
 data class AuthUxParams(
     @SerializedName(SerializedNames.OPERATION)
-    val operation: String?,
+    val operation: String? = null,
 
     @SerializedName(SerializedNames.SESSION_ID)
-    val sessionId: String?,
+    val sessionId: String? = null,
 
     @SerializedName(SerializedNames.CODE_MATCH)
-    val codeMatch: String?
+    val codeMatch: String? = null,
+
+    @SerializedName(SerializedNames.VERSION)
+    val version: Int? = null,
+
+    @SerializedName(SerializedNames.ERROR_CODE)
+    val errorCode: String? = null,
+
+    @SerializedName(SerializedNames.PAGE_ID)
+    val pageId: String? = null,
+
+    @SerializedName(SerializedNames.TRACKING_ID)
+    val trackingId: String? = null
 )
 
 class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
@@ -96,4 +122,8 @@ object SerializedNames {
     const val OPERATION = "operation"
     const val SESSION_ID = "sessionID"
     const val CODE_MATCH = "code_match"
+    const val VERSION = "v"
+    const val ERROR_CODE = "errorCode"
+    const val PAGE_ID = "pageId"
+    const val TRACKING_ID = "trackingId"
 }

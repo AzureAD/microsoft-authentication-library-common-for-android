@@ -149,4 +149,93 @@ class AuthUxJsonPayloadTest {
 
         gson.fromJson(json, AuthUxJsonPayload::class.java)
     }
+
+    @Test
+    fun `test deserialization of log_telemetry payload matches design-doc shape`() {
+        // Exact Auth UX design-doc wire format for the log_telemetry action.
+        val json = """
+            {
+                correlationID: "corr-1",
+                action_name: "log_telemetry",
+                action_component: "host",
+                params: {
+                    v: 1,
+                    sessionID: "sess-1",
+                    errorCode: 530003,
+                    pageId: "ConvergedTFA",
+                    trackingId: "track-1"
+                }
+            }
+        """.trimIndent()
+
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+        assertEquals("log_telemetry", payload.actionName)
+        assertEquals("host", payload.actionComponent)
+
+        val params = payload.params
+        assertNotNull(params)
+        // errorCode is sent as a JSON number but captured as an opaque string.
+        assertEquals("530003", params?.errorCode)
+        assertEquals(1, params?.version)
+        assertEquals("sess-1", params?.sessionId)
+        assertEquals("ConvergedTFA", params?.pageId)
+        assertEquals("track-1", params?.trackingId)
+        // The log_telemetry action carries no params.operation.
+        assertNull(params?.operation)
+    }
+
+    @Test
+    fun `test deserialization of log_telemetry payload without errorCode yields null`() {
+        val json = """
+            {
+                correlationID: "corr-1",
+                action_name: "log_telemetry",
+                action_component: "host",
+                params: {
+                    v: 1,
+                    sessionID: "sess-1",
+                    pageId: "ConvergedTFA",
+                    trackingId: "track-1"
+                }
+            }
+        """.trimIndent()
+
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+        val params = payload.params
+        assertNotNull(params)
+        assertNull(params?.errorCode)
+    }
+
+    @Test
+    fun `test deserialization of log_telemetry payload tolerates unknown top-level and params fields`() {
+        // Forward-compat: Auth UX may add new key/value pairs at the top level and inside params;
+        // unknown fields must not break parsing of the known errorCode field.
+        val json = """
+            {
+                correlationID: "corr-1",
+                action_name: "log_telemetry",
+                action_component: "host",
+                futureTopLevel: "ignored",
+                params: {
+                    v: 2,
+                    sessionID: "sess-1",
+                    errorCode: 530003,
+                    pageId: "ConvergedTFA",
+                    trackingId: "track-1",
+                    futureField: "ignored",
+                    futureNumber: 42
+                }
+            }
+        """.trimIndent()
+
+        val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+        val params = payload.params
+        assertNotNull(params)
+        assertEquals("530003", params?.errorCode)
+        assertEquals("ConvergedTFA", params?.pageId)
+        assertEquals("track-1", params?.trackingId)
+    }
 }

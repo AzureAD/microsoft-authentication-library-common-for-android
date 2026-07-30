@@ -36,10 +36,38 @@ import java.net.URI
 import java.net.URISyntaxException
 
 /**
+ * Callback seam used to forward an opaque Auth UX telemetry signal (a server error code) received
+ * over the JS bridge to the onboarding telemetry sink.
+ *
+ * Kept deliberately minimal and decoupled from the concrete telemetry recorder so this bridge does
+ * not take a dependency on the onboarding recorder plumbing. The concrete wiring — resolving the
+ * active [com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder] and
+ * appending the code to the onboarding blob's blocking-errors list (subject to the non-blocking
+ * exclusion list) — is supplied by the host and handled downstream (see AB#3688632).
+ */
+fun interface AuthUxTelemetrySink {
+    /**
+     * Route an opaque Auth UX server error code to onboarding telemetry.
+     *
+     * @param errorCode The server-emitted error code (e.g. an STS error code such as "530003"),
+     *  treated as an opaque telemetry value. Guaranteed non-empty by the caller.
+     */
+    fun onAuthUxServerError(errorCode: String)
+}
+
+/**
  * JavaScript API to receive JSON string payloads from AuthUX in order to facilitate calling various
  * broker methods.
+ *
+ * @property telemetrySink Optional sink invoked for the non-mutating
+ *  [ActionNames.LOG_TELEMETRY] action to forward an opaque Auth UX server error code to
+ *  onboarding telemetry. When null (the default), `log_telemetry` messages are still parsed and
+ *  validated but produce no telemetry side effect. Supplying a default keeps existing no-arg
+ *  construction (e.g. from the WebView host) source-compatible.
  */
-class AuthUxJavaScriptInterface {
+class AuthUxJavaScriptInterface @JvmOverloads constructor(
+    private val telemetrySink: AuthUxTelemetrySink? = null
+) {
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -140,19 +168,36 @@ class AuthUxJavaScriptInterface {
                 span.setAttribute(AttributeName.authux_js_operation.name, operation)
             }
 
-            Logger.info(methodTag, "Function name: [$operation]")
+            Logger.info(methodTag, "Action name: [$actionName], operation: [$operation]")
 
-            when (operation) {
-                OperationNames.NUMBER_MATCHING ->
+            when {
+                operation == OperationNames.NUMBER_MATCHING ->
                     NumberMatchHelper.storeNumberMatch(
                         parameters.sessionId,
                         parameters.codeMatch
                     )
 
+                actionName == ActionNames.LOG_TELEMETRY -> {
+                    // Dedicated, non-mutating telemetry path (H3): dispatched by action_name (the
+                    // log_telemetry action carries no params.operation) and must never touch the
+                    // number-match / write_data device-store path. The append to the onboarding
+                    // blob (with the non-blocking exclusion list) is handled downstream by the
+                    // supplied sink — see AB#3688632.
+                    val errorCode = parameters.errorCode
+                    if (errorCode.isNullOrEmpty()) {
+                        Logger.warn(
+                            methodTag,
+                            "log_telemetry payload contained no \"errorCode\"; ignoring (no-op)."
+                        )
+                    } else {
+                        telemetrySink?.onAuthUxServerError(errorCode)
+                    }
+                }
+
                 else ->
                     Logger.warn(
                         methodTag,
-                        "Payload from AuthUX contained an unknown function name."
+                        "Payload from AuthUX contained an unknown action/operation."
                     )
             }
         } catch (e: Exception) { // If we run into exceptions, we don't want to kill the broker
@@ -192,9 +237,16 @@ class AuthUxJavaScriptInterface {
     }
 
     /**
-     * Enum class representing the operation names that can be called from AuthUX.
+     * Operation names dispatched via the `params.operation` field (number-match / `write_data` path).
      */
     object OperationNames {
         const val NUMBER_MATCHING = "number_matching"
+    }
+
+    /**
+     * Top-level `action_name` values dispatched directly (independent of `params.operation`).
+     */
+    object ActionNames {
+        const val LOG_TELEMETRY = "log_telemetry"
     }
 }

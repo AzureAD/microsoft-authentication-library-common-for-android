@@ -48,6 +48,59 @@ class AuthUxJavaScriptInterfaceTest {
         }
     """.trimIndent()
 
+    private val mockErrorCode = "530003"
+
+    // Matches the Auth UX design-doc wire format: dispatched by action_name = "log_telemetry"
+    // (no params.operation), errorCode sent as a JSON number, plus additional params context fields.
+    private val logTelemetryTestPayload = """
+        {
+            correlationID: "corr-1",
+            action_name: "log_telemetry",
+            action_component: "host",
+            params: {
+                v: 1,
+                sessionID: "sess-1",
+                errorCode: $mockErrorCode,
+                pageId: "ConvergedTFA",
+                trackingId: "track-1"
+            }
+        }
+    """.trimIndent()
+
+    private val logTelemetryMissingErrorCodePayload = """
+        {
+            correlationID: "corr-1",
+            action_name: "log_telemetry",
+            action_component: "host",
+            params: {
+                v: 1,
+                sessionID: "sess-1",
+                pageId: "ConvergedTFA",
+                trackingId: "track-1"
+            }
+        }
+    """.trimIndent()
+
+    // A future Auth UX version may add new key/value pairs at the top level and inside params;
+    // dispatch must tolerate them and still forward errorCode.
+    private val logTelemetryWithFutureFieldsPayload = """
+        {
+            correlationID: "corr-1",
+            action_name: "log_telemetry",
+            action_component: "host",
+            futureTopLevel: "ignored",
+            params: {
+                v: 2,
+                sessionID: "sess-1",
+                errorCode: $mockErrorCode,
+                pageId: "ConvergedTFA",
+                trackingId: "track-1",
+                futureField: "ignored",
+                futureNumber: 42
+            }
+        }
+    """.trimIndent()
+
     @Before
     fun setUp() {
         authUxJavaScriptInterface = AuthUxJavaScriptInterface()
@@ -83,6 +136,71 @@ class AuthUxJavaScriptInterfaceTest {
         authUxJavaScriptInterface.receiveAuthUxMessage("NotAJson")
 
         // Should not get an exception
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry forwards errorCode to sink exactly once`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        // The opaque error code is forwarded to the sink exactly once...
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+        // ...and H3 holds: the telemetry path never touches the number-match device store.
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry and missing errorCode is a no-op`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryMissingErrorCodePayload)
+
+        // Absent errorCode must not throw and must not emit telemetry.
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry tolerates unknown future fields`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryWithFutureFieldsPayload)
+
+        // New top-level and params key/value pairs must not break dispatch; errorCode still forwarded.
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with log_telemetry does not throw when no sink attached`() {
+        // Default no-arg construction (no sink): parses and validates without side effects or throwing.
+        authUxJavaScriptInterface.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage with number_matching does not invoke telemetry sink`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(numberMatchTestPayload)
+
+        // Existing number-match behavior is unchanged (regression-safe)...
+        Assert.assertEquals(mockNumberMatchValue, NumberMatchHelper.numberMatchMap[mockSessionId])
+        // ...and the telemetry sink is never invoked for a non-telemetry action.
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    /** Test double that records every error code routed to the telemetry sink. */
+    private class RecordingTelemetrySink : AuthUxTelemetrySink {
+        val received = mutableListOf<String>()
+        override fun onAuthUxServerError(errorCode: String) {
+            received.add(errorCode)
+        }
     }
 
     @Test
