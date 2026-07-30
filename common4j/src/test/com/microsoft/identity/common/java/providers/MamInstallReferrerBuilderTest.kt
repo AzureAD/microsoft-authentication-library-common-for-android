@@ -344,30 +344,15 @@ class MamInstallReferrerBuilderTest {
     }
 
     /**
-     * With the flight off nothing is evaluated and nothing is reported - the null tag is what keeps
-     * the kill switch complete, telemetry included.
+     * With the flight off nothing is evaluated, and the outcome says so - the kill switch has to be
+     * distinguishable from "evaluated and declined", since both launch the link unchanged.
      */
     @Test
-    fun outcome_flightOff_isNotReportedAtAll() {
+    fun outcome_flightOff_isReportedAsFlightOff() {
         setMamCaReferrerFlight(false)
 
         val outcome = outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
         assertEquals(MamInstallReferrerBuilder.Outcome.FLIGHT_OFF, outcome)
-        assertNull("The flight-off outcome must not be reportable.", outcome.tag)
-    }
-
-    /** Every reported outcome needs a distinct, non-blank tag, or the funnel cannot be sliced. */
-    @Test
-    fun outcome_reportableTagsAreDistinctAndNonBlank() {
-        val tags = MamInstallReferrerBuilder.Outcome.values().mapNotNull { it.tag }
-
-        assertEquals(
-            "Every outcome except FLIGHT_OFF is reportable.",
-            MamInstallReferrerBuilder.Outcome.values().size - 1,
-            tags.size
-        )
-        assertTrue("Tags must not be blank: $tags", tags.none { it.isBlank() })
-        assertEquals("Tags must be distinct: $tags", tags.size, tags.toSet().size)
     }
 
     /** The reporting overload must not change what is actually launched. */

@@ -1358,11 +1358,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // redirects back to us after install. The flight- and MAM-CA-gates live in
         // MamInstallReferrerBuilder; when they don't apply the link is launched as before.
         //
-        // Decorate and report here rather than from the delayed Runnable below: the completion
-        // callback that follows hands the result back and finishes the Activity, and the onboarding
-        // blob is finalized off that same result. Anything recorded a second later would be written
-        // to a blob that has already shipped, so the outcome has to be on the recorder before the
-        // result leaves. This mirrors STEP_BROKER_INSTALL_PROMPTED being recorded at method entry.
+        // Resolved here rather than inside the delayed Runnable below so the link is built while the
+        // redirect parameters are still in hand, leaving the Runnable with nothing to do but launch
+        // it.
         //
         // getActivity() is a final field, so it cannot become non-null later; a null here means the
         // link simply is not launched, which is what the Runnable already did in that case.
@@ -1371,13 +1369,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (activity == null || appLink == null) {
             installLink = null;
         } else {
-            final MamInstallReferrerBuilder.Decoration decoration =
-                    MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
-                            appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
-                            activity.getPackageName(),
-                            parameters);
-            recordMamCaReferrerOutcome(decoration.getOutcome());
-            installLink = decoration.getAppLink();
+            installLink = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                    activity.getPackageName(),
+                    parameters);
         }
 
         getCompletionCallback().onChallengeResponseReceived(result);
@@ -1866,33 +1861,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             recorder.addStep(stepId);
         } catch (final Throwable t) {
             Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
-        }
-    }
-
-    /**
-     * Best-effort onboarding telemetry hook: reports why the Company Portal install link was or was
-     * not tagged with an install referrer, as a UX-flow variant (MATS {@code mo_ux_flow_used}).
-     * <p>
-     * This is the ramp-safety signal for {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER}: it is
-     * what makes "has the server started marking MAM-CA installs, and are we tagging them?"
-     * answerable from telemetry instead of from device logs.
-     * <p>
-     * No-op when no recorder is attached, and - deliberately - when the flight is off, so that
-     * turning the flight off leaves no trace in telemetry either. Never throws.
-     */
-    private void recordMamCaReferrerOutcome(@NonNull final MamInstallReferrerBuilder.Outcome outcome) {
-        final String tag = outcome.getTag();
-        if (tag == null) {
-            return;
-        }
-        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
-        if (recorder == null) {
-            return;
-        }
-        try {
-            recorder.addUxFlowUsed(tag);
-        } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record UX flow " + tag + ": " + t.getMessage());
         }
     }
 
