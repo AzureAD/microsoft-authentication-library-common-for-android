@@ -1352,6 +1352,34 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String appLink = parameters.get(APP_LINK_KEY);
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
+
+        // MAM Conditional Access onboarding: tag the Company Portal install launch with the calling
+        // app package as the Play install referrer, so Company Portal skips its own sign-in UX and
+        // redirects back to us after install. The flight- and MAM-CA-gates live in
+        // MamInstallReferrerBuilder; when they don't apply the link is launched as before.
+        //
+        // Decorate and report here rather than from the delayed Runnable below: the completion
+        // callback that follows hands the result back and finishes the Activity, and the onboarding
+        // blob is finalized off that same result. Anything recorded a second later would be written
+        // to a blob that has already shipped, so the outcome has to be on the recorder before the
+        // result leaves. This mirrors STEP_BROKER_INSTALL_PROMPTED being recorded at method entry.
+        //
+        // getActivity() is a final field, so it cannot become non-null later; a null here means the
+        // link simply is not launched, which is what the Runnable already did in that case.
+        final Activity activity = getActivity();
+        final String installLink;
+        if (activity == null || appLink == null) {
+            installLink = null;
+        } else {
+            final MamInstallReferrerBuilder.Decoration decoration =
+                    MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
+                            appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                            activity.getPackageName(),
+                            parameters);
+            recordMamCaReferrerOutcome(decoration.getOutcome());
+            installLink = decoration.getAppLink();
+        }
+
         getCompletionCallback().onChallengeResponseReceived(result);
 
         final Handler handler = new Handler();
@@ -1359,33 +1387,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                // Cache the Activity once rather than calling getActivity() repeatedly. Neither
-                // branch below is expected to trigger - the Activity reference is final and the
-                // app_link was validated upstream - but a null here would crash the install launch,
-                // so it is worth a cheap check.
-                //
                 // Deliberately no isFinishing()/isDestroyed() check: the result callback above
                 // finishes the AuthorizationActivity, so by the time this fires a second later the
                 // Activity is normally already finishing. Skipping the launch in that state would
                 // suppress the install in the healthy path, which is the whole feature.
-                final Activity activity = getActivity();
-                if (activity == null || appLink == null) {
+                if (activity == null || installLink == null) {
                     Logger.warn(methodTag,
                             "Activity or app_link no longer available; skipping broker install launch.");
                     view.stopLoading();
                     return;
                 }
-                // MAM Conditional Access onboarding: tag the Company Portal install launch with the
-                // calling app package as the Play install referrer, so Company Portal skips its own
-                // sign-in UX and redirects back to us after install. The flight- and MAM-CA-gates live
-                // in MamInstallReferrerBuilder; when they don't apply the link is launched as before.
-                final MamInstallReferrerBuilder.Decoration decoration =
-                        MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
-                                appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
-                                activity.getPackageName(),
-                                parameters);
-                recordMamCaReferrerOutcome(decoration.getOutcome());
-                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(decoration.getAppLink()));
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(installLink));
                 activity.startActivity(intent);
                 view.stopLoading();
             }

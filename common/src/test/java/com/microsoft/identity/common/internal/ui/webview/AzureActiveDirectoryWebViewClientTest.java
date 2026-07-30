@@ -2140,6 +2140,76 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
+     * The ordering that makes the ramp signal reach MATS at all: the outcome has to be on the
+     * recorder <em>before</em> the result is handed back, because the completion callback sends the
+     * result and finishes the Activity, and the onboarding blob is finalized off that same result
+     * (broker side: AccountChooserActivity#finalizeOnboardingBlobForFailure -> finalizeBlob).
+     * <p>
+     * Recording from the 1s-delayed install Runnable instead would write into a blob that has
+     * already shipped, which no assertion that finalizes the blob itself at the end of the test can
+     * catch - hence this test snapshots the blob from inside the completion callback.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_reportsTheOutcomeBeforeHandingBackTheResult() {
+        setMamCaInstallReferrerFlight(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        final java.util.List<String> flowsWhenResultWasHandedBack = new java.util.ArrayList<>();
+
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                new IAuthorizationCompletionCallback() {
+                    @Override
+                    public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
+                        try {
+                            flowsWhenResultWasHandedBack.addAll(onboardingUxFlows(recorder));
+                        } catch (final org.json.JSONException e) {
+                            Assert.fail("Could not read the onboarding blob: " + e);
+                        }
+                    }
+
+                    @Override
+                    public void setPKeyAuthStatus(final boolean status) {
+                    }
+                },
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                    }
+                },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false);
+        client.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue("A broker-install redirect must be handled by the WebView client",
+                client.shouldOverrideUrlLoading(mMockWebView, TEST_MAM_CA_INSTALL_REQUEST_URL));
+
+        assertTrue("The outcome must already be recorded when the result is handed back, but the "
+                        + "blob at that point held: " + flowsWhenResultWasHandedBack,
+                flowsWhenResultWasHandedBack.contains(
+                        MamInstallReferrerBuilder.Outcome.DECORATED.getTag()));
+    }
+
+    /**
+     * The reorder above must not cost the install launch: the decorated link is still what gets
+     * launched a second later, from the delayed Runnable.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_stillLaunchesTheDecoratedLinkAfterTheDelay() {
+        setMamCaInstallReferrerFlight(true);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+        assertNotNull("Expected the Company Portal install link to be launched", launched);
+        assertTrue("The launched link must be the decorated one, but was: " + launched.getDataString(),
+                launched.getDataString().contains(
+                        MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + mActivity.getPackageName()));
+    }
+
+    /**
      * The decoration is a fallback, not an override. The server names the calling app directly,
      * whereas the client can only ever name the process hosting the sign-in UI, so where the two
      * disagree the server wins.
