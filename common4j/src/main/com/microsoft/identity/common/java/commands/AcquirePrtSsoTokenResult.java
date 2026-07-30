@@ -35,7 +35,7 @@ import lombok.experimental.Accessors;
 /**
  * A DTO for the results from an AcquirePrtSsoToken request.
  */
-@Builder
+@Builder(toBuilder = true)
 @Getter
 @Accessors(prefix = "m")
 public class AcquirePrtSsoTokenResult {
