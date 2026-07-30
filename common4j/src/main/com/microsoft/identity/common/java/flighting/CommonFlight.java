@@ -320,7 +320,19 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Kill switch for validating the redirect target before the PRT credential header
+     * ({@code x-ms-RefreshTokenCredential}) is forwarded on an {@code sso_nonce} redirect in
+     * {@code NonceRedirectHandler} (CWE-918). When enabled (default), the credential header is
+     * stripped unless the target is an HTTPS, validated AAD cloud host; the navigation still
+     * proceeds without the credential.
+     * Turn off via ECS to revert to the historical behavior of forwarding the header to the
+     * redirect target unconditionally (e.g. if instance-discovery ordering causes a legitimate AAD
+     * host to be treated as untrusted and silently lose SSO).
+     */
+    ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION("EnableNonceRedirectCredentialHeaderValidation", true);
 
     private String key;
     private Object defaultValue;

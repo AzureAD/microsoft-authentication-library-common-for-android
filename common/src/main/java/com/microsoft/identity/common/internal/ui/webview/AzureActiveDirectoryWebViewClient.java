@@ -1566,8 +1566,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // SECURITY (CWE-918): mirror the trust gate applied inside NonceRedirectHandler so the
                 // fallback navigation cannot forward the PRT credential header to an untrusted or
                 // cleartext target. Trusted AAD hosts keep the headers; everything else loads without
-                // the credential rather than dead-ending the flow.
-                if (NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(url)) {
+                // the credential rather than dead-ending the flow. Gated behind the same kill-switch
+                // flight (default on) so flight-off is a complete revert to pre-fix behavior.
+                final boolean nonceCredentialValidationEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION);
+                if (!nonceCredentialValidationEnabled
+                        || NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(url)) {
                     view.loadUrl(url, mRequestHeaders);
                 } else {
                     Logger.warn(methodTag, "Nonce redirect target is not a trusted HTTPS AAD host; "

@@ -27,6 +27,8 @@ import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialPro
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SSO_NONCE_PARAMETER
 import com.microsoft.identity.common.adal.internal.util.StringExtensions
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
@@ -53,7 +55,12 @@ class NonceRedirectHandler(
         // valid, AAD-audience-bound PRT. Only forward credential headers to an HTTPS, trusted AAD
         // cloud host. Otherwise strip the credential and still load the page, so an untrusted hop
         // simply loses SSO instead of dead-ending sign-in.
-        if (!isRedirectTrustedForHeaderForwarding(input.toString())) {
+        // Gated behind ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION (default on) so the
+        // enforcement can be reverted via ECS: flight-off skips the trust check entirely and falls
+        // through to the original loadUrl(url, headers), i.e. exactly the pre-fix behavior.
+        val validationEnabled = CommonFlightsManager.getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
+        if (validationEnabled && !isRedirectTrustedForHeaderForwarding(input.toString())) {
             Logger.warn(
                 methodTag,
                 "Nonce redirect target is not a trusted HTTPS AAD host; " +
@@ -113,6 +120,28 @@ class NonceRedirectHandler(
         private val TAG = NonceRedirectHandler::class.java.simpleName
 
         /**
+         * The set of credential-bearing request-header keys that must never be forwarded to an
+         * untrusted or cleartext redirect target.
+         *
+         * The request-header map handled here is **not** built in this module: it originates from the
+         * caller (broker / MSAL) and reaches the WebView via the `REQUEST_HEADERS` intent extra
+         * (see `WebViewAuthorizationFragment.getRequestHeaders`), so its key set is defined outside
+         * this module and can grow over time. As of this writing the only known credential-bearing
+         * entry is the PRT response header
+         * ([AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]); the other known contributors — the
+         * passkey/FIDO protocol header and the broker ESTS client-extras telemetry header — are not
+         * credentials and are intentionally left in place so a legitimate-but-not-yet-validated AAD
+         * host (e.g. the WW host before instance discovery runs) keeps passkey and telemetry support.
+         *
+         * Any new credential-bearing header added upstream MUST be added to this set, otherwise it
+         * would be re-introduced as a leak on the untrusted branch with no signal here.
+         */
+        @JvmStatic
+        val CREDENTIAL_HEADERS: Set<String> = setOf(
+            AuthenticationConstants.Broker.PRT_RESPONSE_HEADER
+        )
+
+        /**
          * Determines whether the PRT credential header ([AuthenticationConstants.Broker.PRT_RESPONSE_HEADER])
          * may be forwarded to the given redirect target.
          *
@@ -139,19 +168,23 @@ class NonceRedirectHandler(
         }
 
         /**
-         * Returns a copy of [headers] with the PRT credential header
-         * ([AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]) removed.
+         * Returns a copy of [headers] with every credential-bearing header in [CREDENTIAL_HEADERS]
+         * removed.
          *
          * A copy is returned so the caller's shared header map is left untouched; the original map
-         * still carries the credential for subsequent, trusted navigations.
+         * still carries the credential(s) for subsequent, trusted navigations. Non-credential headers
+         * (e.g. passkey/FIDO protocol, telemetry) are deliberately preserved so an
+         * untrusted-but-legitimate hop keeps that functionality.
          *
          * @param headers the request headers to sanitize.
-         * @return a new map without the PRT credential header.
+         * @return a new map without any credential-bearing header.
          */
         @JvmStatic
         fun withoutCredentialHeaders(headers: HashMap<String, String>): HashMap<String, String> {
             val sanitized = HashMap(headers)
-            sanitized.remove(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER)
+            for (credentialHeader in CREDENTIAL_HEADERS) {
+                sanitized.remove(credentialHeader)
+            }
             return sanitized
         }
     }

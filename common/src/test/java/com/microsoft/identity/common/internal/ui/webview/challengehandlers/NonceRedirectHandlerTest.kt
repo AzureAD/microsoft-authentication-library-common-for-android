@@ -24,9 +24,16 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.webkit.WebView
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightConfig
+import com.microsoft.identity.common.java.flighting.IFlightsManager
+import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
 import io.opentelemetry.api.trace.Span
+import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -60,12 +67,16 @@ class NonceRedirectHandlerTest {
     private lateinit var handler: NonceRedirectHandler
 
     private val prtHeaderValue = "original-prt-credential"
+    private val nonCredentialHeaderValue = "passkey-protocol-v1"
 
     @Before
     fun setUp() {
         webView = mock(WebView::class.java)
         headers = HashMap()
         headers[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER] = prtHeaderValue
+        // A representative non-credential header (e.g. passkey/FIDO protocol or telemetry). It must
+        // survive the credential strip so an untrusted-but-legitimate hop keeps that functionality.
+        headers[NON_CREDENTIAL_HEADER] = nonCredentialHeaderValue
         span = mock(Span::class.java)
         handler = NonceRedirectHandler(webView, headers, span)
 
@@ -76,6 +87,13 @@ class NonceRedirectHandlerTest {
             TRUSTED_HOST,
             AzureActiveDirectoryCloud(TRUSTED_HOST, TRUSTED_HOST, listOf(TRUSTED_HOST))
         )
+    }
+
+    @After
+    fun tearDown() {
+        // Reset the flights manager so a flight override installed by an individual test (e.g. the
+        // kill-switch-off case) cannot leak into the other tests, which rely on the default (on).
+        CommonFlightsManager.resetFlightsManager()
     }
 
     @Test
@@ -140,6 +158,24 @@ class NonceRedirectHandlerTest {
     }
 
     @Test
+    fun `untrusted host strips only credential headers and preserves non-credential headers`() {
+        val url = "https://$UNTRUSTED_HOST/authorize?sso_nonce=abc"
+
+        handler.processChallenge(URL(url))
+
+        val forwarded = captureLoadedHeaders(url)
+        assertFalse(
+            "PRT credential header must be stripped for an untrusted host.",
+            forwarded.containsKey(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER)
+        )
+        assertEquals(
+            "Non-credential headers must survive the credential strip.",
+            nonCredentialHeaderValue,
+            forwarded[NON_CREDENTIAL_HEADER]
+        )
+    }
+
+    @Test
     fun `isRedirectTrustedForHeaderForwarding contract`() {
         assertTrue(
             NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(
@@ -161,6 +197,28 @@ class NonceRedirectHandlerTest {
         assertFalse(
             "malformed url must not be trusted",
             NonceRedirectHandler.isRedirectTrustedForHeaderForwarding("not a url")
+        )
+    }
+
+    /**
+     * Kill-switch revert: with [CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION]
+     * turned OFF, the trust check is skipped entirely and the redirect loads with the full header
+     * map — i.e. exactly the pre-fix behavior — even for an untrusted, cleartext target. This proves
+     * enforcement can be reverted via ECS without a code rollback.
+     */
+    @Test
+    fun `flight off forwards the PRT credential header to an untrusted host`() {
+        CommonFlightsManager.initializeCommonFlightsManager(NonceValidationOffFlightsManager)
+        val url = "http://$UNTRUSTED_HOST/authorize?sso_nonce=abc"
+
+        handler.processChallenge(URL(url))
+
+        val forwarded = captureLoadedHeaders(url)
+        assertEquals(
+            "With the kill-switch flight OFF, the PRT credential header must be forwarded unchanged " +
+                "(pre-fix behavior).",
+            prtHeaderValue,
+            forwarded[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]
         )
     }
 
@@ -186,5 +244,53 @@ class NonceRedirectHandlerTest {
     companion object {
         private const val TRUSTED_HOST = "login.microsoftonline.com"
         private const val UNTRUSTED_HOST = "malicious.contoso.example"
+        private const val NON_CREDENTIAL_HEADER = "x-ms-PasskeyProtocol"
+
+        /**
+         * Inline test [IFlightsManager] whose provider returns `false` only for
+         * [CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION] and each flight's own
+         * default for everything else, so the kill-switch-off path can be exercised without
+         * disturbing unrelated flights.
+         *
+         * Implemented inline (rather than via the shared `MockCommonFlightsManager` helper) because
+         * that helper's setter is generated by Lombok at Java-compile time — after kotlinc — so it is
+         * not visible from Kotlin test sources without enabling kapt. This mirrors the approach in
+         * `SwitchBrowserActivityTest`.
+         */
+        private object NonceValidationOffFlightsManager : IFlightsManager {
+            private val provider = object : IFlightsProvider {
+                override fun isFlightEnabled(flightConfig: IFlightConfig): Boolean =
+                    if (flightConfig.key ==
+                        CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION.key
+                    ) {
+                        false
+                    } else {
+                        flightConfig.defaultValue as Boolean
+                    }
+
+                override fun getBooleanValue(flightConfig: IFlightConfig): Boolean =
+                    isFlightEnabled(flightConfig)
+
+                override fun getIntValue(flightConfig: IFlightConfig): Int =
+                    flightConfig.defaultValue as Int
+
+                override fun getDoubleValue(flightConfig: IFlightConfig): Double =
+                    flightConfig.defaultValue as Double
+
+                override fun getStringValue(flightConfig: IFlightConfig): String =
+                    flightConfig.defaultValue as String
+
+                override fun getJsonValue(flightConfig: IFlightConfig): JSONObject =
+                    flightConfig.defaultValue as JSONObject
+            }
+
+            override fun getFlightsProvider(waitForConfigsWithTimeoutInMs: Long): IFlightsProvider =
+                provider
+
+            override fun getFlightsProviderForTenant(
+                tenantId: String,
+                waitForConfigsWithTimeoutInMs: Long
+            ): IFlightsProvider = provider
+        }
     }
 }
