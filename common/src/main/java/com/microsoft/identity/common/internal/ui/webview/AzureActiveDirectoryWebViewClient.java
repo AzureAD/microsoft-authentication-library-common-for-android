@@ -164,6 +164,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
+
+    /**
+     * The most recent {@code http(s)} main-frame URL observed by this WebView, used as the trusted
+     * same-origin reference when validating a PKeyAuth challenge's attacker-controlled
+     * {@code SubmitUrl} (CWE-918 / AB#3706623). Updated from {@link #onPageStarted} and the top of
+     * {@link #handleUrl}; preferred over {@link WebView#getUrl()} because {@code getUrl()} only
+     * reflects the last *committed* page and can lag behind a redirect-delivered challenge (e.g. an
+     * ADFS hop that 302s straight to the PKeyAuth {@code urn:} without ever committing). Read and
+     * written only on the UI thread, so no synchronization is required.
+     */
+    @Nullable
+    private String mLastCommittedRequestUrl;
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
@@ -323,11 +335,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
+        // Remember the most recent http(s) navigation so a subsequent PKeyAuth challenge (which
+        // arrives as a non-http(s) urn: and therefore does not overwrite this) can be validated
+        // against the origin that issued it. See mLastCommittedRequestUrl / AB#3706623.
+        recordLastCommittedRequestUrlIfHttp(url);
+
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
-                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
+                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url, getChallengingOrigin(view));
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isPasskeyUrl(formattedURL)) {
@@ -499,6 +516,41 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Records {@code url} as the most recent {@code http(s)} main-frame URL when it uses an
+     * {@code http}/{@code https} scheme. Non-http(s) navigations (e.g. the {@code urn:http-auth:}
+     * PKeyAuth challenge itself, {@code msauth://}, {@code browser://}) are ignored so
+     * {@link #mLastCommittedRequestUrl} keeps pointing at the origin that issued such a challenge.
+     *
+     * @param url the URL from a navigation callback; may be {@code null}.
+     */
+    private void recordLastCommittedRequestUrlIfHttp(@Nullable final String url) {
+        if (url == null) {
+            return;
+        }
+        final String lower = url.toLowerCase(Locale.US);
+        if (lower.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME + "://") || lower.startsWith("http://")) {
+            mLastCommittedRequestUrl = url;
+        }
+    }
+
+    /**
+     * Returns the trusted origin to validate a PKeyAuth challenge's {@code SubmitUrl} against.
+     * Prefers {@link #mLastCommittedRequestUrl} (the last http(s) main-frame URL, which tracks
+     * redirect-delivered challenges correctly) and falls back to {@link WebView#getUrl()}.
+     *
+     * @param view the WebView handling the challenge.
+     * @return the challenging origin URL, or {@code null} if none could be determined (the factory
+     *         then rejects the challenge, failing closed).
+     */
+    @Nullable
+    private String getChallengingOrigin(@NonNull final WebView view) {
+        if (!StringUtil.isNullOrEmpty(mLastCommittedRequestUrl)) {
+            return mLastCommittedRequestUrl;
+        }
+        return view.getUrl();
     }
 
     private boolean isPasskeyUrl(@NonNull final String url) {
@@ -1670,6 +1722,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        // Track the origin of the page currently being loaded. onPageStarted fires for every
+        // main-frame load (including server-redirect targets and POST navigations) before the page
+        // commits, so this reliably captures the host that issues a redirect-delivered PKeyAuth
+        // challenge even when WebView#getUrl() still points at the previous committed page
+        // (AB#3706623).
+        recordLastCommittedRequestUrlIfHttp(url);
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)

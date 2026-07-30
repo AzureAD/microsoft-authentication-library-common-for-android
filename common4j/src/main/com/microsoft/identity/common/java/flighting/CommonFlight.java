@@ -320,7 +320,20 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Kill switch for same-origin validation of a PKeyAuth {@code SubmitUrl} parsed from an
+     * untrusted WebView redirect ({@code urn:http-auth:PKeyAuth?...}). When enabled (the default),
+     * the {@code SubmitUrl} must be an absolute HTTPS URL whose host matches the challenging
+     * endpoint's host before the device key signs or the response is submitted, closing the
+     * CWE-918 / SSRF hole (AB#3706623). Turn off via ECS to revert to the historical behavior
+     * (no scheme/origin enforcement) if a federation topology is found where the challenging
+     * origin cannot be derived correctly and legitimate device auth is rejected.
+     * <p>
+     * Default is true.
+     */
+    ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true);
 
     private String key;
     private Object defaultValue;

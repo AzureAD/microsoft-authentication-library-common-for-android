@@ -35,7 +35,12 @@ import static com.microsoft.identity.common.java.challengehandlers.MockData.PKEY
 import static com.microsoft.identity.common.java.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +50,17 @@ import java.io.UnsupportedEncodingException;
 
 @RunWith(JUnit4.class)
 public class PKeyAuthChallengeFactoryTest {
+
+    // A trusted challenging origin whose host matches the SubmitUrl host in the webview-redirect
+    // fixtures (login.microsoftonline.com). The path/query intentionally differ from the SubmitUrl
+    // to show that only the host participates in the same-origin check.
+    private static final String CHALLENGING_ORIGIN =
+            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000000-0000-0000-0000-000000000000";
+
+    // Minimal, well-formed webview redirect carrying every required field except SubmitUrl, which
+    // callers append (URL-encoded) so each test can exercise a specific SubmitUrl shape.
+    private static final String MINIMAL_CHALLENGE_PREFIX =
+            "urn:http-auth:PKeyAuth?Version=1.0&Context=abc&nonce=abc&SubmitUrl=";
 
     private final String[] CERT_AUTHORITIES = new String[]{
             "OU=82dbaca4-3e81-46ca-9c73-0950c1eaca97,CN=MS-Organization-Access,DC=windows,DC=net"
@@ -73,7 +89,7 @@ public class PKeyAuthChallengeFactoryTest {
 
     @Test
     public void testParsingChallengeUrl() throws ClientException {
-        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_URL);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_URL, CHALLENGING_ORIGIN);
         Assert.assertArrayEquals(PKEYAUTH_CERT_AUTHORITIES, challenge.getCertAuthorities().toArray());
         Assert.assertEquals(PKEYAUTH_MOCK_VERSION, challenge.getVersion());
         Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_CONTEXT, challenge.getContext());
@@ -87,7 +103,7 @@ public class PKeyAuthChallengeFactoryTest {
     // (or, if the earlier is not provided, x-client-Ver >= 3.1.0)
     @Test
     public void testParsingChallengeUrl_WithTenantId() throws ClientException {
-        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_URL);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_URL, CHALLENGING_ORIGIN);
         Assert.assertArrayEquals(PKEYAUTH_CERT_AUTHORITIES, challenge.getCertAuthorities().toArray());
         Assert.assertEquals(PKEYAUTH_MOCK_VERSION, challenge.getVersion());
         Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_CONTEXT, challenge.getContext());
@@ -101,12 +117,110 @@ public class PKeyAuthChallengeFactoryTest {
     public void testParsingChallengeUrl_Malformed() {
         try{
             new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
-                    "urn:http-auth:PKeyAuth?CertAuthorities=OU%3d82dbaca4"
+                    "urn:http-auth:PKeyAuth?CertAuthorities=OU%3d82dbaca4",
+                    CHALLENGING_ORIGIN
             );
             Assert.fail("Exception is expected");
         } catch (final ClientException e) {
             Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
         }
+    }
+
+    // AB#3706623 (CWE-918): a webview-redirect SubmitUrl that is same-origin (host-equal) with the
+    // challenging endpoint and HTTPS is accepted, even when its path/query differ from the origin
+    // and the origin host is supplied in a different letter case.
+    @Test
+    public void testWebViewRedirect_SameOriginHttps_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                PKEYAUTH_AUTH_ENDPOINT_URL,
+                "https://LOGIN.microsoftonline.com/common/oauth2/authorize?dc=ESTS-PUB");
+        Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_SUBMIT_URL, challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918): an on-prem ADFS host containing an underscore (e.g.
+    // adfs_server.contoso.com) is a valid same-origin target. java.net.URI.getHost() returns null for
+    // such hosts (RFC 1123 server-authority parsing fails on '_'), which would false-reject the whole
+    // authorization request; java.net.URL preserves the host, so this same-origin challenge is
+    // accepted. Pins that parser choice.
+    @Test
+    public void testWebViewRedirect_UnderscoreHostSameOrigin_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                "urn:http-auth:PKeyAuth?Version=1.0&Context=abc&nonce=abc&SubmitUrl="
+                        + "https%3a%2f%2fadfs_server.contoso.com%2fadfs%2fls",
+                "https://adfs_server.contoso.com/adfs/ls?client-request-id=abc");
+        Assert.assertEquals("https://adfs_server.contoso.com/adfs/ls", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918): a SubmitUrl whose host differs from the challenging origin's host is
+    // rejected at construction, so no PKeyAuthChallenge is created and the device key can never sign
+    // for it. This is the core SSRF exfiltration guard.
+    @Test
+    public void testWebViewRedirect_CrossOriginHost_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("Cross-origin SubmitUrl must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): a cleartext http:// SubmitUrl is rejected even when its host matches the
+    // challenging origin, so a device-signed assertion is never sent over an unprotected channel.
+    @Test
+    public void testWebViewRedirect_CleartextHttp_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("Cleartext http SubmitUrl must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): when the challenging origin cannot be determined the challenge is
+    // rejected (fail closed), rather than defaulting to accepting the attacker-supplied SubmitUrl.
+    @Test
+    public void testWebViewRedirect_NullOrigin_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    PKEYAUTH_AUTH_ENDPOINT_URL,
+                    null);
+            Assert.fail("Challenge with an undeterminable origin must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
+    // the flight OFF the factory must fall back to the pre-fix behavior and construct the challenge
+    // even for a cross-origin SubmitUrl — proving the disable path actually bypasses enforcement.
+    @Test
+    public void testWebViewRedirect_OriginValidationFlightOff_CrossOriginAccepted()
+            throws ClientException {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(
+                CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), "false");
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory()
+                .getPKeyAuthChallengeFromWebViewRedirect(
+                        MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                        CHALLENGING_ORIGIN);
+
+        Assert.assertEquals("https://evil.example.com/steal", challenge.getSubmitUrl());
+    }
+
+    @After
+    public void tearDown() {
+        // Prevent flight state from a disable-path test leaking into other tests (default-on
+        // enforcement must remain the baseline everywhere else).
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test
