@@ -1402,6 +1402,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // now and pre-fill it on the request the user makes when they come back, instead of asking
         // them to type their address again. No-op unless the flight is on and the redirect is marked
         // as the MAM-CA path.
+        //
+        // Written inline on the UI thread, deliberately. This is the last moment the process is
+        // guaranteed to be alive: the completion callback below finishes the authorization activity
+        // and the Play Store install that follows very often kills us. Handing the write to a
+        // background thread would risk losing the hint in exactly the case it exists for, and would
+        // trade a bounded, best-effort write - a single encrypted key/value put, with every failure
+        // caught and swallowed inside the store - for a race it cannot win.
         final Activity installRequestActivity = getActivity();
         if (installRequestActivity != null) {
             MamUpnHintStore.saveUpnHintForMamCaInstall(

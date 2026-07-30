@@ -32,6 +32,8 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
@@ -51,54 +53,35 @@ import lombok.NonNull;
  * the next interactive request can pre-fill it instead of asking the user to type their address
  * again (Feature AB#3676213).
  * <p>
- * <b>Why this needs to be persisted.</b> When Conditional Access blocks an interactive request until
- * Company Portal is installed, the user leaves for the Play Store. Installing Company Portal very
- * often kills the calling app's process, so the UPN cannot simply be held in memory - it has to
- * survive process death. It is therefore written to the platform's <em>encrypted</em> name-value
- * store, which is private to the calling app.
- * <p>
- * <b>Where the UPN comes from.</b> The server returns it on the broker-install redirect
- * ({@code msauth://wpj/?username=<upn>&app_link=...&intuneAppProtection=1}). Nothing is inferred or
- * collected here beyond what the server already told us, and only the MAM-CA path is recorded - an
- * ordinary device-registration broker install stores nothing (see {@link MamCaRedirect}).
- * <p>
- * <b>Lifetime.</b> The hint is a short-lived UI convenience and is treated as such:
+ * The UPN is the one the server returned on the broker-install redirect
+ * ({@code msauth://wpj/?username=<upn>&app_link=...&intuneAppProtection=1}); nothing is inferred
+ * beyond that, and only the MAM-CA path is recorded (see {@link MamCaRedirect}). It is written to
+ * the platform's <em>encrypted</em>, app-private name-value store rather than held in memory,
+ * because installing Company Portal very often kills the calling app's process.
  * <ul>
- *   <li>Each record stores <em>when it was written</em>, and validity is decided at read time
- *       against {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}. Storing the write time rather than
- *       an absolute expiry means changing that flight also governs records already on disk.</li>
- *   <li>Reads are non-destructive, because this flow reaches the caller's account screen more than
- *       once - see {@link #getValidUpnHint}. A record is retired on a successful sign-in, by an
- *       explicit {@link #clearUpnHint}, or by its TTL. The TTL is what bounds replay, so it is kept
- *       short; within that window a hint may be offered to more than one request for the same
- *       client, which is why {@link #applyStoredUpnHintIfAbsent} declines to answer a request that
- *       explicitly asked the user to choose an account.</li>
- *   <li>Every read sweeps out <em>all</em> unusable records, for every client id, so nothing lingers
- *       at rest beyond the window the flow needs. The sweep runs whether or not the flight is on, so
- *       turning the flight off cannot strand records already written.</li>
+ *   <li><b>Lifetime.</b> Each record stores <em>when</em> it was written and is judged at read time
+ *       against {@link CommonFlight#MAM_CA_UPN_HINT_TTL_SECONDS}, so changing that flight also
+ *       governs records already on disk. A record is retired on a successful sign-in, by an explicit
+ *       {@link #clearUpnHint}, or by its TTL - not by being read; see {@link #getValidUpnHint}.</li>
+ *   <li><b>Sweeping.</b> Every read drops all unusable records, for every client id, so nothing
+ *       lingers at rest. It runs whether or not the flight is on, so the kill switch cannot strand
+ *       records already written.</li>
+ *   <li><b>Keying.</b> Records are keyed by client id as well as by app, because "one process, one
+ *       client id" does not hold: a broker hosts the WebView on behalf of every calling app, and one
+ *       app may run several clients. This mirrors the credential cache. A hint whose client id
+ *       cannot be determined is not stored.</li>
+ *   <li><b>Authority binding.</b> Each record remembers the <em>host</em> it came from, and
+ *       {@link #applyStoredUpnHintIfAbsent} will not send the UPN to a different one - that host is
+ *       the sovereign-cloud boundary. Host and not full url, because apps routinely start at
+ *       {@code /common} and retry against {@code /{tenantId}}, which is the very flow this
+ *       feature serves.</li>
+ *   <li><b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
+ *       (default off). {@link #clearUpnHint(IPlatformComponents, String)} is deliberately not gated,
+ *       so cleanup keeps working after the flight is turned off.</li>
+ *   <li><b>Telemetry.</b> {@link #applyStoredUpnHintIfAbsent} tags the request's span with
+ *       {@link AttributeName#mam_ca_upn_hint_outcome} so the pre-fill's reach can be measured as the
+ *       flight ramps; see {@link #reportOutcome}.</li>
  * </ul>
- * <p>
- * <b>Keying.</b> The store is app-private, so it is already isolated between apps. Records are
- * <em>additionally</em> keyed by client id because "one process, one client id" does not hold: a
- * broker hosts the authorization WebView in its own process on behalf of every calling app, and a
- * single app may run more than one client. This mirrors the credential cache, whose keys include the
- * client id for the same reason. A hint whose client id cannot be determined is not stored at all.
- * <p>
- * <b>Authority binding.</b> Each record also remembers the <em>host</em> of the authority that
- * produced it, and {@link #applyStoredUpnHintIfAbsent} will not put the UPN on the wire to a
- * different host. That host is the sovereign-cloud boundary - commercial, US Gov and 21Vianet are
- * distinct hosts - so this is what stops an address the user gave to one cloud being sent to
- * another. It is deliberately the host and not the full authority url: apps routinely start at
- * {@code /common} and retry against {@code /{tenantId}} once the account resolves, which is exactly
- * the flow this feature exists for, and binding to the whole url would break it. A mismatch declines
- * the pre-fill but does <em>not</em> delete the record, since an unrelated request to another
- * authority would otherwise silently destroy a hint the user is about to come back for.
- * <p>
- * <b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
- * (default off), so with the flight off nothing is ever stored and behavior is unchanged.
- * {@link #clearUpnHint(IPlatformComponents, String)} is deliberately <em>not</em> gated so that
- * cleanup always works, including after the flight has been turned off.
- * <p>
  * Every operation is best-effort: this is a convenience hint, so a storage failure is logged and
  * swallowed rather than allowed to fail the authentication request.
  */
@@ -127,6 +110,29 @@ public final class MamUpnHintStore {
     static final String KEY_PREFIX_RECORD = "record.";
 
     private static final Gson GSON = new Gson();
+
+    /**
+     * Values of {@link AttributeName#mam_ca_upn_hint_outcome}. A small fixed set, deliberately: they
+     * are span attribute values, so they must not carry anything request-specific.
+     */
+    //@VisibleForTesting
+    static final String OUTCOME_APPLIED = "applied";
+
+    /** No hint was stored for this client, or it had expired. */
+    //@VisibleForTesting
+    static final String OUTCOME_NONE_STORED = "none_stored";
+
+    /** Declined: the caller asked the user to pick or create an account. */
+    //@VisibleForTesting
+    static final String OUTCOME_DECLINED_PROMPT = "declined_prompt";
+
+    /** Declined: the hint was captured against a different authority host. */
+    //@VisibleForTesting
+    static final String OUTCOME_DECLINED_AUTHORITY_MISMATCH = "declined_authority_mismatch";
+
+    /** Declined: the request's own authority host could not be determined. */
+    //@VisibleForTesting
+    static final String OUTCOME_DECLINED_NO_REQUEST_HOST = "declined_no_request_host";
 
     private MamUpnHintStore() {
         // Utility class.
@@ -164,9 +170,21 @@ public final class MamUpnHintStore {
                                                   @Nullable final String clientId,
                                                   @Nullable final String authorityHost,
                                                   @Nullable final Map<String, String> redirectParameters) {
-        if (!isEnabled() || !MamCaRedirect.isMamCaInstall(redirectParameters)) {
+        final String methodTag = TAG + ":saveUpnHintForMamCaInstall";
+
+        if (!isEnabled()) {
+            Logger.verbose(methodTag, "Not storing a UPN hint: the flight is off.");
             return;
         }
+
+        if (!MamCaRedirect.isMamCaInstall(redirectParameters)) {
+            // An ordinary device-registration broker install; nothing to remember. Logged so that
+            // the two kinds of broker-install redirect can be told apart in a capture.
+            Logger.verbose(methodTag,
+                    "Not storing a UPN hint: this broker install is not the MAM Conditional Access path.");
+            return;
+        }
+
         saveUpnHint(components, clientId, MamCaRedirect.getUsername(redirectParameters), authorityHost);
     }
 
@@ -187,14 +205,25 @@ public final class MamUpnHintStore {
                                                   @Nullable final String clientId,
                                                   @Nullable final Authority authority,
                                                   @Nullable final AuthorizationErrorResponse errorResponse) {
+        final String methodTag = TAG + ":saveUpnHintForMamCaInstall";
+
+        if (!isEnabled()) {
+            Logger.verbose(methodTag, "Not storing a UPN hint: the flight is off.");
+            return;
+        }
+
         if (errorResponse == null
                 || !MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED
                         .equals(errorResponse.getError())) {
+            // The request failed for some other reason, so there is no install to come back from.
+            Logger.verbose(methodTag,
+                    "Not storing a UPN hint: this failure is not a broker-install interrupt.");
             return;
         }
 
         if (!errorResponse.isMamCaInstall()) {
-            // An ordinary device-registration broker install; nothing to remember.
+            Logger.verbose(methodTag,
+                    "Not storing a UPN hint: this broker install is not the MAM Conditional Access path.");
             return;
         }
 
@@ -211,6 +240,7 @@ public final class MamUpnHintStore {
      * @param upn           the UPN to remember.
      * @param authorityHost host of the authority the hint came from, if it could be determined.
      */
+    //@VisibleForTesting
     static void saveUpnHint(@Nullable final IPlatformComponents components,
                             @Nullable final String clientId,
                             @Nullable final String upn,
@@ -262,6 +292,7 @@ public final class MamUpnHintStore {
      * @param authorityHost host of the authority the hint came from, already normalized.
      * @param nowMillis     the current time in epoch millis.
      */
+    //@VisibleForTesting
     static void saveUpnHint(@NonNull final INameValueStorage<String> storage,
                             @NonNull final String clientId,
                             @NonNull final String upn,
@@ -332,18 +363,21 @@ public final class MamUpnHintStore {
             return null;
         }
 
+        final long nowMillis = System.currentTimeMillis();
+        final long ttlMillis = getTtlMillis();
         try {
-            // Sweep before consulting the flight, not after. Expiry is driven entirely by reads, so
-            // gating this behind isEnabled() would mean that turning the flight off - the kill
-            // switch - stranded every UPN already on disk permanently. Only handing a hint out is
-            // a feature decision; clearing one out is hygiene and has to keep working.
-            sweepUnusableRecords(storage, System.currentTimeMillis(), getTtlMillis());
+            // The one place the store is swept, and it runs before the flight is consulted, not
+            // after. Expiry is driven entirely by reads, so gating this behind isEnabled() would
+            // mean that turning the flight off - the kill switch - stranded every UPN already on
+            // disk permanently. Only handing a hint out is a feature decision; clearing one out is
+            // hygiene and has to keep working.
+            sweepUnusableRecords(storage, nowMillis, ttlMillis);
 
             if (!isEnabled()) {
                 return null;
             }
 
-            return getValidRecord(storage, clientId, System.currentTimeMillis(), getTtlMillis());
+            return getValidRecord(storage, clientId, nowMillis, ttlMillis);
         } catch (final Exception e) {
             // A pre-filled text box must never be the reason an authentication request fails.
             Logger.warn(TAG + ":readValidRecord",
@@ -353,7 +387,8 @@ public final class MamUpnHintStore {
     }
 
     /**
-     * Storage-level read of the whole record, with an injectable clock and TTL. Non-destructive.
+     * Storage-level read of the whole record, with an injectable clock and TTL. Non-destructive, and
+     * does not sweep - {@link #readValidRecord} does that once, before calling this.
      *
      * @param storage   the backing store.
      * @param clientId  client id to read the record for.
@@ -361,25 +396,23 @@ public final class MamUpnHintStore {
      * @param ttlMillis how long a hint stays usable, in millis.
      * @return the record if still valid, otherwise {@code null}.
      */
+    //@VisibleForTesting
     @Nullable
     static Record getValidRecord(@NonNull final INameValueStorage<String> storage,
                                  @Nullable final String clientId,
                                  final long nowMillis,
                                  final long ttlMillis) {
-        // Sweep first, so a hint that is itself stale is dropped rather than returned below. This
-        // runs before the client-id check because it is not scoped to one client.
-        sweepUnusableRecords(storage, nowMillis, ttlMillis);
-
         if (StringUtil.isNullOrEmpty(clientId)) {
             // Records are only ever written under a real client id, so there is nothing to look up.
             return null;
         }
 
         final Record record = deserialize(storage.get(KEY_PREFIX_RECORD + clientId));
-        // Re-check this record rather than trusting the sweep to have removed it: the sweep depends
-        // on the store being able to enumerate itself, and an expired UPN must never be handed out
-        // just because a listing came back short.
+        // Judge this record on its own terms rather than trusting the sweep to have removed it: the
+        // sweep depends on the store being able to enumerate itself, and an expired UPN must never
+        // be handed out just because a listing came back short.
         if (!isUsable(record, nowMillis, ttlMillis)) {
+            Logger.verbose(TAG + ":getValidRecord", "No usable stored record for this client id.");
             return null;
         }
 
@@ -395,9 +428,10 @@ public final class MamUpnHintStore {
      * @param nowMillis the current time in epoch millis.
      * @param ttlMillis how long a hint stays usable, in millis.
      */
-    private static void sweepUnusableRecords(@NonNull final INameValueStorage<String> storage,
-                                             final long nowMillis,
-                                             final long ttlMillis) {
+    //@VisibleForTesting
+    static void sweepUnusableRecords(@NonNull final INameValueStorage<String> storage,
+                                     final long nowMillis,
+                                     final long ttlMillis) {
         final String methodTag = TAG + ":sweepUnusableRecords";
 
         final Map<String, String> all = storage.getAll();
@@ -529,7 +563,8 @@ public final class MamUpnHintStore {
         final String methodTag = TAG + ":applyStoredUpnHintIfAbsent";
 
         if (!StringUtil.isNullOrEmpty(parameters.getLoginHint())) {
-            // The caller already knows who is signing in.
+            // The caller already knows who is signing in. Deliberately not reported: this is the
+            // ordinary case for most callers and says nothing about how the feature is doing.
             return parameters;
         }
 
@@ -538,12 +573,14 @@ public final class MamUpnHintStore {
                 || prompt == OpenIdConnectPromptParameter.CREATE) {
             Logger.info(methodTag,
                     "Not pre-filling login_hint: the caller asked the user to choose or create an account.");
+            reportOutcome(OUTCOME_DECLINED_PROMPT);
             return parameters;
         }
 
         // Read first, so that the sweep still runs even when the hint turns out not to be applicable.
         final Record record = readValidRecord(parameters.getPlatformComponents(), parameters.getClientId());
         if (record == null || StringUtil.isNullOrEmpty(record.getUpn())) {
+            reportOutcome(OUTCOME_NONE_STORED);
             return parameters;
         }
 
@@ -551,6 +588,7 @@ public final class MamUpnHintStore {
         if (requestHost == null) {
             Logger.info(methodTag,
                     "Not pre-filling login_hint: the request's authority host could not be determined.");
+            reportOutcome(OUTCOME_DECLINED_NO_REQUEST_HOST);
             return parameters;
         }
 
@@ -559,11 +597,41 @@ public final class MamUpnHintStore {
         if (!requestHost.equals(record.getAuthorityHost())) {
             Logger.info(methodTag,
                     "Not pre-filling login_hint: the hint was stored against a different authority.");
+            reportOutcome(OUTCOME_DECLINED_AUTHORITY_MISMATCH);
             return parameters;
         }
 
         Logger.info(methodTag, "Pre-filling login_hint from the stored MAM-CA UPN hint.");
+        reportOutcome(OUTCOME_APPLIED);
         return parameters.toBuilder().loginHint(record.getUpn()).build();
+    }
+
+    /**
+     * Tags the request's span with what the pre-fill did, so the feature's reach can be measured
+     * while the flight ramps instead of inferred from logs. The value is one of a small fixed set,
+     * so this cannot inflate attribute cardinality.
+     * <p>
+     * Nothing is reported when the caller supplied its own {@code login_hint}: that is the ordinary
+     * case and would drown the signal. Nothing is reported on the retirement path either - a hint
+     * that was applied already tagged this same span with {@link #OUTCOME_APPLIED}, and whether the
+     * request then succeeded is already on it.
+     * <p>
+     * Note that the flight-off counterfactual - "how many requests would have been pre-filled" - is
+     * not obtainable and is not attempted: writes are gated by the same flight, so with it off no
+     * hint is ever stored and there is nothing to have counted. Making it observable would mean
+     * persisting UPNs for users who are not in the experiment, which is not a trade worth making for
+     * a ramp metric.
+     *
+     * @param outcome one of the {@code OUTCOME_*} constants.
+     */
+    private static void reportOutcome(@NonNull final String outcome) {
+        try {
+            SpanExtension.current().setAttribute(AttributeName.mam_ca_upn_hint_outcome.name(), outcome);
+        } catch (final Exception e) {
+            // Telemetry must never be the reason a sign-in fails.
+            Logger.verbose(TAG + ":reportOutcome",
+                    "Could not report the outcome: " + e.getClass().getSimpleName());
+        }
     }
 
     /**

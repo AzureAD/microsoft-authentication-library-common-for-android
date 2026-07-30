@@ -110,9 +110,11 @@ public class LocalMSALController extends BaseController {
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodTag = TAG + ":acquireToken";
 
-        // MAM broker-install onboarding: if this request was interrupted earlier by a Conditional
-        // Access "install Company Portal" block, pre-fill the UPN the user already gave us. No-op
-        // unless the flight is on, the caller left login_hint blank, and a hint is still valid.
+        // MAM broker-install onboarding: pre-fill the UPN the user gave us before a Conditional
+        // Access "install Company Portal" block interrupted them. This runs on every interactive
+        // request, not only the one that follows an install - it is a no-op unless the flight is on,
+        // the caller left login_hint blank, and a hint stored for this client and authority is still
+        // within its TTL.
         final InteractiveTokenCommandParameters parameters =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
 
@@ -182,10 +184,11 @@ public class LocalMSALController extends BaseController {
         ResultUtil.logResult(TAG, result);
 
         // MAM Conditional Access onboarding: if Conditional Access blocked this request until
-        // Company Portal is installed, remember the UPN the server sent back. Installing the broker
-        // usually kills this process, so the hint is persisted and pre-filled on the interactive
-        // request the user makes once they return. No-op unless the flight is on and this is a
-        // MAM-CA install failure.
+        // Company Portal is installed, remember the UPN the server sent back. Installing Company
+        // Portal usually kills this process, so the hint is persisted and pre-filled on the
+        // interactive request the user makes once they return. No-op unless the flight is on and
+        // this failure is specifically the MAM-CA install - an ordinary device-registration broker
+        // install stores nothing.
         MamUpnHintStore.saveUpnHintForMamCaInstall(
                 parametersWithScopes.getPlatformComponents(),
                 parametersWithScopes.getClientId(),

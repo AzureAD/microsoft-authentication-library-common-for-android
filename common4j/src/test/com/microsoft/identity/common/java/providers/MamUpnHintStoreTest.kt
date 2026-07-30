@@ -289,6 +289,28 @@ class MamUpnHintStoreTest {
         )
     }
 
+    /**
+     * The sweep is not scoped to a client id, so it belongs to the read of the store as a whole and
+     * not to the per-client lookup. Pinning that here keeps a caller from re-adding it inside
+     * [MamUpnHintStore.getValidRecord], which would make every read enumerate and deserialize the
+     * whole store twice.
+     */
+    @Test
+    fun getValidRecord_doesNotSweep() {
+        val storage: INameValueStorage<String> = InMemoryStorage()
+        save(storage, OTHER_CLIENT_ID, OTHER_UPN, NOW)
+        save(storage, CLIENT_ID, UPN, NOW + TTL)
+
+        assertEquals(
+            UPN,
+            MamUpnHintStore.getValidRecord(storage, CLIENT_ID, NOW + TTL, TTL)?.upn
+        )
+        assertNotNull(
+            "the per-client read must leave the sweeping to its caller",
+            storage.get(MamUpnHintStore.KEY_PREFIX_RECORD + OTHER_CLIENT_ID)
+        )
+    }
+
     // endregion
 
     // region MAM-CA marker gate
@@ -795,6 +817,46 @@ class MamUpnHintStoreTest {
 
     // endregion
 
+    // region telemetry
+
+    @Test
+    fun outcomeValues_areDistinctAndNonBlank() {
+        val outcomes = listOf(
+            MamUpnHintStore.OUTCOME_APPLIED,
+            MamUpnHintStore.OUTCOME_NONE_STORED,
+            MamUpnHintStore.OUTCOME_DECLINED_PROMPT,
+            MamUpnHintStore.OUTCOME_DECLINED_AUTHORITY_MISMATCH,
+            MamUpnHintStore.OUTCOME_DECLINED_NO_REQUEST_HOST
+        )
+
+        outcomes.forEach {
+            assertFalse("an outcome reported to telemetry must not be blank", it.isBlank())
+        }
+        assertEquals(
+            "each branch must report a distinct outcome, or they cannot be told apart",
+            outcomes.size, outcomes.toSet().size
+        )
+    }
+
+    @Test
+    fun apply_withNoTelemetrySdkConfigured_stillAppliesTheHint() {
+        // No OpenTelemetry SDK is installed in these tests, so reporting runs against the no-op
+        // span. Pins that reporting can never be the reason a sign-in loses its pre-fill.
+        setFlights(true)
+        val parameters = parameters(null)
+        save(parameters.platformComponents, CLIENT_ID, UPN)
+
+        assertEquals(UPN, MamUpnHintStore.applyStoredUpnHintIfAbsent(parameters).loginHint)
+
+        // ... and the declining branches stay non-throwing too.
+        val picker = parameters.toBuilder()
+            .prompt(OpenIdConnectPromptParameter.SELECT_ACCOUNT)
+            .build()
+        assertSame(picker, MamUpnHintStore.applyStoredUpnHintIfAbsent(picker))
+    }
+
+    // endregion
+
     // region round trip through a real (mock-backed) store
 
     @Test
@@ -878,13 +940,23 @@ class MamUpnHintStoreTest {
     private fun authority(host: String = HOST): Authority =
         Authority.getAuthorityFromAuthorityUrl("https://$host/common")
 
-    /** Storage-level read with an injected clock, unwrapped to the UPN the assertions care about. */
+    /**
+     * Storage-level read with an injected clock, unwrapped to the UPN the assertions care about.
+     *
+     * Sweeps first and then reads, mirroring what [MamUpnHintStore.readValidRecord] does on the
+     * production path. The sweep is a separate call because it is not scoped to one client id, so
+     * doing it inside the per-client read would mean every read of the store enumerated and
+     * deserialized it twice.
+     */
     private fun readUpn(
         storage: INameValueStorage<String>,
         clientId: String?,
         nowMillis: Long,
         ttlMillis: Long
-    ): String? = MamUpnHintStore.getValidRecord(storage, clientId, nowMillis, ttlMillis)?.upn
+    ): String? {
+        MamUpnHintStore.sweepUnusableRecords(storage, nowMillis, ttlMillis)
+        return MamUpnHintStore.getValidRecord(storage, clientId, nowMillis, ttlMillis)?.upn
+    }
 
     private fun storageOf(components: IPlatformComponents): INameValueStorage<String> {
         val storage = components.storageSupplier

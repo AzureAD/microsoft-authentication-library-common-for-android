@@ -352,9 +352,11 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters requestParameters)
             throws BaseException, InterruptedException, ExecutionException {
-        // MAM Conditional Access onboarding: this is the request the user makes after installing the
-        // broker, so pre-fill the UPN they already gave us before being interrupted. No-op unless
-        // the flight is on, the caller left login_hint blank, and a stored hint is still valid.
+        // MAM Conditional Access onboarding: pre-fill the UPN the user gave us before a Conditional
+        // Access "install Company Portal" block interrupted them. This runs on every interactive
+        // request, not only the one that follows an install - it is a no-op unless the flight is on,
+        // the caller left login_hint blank, and a hint stored for this client and authority is still
+        // within its TTL.
         final InteractiveTokenCommandParameters parameters =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
 
