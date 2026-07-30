@@ -1563,7 +1563,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.error(methodTag, "Error processing nonce and re-attaching headers", throwable);
                 span.setStatus(StatusCode.ERROR, "Error processing nonce and re-attaching headers");
                 span.recordException(throwable);
-                view.loadUrl(url, mRequestHeaders);
+                // SECURITY (CWE-918): mirror the trust gate applied inside NonceRedirectHandler so the
+                // fallback navigation cannot forward the PRT credential header to an untrusted or
+                // cleartext target. Trusted AAD hosts keep the headers; everything else loads without
+                // the credential rather than dead-ending the flow.
+                if (NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(url)) {
+                    view.loadUrl(url, mRequestHeaders);
+                } else {
+                    Logger.warn(methodTag, "Nonce redirect target is not a trusted HTTPS AAD host; "
+                            + "loading without the PRT credential header.");
+                    view.loadUrl(url, NonceRedirectHandler.withoutCredentialHeaders(mRequestHeaders));
+                }
             } finally {
                 span.end();
             }
