@@ -65,6 +65,23 @@ object OnboardingBlockingErrorParser {
     private fun isExcluded(candidate: String): Boolean = candidate in NON_ONBOARDING_AADSTS_CODES
 
     /**
+     * Public policy check for callers that already hold a single, non-header error code and need to
+     * decide whether it belongs in the onboarding blob's `blocking_errors[]` — e.g. the Auth UX JS
+     * bridge `log_telemetry` path (AB#3688632), which receives one server error code directly rather
+     * than an `x-ms-clitelem` header or a [MicrosoftTokenResponse].
+     *
+     * Exposing the check here keeps a single source of truth for the exclusion set (parity with iOS
+     * `nonBlockingOnboardingErrorCodes`) so callers apply the SAME policy as the header/response
+     * parsers above instead of duplicating [NON_ONBOARDING_AADSTS_CODES].
+     *
+     * @return true when [code] is present in the non-blocking exclusion set; false otherwise
+     *         (including for null or blank input).
+     */
+    @JvmStatic
+    fun isNonBlockingOnboardingErrorCode(code: String?): Boolean =
+        !code.isNullOrBlank() && isExcluded(code)
+
+    /**
      * Extract a blocking-error attribution string from a [MicrosoftTokenResponse].
      *
      * Returns the most specific available identifier:

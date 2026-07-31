@@ -43,7 +43,8 @@ import java.net.URISyntaxException
  * not take a dependency on the onboarding recorder plumbing. The concrete wiring — resolving the
  * active [com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder] and
  * appending the code to the onboarding blob's blocking-errors list (subject to the non-blocking
- * exclusion list) — is supplied by the host and handled downstream (see AB#3688632).
+ * exclusion list) — is supplied by the host
+ * (`AzureActiveDirectoryWebViewClient.initializeAuthUxJavaScriptApi`); see AB#3688632.
  */
 fun interface AuthUxTelemetrySink {
     /**
@@ -180,9 +181,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 actionName == ActionNames.LOG_TELEMETRY -> {
                     // Dedicated, non-mutating telemetry path (H3): dispatched by action_name (the
                     // log_telemetry action carries no params.operation) and must never touch the
-                    // number-match / write_data device-store path. The append to the onboarding
-                    // blob (with the non-blocking exclusion list) is handled downstream by the
-                    // supplied sink — see AB#3688632.
+                    // number-match / write_data device-store path. The supplied sink appends the
+                    // code to the onboarding blob's blocking-errors list (subject to the
+                    // non-blocking exclusion list); wired by the host in AB#3688632.
                     val errorCode = parameters.errorCode
                     if (errorCode.isNullOrEmpty()) {
                         Logger.warn(

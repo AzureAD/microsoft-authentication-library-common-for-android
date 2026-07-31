@@ -130,10 +130,12 @@ class OnboardingTelemetryRecorder(
      * Also persists the session correlation entry to SharedPreferences
      * (best-effort, async) for app-kill resilience.
      *
-     * @param errorCode The onboarding blocking-error identifier to record
-     *                  (e.g., [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL]
-     *                  or [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]),
-     *                  not a numeric service auth error code.
+     * @param errorCode The onboarding blocking-error identifier to record. Either a symbolic
+     *                  blocking-error constant (e.g.,
+     *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL] or
+     *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]) or a numeric
+     *                  server/STS error code surfaced by OnboardingBlockingErrorParser or the
+     *                  Auth UX JS bridge (e.g., "530003"). Recorded verbatim as an opaque string.
      */
     override fun addBlockingError(errorCode: String) {
         blockingErrors.add(errorCode)

@@ -1900,5 +1900,62 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse("blank URL should not produce a last_loaded_domain entry",
                 blob.has("last_loaded_domain"));
     }
+
+    /**
+     * AB#3688632: a valid Auth UX {@code log_telemetry} server error code is appended to the
+     * onboarding blob's blocking-errors list (and surfaces as {@code last_blocking_error}).
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_AppendsToOnboardingBlob() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.recordAuthUxServerErrorCode("530003");
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals(1, errors.length());
+        assertEquals("530003", errors.getString(0));
+        assertEquals("530003", blob.getString(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: codes in the non-blocking exclusion list (parity with iOS
+     * {@code nonBlockingOnboardingErrorCodes}) are NOT appended to the blob.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_NonBlockingCode_NotAppended() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.recordAuthUxServerErrorCode("50058"); // UserInformationNotProvided — excluded
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals("excluded code must not be appended", 0, blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS).length());
+        assertFalse("no last_blocking_error when nothing was appended", blob.has(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: when no recorder is attached the hook is a no-op and never throws.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_NoRecorder_IsNoOp() {
+        // Default mWebViewClient has no recorder attached. This must not throw.
+        mWebViewClient.recordAuthUxServerErrorCode("530003");
+    }
 }
 

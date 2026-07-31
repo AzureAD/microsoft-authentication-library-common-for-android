@@ -82,6 +82,7 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -222,9 +223,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
+            // If broker request, and a valid url, expose JavaScript API.
+            // Thread the onboarding telemetry recorder into the bridge via a sink so a
+            // log_telemetry event can append the Auth UX server error code to the onboarding blob
+            // (AB#3688632). The sink (recordAuthUxServerErrorCode) reads mOnboardingTelemetryRecorder
+            // lazily, so it still works when the recorder is attached after this registration.
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            view.addJavascriptInterface(
+                    new AuthUxJavaScriptInterface(this::recordAuthUxServerErrorCode),
+                    AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
     }
@@ -1851,6 +1858,43 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         } catch (final Throwable t) {
             Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
+        }
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook for Auth UX bridge {@code log_telemetry} events:
+     * appends the Auth UX server error code to the onboarding blob's blocking-errors list on the
+     * attached recorder, unless the code is in the non-blocking exclusion list
+     * ({@link OnboardingBlockingErrorParser#isNonBlockingOnboardingErrorCode(String)}, parity with
+     * iOS {@code nonBlockingOnboardingErrorCodes}).
+     *
+     * <p>Append-only / non-mutating: it only calls
+     * {@link OnboardingTelemetryRecorder#addBlockingError(String)} and never touches device or
+     * credential state. No-op when no recorder is attached (inherits the seed-gate, so hosts without
+     * an onboarding session — e.g. third-party callers — stay inert). Reads
+     * {@link #mOnboardingTelemetryRecorder} lazily so it works whether the recorder was attached
+     * before or after the JS interface was registered, and identically for brokered and
+     * non-brokered flows (the same AndroidCommon recorder backs both). Never throws.
+     *
+     * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #initializeAuthUxJavaScriptApi}.
+     *
+     * @param errorCode Opaque Auth UX server error code (e.g. an STS code such as {@code "530003"});
+     *                  guaranteed non-empty by the bridge.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    void recordAuthUxServerErrorCode(@NonNull final String errorCode) {
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            return;
+        }
+        if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
+            Logger.info(TAG, "Onboarding telemetry: skipping non-blocking Auth UX error code");
+            return;
+        }
+        try {
+            recorder.addBlockingError(errorCode);
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record Auth UX server error: " + t.getMessage());
         }
     }
 }

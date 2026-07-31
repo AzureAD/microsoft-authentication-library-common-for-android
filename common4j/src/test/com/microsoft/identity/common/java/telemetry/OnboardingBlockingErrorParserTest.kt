@@ -240,4 +240,28 @@ class OnboardingBlockingErrorParserTest {
             OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("53003,65001,53003")
         )
     }
+
+    // --- isNonBlockingOnboardingErrorCode (single-code policy check, e.g. Auth UX JS bridge) ---
+
+    @Test
+    fun isNonBlocking_ExcludedCodesReturnTrue() {
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("50058"))
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("50097"))
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("50126"))
+    }
+
+    @Test
+    fun isNonBlocking_RealBlockingCodesReturnFalse() {
+        // Real CA / onboarding-remediation codes must be treated as blocking (not excluded).
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("530003"))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("53003"))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("65001"))
+    }
+
+    @Test
+    fun isNonBlocking_NullOrBlankReturnsFalse() {
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(null))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(""))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("   "))
+    }
 }
