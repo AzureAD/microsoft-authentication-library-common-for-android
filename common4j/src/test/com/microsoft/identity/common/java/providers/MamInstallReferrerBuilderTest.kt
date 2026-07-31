@@ -355,6 +355,45 @@ class MamInstallReferrerBuilderTest {
         assertEquals(MamInstallReferrerBuilder.Outcome.FLIGHT_OFF, outcome)
     }
 
+    /**
+     * Every outcome the flight actually evaluates has to name itself in the log, because with no
+     * telemetry attached the log is the only ramp signal this class emits. Reading the expected
+     * value back off [MamInstallReferrerBuilder.Outcome] rather than hard-coding strings keeps the
+     * two from drifting apart.
+     */
+    @Test
+    fun outcome_everyEvaluatedOutcomeNamesItselfInTheLog() {
+        setMamCaReferrerFlight(true)
+
+        val cases = mapOf<MamInstallReferrerBuilder.Outcome, Triple<String?, String?, Map<String, String>>>(
+            MamInstallReferrerBuilder.Outcome.DECORATED to
+                    Triple(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()),
+            MamInstallReferrerBuilder.Outcome.NOT_MAM_CA to
+                    Triple(CP_APP_LINK, ORIGIN_PKG, mapOf("username" to "user@contoso.com")),
+            MamInstallReferrerBuilder.Outcome.NO_ORIGIN_PKG to
+                    Triple(CP_APP_LINK, null, mamCaRedirectParameters()),
+            MamInstallReferrerBuilder.Outcome.NO_APP_LINK to
+                    Triple(null, ORIGIN_PKG, mamCaRedirectParameters()),
+            MamInstallReferrerBuilder.Outcome.SERVER_REFERRER to
+                    Triple(
+                        "$CP_APP_LINK&referrer=com.server.chose.this", ORIGIN_PKG,
+                        mamCaRedirectParameters()
+                    ),
+            MamInstallReferrerBuilder.Outcome.LINK_UNPARSEABLE to
+                    Triple("not a uri at all", ORIGIN_PKG, mamCaRedirectParameters())
+        )
+
+        for ((expected, inputs) in cases) {
+            val (appLink, originPkg, redirectParameters) = inputs
+            val logged = captureLogsWhile { outcomeOf(appLink, originPkg, redirectParameters) }
+
+            assertTrue(
+                "$expected should have named itself in the log, but only got: $logged",
+                logged.any { it.contains(expected.name) }
+            )
+        }
+    }
+
     /** The reporting overload must not change what is actually launched. */
     @Test
     fun outcome_overloadReturnsTheSameLinkAsTheStringEntryPoint() {

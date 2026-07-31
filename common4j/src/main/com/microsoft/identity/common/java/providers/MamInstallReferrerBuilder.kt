@@ -62,9 +62,10 @@ object MamInstallReferrerBuilder {
      * a referrer" are indistinguishable from it. This enum is what makes those cases separable, in
      * tests and when reading a call site.
      *
-     * Deliberately carries no telemetry tag. Rollout is read off the log lines below, not off the
-     * onboarding blob: `ux_flow_used` records which UX-variant cohort a user was in, not per-attempt
-     * result codes, so these values do not belong there.
+     * Deliberately carries no telemetry tag. Rollout is read off the log lines below - every outcome
+     * the flight actually evaluates names itself in one - not off the onboarding blob: `ux_flow_used`
+     * records which UX-variant cohort a user was in, not per-attempt result codes, so these values do
+     * not belong there.
      */
     enum class Outcome {
 
@@ -166,9 +167,20 @@ object MamInstallReferrerBuilder {
         MamCaRedirect.logRedirectParameterNames(methodTag, redirectParameters)
 
         if (!MamCaRedirect.isMamCaInstall(redirectParameters)) {
+            Logger.info(
+                methodTag,
+                "The redirect carries no MAM-CA marker, so this is an ordinary broker install; " +
+                    "leaving the install link as it is. [outcome=${Outcome.NOT_MAM_CA}]"
+            )
             return Decoration(appLink, Outcome.NOT_MAM_CA)
         }
         if (originPkg.isNullOrEmpty()) {
+            Logger.info(
+                methodTag,
+                "A MAM-CA install, but the calling app package is unavailable to name as the " +
+                    "install referrer; leaving the install link as it is. " +
+                    "[outcome=${Outcome.NO_ORIGIN_PKG}]"
+            )
             return Decoration(appLink, Outcome.NO_ORIGIN_PKG)
         }
 
@@ -210,6 +222,11 @@ object MamInstallReferrerBuilder {
         val methodTag = "$TAG:decorateAppLinkWithOriginReferrer"
 
         if (appLink.isNullOrEmpty()) {
+            Logger.info(
+                methodTag,
+                "The redirect carried no app_link to tag with an install referrer. " +
+                    "[outcome=${Outcome.NO_APP_LINK}]"
+            )
             return Decoration(appLink, Outcome.NO_APP_LINK)
         }
         return try {
@@ -222,7 +239,8 @@ object MamInstallReferrerBuilder {
             if (builder.queryParams.any { REFERRER_QUERY_PARAM.equals(it.name, ignoreCase = true) }) {
                 Logger.info(
                     methodTag,
-                    "The install link already names an install referrer; leaving it as it is."
+                    "The install link already names an install referrer; leaving it as it is. " +
+                        "[outcome=${Outcome.SERVER_REFERRER}]"
                 )
                 Decoration(appLink, Outcome.SERVER_REFERRER)
             } else {
@@ -232,14 +250,16 @@ object MamInstallReferrerBuilder {
                     .toString()
                 Logger.info(
                     methodTag,
-                    "Tagged the Company Portal install launch with the calling app as the install referrer."
+                    "Tagged the Company Portal install launch with the calling app as the install " +
+                        "referrer. [outcome=${Outcome.DECORATED}]"
                 )
                 Decoration(decorated, Outcome.DECORATED)
             }
         } catch (e: URISyntaxException) {
             Logger.warn(
                 methodTag,
-                "Could not parse app_link to append the install referrer; launching it unchanged."
+                "Could not parse app_link to append the install referrer; launching it unchanged. " +
+                    "[outcome=${Outcome.LINK_UNPARSEABLE}]"
             )
             Decoration(appLink, Outcome.LINK_UNPARSEABLE)
         }
