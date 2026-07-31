@@ -45,11 +45,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
@@ -71,6 +73,9 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -794,6 +799,140 @@ public class BrokerOAuth2TokenCacheTest {
         assertNotNull(
                 authorizedAppBCache.getAccountByHomeAccountId(ENVIRONMENT, CLIENT_ID, HOME_ACCOUNT_ID)
         );
+    }
+
+    /**
+     * Regression test for AB#3687466 (Round 7): {@link BrokerOAuth2TokenCache#load} must not
+     * fall back to the shared FoCI cache when Chokepoint #2 returned {@code null} for an
+     * unauthorized caller. Prior to the loader gate, {@code shouldUseFociCache =
+     * (null == targetCache || isKnownFoci)} treated the fail-closed null as the trigger
+     * that routed execution into {@code mFociCache.loadByFamilyId}, leaking the victim's
+     * family RT.
+     */
+    @Test
+    public void testLoadEnvScopedFociUnauthorizedReturnsSparseRecord() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+
+        final ICacheRecord unauthorized = unauthorizedAppBCache.load(
+                CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
+                TARGET,
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+        assertNotNull(unauthorized);
+        assertNotNull(unauthorized.getAccount());
+        assertNull("Unauthorized caller must not receive shared FoCI RT.",
+                unauthorized.getRefreshToken());
+        assertNull(unauthorized.getAccessToken());
+        assertNull(unauthorized.getIdToken());
+
+        // Positive control: authorized caller in the same setup still gets the RT.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final ICacheRecord authorized = authorizedAppBCache.load(
+                CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
+                TARGET,
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+        assertNotNull(authorized.getRefreshToken());
+    }
+
+    /**
+     * Regression test for AB#3687466 (Round 7): {@link BrokerOAuth2TokenCache#loadWithAggregatedAccountData}
+     * must return a sparse singleton (NOT an empty list) for an unauthorized caller.
+     * {@code BrokerLocalController.acquireTokenSilent} calls {@code accountWithProfiles.get(0)}
+     * immediately after; an empty list would throw {@code IndexOutOfBoundsException} instead
+     * of the intended {@code UiRequiredException} downstream.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testLoadWithAggregatedAccountDataEnvScopedFociUnauthorizedReturnsSparseSingleton()
+            throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+
+        final List<ICacheRecord> unauthorized = unauthorizedAppBCache.loadWithAggregatedAccountData(
+                CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
+                TARGET,
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+        assertNotNull(unauthorized);
+        assertEquals("Contract: primary record must exist (get(0) is called downstream).",
+                1, unauthorized.size());
+        assertNotNull(unauthorized.get(0).getAccount());
+        assertNull("Unauthorized caller must not receive shared FoCI RT.",
+                unauthorized.get(0).getRefreshToken());
+
+        // Positive control: authorized caller still receives an aggregated record with RT.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final List<ICacheRecord> authorized = authorizedAppBCache.loadWithAggregatedAccountData(
+                CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
+                TARGET,
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+        assertFalse(authorized.isEmpty());
+        assertNotNull(authorized.get(0).getRefreshToken());
+    }
+
+    /**
+     * Regression test for AB#3687466 (Round 7): the optimized save-and-load path
+     * ({@link BrokerOAuth2TokenCache#saveAndLoadAggregatedAccountDataOptimized}) selects
+     * its target cache directly from the server-supplied familyId, bypassing both FoCI
+     * chokepoints. Assert the explicit caller-authorization gate returns only the
+     * just-saved record for an unauthorized FoCI caller, preventing aggregation across
+     * the shared cache.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSaveAndLoadAggregatedAccountDataOptimizedFociUnauthorizedReturnsJustSavedRecord()
+            throws ClientException {
+        // Force the optimized code path via the flight.
+        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD))
+                .thenReturn(true);
+        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
+        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
+        try {
+            // Seed the shared FoCI cache with App A + a family record for App B under
+            // the authorized instance so aggregation would otherwise return > 1 record.
+            configureMocksForFoci();
+            mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
+            final BrokerOAuth2TokenCache authorizedAppBCache =
+                    newBrokerCacheForUid(TEST_APP_UID + 1, true);
+            authorizedAppBCache.save(mockStrategy, mockRequest, mockResponse);
+
+            final BrokerOAuth2TokenCache unauthorizedAppBCache =
+                    newBrokerCacheForUid(TEST_APP_UID + 1, false);
+
+            final List<ICacheRecord> unauthorized =
+                    unauthorizedAppBCache.saveAndLoadAggregatedAccountData(
+                            mDefaultFociTestBundle.mGeneratedAccount,
+                            mDefaultFociTestBundle.mGeneratedIdToken,
+                            mDefaultFociTestBundle.mGeneratedAccessToken,
+                            mDefaultFociTestBundle.mGeneratedRefreshToken,
+                            mDefaultFociTestBundle.mGeneratedRefreshToken.getFamilyId(),
+                            BEARER_AUTHENTICATION_SCHEME,
+                            false
+                    );
+            assertNotNull(unauthorized);
+            assertEquals("Unauthorized FoCI caller must receive only the just-saved record.",
+                    1, unauthorized.size());
+        } finally {
+            CommonFlightsManager.INSTANCE.resetFlightsManager();
+        }
     }
 
     /**
