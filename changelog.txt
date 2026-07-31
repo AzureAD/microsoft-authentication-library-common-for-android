@@ -1,5 +1,9 @@
 vNext
 ----------
+- [MINOR] Attach an immutable, one-shot return PendingIntent to the openid-vc:// hand-off so a signature-pinned Microsoft Authenticator (VID wallet) can bring the calling app's task back to the foreground after VID completes, via a transparent no-history OpenIdVcReturnActivity trampoline; gated by ENABLE_OPEN_ID_VC_RETURN_TO_CALLER CommonFlight (default on) (#3184)
+- [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface (as a binary-compatible default method) so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
+- [PATCH] Security: validate the target of WebView broker-install intent-scheme redirects against an allow-list (Google Play Store only), clearing any explicit component/selector and stripping URI-permission grant flags so resolution is driven solely by the validated package; gated by ENABLE_BROKER_INSTALL_INTENT_VALIDATION CommonFlight (default off) and recording the launched / blocked outcome via the is_broker_install_intent_blocked span attribute (#3170)
+- [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
 
 Version 24.5.0
 ----------
