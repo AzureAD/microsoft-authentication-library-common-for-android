@@ -38,14 +38,10 @@ import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
-// TEMP: disabled to intentionally drop PackageHelper coverage and validate the
-// PR code-coverage gate end-to-end. REVERT before merge.
-@Ignore("Temporary: validating the code-coverage gate; revert before merge.")
 @RunWith(RobolectricTestRunner.class)
 public class PackageHelperTest {
 
