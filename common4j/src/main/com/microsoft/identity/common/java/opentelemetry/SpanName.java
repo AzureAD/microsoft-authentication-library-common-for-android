@@ -128,5 +128,12 @@ public enum SpanName {
      * when the {@code EnableHttpAuthOriginDisplay} flight is on; used to confirm the flighted path is
      * executing successfully in dashboards after the flight is ramped.
      */
-    HttpAuthOriginDisplay
+    HttpAuthOriginDisplay,
+
+    /**
+     * Span name for the MAM broker-install request-resume funnel (parked -> referrer-fired ->
+     * resume-received -> retry-success -> delivered). Emitted only when the
+     * {@code EnableBrokerInstallResume} flight is on.
+     */
+    BrokerInstallResume
 }

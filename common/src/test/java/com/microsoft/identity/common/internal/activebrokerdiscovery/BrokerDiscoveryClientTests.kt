@@ -948,6 +948,95 @@ class BrokerDiscoveryClientTests {
     }
 
     /**
+     * MAM broker-install request-resume regression: a broker (Company Portal) installed mid-process
+     * must be picked up by a force-fresh discovery (getActiveBroker(shouldSkipCache = true)) so that a
+     * SUBSEQUENT getActiveBrokerWithInMemoryCache() returns it instead of the stale "no broker" result.
+     *
+     * Before the fix, getActiveBroker(shouldSkipCache = true) only refreshed the persistent cache and
+     * left the in-memory cache pinned to CachedBrokerData(null); the resume eligibility check (which
+     * reads via getActiveBrokerWithInMemoryCache) kept seeing "no broker", so the parked request could
+     * never complete through the freshly installed broker.
+     **/
+    @Test
+    fun testForceFreshDiscoveryRefreshesInMemoryCache_BrokerInstalledMidProcess() {
+        val companyPortalInstalled = AtomicBoolean(false)
+
+        val cache = object : InMemoryActiveBrokerCache() {
+            var readCount = 0
+            override fun getCachedActiveBroker(): BrokerData? {
+                readCount++
+                return super.getCachedActiveBroker()
+            }
+        }
+
+        var accountManagerReadCount = 0
+        val client = BrokerDiscoveryClient(
+            brokerCandidates = setOf(
+                prodMicrosoftAuthenticator, prodCompanyPortal
+            ),
+            getActiveBrokerFromAccountManager = {
+                accountManagerReadCount++
+                null
+            },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    if (companyPortalInstalled.get() &&
+                        bundle.targetBrokerAppPackageName == prodCompanyPortal.packageName) {
+                        val returnBundle = Bundle()
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                            prodCompanyPortal.packageName
+                        )
+                        returnBundle.putString(
+                            BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                            prodCompanyPortal.signingCertificateThumbprint
+                        )
+                        return returnBundle
+                    }
+                    throw IllegalStateException()
+                }
+                override fun isSupportedByTargetedBroker(targetedBrokerPackageName: String): Boolean {
+                    return true
+                }
+                override fun getType(): IIpcStrategy.Type {
+                    return IIpcStrategy.Type.CONTENT_PROVIDER
+                }
+            },
+            cache = cache,
+            isPackageInstalled = { brokerData ->
+                companyPortalInstalled.get() && brokerData == prodCompanyPortal
+            },
+            isValidBroker = { brokerData ->
+                companyPortalInstalled.get() && brokerData == prodCompanyPortal
+            }
+        )
+
+        // 1) Before Company Portal is installed: the in-memory-cache read finds no broker and caches
+        //    the "no broker" result.
+        Assert.assertNull(client.getActiveBrokerWithInMemoryCache(null))
+        Assert.assertNotNull(client.cachedData)
+        Assert.assertNull(client.cachedData!!.brokerData)
+
+        // The in-memory cache is sticky: a second read does not re-query.
+        Assert.assertNull(client.getActiveBrokerWithInMemoryCache(null))
+        Assert.assertEquals(1, cache.readCount)
+
+        // 2) Company Portal is installed mid-process (the broker-install detour completes).
+        companyPortalInstalled.set(true)
+
+        // Without a force-fresh, the in-memory cache is still stale.
+        Assert.assertNull(client.getActiveBrokerWithInMemoryCache(null))
+
+        // 3) Force-fresh discovery — exactly what the broker-install resume path triggers.
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBroker(true))
+
+        // 4) The in-memory cache is now coherent, so the eligibility read returns Company Portal.
+        Assert.assertNotNull(client.cachedData)
+        Assert.assertEquals(prodCompanyPortal, client.cachedData!!.brokerData)
+        Assert.assertEquals(prodCompanyPortal, client.getActiveBrokerWithInMemoryCache(null))
+    }
+
+    /**
      * Test concurrent access to in-memory cache from multiple coroutines.
      * All coroutines should read from cache without triggering discovery flow or storage operations.
      **/

@@ -320,7 +320,18 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Flight to enable the MAM broker-install request-resume engine. When enabled, an interactive
+     * request blocked by a Conditional-Access "install broker" (Company Portal) response is parked
+     * in-memory instead of returning the terminal install-required error; after the broker is
+     * installed the request is replayed silently and the token delivered on the original callback.
+     * <p>
+     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off, the pre-existing
+     * terminal install-required behavior is unchanged.
+     */
+    ENABLE_BROKER_INSTALL_RESUME("EnableBrokerInstallResume", false);
 
     private String key;
     private Object defaultValue;

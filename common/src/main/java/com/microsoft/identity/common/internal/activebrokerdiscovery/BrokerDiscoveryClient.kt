@@ -425,6 +425,7 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
 
         if (brokerData != null) {
             cache.setCachedActiveBroker(brokerData)
+            refreshInMemoryCacheOnForceFresh(shouldSkipCache, brokerData)
             return brokerData
         }
 
@@ -447,6 +448,30 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     "get ${accountManagerResult?.packageName}."
         )
 
+        refreshInMemoryCacheOnForceFresh(shouldSkipCache, accountManagerResult)
         return accountManagerResult
+    }
+
+    /**
+     * Keeps the in-memory cache ([cachedData]) coherent with a force-fresh discovery.
+     *
+     * A force-fresh discovery ([getActiveBroker] with {@code shouldSkipCache = true}) is
+     * authoritative: it deliberately bypasses every cache and re-runs discovery. Its result must
+     * therefore also overwrite the in-memory cache, otherwise [getActiveBrokerWithInMemoryCache]
+     * keeps returning a stale value for the life of the process. In particular, a broker installed
+     * mid-process (the MAM broker-install request-resume case: Company Portal is installed while the
+     * calling app is alive) would never be surfaced, because the in-memory cache stays pinned to the
+     * earlier {@code CachedBrokerData(null)} ("no broker") result.
+     *
+     * Must be called while holding [classLevelLock] (as all [getActiveBrokerAsync] callers do), which
+     * matches how [getActiveBrokerWithInMemoryCache] writes [cachedData].
+     *
+     * @param shouldSkipCache whether the discovery that produced [brokerData] was force-fresh.
+     * @param brokerData      the freshly discovered active broker, or {@code null} if none was found.
+     */
+    private fun refreshInMemoryCacheOnForceFresh(shouldSkipCache: Boolean, brokerData: BrokerData?) {
+        if (shouldSkipCache) {
+            cachedData = CachedBrokerData(brokerData)
+        }
     }
 }

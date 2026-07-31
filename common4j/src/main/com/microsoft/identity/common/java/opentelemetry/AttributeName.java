@@ -781,4 +781,28 @@ public enum AttributeName {
     server_caller_data_boundary,
 
     //endregion
+
+    //region MAM Broker-Install Request Resume
+    // NOTE: any attribute added here MUST be mirrored in the broker4j AttributeName enum
+    // (ad-accounts-for-android, .../opentelemetry/AttributeName.java) with an appropriate
+    // DataClassification (SystemMetadata for these non-PII stage flags/strings) — a separate
+    // broker-repo change. Do not place UPNs, tokens, or other secrets on these attributes.
+
+    /** Current funnel stage: parked | referrer_fired | resume_received | retry_success | delivered. */
+    broker_install_resume_stage,
+    /** True when the interactive request was parked on the install-required path. */
+    broker_install_resume_parked,
+    /** True when the Play Store launch carrying the install referrer was fired. */
+    broker_install_resume_referrer_fired,
+    /** True when the mam_resume redirect was received and matched a parked request. */
+    broker_install_resume_resume_received,
+    /** True when the silent broker retry succeeded. */
+    broker_install_resume_retry_success,
+    /** True when the token was delivered to the app's original callback. */
+    broker_install_resume_delivered,
+    /** True when a resume redirect arrived but no parked request matched (process-death indicator). */
+    broker_install_resume_no_park,
+    /** Bounded failure reason for the resume funnel; never PII / token. */
+    broker_install_resume_failure_reason,
+    //endregion
 }
