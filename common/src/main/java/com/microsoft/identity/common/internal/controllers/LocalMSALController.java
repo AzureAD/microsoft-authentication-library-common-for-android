@@ -113,8 +113,8 @@ public class LocalMSALController extends BaseController {
         // MAM broker-install onboarding: pre-fill the UPN the user gave us before a Conditional
         // Access "install Company Portal" block interrupted them. This runs on every interactive
         // request, not only the one that follows an install - it is a no-op unless the flight is on,
-        // the caller left login_hint blank, and a hint stored for this client and authority is still
-        // within its TTL.
+        // the caller left login_hint blank, the caller did not ask the user to pick or create an
+        // account, and a hint stored for this client and authority is still within its TTL.
         final InteractiveTokenCommandParameters parameters =
                 MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
 

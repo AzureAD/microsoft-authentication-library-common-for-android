@@ -75,6 +75,10 @@ import lombok.NonNull;
  *       the sovereign-cloud boundary. Host and not full url, because apps routinely start at
  *       {@code /common} and retry against {@code /{tenantId}}, which is the very flow this
  *       feature serves.</li>
+ *   <li><b>Prompt.</b> The hint is not applied when the caller passed {@code prompt=select_account}
+ *       or {@code prompt=create}: those explicitly ask the user to choose or create an account, and
+ *       a {@code login_hint} suppresses the account picker, so answering that question from storage
+ *       would defeat the request.</li>
  *   <li><b>Flighting.</b> Reads and writes are gated by {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT}
  *       (default off). {@link #clearUpnHint(IPlatformComponents, String)} is deliberately not gated,
  *       so cleanup keeps working after the flight is turned off.</li>
@@ -101,12 +105,14 @@ public final class MamUpnHintStore {
      * Name of the (encrypted) name-value store backing the hint. Deliberately its own store so the
      * whole feature can be reasoned about - and removed - independently of the token cache.
      */
+    //@VisibleForTesting
     static final String STORE_NAME = "com.microsoft.identity.common.broker_install_upn_hint";
 
     /**
      * Prefix of the key holding a record; the client id is appended. One key per record, so that
      * writing one is a single storage operation and can never be torn by process death.
      */
+    //@VisibleForTesting
     static final String KEY_PREFIX_RECORD = "record.";
 
     private static final Gson GSON = new Gson();
@@ -247,7 +253,18 @@ public final class MamUpnHintStore {
                             @Nullable final String authorityHost) {
         final String methodTag = TAG + ":saveUpnHint";
 
-        if (!isEnabled() || StringUtil.isNullOrEmpty(upn)) {
+        if (!isEnabled()) {
+            // Already logged by the public overloads, which gate on the flight before reaching here.
+            return;
+        }
+
+        if (StringUtil.isNullOrEmpty(upn)) {
+            // Both public overloads confirm the server marked the redirect as MAM-CA before calling
+            // in, so a blank UPN here means the marker arrived without one - a server-contract
+            // oddity rather than an ordinary skip, and worth a line when diagnosing a missing
+            // pre-fill.
+            Logger.verbose(methodTag, "Not storing a UPN hint: the redirect was marked MAM-CA but "
+                    + "carried no UPN.");
             return;
         }
 
@@ -674,6 +691,10 @@ public final class MamUpnHintStore {
         final String methodTag = TAG + ":getStorage";
 
         if (components == null) {
+            // Covers saveUpnHint, readValidRecord and clearUpnHint in one place, so none of them
+            // has to repeat it.
+            Logger.verbose(methodTag,
+                    "Could not open the UPN hint store: no platform components were supplied.");
             return null;
         }
 
