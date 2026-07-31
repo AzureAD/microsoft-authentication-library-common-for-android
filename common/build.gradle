@@ -1,10 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id 'com.microsoft.identity.buildsystem' version '0.2.5'
+    id 'com.microsoft.identity.buildsystem' version '0.3.0'
     id 'com.android.library'
     id 'pmd'
     id 'checkstyle'
     id 'maven-publish'
-    id 'kotlin-android'
     id 'jacoco'
 
     // Test retries
@@ -14,9 +15,50 @@ plugins {
 
 apply from: '../versioning/version_tasks.gradle'
 
+// Built-in Kotlin (AGP 9): replaces the android { kotlinOptions { } } block that the
+// removed 'kotlin-android' plugin previously provided.
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_1_8
+    }
+}
+
 buildSystem {
     desugar = false
 }
+
+// Robolectric 4.16.1 -> Guava 33.4.8-jre pulls org.jspecify:jspecify:1.0.0, which is not mirrored
+// in the internal Maven feed (CI fails to resolve the jar). jspecify provides compile-time-only
+// nullability annotations for Guava's API; they are not required to compile or run against Guava,
+// so we exclude the transitive rather than block on the feed. Remove this once the feed mirrors it.
+configurations.all {
+    exclude group: 'org.jspecify', module: 'jspecify'
+}
+
+// --- SpotBugs 6.x adjustments (repo-local; NOT in the shared buildsystem plugin) ---
+// The Gradle 9 upgrade forced spotbugs-gradle-plugin 4.7.x -> 6.x, which changed two things.
+// Both fixes are kept here (repo-scoped) rather than in the shared buildsystem plugin, so other
+// consumers (msal, broker) are unaffected until they upgrade.
+//
+// 1) Windows-only launch fix: the Android SpotBugs task factory sets
+//    sourceDirs = javaCompile.getSource() (~225 .java files), and SpotBugsRunner emits
+//    `-sourcepath <all those files>`, which exceeds the Windows ~32,767-char command-line limit
+//    (CreateProcess error=206) so the analysis process fails to start. Clearing sourceDirs drops
+//    -sourcepath (it only enriches report rendering, not the analysis). Gated to Windows so
+//    CI (Linux) is unchanged; run in afterEvaluate so it wins over the factory.
+if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+    afterEvaluate {
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { t ->
+            t.sourceDirs.setFrom()
+        }
+    }
+}
+
+// 2) SpotBugs 6.x reports medium-confidence findings on pre-existing (unchanged) code that
+//    4.7.x did not, which would newly fail the build. Those specific detectors are suppressed
+//    repo-locally in config/spotbugs/exclude.xml (see its "SpotBugs 6.x" section) so behaviour
+//    matches the pre-upgrade baseline while leaving all other detectors active. Kept out of the
+//    shared buildsystem plugin so other consumers are unaffected until they upgrade.
 
 def enableCodeCoverage = false
 
@@ -63,7 +105,7 @@ tasks.register("jacocoTestReport", JacocoReport) {
     ]
 
     def kotlinClasses = fileTree(
-            dir: "$buildDir/tmp/kotlin-classes/localDebug",
+            dir: "$buildDir/intermediates/built_in_kotlinc/localDebug/compileLocalDebugKotlin/classes",
             excludes: fileFilter
     )
 
@@ -109,7 +151,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode getAppVersionCode()
         versionName getAppVersionName()
-        project.archivesBaseName = "common"
+        project.base.archivesName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //Languages Common supports.
@@ -126,6 +168,13 @@ android {
         buildConfig = true
         aidl = true
     }
+
+    // AGP 9: software components for publishing are no longer auto-created; each
+    // variant that is published via `from components.<name>` must be declared here.
+    publishing {
+        singleVariant("distRelease") {}
+        singleVariant("distDebug") {}
+    }
     buildTypes {
         debug {
             testCoverageEnabled enableCodeCoverage
@@ -134,7 +183,7 @@ android {
         release {
             minifyEnabled false
             debuggable false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
         }
     }
@@ -142,10 +191,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
     }
 
     lintOptions {
@@ -201,7 +246,7 @@ android {
 
     libraryVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${archivesBaseName}-${version}.aar"
+            outputFileName = "${project.base.archivesName.get()}-${version}.aar"
         }
     }
 }

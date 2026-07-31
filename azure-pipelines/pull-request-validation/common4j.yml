@@ -42,7 +42,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: clean common4j:assemble
           javaHomeOption: JDKVersion
-          jdkVersionOption: 1.17
+          jdkVersionOption: 1.21
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: common4j
@@ -54,7 +54,7 @@ stages:
           cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: common4j:jacocoTestReport -Psugar=true -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
           javaHomeOption: JDKVersion
-          jdkVersionOption: 1.17
+          jdkVersionOption: 1.21
       - script: tree "$(Build.SourcesDirectory)" /F /A
         displayName: 'Print File Structure Tree'
       - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
@@ -90,11 +90,6 @@ stages:
             tasks: clean common4j:assemble
             javaHomeOption: JDKVersion
             jdkVersionOption: 1.17
-        - template: ../templates/steps/spotbugs.yml
-          parameters:
-            project: common4j
-            cwd: $(Build.SourcesDirectory)/common-java-root
-            spotbugsCommand: spotbugsMain
         - task: Gradle@2
           displayName: Run the unit tests.
           inputs:
@@ -107,6 +102,17 @@ stages:
         - publish: $(Build.SourcesDirectory)/common4j/build/reports/jacoco/test/jacocoTestReport.xml
           artifact: jacocoReportDev
           displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
+        # SpotBugs runs LAST on the dev baseline: this job's only deliverable is jacocoReportDev
+        # for the coverage comparison, so a SpotBugs failure on dev's (pre-upgrade) code must not
+        # halt the job before the coverage artifact is published.
+        # javaVersion pinned to 1.17: dev's pre-upgrade SpotBugs (4.7.x) crashes under JDK 21
+        # (System.setSecurityManager UnsupportedOperationException); JDK 17 lets it run cleanly.
+        - template: ../templates/steps/spotbugs.yml
+          parameters:
+            project: common4j
+            cwd: $(Build.SourcesDirectory)/common-java-root
+            spotbugsCommand: spotbugsMain
+            javaVersion: "1.17"
 
   - template: ../code-coverage/compare-code-coverage.yml
     parameters:
