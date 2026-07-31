@@ -80,7 +80,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
      * caller; null means enforcement is off (ADAL / AccountChooser / WebApps / kill-switch disabled).
      */
     @Nullable
-    private final Integer osAttestedUid;
+    private final transient Integer osAttestedUid;
 
     @Expose
     private final String homeTenantId;
