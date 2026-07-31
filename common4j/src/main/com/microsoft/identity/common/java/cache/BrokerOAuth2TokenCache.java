@@ -110,7 +110,16 @@ public class BrokerOAuth2TokenCache
      * Whether the calling app (identified by {@link #mUid}) is authorized to read the shared,
      * device-wide FoCI cache. Set once at construction from broker policy (flight +
      * isAuthorizedToShareTokens). When {@code false}, reads that would otherwise expose
-     * {@link #mFociCache} to an unauthorized caller are short-circuited to an empty result.
+     * {@link #mFociCache} to an unauthorized caller short-circuit to a downstream-safe
+     * result: {@code null} for single-account getters, {@code Collections.emptyList()} for
+     * enumerators, a sparse {@link com.microsoft.identity.common.java.cache.CacheRecord}
+     * ({@code account} set, tokens null) or a sparse singleton for loaders that downstream
+     * broker code dereferences via {@code .get(0)}. Enforcement lives in two chokepoints
+     * ({@link #getTokenCachesForClientId(String)} and
+     * {@link #getTokenCacheForClient(BrokerApplicationMetadata)}) plus explicit gates at
+     * each loader / device-wide enumeration call site ({@link #load},
+     * {@link #loadWithAggregatedAccountData}, {@link #saveAndLoadAggregatedAccountDataOptimized},
+     * {@link #loadAggregatedAccountData}, {@link #getAccounts()}, {@link #getFociCacheRecords()}).
      * Defaults to {@code true} via the ctors that omit it, preserving pre-existing behavior
      * for non-broker call paths and existing tests. See AB#3687466.
      */
@@ -165,8 +174,14 @@ public class BrokerOAuth2TokenCache
      * Constructs a new BrokerOAuth2TokenCache with an explicit FoCI-read authorization gate.
      * The gate is set by the broker at construction time (typically
      * {@code !VALIDATE_GET_ACCOUNTS_FOCI_CALLER_flight || isAuthorizedToShareTokens(uid)}).
-     * When {@code callerAuthorizedForFoci} is {@code false}, this instance will not return
-     * shared-FoCI accounts on the environment-scoped read path (fail-closed). AB#3687466.
+     * When {@code callerAuthorizedForFoci} is {@code false}, this instance suppresses shared
+     * FoCI cache access on both the env==null iteration path (chokepoint #1 in
+     * {@link #getTokenCachesForClientId(String)}) and the env!=null resolution path
+     * (chokepoint #2 in {@link #getTokenCacheForClient(BrokerApplicationMetadata)}), plus the
+     * device-wide enumeration ({@link #getFociCacheRecords()}) and the loader-fallback
+     * carve-outs at {@link #load}, {@link #loadWithAggregatedAccountData},
+     * {@link #loadAggregatedAccountData}, and
+     * {@link #saveAndLoadAggregatedAccountDataOptimized}. AB#3687466.
      *
      * @param components               The current platform components.
      * @param uid                      UID of the current unix user.
@@ -379,6 +394,14 @@ public class BrokerOAuth2TokenCache
             Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                     "environment:" + environment +
                     "processUid: " + mUid);
+            // Chokepoint #2 nulls the target for an unauthorized FoCI caller (AB#3687466).
+            // Only caller is saveAndLoadAggregatedAccountData post-save; return the just-saved
+            // record as a singleton so BrokerLocalController.acquireTokenSilent's .get(0)
+            // resolves without NPE while cross-app FoCI aggregation stays blocked. Mirrors
+            // the sparse-singleton contract on the optimized (flighted) sibling path.
+            if (!mCallerAuthorizedForFoci) {
+                return Collections.singletonList(cacheRecord);
+            }
             return null;
         }
 
