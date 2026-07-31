@@ -28,12 +28,16 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
@@ -55,15 +59,18 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -77,6 +84,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -170,6 +178,12 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_PASSKEY_REDIRECT_URL = "http-auth:PassKey?challenge=challenge&version=1.0&submitUrl=https://login.microsoftonline.com/common/credential?passKeyAuth=1.0%2fpasskey&context=&relyingPartyIdentifier=login.microsoft.com&allowedCredentials=somevalue";
     private static final String TEST_INTENT_INSTALL_BROKER_REDIRECT_URL = "intent://play.google.com/store/apps/details?id=com.azure.authenticator&referrer=%20adjust_reftag%3Dc6f1p4ErudH2C%26utm_source%3DLanding%2BPage%2BOrganic%2B-%2Bapp%2Bstore%2Bbadges%26utm_campaign%3Dappstore_android&pcampaignid=web_auto_redirect&web_logged_in=0&redirect_entry_point=dp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
 
+    // Intent fixtures whose effective parsed target differs from the allow-listed Play Store package,
+    // used to verify the post-parse validation step.
+    private static final String TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE = "intent://play.google.com/store/apps/details?referrer=;package=com.android.vending;&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.example.unrelatedapp;end";
+    private static final String TEST_INTENT_WITH_EXPLICIT_COMPONENT = "intent://play.google.com/store/apps/details?id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;component=com.example.unrelatedapp/.SampleActivity;end";
+    private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
 
     private static final String TEST_PLAYSTORE_REDIRECT_WITH_BROWSER_PROTOCOL = "browser://play.app.goo.gl/?link=https://play.google.com/store/apps/details?id=com.microsoft.windowsintune.companyportal";
@@ -258,6 +272,171 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesOpenIdVcUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_TrustedAuthenticator_AttachesReturnPendingIntent() {
+        // Arrange: the return-to-caller flight is on, and Microsoft Authenticator is the resolved handler...
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        // ...and it passes BrokerValidator signature-pinning.
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: the launch intent is pinned to Authenticator and carries the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertEquals("Launch intent must be pinned to Authenticator",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_UntrustedHandler_DoesNotAttachReturnPendingIntent() {
+        // Arrange: the return-to-caller flight is on, but a non-Authenticator app claims the scheme.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler("com.example.malicious");
+
+        // Act: the untrusted package fails the Authenticator check before BrokerValidator is even consulted.
+        final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+        assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+
+        // Assert: the handler is still launched (existing dispatch behavior) but WITHOUT the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Untrusted handler must NOT receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_AuthenticatorFailsSignatureVerification_DoesNotPinOrAttach() {
+        // Arrange: the return-to-caller flight is on and the resolved handler IS Microsoft
+        // Authenticator by package name, but it FAILS BrokerValidator signature verification -
+        // e.g. a re-signed / repackaged look-alike claiming com.azure.authenticator. The signature
+        // gate (not just the package-name check) must prevent both package-pinning and attaching.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(false))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: the handler is still launched, but the intent is neither pinned to Authenticator
+        // nor carries the return PendingIntent - the signature gate rejected it.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertNotEquals("Signature-failing Authenticator must NOT be package-pinned",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_MultipleHandlers_PinsToAuthenticatorAndAttaches() {
+        // Arrange: the return-to-caller flight is on, and TWO apps claim openid-vc:// - a
+        // third-party wallet and Microsoft Authenticator. resolveActivity() would return the
+        // system chooser here; the implementation must instead target Authenticator directly.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler("com.example.otherwallet");
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: no chooser - the launch is pinned to Authenticator and carries the return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertEquals("Multi-handler launch must be pinned to Authenticator (no chooser)",
+                AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
+        assertTrue("Pinned Authenticator must receive the return PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    @Test
+    public void testOpenIdVcUrl_BrokerlessHost_DoesNotAttachReturnPendingIntent() {
+        // Arrange: return-to-caller flight is on and Microsoft Authenticator is the verified
+        // handler, but this WebView is NOT hosted in the broker's auth-service process (brokerless
+        // / embedded case - no ShadowProcessUtil applied, so ProcessUtil.isRunningOnAuthService is
+        // false). Return-to-caller must be wired only for the brokered flow.
+        enableOpenIdVcReturnToCallerFlight();
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        try (final MockedConstruction<BrokerValidator> ignored = mockConstruction(
+                BrokerValidator.class,
+                (mock, ctx) -> when(mock.isValidBrokerPackage(anyString())).thenReturn(true))) {
+            final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+            assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+        }
+
+        // Assert: brokerless host falls back to the pre-existing dispatch - no return PendingIntent.
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Brokerless host must NOT attach the return-to-caller PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    private void registerOpenIdVcHandler(final String packageName) {
+        final ResolveInfo resolveInfo = new ResolveInfo();
+        resolveInfo.activityInfo = new ActivityInfo();
+        resolveInfo.activityInfo.packageName = packageName;
+        resolveInfo.activityInfo.name = packageName + ".OpenIdVcActivity";
+        final ShadowPackageManager shadowPackageManager = Shadows.shadowOf(mContext.getPackageManager());
+        // Register for the implicit intent (used by queryIntentActivities to discover handlers) and
+        // for the package-pinned intent (used by resolveActivity after the launch is pinned to a
+        // specific handler, which is how the production code resolves the final intent).
+        shadowPackageManager.addResolveInfoForIntent(
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)), resolveInfo);
+        shadowPackageManager.addResolveInfoForIntent(
+                new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_OPENID_VC_URL)).setPackage(packageName), resolveInfo);
+    }
+
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testOpenIdVcUrl_ReturnToCallerFlightDisabled_DoesNotAttachReturnPendingIntent() {
+        // Arrange: openid-vc redirect handling is on, but the return-to-caller flight is OFF.
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)).thenReturn(false);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        // Even with Authenticator as the resolved handler, the flight being off means no attach.
+        registerOpenIdVcHandler(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+
+        final boolean result = mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_OPENID_VC_URL);
+        assertTrue("shouldOverrideUrlLoading must return true for openid-vc:// URLs", result);
+
+        final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertNotNull("Expected the openid-vc handler to be started", started);
+        assertFalse("Return-to-caller flight OFF must not attach the return PendingIntent",
+                started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
+    }
+
+    private void enableOpenIdVcReturnToCallerFlight() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)).thenReturn(true);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     @Test
@@ -937,8 +1116,141 @@ public class AzureActiveDirectoryWebViewClientTest {
         }
     }
 
+    @Test
     public void testUrlOverrideHandlesIntentRedirectUrl() {
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INTENT_INSTALL_BROKER_REDIRECT_URL));
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_INSTALL_BROKER_REDIRECT_URL));
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
+        assertNull(intentCaptor.getValue().getComponent());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_blocksNonAllowlistedPackage_whenValidationEnabled() {
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        // The request passes the install-intent gate (so it is "handled") ...
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
+        // ... but a parsed target package that is not on the allow-list must not be launched.
+        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_clearsExplicitComponent_whenValidationEnabled() {
+        setBrokerInstallIntentValidationFlight(true);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_EXPLICIT_COMPONENT));
+
+        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+        Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+        // Any explicit component is cleared; only the allow-listed package remains.
+        assertNull(intentCaptor.getValue().getComponent());
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    @Test
+    public void testIntentToInstallBroker_legacyBehavior_whenValidationDisabled() {
+        setBrokerInstallIntentValidationFlight(false);
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        // With the validation flight off, the legacy launch behavior is preserved (rollback switch).
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
+        Mockito.verify(mockContext).startActivity(any(Intent.class));
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    }
+
+    /**
+     * A selector cannot be injected through the {@code intent://} URL scheme (Android does not
+     * (de)serialize a selector via parseUri/toUri), so the selector-clearing defense is exercised
+     * directly on the sanitizer. On Android a top-level package and a selector are mutually
+     * exclusive, so an intent that smuggles the store package inside a selector has a {@code null}
+     * top-level package: the sanitizer nulls the selector (verified on the mutated intent) and then
+     * blocks the intent because the validated package is null.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_clearsSelectorAndBlocks() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        final Intent selector = new Intent(Intent.ACTION_VIEW);
+        selector.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.setSelector(selector);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNull(result);
+        // The selector was cleared before the null-package block, so it can never redirect resolution.
+        assertNull(intent.getSelector());
+    }
+
+    /**
+     * When the validated (top-level) package is not allow-listed, the intent must be blocked
+     * (returns {@code null}) so it is never launched.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_returnsNullForNonAllowlistedPackage() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage("com.example.unrelatedapp");
+
+        assertNull(mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent));
+    }
+
+    /**
+     * For an allow-listed target, URI-permission grant flags are stripped and CATEGORY_BROWSABLE is
+     * added, while unrelated flags (e.g. FLAG_ACTIVITY_NEW_TASK) are preserved.
+     */
+    @Test
+    public void testSanitizeAndValidateBrokerInstallIntent_stripsGrantFlagsAndAddsBrowsable() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+
+        assertNotNull(result);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        assertNotEquals(0, result.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
+        assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
+    }
+
+    private void setBrokerInstallIntentValidationFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        // Default any unstubbed flight to its real default value so these tests don't silently
+        // depend on Mockito's boolean default (false) as the WebViewClient evolves.
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        // Override only the flight under test.
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION))
+                .thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     public void setTestPasskeyRedirectUrl() {
