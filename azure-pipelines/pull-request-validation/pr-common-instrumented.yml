@@ -7,8 +7,11 @@
 #              works as a Build Validation branch policy on the common repo.
 name: $(date:yyyyMMdd)$(rev:.r)
 
-# PR validation is driven by a Build Validation branch policy in ADO, not by YAML triggers.
-pr: none
+# Runs on PRs targeting dev. CI (branch) builds are disabled.
+pr:
+  branches:
+    include:
+    - dev
 trigger: none
 
 resources:

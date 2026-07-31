@@ -104,13 +104,12 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
      * @param request The permission request to handle.
      */
     fun handle(request: PermissionRequest, context: Context) {
-        val  methodTag = "$TAG:handle"
         // Check if the request is valid.
         if (isValid(request)) {
             currentPermissionRequest = request
             isGranted = false
         } else {
-            Logger.warn(methodTag, "Permission request is not valid, returning.")
+            // isValid() already logged the reason and handled the request (deny / repeated grant); return without extra noise.
             return
         }
         span = OTelUtility.createSpan(SpanName.CameraPermissionRequest.name)
