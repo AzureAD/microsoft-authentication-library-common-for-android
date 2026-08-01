@@ -1,4 +1,7 @@
-# Description: Template to build & publish any auth client android sdk library to internal maven feed
+# Description: Compare code coverage between a PR branch and the base (dev) branch and
+# FAIL the PR check when coverage drops. Also surfaces a per-class breakdown of where
+# coverage regressed (published as an artifact and shown in the build summary) so the
+# PR author knows exactly which classes need tests.
 
 parameters:
 - name: prBranchReportArtifact
@@ -6,19 +9,56 @@ parameters:
 - name: devBranchReportArtifact
   default: jacocoReportDev
 - name: commonRepoAlias
+# LINE (default) or BRANCH.
+- name: metric
+  type: string
+  default: LINE
+# Allowed overall drop in percentage points before the check fails. 0 = any drop fails.
+- name: tolerance
+  type: number
+  default: 0
+# When false, the comparison is reported but never fails the build (report-only mode).
+- name: failOnDrop
+  type: boolean
+  default: true
 # List of stages this templates depends on to start.
 - name: dependsOn
   type: object
   default: []
+# PR label that, when applied, SKIPS the coverage gate (the compare job does not run).
+# Escape hatch for emergencies or when the coverage check itself is broken; remove the
+# label to re-enable the gate. Matched case-insensitively as a substring of the PR's
+# GitHub labels, mirroring the skipConsumerValidationLabel pattern in build-consumers.yml.
+- name: skipLabel
+  type: string
+  default: skip-coverage-check
 
 stages:
+# Fetch the PR's GitHub labels first so the compare job can opt out when skipLabel is set.
+# On non-PR runs fetch-pr-labels.yml leaves prLabels empty, so the gate still runs.
+- stage: coverage_get_label
+  displayName: Check for PR Label (coverage)
+  dependsOn: []
+  jobs:
+    - template: ../templates/steps/fetch-pr-labels.yml
 - stage: compare_coverage
   displayName: Compare Code Coverage
-  dependsOn: ${{ parameters.dependsOn }}
+  dependsOn:
+  - coverage_get_label
+  - ${{ each stage in parameters.dependsOn }}:
+    - ${{ stage }}
   jobs:
     - job: compare
       displayName: PR VS. Dev
-      continueOnError: true
+      # Skip the whole comparison when the PR carries the skip label.
+      condition: and( succeeded(), not( contains( variables['prLabels'], '${{ parameters.skipLabel }}' ) ) )
+      variables:
+        prLabels: $[ stageDependencies.coverage_get_label.getLabelsJob.outputs['fetchPrCILabel.prLabels'] ]
+        # Report-only mode passes --no-fail-on-drop so the diff is surfaced without gating.
+        ${{ if parameters.failOnDrop }}:
+          noFailFlag: ''
+        ${{ else }}:
+          noFailFlag: '--no-fail-on-drop'
       steps:
         - checkout: ${{ parameters.commonRepoAlias }}
           clean: true
@@ -28,6 +68,39 @@ stages:
           artifact: ${{ parameters.prBranchReportArtifact }} # Adjust artifact name as needed
         - download: current
           artifact: ${{ parameters.devBranchReportArtifact }} # Adjust artifact name as needed
-        - script: |
-            python $(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py $(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/jacocoTestReport.xml $(Pipeline.Workspace)/${{ parameters.devBranchReportArtifact }}/jacocoTestReport.xml
+          # The base (dev) coverage job is best-effort (continueOnError). If it didn't
+          # publish a report, don't hard-fail here: compare_coverage.py treats a missing
+          # baseline as "nothing to compare" and skips gating instead of blocking the PR.
+          continueOnError: true
+        - bash: |
+            set -e
+            python3 "$(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py" \
+              --pr   "$(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/jacocoTestReport.xml" \
+              --base "$(Pipeline.Workspace)/${{ parameters.devBranchReportArtifact }}/jacocoTestReport.xml" \
+              --metric ${{ parameters.metric }} \
+              --tolerance ${{ parameters.tolerance }} \
+              $(noFailFlag) \
+              --out-md   "$(Build.ArtifactStagingDirectory)/coverage-comparison.md" \
+              --out-json "$(Build.ArtifactStagingDirectory)/coverage-comparison.json"
           displayName: Compare Jacoco Coverage
+        - bash: |
+            # Surface the per-class breakdown in the build's Extensions/Summary tab even
+            # when the comparison step failed the build on a coverage drop. Guard on the
+            # file existing so this step can't fail/obscure the real error if the compare
+            # script exited before writing it.
+            summary="$(Build.ArtifactStagingDirectory)/coverage-comparison.md"
+            if [ -f "$summary" ]; then
+              echo "##vso[task.uploadsummary]$summary"
+            else
+              echo "No coverage-comparison.md was produced; nothing to upload to summary."
+            fi
+          displayName: Publish comparison to build summary
+          condition: succeededOrFailed()
+        - task: PublishPipelineArtifact@1
+          displayName: Publish coverage comparison
+          condition: succeededOrFailed()
+          inputs:
+            # Publish the staging directory (not the single .md) so publishing still
+            # succeeds when only the JSON exists (or the comparison was skipped).
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifactName: coverage-comparison
