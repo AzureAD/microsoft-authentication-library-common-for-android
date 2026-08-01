@@ -83,6 +83,17 @@ var __webauthn_hooks__;
             var str = CM_base64url_encode(temppk.challenge);
             temppk.challenge = str;
         }
+        // Encode all allowCredentials ids if provided. These arrive as ArrayBuffers, and
+        // JSON.stringify serializes an ArrayBuffer as {}, which would strip every credential
+        // id from the request and cause Credential Manager to match nothing.
+        if (temppk.hasOwnProperty('allowCredentials') && Array.isArray(temppk.allowCredentials) && temppk.allowCredentials.length > 0) {
+            for (var i = 0; i < temppk.allowCredentials.length; i++) {
+                var cred = temppk.allowCredentials[i];
+                if (cred && cred.hasOwnProperty('id')) {
+                    cred.id = CM_base64url_encode(cred.id);
+                }
+            }
+        }
         var jsonObj = {"type":"get", "request":temppk}
 
         var json = JSON.stringify(jsonObj);
