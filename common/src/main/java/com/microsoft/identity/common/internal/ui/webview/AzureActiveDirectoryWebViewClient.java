@@ -166,9 +166,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mInWebCpFlow = false;
 
     /**
-     * The most recent {@code http(s)} main-frame URL observed by this WebView, used as the trusted
+     * The most recent {@code https} main-frame URL observed by this WebView, used as the trusted
      * same-origin reference when validating a PKeyAuth challenge's attacker-controlled
-     * {@code SubmitUrl} (CWE-918 / AB#3706623). Updated from {@link #onPageStarted} and the top of
+     * {@code SubmitUrl} (CWE-918 / AB#3706623). Only {@code https} URLs are recorded: a cleartext
+     * {@code http} page must never become a trusted challenging origin, and if an https flow briefly
+     * detours through http this field correctly retains the last https origin. Updated from
+     * {@link #onPageStarted} and the top of
      * {@link #handleUrl}; preferred over {@link WebView#getUrl()} because {@code getUrl()} only
      * reflects the last *committed* page and can lag behind a redirect-delivered challenge (e.g. an
      * ADFS hop that 302s straight to the PKeyAuth {@code urn:} without ever committing). Read and
@@ -335,10 +338,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
-        // Remember the most recent http(s) navigation so a subsequent PKeyAuth challenge (which
-        // arrives as a non-http(s) urn: and therefore does not overwrite this) can be validated
+        // Remember the most recent https navigation so a subsequent PKeyAuth challenge (which
+        // arrives as a non-https urn: and therefore does not overwrite this) can be validated
         // against the origin that issued it. See mLastCommittedRequestUrl / AB#3706623.
-        recordLastCommittedRequestUrlIfHttp(url);
+        recordLastCommittedHttpsRequestUrl(url);
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
@@ -519,26 +522,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Records {@code url} as the most recent {@code http(s)} main-frame URL when it uses an
-     * {@code http}/{@code https} scheme. Non-http(s) navigations (e.g. the {@code urn:http-auth:}
+     * Records {@code url} as the most recent {@code https} main-frame URL when it uses the
+     * {@code https} scheme. Non-https navigations (cleartext {@code http}, the {@code urn:http-auth:}
      * PKeyAuth challenge itself, {@code msauth://}, {@code browser://}) are ignored so
-     * {@link #mLastCommittedRequestUrl} keeps pointing at the origin that issued such a challenge.
+     * {@link #mLastCommittedRequestUrl} keeps pointing at the {@code https} origin that issued such a
+     * challenge. Recording https only means a cleartext page can never become the trusted origin used
+     * to authorize a PKeyAuth {@code SubmitUrl}.
      *
      * @param url the URL from a navigation callback; may be {@code null}.
      */
-    private void recordLastCommittedRequestUrlIfHttp(@Nullable final String url) {
+    private void recordLastCommittedHttpsRequestUrl(@Nullable final String url) {
         if (url == null) {
             return;
         }
-        final String lower = url.toLowerCase(Locale.US);
-        if (lower.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME + "://") || lower.startsWith("http://")) {
+        if (url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME + "://")) {
             mLastCommittedRequestUrl = url;
         }
     }
 
     /**
      * Returns the trusted origin to validate a PKeyAuth challenge's {@code SubmitUrl} against.
-     * Prefers {@link #mLastCommittedRequestUrl} (the last http(s) main-frame URL, which tracks
+     * Prefers {@link #mLastCommittedRequestUrl} (the last https main-frame URL, which tracks
      * redirect-delivered challenges correctly) and falls back to {@link WebView#getUrl()}.
      *
      * @param view the WebView handling the challenge.
@@ -1727,7 +1731,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // commits, so this reliably captures the host that issues a redirect-delivered PKeyAuth
         // challenge even when WebView#getUrl() still points at the previous committed page
         // (AB#3706623).
-        recordLastCommittedRequestUrlIfHttp(url);
+        recordLastCommittedHttpsRequestUrl(url);
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)

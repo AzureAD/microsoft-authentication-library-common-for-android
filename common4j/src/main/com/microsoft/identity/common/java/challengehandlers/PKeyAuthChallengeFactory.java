@@ -80,8 +80,8 @@ public class PKeyAuthChallengeFactory {
      * {@code challengingUrl} before a challenge object is constructed. Validation happens here, at
      * construction, so a rejected challenge never becomes a {@link PKeyAuthChallenge}: the device key
      * is never used to sign and the response is never submitted (CWE-918 / SSRF hardening,
-     * AB#3706623). The {@code SubmitUrl} must be an absolute HTTPS URL whose host equals the host of
-     * {@code challengingUrl} (same-origin). The sibling token-endpoint path
+     * AB#3706623). The {@code SubmitUrl} must be an absolute HTTPS URL that is same-origin (equal
+     * scheme, host, and port) with {@code challengingUrl}. The sibling token-endpoint path
      * ({@link #getPKeyAuthChallengeFromTokenEndpointResponse}) is not affected: it derives the submit
      * URL from the caller's trusted authority rather than from the wire.
      *
@@ -90,7 +90,7 @@ public class PKeyAuthChallengeFactory {
      *                      {@literal &}CertAuthorities=[distinguished names of CAs]
      *                      {@literal &}Version=1.0
      *                      {@literal &}SubmitUrl=[URL to submit response]
-     *                      {@literal &}Context=[server state thatclient must convey back]
+     *                      {@literal &}Context=[server state that client must convey back]
      * @param challengingUrl The trusted URL of the endpoint that issued this challenge (the WebView's
      *                       current navigation origin). Used as the same-origin reference for
      *                       {@code SubmitUrl}. When {@code null}/blank or unparseable the challenge is
@@ -208,13 +208,17 @@ public class PKeyAuthChallengeFactory {
      * <ul>
      *     <li>{@code SubmitUrl} must be an absolute HTTPS URL with a host (no cleartext, no
      *         scheme-relative or opaque values).</li>
-     *     <li>Its host must equal (case-insensitively) the host of {@code challengingUrl}, i.e. the
+     *     <li>{@code challengingUrl} must itself be an absolute HTTPS URL with a host. A cleartext
+     *         {@code http} challenging origin is rejected (fail closed) so it can never authorize an
+     *         HTTPS {@code SubmitUrl}.</li>
+     *     <li>The two must be same-origin: equal scheme (both HTTPS), equal host (case-insensitive),
+     *         and equal port (with the implicit HTTPS port normalized on both sides), i.e. the
      *         submission must go back to the same origin that issued the challenge.</li>
      * </ul>
      * Same-origin is the protocol-correct constraint for PKeyAuth device authentication and works for
-     * both AAD and ADFS on-prem, where the challenging endpoint and the submission endpoint share a
-     * host. If {@code challengingUrl} cannot be resolved to a host the challenge is rejected (fail
-     * closed) rather than accepted, since same-origin cannot otherwise be proven.
+     * both AAD and ADFS on-prem, where the challenging endpoint and the submission endpoint share an
+     * origin. If {@code challengingUrl} cannot be resolved to an HTTPS URL with a host the challenge is
+     * rejected (fail closed) rather than accepted, since same-origin cannot otherwise be proven.
      *
      * <p>Enforcement is gated by the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}
      * flight (default on). When the flight is disabled via ECS this method is a no-op and the
@@ -222,13 +226,19 @@ public class PKeyAuthChallengeFactory {
      * unlikely case that a federation topology defeats origin derivation and legitimate device auth
      * is rejected.
      *
-     * <p>Only the host is compared: both the challenging and submission endpoints use the default
-     * HTTPS port, so a port comparison would add no security while risking false rejections. On any
-     * rejection a value-free warning is logged to the primary channel; a companion PII-channel
-     * warning ({@link Logger#warnPII}) carries the disagreeing <em>hosts only</em> — never the header,
-     * signed JWT, nonce, {@code Context}, or full {@code SubmitUrl} — so an on-call engineer can tell a
-     * genuine block from an origin-derivation bug. A {@link ClientException} is thrown before the
-     * challenge object exists, so the device key is never exercised on a rejected challenge.
+     * <p>Same-origin here means scheme, host, and port must all match. Both endpoints are pinned to
+     * HTTPS (a cleartext {@code SubmitUrl} or challenging origin is rejected above), so scheme
+     * equality is implied. Host is compared case-insensitively. Port is compared after normalizing
+     * the implicit HTTPS port: {@code https://host} ({@link URL#getPort()} {@code == -1}) and
+     * {@code https://host:443} both resolve to 443 via {@link URL#getDefaultPort()}, so a naive
+     * {@code getPort()} comparison must not be substituted here — it would falsely reject that
+     * legitimate same-origin pair and, via {@code handleUrl}, fail the entire authorization request.
+     * On any rejection a value-free warning is logged to the primary channel; a companion PII-channel
+     * warning ({@link Logger#warnPII}) carries the disagreeing <em>hosts (and ports) only</em> —
+     * never the header, signed JWT, nonce, {@code Context}, or full {@code SubmitUrl} — so an on-call
+     * engineer can tell a genuine block from an origin-derivation bug. A {@link ClientException} is
+     * thrown before the challenge object exists, so the device key is never exercised on a rejected
+     * challenge.
      *
      * <p>Note on {@code CertAuthorities}: that field is also attacker-suppliable from the same
      * redirect, but same-origin enforcement means any resulting signed assertion can only be
@@ -237,8 +247,9 @@ public class PKeyAuthChallengeFactory {
      *
      * @param submitUrl      the {@code SubmitUrl} value taken verbatim from the redirect.
      * @param challengingUrl the trusted origin that issued the challenge; may be {@code null}/blank.
-     * @throws ClientException if {@code submitUrl} is not an absolute HTTPS URL, if the origin cannot
-     *                         be resolved, or if the hosts differ.
+     * @throws ClientException if {@code submitUrl} is not an absolute HTTPS URL, if the challenging
+     *                         origin cannot be resolved or is not HTTPS, or if the two are not
+     *                         same-origin (host or port differ).
      */
     private void validateSubmitUrlOrigin(@Nullable final String submitUrl,
                                          @Nullable final String challengingUrl) throws ClientException {
@@ -268,25 +279,33 @@ public class PKeyAuthChallengeFactory {
         }
 
         final URL originUri = parseAbsoluteUri(challengingUrl);
-        if (originUri == null || StringUtil.isNullOrEmpty(originUri.getHost())) {
-            // Fail closed: without a resolvable challenging origin we cannot prove same-origin.
+        if (originUri == null
+                || !HTTPS_SCHEME.equalsIgnoreCase(originUri.getProtocol())
+                || StringUtil.isNullOrEmpty(originUri.getHost())) {
+            // Fail closed: without a resolvable HTTPS challenging origin we cannot prove same-origin.
+            // A cleartext http origin is rejected here so it can never authorize an https SubmitUrl.
             Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: the challenging origin could not be determined.");
+                    "PKeyAuth challenge rejected: the challenging origin could not be determined or is not HTTPS.");
             Logger.warnPII(methodTag,
-                    "PKeyAuth challenge rejected: challenging origin unresolvable. submitHost="
-                            + submitUri.getHost());
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth challenging origin is unavailable; cannot validate SubmitUrl.");
-        }
-
-        if (!submitUri.getHost().equalsIgnoreCase(originUri.getHost())) {
-            Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: SubmitUrl host is not same-origin with the challenging endpoint.");
-            Logger.warnPII(methodTag,
-                    "PKeyAuth SubmitUrl host mismatch. challengingHost=" + originUri.getHost()
+                    "PKeyAuth challenge rejected: challenging origin unresolvable or not HTTPS. originScheme="
+                            + (originUri == null ? "<unparseable>" : originUri.getProtocol())
                             + " submitHost=" + submitUri.getHost());
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth SubmitUrl host does not match the challenging endpoint host.");
+                    "PKeyAuth challenging origin is unavailable or not HTTPS; cannot validate SubmitUrl.");
+        }
+
+        final int submitPort = submitUri.getPort() == -1 ? submitUri.getDefaultPort() : submitUri.getPort();
+        final int originPort = originUri.getPort() == -1 ? originUri.getDefaultPort() : originUri.getPort();
+        if (!submitUri.getHost().equalsIgnoreCase(originUri.getHost()) || submitPort != originPort) {
+            Logger.warn(methodTag,
+                    "PKeyAuth challenge rejected: SubmitUrl is not same-origin with the challenging endpoint.");
+            Logger.warnPII(methodTag,
+                    "PKeyAuth SubmitUrl origin mismatch. challengingHost=" + originUri.getHost()
+                            + " challengingPort=" + originPort
+                            + " submitHost=" + submitUri.getHost()
+                            + " submitPort=" + submitPort);
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
+                    "PKeyAuth SubmitUrl is not same-origin (scheme/host/port) with the challenging endpoint.");
         }
     }
 

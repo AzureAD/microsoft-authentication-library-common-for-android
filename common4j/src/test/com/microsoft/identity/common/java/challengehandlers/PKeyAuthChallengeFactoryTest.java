@@ -194,6 +194,49 @@ public class PKeyAuthChallengeFactoryTest {
         }
     }
 
+    // AB#3706623 (CWE-918): the challenging origin must itself be HTTPS. A cleartext http:// page
+    // must never become a trusted origin that can authorize an https SubmitUrl on the same host —
+    // otherwise a network attacker on the cleartext page could drive device-key signing. This is the
+    // regression test for the challenging-origin scheme check.
+    @Test
+    public void testWebViewRedirect_CleartextChallengingOrigin_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    "http://login.microsoftonline.com/common/oauth2/authorize");
+            Assert.fail("Cleartext (http) challenging origin must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): same-origin is scheme + host + port. A SubmitUrl on the same host but a
+    // different explicit port is a different origin and must be rejected.
+    @Test
+    public void testWebViewRedirect_SameHostDifferentPort_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%3a8443%2fcommon%2fDeviceAuthPKeyAuth",
+                    "https://login.microsoftonline.com/common/oauth2/authorize");
+            Assert.fail("SubmitUrl on a different port must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the implicit HTTPS port must be normalized on both sides. A challenging
+    // origin of https://host (URL.getPort() == -1) and a SubmitUrl of https://host:443 are the same
+    // origin; a naive getPort() comparison would false-reject this legitimate pair and fail the whole
+    // authorization request. This is the most important port test — it pins the normalization.
+    @Test
+    public void testWebViewRedirect_ImplicitVsExplicitDefaultPort_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%3a443%2fcommon%2fDeviceAuthPKeyAuth",
+                "https://login.microsoftonline.com/common/oauth2/authorize");
+        Assert.assertEquals(
+                "https://login.microsoftonline.com:443/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+    }
+
     // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
     // the flight OFF the factory must fall back to the pre-fix behavior and construct the challenge
     // even for a cross-origin SubmitUrl — proving the disable path actually bypasses enforcement.
