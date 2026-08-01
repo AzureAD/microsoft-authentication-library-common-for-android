@@ -57,6 +57,15 @@ import java.net.URL
  * [AzureActiveDirectory.putCloud] (which yields an [AzureActiveDirectoryCloud] with
  * `isValidated == true`), while untrusted hosts are simply never seeded, so
  * [AzureActiveDirectory.isValidCloudHost] genuinely returns `false` for them.
+ *
+ * A synthetic, test-only hostname ([TRUSTED_HOST]) is used rather than a real production host such
+ * as `login.microsoftonline.com`. [AzureActiveDirectory.putCloud] writes into the JVM-global
+ * `sAadClouds` cache, which this class never clears (the only clear path is guarded inside
+ * [AzureActiveDirectory.setEnvironment] and cannot be triggered cleanly). Seeding a real host would
+ * therefore permanently mark it validated for every subsequent test in the module, creating
+ * order-dependent behavior for anything that relies on that host being unvalidated until instance
+ * discovery runs. The behavior under test (host in the validated cloud set -> forward the PRT
+ * header) is host-agnostic, so a synthetic host loses nothing.
  */
 @RunWith(RobolectricTestRunner::class)
 class NonceRedirectHandlerTest {
@@ -242,7 +251,7 @@ class NonceRedirectHandlerTest {
     }
 
     companion object {
-        private const val TRUSTED_HOST = "login.microsoftonline.com"
+        private const val TRUSTED_HOST = "trusted.contoso.example"
         private const val UNTRUSTED_HOST = "malicious.contoso.example"
         private const val NON_CREDENTIAL_HEADER = "x-ms-PasskeyProtocol"
 
