@@ -123,7 +123,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
@@ -276,7 +276,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
     /**
      * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
