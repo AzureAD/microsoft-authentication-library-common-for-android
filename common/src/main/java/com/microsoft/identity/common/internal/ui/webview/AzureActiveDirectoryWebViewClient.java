@@ -170,12 +170,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * same-origin reference when validating a PKeyAuth challenge's attacker-controlled
      * {@code SubmitUrl} (CWE-918 / AB#3706623). Only {@code https} URLs are recorded: a cleartext
      * {@code http} page must never become a trusted challenging origin, and if an https flow briefly
-     * detours through http this field correctly retains the last https origin. Updated from
-     * {@link #onPageStarted} and the top of
-     * {@link #handleUrl}; preferred over {@link WebView#getUrl()} because {@code getUrl()} only
-     * reflects the last *committed* page and can lag behind a redirect-delivered challenge (e.g. an
-     * ADFS hop that 302s straight to the PKeyAuth {@code urn:} without ever committing). Read and
-     * written only on the UI thread, so no synchronization is required.
+     * detours through http this field correctly retains the last https origin. Recorded only for
+     * main-frame navigations (a subframe must never poison the origin) from {@link #onPageStarted}
+     * (main-frame-only by the Android contract) and, past branch dispatch, from {@link #handleUrl}
+     * for URLs actually deferred to the WebView to load. The pre-API-24
+     * {@link #shouldOverrideUrlLoading(WebView, String)} overload carries no frame information and so
+     * never records; on those API levels {@link #onPageStarted} is the sole source. All recording is
+     * gated on {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}. Preferred over
+     * {@link WebView#getUrl()} because {@code getUrl()} only reflects the last *committed* page and
+     * can lag behind a redirect-delivered challenge (e.g. an ADFS hop that 302s straight to the
+     * PKeyAuth {@code urn:} without ever committing). Read and written only on the UI thread, so no
+     * synchronization is required.
      */
     @Nullable
     private String mLastCommittedRequestUrl;
@@ -292,7 +297,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
-        return handleUrl(view, url);
+        // This pre-API-24 overload carries no frame information, so it cannot tell a main-frame
+        // navigation from a subframe one. Recording a subframe URL as the challenging origin would
+        // poison the PKeyAuth same-origin check (AB#3706623), so we never record from here and pass
+        // isForMainFrame=false; on these API levels the origin is captured by onPageStarted instead,
+        // which is main-frame-only by the Android contract.
+        return handleUrl(view, url, false);
     }
 
     /**
@@ -308,7 +318,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        return handleUrl(view, requestUrl.toString());
+        return handleUrl(view, requestUrl.toString(), request.isForMainFrame());
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
@@ -334,20 +344,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The string representation of the url.
      * @return false if we will not take action on the url.
      */
-    private boolean handleUrl(final WebView view, final String url) {
+    private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
-        // Remember the most recent https navigation so a subsequent PKeyAuth challenge (which
-        // arrives as a non-https urn: and therefore does not overwrite this) can be validated
-        // against the origin that issued it. See mLastCommittedRequestUrl / AB#3706623.
-        recordLastCommittedHttpsRequestUrl(url);
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
-                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url, getChallengingOrigin(view));
+                // getChallengingOrigin() reads the recorded origin / view.getUrl(); only evaluate it
+                // when the origin-validation flight is on so that, with the flight off, no new code
+                // runs and the factory receives null and no-ops (AB#3706623).
+                final String challengingOrigin = isPKeyAuthSubmitUrlOriginValidationEnabled()
+                        ? getChallengingOrigin(view) : null;
+                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url, challengingOrigin);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
             } else if (isPasskeyUrl(formattedURL)) {
@@ -444,6 +454,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
+                // Record the challenging origin only here — past branch dispatch — so we capture a URL
+                // solely when we actually defer it to the WebView to load (not one we override and hand
+                // off elsewhere), and only for main-frame navigations so a subframe cannot poison the
+                // PKeyAuth same-origin reference (AB#3706623). The record itself is additionally gated
+                // on the flight inside recordLastCommittedHttpsRequestUrl.
+                if (isForMainFrame) {
+                    recordLastCommittedHttpsRequestUrl(url);
+                }
                 return false;
             }
         } catch (final ClientException exception) {
@@ -529,15 +547,36 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * challenge. Recording https only means a cleartext page can never become the trusted origin used
      * to authorize a PKeyAuth {@code SubmitUrl}.
      *
+     * <p>The whole recording path is gated on the
+     * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch so that, with the
+     * flight off, this is a complete no-op and the client behaves exactly as it did before
+     * AB#3706623. Callers are responsible for the main-frame constraint (see {@link #handleUrl} and
+     * {@link #onPageStarted}); this method only enforces the https-scheme and flight gates.
+     *
      * @param url the URL from a navigation callback; may be {@code null}.
      */
     private void recordLastCommittedHttpsRequestUrl(@Nullable final String url) {
+        if (!isPKeyAuthSubmitUrlOriginValidationEnabled()) {
+            return;
+        }
         if (url == null) {
             return;
         }
         if (url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME + "://")) {
             mLastCommittedRequestUrl = url;
         }
+    }
+
+    /**
+     * @return {@code true} when the PKeyAuth SubmitUrl origin-validation kill-switch
+     * ({@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}) is enabled. All new
+     * origin-tracking code added for AB#3706623 — recording the challenging origin and deriving it at
+     * challenge dispatch — is gated on this so that, with the flight off, the WebView client is a
+     * true end-to-end no-op relative to its pre-fix behavior.
+     */
+    private boolean isPKeyAuthSubmitUrlOriginValidationEnabled() {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION);
     }
 
     /**
@@ -1730,7 +1769,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // main-frame load (including server-redirect targets and POST navigations) before the page
         // commits, so this reliably captures the host that issues a redirect-delivered PKeyAuth
         // challenge even when WebView#getUrl() still points at the previous committed page
-        // (AB#3706623).
+        // (AB#3706623). Recording is gated on the origin-validation flight inside the callee.
         recordLastCommittedHttpsRequestUrl(url);
         // Track URL load started
         if (mUrlLoadTracker != null) {

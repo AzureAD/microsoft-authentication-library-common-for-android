@@ -263,6 +263,20 @@ public class PKeyAuthChallengeFactory {
             return;
         }
 
+        // Guard against a parser differential before any other check: java.net.URL (used below to
+        // validate) and the WHATWG parser used by WebView#loadUrl (where the response is actually
+        // sent) disagree on a backslash in the authority. Reject it here, in the authority component
+        // only, so a legitimate backslash in a path or query value cannot false-reject the challenge.
+        final String submitAuthority = extractAuthority(submitUrl);
+        if (submitAuthority != null && submitAuthority.indexOf('\\') >= 0) {
+            Logger.warn(methodTag,
+                    "PKeyAuth challenge rejected: SubmitUrl authority contains a backslash (parser-differential guard).");
+            Logger.warnPII(methodTag,
+                    "PKeyAuth SubmitUrl rejected: backslash in authority component. submitAuthority=" + submitAuthority);
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
+                    "PKeyAuth SubmitUrl authority must not contain a backslash.");
+        }
+
         final URL submitUri = parseAbsoluteUri(submitUrl);
         if (submitUri == null
                 || !HTTPS_SCHEME.equalsIgnoreCase(submitUri.getProtocol())
@@ -336,6 +350,43 @@ public class PKeyAuthChallengeFactory {
         } catch (final MalformedURLException e) {
             return null;
         }
+    }
+
+    /**
+     * Extracts the authority component of {@code url} textually — the substring after
+     * {@code scheme://} up to the first {@code '/'}, {@code '?'} or {@code '#'}.
+     *
+     * <p>This is deliberately <em>not</em> derived from {@link URL#getAuthority()}: the whole point
+     * of the caller's backslash guard is that {@link URL} mis-parses an authority that contains a
+     * backslash (it treats {@code '\'} as an ordinary character and everything up to the last
+     * {@code '@'} as userinfo), so we recover the raw authority region ourselves. The WHATWG URL
+     * parser used by the WebView that ultimately sends the response additionally treats {@code '\'}
+     * as an authority terminator for special schemes, which is exactly the differential we detect:
+     * if this raw region contains a backslash, the two parsers would resolve different hosts.
+     *
+     * @param url the raw URL string; may be {@code null}.
+     * @return the raw authority substring, or {@code null} when {@code url} is blank or has no
+     *         {@code "://"} scheme separator.
+     */
+    @Nullable
+    private String extractAuthority(@Nullable final String url) {
+        if (StringUtil.isNullOrEmpty(url)) {
+            return null;
+        }
+        final int schemeIdx = url.indexOf("://");
+        if (schemeIdx < 0) {
+            return null;
+        }
+        final int authorityStart = schemeIdx + "://".length();
+        int authorityEnd = url.length();
+        for (int i = authorityStart; i < url.length(); i++) {
+            final char c = url.charAt(i);
+            if (c == '/' || c == '?' || c == '#') {
+                authorityEnd = i;
+                break;
+            }
+        }
+        return url.substring(authorityStart, authorityEnd);
     }
 
     private Map<String, String> getPKeyAuthHeader(final String headerStr) throws ClientException, UnsupportedEncodingException {

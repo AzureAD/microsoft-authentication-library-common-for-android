@@ -237,6 +237,44 @@ public class PKeyAuthChallengeFactoryTest {
                 "https://login.microsoftonline.com:443/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
     }
 
+    // AB#3706623 (CWE-918): parser-differential guard. java.net.URL (used for validation) treats a
+    // backslash as an ordinary character and '@' as the userinfo delimiter, so it parses
+    // https://evil.example.com\@login.microsoftonline.com/steal with host=login.microsoftonline.com —
+    // which matches the challenging origin and, without this guard, would be ACCEPTED. The WHATWG URL
+    // parser used by WebView#loadUrl (where the response is actually POSTed) treats the backslash as an
+    // authority terminator and resolves host=evil.example.com, so the device-signed assertion would be
+    // exfiltrated. Rejecting a backslash in the authority component closes the bypass. This also
+    // confirms %5C arrives form-decoded to a literal '\' by the time the factory parses the query.
+    @Test
+    public void testWebViewRedirect_BackslashAuthorityParserDifferential_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX
+                            + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("SubmitUrl with a backslash in the authority component must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the backslash guard is intentionally scoped to the authority component
+    // only. A legitimate same-origin SubmitUrl may carry a backslash in a path or query value (e.g. a
+    // form-decoded DOMAIN\\user parameter); rejecting those would turn into a ClientException that fails
+    // the whole authorization request. This pins that a backslash outside the authority is still
+    // accepted (the authority — login.microsoftonline.com — contains no backslash, so both parsers
+    // agree on the host).
+    @Test
+    public void testWebViewRedirect_BackslashInQuery_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX
+                        + "https%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth%3fdomain%3dCONTOSO%5cuser",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals(
+                "https://login.microsoftonline.com/common/DeviceAuthPKeyAuth?domain=CONTOSO\\user",
+                challenge.getSubmitUrl());
+    }
+
     // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
     // the flight OFF the factory must fall back to the pre-fix behavior and construct the challenge
     // even for a cross-origin SubmitUrl — proving the disable path actually bypasses enforcement.
