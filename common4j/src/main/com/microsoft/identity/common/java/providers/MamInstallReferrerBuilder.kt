@@ -39,10 +39,17 @@ import java.net.URISyntaxException
  * that caused the install when the Play install referrer names it, so this is the whole of the
  * client-side change: append `referrer=<callingAppPackage>`.
  *
- * **Scope.** Only the MAM-CA install path is tagged. The same broker-install redirect also drives
- * ordinary device-registration installs, which must keep their existing behavior, so the decoration
- * is gated on [MamCaRedirect.isMamCaInstall] as well as on
- * [CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER].
+ * **Scope.** Only the MAM-CA install path is tagged, and only where the referrer can actually do
+ * something. The same broker-install redirect also drives ordinary device-registration installs,
+ * which must keep their existing behavior, so the decoration is gated on
+ * [MamCaRedirect.isMamCaInstall] as well as on [CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER].
+ *
+ * The marker alone is not enough, though: the redirect's `app_link` is allowed to name any of three
+ * destinations (see `BrokerInstallLinkValidator`), and only one of them honours a Play install
+ * referrer. The Authenticator has no such contract, and the China Company Portal link is a
+ * `go.microsoft.com` fwlink rather than a Play Store link, so a `referrer` on it is inert. Both are
+ * therefore left alone and reported as [Outcome.NOT_COMPANY_PORTAL] - tagging them would do nothing
+ * except overstate the rollout, which is read off these log lines.
  *
  * **Safety.** Every entry point returns the original `app_link` unchanged if anything is missing or
  * unparseable, so a broker install is never broken by referrer decoration.
@@ -54,13 +61,22 @@ object MamInstallReferrerBuilder {
     /** The Play install referrer query-parameter name. */
     const val REFERRER_QUERY_PARAM = "referrer"
 
+    /** The Play Store query-parameter naming the application to install. */
+    private const val PLAY_PACKAGE_QUERY_PARAM = "id"
+
+    /**
+     * The only application that acts on the install referrer this class appends: Company Portal
+     * reads it to skip its own sign-in UX and redirect back to the app that caused the install.
+     */
+    private const val COMPANY_PORTAL_PACKAGE_ID = "com.microsoft.windowsintune.companyportal"
+
     /**
      * Why a Company Portal install link was, or was not, tagged with an install referrer.
      *
-     * Six of the seven outcomes return the caller's `app_link` unchanged, so the returned link alone
-     * cannot say *why* decoration did not happen - "the flight is off" and "the server already named
-     * a referrer" are indistinguishable from it. This enum is what makes those cases separable, in
-     * tests and when reading a call site.
+     * Seven of the eight outcomes return the caller's `app_link` unchanged, so the returned link
+     * alone cannot say *why* decoration did not happen - "the flight is off" and "the server already
+     * named a referrer" are indistinguishable from it. This enum is what makes those cases
+     * separable, in tests and when reading a call site.
      *
      * Deliberately carries no telemetry tag. Rollout is read off the log lines below - every outcome
      * the flight actually evaluates names itself in one - not off the onboarding blob: `ux_flow_used`
@@ -83,6 +99,12 @@ object MamInstallReferrerBuilder {
 
         /** A MAM-CA install, but the redirect carried no `app_link` to decorate. */
         NO_APP_LINK,
+
+        /**
+         * A MAM-CA install whose `app_link` does not install Company Portal from the Play Store -
+         * the Authenticator, or the China fwlink - so an install referrer would have no effect.
+         */
+        NOT_COMPANY_PORTAL,
 
         /** A MAM-CA install whose `app_link` already named a referrer; the server's wins. */
         SERVER_REFERRER,
@@ -231,6 +253,18 @@ object MamInstallReferrerBuilder {
         }
         return try {
             val builder = CommonURIBuilder(appLink)
+            // Checked here, inside the parse, rather than before it: doing it on the parsed link
+            // costs nothing extra and keeps an unparseable app_link reported as LINK_UNPARSEABLE
+            // rather than being mislabelled as the wrong install target.
+            if (!installsCompanyPortalFromPlay(builder)) {
+                Logger.info(
+                    methodTag,
+                    "The install link does not install Company Portal from the Play Store, so an " +
+                        "install referrer would have no effect; leaving it as it is. " +
+                        "[outcome=${Outcome.NOT_COMPANY_PORTAL}]"
+                )
+                return Decoration(appLink, Outcome.NOT_COMPANY_PORTAL)
+            }
             // This check must stay ahead of addParameterIfAbsent, but not for case-handling reasons:
             // CommonURIBuilder.containsParam already compares with equalsIgnoreCase, so both agree on
             // a mixed-case `Referrer=`. What the explicit branch earns is the two things
@@ -264,4 +298,26 @@ object MamInstallReferrerBuilder {
             Decoration(appLink, Outcome.LINK_UNPARSEABLE)
         }
     }
+
+    /**
+     * Whether [builder] points at the Play Store listing for Company Portal.
+     *
+     * Only the Play Store install of Company Portal can act on the referrer this class appends: it
+     * is delivered by the Play install-referrer API, and it is Company Portal that reads it. The
+     * Authenticator listing and the China `go.microsoft.com` fwlink are the other two destinations a
+     * broker-install redirect is allowed to carry, and neither would do anything with it.
+     *
+     * Only the package id is matched. The host does not need re-checking here because
+     * `BrokerInstallLinkValidator` has already restricted `app_link` to its allowlist - unflighted,
+     * on the path that produces `BROKER_INSTALLATION_TRIGGERED` in the first place - so a link
+     * naming Company Portal has necessarily arrived on `play.google.com`.
+     *
+     * @param builder the parsed `app_link`.
+     * @return `true` when the link installs Company Portal from the Play Store.
+     */
+    private fun installsCompanyPortalFromPlay(builder: CommonURIBuilder): Boolean =
+        builder.queryParams.any {
+            PLAY_PACKAGE_QUERY_PARAM.equals(it.name, ignoreCase = true) &&
+                COMPANY_PORTAL_PACKAGE_ID.equals(it.value, ignoreCase = true)
+        }
 }
