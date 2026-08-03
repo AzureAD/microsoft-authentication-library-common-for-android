@@ -165,7 +165,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     private final SpanContext mSpanContext;
@@ -224,16 +223,32 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API.
-            // Thread the onboarding telemetry recorder into the bridge via a sink so a
-            // log_telemetry event can append the Auth UX server error code to the onboarding blob
-            // (AB#3688632). The sink (recordAuthUxServerErrorCode) reads mOnboardingTelemetryRecorder
-            // lazily, so it still works when the recorder is attached after this registration.
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
             view.addJavascriptInterface(
-                    new AuthUxJavaScriptInterface(this::recordAuthUxServerErrorCode),
+                    createAuthUxJavaScriptInterface(),
                     AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Threads the onboarding telemetry recorder into the bridge via a sink so a
+     * {@code log_telemetry} event can append the Auth UX server error code to the onboarding blob
+     * (AB#3688632). The sink ({@link #recordAuthUxServerErrorCode}) reads
+     * {@code mOnboardingTelemetryRecorder} lazily, so it still works when the recorder is attached
+     * after registration.
+     *
+     * <p>Overriding the factory (rather than passing the sink at a single call site) is what keeps
+     * the sink attached: {@code onPageStarted} re-registers the bridge on every navigation, and a
+     * bare instance registered there would otherwise replace the sink-carrying one and silently turn
+     * the whole {@code log_telemetry} path into a no-op.
+     */
+    @NonNull
+    @Override
+    protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
+        return new AuthUxJavaScriptInterface(this::recordAuthUxServerErrorCode);
     }
 
     /**

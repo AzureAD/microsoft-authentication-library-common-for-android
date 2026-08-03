@@ -6,6 +6,7 @@ vNext
 - [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
 - [MINOR] Add a non-mutating log_telemetry action to the Auth UX JavaScript bridge (AuthUxJavaScriptInterface) that forwards the page-reported server error code to an onboarding telemetry sink seam; dispatched off the top-level action_name, tolerant of unknown current/future payload fields, and kept entirely separate from the number-matching device-store path (#3197)
 - [MINOR] Append the Auth UX log_telemetry server error code to the onboarding telemetry blob's blocking-errors list, reusing the OnboardingBlockingErrorParser non-onboarding AADSTS exclusion list (50058/50097/50126) for iOS parity, and clarify that addBlockingError also accepts numeric server/STS codes (#3201)
+- [PATCH] Build the Auth UX JS bridge through an overridable createAuthUxJavaScriptInterface() factory so the telemetry-sink-carrying instance is not silently replaced by the bare instance that onPageStarted re-registers on every navigation (which made the log_telemetry path a no-op), and drop the shadowed mAuthUxJavaScriptInterfaceAdded field in AzureActiveDirectoryWebViewClient that desynchronised interface add/remove tracking from the base class (#3201)
 
 Version 24.5.0
 ----------

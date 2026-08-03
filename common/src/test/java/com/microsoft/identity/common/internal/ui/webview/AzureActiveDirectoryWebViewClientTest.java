@@ -1957,5 +1957,45 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Default mWebViewClient has no recorder attached. This must not throw.
         mWebViewClient.recordAuthUxServerErrorCode("530003");
     }
+
+    /**
+     * AB#3688632 regression: the bridge object actually bound into the WebView must carry the
+     * telemetry sink.
+     *
+     * <p>The bridge is registered from two places — {@code initializeAuthUxJavaScriptApi} (initial
+     * load) and {@code OAuth2WebViewClient#onPageStarted} (re-evaluated on every navigation) — and
+     * {@code addJavascriptInterface} replaces any object previously bound to the same name. When
+     * {@code onPageStarted} constructed a bare {@code AuthUxJavaScriptInterface}, it replaced the
+     * sink-carrying instance on the very first page load and the entire {@code log_telemetry} path
+     * became a silent no-op in production. Both sites now build the bridge through
+     * {@code createAuthUxJavaScriptInterface()}, so exercising that factory end-to-end (JSON in →
+     * blob out) pins the behaviour.
+     */
+    @Test
+    public void testCreateAuthUxJavaScriptInterface_CarriesTelemetrySink() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // Drive the bridge exactly as the injected JS shim does: a log_telemetry payload handed to
+        // receiveAuthUxMessage on the instance the client would bind into the WebView.
+        mWebViewClient.createAuthUxJavaScriptInterface().receiveAuthUxMessage(
+                "{\"correlationID\":\"corr-1\","
+                        + "\"action_name\":\"log_telemetry\","
+                        + "\"action_component\":\"host\","
+                        + "\"params\":{\"v\":1,\"sessionID\":\"sess-1\",\"errorCode\":530003,"
+                        + "\"pageId\":\"ConvergedTFA\",\"trackingId\":\"track-1\"}}");
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("sink must be wired into the bridge the WebView actually binds",
+                1, errors.length());
+        assertEquals("530003", errors.getString(0));
+    }
 }
 
