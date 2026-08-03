@@ -374,8 +374,6 @@ class MamInstallReferrerBuilderTest {
                     Triple(CP_APP_LINK, null, mamCaRedirectParameters()),
             MamInstallReferrerBuilder.Outcome.NO_APP_LINK to
                     Triple(null, ORIGIN_PKG, mamCaRedirectParameters()),
-            MamInstallReferrerBuilder.Outcome.NOT_COMPANY_PORTAL to
-                    Triple(AUTHENTICATOR_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()),
             MamInstallReferrerBuilder.Outcome.SERVER_REFERRER to
                     Triple(
                         "$CP_APP_LINK&referrer=com.server.chose.this", ORIGIN_PKG,
@@ -397,49 +395,33 @@ class MamInstallReferrerBuilderTest {
     }
 
     /**
-     * A marked redirect is not on its own a reason to tag the link. The Authenticator honours no
-     * install-referrer contract, so tagging its listing would change nothing except the rollout
-     * signal, which is read off these outcomes.
+     * The install target is deliberately not part of the gate. `intuneAppProtection=1` is set by the
+     * server only on MAM-CA flows, so the marker alone already establishes that the redirect is one;
+     * every destination a broker-install redirect may carry is legitimate at that point, including
+     * the China Company Portal `go.microsoft.com` fwlink, which is a Company Portal install by
+     * another distribution channel rather than a different app.
+     *
+     * This is pinned because narrowing on the install target looks like a safe tightening and is
+     * not: it would silently drop the referrer on real MAM-CA installs, which is the one thing this
+     * class exists to add.
      */
     @Test
-    fun gated_markedInstallOfADifferentApp_isLeftAlone() {
+    fun gated_markedInstall_isDecoratedWhateverTheInstallTargetIs() {
         setMamCaReferrerFlight(true)
 
-        val decoration =
-            outcomeDecorationOf(AUTHENTICATOR_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
+        for (appLink in listOf(CP_APP_LINK, AUTHENTICATOR_APP_LINK, CHINA_CP_FWLINK)) {
+            val decoration = outcomeDecorationOf(appLink, ORIGIN_PKG, mamCaRedirectParameters())
 
-        assertEquals(MamInstallReferrerBuilder.Outcome.NOT_COMPANY_PORTAL, decoration.outcome)
-        assertEquals(AUTHENTICATOR_APP_LINK, decoration.appLink)
-    }
-
-    /**
-     * The China Company Portal target is a `go.microsoft.com` fwlink, not a Play Store listing.
-     * There is no Play Store to deliver an install referrer there, so appending one would be inert -
-     * and reporting it as decorated would overstate how far the feature had actually reached.
-     */
-    @Test
-    fun gated_markedInstallViaTheChinaFwLink_isLeftAlone() {
-        setMamCaReferrerFlight(true)
-
-        val decoration =
-            outcomeDecorationOf(CHINA_CP_FWLINK, ORIGIN_PKG, mamCaRedirectParameters())
-
-        assertEquals(MamInstallReferrerBuilder.Outcome.NOT_COMPANY_PORTAL, decoration.outcome)
-        assertEquals(CHINA_CP_FWLINK, decoration.appLink)
-    }
-
-    /**
-     * The install target is read off the parsed link, so a link that cannot be parsed still reports
-     * why it was left alone rather than being mislabelled as the wrong target.
-     */
-    @Test
-    fun gated_unparseableLink_isStillReportedAsUnparseable() {
-        setMamCaReferrerFlight(true)
-
-        assertEquals(
-            MamInstallReferrerBuilder.Outcome.LINK_UNPARSEABLE,
-            outcomeOf("not a uri at all", ORIGIN_PKG, mamCaRedirectParameters())
-        )
+            assertEquals(
+                "$appLink should have been tagged",
+                MamInstallReferrerBuilder.Outcome.DECORATED,
+                decoration.outcome
+            )
+            assertTrue(
+                "$appLink should name the caller as the referrer, but got ${decoration.appLink}",
+                decoration.appLink!!.contains("referrer=$ORIGIN_PKG")
+            )
+        }
     }
 
     /** The reporting overload must not change what is actually launched. */
@@ -536,8 +518,8 @@ class MamInstallReferrerBuilderTest {
         private const val CP_APP_LINK = "https://play.google.com/store/apps/details?id=$CP_ID"
 
         /**
-         * The other two destinations `BrokerInstallLinkValidator` lets through, neither of which can
-         * act on a Play install referrer.
+         * The other two destinations `BrokerInstallLinkValidator` lets through. Both are legitimate
+         * MAM-CA install targets; the fwlink is the China Company Portal.
          */
         private const val AUTHENTICATOR_APP_LINK =
             "https://play.google.com/store/apps/details?id=com.azure.authenticator"
