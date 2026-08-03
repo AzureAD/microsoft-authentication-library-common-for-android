@@ -1570,6 +1570,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // flight (default on) so flight-off is a complete revert to pre-fix behavior.
                 final boolean nonceCredentialValidationEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION);
+                // The flight check is deliberately the LEFT operand of the ||. Java short-circuits, so
+                // when the kill-switch is off (nonceCredentialValidationEnabled == false) the right
+                // operand isRedirectTrustedForHeaderForwarding(url) is never evaluated and this reduces
+                // to the pre-fix line view.loadUrl(url, mRequestHeaders). Do not reorder these operands.
                 if (!nonceCredentialValidationEnabled
                         || NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(url)) {
                     view.loadUrl(url, mRequestHeaders);
