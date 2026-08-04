@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.util.CommonURIBuilder
 import org.apache.hc.core5.http.NameValuePair
+import org.apache.hc.core5.http.message.BasicNameValuePair
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
@@ -41,8 +42,6 @@ import java.net.URL
  * configured tenant path. Invalid hrefs are rejected before they can receive sensitive flow state.
  */
 class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration) {
-
-    private val TAG: String = NativeAuthV2HrefResolver::class.java.simpleName
 
     /**
      * Resolves a server-provided `_links` href into an absolute request URL.
@@ -175,43 +174,95 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         }
 
         val apiPath = extractApiPath(uri.path.orEmpty(), correlationId)
-        val authorityUrl = config.getAuthorityUrl()
 
-        // Build the URL by combining authority base + api path + original query list.
-        // Using CommonURIBuilder directly (backed by Apache URIBuilder) preserves the full
-        // NameValuePair list from the href, including duplicate keys, without collapsing them
-        // into a Map<String,String> which would silently drop all but the last value.
-        val builder = CommonURIBuilder(authorityUrl.toString())
-
-        // Merge authority path segments with api path segments.
+        // Resolve path segments only here. The href's query is preserved separately, verbatim,
+        // by resolveQuery below so that duplicate keys, ordering, and any not-yet-decoded
+        // characters survive without a decode/re-encode round trip through the query parser.
         val pathBuilder = CommonURIBuilder()
         pathBuilder.setPath(apiPath)
         val apiSegments = pathBuilder.pathSegments
+        rejectEmptyInteriorPathSegments(apiSegments, correlationId)
 
+        val authorityUrl = config.getAuthorityUrl()
+        val builder = CommonURIBuilder(authorityUrl.toString())
         val baseSegments = ArrayList(builder.pathSegments)
         if (baseSegments.isNotEmpty() && baseSegments.last() == "") {
             baseSegments.removeAt(baseSegments.size - 1)
         }
-        for (segment in apiSegments) {
-            if (segment.isNotEmpty()) {
-                baseSegments.add(segment)
-            }
-        }
+        baseSegments.addAll(apiSegments)
         builder.setPathSegments(baseSegments)
 
-        // Set the parsed query parameters from the href, preserving order and duplicates.
-        val hrefParams: List<NameValuePair> = CommonURIBuilder(uri).queryParams
-        if (hrefParams.isNotEmpty()) {
-            builder.setParameters(hrefParams)
-        }
+        val resolvedUri = builder.build()
+        val finalQuery = resolveQuery(uri, correlationId)
 
-        // Append dc only when non-empty and not already present.
+        return if (finalQuery.isNullOrEmpty()) {
+            resolvedUri.toURL()
+        } else {
+            URI("$resolvedUri?$finalQuery").toURL()
+        }
+    }
+
+    /**
+     * Rejects a relative API path whose segments contain an internal empty segment (i.e. a
+     * double slash occurring anywhere except as a single trailing slash). Silently dropping such
+     * segments — as the merge logic in [resolveRelative] previously did — would change the
+     * semantics of a malformed path instead of surfacing it as an error. A single trailing empty
+     * segment (a plain trailing slash) is permitted, and the single required leading slash never
+     * produces a leading empty entry because [CommonURIBuilder] already skips exactly one leading
+     * separator when parsing path segments.
+     */
+    private fun rejectEmptyInteriorPathSegments(segments: List<String>, correlationId: String) {
+        val lastIndex = segments.size - 1
+        segments.forEachIndexed { index, segment ->
+            if (segment.isEmpty() && index != lastIndex) {
+                throw clientException(
+                    errorCode = ClientException.MALFORMED_URL,
+                    message = "Native Auth V2 relative href contains an empty path segment.",
+                    correlationId = correlationId
+                )
+            }
+        }
+    }
+
+    /**
+     * Preserves the href's raw query verbatim — duplicate keys, ordering, and un-decoded
+     * characters intact — and appends `dc` exactly once when [BuildValues.getDC] is non-empty
+     * and not already present.
+     *
+     * This deliberately avoids [CommonURIBuilder.setParameters] with a parsed/decoded
+     * [NameValuePair] list to rebuild the query: that reconstruction depends on the query
+     * parser's own (silent) handling of edge cases, such as dropping a pair with an empty name.
+     * [CommonURIBuilder.getQueryParams] is used below *only* to answer the yes/no question of
+     * whether a `dc` parameter is already present; that parsed view is never used to
+     * reconstruct the emitted query, so the parser's handling of malformed pairs cannot alter
+     * the bytes sent to the server. This has been verified against the httpcore5 versions
+     * present for this repository (the pinned 5.3 and the 5.4.2 also resolved into the local
+     * Gradle cache): both preserve duplicate keys and ordering identically for this query, so
+     * the resolver does not depend on version-specific reconstruction behavior.
+     */
+    private fun resolveQuery(uri: URI, correlationId: String): String? {
+        val rawQuery = uri.rawQuery
         val dc = BuildValues.getDC()
-        if (dc.isNotEmpty()) {
-            builder.addParameterIfAbsent(DC_QUERY_PARAMETER, dc)
+        if (dc.isEmpty()) {
+            return rawQuery
         }
 
-        return builder.build().toURL()
+        val dcAlreadyPresent = rawQuery != null && CommonURIBuilder(uri).queryParams.any {
+            pair: NameValuePair -> pair.name.equals(DC_QUERY_PARAMETER, ignoreCase = true)
+        }
+        if (dcAlreadyPresent) {
+            return rawQuery
+        }
+
+        // Build the dc-only query fragment in isolation so its value is percent-encoded through
+        // the same codec path used elsewhere in this class, without touching the href's own
+        // query bytes.
+        val dcQuery = CommonURIBuilder()
+            .setParameters(BasicNameValuePair(DC_QUERY_PARAMETER, dc))
+            .build()
+            .rawQuery
+
+        return if (rawQuery.isNullOrEmpty()) dcQuery else "$rawQuery&$dcQuery"
     }
 
     private fun validateUserInfoAndFragment(uri: URI, correlationId: String) {
@@ -291,6 +342,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
     )
 
     private companion object {
+        private val TAG: String = NativeAuthV2HrefResolver::class.java.simpleName
         private const val HTTPS_SCHEME = "https"
         private const val HTTP_SCHEME = "http"
         private const val HTTPS_DEFAULT_PORT = 443
