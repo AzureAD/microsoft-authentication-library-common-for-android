@@ -158,10 +158,21 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
             return uri.toURL()
         }
 
-        return CommonURIBuilder(uri)
-            .addParametersIfAbsent(mapOf(DC_QUERY_PARAMETER to dc))
-            .build()
-            .toURL()
+        // Reuse resolveQuery to preserve the raw query verbatim — same semantic guarantee as
+        // resolveRelative — rather than round-tripping through CommonURIBuilder's query parser,
+        // which silently drops pairs with an empty name (e.g. ?=novalue&y=2).
+        val finalQuery = resolveQuery(uri, correlationId)
+        if (finalQuery.isNullOrEmpty()) {
+            return uri.toURL()
+        }
+
+        // Reconstruct the URI preserving the original scheme/authority/path bytes exactly;
+        // only the query portion is replaced. toASCIIString() is fully percent-encoded, and
+        // the fragment check in validateUserInfoAndFragment guarantees rawFragment is null here.
+        val rawUriString = uri.toASCIIString()
+        val queryStart = rawUriString.indexOf('?')
+        val base = if (queryStart >= 0) rawUriString.substring(0, queryStart) else rawUriString
+        return URI("$base?$finalQuery").toURL()
     }
 
     private fun resolveRelative(uri: URI, correlationId: String): URL {
