@@ -969,6 +969,42 @@ public class BrokerOAuth2TokenCacheTest {
         assertFalse(authorizedWrapper.getFociCacheRecords().isEmpty());
     }
 
+    /**
+     * Same defense-in-depth invariant as
+     * {@link #testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty()} but for the
+     * no-arg {@link BrokerOAuth2TokenCacheTelemetryWrapper#getAccounts()} overload. Without the
+     * delegate the wrapper's super {@code getAccounts()} runs on the wrapper's own instance where
+     * {@code mCallerAuthorizedForFoci} is true (3-arg ctor default), quietly reading
+     * {@code mFociCache.getAccountCredentialCache().getAccounts()} regardless of how
+     * {@code mCacheToWrap} was constructed (AB#3687466).
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testTelemetryWrapperGetAccountsNoArgUnauthorizedReturnsEmpty() throws ClientException {
+        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final BrokerOAuth2TokenCacheTelemetryWrapper wrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
+                mPlatformComponents,
+                TEST_APP_UID + 1,
+                mApplicationMetadataCache,
+                unauthorizedAppBCache
+        );
+
+        assertFalse(wrapper.isCallerAuthorizedForFoci());
+        assertTrue(wrapper.getAccounts().isEmpty());
+
+        // Positive control: wrapper around an authorized cache surfaces the shared FoCI accounts.
+        final BrokerOAuth2TokenCache authorizedAppBCache =
+                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        final BrokerOAuth2TokenCacheTelemetryWrapper authorizedWrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
+                mPlatformComponents,
+                TEST_APP_UID + 1,
+                mApplicationMetadataCache,
+                authorizedAppBCache
+        );
+        assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
+        assertFalse(authorizedWrapper.getAccounts().isEmpty());
+    }
+
     // endregion
 
     @Test

@@ -381,6 +381,11 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
     }
 
     @Override
+    public List<AccountRecord> getAccounts() {
+        return mCacheToWrap.getAccounts();
+    }
+
+    @Override
     public boolean isCallerAuthorizedForFoci() {
         return mCacheToWrap.isCallerAuthorizedForFoci();
     }
