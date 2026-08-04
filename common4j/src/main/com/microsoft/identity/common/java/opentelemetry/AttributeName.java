@@ -485,6 +485,12 @@ public enum AttributeName {
     authux_js_operation,
 
     /**
+     * Record the Auth UX server error code forwarded by the `log_telemetry` bridge action, so the
+     * telemetry path is queryable in android_spans without waiting for the onboarding blob to land.
+     */
+    authux_js_error_code,
+
+    /**
      * Record whether or not the request stored a number match entry.
      */
     stored_number_match_entry,

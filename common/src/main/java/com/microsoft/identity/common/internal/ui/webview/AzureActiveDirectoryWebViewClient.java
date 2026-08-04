@@ -51,6 +51,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -1891,25 +1892,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * before or after the JS interface was registered, and identically for brokered and
      * non-brokered flows (the same AndroidCommon recorder backs both). Never throws.
      *
-     * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #initializeAuthUxJavaScriptApi}.
+     * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #createAuthUxJavaScriptInterface()}.
      *
-     * @param errorCode Opaque Auth UX server error code (e.g. an STS code such as {@code "530003"});
-     *                  guaranteed non-empty by the bridge.
+     * @param event Validated Auth UX telemetry context from the bridge. Only
+     *              {@link AuthUxTelemetryEvent#getErrorCode()} is consumed today (guaranteed
+     *              non-empty and shape-checked by the bridge); the remaining fields — correlation
+     *              id, session / page / tracking ids and contract version — are carried so they can
+     *              be recorded without another change to the sink contract.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    void recordAuthUxServerErrorCode(@NonNull final String errorCode) {
+    void recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
+        final String errorCode = event.getErrorCode();
         final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
         if (recorder == null) {
             return;
         }
         if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
-            Logger.info(TAG, "Onboarding telemetry: skipping non-blocking Auth UX error code");
+            Logger.info(TAG, event.getCorrelationId(),
+                    "Onboarding telemetry: skipping non-blocking Auth UX error code");
             return;
         }
         try {
             recorder.addBlockingError(errorCode);
         } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record Auth UX server error: " + t.getMessage());
+            Logger.warn(TAG, event.getCorrelationId(),
+                    "Onboarding telemetry: failed to record Auth UX server error: " + t.getMessage());
         }
     }
 }

@@ -1915,7 +1915,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         seedJson, "client-id", "scope1", mContext);
 
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
-        mWebViewClient.recordAuthUxServerErrorCode("530003");
+        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
@@ -1940,7 +1940,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         seedJson, "client-id", "scope1", mContext);
 
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
-        mWebViewClient.recordAuthUxServerErrorCode("50058"); // UserInformationNotProvided — excluded
+        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")); // UserInformationNotProvided — excluded
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertEquals("excluded code must not be appended", 0, blob.getJSONArray(
@@ -1955,7 +1955,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testRecordAuthUxServerErrorCode_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
-        mWebViewClient.recordAuthUxServerErrorCode("530003");
+        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+    }
+
+    /** Minimal Auth UX telemetry event carrying just the error code under test. */
+    private static com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent authUxEvent(
+            final String errorCode) {
+        return new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                "corr-1", errorCode, null, null, null, null);
     }
 
     /**
