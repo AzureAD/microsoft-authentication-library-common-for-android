@@ -171,11 +171,10 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     }
 
     @Override
-    public void validateSilentCaller(final int osAttestedUid,
-                                     @Nullable final String callerPackageName,
-                                     @Nullable final String applicationName) throws ClientException {
-        final String methodTag = TAG + ":validateSilentCaller";
-        final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(osAttestedUid);
+    public void validateCallingAppForUid(final int callingUid,
+                                     @NonNull final String callerPackageName) throws ClientException {
+        final String methodTag = TAG + ":validateCallingAppForUid";
+        final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
         final List<String> ownedPackages =
                 uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);
         if (ownedPackages.isEmpty()) {
@@ -191,13 +190,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                             + "Rejecting potential impersonation.", null);
             throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
                     "Caller package does not match the OS-attested calling app.");
-        }
-        if (!StringUtil.isNullOrEmpty(applicationName) && !ownedPackages.contains(applicationName)) {
-            Logger.error(methodTag,
-                    "Application name in request bundle is not owned by the OS-attested calling uid. "
-                            + "Rejecting potential impersonation.", null);
-            throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
-                    "Application name does not match the OS-attested calling app.");
         }
     }
     @Override

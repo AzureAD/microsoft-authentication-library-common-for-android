@@ -157,7 +157,7 @@ public class MockPlatformComponentsFactory {
         }
 
         @Override
-        public void validateSilentCaller(int osAttestedUid, String callerPackageName, String applicationName) {
+        public void validateCallingAppForUid(int callingUid, String callerPackageName) {
             throw new UnsupportedOperationException();
         }
         @Nullable

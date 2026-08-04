@@ -186,6 +186,15 @@ public enum CommonFlight implements IFlightConfig {
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
     /**
+     * Flight controlling silent-caller validation: when enabled (default), a silent broker token
+     * request whose self-reported caller package is not owned by the kernel-attested calling uid
+     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466). Acts as a
+     * secure-by-default, ECS-backed kill-switch for the check in
+     * {@code BrokerSilentTokenCommandParameters.validate()}.
+     */
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
+
+    /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
      */
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
