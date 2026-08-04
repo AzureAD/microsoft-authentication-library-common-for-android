@@ -55,7 +55,10 @@ data class AuthUxJsonPayload(
  *  (e.g. `number_matching`).
  * @property sessionId Session identifier (`sessionID`).
  * @property codeMatch Number-match value (`code_match`).
- * @property version Payload schema version (`v`) of the telemetry contract.
+ * @property version Payload schema version (`v`) of the telemetry contract. Typed as a string, not
+ *  an integer: `v` is the one field explicitly designed to change over time, and Gson throws on a
+ *  type mismatch — which would drop the ENTIRE message (including `errorCode`) if the page ever
+ *  sent `"1.0"` or `"v2"`. Gson coerces a JSON number to a string, so this direction has no cliff.
  * @property errorCode Opaque Auth UX server error code (e.g. an STS error code such as "530003")
  *  carried by the `log_telemetry` action. Treated as an opaque telemetry value only; it is never
  *  used to drive client behavior. Optional/nullable — its absence results in a no-op. Captured as a
@@ -76,7 +79,7 @@ data class AuthUxParams(
     val codeMatch: String? = null,
 
     @SerializedName(SerializedNames.VERSION)
-    val version: Int? = null,
+    val version: String? = null,
 
     @SerializedName(SerializedNames.ERROR_CODE)
     val errorCode: String? = null,
@@ -101,7 +104,7 @@ class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
             ?: throw JsonParseException("action_component is required and cannot be null")
 
         // Deserialize params if present
-        val params = jsonObject.get("params")?.let {
+        val params = jsonObject.get(SerializedNames.PARAMS)?.let {
             context.deserialize<AuthUxParams>(it, AuthUxParams::class.java)
         }
 

@@ -177,7 +177,7 @@ class AuthUxJsonPayloadTest {
         assertNotNull(params)
         // errorCode is sent as a JSON number but captured as an opaque string.
         assertEquals("530003", params?.errorCode)
-        assertEquals(1, params?.version)
+        assertEquals("1", params?.version)
         assertEquals("sess-1", params?.sessionId)
         assertEquals("ConvergedTFA", params?.pageId)
         assertEquals("track-1", params?.trackingId)
@@ -237,5 +237,33 @@ class AuthUxJsonPayloadTest {
         assertEquals("530003", params?.errorCode)
         assertEquals("ConvergedTFA", params?.pageId)
         assertEquals("track-1", params?.trackingId)
+    }
+
+    @Test
+    fun `test deserialization of log_telemetry payload tolerates non-integer schema version`() {
+        // Regression: params.v was once typed Int?, so a non-integer version threw
+        // JsonSyntaxException and dropped the ENTIRE message — including errorCode. The one field
+        // explicitly designed to change over time must never be a parse cliff.
+        for (versionLiteral in listOf("\"1.0\"", "\"v2\"", "2", "1.5")) {
+            val json = """
+                {
+                    correlationID: "corr-1",
+                    action_name: "log_telemetry",
+                    action_component: "host",
+                    params: {
+                        v: $versionLiteral,
+                        errorCode: 530003
+                    }
+                }
+            """.trimIndent()
+
+            val payload = gson.fromJson(json, AuthUxJsonPayload::class.java)
+
+            assertEquals(
+                "errorCode must survive a v of $versionLiteral",
+                "530003",
+                payload.params?.errorCode
+            )
+        }
     }
 }
