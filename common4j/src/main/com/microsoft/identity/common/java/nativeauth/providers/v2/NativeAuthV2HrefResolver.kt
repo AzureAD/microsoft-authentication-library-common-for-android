@@ -24,15 +24,15 @@
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.util.CommonURIBuilder
-import com.microsoft.identity.common.java.util.UrlUtil
+import org.apache.hc.core5.http.NameValuePair
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
-import java.util.LinkedHashMap
 
 /**
  * Resolves Native Auth V2 server-provided hrefs against the configured authority.
@@ -41,6 +41,8 @@ import java.util.LinkedHashMap
  * configured tenant path. Invalid hrefs are rejected before they can receive sensitive flow state.
  */
 class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration) {
+
+    private val TAG: String = NativeAuthV2HrefResolver::class.java.simpleName
 
     /**
      * Resolves a server-provided `_links` href into an absolute request URL.
@@ -52,6 +54,12 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
      * off-authority.
      */
     fun resolve(href: String, correlationId: String): URL {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = correlationId,
+            methodName = "$TAG.resolve"
+        )
+
         val trimmedHref = href.trim()
         if (trimmedHref.isBlank()) {
             throw clientException(
@@ -63,6 +71,13 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
 
         return try {
             val normalizedHref = stripLeadingTenantTemplate(trimmedHref)
+            if (normalizedHref.isBlank()) {
+                throw clientException(
+                    errorCode = ClientException.MALFORMED_URL,
+                    message = "Native Auth V2 href resolves to an empty path after template stripping.",
+                    correlationId = correlationId
+                )
+            }
             if (normalizedHref.startsWith(NETWORK_PATH_PREFIX)) {
                 throw clientException(
                     errorCode = ClientException.UNSUPPORTED_URL,
@@ -160,22 +175,43 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         }
 
         val apiPath = extractApiPath(uri.path.orEmpty(), correlationId)
-        val queryParameters = getQueryParameters(uri)
-        val dc = BuildValues.getDC()
-        if (
-            dc.isNotEmpty() &&
-            queryParameters.keys.none {
-                it.equals(DC_QUERY_PARAMETER, ignoreCase = true)
+        val authorityUrl = config.getAuthorityUrl()
+
+        // Build the URL by combining authority base + api path + original query list.
+        // Using CommonURIBuilder directly (backed by Apache URIBuilder) preserves the full
+        // NameValuePair list from the href, including duplicate keys, without collapsing them
+        // into a Map<String,String> which would silently drop all but the last value.
+        val builder = CommonURIBuilder(authorityUrl.toString())
+
+        // Merge authority path segments with api path segments.
+        val pathBuilder = CommonURIBuilder()
+        pathBuilder.setPath(apiPath)
+        val apiSegments = pathBuilder.pathSegments
+
+        val baseSegments = ArrayList(builder.pathSegments)
+        if (baseSegments.isNotEmpty() && baseSegments.last() == "") {
+            baseSegments.removeAt(baseSegments.size - 1)
+        }
+        for (segment in apiSegments) {
+            if (segment.isNotEmpty()) {
+                baseSegments.add(segment)
             }
-        ) {
-            queryParameters[DC_QUERY_PARAMETER] = dc
+        }
+        builder.setPathSegments(baseSegments)
+
+        // Set the parsed query parameters from the href, preserving order and duplicates.
+        val hrefParams: List<NameValuePair> = CommonURIBuilder(uri).queryParams
+        if (hrefParams.isNotEmpty()) {
+            builder.setParameters(hrefParams)
         }
 
-        return UrlUtil.appendPathAndQueryToURL(
-            config.getAuthorityUrl(),
-            apiPath,
-            queryParameters.takeIf { it.isNotEmpty() }
-        )
+        // Append dc only when non-empty and not already present.
+        val dc = BuildValues.getDC()
+        if (dc.isNotEmpty()) {
+            builder.addParameterIfAbsent(DC_QUERY_PARAMETER, dc)
+        }
+
+        return builder.build().toURL()
     }
 
     private fun validateUserInfoAndFragment(uri: URI, correlationId: String) {
@@ -213,14 +249,6 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         }
 
         return normalizedPath.substring(endpointIndex)
-    }
-
-    private fun getQueryParameters(uri: URI): LinkedHashMap<String, String> {
-        val queryParameters = LinkedHashMap<String, String>()
-        CommonURIBuilder(uri).queryParams.forEach { parameter ->
-            queryParameters[parameter.name] = parameter.value.orEmpty()
-        }
-        return queryParameters
     }
 
     private fun stripLeadingTenantTemplate(href: String): String {
