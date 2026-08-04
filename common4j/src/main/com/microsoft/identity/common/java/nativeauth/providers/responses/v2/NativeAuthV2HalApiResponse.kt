@@ -41,7 +41,14 @@ import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiRes
  *
  * Instances are only ever produced via [from]; the primary constructor is private so that
  * [isWebFallbackRequired] can never be constructed out of sync with [serverError] and [state].
+ *
+ * [ConsistentCopyVisibility] keeps the compiler-generated `copy()` `private` to match the
+ * primary constructor. Without it, `copy()` defaults to `public` even though the constructor is
+ * `private`, which would let any caller bypass the invariant above by producing an instance with
+ * an [isWebFallbackRequired] that no longer matches [serverError]/[state] (e.g.
+ * `response.copy(isWebFallbackRequired = true)`).
  */
+@ConsistentCopyVisibility
 data class NativeAuthV2HalApiResponse private constructor(
     override val statusCode: Int,
     internal val correlationIdValue: String,
@@ -157,7 +164,8 @@ data class NativeAuthV2HalApiResponse private constructor(
         )
 
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
-            links.mapValues { (_, value) -> value.first().href }
+            links.mapNotNull { (relation, halLinks) -> halLinks.firstOrNull()?.let { relation to it.href } }
+                .toMap()
 
         private fun extractServerError(halResource: HalResource): HalServerError? {
             val errorMap = halResource.properties[ERROR_KEY] as? Map<*, *> ?: return null
