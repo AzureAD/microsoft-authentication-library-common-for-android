@@ -184,12 +184,13 @@ class NativeAuthV2ResponseParser {
             return missingContinuationTokenError(response.correlationId)
         }
 
-        return when (response.action) {
+        return when (val action = response.action) {
+            null -> missingActionError(response.correlationId)
             NativeAuthV2HalAction.CHALLENGE -> parseChallenge(response, previousState)
             NativeAuthV2HalAction.VERIFY -> parseVerify(response, previousState)
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
-            else -> unsupportedAction(response)
+            else -> unsupportedAction(response.correlationId, action.value)
         }
     }
 
@@ -278,11 +279,13 @@ class NativeAuthV2ResponseParser {
         )
     }
 
-    private fun unsupportedAction(response: NativeAuthV2HalApiResponse): NativeAuthV2InteractionApiResult {
-        val rawAction = response.action?.value.orEmpty()
+    private fun unsupportedAction(
+        correlationId: String,
+        rawAction: String
+    ): NativeAuthV2InteractionApiResult {
         Logger.warn(TAG, "Native Auth V2 response requested unsupported action '$rawAction'.")
         return NativeAuthV2InteractionApiResult.UnsupportedAction(
-            correlationId = response.correlationId,
+            correlationId = correlationId,
             rawAction = rawAction,
             error = ApiErrorResult.INVALID_STATE,
             errorDescription = "Native Auth V2 response requested unsupported action '$rawAction'."
@@ -386,6 +389,14 @@ class NativeAuthV2ResponseParser {
         correlationId = correlationId,
         error = ApiErrorResult.INVALID_STATE,
         errorDescription = "Native Auth V2 'verify' response is missing required field '$fieldName'."
+    )
+
+    private fun missingActionError(
+        correlationId: String
+    ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
+        correlationId = correlationId,
+        error = ApiErrorResult.INVALID_STATE,
+        errorDescription = "Native Auth V2 response is missing required field 'action'."
     )
 
     private fun missingContinuationTokenError(
