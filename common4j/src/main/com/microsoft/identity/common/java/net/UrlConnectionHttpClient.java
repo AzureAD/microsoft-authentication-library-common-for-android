@@ -415,10 +415,16 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 throw e;
             } catch (final IOException ioException) {
                 // 404, for example, will generate an exception.  We should catch it.
+                Logger.warn(TAG, "IOException while reading response stream: "
+                        + ioException.getClass().getSimpleName() + ": " + ioException.getMessage());
                 responseStream = urlConnection.getErrorStream();
             }
 
             final int statusCode = urlConnection.getResponseCode();
+            if (statusCode == -1) {
+                Logger.warn(TAG, "Received an unparseable HTTP status line (statusCode=-1) for "
+                        + urlConnection.getRequestMethod() + " request.");
+            }
 
             final Date date = new Date(urlConnection.getDate());
 

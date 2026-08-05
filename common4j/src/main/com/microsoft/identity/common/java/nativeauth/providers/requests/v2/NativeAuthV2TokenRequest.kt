@@ -89,9 +89,10 @@ data class NativeAuthV2TokenRequest private constructor(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("code") val code: String,
-        @SerializedName("scope") val scope: String
+        @SerializedName("scope") val scope: String,
+        @SerializedName("client_info") private val clientInfo: Boolean = true
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, scope=$scope)"
+        override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, scope=$scope, clientInfo=$clientInfo)"
 
         override fun toString(): String = toUnsanitizedString()
     }

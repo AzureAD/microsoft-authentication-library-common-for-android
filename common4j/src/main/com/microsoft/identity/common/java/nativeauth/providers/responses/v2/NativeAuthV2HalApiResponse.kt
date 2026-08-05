@@ -103,6 +103,13 @@ data class NativeAuthV2HalApiResponse private constructor(
         private const val HINT_KEY = "hint"
         private const val TYPE_KEY = "type"
         private const val AUTHORIZATION_CODE_KEY = "authorizationCode"
+
+        /**
+         * The authorize-challenge response returns the authorization code as a top-level `code`
+         * property. This is distinct from [ERROR_CODE_KEY], which is only ever read from inside
+         * the nested `error` object, so the two cannot collide.
+         */
+        private const val AUTHORIZATION_CODE_SHORT_KEY = "code"
         private const val CONTINUATION_TOKEN_CAMEL_KEY = "continuationToken"
         private const val CONTINUATION_TOKEN_SNAKE_KEY = "continuation_token"
         private const val METHODS_RELATION = "methods"
@@ -142,7 +149,8 @@ data class NativeAuthV2HalApiResponse private constructor(
                 codeLength = halResource.int(CODE_LENGTH_KEY),
                 challengeTargetLabel = halResource.string(HINT_KEY),
                 challengeChannel = halResource.string(TYPE_KEY),
-                authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY),
+                authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
+                    ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
                 serverError = serverError,
                 isWebFallbackRequired = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
                         state == WEB_FALLBACK_REQUIRED_STATE
