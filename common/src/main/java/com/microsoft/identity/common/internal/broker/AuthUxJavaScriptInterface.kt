@@ -73,22 +73,32 @@ data class AuthUxTelemetryEvent(
  * appending the code to the onboarding blob's blocking-errors list (subject to the non-blocking
  * exclusion list) — is supplied by the host and handled downstream (see AB#3688632).
  *
- * **Threading.** Implementations MUST be thread-safe. `@JavascriptInterface` methods are dispatched
- * on the WebView's private JavaBridge thread, not the UI thread, so a sink can be invoked
- * concurrently with UI-thread callers that touch the same telemetry recorder (for example
- * `AzureActiveDirectoryWebViewClient.onPageFinished` recording the last loaded domain).
+ * **Threading.** `@JavascriptInterface` methods are dispatched on the WebView's private JavaBridge
+ * thread, not the UI thread. The bridge serializes its own calls per instance, but the telemetry
+ * state a sink writes to is typically also touched from the UI thread (for example
+ * `AzureActiveDirectoryWebViewClient.onPageFinished` recording the last loaded domain, or the host
+ * serializing the blob at the end of the flow). The bridge cannot enforce safety on state it does
+ * not own, so that state must be thread-safe; the shipped implementation satisfies this by making
+ * the onboarding recorder's collections thread-safe rather than by relying on this note.
  */
 fun interface AuthUxTelemetrySink {
     /**
      * Route an opaque Auth UX telemetry event to onboarding telemetry.
      *
-     * Called on the WebView JavaBridge thread; implementations must be thread-safe and must not
-     * block. Throwing is tolerated (the bridge catches and logs) but never useful.
+     * **Threading.** Invoked on the WebView JavaBridge thread. The bridge guarantees calls are
+     * *serialized per bridge instance* and are never made while holding an internal lock, but it
+     * cannot serialize against other threads: a host that also mutates the same telemetry state
+     * from the UI thread (for example while serializing the onboarding blob) must make that state
+     * thread-safe itself. Implementations must not block.
      *
      * @param event The validated telemetry context. [AuthUxTelemetryEvent.errorCode] is guaranteed
      *  non-empty and shape-checked; the remaining fields are best-effort page-supplied context.
+     * @return `true` if the event was consumed and recorded, `false` if it was ignored (for example
+     *  because the host has no active telemetry recorder yet). Returning `false` lets the bridge
+     *  leave the code eligible for a later retry instead of suppressing it as already-forwarded, so
+     *  a code that arrives before the host is ready is not lost.
      */
-    fun onAuthUxTelemetry(event: AuthUxTelemetryEvent)
+    fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean
 }
 
 /**
@@ -106,10 +116,23 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 ) {
 
     /**
-     * Distinct error codes already forwarded by this instance, used to enforce
-     * [MAX_FORWARDED_ERROR_CODES] and to suppress duplicates so a page that posts in a loop cannot
-     * bloat the onboarding blob. Bounded by the cap. Guarded by itself because
-     * `@JavascriptInterface` calls arrive on the WebView JavaBridge thread.
+     * Error codes this instance has actually handed to a sink that reported consuming them.
+     *
+     * Used to suppress duplicates and to enforce [MAX_FORWARDED_ERROR_CODES]. A code is recorded
+     * only after [AuthUxTelemetrySink.onAuthUxTelemetry] returns `true`, so a code that arrives
+     * before the host has a recorder (sink returns `false`) stays eligible for a later retry rather
+     * than being suppressed as already-forwarded.
+     *
+     * **Scope is this bridge instance only.** The WebView host re-registers the bridge on every
+     * navigation (`OAuth2WebViewClient.onPageStarted`), and each registration constructs a new
+     * `AuthUxJavaScriptInterface`, so this state resets per page load while the consumer it feeds
+     * lives for the whole request. This is therefore a per-page flood guard, **not** a
+     * request-wide de-duplication guarantee: the same code reported on two page loads is forwarded
+     * twice, and session-wide de-duplication is the consumer's responsibility (the onboarding
+     * recorder de-duplicates its blocking-errors list for exactly this reason).
+     *
+     * Guarded by itself because `@JavascriptInterface` calls arrive on the WebView JavaBridge
+     * thread. The sink is never invoked while this lock is held.
      */
     private val forwardedErrorCodes = LinkedHashSet<String>()
 
@@ -133,8 +156,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
         /**
          * Maximum number of distinct error codes a single bridge instance will forward. Bounds the
-         * onboarding blob against a page that posts `log_telemetry` in a loop. Duplicates are
-         * suppressed and do not count toward the cap.
+         * damage a page that posts `log_telemetry` in a loop can do **within one page load** —
+         * see [forwardedErrorCodes] for why the scope is per instance rather than per request.
+         * Duplicates are suppressed and do not count toward the cap.
          */
         private const val MAX_FORWARDED_ERROR_CODES = 10
 
@@ -247,9 +271,15 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         try {
             val payloadObject = parseJsonToAuthUxJsonPayloadObject(jsonPayload)
 
+            // correlationID is page-controlled (the deserializer only requires that it be present
+            // and a JSON string), and it is passed as the correlationID argument of every Logger
+            // call below — which common4j formats into the emitted line verbatim. Sanitize once
+            // here so no page-supplied value can forge log entries.
+            val correlationId = sanitizeForLog(payloadObject.correlationId)
+
             Logger.info(
                 methodTag,
-                "Correlation ID during JavaScript Call: [${payloadObject.correlationId}]"
+                "Correlation ID during JavaScript Call: [$correlationId]"
             )
 
             val span = SpanExtension.current()
@@ -281,7 +311,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 // non-blocking exclusion list) is handled downstream by the supplied sink — see
                 // AB#3688632.
                 actionName == ActionNames.LOG_TELEMETRY ->
-                    handleLogTelemetry(payloadObject.correlationId, parameters, methodTag)
+                    handleLogTelemetry(correlationId, parameters, methodTag)
 
                 operation == OperationNames.NUMBER_MATCHING ->
                     NumberMatchHelper.storeNumberMatch(
@@ -371,7 +401,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         }
 
         val span = SpanExtension.current()
-        span.setAttribute(AttributeName.authux_js_error_code.name, errorCode)
 
         synchronized(forwardedErrorCodes) {
             if (forwardedErrorCodes.contains(errorCode)) {
@@ -391,13 +420,13 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 )
                 return
             }
-            forwardedErrorCodes.add(errorCode)
         }
 
         val sink = telemetrySink
         if (sink == null) {
             // Not silent: without this a DRI cannot distinguish "the page never sent a code" from
-            // "the host never wired a sink".
+            // "the host never wired a sink". Deliberately NOT recorded as forwarded — nothing
+            // consumed it, so it must stay eligible if a sink is wired later.
             Logger.warn(
                 methodTag,
                 correlationId,
@@ -406,7 +435,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             return
         }
 
-        try {
+        val consumed = try {
+            // Invoked outside the lock: never hold an internal lock across a host callback.
             sink.onAuthUxTelemetry(
                 AuthUxTelemetryEvent(
                     correlationId = correlationId,
@@ -417,21 +447,44 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                     version = parameters.version
                 )
             )
-            Logger.info(
-                methodTag,
-                correlationId,
-                "Forwarded Auth UX server error code [$errorCode] to onboarding telemetry."
-            )
         } catch (t: Throwable) {
             // Own try/catch so a throwing sink is not misdiagnosed as a payload parsing failure by
             // the caller's generic handler. Telemetry must never fail the auth flow.
+            //
+            // A throw counts as consumed: a sink that throws is a defect in the host, retrying it
+            // cannot fix that, and treating it as retryable would let a looping page re-invoke a
+            // broken sink without bound.
             Logger.error(
                 methodTag,
                 correlationId,
                 "Onboarding telemetry sink threw while handling Auth UX error code [$errorCode]; ignoring.",
                 t
             )
+            true
         }
+
+        if (!consumed) {
+            Logger.info(
+                methodTag,
+                correlationId,
+                "log_telemetry errorCode [$errorCode] was not consumed by the sink; "
+                        + "leaving it eligible for retry."
+            )
+            return
+        }
+
+        synchronized(forwardedErrorCodes) {
+            forwardedErrorCodes.add(errorCode)
+        }
+        // Recorded only for codes a sink actually took, so the span cannot disagree with what
+        // downstream telemetry received. Single-valued by nature of setAttribute: on a flow
+        // reporting several codes the LAST forwarded code wins.
+        span.setAttribute(AttributeName.authux_js_error_code.name, errorCode)
+        Logger.info(
+            methodTag,
+            correlationId,
+            "Forwarded Auth UX server error code [$errorCode] to onboarding telemetry."
+        )
     }
 
     /**

@@ -196,19 +196,127 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     /** Test double that records every telemetry event routed to the sink. */
-    private class RecordingTelemetrySink : AuthUxTelemetrySink {
+    private class RecordingTelemetrySink(
+        /** When false, simulates a host that is not ready to consume yet (e.g. no recorder). */
+        var consume: Boolean = true
+    ) : AuthUxTelemetrySink {
         val events = mutableListOf<AuthUxTelemetryEvent>()
         val received: List<String> get() = events.map { it.errorCode }
-        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent) {
+        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            if (!consume) {
+                return false
+            }
             events.add(event)
+            return true
         }
     }
 
     /** Test double that always throws, to prove a bad sink cannot kill the bridge. */
     private class ThrowingTelemetrySink : AuthUxTelemetrySink {
-        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent) {
+        var calls = 0
+        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            calls++
             throw IllegalStateException("sink boom")
         }
+    }
+
+    @Test
+    fun `test a code not consumed by the sink stays eligible for retry`() {
+        // A sink may legitimately accept the call and record nothing — the first real implementation
+        // returns false while its recorder is not yet attached. The bridge must NOT mark such a code
+        // as forwarded, otherwise the retry is suppressed and the value is lost for good.
+        val sink = RecordingTelemetrySink(consume = false)
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        Assert.assertTrue("nothing consumed yet", sink.received.isEmpty())
+
+        // Host becomes ready; the same code is reported again and must now get through.
+        sink.consume = true
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test an unconsumed code does not consume the forwarding cap`() {
+        val sink = RecordingTelemetrySink(consume = false)
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        // 15 distinct codes all rejected by the sink — none should count against the cap of 10.
+        for (i in 1..15) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
+        }
+        Assert.assertTrue(sink.received.isEmpty())
+
+        sink.consume = true
+        for (i in 1..10) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
+        }
+
+        Assert.assertEquals("cap must not have been consumed by rejected codes", 10, sink.received.size)
+    }
+
+    @Test
+    fun `test no sink wired does not consume the cap`() {
+        // With no sink at all nothing is consumed, so the codes must remain eligible. Verified by
+        // re-posting through a bridge that does have a sink.
+        authUxJavaScriptInterface.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        val sink = RecordingTelemetrySink()
+        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test a throwing sink is treated as consumed and is not retried`() {
+        // A throwing sink is a host defect; retrying cannot fix it, and treating it as retryable
+        // would let a looping page re-invoke a broken sink without bound.
+        val sink = ThrowingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals("second post must be suppressed as a duplicate", 1, sink.calls)
+    }
+
+    @Test
+    fun `test dedupe does not survive bridge re-registration`() {
+        // Documents the per-instance scope called out in forwardedErrorCodes' KDoc: the WebView host
+        // rebuilds the bridge on every navigation, so the same code reported across two page loads
+        // reaches the sink twice. Request-wide de-duplication is the consumer's job — the onboarding
+        // recorder de-duplicates its blocking-errors list for exactly this reason.
+        val sink = RecordingTelemetrySink()
+
+        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode, mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test a correlationId containing a newline is sanitized before logging`() {
+        // Log-forging guard: correlationID is page-controlled and is passed as the correlationID
+        // argument of every Logger call on this path, which common4j formats verbatim.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                correlationID: "corr-1\nFATAL forged line",
+                action_name: "log_telemetry",
+                action_component: "host",
+                params: { errorCode: $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        val seen = sink.events.single().correlationId
+        Assert.assertFalse("CR/LF must be stripped from correlationId", seen.contains("\n"))
+        Assert.assertFalse(seen.contains("\r"))
     }
 
     @Test
