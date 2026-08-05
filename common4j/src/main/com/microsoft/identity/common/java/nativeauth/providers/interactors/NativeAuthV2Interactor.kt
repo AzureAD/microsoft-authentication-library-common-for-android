@@ -66,12 +66,12 @@ class NativeAuthV2Interactor(
 
     //region /oauth2/v2.0/authorize-challenge (start)
     /**
-     * Starts a V2 Native Auth flow at the authorize-challenge endpoint. [entryRelation] and
-     * [scenario] are used by the parser to build the first [NativeAuthV2ContinuationState] from the
-     * server response. Both are declared `internal` here because [NativeAuthV2FlowScenario] is
-     * itself `internal` (SDK-only context type not exposed in results or telemetry).
+     * Starts a V2 Native Auth flow at the authorize-challenge endpoint.
+     *
+     * [entryRelation] and [scenario] are passed through to the parser so it can build the first
+     * [NativeAuthV2ContinuationState] from the server response.
      */
-    internal fun performAuthorizeChallengeStart(
+    fun performAuthorizeChallengeStart(
         correlationId: String,
         entryRelation: NativeAuthV2LinkRelation,
         scenario: NativeAuthV2FlowScenario,

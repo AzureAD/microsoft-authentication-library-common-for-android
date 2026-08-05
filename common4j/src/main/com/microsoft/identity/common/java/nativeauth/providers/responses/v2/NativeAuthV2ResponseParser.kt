@@ -36,11 +36,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2Fl
  * the already-extracted fields (`state`, `action`, links, embedded methods, error) into an SDK
  * outcome.
  *
- * Both entry points are declared `internal`, not `public`, because they take an
- * [NativeAuthV2FlowScenario] / [NativeAuthV2Operation] parameter; both types are themselves
- * `internal` (SDK-only parser/request context, not a public or telemetry surface, per T3), and
- * Kotlin forbids a `public` declaration from exposing an `internal` type in its signature. This
- * mirrors the same constraint T3 already applied to [NativeAuthV2ContinuationState]'s factories.
+ * Both entry points are declared `internal`, not `public`, because the parser remains module-local
+ * request/response plumbing, and [NativeAuthV2Operation] is still `internal`. This mirrors the
+ * same constraint T3 already applied to [NativeAuthV2ContinuationState]'s factories.
  */
 class NativeAuthV2ResponseParser {
 

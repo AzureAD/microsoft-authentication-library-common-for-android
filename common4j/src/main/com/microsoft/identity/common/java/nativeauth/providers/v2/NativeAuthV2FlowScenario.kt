@@ -25,13 +25,12 @@ package com.microsoft.identity.common.java.nativeauth.providers.v2
 /**
  * The Native Auth V2 flow that produced a [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState].
  *
- * This is SDK-internal parser/request context (for example, to help select the right entry link
- * relation on the next request); it is not exposed as part of any public result or telemetry
- * surface. Only [RESET_PASSWORD] is wired up in this round; additional values are added, one flow
- * at a time, as sign-in and sign-up V2 support lands. `Enum` already implements `Serializable`, so
- * this type participates in [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState]'s
+ * This stays intentionally small: only [RESET_PASSWORD] is wired up in this round, so callers can
+ * pass the scenario through the public Native Auth V2 strategy/controller surface without
+ * exposing any broader flow matrix yet. `Enum` already implements `Serializable`, so this type
+ * participates in [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState]'s
  * serialization without any extra declaration here.
  */
-internal enum class NativeAuthV2FlowScenario {
+enum class NativeAuthV2FlowScenario {
     RESET_PASSWORD
 }

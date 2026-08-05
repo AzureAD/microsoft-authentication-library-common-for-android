@@ -38,9 +38,11 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpS
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpSubmitUserAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.NativeAuthV2Interactor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITIntrospectApiResult
@@ -56,6 +58,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpContinueApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signup.SignUpStartApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
@@ -74,6 +81,13 @@ class NativeAuthOAuth2Strategy(
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
     //Cache identifier returned by the mock API
     private val CACHE_IDENTIFIER_MOCK = "login.windows.net"
+    private val nativeAuthV2Interactor = NativeAuthV2Interactor(
+        httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+        requestProvider = NativeAuthV2RequestProvider(config = config),
+        responseHandler = NativeAuthV2ResponseHandler(),
+        responseParser = NativeAuthV2ResponseParser(),
+        requestInterceptor = config.requestInterceptor
+    )
 
     /**
      * Returns the issuer cache identifier. For mock APIs, a static value of cache identifier is used.
@@ -267,6 +281,23 @@ class NativeAuthOAuth2Strategy(
     ): JITContinueApiResult {
         return jitInteractor.performContinue(
             parameters = parameters
+        )
+    }
+
+    /**
+     * Starts a V2 Native Auth authorize-challenge flow.
+     */
+    fun performAuthorizeChallengeStart(
+        correlationId: String,
+        entryRelation: NativeAuthV2LinkRelation,
+        scenario: NativeAuthV2FlowScenario,
+        scopes: List<String>
+    ): AuthorizeChallengeApiResult {
+        return nativeAuthV2Interactor.performAuthorizeChallengeStart(
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = scenario,
+            scopes = scopes
         )
     }
 
