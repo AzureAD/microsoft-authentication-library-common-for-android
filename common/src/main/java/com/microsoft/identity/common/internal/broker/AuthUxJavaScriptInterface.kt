@@ -357,10 +357,17 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             )
 
             val span = SpanExtension.current()
+            // Span attributes are bounded/neutralized the same way log lines are: these are
+            // page-controlled strings, and an oversized or control-character-laden value would
+            // otherwise ride straight into the telemetry backend. Dispatch below deliberately
+            // compares the RAW values, so sanitizing here cannot change which branch is taken.
             val actionName = payloadObject.actionName
-            span.setAttribute(AttributeName.authux_js_action_name.name, actionName)
+            span.setAttribute(AttributeName.authux_js_action_name.name, sanitizeForLog(actionName))
             val actionComponent = payloadObject.actionComponent
-            span.setAttribute(AttributeName.authux_js_action_component.name, actionComponent)
+            span.setAttribute(
+                AttributeName.authux_js_action_component.name,
+                sanitizeForLog(actionComponent)
+            )
 
             val parameters = payloadObject.params
             if (parameters == null) {
@@ -374,7 +381,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             val operation = parameters.operation
             if (operation != null) {
-                span.setAttribute(AttributeName.authux_js_operation.name, operation)
+                span.setAttribute(AttributeName.authux_js_operation.name, sanitizeForLog(operation))
             }
 
             Logger.info(
