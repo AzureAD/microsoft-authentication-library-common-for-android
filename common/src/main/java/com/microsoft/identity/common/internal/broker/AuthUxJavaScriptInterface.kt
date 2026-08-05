@@ -402,6 +402,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 else ->
                     Logger.warn(
                         methodTag,
+                        correlationId,
                         "Payload from AuthUX contained an unknown action/operation."
                     )
             }
