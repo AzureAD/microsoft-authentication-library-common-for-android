@@ -39,7 +39,9 @@ interface INativeAuthCommandResult : ILoggable {
         SignUpStartCommandResult, SignUpSubmitCodeCommandResult, SignUpResendCodeCommandResult, SignUpSubmitPasswordCommandResult, SignUpSubmitUserAttributesCommandResult,
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult, ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
         MFAChallengeCommandResult, MFASubmitChallengeCommandResult, GetAuthMethodsCommandResult,
-        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult {
+        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
+        NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
@@ -70,7 +72,9 @@ interface INativeAuthCommandResult : ILoggable {
         ResetPasswordStartCommandResult, ResetPasswordSubmitCodeCommandResult,
         ResetPasswordResendCodeCommandResult, ResetPasswordSubmitNewPasswordCommandResult,
         GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult,
-        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult
+        JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
+        NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult
     {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
@@ -93,7 +97,8 @@ interface INativeAuthCommandResult : ILoggable {
         override val errorCodes: List<Int>? = null,
         val exception: Exception? = null
     ) : Error(error, errorDescription, details, correlationId, errorCodes),
-        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult {
+        INativeAuthCommandResult, SignInStartCommandResult, SignUpStartCommandResult, SignUpSubmitPasswordCommandResult, ResetPasswordStartCommandResult,
+        NativeAuthV2ResetPasswordStartCommandResult {
         override fun toUnsanitizedString(): String = "InvalidUsername(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 
         override fun toString(): String = "InvalidUsername(correlationId=$correlationId)"
