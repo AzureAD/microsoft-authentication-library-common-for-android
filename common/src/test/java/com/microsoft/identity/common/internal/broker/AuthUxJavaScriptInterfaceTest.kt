@@ -283,36 +283,11 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test the no-sink path is bounded too`() {
-        // No sink at all never records a handled code either, so only the attempt cap stops a page
-        // looping on this path. Nothing to assert on a sink here; the bridge must simply stop
-        // processing rather than logging without limit. Verified by the fact that after the attempt
-        // cap is exhausted a freshly-wired code is refused.
-        for (i in 1..40) {
-            authUxJavaScriptInterface.receiveAuthUxMessage(
-                logTelemetryPayloadWithErrorCode("\"5300$i\"")
-            )
-        }
-        // Reaching here without hanging or throwing is the assertion; the cap is asserted directly
-        // in the test above where a sink can count invocations.
-    }
-
-    @Test
-    fun `test no sink wired does not consume the cap`() {
-        // With no sink at all nothing is consumed, so the codes must remain eligible. Verified by
-        // re-posting through a bridge that does have a sink.
-        authUxJavaScriptInterface.receiveAuthUxMessage(logTelemetryTestPayload)
-
-        val sink = RecordingTelemetrySink()
-        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
-
-        Assert.assertEquals(listOf(mockErrorCode), sink.received)
-    }
-
-    @Test
     fun `test a throwing sink is treated as handled and is not retried`() {
         // A throwing sink is a host defect; retrying cannot fix it, and treating it as retryable
-        // would let a looping page re-invoke a broken sink without bound.
+        // would let a looping page re-invoke a broken sink without bound. Both posts go through the
+        // SAME instance — the dedupe/cap bookkeeping is per instance, so asserting across two
+        // instances would prove nothing.
         val sink = ThrowingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
@@ -323,23 +298,8 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test a throwing sink does not claim the code was forwarded`() {
-        // Suppressing retry is the ONLY thing a throw should drive. Nothing reached downstream
-        // telemetry, so the code must not be reported as forwarded. A subsequent successful forward
-        // of a DIFFERENT code proves the throw did not consume the distinct-code cap either.
-        val throwing = AuthUxJavaScriptInterface(ThrowingTelemetrySink())
-        throwing.receiveAuthUxMessage(logTelemetryTestPayload)
-
-        val sink = RecordingTelemetrySink()
-        val healthy = AuthUxJavaScriptInterface(sink)
-        healthy.receiveAuthUxMessage(logTelemetryTestPayload)
-
-        Assert.assertEquals(listOf(mockErrorCode), sink.received)
-    }
-
-    @Test
     fun `test dedupe does not survive bridge re-registration`() {
-        // Documents the per-instance scope called out in forwardedErrorCodes' KDoc: the WebView host
+        // Documents the per-instance scope called out in handledErrorCodes' KDoc: the WebView host
         // rebuilds the bridge on every navigation, so the same code reported across two page loads
         // reaches the sink twice. Request-wide de-duplication is the consumer's job — the onboarding
         // recorder de-duplicates its blocking-errors list for exactly this reason.
@@ -380,11 +340,13 @@ class AuthUxJavaScriptInterfaceTest {
     fun `test an oversized correlationId is bounded and control chars replaced`() {
         // The correlation ID is page-controlled. Sanitizing must bound its own work rather than
         // transforming the whole value and then cutting it, and must neutralize control characters
-        // beyond just CR/LF (an ESC, for example, can also corrupt a log consumer).
+        // beyond just CR/LF (an ESC, for example, can also corrupt a log consumer). The ESC is
+        // placed at the START so it falls inside the kept prefix and its replacement is observable
+        // rather than being truncated away.
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
-        val huge = "A".repeat(200_000) + "\u001B[31m"
+        val huge = "corr\u001B[31m" + "A".repeat(200_000)
         interfaceWithSink.receiveAuthUxMessage(
             """
             {
@@ -402,22 +364,22 @@ class AuthUxJavaScriptInterfaceTest {
             seen.length < 200
         )
         Assert.assertTrue(seen.endsWith("...(truncated)"))
+        Assert.assertFalse("ESC must not survive sanitization", seen.contains('\u001B'))
+        Assert.assertTrue("ESC must be replaced with a space", seen.startsWith("corr [31m"))
     }
 
     @Test
-    fun `test control characters beyond CR and LF are neutralized in logged values`() {
-        // sanitizeForLog is applied to the rejected errorCode; an ESC or NEL must not survive into
-        // a log line any more than a newline does.
+    fun `test an errorCode containing a control character is rejected`() {
+        // An ESC is not in ERROR_CODE_REGEX, so the code is dropped before it can reach the sink or
+        // the onboarding blob. (The rejection warning renders it via sanitizeForLog, which is
+        // covered directly by the correlationId test above.)
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
-        // Contains an ESC, so it fails ERROR_CODE_REGEX and is logged via sanitizeForLog.
         interfaceWithSink.receiveAuthUxMessage(
             logTelemetryPayloadWithErrorCode("\"530003\\u001B[31mred\"")
         )
 
-        // Rejected outright — the assertion here is that nothing reached the sink and no exception
-        // escaped while formatting the sanitized value into the warning.
         Assert.assertTrue(sink.received.isEmpty())
     }
 
