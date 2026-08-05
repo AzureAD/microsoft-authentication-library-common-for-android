@@ -31,6 +31,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Collections
 import java.util.Date
 import java.util.Locale
 
@@ -77,8 +78,9 @@ class OnboardingTelemetryRecorder(
     private val onboardingMode: String
 
     // Populated fields
-    private val stepsList: MutableList<StepEntry> = mutableListOf()
-    private val blockingErrors: MutableList<String> = mutableListOf()
+    private val stepsList: MutableList<StepEntry> = Collections.synchronizedList(mutableListOf())
+    private val blockingErrors: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    @Volatile
     private var lastLoadedDomain: String? = null
     private var profile: String? = null
     private val uxFlowUsed: MutableList<String> = mutableListOf()
@@ -136,9 +138,20 @@ class OnboardingTelemetryRecorder(
      *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]) or a numeric
      *                  server/STS error code surfaced by OnboardingBlockingErrorParser or the
      *                  Auth UX JS bridge (e.g., "530003"). Recorded verbatim as an opaque string.
+     *
+     * De-duplicated: a code already present is ignored. The Auth UX JS bridge is re-registered on
+     * every WebView navigation and only de-duplicates within a single page load, so without this
+     * the same server error reported across a redirect-heavy flow would appear repeatedly in the
+     * uploaded blob. This recorder outlives those registrations and owns the blob, so it is the
+     * correct place for the request-wide guarantee.
      */
     override fun addBlockingError(errorCode: String) {
-        blockingErrors.add(errorCode)
+        synchronized(blockingErrors) {
+            if (blockingErrors.contains(errorCode)) {
+                return
+            }
+            blockingErrors.add(errorCode)
+        }
 
         // Persist session correlation to SharedPreferences immediately on block
         persistSessionCorrelation()
@@ -206,9 +219,15 @@ class OnboardingTelemetryRecorder(
                 put(FIELD_SESSION_CORRELATION_ID, sessionCorrelationId)
                 put(FIELD_ONBOARDING_MODE, onboardingMode)
 
-                // StepsList
+                // StepsList. Snapshot under the list's own monitor: Collections.synchronizedList
+                // guarantees atomic single operations but NOT iteration, and these lists are
+                // written from the WebView JavaBridge thread while the blob is serialized here on
+                // the caller's thread.
+                val stepsSnapshot = synchronized(stepsList) { stepsList.toList() }
+                val errorsSnapshot = synchronized(blockingErrors) { blockingErrors.toList() }
+
                 val steps = JSONArray()
-                for (entry in stepsList) {
+                for (entry in stepsSnapshot) {
                     steps.put(JSONObject().apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
@@ -218,16 +237,16 @@ class OnboardingTelemetryRecorder(
 
                 // Platform builder fields
                 val errorsArray = JSONArray()
-                for (error in blockingErrors) {
+                for (error in errorsSnapshot) {
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
                 // last_blocking_error is only meaningful when at least one was recorded;
                 // omit the field on smooth-success flows rather than serializing a sentinel.
-                if (blockingErrors.isNotEmpty()) {
+                if (errorsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                        blockingErrors.last()
+                        errorsSnapshot.last()
                     )
                 }
 
@@ -235,10 +254,10 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
 
-                if (stepsList.isNotEmpty()) {
+                if (stepsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
-                        stepsList.last().stepId
+                        stepsSnapshot.last().stepId
                     )
                 }
 

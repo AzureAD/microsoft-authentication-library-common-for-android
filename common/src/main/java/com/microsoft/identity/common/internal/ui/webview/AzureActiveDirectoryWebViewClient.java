@@ -1899,18 +1899,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *              non-empty and shape-checked by the bridge); the remaining fields — correlation
      *              id, session / page / tracking ids and contract version — are carried so they can
      *              be recorded without another change to the sink contract.
+     * @return {@code true} when the code was handed to a recorder (or deliberately dropped as
+     *         non-blocking), {@code false} when there is no recorder yet — which keeps the code
+     *         eligible for a retry once the host attaches one, instead of the bridge suppressing it
+     *         as already-forwarded.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    void recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
+    boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
         final String errorCode = event.getErrorCode();
         final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
         if (recorder == null) {
-            return;
+            // Not consumed: the recorder is attached by the host and may not be available yet, so
+            // report failure and let the bridge offer this code again.
+            return false;
         }
         if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
             Logger.info(TAG, event.getCorrelationId(),
                     "Onboarding telemetry: skipping non-blocking Auth UX error code");
-            return;
+            // Consumed: this is a deliberate policy drop, not a "try again later".
+            return true;
         }
         try {
             recorder.addBlockingError(errorCode);
@@ -1918,5 +1925,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.warn(TAG, event.getCorrelationId(),
                     "Onboarding telemetry: failed to record Auth UX server error: " + t.getMessage());
         }
+        return true;
     }
 }

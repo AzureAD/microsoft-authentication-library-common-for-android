@@ -1950,12 +1950,60 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * AB#3688632: when no recorder is attached the hook is a no-op and never throws.
+     * AB#3688632: when no recorder is attached the hook is a no-op, never throws, and reports that
+     * it did NOT consume the event so the bridge keeps the code eligible for a later retry.
      */
     @Test
     public void testRecordAuthUxServerErrorCode_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
+        assertFalse("no recorder means not consumed",
+                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+    }
+
+    /**
+     * AB#3688632: a non-blocking code is a deliberate policy drop, so it counts as consumed —
+     * re-offering it would be pointless churn.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_NonBlockingCode_IsConsumed() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue("policy drop still counts as consumed",
+                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")));
+    }
+
+    /**
+     * AB#3688632: the recorder de-duplicates its blocking-errors list. The JS bridge is rebuilt on
+     * every WebView navigation and only de-duplicates within one page load, so without this a
+     * redirect-heavy flow records the same server error repeatedly in the uploaded blob — which is
+     * exactly what an earlier device run produced ({@code ["530003","530003"]}).
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_DuplicateAcrossRegistrations_RecordedOnce()
+            throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // Simulates the same code arriving from two separate bridge instances (two page loads).
         mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("duplicate must not reach the blob", 1, errors.length());
+        assertEquals("530003", errors.getString(0));
     }
 
     /** Minimal Auth UX telemetry event carrying just the error code under test. */
