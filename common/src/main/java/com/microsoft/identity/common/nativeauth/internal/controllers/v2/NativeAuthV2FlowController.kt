@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ResendCodeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.INative
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
@@ -88,9 +90,10 @@ class NativeAuthV2FlowController(
      * Starts the V2 SSPR flow: authorize-challenge start → reset-password entry → challenge.
      *
      * Returns [NativeAuthV2CommandResult.CodeRequired] when the server issues a one-time code,
-     * [NativeAuthV2CommandResult.Complete] if the challenge step fast-forwards to completion,
-     * [INativeAuthCommandResult.Redirect] for browser-redirect outcomes, or an
-     * [INativeAuthCommandResult.APIError] / [NativeAuthV2CommandResult.UserNotFound] for errors.
+     * [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] if the challenge step
+     * fast-forwards to completion, [INativeAuthCommandResult.Redirect] for browser-redirect
+     * outcomes, or an [INativeAuthCommandResult.APIError] / [NativeAuthV2CommandResult.UserNotFound]
+     * for errors.
      */
     fun resetPasswordStart(parameters: ResetPasswordV2StartCommandParameters): NativeAuthV2ResetPasswordStartCommandResult {
         LogSession.logMethodCall(
@@ -169,10 +172,9 @@ class NativeAuthV2FlowController(
                     challengeTargetLabel = challengeResult.challengeTargetLabel,
                     challengeChannel = challengeResult.challengeChannel
                 )
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeFlow(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
-                    state = challengeResult.continuationState
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
+                    correlationId = challengeResult.correlationId,
+                    continuationState = challengeResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = challengeResult.correlationId,
@@ -193,7 +195,8 @@ class NativeAuthV2FlowController(
     /**
      * Submits the one-time code. Returns [NativeAuthV2CommandResult.NewPasswordRequired] on
      * success, [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state) on a bad
-     * code, or [NativeAuthV2CommandResult.Complete] if the server fast-forwards.
+     * code, or [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] if the server
+     * fast-forwards to completion.
      */
     fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult {
         LogSession.logMethodCall(
@@ -215,10 +218,9 @@ class NativeAuthV2FlowController(
                     correlationId = verifyResult.correlationId,
                     continuationState = verifyResult.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeFlow(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
-                    state = verifyResult.continuationState
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
+                    correlationId = verifyResult.correlationId,
+                    continuationState = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
                     correlationId = verifyResult.correlationId,
@@ -286,7 +288,7 @@ class NativeAuthV2FlowController(
     /**
      * Submits the new password and polls until the server completes the reset or times out.
      *
-     * Returns [NativeAuthV2CommandResult.Complete] on success,
+     * Returns [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] on success,
      * [NativeAuthV2CommandResult.PasswordNotAccepted] (carrying the input state) if the password
      * is rejected, [NativeAuthV2CommandResult.PasswordResetFailed] on timeout, or an
      * [INativeAuthCommandResult.APIError] on interruption or server error.
@@ -309,14 +311,12 @@ class NativeAuthV2FlowController(
             return when (updateResult) {
                 is NativeAuthV2InteractionApiResult.PollInProgress -> pollUntilComplete(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
                     pollState = updateResult.continuationState,
                     delayMs = updateResult.retryAfterMillis ?: FALLBACK_POLL_DELAY_MS
                 )
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeFlow(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
-                    state = updateResult.continuationState
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
+                    correlationId = updateResult.correlationId,
+                    continuationState = updateResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.InvalidPassword -> NativeAuthV2CommandResult.PasswordNotAccepted(
                     correlationId = updateResult.correlationId,
@@ -345,7 +345,6 @@ class NativeAuthV2FlowController(
 
     private fun pollUntilComplete(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
-        parameters: BaseSignInTokenCommandParameters,
         pollState: NativeAuthV2ContinuationState,
         delayMs: Long
     ): NativeAuthV2SubmitNewPasswordCommandResult {
@@ -365,10 +364,9 @@ class NativeAuthV2FlowController(
             val pollResult = oAuth2Strategy.performPoll(state = currentState)
 
             when (pollResult) {
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> return completeFlow(
-                    oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
-                    state = pollResult.continuationState
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> return NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
+                    correlationId = pollResult.correlationId,
+                    continuationState = pollResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.PollInProgress -> {
                     currentState = pollResult.continuationState
@@ -391,21 +389,58 @@ class NativeAuthV2FlowController(
     }
 
     // -----------------------------------------------------------------------------------------
+    // signInAfterResetPassword
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * Explicit app-invoked sign-in step following a completed V2 SSPR flow. This is the only
+     * entry point that triggers [completeFlow]'s token exchange and cache persistence; the
+     * reset-password steps above never invoke it automatically — they return
+     * [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] and wait for this command.
+     *
+     * Returns [NativeAuthV2CommandResult.Complete] on success, or an
+     * [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
+     */
+    fun signInAfterResetPassword(parameters: NativeAuthV2SignInAfterResetPasswordCommandParameters): NativeAuthV2SignInAfterResetPasswordCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.signInAfterResetPassword"
+        )
+
+        try {
+            val oAuth2Strategy = createNativeAuthStrategy(parameters)
+            return completeFlow(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters,
+                state = parameters.continuationState
+            )
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in signInAfterResetPassword", e)
+            throw e
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------
     // completeFlow — shared terminal path
     // -----------------------------------------------------------------------------------------
 
     /**
      * Completes the V2 SSPR flow by continuing the authorize-challenge interaction, exchanging
-     * the resulting authorization code for tokens, and saving them to the cache.
+     * the resulting authorization code for tokens, and saving them to the cache. This is the
+     * shared terminal path invoked only by [signInAfterResetPassword], never automatically by the
+     * reset-password steps above — those return [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired]
+     * instead and defer this work until the app explicitly signs in.
      *
      * Returns [NativeAuthV2CommandResult.Complete] with the resulting [ILocalAuthenticationResult]
-     * on success, or an error result on any failure at this stage.
+     * on success, or a typed [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError]
+     * on any failure at this stage.
      */
     private fun completeFlow(
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parameters: BaseSignInTokenCommandParameters,
         state: NativeAuthV2ContinuationState
-    ): NativeAuthV2CommandResult.Complete {
+    ): NativeAuthV2SignInAfterResetPasswordCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = state.correlationId,
@@ -416,14 +451,17 @@ class NativeAuthV2FlowController(
         val continueResult = oAuth2Strategy.performAuthorizeChallengeContinue(state = state)
         val code = when (continueResult) {
             is AuthorizeChallengeApiResult.AuthorizationCode -> continueResult.code
-            is AuthorizeChallengeApiResult.Redirect -> throw IllegalStateException(
-                "Redirect at authorize-challenge continue is not recoverable here; " +
-                        "caller should surface Redirect before invoking completeFlow."
+            is AuthorizeChallengeApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
+                correlationId = continueResult.correlationId,
+                redirectReason = continueResult.redirectReason
             )
             else -> {
                 continueResult as ApiErrorResult
-                throw IllegalStateException(
-                    "authorize-challenge continue failed: ${continueResult.error} — ${continueResult.errorDescription}"
+                return INativeAuthCommandResult.APIError(
+                    error = continueResult.error,
+                    errorDescription = continueResult.errorDescription,
+                    errorCodes = continueResult.errorCodes,
+                    correlationId = continueResult.correlationId
                 )
             }
         }
@@ -437,9 +475,19 @@ class NativeAuthV2FlowController(
 
         val successTokenResult = when (tokenResult) {
             is SignInTokenApiResult.Success -> tokenResult
-            else -> throw IllegalStateException(
-                "Token request at flow completion failed: $tokenResult"
+            is SignInTokenApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
+                correlationId = tokenResult.correlationId,
+                redirectReason = tokenResult.redirectReason
             )
+            else -> {
+                tokenResult as ApiErrorResult
+                return INativeAuthCommandResult.APIError(
+                    error = tokenResult.error,
+                    errorDescription = tokenResult.errorDescription,
+                    errorCodes = tokenResult.errorCodes,
+                    correlationId = tokenResult.correlationId
+                )
+            }
         }
 
         // Step 3 — save tokens and build result

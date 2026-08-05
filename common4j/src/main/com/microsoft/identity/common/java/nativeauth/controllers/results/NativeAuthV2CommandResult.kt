@@ -30,6 +30,7 @@ sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthComman
 sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
 
 /**
  * Reflects the possible results from the V2 SSPR (self-service password reset) command flow.
@@ -78,10 +79,30 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
+     * The password reset has completed server-side. The app must explicitly invoke the
+     * sign-in-after-reset command with [continuationState] to exchange it for tokens and persist
+     * them to cache; no token exchange or cache write happens until then.
+     * Applies to any step that reaches server-side completion (start, submit-code, and
+     * submit-new-password — including its fast-forward and poll-completion paths).
+     */
+    data class SignInAfterResetPasswordRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+    ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2SubmitNewPasswordCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
+    /**
      * The password reset flow has completed successfully.
      * [authenticationResult] may be non-null when the server returns a sign-in continuation token
      * that was redeemed inline; it is null when no automatic sign-in was performed.
-     * Applies to any step that reaches terminal completion.
+     * Applies to any step that reaches terminal completion, including the explicit
+     * sign-in-after-reset command.
      */
     data class Complete(
         override val correlationId: String,
@@ -91,7 +112,8 @@ interface NativeAuthV2CommandResult {
     ) : NativeAuthV2ResetPasswordStartCommandResult,
         NativeAuthV2SubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult {
+        NativeAuthV2SubmitNewPasswordCommandResult,
+        NativeAuthV2SignInAfterResetPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
 

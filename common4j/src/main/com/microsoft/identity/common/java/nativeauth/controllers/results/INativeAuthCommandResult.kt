@@ -41,7 +41,8 @@ interface INativeAuthCommandResult : ILoggable {
         MFAChallengeCommandResult, MFASubmitChallengeCommandResult, GetAuthMethodsCommandResult,
         JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
-        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult {
+        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
+        NativeAuthV2SignInAfterResetPasswordCommandResult {
             companion object {
                 private const val BROWSER_REQUIRED_ERROR: String = "browser_required"
                 private const val BROWSER_REQUIRED_ERROR_DESCRIPTION: String = "The client's authentication capabilities are insufficient. Please redirect to the browser to complete authentication"
@@ -74,7 +75,8 @@ interface INativeAuthCommandResult : ILoggable {
         GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult,
         JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
-        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult
+        NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
+        NativeAuthV2SignInAfterResetPasswordCommandResult
     {
         override fun toUnsanitizedString(): String = "UnknownError(correlationId=$correlationId, error=$error, errorDescription=$errorDescription), details=$details, errorCodes=$errorCodes)"
 

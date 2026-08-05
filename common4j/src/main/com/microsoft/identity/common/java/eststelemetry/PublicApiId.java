@@ -164,12 +164,13 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_JIT_CHALLENGE_AUTH_METHOD = "255";
     public static final String NATIVE_AUTH_JIT_SUBMIT_CHALLENGE = "256";
 
-    // NativeAuth V2 SSPR APIs (260-263)
+    // NativeAuth V2 SSPR APIs (260-264)
     //==============================================================================================
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_START = "260";
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_SUBMIT_CODE = "261";
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_RESEND_CODE = "262";
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_SUBMIT_NEW_PASSWORD = "263";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_AFTER_RESET_PASSWORD = "264";
     //endregion
 
     // region WebApps APIs
