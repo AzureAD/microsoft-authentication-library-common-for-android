@@ -51,32 +51,34 @@ class AuthUxJavaScriptInterfaceTest {
     private val mockErrorCode = "530003"
 
     // Matches the Auth UX design-doc wire format: dispatched by action_name = "log_telemetry"
-    // (no params.operation), errorCode sent as a JSON number, plus additional params context fields.
+    // (no params.operation), errorCode sent as a JSON number, plus additional params context
+    // fields. Written as strict JSON — quoted keys — so the fixture is exactly what a real JS
+    // sender's JSON.stringify would emit rather than something only a lenient parser accepts.
     private val logTelemetryTestPayload = """
         {
-            correlationID: "corr-1",
-            action_name: "log_telemetry",
-            action_component: "host",
-            params: {
-                v: 1,
-                sessionID: "sess-1",
-                errorCode: $mockErrorCode,
-                pageId: "ConvergedTFA",
-                trackingId: "track-1"
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": {
+                "v": 1,
+                "sessionID": "sess-1",
+                "errorCode": $mockErrorCode,
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1"
             }
         }
     """.trimIndent()
 
     private val logTelemetryMissingErrorCodePayload = """
         {
-            correlationID: "corr-1",
-            action_name: "log_telemetry",
-            action_component: "host",
-            params: {
-                v: 1,
-                sessionID: "sess-1",
-                pageId: "ConvergedTFA",
-                trackingId: "track-1"
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": {
+                "v": 1,
+                "sessionID": "sess-1",
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1"
             }
         }
     """.trimIndent()
@@ -85,18 +87,18 @@ class AuthUxJavaScriptInterfaceTest {
     // dispatch must tolerate them and still forward errorCode.
     private val logTelemetryWithFutureFieldsPayload = """
         {
-            correlationID: "corr-1",
-            action_name: "log_telemetry",
-            action_component: "host",
-            futureTopLevel: "ignored",
-            params: {
-                v: 2,
-                sessionID: "sess-1",
-                errorCode: $mockErrorCode,
-                pageId: "ConvergedTFA",
-                trackingId: "track-1",
-                futureField: "ignored",
-                futureNumber: 42
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "futureTopLevel": "ignored",
+            "params": {
+                "v": 2,
+                "sessionID": "sess-1",
+                "errorCode": $mockErrorCode,
+                "pageId": "ConvergedTFA",
+                "trackingId": "track-1",
+                "futureField": "ignored",
+                "futureNumber": 42
             }
         }
     """.trimIndent()
@@ -359,10 +361,10 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(
             """
             {
-                correlationID: "corr-1\nFATAL forged line",
-                action_name: "log_telemetry",
-                action_component: "host",
-                params: { errorCode: $mockErrorCode }
+                "correlationID": "corr-1\nFATAL forged line",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
             }
             """.trimIndent()
         )
@@ -370,6 +372,48 @@ class AuthUxJavaScriptInterfaceTest {
         val seen = sink.events.single().correlationId
         Assert.assertFalse("CR/LF must be stripped from correlationId", seen.contains("\n"))
         Assert.assertFalse(seen.contains("\r"))
+    }
+
+    @Test
+    fun `test a realistic correlationId is preserved verbatim as the join key`() {
+        // The correlation ID is the key used to join this event against eSTS / Kusto records, so
+        // sanitizing must not shorten it. A GUID is 36 chars and must survive intact.
+        val guid = "e4fd50ea-aa9c-41c9-8cc1-078ae50ddf0d"
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "$guid",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(guid, sink.events.single().correlationId)
+    }
+
+    @Test
+    fun `test repeated duplicate codes do not spam past the attempt cap`() {
+        // The duplicate and distinct-code checks log and return, so if the attempt counter were
+        // checked after them a page looping ONE already-handled code would keep logging forever.
+        // The counter is checked first, so processing stops once the cap is hit — observable here
+        // because a code offered after the cap never reaches the sink even though it is new.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        // One consumed code, then the same code 40 more times (all duplicates).
+        for (i in 1..41) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+        Assert.assertEquals("only the first is forwarded", 1, sink.calls)
+
+        // The attempt cap is now exhausted, so even a brand-new code is refused.
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"999999\""))
+        Assert.assertEquals("attempt cap must stop further processing", 1, sink.calls)
     }
 
     @Test
@@ -382,14 +426,14 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(
             """
             {
-                correlationID: "corr-1",
-                action_name: "log_telemetry",
-                action_component: "host",
-                params: {
-                    operation: "number_matching",
-                    sessionID: "$mockSessionId",
-                    code_match: "$mockNumberMatchValue",
-                    errorCode: $mockErrorCode
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "operation": "number_matching",
+                    "sessionID": "$mockSessionId",
+                    "code_match": "$mockNumberMatchValue",
+                    "errorCode": $mockErrorCode
                 }
             }
             """.trimIndent()
@@ -410,10 +454,10 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(
             """
             {
-                correlationID: "corr-1",
-                action_name: "some_future_action",
-                action_component: "host",
-                params: { errorCode: $mockErrorCode }
+                "correlationID": "corr-1",
+                "action_name": "some_future_action",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
             }
             """.trimIndent()
         )
@@ -540,10 +584,10 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(
             """
             {
-                correlationID: "corr-1",
-                action_name: "log_telemetry",
-                action_component: "host",
-                params: { v: "1.0", errorCode: $mockErrorCode }
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "v": "1.0", "errorCode": $mockErrorCode }
             }
             """.trimIndent()
         )
@@ -570,10 +614,10 @@ class AuthUxJavaScriptInterfaceTest {
 
     private fun logTelemetryPayloadWithErrorCode(errorCodeLiteral: String): String = """
         {
-            correlationID: "corr-1",
-            action_name: "log_telemetry",
-            action_component: "host",
-            params: { errorCode: $errorCodeLiteral }
+            "correlationID": "corr-1",
+            "action_name": "log_telemetry",
+            "action_component": "host",
+            "params": { "errorCode": $errorCodeLiteral }
         }
     """.trimIndent()
 

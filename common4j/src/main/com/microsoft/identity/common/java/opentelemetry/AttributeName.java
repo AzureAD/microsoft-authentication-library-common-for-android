@@ -485,8 +485,10 @@ public enum AttributeName {
     authux_js_operation,
 
     /**
-     * Record the Auth UX server error code forwarded by the `log_telemetry` bridge action, so the
-     * telemetry path is queryable in android_spans without waiting for the onboarding blob to land.
+     * Record the Auth UX server error code forwarded by the {@code log_telemetry} bridge action, so
+     * the telemetry path is queryable in android_spans without waiting for the onboarding blob to
+     * land. Set only for codes a sink actually consumed; on a flow reporting several codes the last
+     * consumed code wins.
      */
     authux_js_error_code,
 
