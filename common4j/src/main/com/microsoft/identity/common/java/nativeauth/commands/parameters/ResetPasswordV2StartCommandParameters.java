@@ -36,8 +36,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 public class ResetPasswordV2StartCommandParameters extends BaseNativeAuthCommandParameters {
-    private static final String TAG = ResetPasswordV2StartCommandParameters.class.getSimpleName();
-
     /**
      * The email address of the user initiating password reset.
      */

@@ -93,15 +93,6 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
-     * The server requires a browser redirect to complete authentication.
-     * [NativeAuthV2CommandResult] flows emit [INativeAuthCommandResult.Redirect] directly; this
-     * companion constant documents that Redirect is already wired via [INativeAuthCommandResult].
-     */
-    // Note: INativeAuthCommandResult.Redirect must be extended to also implement the four
-    // NativeAuthV2*CommandResult marker interfaces in INativeAuthCommandResult.kt when those
-    // sealed interfaces are added.
-
-    /**
      * The server rejected the submitted OTP.
      * Applies to the submit-code step.
      */
