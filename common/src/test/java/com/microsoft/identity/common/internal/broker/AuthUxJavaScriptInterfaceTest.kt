@@ -422,6 +422,29 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test an oversized action_component does not affect dispatch`() {
+        // Span attributes are sanitized, but dispatch must keep comparing the RAW values. An
+        // oversized/control-char action_component is page-controlled and gets bounded before it
+        // reaches the span, yet the log_telemetry action must still be recognised and forwarded.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        val hugeComponent = "host" + "X".repeat(5_000)
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "$hugeComponent",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
     fun `test a realistic correlationId is preserved verbatim as the join key`() {
         // The correlation ID is the key used to join this event against eSTS / Kusto records, so
         // sanitizing must not shorten it. A GUID is 36 chars and must survive intact.
