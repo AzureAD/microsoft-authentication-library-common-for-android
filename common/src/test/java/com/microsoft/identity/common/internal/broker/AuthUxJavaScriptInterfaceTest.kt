@@ -50,6 +50,9 @@ class AuthUxJavaScriptInterfaceTest {
 
     private val mockErrorCode = "530003"
 
+    /** Mirrors AuthUxJavaScriptInterface.MAX_TELEMETRY_ATTEMPTS, which is private. */
+    private val MAX_ATTEMPTS_FOR_TEST = 25
+
     // Matches the Auth UX design-doc wire format: dispatched by action_name = "log_telemetry"
     // (no params.operation), errorCode sent as a JSON number, plus additional params context
     // fields. Written as strict JSON — quoted keys — so the fixture is exactly what a real JS
@@ -402,6 +405,41 @@ class AuthUxJavaScriptInterfaceTest {
             }
             """.trimIndent()
         )
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test malformed codes count toward the attempt cap`() {
+        // Validation failures log a warning and do regex work, so the cap has to be applied on
+        // entry to the handler rather than after validation — otherwise a page could spam malformed
+        // codes forever without ever reaching it. Observable here because once the cap is exhausted
+        // by malformed messages, a subsequent VALID code is refused.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        repeat(MAX_ATTEMPTS_FOR_TEST) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
+        }
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertTrue(
+            "malformed messages must consume the attempt cap, so the later valid code is refused",
+            sink.received.isEmpty()
+        )
+    }
+
+    @Test
+    fun `test a valid code still gets through below the attempt cap`() {
+        // Guards the opposite direction of the test above: counting malformed messages must not be
+        // so aggressive that ordinary noise blocks a legitimate code.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        repeat(5) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
+        }
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
 
         Assert.assertEquals(listOf(mockErrorCode), sink.received)
     }

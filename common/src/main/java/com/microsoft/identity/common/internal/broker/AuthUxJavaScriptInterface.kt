@@ -141,16 +141,18 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     private val handledErrorCodes = LinkedHashSet<String>()
 
     /**
-     * Number of `log_telemetry` messages this instance has taken past validation, whether or not a
-     * sink consumed them. Saturates one past [MAX_TELEMETRY_ATTEMPTS] rather than counting
-     * indefinitely: the extra increment marks that the cap message has been logged, so it is
-     * emitted once on the transition instead of on every subsequent message.
+     * Number of `log_telemetry` messages this instance has dispatched to [handleLogTelemetry],
+     * counted on entry so that a malformed error code consumes the budget too. Saturates one past
+     * [MAX_TELEMETRY_ATTEMPTS] rather than counting indefinitely: the extra increment marks that
+     * the cap message has been logged, so it is emitted once on the transition instead of on every
+     * subsequent message.
      *
      * [handledErrorCodes] alone cannot bound the work a page can cause: a code that is never
-     * consumed is deliberately never recorded there, so neither the duplicate check nor the
-     * distinct-code cap would ever fire for it. Without this counter a page posting the same code
-     * in a loop while no sink is wired — or while the sink keeps declining — would re-invoke the
-     * sink and re-log without limit. Guarded by [handledErrorCodes].
+     * consumed is deliberately never recorded there, and a malformed code never gets that far at
+     * all, so neither the duplicate check nor the distinct-code cap would ever fire for them.
+     * Without this counter a page posting in a loop — malformed codes, or the same code while no
+     * sink is wired — would re-log (and re-validate, and re-invoke the sink) without limit.
+     * Guarded by [handledErrorCodes].
      */
     private var telemetryAttempts = 0
 
@@ -181,12 +183,13 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         private const val MAX_FORWARDED_ERROR_CODES = 10
 
         /**
-         * Maximum number of `log_telemetry` messages a single bridge instance will process past
-         * validation, counted whether or not a sink consumes them. Bounds the paths
-         * [MAX_FORWARDED_ERROR_CODES] cannot: a code that is never consumed is never recorded as
-         * handled, so only this counter stops a page looping against an unwired or perpetually
-         * declining sink. Set above [MAX_FORWARDED_ERROR_CODES] so that legitimate retries — a code
-         * reported before the host attached its recorder — still get through.
+         * Maximum number of `log_telemetry` messages a single bridge instance will handle, counted
+         * on entry to the handler — before the error code is validated, and whether or not a sink
+         * consumes it. Bounds the paths [MAX_FORWARDED_ERROR_CODES] cannot: a malformed code, or
+         * one that is never consumed, is never recorded as handled, so only this counter stops a
+         * page looping against validation warnings, an unwired sink, or a perpetually declining
+         * one. Set above [MAX_FORWARDED_ERROR_CODES] so that legitimate retries — a code reported
+         * before the host attached its recorder — still get through.
          */
         private const val MAX_TELEMETRY_ATTEMPTS = 25
 
@@ -460,12 +463,13 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * which logs once on the transition and is then silent — otherwise the message warning about
      * spam would itself become the spam.
      *
-     * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across two critical sections
-     * with the sink invocation between them (the sink is deliberately never called under the lock).
-     * That gap cannot interleave in practice because WebView dispatches `@JavascriptInterface`
-     * calls for one WebView on a single thread, so a bridge instance is only ever driven serially.
-     * The state is still guarded so that even if a caller invoked this from another thread the
-     * worst case is a bounded duplicate forward, never a corrupted set.
+     * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across three critical sections
+     * (attempt cap, dedupe/distinct-code cap, and the final record) with validation and the sink
+     * invocation between them — the sink is deliberately never called under the lock. Those gaps
+     * cannot interleave in practice because WebView dispatches `@JavascriptInterface` calls for one
+     * WebView on a single thread, so a bridge instance is only ever driven serially. The state is
+     * still guarded so that even if a caller invoked this from another thread the worst case is a
+     * bounded duplicate forward, never a corrupted set.
      *
      * @param correlationId Correlation ID from the payload, used as the telemetry join key.
      * @param parameters Parsed `params` object of the message.
@@ -476,6 +480,32 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         parameters: AuthUxParams,
         methodTag: String
     ) {
+        // Counted FIRST, before validation, so that a malformed errorCode consumes the budget too:
+        // validation failures emit a warning and do regex work, so counting only after validation
+        // would let a page spam those without ever reaching the cap.
+        //
+        // Scope note: this bounds the log_telemetry HANDLING path only. The per-message logging in
+        // receiveAuthUxMessage runs before this method and is shared with the number-match path, so
+        // it is deliberately left alone; a payload rejected earlier (no params, unknown action,
+        // unparseable JSON) never reaches this counter at all.
+        synchronized(handledErrorCodes) {
+            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
+                if (telemetryAttempts == MAX_TELEMETRY_ATTEMPTS) {
+                    // Logged once, on the transition, so hitting the cap is diagnosable without the
+                    // cap message itself becoming the spam it exists to prevent.
+                    telemetryAttempts++
+                    Logger.warn(
+                        methodTag,
+                        correlationId,
+                        "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
+                                + "ignoring further log_telemetry messages from this page."
+                    )
+                }
+                return
+            }
+            telemetryAttempts++
+        }
+
         val errorCode = parameters.errorCode
         if (errorCode.isNullOrEmpty()) {
             Logger.warn(
@@ -499,27 +529,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         }
 
         synchronized(handledErrorCodes) {
-            // Counted and checked FIRST, before the duplicate and distinct-code checks, because
-            // those paths log and return: a page looping one already-handled code, or posting new
-            // codes after the distinct-code cap is reached, would otherwise never reach this
-            // counter and could spam the log without bound. Counting here bounds every path past
-            // validation, whether or not a sink ends up consuming the code.
-            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
-                if (telemetryAttempts == MAX_TELEMETRY_ATTEMPTS) {
-                    // Logged once, on the transition, so hitting the cap is diagnosable without the
-                    // cap message itself becoming the spam it exists to prevent.
-                    telemetryAttempts++
-                    Logger.warn(
-                        methodTag,
-                        correlationId,
-                        "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
-                                + "ignoring further log_telemetry messages from this page."
-                    )
-                }
-                return
-            }
-            telemetryAttempts++
-
             if (handledErrorCodes.contains(errorCode)) {
                 Logger.info(
                     methodTag,
