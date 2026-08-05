@@ -44,8 +44,8 @@ import java.net.URISyntaxException
  * [AuthUxTelemetrySink]. Fields other than [correlationId] and [errorCode] are optional because the
  * page may omit them.
  *
- * @property correlationId Correlation ID reported by the page (`correlationID`). Non-empty:
- *  the deserializer rejects a payload without it.
+ * @property correlationId Correlation ID reported by the page (`correlationID`). Present — the
+ *  deserializer rejects a payload without it — but may be empty, since the page controls the value.
  * @property errorCode Validated Auth UX server error code (e.g. `"530003"`). Guaranteed to be
  *  non-empty and to match the bridge's accepted error-code shape.
  * @property sessionId Auth UX session identifier (`params.sessionID`), when supplied.
@@ -141,8 +141,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
     private val handledErrorCodes = LinkedHashSet<String>()
 
     /**
-     * Count of `log_telemetry` messages this instance has taken past validation, whether or not a
-     * sink consumed them.
+     * Number of `log_telemetry` messages this instance has taken past validation, whether or not a
+     * sink consumed them. Saturates one past [MAX_TELEMETRY_ATTEMPTS] rather than counting
+     * indefinitely: the extra increment marks that the cap message has been logged, so it is
+     * emitted once on the transition instead of on every subsequent message.
      *
      * [handledErrorCodes] alone cannot bound the work a page can cause: a code that is never
      * consumed is deliberately never recorded there, so neither the duplicate check nor the
@@ -454,7 +456,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      *
      * Every exit path is logged distinguishably so a DRI can tell from logcat alone whether a code
      * was forwarded, rejected as malformed, suppressed by the cap/dedupe, declined by the sink, or
-     * dropped because no host sink was wired.
+     * dropped because no host sink was wired. The one deliberate exception is the attempt cap,
+     * which logs once on the transition and is then silent — otherwise the message warning about
+     * spam would itself become the spam.
      *
      * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across two critical sections
      * with the sink invocation between them (the sink is deliberately never called under the lock).
@@ -493,8 +497,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             )
             return
         }
-
-        val span = SpanExtension.current()
 
         synchronized(handledErrorCodes) {
             // Counted and checked FIRST, before the duplicate and distinct-code checks, because
@@ -607,7 +609,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         // Set only for codes a sink actually took, so the span cannot report codes that downstream
         // telemetry never received. Single-valued by nature of setAttribute: on a flow reporting
         // several codes the LAST consumed code wins.
-        span.setAttribute(AttributeName.authux_js_error_code.name, errorCode)
+        SpanExtension.current()
+            .setAttribute(AttributeName.authux_js_error_code.name, errorCode)
         Logger.info(
             methodTag,
             correlationId,
