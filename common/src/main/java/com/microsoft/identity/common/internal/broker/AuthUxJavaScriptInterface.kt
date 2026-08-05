@@ -192,6 +192,14 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         private const val MAX_LOGGED_VALUE_LENGTH = 64
 
         /**
+         * Upper bound on a correlation ID. Generous: a GUID is 36 characters, so anything under
+         * this is preserved verbatim. A value longer than this is not a usable join key anyway, so
+         * truncating it costs nothing and stops a page pushing an unbounded string into every log
+         * line on this path.
+         */
+        private const val MAX_CORRELATION_ID_LENGTH = 128
+
+        /**
          * Bound an untrusted, page-supplied string before it reaches a log line: truncate to
          * [MAX_LOGGED_VALUE_LENGTH] and strip CR/LF so a crafted value cannot forge log entries.
          */
@@ -204,6 +212,26 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 flattened
             } else {
                 flattened.substring(0, MAX_LOGGED_VALUE_LENGTH) + "...(truncated)"
+            }
+        }
+
+        /**
+         * Make a page-supplied correlation ID safe to log **without destroying its value as a join
+         * key**.
+         *
+         * Unlike [sanitizeForLog] this does not truncate at the log-display bound: the correlation
+         * ID is forwarded to the telemetry sink and is the key used to join this event against
+         * eSTS / Kusto records, so shortening a legitimate ID would silently break correlation.
+         * Control characters (including CR/LF) are stripped so a crafted value cannot forge log
+         * entries, and only absurd lengths — well past any real correlation ID — are cut, since
+         * such a value is not a usable key anyway.
+         */
+        private fun sanitizeCorrelationId(value: String): String {
+            val flattened = value.map { if (it.isISOControl()) ' ' else it }.joinToString("")
+            return if (flattened.length <= MAX_CORRELATION_ID_LENGTH) {
+                flattened
+            } else {
+                flattened.substring(0, MAX_CORRELATION_ID_LENGTH) + "...(truncated)"
             }
         }
 
@@ -299,9 +327,11 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             // correlationID is page-controlled (the deserializer only requires that it be present
             // and a JSON string), and it is passed as the correlationID argument of every Logger
-            // call below — which common4j formats into the emitted line verbatim. Sanitize once
-            // here so no page-supplied value can forge log entries.
-            val correlationId = sanitizeForLog(payloadObject.correlationId)
+            // call below — which common4j formats into the emitted line verbatim. Strip control
+            // characters so no page-supplied value can forge log entries, but preserve the value's
+            // length: it is also the telemetry join key, so truncating a legitimate ID would
+            // silently break correlation.
+            val correlationId = sanitizeCorrelationId(payloadObject.correlationId)
 
             Logger.info(
                 methodTag,
@@ -436,6 +466,27 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         val span = SpanExtension.current()
 
         synchronized(handledErrorCodes) {
+            // Counted and checked FIRST, before the duplicate and distinct-code checks, because
+            // those paths log and return: a page looping one already-handled code, or posting new
+            // codes after the distinct-code cap is reached, would otherwise never reach this
+            // counter and could spam the log without bound. Counting here bounds every path past
+            // validation, whether or not a sink ends up consuming the code.
+            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
+                if (telemetryAttempts == MAX_TELEMETRY_ATTEMPTS) {
+                    // Logged once, on the transition, so hitting the cap is diagnosable without the
+                    // cap message itself becoming the spam it exists to prevent.
+                    telemetryAttempts++
+                    Logger.warn(
+                        methodTag,
+                        correlationId,
+                        "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
+                                + "ignoring further log_telemetry messages from this page."
+                    )
+                }
+                return
+            }
+            telemetryAttempts++
+
             if (handledErrorCodes.contains(errorCode)) {
                 Logger.info(
                     methodTag,
@@ -453,18 +504,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 )
                 return
             }
-            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
-                Logger.warn(
-                    methodTag,
-                    correlationId,
-                    "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
-                            + "dropping errorCode [$errorCode]."
-                )
-                return
-            }
-            // Counted here, before the outcome is known, so the paths that deliberately do NOT
-            // record a handled code (no sink wired, sink declined) are still bounded.
-            telemetryAttempts++
         }
 
         val sink = telemetrySink

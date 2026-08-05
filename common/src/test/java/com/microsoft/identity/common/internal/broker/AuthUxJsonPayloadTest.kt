@@ -155,15 +155,15 @@ class AuthUxJsonPayloadTest {
         // Exact Auth UX design-doc wire format for the log_telemetry action.
         val json = """
             {
-                correlationID: "corr-1",
-                action_name: "log_telemetry",
-                action_component: "host",
-                params: {
-                    v: 1,
-                    sessionID: "sess-1",
-                    errorCode: 530003,
-                    pageId: "ConvergedTFA",
-                    trackingId: "track-1"
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "v": 1,
+                    "sessionID": "sess-1",
+                    "errorCode": 530003,
+                    "pageId": "ConvergedTFA",
+                    "trackingId": "track-1"
                 }
             }
         """.trimIndent()
@@ -189,14 +189,14 @@ class AuthUxJsonPayloadTest {
     fun `test deserialization of log_telemetry payload without errorCode yields null`() {
         val json = """
             {
-                correlationID: "corr-1",
-                action_name: "log_telemetry",
-                action_component: "host",
-                params: {
-                    v: 1,
-                    sessionID: "sess-1",
-                    pageId: "ConvergedTFA",
-                    trackingId: "track-1"
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": {
+                    "v": 1,
+                    "sessionID": "sess-1",
+                    "pageId": "ConvergedTFA",
+                    "trackingId": "track-1"
                 }
             }
         """.trimIndent()
@@ -214,18 +214,18 @@ class AuthUxJsonPayloadTest {
         // unknown fields must not break parsing of the known errorCode field.
         val json = """
             {
-                correlationID: "corr-1",
-                action_name: "log_telemetry",
-                action_component: "host",
-                futureTopLevel: "ignored",
-                params: {
-                    v: 2,
-                    sessionID: "sess-1",
-                    errorCode: 530003,
-                    pageId: "ConvergedTFA",
-                    trackingId: "track-1",
-                    futureField: "ignored",
-                    futureNumber: 42
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "futureTopLevel": "ignored",
+                "params": {
+                    "v": 2,
+                    "sessionID": "sess-1",
+                    "errorCode": 530003,
+                    "pageId": "ConvergedTFA",
+                    "trackingId": "track-1",
+                    "futureField": "ignored",
+                    "futureNumber": 42
                 }
             }
         """.trimIndent()
@@ -247,12 +247,12 @@ class AuthUxJsonPayloadTest {
         for (versionLiteral in listOf("\"1.0\"", "\"v2\"", "2", "1.5")) {
             val json = """
                 {
-                    correlationID: "corr-1",
-                    action_name: "log_telemetry",
-                    action_component: "host",
-                    params: {
-                        v: $versionLiteral,
-                        errorCode: 530003
+                    "correlationID": "corr-1",
+                    "action_name": "log_telemetry",
+                    "action_component": "host",
+                    "params": {
+                        "v": $versionLiteral,
+                        "errorCode": 530003
                     }
                 }
             """.trimIndent()
