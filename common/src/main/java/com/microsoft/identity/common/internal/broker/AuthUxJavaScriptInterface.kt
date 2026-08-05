@@ -205,6 +205,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * control character with a space so a crafted value cannot forge log entries, and appending
          * a marker when the input was longer.
          *
+         * Replacing rather than removing keeps the result the same length as the inspected prefix,
+         * so a value's shape stays recognisable in a log line instead of silently closing up around
+         * the removed characters.
+         *
          * Walks at most [limit] characters rather than transforming the whole string and then
          * cutting it, so the work done here is bounded by the limit instead of by the size of the
          * page-supplied value. (The value itself is already materialized by the time the bridge is
@@ -225,8 +229,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
         /**
          * Bound an untrusted, page-supplied string before it reaches a log line: truncate to
-         * [MAX_LOGGED_VALUE_LENGTH] and strip control characters (including CR/LF) so a crafted
-         * value cannot forge log entries.
+         * [MAX_LOGGED_VALUE_LENGTH] and replace control characters (including CR/LF) with spaces so
+         * a crafted value cannot forge log entries.
          */
         private fun sanitizeForLog(value: String?): String {
             if (value == null) {
@@ -242,9 +246,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * Unlike [sanitizeForLog] this does not truncate at the log-display bound: the correlation
          * ID is forwarded to the telemetry sink and is the key used to join this event against
          * eSTS / Kusto records, so shortening a legitimate ID would silently break correlation.
-         * Control characters (including CR/LF) are stripped so a crafted value cannot forge log
-         * entries, and only absurd lengths — well past any real correlation ID — are cut, since
-         * such a value is not a usable key anyway.
+         * Control characters (including CR/LF) are replaced with spaces so a crafted value cannot
+         * forge log entries, and only absurd lengths — well past any real correlation ID — are cut,
+         * since such a value is not a usable key anyway.
          */
         private fun sanitizeCorrelationId(value: String): String =
             sanitizeBounded(value, MAX_CORRELATION_ID_LENGTH)
@@ -340,16 +344,17 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             val payloadObject = parseJsonToAuthUxJsonPayloadObject(jsonPayload)
 
             // correlationID is page-controlled (the deserializer only requires that it be present
-            // and a JSON string), and it is passed as the correlationID argument of every Logger
-            // call below — which common4j formats into the emitted line verbatim. Strip control
-            // characters so no page-supplied value can forge log entries, but preserve the value's
-            // length: it is also the telemetry join key, so truncating a legitimate ID would
-            // silently break correlation.
+            // and a JSON string), and it is passed as the correlationID argument of the Logger
+            // calls on this path — which common4j formats into the emitted line verbatim. Replace
+            // control characters so no page-supplied value can forge log entries, but preserve the
+            // value's length: it is also the telemetry join key, so truncating a legitimate ID
+            // would silently break correlation.
             val correlationId = sanitizeCorrelationId(payloadObject.correlationId)
 
             Logger.info(
                 methodTag,
-                "Correlation ID during JavaScript Call: [$correlationId]"
+                correlationId,
+                "Parsed AuthUX JavaScript payload."
             )
 
             val span = SpanExtension.current()
@@ -360,7 +365,11 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             val parameters = payloadObject.params
             if (parameters == null) {
-                Logger.warn(methodTag, "Payload from AuthUX contained no \"params\" field.")
+                Logger.warn(
+                    methodTag,
+                    correlationId,
+                    "Payload from AuthUX contained no \"params\" field."
+                )
                 return
             }
 
@@ -371,6 +380,7 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
             Logger.info(
                 methodTag,
+                correlationId,
                 "Action name: [${sanitizeForLog(actionName)}], operation: [${sanitizeForLog(operation)}]"
             )
 

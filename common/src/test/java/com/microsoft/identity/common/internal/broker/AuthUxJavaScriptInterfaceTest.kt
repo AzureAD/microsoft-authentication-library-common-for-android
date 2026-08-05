@@ -370,14 +370,16 @@ class AuthUxJavaScriptInterfaceTest {
         )
 
         val seen = sink.events.single().correlationId
-        Assert.assertFalse("CR/LF must be stripped from correlationId", seen.contains("\n"))
+        Assert.assertFalse("CR/LF must not survive in correlationId", seen.contains("\n"))
         Assert.assertFalse(seen.contains("\r"))
+        // Replaced with a space rather than removed, so the value keeps its shape in a log line.
+        Assert.assertEquals("corr-1 FATAL forged line", seen)
     }
 
     @Test
-    fun `test an oversized correlationId is bounded and control chars stripped`() {
+    fun `test an oversized correlationId is bounded and control chars replaced`() {
         // The correlation ID is page-controlled. Sanitizing must bound its own work rather than
-        // transforming the whole value and then cutting it, and must strip control characters
+        // transforming the whole value and then cutting it, and must neutralize control characters
         // beyond just CR/LF (an ESC, for example, can also corrupt a log consumer).
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
@@ -403,7 +405,7 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test control characters beyond CR and LF are stripped from logged values`() {
+    fun `test control characters beyond CR and LF are neutralized in logged values`() {
         // sanitizeForLog is applied to the rejected errorCode; an ESC or NEL must not survive into
         // a log line any more than a newline does.
         val sink = RecordingTelemetrySink()
