@@ -85,11 +85,14 @@ fun interface AuthUxTelemetrySink {
     /**
      * Route an opaque Auth UX telemetry event to onboarding telemetry.
      *
-     * **Threading.** Invoked on the WebView JavaBridge thread. The bridge guarantees calls are
-     * *serialized per bridge instance* and are never made while holding an internal lock, but it
-     * cannot serialize against other threads: a host that also mutates the same telemetry state
-     * from the UI thread (for example while serializing the onboarding blob) must make that state
-     * thread-safe itself. Implementations must not block.
+     * **Threading.** Invoked on the WebView JavaBridge thread. WebView dispatches
+     * `@JavascriptInterface` calls for a given WebView on a single private background thread, so
+     * calls into one bridge instance do not overlap — note this is a *platform* property, not
+     * something this class implements: [receiveAuthUxMessage] takes no lock. The bridge does
+     * guarantee it never invokes a sink while holding an internal lock. It cannot serialize a sink
+     * against other threads, so a host that also mutates the same telemetry state from the UI
+     * thread (for example while serializing the onboarding blob) must make that state thread-safe
+     * itself. Implementations must not block.
      *
      * @param event The validated telemetry context. [AuthUxTelemetryEvent.errorCode] is guaranteed
      *  non-empty and shape-checked; the remaining fields are best-effort page-supplied context.
@@ -116,25 +119,38 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 ) {
 
     /**
-     * Error codes this instance has actually handed to a sink that reported consuming them.
+     * Error codes this instance will not offer to a sink again — either because a sink reported
+     * consuming them, or because a sink threw while handling them (a host defect that retrying
+     * cannot fix).
      *
-     * Used to suppress duplicates and to enforce [MAX_FORWARDED_ERROR_CODES]. A code is recorded
-     * only after [AuthUxTelemetrySink.onAuthUxTelemetry] returns `true`, so a code that arrives
-     * before the host has a recorder (sink returns `false`) stays eligible for a later retry rather
-     * than being suppressed as already-forwarded.
+     * A code is *not* recorded here when a sink reports it did **not** consume the event, so a code
+     * that arrives before the host has a recorder stays eligible for a later retry rather than being
+     * suppressed as already-handled.
      *
      * **Scope is this bridge instance only.** The WebView host re-registers the bridge on every
      * navigation (`OAuth2WebViewClient.onPageStarted`), and each registration constructs a new
      * `AuthUxJavaScriptInterface`, so this state resets per page load while the consumer it feeds
      * lives for the whole request. This is therefore a per-page flood guard, **not** a
-     * request-wide de-duplication guarantee: the same code reported on two page loads is forwarded
+     * request-wide de-duplication guarantee: the same code reported on two page loads is offered
      * twice, and session-wide de-duplication is the consumer's responsibility (the onboarding
      * recorder de-duplicates its blocking-errors list for exactly this reason).
      *
-     * Guarded by itself because `@JavascriptInterface` calls arrive on the WebView JavaBridge
-     * thread. The sink is never invoked while this lock is held.
+     * Guarded by itself; also guards [telemetryAttempts]. The sink is never invoked while this
+     * lock is held.
      */
-    private val forwardedErrorCodes = LinkedHashSet<String>()
+    private val handledErrorCodes = LinkedHashSet<String>()
+
+    /**
+     * Count of `log_telemetry` messages this instance has taken past validation, whether or not a
+     * sink consumed them.
+     *
+     * [handledErrorCodes] alone cannot bound the work a page can cause: a code that is never
+     * consumed is deliberately never recorded there, so neither the duplicate check nor the
+     * distinct-code cap would ever fire for it. Without this counter a page posting the same code
+     * in a loop while no sink is wired — or while the sink keeps declining — would re-invoke the
+     * sink and re-log without limit. Guarded by [handledErrorCodes].
+     */
+    private var telemetryAttempts = 0
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -155,12 +171,22 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
 
         /**
-         * Maximum number of distinct error codes a single bridge instance will forward. Bounds the
-         * damage a page that posts `log_telemetry` in a loop can do **within one page load** —
-         * see [forwardedErrorCodes] for why the scope is per instance rather than per request.
-         * Duplicates are suppressed and do not count toward the cap.
+         * Maximum number of distinct error codes a single bridge instance will hand to a sink.
+         * Bounds the damage a page that posts `log_telemetry` in a loop can do **within one page
+         * load** — see [handledErrorCodes] for why the scope is per instance rather than per
+         * request. Duplicates are suppressed and do not count toward the cap.
          */
         private const val MAX_FORWARDED_ERROR_CODES = 10
+
+        /**
+         * Maximum number of `log_telemetry` messages a single bridge instance will process past
+         * validation, counted whether or not a sink consumes them. Bounds the paths
+         * [MAX_FORWARDED_ERROR_CODES] cannot: a code that is never consumed is never recorded as
+         * handled, so only this counter stops a page looping against an unwired or perpetually
+         * declining sink. Set above [MAX_FORWARDED_ERROR_CODES] so that legitimate retries — a code
+         * reported before the host attached its recorder — still get through.
+         */
+        private const val MAX_TELEMETRY_ATTEMPTS = 25
 
         /** Maximum length of a page-supplied string echoed into a log line. */
         private const val MAX_LOGGED_VALUE_LENGTH = 64
@@ -366,8 +392,15 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * code and forward it, with its telemetry context, to the host-supplied sink.
      *
      * Every exit path is logged distinguishably so a DRI can tell from logcat alone whether a code
-     * was forwarded, rejected as malformed, suppressed by the cap/dedupe, or dropped because no
-     * host sink was wired.
+     * was forwarded, rejected as malformed, suppressed by the cap/dedupe, declined by the sink, or
+     * dropped because no host sink was wired.
+     *
+     * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across two critical sections
+     * with the sink invocation between them (the sink is deliberately never called under the lock).
+     * That gap cannot interleave in practice because WebView dispatches `@JavascriptInterface`
+     * calls for one WebView on a single thread, so a bridge instance is only ever driven serially.
+     * The state is still guarded so that even if a caller invoked this from another thread the
+     * worst case is a bounded duplicate forward, never a corrupted set.
      *
      * @param correlationId Correlation ID from the payload, used as the telemetry join key.
      * @param parameters Parsed `params` object of the message.
@@ -402,16 +435,16 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
         val span = SpanExtension.current()
 
-        synchronized(forwardedErrorCodes) {
-            if (forwardedErrorCodes.contains(errorCode)) {
+        synchronized(handledErrorCodes) {
+            if (handledErrorCodes.contains(errorCode)) {
                 Logger.info(
                     methodTag,
                     correlationId,
-                    "log_telemetry errorCode [$errorCode] already forwarded; suppressing duplicate."
+                    "log_telemetry errorCode [$errorCode] already handled; suppressing duplicate."
                 )
                 return
             }
-            if (forwardedErrorCodes.size >= MAX_FORWARDED_ERROR_CODES) {
+            if (handledErrorCodes.size >= MAX_FORWARDED_ERROR_CODES) {
                 Logger.warn(
                     methodTag,
                     correlationId,
@@ -420,13 +453,26 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 )
                 return
             }
+            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
+                Logger.warn(
+                    methodTag,
+                    correlationId,
+                    "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
+                            + "dropping errorCode [$errorCode]."
+                )
+                return
+            }
+            // Counted here, before the outcome is known, so the paths that deliberately do NOT
+            // record a handled code (no sink wired, sink declined) are still bounded.
+            telemetryAttempts++
         }
 
         val sink = telemetrySink
         if (sink == null) {
             // Not silent: without this a DRI cannot distinguish "the page never sent a code" from
-            // "the host never wired a sink". Deliberately NOT recorded as forwarded — nothing
-            // consumed it, so it must stay eligible if a sink is wired later.
+            // "the host never wired a sink". Deliberately NOT recorded as handled — nothing
+            // consumed it, so it must stay eligible if a sink is wired later; the attempt counter
+            // above is what stops a page looping on this path.
             Logger.warn(
                 methodTag,
                 correlationId,
@@ -435,56 +481,80 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             return
         }
 
-        val consumed = try {
+        val outcome = try {
             // Invoked outside the lock: never hold an internal lock across a host callback.
-            sink.onAuthUxTelemetry(
-                AuthUxTelemetryEvent(
-                    correlationId = correlationId,
-                    errorCode = errorCode,
-                    sessionId = parameters.sessionId,
-                    pageId = parameters.pageId,
-                    trackingId = parameters.trackingId,
-                    version = parameters.version
+            if (sink.onAuthUxTelemetry(
+                    AuthUxTelemetryEvent(
+                        correlationId = correlationId,
+                        errorCode = errorCode,
+                        sessionId = parameters.sessionId,
+                        pageId = parameters.pageId,
+                        trackingId = parameters.trackingId,
+                        version = parameters.version
+                    )
                 )
-            )
+            ) {
+                SinkOutcome.CONSUMED
+            } else {
+                SinkOutcome.NOT_CONSUMED
+            }
         } catch (t: Throwable) {
             // Own try/catch so a throwing sink is not misdiagnosed as a payload parsing failure by
             // the caller's generic handler. Telemetry must never fail the auth flow.
-            //
-            // A throw counts as consumed: a sink that throws is a defect in the host, retrying it
-            // cannot fix that, and treating it as retryable would let a looping page re-invoke a
-            // broken sink without bound.
             Logger.error(
                 methodTag,
                 correlationId,
                 "Onboarding telemetry sink threw while handling Auth UX error code [$errorCode]; ignoring.",
                 t
             )
-            true
+            SinkOutcome.THREW
         }
 
-        if (!consumed) {
-            Logger.info(
-                methodTag,
-                correlationId,
-                "log_telemetry errorCode [$errorCode] was not consumed by the sink; "
-                        + "leaving it eligible for retry."
-            )
-            return
+        when (outcome) {
+            SinkOutcome.NOT_CONSUMED -> {
+                Logger.info(
+                    methodTag,
+                    correlationId,
+                    "log_telemetry errorCode [$errorCode] was not consumed by the sink; "
+                            + "leaving it eligible for retry."
+                )
+                return
+            }
+
+            SinkOutcome.THREW -> {
+                // Suppress retry only. A throwing sink is a host defect that retrying cannot fix,
+                // and re-offering it would let a looping page re-invoke a broken sink. But nothing
+                // was recorded downstream, so this deliberately does NOT set the span attribute or
+                // claim the code was forwarded — the error log above is the whole story.
+                synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
+                return
+            }
+
+            SinkOutcome.CONSUMED -> Unit
         }
 
-        synchronized(forwardedErrorCodes) {
-            forwardedErrorCodes.add(errorCode)
-        }
-        // Recorded only for codes a sink actually took, so the span cannot disagree with what
-        // downstream telemetry received. Single-valued by nature of setAttribute: on a flow
-        // reporting several codes the LAST forwarded code wins.
+        synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
+        // Set only for codes a sink actually took, so the span cannot report codes that downstream
+        // telemetry never received. Single-valued by nature of setAttribute: on a flow reporting
+        // several codes the LAST consumed code wins.
         span.setAttribute(AttributeName.authux_js_error_code.name, errorCode)
         Logger.info(
             methodTag,
             correlationId,
             "Forwarded Auth UX server error code [$errorCode] to onboarding telemetry."
         )
+    }
+
+    /** Outcome of handing one telemetry event to the host-supplied sink. */
+    private enum class SinkOutcome {
+        /** The sink recorded the event (or deliberately dropped it by policy). */
+        CONSUMED,
+
+        /** The sink is not ready to record yet; the code stays eligible for a retry. */
+        NOT_CONSUMED,
+
+        /** The sink threw. Retry is suppressed, but nothing was recorded downstream. */
+        THREW
     }
 
     /**

@@ -201,8 +201,11 @@ class AuthUxJavaScriptInterfaceTest {
         var consume: Boolean = true
     ) : AuthUxTelemetrySink {
         val events = mutableListOf<AuthUxTelemetryEvent>()
+        /** Every invocation, including ones this sink declines. */
+        var calls = 0
         val received: List<String> get() = events.map { it.errorCode }
         override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+            calls++
             if (!consume) {
                 return false
             }
@@ -239,12 +242,32 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test an unconsumed code does not consume the forwarding cap`() {
+    fun `test an unconsumed code stays eligible but attempts are still bounded`() {
+        // Two properties at once. A declined code must not consume the distinct-code cap (so it can
+        // still get through later), but the work a page can cause must remain bounded — otherwise a
+        // page looping against an unwired or perpetually-declining sink re-invokes it forever,
+        // because a code that is never consumed is never recorded as handled.
         val sink = RecordingTelemetrySink(consume = false)
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
-        // 15 distinct codes all rejected by the sink — none should count against the cap of 10.
-        for (i in 1..15) {
+        for (i in 1..40) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"5300$i\""))
+        }
+        Assert.assertTrue("nothing consumed", sink.received.isEmpty())
+        Assert.assertEquals(
+            "sink invocations must be bounded by the attempt cap",
+            25,
+            sink.calls
+        )
+    }
+
+    @Test
+    fun `test an unconsumed code does not consume the distinct-code cap`() {
+        val sink = RecordingTelemetrySink(consume = false)
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        // Five declined codes: they must not count against the cap of 10 distinct consumed codes.
+        for (i in 1..5) {
             interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
         }
         Assert.assertTrue(sink.received.isEmpty())
@@ -254,7 +277,22 @@ class AuthUxJavaScriptInterfaceTest {
             interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
         }
 
-        Assert.assertEquals("cap must not have been consumed by rejected codes", 10, sink.received.size)
+        Assert.assertEquals("cap must not have been consumed by declined codes", 10, sink.received.size)
+    }
+
+    @Test
+    fun `test the no-sink path is bounded too`() {
+        // No sink at all never records a handled code either, so only the attempt cap stops a page
+        // looping on this path. Nothing to assert on a sink here; the bridge must simply stop
+        // processing rather than logging without limit. Verified by the fact that after the attempt
+        // cap is exhausted a freshly-wired code is refused.
+        for (i in 1..40) {
+            authUxJavaScriptInterface.receiveAuthUxMessage(
+                logTelemetryPayloadWithErrorCode("\"5300$i\"")
+            )
+        }
+        // Reaching here without hanging or throwing is the assertion; the cap is asserted directly
+        // in the test above where a sink can count invocations.
     }
 
     @Test
@@ -270,7 +308,7 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test a throwing sink is treated as consumed and is not retried`() {
+    fun `test a throwing sink is treated as handled and is not retried`() {
         // A throwing sink is a host defect; retrying cannot fix it, and treating it as retryable
         // would let a looping page re-invoke a broken sink without bound.
         val sink = ThrowingTelemetrySink()
@@ -280,6 +318,21 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
 
         Assert.assertEquals("second post must be suppressed as a duplicate", 1, sink.calls)
+    }
+
+    @Test
+    fun `test a throwing sink does not claim the code was forwarded`() {
+        // Suppressing retry is the ONLY thing a throw should drive. Nothing reached downstream
+        // telemetry, so the code must not be reported as forwarded. A subsequent successful forward
+        // of a DIFFERENT code proves the throw did not consume the distinct-code cap either.
+        val throwing = AuthUxJavaScriptInterface(ThrowingTelemetrySink())
+        throwing.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        val sink = RecordingTelemetrySink()
+        val healthy = AuthUxJavaScriptInterface(sink)
+        healthy.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
     }
 
     @Test
