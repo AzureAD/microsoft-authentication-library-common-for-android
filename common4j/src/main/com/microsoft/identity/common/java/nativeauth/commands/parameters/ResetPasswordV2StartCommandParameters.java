@@ -30,12 +30,12 @@ import lombok.experimental.SuperBuilder;
 /**
  * Parameters for the V2 reset-password start operation.
  * Carries the username that initiates the SSPR flow.
- * Extends {@link BaseNativeAuthCommandParameters}.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class ResetPasswordV2StartCommandParameters extends BaseNativeAuthCommandParameters {
+public class ResetPasswordV2StartCommandParameters extends BaseSignInTokenCommandParameters {
     /**
      * The email address of the user initiating password reset.
      */

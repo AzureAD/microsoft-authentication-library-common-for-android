@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -29,13 +30,13 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * Parameters for the V2 submit-code step of the SSPR flow.
- * Carries the OTP code and the opaque continuation token from the preceding challenge step.
- * Extends {@link BaseNativeAuthCommandParameters}.
+ * Carries the OTP code and the opaque continuation state from the preceding challenge step.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class NativeAuthV2SubmitCodeCommandParameters extends BaseNativeAuthCommandParameters {
+public class NativeAuthV2SubmitCodeCommandParameters extends BaseSignInTokenCommandParameters {
 
     /**
      * The one-time password entered by the user.
@@ -44,10 +45,10 @@ public class NativeAuthV2SubmitCodeCommandParameters extends BaseNativeAuthComma
     public final String code;
 
     /**
-     * The opaque continuation token from the preceding challenge response.
+     * The opaque continuation state from the preceding challenge response.
      */
     @NonNull
-    public final String continuationToken;
+    public final NativeAuthV2ContinuationState continuationState;
 
     @NonNull
     @Override

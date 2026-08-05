@@ -44,9 +44,16 @@ class NativeAuthV2ContinuationState private constructor(
     internal val continuationToken: String,
     internal val links: Map<String, String>,
     internal val scopes: List<String>,
-    internal val correlationId: String,
+    val correlationId: String,
     internal val scenario: NativeAuthV2FlowScenario
 ) : Serializable, ILoggable {
+
+    /**
+     * Returns a defensive copy of the scopes this state was created with, for use in token
+     * requests at flow completion. Controllers outside common4j access scopes only via this method,
+     * keeping the internal [scopes] field opaque.
+     */
+    fun scopesForTokenRequest(): List<String> = ArrayList(scopes)
 
     /**
      * Returns the href retained for [relation], or `null` if that relation was not present, or was

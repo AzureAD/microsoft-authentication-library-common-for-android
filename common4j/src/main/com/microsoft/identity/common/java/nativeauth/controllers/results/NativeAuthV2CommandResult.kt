@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
@@ -44,11 +45,12 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The server has sent a one-time code to the user's registered channel.
+     * [continuationState] is the opaque mid-flow state to be passed back on the submit-code step.
      * Applies to start and resend-code steps.
      */
     data class CodeRequired(
         override val correlationId: String,
-        val continuationToken: String,
+        val continuationState: NativeAuthV2ContinuationState,
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
@@ -62,11 +64,12 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The server has accepted the OTP and is requesting a new password.
+     * [continuationState] is the opaque mid-flow state to be passed back on the submit-new-password step.
      * Applies to the submit-code step.
      */
     data class NewPasswordRequired(
         override val correlationId: String,
-        val continuationToken: String,
+        val continuationState: NativeAuthV2ContinuationState,
     ) : NativeAuthV2SubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NewPasswordRequired(correlationId=$correlationId)"
@@ -78,14 +81,17 @@ interface NativeAuthV2CommandResult {
      * The password reset flow has completed successfully.
      * [authenticationResult] may be non-null when the server returns a sign-in continuation token
      * that was redeemed inline; it is null when no automatic sign-in was performed.
-     * Applies to the submit-new-password step.
+     * Applies to any step that reaches terminal completion.
      */
     data class Complete(
         override val correlationId: String,
         val authenticationResult: ILocalAuthenticationResult?,
         val continuationToken: String?,
         val expiresIn: Int?,
-    ) : NativeAuthV2SubmitNewPasswordCommandResult {
+    ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2ResendCodeCommandResult,
+        NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
 
@@ -94,6 +100,7 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The server rejected the submitted OTP.
+     * [retryState] is the caller's previous continuation state so the same verify step can be retried.
      * Applies to the submit-code step.
      */
     data class IncorrectCode(
@@ -101,6 +108,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val subError: String,
+        val retryState: NativeAuthV2ContinuationState,
     ) : NativeAuthV2SubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -111,6 +119,7 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The supplied password did not meet policy requirements.
+     * [retryState] is the caller's previous continuation state so the same update step can be retried.
      * Applies to the submit-new-password step.
      */
     data class PasswordNotAccepted(
@@ -118,6 +127,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val subError: String,
+        val retryState: NativeAuthV2ContinuationState,
     ) : NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordNotAccepted(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"

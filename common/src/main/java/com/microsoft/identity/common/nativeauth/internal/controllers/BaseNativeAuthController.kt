@@ -47,12 +47,14 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.GenerateShrResult
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.java.util.ported.PropertyBag
 import com.microsoft.identity.common.java.util.StringUtil
 import lombok.EqualsAndHashCode
@@ -330,5 +332,24 @@ abstract class BaseNativeAuthController : BaseController() {
         // sanitize empty and null scopes
         requestScopes.removeAll(listOf("", null))
         return requestScopes.toList()
+    }
+
+    /**
+     * Builds a [NativeAuthOAuth2Strategy] from [parameters]. Shared by V1 and V2 controllers so
+     * neither needs to duplicate the strategy-parameter construction logic.
+     */
+    protected fun createNativeAuthStrategy(parameters: BaseNativeAuthCommandParameters): NativeAuthOAuth2Strategy {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.createNativeAuthStrategy"
+        )
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .challengeTypes(parameters.challengeType)
+            .capabilities(parameters.capabilities)
+            .requestInterceptor(parameters.requestInterceptor)
+            .build()
+        return parameters.authority.createOAuth2Strategy(strategyParameters)
     }
 }

@@ -20,44 +20,35 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.commands.parameters;
+package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import com.microsoft.identity.common.java.util.ThreadUtils
 
 /**
- * Parameters for the V2 resend-code step of the SSPR flow.
- * Carries the opaque continuation state needed to re-trigger the challenge.
- * Extends {@link BaseSignInTokenCommandParameters}.
+ * Abstraction over blocking sleep used in the V2 poll loop, enabling tests to replace the
+ * production implementation with a no-op or recording fake without touching the controller.
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class NativeAuthV2ResendCodeCommandParameters extends BaseSignInTokenCommandParameters {
-
+fun interface NativeAuthV2PollingSleeper {
     /**
-     * The opaque continuation state from the preceding start/challenge response.
+     * Blocks the calling thread for approximately [delayMillis] milliseconds.
+     *
+     * @return `true` if the sleep completed normally; `false` if the thread was interrupted,
+     * signalling the poll loop to stop and surface an interrupted result.
      */
-    @NonNull
-    public final NativeAuthV2ContinuationState continuationState;
+    fun sleep(delayMillis: Long): Boolean
+}
 
-    @NonNull
-    @Override
-    public String toUnsanitizedString() {
-        return "NativeAuthV2ResendCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+/**
+ * Production implementation: delegates to [ThreadUtils.sleepSafely] and checks the thread
+ * interrupted flag afterward.
+ */
+class ProductionNativeAuthV2PollingSleeper : NativeAuthV2PollingSleeper {
+    override fun sleep(delayMillis: Long): Boolean {
+        ThreadUtils.sleepSafely(delayMillis.toInt(), TAG, "V2 poll sleep")
+        return !Thread.currentThread().isInterrupted
     }
 
-    @Override
-    public boolean containsPii() {
-        return !toString().equals(toUnsanitizedString());
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return toUnsanitizedString();
+    private companion object {
+        private val TAG: String = ProductionNativeAuthV2PollingSleeper::class.java.simpleName
     }
 }

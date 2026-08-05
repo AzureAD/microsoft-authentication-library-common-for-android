@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,14 +32,14 @@ import lombok.experimental.SuperBuilder;
 /**
  * Parameters for the V2 submit-new-password step of the SSPR flow.
  * Carries the new password (as a char array to enable clearing after use) and the opaque
- * continuation token from the preceding continue response.
- * Extends {@link BaseNativeAuthCommandParameters}.
+ * continuation state from the preceding continue response.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class NativeAuthV2SubmitNewPasswordCommandParameters extends BaseNativeAuthCommandParameters {
+public class NativeAuthV2SubmitNewPasswordCommandParameters extends BaseSignInTokenCommandParameters {
 
     /**
      * The new password collected from the user. Stored as char[] to allow zeroing after use.
@@ -47,10 +48,10 @@ public class NativeAuthV2SubmitNewPasswordCommandParameters extends BaseNativeAu
     public final char[] newPassword;
 
     /**
-     * The opaque continuation token from the preceding continue response.
+     * The opaque continuation state from the preceding continue response.
      */
     @NonNull
-    public final String continuationToken;
+    public final NativeAuthV2ContinuationState continuationState;
 
     @NonNull
     @Override
