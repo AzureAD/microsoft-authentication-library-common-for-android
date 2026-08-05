@@ -80,6 +80,13 @@ public enum CommonFlight implements IFlightConfig {
     STOP_RETURNING_AAD_RT_BACK_TO_CALLING_APP("StopReturningAadRtBackToCallingApp", false),
 
     /**
+     * Flight to bind broker GET_ACCOUNTS / ACQUIRE_TOKEN_SILENT caller validation to the
+     * OS-verified calling UID (instead of a self-reported package name / redirect URI).
+     * Default-on; acts as an ECS kill-switch for the MSRC 128805 / IcM 31000000668429 fix.
+     */
+    ENABLE_BROKER_CALLER_ID_VALIDATION("EnableBrokerCallerIdValidation", true),
+
+    /**
      * Flight to enable the legacy FIDO security key additional logic. Default is true for common.
      */
     ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC("EnableLegacyFidoSecurityKeyLogic", true),

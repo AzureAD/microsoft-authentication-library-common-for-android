@@ -68,6 +68,30 @@ public interface IPlatformUtil {
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
 
     /**
+     * Validate that the OS-verified calling app (identified by its UID) owns the redirect URI.
+     * <p>
+     * Unlike {@link #isValidCallingApp(String, String)}, the package identity is derived from the
+     * trusted {@code callingUid} (e.g. {@code Binder.getCallingUid()}) rather than a
+     * caller-supplied package name, so it cannot be spoofed via the request bundle. This is the
+     * variant broker IPC entry points must use for caller validation
+     * (MSRC 128805 / IcM 31000000668429).
+     * <p>
+     * The default implementation resolves a single package name from the UID; platforms that can
+     * enumerate all packages sharing a UID should override this with shared-UID-aware logic.
+     *
+     * @param redirectUri the redirect URI supplied by the caller.
+     * @param callingUid  the OS-verified UID of the calling app.
+     * @return true if the calling app owns the redirect URI; false (fail-closed) otherwise.
+     */
+    default boolean isValidCallingApp(@NonNull final String redirectUri, final int callingUid) {
+        final String packageName = getPackageNameFromUid(callingUid);
+        if (packageName == null || packageName.isEmpty()) {
+            return false;
+        }
+        return isValidCallingApp(redirectUri, packageName);
+    }
+
+    /**
      * Validates that the calling uid belongs to an acceptable app for web apps.
      *
      * @param callingUid the calling uid to validate

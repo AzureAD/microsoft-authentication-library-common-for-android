@@ -106,6 +106,13 @@ public class BrokerOAuth2TokenCache
     private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
+    /**
+     * SECURITY (MSRC 128805 / IcM 31000000668429): when false, this cache instance must never serve
+     * the device-wide shared FoCI cache (accounts or refresh tokens) to its caller. Bound at
+     * construction from the broker's isAuthorizedToShareTokens(uid) for the getAccounts and silent
+     * request paths; defaults true for all other/legacy construction so behavior is unchanged.
+     */
+    private final boolean mSharedFociAccessAllowed;
     private ProcessUidCacheFactory mDelegate = null;
 
     /**
@@ -149,6 +156,22 @@ public class BrokerOAuth2TokenCache
     public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
                                   int uid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
+        this(components, uid, applicationMetadataCache, true);
+    }
+
+    /**
+     * Constructs a new BrokerOAuth2TokenCache.
+     *
+     * @param components               The current platform components.
+     * @param uid                      UID of the current unix user.
+     * @param applicationMetadataCache The metadata cache to use.
+     * @param sharedFociAccessAllowed  When false, the device-wide shared FoCI cache is never served
+     *                                 to this caller (MSRC 128805 / IcM 31000000668429).
+     */
+    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
+                                  int uid,
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  final boolean sharedFociAccessAllowed) {
         super(components);
 
         Logger.verbose(
@@ -159,6 +182,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mFociCache = initializeFociCache(getComponents());
         mApplicationMetadataCache = applicationMetadataCache;
+        mSharedFociAccessAllowed = sharedFociAccessAllowed;
     }
 
     /**
@@ -205,6 +229,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mDelegate = delegate;
         mFociCache = fociCache;
+        mSharedFociAccessAllowed = true;
     }
 
     /**
@@ -855,9 +880,15 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
                 if (null != metadata.getFoci() && !containsFoci) {
-                    // Add the foci cache, but only once...
-                    result.add(mFociCache);
-                    containsFoci = true;
+                    // SECURITY (MSRC 128805 / IcM 31000000668429): the shared FoCI cache is device-wide.
+                    // Only include it for a caller authorized to share family tokens; otherwise a caller
+                    // naming a family clientId it does not own could enumerate the family's accounts.
+                    // containsFoci tracks whether the result actually contains mFociCache, so it is set
+                    // only when the cache is added (an unauthorized caller never has it added).
+                    if (mSharedFociAccessAllowed) {
+                        containsFoci = true;
+                        result.add(mFociCache);
+                    }
                 } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
                     final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
@@ -905,12 +936,15 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         localAccountId
                 );
-            } else {
+            } else if (mSharedFociAccessAllowed) {
                 return mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+            } else {
+                // SECURITY (MSRC 128805): caller not authorized for the shared FoCI cache.
+                return null;
             }
         } else {
             AccountRecord result = null;
@@ -959,12 +993,15 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         localAccountId
                 );
-            } else {
+            } else if (mSharedFociAccessAllowed) {
                 return mFociCache.getAccountWithAggregatedAccountDataByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+            } else {
+                // SECURITY (MSRC 128805): caller not authorized for the shared FoCI cache.
+                return null;
             }
         } else {
             ICacheRecord result = null;
@@ -1076,6 +1113,14 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
+                // SECURITY (MSRC 128805): the env-scoped lookup falls back to the shared FoCI cache
+                // when the caller has no own entry. Exclude it when the caller is not authorized to
+                // read the shared FoCI cache.
+                if (!mSharedFociAccessAllowed) {
+                    Logger.verbose(TAG + methodName,
+                            "Excluding shared FoCI cache on env-scoped path (own-accounts read).");
+                    return new ArrayList<>();
+                }
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
@@ -1536,12 +1581,15 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         homeAccountId
                 );
-            } else {
+            } else if (mSharedFociAccessAllowed) {
                 return mFociCache.getAccountByHomeAccountId(
                         environment,
                         clientId,
                         homeAccountId
                 );
+            } else {
+                // SECURITY (MSRC 128805): caller not authorized for the shared FoCI cache.
+                return null;
             }
         } else {
             AccountRecord result = null;

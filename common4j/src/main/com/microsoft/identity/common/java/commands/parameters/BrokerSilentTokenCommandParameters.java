@@ -129,11 +129,22 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
         }
-        if (!platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
+        // SECURITY (MSRC 128805 / IcM 31000000668429): validate the redirect URI against the
+        // OS-verified calling UID rather than the self-reported caller package name. The bundle's
+        // callerPackageName/redirectUri are attacker-controlled, so the legacy
+        // isValidCallingApp(redirectUri, callerPackageName) check could be satisfied with a
+        // victim app's public values. Binding to getCallerUid() (set from Binder.getCallingUid())
+        // closes that gap. Gated by an ECS kill-switch; when disabled we fall back to the prior
+        // package-name-based check.
+        final boolean isValidCaller = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_BROKER_CALLER_ID_VALIDATION)
+                ? platformUtil.isValidCallingApp(getRedirectUri(), getCallerUid())
+                : platformUtil.isValidCallingApp(getRedirectUri(), getCallerPackageName());
+        if (!isValidCaller) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mRedirectUri", "The redirect URI doesn't match the uri" +
-                    " generated with caller package name and signature"
+                    " generated with the calling app's package name and signature"
             );
         }
     }

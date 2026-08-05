@@ -162,6 +162,44 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         return isValidBrokerRedirect;
     }
 
+    /**
+     * Validates the caller against the OS-verified {@code callingUid} instead of a self-reported
+     * package name (MSRC 128805 / IcM 31000000668429).
+     * <p>
+     * Android permits multiple packages to share a UID via {@code android:sharedUserId}, and
+     * legitimate first-party apps historically do. The caller is therefore considered valid if the
+     * supplied {@code redirectUri} matches the broker redirect derived from the real signing
+     * certificate of <em>any</em> package that actually shares the caller's UID. Because the UID is
+     * supplied by Binder (not the request bundle), a spoofed package name / redirect can no longer
+     * satisfy the check. Fails closed if the UID cannot be resolved to any package.
+     */
+    @Override
+    public boolean isValidCallingApp(@NonNull final String redirectUri, final int callingUid) {
+        final String methodTag = TAG + ":isValidCallingApp(uid)";
+
+        if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
+            Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. " + redirectUri);
+            return true;
+        }
+
+        final String[] packageNames = mContext.getPackageManager().getPackagesForUid(callingUid);
+        if (packageNames == null || packageNames.length == 0) {
+            Logger.error(methodTag, "No package found for calling uid [" + callingUid + "]. Rejecting.", null);
+            return false;
+        }
+
+        for (final String packageName : packageNames) {
+            if (isValidCallingApp(redirectUri, packageName)) {
+                return true;
+            }
+        }
+
+        Logger.error(methodTag,
+                "The redirect URI does not match any package sharing the calling uid [" + callingUid + "].",
+                null);
+        return false;
+    }
+
     @Override
     public void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException {
         // This operation is not supported in non-broker contexts.
