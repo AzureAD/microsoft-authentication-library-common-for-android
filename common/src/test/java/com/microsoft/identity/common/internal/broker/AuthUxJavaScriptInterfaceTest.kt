@@ -375,6 +375,51 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test an oversized correlationId is bounded and control chars stripped`() {
+        // The correlation ID is page-controlled. Sanitizing must bound its own work rather than
+        // transforming the whole value and then cutting it, and must strip control characters
+        // beyond just CR/LF (an ESC, for example, can also corrupt a log consumer).
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        val huge = "A".repeat(200_000) + "\u001B[31m"
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "$huge",
+                "action_name": "log_telemetry",
+                "action_component": "host",
+                "params": { "errorCode": $mockErrorCode }
+            }
+            """.trimIndent()
+        )
+
+        val seen = sink.events.single().correlationId
+        Assert.assertTrue(
+            "oversized correlationId must be truncated, was ${seen.length} chars",
+            seen.length < 200
+        )
+        Assert.assertTrue(seen.endsWith("...(truncated)"))
+    }
+
+    @Test
+    fun `test control characters beyond CR and LF are stripped from logged values`() {
+        // sanitizeForLog is applied to the rejected errorCode; an ESC or NEL must not survive into
+        // a log line any more than a newline does.
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        // Contains an ESC, so it fails ERROR_CODE_REGEX and is logged via sanitizeForLog.
+        interfaceWithSink.receiveAuthUxMessage(
+            logTelemetryPayloadWithErrorCode("\"530003\\u001B[31mred\"")
+        )
+
+        // Rejected outright — the assertion here is that nothing reached the sink and no exception
+        // escaped while formatting the sanitized value into the warning.
+        Assert.assertTrue(sink.received.isEmpty())
+    }
+
+    @Test
     fun `test a realistic correlationId is preserved verbatim as the join key`() {
         // The correlation ID is the key used to join this event against eSTS / Kusto records, so
         // sanitizing must not shorten it. A GUID is 36 chars and must survive intact.

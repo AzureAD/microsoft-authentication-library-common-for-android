@@ -200,19 +200,38 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         private const val MAX_CORRELATION_ID_LENGTH = 128
 
         /**
+         * Copy at most [limit] characters of an untrusted, page-supplied string, replacing any
+         * control character with a space so a crafted value cannot forge log entries, and appending
+         * a marker when the input was longer.
+         *
+         * Walks at most [limit] characters rather than transforming the whole string and then
+         * cutting it, so the work done here is bounded by the limit instead of by the size of the
+         * page-supplied value. (The value itself is already materialized by the time the bridge is
+         * called, so this bounds our own processing, not the caller's allocation.)
+         */
+        private fun sanitizeBounded(value: String, limit: Int): String {
+            val kept = minOf(value.length, limit)
+            val builder = StringBuilder(kept)
+            for (i in 0 until kept) {
+                val c = value[i]
+                builder.append(if (c.isISOControl()) ' ' else c)
+            }
+            if (value.length > limit) {
+                builder.append("...(truncated)")
+            }
+            return builder.toString()
+        }
+
+        /**
          * Bound an untrusted, page-supplied string before it reaches a log line: truncate to
-         * [MAX_LOGGED_VALUE_LENGTH] and strip CR/LF so a crafted value cannot forge log entries.
+         * [MAX_LOGGED_VALUE_LENGTH] and strip control characters (including CR/LF) so a crafted
+         * value cannot forge log entries.
          */
         private fun sanitizeForLog(value: String?): String {
             if (value == null) {
                 return "null"
             }
-            val flattened = value.replace('\n', ' ').replace('\r', ' ')
-            return if (flattened.length <= MAX_LOGGED_VALUE_LENGTH) {
-                flattened
-            } else {
-                flattened.substring(0, MAX_LOGGED_VALUE_LENGTH) + "...(truncated)"
-            }
+            return sanitizeBounded(value, MAX_LOGGED_VALUE_LENGTH)
         }
 
         /**
@@ -226,14 +245,8 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * entries, and only absurd lengths — well past any real correlation ID — are cut, since
          * such a value is not a usable key anyway.
          */
-        private fun sanitizeCorrelationId(value: String): String {
-            val flattened = value.map { if (it.isISOControl()) ' ' else it }.joinToString("")
-            return if (flattened.length <= MAX_CORRELATION_ID_LENGTH) {
-                flattened
-            } else {
-                flattened.substring(0, MAX_CORRELATION_ID_LENGTH) + "...(truncated)"
-            }
-        }
+        private fun sanitizeCorrelationId(value: String): String =
+            sanitizeBounded(value, MAX_CORRELATION_ID_LENGTH)
 
         fun getInterfaceName(): String {
             return JAVASCRIPT_INTERFACE_NAME
