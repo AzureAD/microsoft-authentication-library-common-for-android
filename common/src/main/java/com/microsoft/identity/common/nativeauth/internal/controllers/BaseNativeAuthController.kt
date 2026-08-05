@@ -59,7 +59,6 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag
 import com.microsoft.identity.common.java.util.StringUtil
 import lombok.EqualsAndHashCode
 import java.net.URL
-import java.util.List
 
 /**
  * The implementation of the basis for MSAL native authentication.
