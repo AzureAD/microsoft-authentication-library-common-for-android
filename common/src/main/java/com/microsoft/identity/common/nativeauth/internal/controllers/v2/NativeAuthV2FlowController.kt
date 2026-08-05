@@ -469,8 +469,8 @@ class NativeAuthV2FlowController(
      */
     private fun mapInteractionError(result: NativeAuthV2InteractionApiResult): INativeAuthCommandResult.APIError {
         Logger.warnWithObject(TAG, result.correlationId, "Unexpected interaction result: ", result)
-        val error: String
-        val errorDescription: String
+        val error: String?
+        val errorDescription: String?
         val errorCodes: List<Int>?
         if (result is ApiErrorResult) {
             error = result.error
