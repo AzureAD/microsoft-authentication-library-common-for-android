@@ -137,7 +137,7 @@ data class NativeAuthV2HalApiResponse private constructor(
                     ?: halResource.string(CONTINUATION_TOKEN_SNAKE_KEY),
                 state = state,
                 action = actionRaw?.let { NativeAuthV2HalAction(it) },
-                links = flattenFirstHref(halResource.links),
+                links = mergeEntryLinks(halResource),
                 methods = halResource.embeddedResources(METHODS_RELATION).map { toEmbeddedAuthMethod(it) },
                 codeLength = halResource.int(CODE_LENGTH_KEY),
                 challengeTargetLabel = halResource.string(HINT_KEY),
@@ -159,6 +159,33 @@ data class NativeAuthV2HalApiResponse private constructor(
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
             links.mapNotNull { (relation, halLinks) -> halLinks.firstOrNull()?.let { relation to it.href } }
                 .toMap()
+
+        /**
+         * Flat top-level link properties (snake_case) the authorize-challenge *start* response
+         * returns as siblings of `continuation_token`, rather than under a HAL `_links` object,
+         * mapped to this SDK's relation keys.
+         */
+        private val FLAT_ENTRY_LINK_PROPERTIES: Map<String, String> = mapOf(
+            "reset_password" to NativeAuthV2LinkRelation.RESET_PASSWORD.value,
+            "sign_in" to NativeAuthV2LinkRelation.SIGN_IN.value,
+            "sign_up" to NativeAuthV2LinkRelation.SIGN_UP.value
+        )
+
+        /**
+         * Builds the relation-to-href map from both wire shapes the service uses: the flat
+         * top-level entry links returned by authorize-challenge start, and standard HAL `_links`
+         * used by mid-flow responses. HAL `_links` take precedence on a relation collision.
+         */
+        private fun mergeEntryLinks(halResource: HalResource): Map<String, String> {
+            val links = LinkedHashMap<String, String>()
+            FLAT_ENTRY_LINK_PROPERTIES.forEach { (property, relation) ->
+                halResource.string(property)?.takeIf { it.isNotBlank() }?.let { href ->
+                    links[relation] = href
+                }
+            }
+            links.putAll(flattenFirstHref(halResource.links))
+            return links
+        }
 
         private fun extractServerError(halResource: HalResource): HalServerError? {
             val errorMap = halResource.properties[ERROR_KEY] as? Map<*, *> ?: return null

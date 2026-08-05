@@ -62,6 +62,37 @@ class NativeAuthV2ResponseParserTest {
         assertTrue(unsupported.errorDescription.contains("mystery-action"))
     }
 
+    @Test
+    fun parseAuthorizeChallenge_whenEntryLinksAreFlatSnakeCaseProperties_returnsContinuationRequired() {
+        // The authorize-challenge start response returns the entry links as flat top-level
+        // snake_case properties (siblings of continuation_token), not under a HAL `_links` object.
+        val response = responseFrom(
+            """
+            {
+              "continuation_token": "flow-token",
+              "reset_password": "/tenant/api/v0.1/auth/resetpassword?dc=TEST",
+              "sign_in": "/tenant/api/v0.1/signin/start?dc=TEST",
+              "sign_up": "/tenant/api/v0.1/signup/start?dc=TEST"
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.ContinuationRequired)
+        val continuation = result as AuthorizeChallengeApiResult.ContinuationRequired
+        assertEquals("flow-token", continuation.continuationState.continuationToken)
+        assertEquals(
+            "/tenant/api/v0.1/auth/resetpassword?dc=TEST",
+            continuation.continuationState.href(NativeAuthV2LinkRelation.RESET_PASSWORD)
+        )
+    }
+
     private fun responseFrom(json: String): NativeAuthV2HalApiResponse =
         NativeAuthV2HalApiResponse.from(
             halResource = HalResource.from(json),
