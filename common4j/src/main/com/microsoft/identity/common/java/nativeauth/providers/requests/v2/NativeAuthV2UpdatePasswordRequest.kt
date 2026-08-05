@@ -31,8 +31,9 @@ import java.net.URL
 /**
  * Represents a request to a Native Auth V2 flow's HAL-resolved `update` endpoint (submitting a new
  * password), and provides a create() function to instantiate the request using the provided
- * parameters. The request URL is resolved from the flow's server-provided `update` link relation
- * by [com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider]. The
+ * parameters. The request URL is resolved from the flow's server-provided `update` link relation,
+ * or from `self` when `update` is absent, by
+ * [com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider]. The
  * body is JSON, using the wire's own camelCase field names. This request is sent with HTTP PUT,
  * verified explicitly by the calling interactor rather than represented as a value on this class.
  */

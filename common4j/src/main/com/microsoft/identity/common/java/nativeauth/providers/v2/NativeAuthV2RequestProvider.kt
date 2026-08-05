@@ -171,7 +171,8 @@ class NativeAuthV2RequestProvider(
 
     /**
      * Creates the request object for a flow's `update` call, resolved via the
-     * [NativeAuthV2LinkRelation.UPDATE] relation on [state]. [newPassword] is passed through as
+     * [NativeAuthV2LinkRelation.UPDATE] relation on [state] and falling back to
+     * [NativeAuthV2LinkRelation.SELF] when `update` is absent. [newPassword] is passed through as
      * the caller's own array, not copied, so the interactor's `finally` block can clear the same
      * buffer it passed in.
      */
@@ -182,7 +183,11 @@ class NativeAuthV2RequestProvider(
             methodName = "$TAG.createUpdatePasswordRequest"
         )
 
-        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.UPDATE)
+        val requestUrl = state.href(NativeAuthV2LinkRelation.UPDATE)?.let {
+            hrefResolver.resolve(it, state.correlationId)
+        } ?: state.href(NativeAuthV2LinkRelation.SELF)?.let {
+            hrefResolver.resolve(it, state.correlationId)
+        } ?: throw missingRelationException(NativeAuthV2LinkRelation.UPDATE, state.correlationId)
         return NativeAuthV2UpdatePasswordRequest.create(
             clientId = config.clientId,
             continuationToken = state.continuationToken,
