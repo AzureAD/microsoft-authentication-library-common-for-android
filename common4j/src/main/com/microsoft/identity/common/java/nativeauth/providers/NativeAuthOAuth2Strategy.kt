@@ -42,6 +42,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.Nativ
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.jit.JITContinueApiResult
@@ -76,17 +79,34 @@ class NativeAuthOAuth2Strategy(
     private val signUpInteractor: SignUpInteractor,
     private val resetPasswordInteractor: ResetPasswordInteractor,
     private val jitInteractor: JITInteractor,
+    private val nativeAuthV2Interactor: NativeAuthV2Interactor,
 ) :
     MicrosoftStsOAuth2Strategy(config, strategyParameters) {
     private val TAG = NativeAuthOAuth2Strategy::class.java.simpleName
     //Cache identifier returned by the mock API
     private val CACHE_IDENTIFIER_MOCK = "login.windows.net"
-    private val nativeAuthV2Interactor = NativeAuthV2Interactor(
-        httpClient = UrlConnectionHttpClient.getDefaultInstance(),
-        requestProvider = NativeAuthV2RequestProvider(config = config),
-        responseHandler = NativeAuthV2ResponseHandler(),
-        responseParser = NativeAuthV2ResponseParser(),
-        requestInterceptor = config.requestInterceptor
+
+    constructor(
+        strategyParameters: OAuth2StrategyParameters,
+        config: NativeAuthOAuth2Configuration,
+        signInInteractor: SignInInteractor,
+        signUpInteractor: SignUpInteractor,
+        resetPasswordInteractor: ResetPasswordInteractor,
+        jitInteractor: JITInteractor,
+    ) : this(
+        strategyParameters = strategyParameters,
+        config = config,
+        signInInteractor = signInInteractor,
+        signUpInteractor = signUpInteractor,
+        resetPasswordInteractor = resetPasswordInteractor,
+        jitInteractor = jitInteractor,
+        nativeAuthV2Interactor = NativeAuthV2Interactor(
+            httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+            requestProvider = NativeAuthV2RequestProvider(config = config),
+            responseHandler = NativeAuthV2ResponseHandler(),
+            responseParser = NativeAuthV2ResponseParser(),
+            requestInterceptor = config.requestInterceptor
+        )
     )
 
     /**
@@ -298,6 +318,96 @@ class NativeAuthOAuth2Strategy(
             entryRelation = entryRelation,
             scenario = scenario,
             scopes = scopes
+        )
+    }
+
+    /**
+     * Continues a V2 Native Auth authorize-challenge flow.
+     */
+    fun performAuthorizeChallengeContinue(
+        state: NativeAuthV2ContinuationState
+    ): AuthorizeChallengeApiResult {
+        return nativeAuthV2Interactor.performAuthorizeChallengeContinue(state = state)
+    }
+
+    /**
+     * Starts the V2 Native Auth reset-password flow.
+     */
+    fun performResetPasswordStart(
+        username: String,
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performResetPasswordStart(
+            username = username,
+            state = state
+        )
+    }
+
+    /**
+     * Performs a V2 Native Auth challenge request.
+     */
+    fun performChallenge(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performChallenge(state = state)
+    }
+
+    /**
+     * Performs a V2 Native Auth resend request.
+     */
+    fun performResend(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performResend(state = state)
+    }
+
+    /**
+     * Performs a V2 Native Auth verify request.
+     */
+    fun performVerify(
+        state: NativeAuthV2ContinuationState,
+        otp: String
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performVerify(
+            state = state,
+            otp = otp
+        )
+    }
+
+    /**
+     * Performs a V2 Native Auth update-password request.
+     */
+    fun performUpdatePassword(
+        state: NativeAuthV2ContinuationState,
+        newPassword: CharArray
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performUpdatePassword(
+            state = state,
+            newPassword = newPassword
+        )
+    }
+
+    /**
+     * Performs a V2 Native Auth poll request.
+     */
+    fun performPoll(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performPoll(state = state)
+    }
+
+    /**
+     * Exchanges a V2 Native Auth authorization code for tokens.
+     */
+    fun performTokenRequest(
+        code: String,
+        scopes: List<String>,
+        correlationId: String
+    ): SignInTokenApiResult {
+        return nativeAuthV2Interactor.performTokenRequest(
+            code = code,
+            scopes = scopes,
+            correlationId = correlationId
         )
     }
 
