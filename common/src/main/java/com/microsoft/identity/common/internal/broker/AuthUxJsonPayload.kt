@@ -58,7 +58,10 @@ data class AuthUxJsonPayload(
  * @property version Payload schema version (`v`) of the telemetry contract. Typed as a string, not
  *  an integer: `v` is the one field explicitly designed to change over time, and Gson throws on a
  *  type mismatch — which would drop the ENTIRE message (including `errorCode`) if the page ever
- *  sent `"1.0"` or `"v2"`. Gson coerces a JSON number to a string, so this direction has no cliff.
+ *  sent `"1.0"` or `"v2"`. Gson coerces any JSON primitive (number, boolean, string) to a string,
+ *  so every realistic version shape parses. A structured value (`{major: 2}` or `[2]`) still
+ *  throws and drops the message; that shape is not part of the contract and is not defended
+ *  against here.
  * @property errorCode Opaque Auth UX server error code (e.g. an STS error code such as "530003")
  *  carried by the `log_telemetry` action. Treated as an opaque telemetry value only; it is never
  *  used to drive client behavior. Optional/nullable — its absence results in a no-op. Captured as a
