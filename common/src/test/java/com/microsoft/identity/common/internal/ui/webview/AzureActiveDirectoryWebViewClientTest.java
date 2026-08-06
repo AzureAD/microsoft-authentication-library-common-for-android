@@ -2007,33 +2007,6 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * AB#3688632: the recorder is shared with broker4j and the {@code x-ms-clitelem} parsers, so its
-     * blocking-errors list must stay append-only and chronological. A → B → A must keep all three
-     * entries and report A as {@code last_blocking_error} — the user ended the flow blocked on A.
-     * De-duplicating here would have re-attributed the block to B.
-     */
-    @Test
-    public void testRecorderBlockingErrors_AreChronologicalNotDeduped() throws Exception {
-        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
-                newRecorder();
-
-        recorder.addBlockingError("530003");
-        recorder.addBlockingError("53003");
-        recorder.addBlockingError("530003");
-
-        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
-        final org.json.JSONArray errors = blob.getJSONArray(
-                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
-        assertEquals("repeats must be preserved for other callers", 3, errors.length());
-        assertEquals("530003", errors.getString(0));
-        assertEquals("53003", errors.getString(1));
-        assertEquals("530003", errors.getString(2));
-        assertEquals("last_blocking_error must be the last block OBSERVED", "530003",
-                blob.getString(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                        .LAST_BLOCKING_ERROR));
-    }
-
-    /**
      * AB#3688632: when the recorder throws, the sink must NOT claim the code was forwarded. It
      * propagates so the bridge's own handling suppresses retry without setting the span attribute
      * or logging a "Forwarded" line — swallowing it here would produce a span that lies.
@@ -2109,6 +2082,43 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         Mockito.verify(mockWebView)
                 .evaluateJavascript(Mockito.contains("postMessageToBroker"), Mockito.any());
+    }
+
+    /**
+     * AB#3688632: a failed append must not leave the code marked as forwarded. The bridge's own
+     * suppression is per-instance and {@code onPageStarted} rebuilds it every navigation, so the
+     * page can legitimately offer the same code again on the next page load. If the throwing attempt
+     * had poisoned the de-duplication set, that offer would short-circuit to "already forwarded" and
+     * the bridge would set the span attribute and log "Forwarded" for telemetry that never existed.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_ThrowDoesNotPoisonDedupeSet() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
+                Mockito.mock(
+                        com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
+        Mockito.doThrow(new IllegalStateException("recorder boom"))
+                .when(throwing).addBlockingError(Mockito.anyString());
+        mWebViewClient.setOnboardingTelemetryRecorder(throwing);
+
+        try {
+            mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+            fail("expected the throwing recorder to propagate");
+        } catch (final IllegalStateException expected) {
+            // expected — the first attempt fails
+        }
+
+        // Next navigation: a healthy recorder is attached and the page re-offers the same code.
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder healthy =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(healthy);
+        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(healthy.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("the retry must actually record, not short-circuit as already-forwarded",
+                1, errors.length());
+        assertEquals("530003", errors.getString(0));
     }
 
     /** Builds a real recorder over a minimal seed; shared by the onboarding-telemetry tests. */

@@ -186,14 +186,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private volatile OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
 
     /**
-     * Auth UX server error codes already forwarded to the onboarding recorder during this
-     * authorization request.
+     * Auth UX server error codes already forwarded to the onboarding recorder by this client.
      *
-     * Scoped to this WebView client, which is constructed once per authorization request and
-     * outlives every navigation within it — unlike the JS bridge, which
+     * Scoped to the lifetime of this WebView client — one per authorization request, and it outlives
+     * every navigation within that request, unlike the JS bridge, which
      * {@code OAuth2WebViewClient#onPageStarted} rebuilds on each page load and which therefore only
      * de-duplicates within a single page. Without this, a redirect-heavy flow reports the same
-     * server error once per page load (an on-device run produced {@code ["530003","530003"]}).
+     * server error once per page load (an on-device run produced {@code ["530003","530003"]}). A
+     * rebuilt client starts a fresh set; in practice that does not happen mid-request, since
+     * {@code AuthorizationActivity} handles the configuration changes that would otherwise recreate
+     * it, and on process death the recorder does not survive either.
+     *
+     * A code is entered only when it is genuinely handed to the recorder: if the append throws, the
+     * entry is retracted so the code is not falsely reported as forwarded on a later offer.
      *
      * Deliberately kept here rather than in {@link OnboardingTelemetryRecorder}: that recorder's
      * {@code blocking_errors} list is shared with broker4j and the {@code x-ms-clitelem} parsers and
@@ -1920,12 +1925,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *              id, session / page / tracking ids and contract version — are carried so they can
      *              be recorded without another change to the sink contract.
      * @return {@code true} when the code was handed to a recorder, deliberately dropped as
-     *         non-blocking, or already forwarded during this request; {@code false} when there is
+     *         non-blocking, or already forwarded by this client; {@code false} when there is
      *         no recorder yet — which keeps the code eligible for a retry once the host attaches
      *         one, instead of the bridge suppressing it as already-handled. Never returns
      *         {@code true} for a code that failed to reach the recorder: a throwing recorder
-     *         propagates, and the bridge's own handling suppresses retry without claiming the code
-     *         was forwarded.
+     *         propagates rather than being reported as forwarded, and the failed code is retracted
+     *         from the de-duplication set so a later offer is not short-circuited either.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
@@ -1950,10 +1955,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // instance. Consumed — re-appending would duplicate it in the uploaded blob.
             return true;
         }
-        // Deliberately not wrapped: if the recorder throws, the bridge's own handler suppresses
-        // retry WITHOUT setting the span attribute or logging a "Forwarded" line, which is the
-        // honest outcome. Swallowing it here would return true and produce a span that lies.
-        recorder.addBlockingError(errorCode);
+        // The claim staked by the add() above is retracted unless the append actually succeeds.
+        // Leaving it in place after a throw would mark the code forwarded when nothing was
+        // recorded, so a later navigation's offer would short-circuit to "already forwarded" and
+        // the bridge would set the span attribute and log "Forwarded" for telemetry that never
+        // existed — the same "span that lies" this method's propagation is meant to prevent, just
+        // displaced by one page load.
+        //
+        // try/finally rather than catch/rethrow: nothing is swallowed, the throw still propagates
+        // into the bridge's THREW handling (which suppresses retry for this page load without
+        // claiming success), and the cleanup covers any abnormal exit, not only RuntimeException.
+        boolean recorded = false;
+        try {
+            recorder.addBlockingError(errorCode);
+            recorded = true;
+        } finally {
+            if (!recorded) {
+                mForwardedAuthUxErrorCodes.remove(errorCode);
+            }
+        }
         return true;
     }
 }

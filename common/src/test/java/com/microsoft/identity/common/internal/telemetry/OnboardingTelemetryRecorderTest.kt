@@ -141,6 +141,31 @@ class OnboardingTelemetryRecorderTest {
     }
 
     @Test
+    fun testFinalizeBlob_RepeatedBlockingError_IsChronologicalNotDeduped() {
+        // This list is shared with broker4j (InteractiveRequestAcquireTokenErrorHandler) and the
+        // x-ms-clitelem parsers, so it is contractually append-only and chronological. A -> B -> A
+        // is a real CA-remediation shape: the user ends the flow blocked on A, so last_blocking_error
+        // must be A. De-duplicating here would silently re-attribute the block to B on the field
+        // dashboards key off. A caller that must not report a repeat de-duplicates on its own side —
+        // AzureActiveDirectoryWebViewClient does so for the Auth UX JS bridge.
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("53003")
+        recorder.addBlockingError("530003")
+
+        val blob = JSONObject(recorder.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals("repeats must be preserved for other callers", 3, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
+        Assert.assertEquals("53003", errors.getString(1))
+        Assert.assertEquals("530003", errors.getString(2))
+        Assert.assertEquals(
+            "last_blocking_error must be the last block OBSERVED",
+            "530003",
+            blob.getString("last_blocking_error")
+        )
+    }
+
+    @Test
     fun testFinalizeBlob_ContainsSeedFields() {
         recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
 
