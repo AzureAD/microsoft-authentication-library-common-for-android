@@ -120,8 +120,9 @@ public class BrokerOAuth2TokenCache
      * each loader / device-wide enumeration call site ({@link #load},
      * {@link #loadWithAggregatedAccountData}, {@link #saveAndLoadAggregatedAccountDataOptimized},
      * {@link #loadAggregatedAccountData}, {@link #getAccounts()}, {@link #getFociCacheRecords()}).
-     * Defaults to {@code true} via the ctors that omit it, preserving pre-existing behavior
-     * for non-broker call paths and existing tests. See AB#3687466.
+     * Must be supplied explicitly by every production constructor — there is deliberately no
+     * convenience overload that omits it, so a missed wiring fails at compile time rather than
+     * silently reverting to pre-fix behavior. See AB#3687466.
      */
     private final boolean mCallerAuthorizedForFoci;
     private ProcessUidCacheFactory mDelegate = null;
@@ -156,19 +157,6 @@ public class BrokerOAuth2TokenCache
     private static final Map<String, SharedPreferencesAccountCredentialCacheWithMemoryCache>
             inMemoryCacheMapByStorage = new ConcurrentHashMap<>();
 
-
-    /**
-     * Constructs a new BrokerOAuth2TokenCache.
-     *
-     * @param components               The current platform components.
-     * @param uid                      UID of the current unix user.
-     * @param applicationMetadataCache The metadata cache to use.
-     */
-    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
-                                  int uid,
-                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
-        this(components, uid, applicationMetadataCache, /* callerAuthorizedForFoci= */ true);
-    }
 
     /**
      * Constructs a new BrokerOAuth2TokenCache with an explicit FoCI-read authorization gate.

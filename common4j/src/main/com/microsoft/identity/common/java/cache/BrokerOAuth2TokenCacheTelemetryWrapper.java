@@ -68,8 +68,9 @@ public class BrokerOAuth2TokenCacheTelemetryWrapper
     public BrokerOAuth2TokenCacheTelemetryWrapper(@NonNull final IPlatformComponents mPlatformComponents,
                                                   int uid,
                                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
-                                                  @NonNull final BrokerOAuth2TokenCache cacheToWrap) {
-        super(mPlatformComponents, uid, applicationMetadataCache);
+                                                  @NonNull final BrokerOAuth2TokenCache cacheToWrap,
+                                                  final boolean callerAuthorizedForFoci) {
+        super(mPlatformComponents, uid, applicationMetadataCache, callerAuthorizedForFoci);
         mCacheToWrap = cacheToWrap;
     }
 

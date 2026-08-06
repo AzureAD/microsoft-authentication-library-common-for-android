@@ -937,10 +937,12 @@ public class BrokerOAuth2TokenCacheTest {
 
     /**
      * Regression: BrokerOAuth2TokenCacheTelemetryWrapper must delegate getFociCacheRecords()
-     * (and isCallerAuthorizedForFoci()) to the wrapped cache. Without the override the wrapper's
-     * inherited default authorization (true) would apply, defeating the caller-authorized gate
-     * that broker orchestration configured on the wrapped instance and allowing device-wide
-     * shared FoCI enumeration through the wrapper (AB#3687466).
+     * (and isCallerAuthorizedForFoci()) to the wrapped cache. The wrapper's own
+     * mCallerAuthorizedForFoci is set from its ctor and — in production — matches the wrapped
+     * cache's gate (BrokerUtil.getBrokerCache threads the same value to both), but the wrapper
+     * still owns a separate instance of the field. Without the explicit delegation, a caller
+     * inspecting the wrapper's inherited FoCI-touching methods could bypass the gate the
+     * wrapped instance was configured with. This test pins the delegation contract (AB#3687466).
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -950,7 +952,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                unauthorizedAppBCache
+                unauthorizedAppBCache,
+                /* callerAuthorizedForFoci= */ false
         );
 
         assertFalse(wrapper.isCallerAuthorizedForFoci());
@@ -963,7 +966,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                authorizedAppBCache
+                authorizedAppBCache,
+                /* callerAuthorizedForFoci= */ true
         );
         assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
         assertFalse(authorizedWrapper.getFociCacheRecords().isEmpty());
@@ -973,10 +977,10 @@ public class BrokerOAuth2TokenCacheTest {
      * Same defense-in-depth invariant as
      * {@link #testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty()} but for the
      * no-arg {@link BrokerOAuth2TokenCacheTelemetryWrapper#getAccounts()} overload. Without the
-     * delegate the wrapper's super {@code getAccounts()} runs on the wrapper's own instance where
-     * {@code mCallerAuthorizedForFoci} is true (3-arg ctor default), quietly reading
-     * {@code mFociCache.getAccountCredentialCache().getAccounts()} regardless of how
-     * {@code mCacheToWrap} was constructed (AB#3687466).
+     * delegate, the wrapper's inherited {@code getAccounts()} would read
+     * {@code mFociCache.getAccountCredentialCache().getAccounts()} against the wrapper's own
+     * inherited field state rather than the wrapped instance's, decoupling the observable
+     * behavior from how {@code mCacheToWrap} was configured (AB#3687466).
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -986,7 +990,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                unauthorizedAppBCache
+                unauthorizedAppBCache,
+                /* callerAuthorizedForFoci= */ false
         );
 
         assertFalse(wrapper.isCallerAuthorizedForFoci());
@@ -999,7 +1004,8 @@ public class BrokerOAuth2TokenCacheTest {
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                authorizedAppBCache
+                authorizedAppBCache,
+                /* callerAuthorizedForFoci= */ true
         );
         assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
         assertFalse(authorizedWrapper.getAccounts().isEmpty());
@@ -1432,7 +1438,8 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents),
+                /* callerAuthorizedForFoci= */ true
         );
 
         assertEquals(
@@ -1443,7 +1450,8 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents),
+                /* callerAuthorizedForFoci= */ true
         );
 
         assertEquals(
