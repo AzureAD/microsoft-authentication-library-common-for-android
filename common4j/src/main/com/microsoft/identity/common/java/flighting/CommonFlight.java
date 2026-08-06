@@ -320,7 +320,30 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * MAM Conditional Access onboarding: remember the UPN across a Conditional-Access "install
+     * Company Portal" interruption, so the interactive request the user makes after installing the
+     * broker can pre-fill it instead of asking them to type their address a second time.
+     * <p>
+     * With the flight off no UPN is stored and no {@code login_hint} is ever added, so the existing
+     * behavior is unchanged. Default off for safe rollout; ramp / kill-switch via ECS.
+     */
+    ENABLE_MAM_CA_UPN_HINT("EnableMamCaUpnHint", false),
+
+    /**
+     * How long a stored MAM Conditional Access UPN hint stays usable, in seconds.
+     * <p>
+     * The window has to span a Company Portal download and install from the Play Store, Company
+     * Portal's first launch and redirect back, the calling app restarting, and the user reaching
+     * their "add account" screen. Three minutes covers that on a normal connection: a hint is only
+     * a pre-fill convenience, so erring short simply means the user types their address, whereas
+     * erring long leaves a stale address on disk for no benefit. Tune per-population via ECS if
+     * real-world telemetry says otherwise - the expiry is evaluated at read time against the write
+     * time, so changing this flight also governs hints already on disk.
+     */
+    MAM_CA_UPN_HINT_TTL_SECONDS("MamCaUpnHintTtlSeconds", 180);
 
     private String key;
     private Object defaultValue;

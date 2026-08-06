@@ -59,6 +59,13 @@ public class AuthorizationErrorResponse implements IErrorResponse{
     private boolean mTokenProtectionRequired;
 
     /**
+     * Set to true when the broker install was triggered by MAM Conditional Access - that is, when
+     * the redirect carried {@code intuneAppProtection=1} - as opposed to an ordinary
+     * device-registration broker install.
+     */
+    private boolean mMamCaInstall;
+
+    /**
      * Constructor of {@link AuthorizationErrorResponse}.
      *
      * @param error            error returned due to Authorization request failure.

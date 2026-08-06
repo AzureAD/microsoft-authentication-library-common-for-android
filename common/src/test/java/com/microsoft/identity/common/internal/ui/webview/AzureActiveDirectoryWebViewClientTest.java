@@ -37,7 +37,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
@@ -56,9 +58,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
@@ -73,6 +77,8 @@ import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightConfig;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -85,6 +91,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -92,6 +99,7 @@ import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
 import java.util.HashMap;
+import java.util.Map;
 
 import io.opentelemetry.api.trace.Span;
 
@@ -1899,6 +1907,161 @@ public class AzureActiveDirectoryWebViewClientTest {
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertFalse("blank URL should not produce a last_loaded_domain entry",
                 blob.has("last_loaded_domain"));
+    }
+
+    // -----------------------------------------------------------------------
+    // MAM Conditional Access: capturing the UPN off the broker-install redirect
+    // -----------------------------------------------------------------------
+
+    private static final String MAM_CA_CLIENT_ID = "4b0db8c2-9f26-4417-8bde-3f0e3656f8e0";
+    private static final String MAM_CA_AUTHORITY_HOST = "login.microsoftonline.com";
+    private static final String MAM_CA_UPN = "someuser@contoso.onmicrosoft.com";
+    private static final String MAM_CA_USERNAME_KEY = "username";
+    private static final String MAM_CA_MARKER_KEY = "intuneAppProtection";
+    private static final String ENCODED_CP_APP_LINK =
+            "https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.microsoft.windowsintune.companyportal";
+    /** Broker-install redirect the service marked as the MAM Conditional Access path. */
+    private static final String TEST_MAM_CA_INSTALL_REQUEST_URL =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&intuneAppProtection=1&app_link="
+                    + ENCODED_CP_APP_LINK;
+    /** The same redirect without the marker: an ordinary device-registration broker install. */
+    private static final String TEST_PLAIN_INSTALL_REQUEST_URL =
+            "msauth://wpj/?username=someuser%40contoso.onmicrosoft.com&app_link=" + ENCODED_CP_APP_LINK;
+
+    /**
+     * Points the flights manager at a provider whose only opinions are the MAM-CA UPN hint flight
+     * and its TTL, so each test states the gate it is exercising. {@code cleanUp} resets the manager.
+     *
+     * @param enabled whether {@link CommonFlight#ENABLE_MAM_CA_UPN_HINT} should report on.
+     */
+    private void setMamCaUpnHintFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_MAM_CA_UPN_HINT)).thenReturn(enabled);
+        when(mockFlightsProvider.getIntValue(CommonFlight.MAM_CA_UPN_HINT_TTL_SECONDS)).thenReturn(180);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    /**
+     * @return a WebView client that knows which app and authority it is authorizing, which is what
+     * the fragment supplies in production.
+     */
+    private AzureActiveDirectoryWebViewClient webViewClientFor(@Nullable final String clientId,
+                                                               @Nullable final String authorityHost) {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                new IAuthorizationCompletionCallback() {
+                    @Override
+                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+                    }
+
+                    @Override
+                    public void setPKeyAuthStatus(boolean status) {
+                    }
+                },
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                    }
+                },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false,
+                null,
+                clientId,
+                authorityHost);
+    }
+
+    /**
+     * The feature itself: the service names the account being onboarded on the install redirect, and
+     * installing Company Portal usually kills this process, so the redirect is handed to the hint
+     * store to be remembered for the app and authority this client is authorizing.
+     * <p>
+     * The whole parameter map is passed on rather than just the address, because the store also
+     * needs the marker that tells it this is the MAM Conditional Access path.
+     */
+    @Test
+    public void testProcessInstallRequest_mamCaInstall_offersTheRedirectToTheHintStore() {
+        setMamCaUpnHintFlight(true);
+
+        try (final MockedStatic<MamUpnHintStore> store = mockStatic(MamUpnHintStore.class)) {
+            webViewClientFor(MAM_CA_CLIENT_ID, MAM_CA_AUTHORITY_HOST)
+                    .shouldOverrideUrlLoading(mMockWebView, TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+            @SuppressWarnings("rawtypes") final ArgumentCaptor<Map> parameters =
+                    ArgumentCaptor.forClass(Map.class);
+            store.verify(() -> MamUpnHintStore.saveUpnHintForMamCaInstall(
+                    any(IPlatformComponents.class),
+                    eq(MAM_CA_CLIENT_ID),
+                    eq(MAM_CA_AUTHORITY_HOST),
+                    parameters.capture()));
+
+            assertEquals("The address the service named must reach the store",
+                    MAM_CA_UPN, parameters.getValue().get(MAM_CA_USERNAME_KEY));
+            assertEquals("The store decides whether this is the MAM-CA path, so the marker must survive",
+                    "1", parameters.getValue().get(MAM_CA_MARKER_KEY));
+        }
+    }
+
+    /**
+     * A caller that never told this client which app and authority it is authorizing still reaches
+     * the store; the store declines rather than writing a hint no app can be matched to. Pins that
+     * the constructors which predate the hint pass null through instead of failing.
+     */
+    @Test
+    public void testProcessInstallRequest_withoutClientIdOrAuthority_stillReachesTheStore() {
+        setMamCaUpnHintFlight(true);
+
+        try (final MockedStatic<MamUpnHintStore> store = mockStatic(MamUpnHintStore.class)) {
+            webViewClientFor(null, null)
+                    .shouldOverrideUrlLoading(mMockWebView, TEST_MAM_CA_INSTALL_REQUEST_URL);
+
+            store.verify(() -> MamUpnHintStore.saveUpnHintForMamCaInstall(
+                    any(IPlatformComponents.class), isNull(), isNull(), any(Map.class)));
+        }
+    }
+
+    /**
+     * The same redirect drives ordinary device-registration installs, which carry a UPN too.
+     * Deciding which ones are the MAM Conditional Access path is the store's job, not this client's,
+     * so an unmarked redirect is still offered - it is the store that declines.
+     */
+    @Test
+    public void testProcessInstallRequest_notMamCaInstall_isStillOfferedAndDeclinedByTheStore() {
+        setMamCaUpnHintFlight(true);
+
+        try (final MockedStatic<MamUpnHintStore> store = mockStatic(MamUpnHintStore.class)) {
+            webViewClientFor(MAM_CA_CLIENT_ID, MAM_CA_AUTHORITY_HOST)
+                    .shouldOverrideUrlLoading(mMockWebView, TEST_PLAIN_INSTALL_REQUEST_URL);
+
+            @SuppressWarnings("rawtypes") final ArgumentCaptor<Map> parameters =
+                    ArgumentCaptor.forClass(Map.class);
+            store.verify(() -> MamUpnHintStore.saveUpnHintForMamCaInstall(
+                    any(IPlatformComponents.class), eq(MAM_CA_CLIENT_ID), eq(MAM_CA_AUTHORITY_HOST),
+                    parameters.capture()));
+
+            assertNull("An unmarked redirect must be recognisable as such by the store",
+                    parameters.getValue().get(MAM_CA_MARKER_KEY));
+        }
+    }
+
+    /**
+     * A device-registration redirect carries a UPN but no install link, so it never becomes a broker
+     * install. Nothing about the account may be remembered for a flow that was not interrupted by an
+     * install: the store is not called at all.
+     */
+    @Test
+    public void testProcessInstallRequest_notABrokerInstall_doesNotTouchTheHintStore() {
+        setMamCaUpnHintFlight(true);
+
+        try (final MockedStatic<MamUpnHintStore> store = mockStatic(MamUpnHintStore.class)) {
+            webViewClientFor(MAM_CA_CLIENT_ID, MAM_CA_AUTHORITY_HOST)
+                    .shouldOverrideUrlLoading(mMockWebView, TEST_DEVICE_REGISTRATION_URL);
+
+            store.verifyNoInteractions();
+        }
     }
 }
 

@@ -105,6 +105,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UnsupportedBrokerException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -349,8 +350,16 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters requestParameters)
             throws BaseException, InterruptedException, ExecutionException {
+        // MAM Conditional Access onboarding: pre-fill the UPN the user gave us before a Conditional
+        // Access "install Company Portal" block interrupted them. This runs on every interactive
+        // request, not only the one that follows an install - it is a no-op unless the flight is on,
+        // the caller left login_hint blank, the caller did not ask the user to pick or create an
+        // account, and a hint stored for this client and authority is still within its TTL.
+        final InteractiveTokenCommandParameters parameters =
+                MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
+
         final AcquireTokenResult result;
         try {
             //Get the broker interactive parameters intent
@@ -381,6 +390,13 @@ public class BrokerMsalController extends BaseController {
                         .putResult(result)
                         .putApiId(TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_INTERACTIVE)
         );
+
+        if (result != null && result.getSucceeded()) {
+            // Signed in, so any remembered UPN has served its purpose and should not linger. This is
+            // where a hint is retired: applying one does not delete it, because the request it was
+            // attached to can still fail.
+            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
+        }
 
         return result;
     }

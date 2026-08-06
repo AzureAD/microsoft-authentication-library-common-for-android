@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -105,9 +106,17 @@ public class LocalMSALController extends BaseController {
 
     @Override
     public AcquireTokenResult acquireToken(
-            @NonNull final InteractiveTokenCommandParameters parameters)
+            @NonNull final InteractiveTokenCommandParameters requestParameters)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodTag = TAG + ":acquireToken";
+
+        // MAM broker-install onboarding: pre-fill the UPN the user gave us before a Conditional
+        // Access "install Company Portal" block interrupted them. This runs on every interactive
+        // request, not only the one that follows an install - it is a no-op unless the flight is on,
+        // the caller left login_hint blank, the caller did not ask the user to pick or create an
+        // account, and a hint stored for this client and authority is still within its TTL.
+        final InteractiveTokenCommandParameters parameters =
+                MamUpnHintStore.applyStoredUpnHintIfAbsent(requestParameters);
 
         Logger.verbose(
                 methodTag,
@@ -174,6 +183,19 @@ public class LocalMSALController extends BaseController {
 
         ResultUtil.logResult(TAG, result);
 
+        // MAM Conditional Access onboarding: if Conditional Access blocked this request until
+        // Company Portal is installed, remember the UPN the server sent back. Installing Company
+        // Portal usually kills this process, so the hint is persisted and pre-filled on the
+        // interactive request the user makes once they return. No-op unless the flight is on and
+        // this failure is specifically the MAM-CA install - an ordinary device-registration broker
+        // install stores nothing.
+        MamUpnHintStore.saveUpnHintForMamCaInstall(
+                parametersWithScopes.getPlatformComponents(),
+                parametersWithScopes.getClientId(),
+                parametersWithScopes.getAuthority(),
+                result.getAuthorizationErrorResponse()
+        );
+
         if (result.getAuthorizationStatus().equals(AuthorizationStatus.SUCCESS)) {
             //3) Exchange authorization code for token
             final TokenResult tokenResult = performTokenRequest(
@@ -234,6 +256,13 @@ public class LocalMSALController extends BaseController {
                         .putResult(acquireTokenResult)
                         .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
         );
+
+        if (acquireTokenResult.getSucceeded()) {
+            // Signed in, so any remembered UPN has served its purpose and should not linger. This is
+            // where a hint is retired: applying one does not delete it, because the request it was
+            // attached to can still fail.
+            MamUpnHintStore.clearUpnHint(parameters.getPlatformComponents(), parameters.getClientId());
+        }
 
         return acquireTokenResult;
     }

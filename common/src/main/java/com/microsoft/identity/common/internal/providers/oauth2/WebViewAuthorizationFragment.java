@@ -95,6 +95,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CLIENT_ID;
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.UTID;
 
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
@@ -371,12 +372,60 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public Map<Integer, UrlStatus> getUrlStatusMap() {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
-                }
+                },
+                getClientIdFromRequestUrl(mAuthorizationRequestUrl),
+                getAuthorityHostFromRequestUrl(mAuthorizationRequestUrl)
         );
         setUpWebView(view, mAADWebViewClient);
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
+    }
+
+    /**
+     * Reads {@code client_id} off an authorization request URL, so the WebView client can scope
+     * per-app state to the app being authorized.
+     *
+     * @param requestUrl the authorization request URL.
+     * @return the client id, or null when it cannot be determined.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String getClientIdFromRequestUrl(@Nullable final String requestUrl) {
+        final String methodTag = TAG + ":getClientIdFromRequestUrl";
+        if (StringUtil.isNullOrEmpty(requestUrl)) {
+            return null;
+        }
+
+        try {
+            return Uri.parse(requestUrl).getQueryParameter(CLIENT_ID);
+        } catch (final UnsupportedOperationException e) {
+            Logger.warn(methodTag, "Could not read the client id off the request url.");
+            return null;
+        }
+    }
+
+    /**
+     * Reads the host off an authorization request URL, so state captured mid-flow can be bound to
+     * the authority it came from.
+     *
+     * @param requestUrl the authorization request URL.
+     * @return the authority host, or null when it cannot be determined.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String getAuthorityHostFromRequestUrl(@Nullable final String requestUrl) {
+        final String methodTag = TAG + ":getAuthorityHostFromRequestUrl";
+        if (StringUtil.isNullOrEmpty(requestUrl)) {
+            return null;
+        }
+
+        try {
+            return Uri.parse(requestUrl).getHost();
+        } catch (final Exception e) {
+            Logger.warn(methodTag, "Could not read the authority host off the request url.");
+            return null;
+        }
     }
 
     @Override

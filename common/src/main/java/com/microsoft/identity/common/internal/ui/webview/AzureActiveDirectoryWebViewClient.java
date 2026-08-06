@@ -47,6 +47,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -86,6 +87,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.MamUpnHintStore;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
@@ -170,6 +172,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final SpanContext mSpanContext;
     private final String mUtid;
 
+    /**
+     * Client id of the request being authorized, when known. Used to scope the MAM Conditional
+     * Access UPN hint to the app that was interrupted.
+     */
+    @Nullable
+    private final String mClientId;
+
+    /**
+     * Host of the authority this WebView is talking to, so a UPN captured mid-flow can be bound to
+     * it. Null when it could not be determined from the authorization request url.
+     */
+    @Nullable
+    private final String mAuthorityHost;
+
     private String mPasskeyRegistrationScript;
 
     /**
@@ -195,6 +211,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl,
+                switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase,
+                urlLoadTracker, null);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String clientId) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl,
+                switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase,
+                urlLoadTracker, clientId, null);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String clientId,
+                                             @Nullable final String authorityHost) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
@@ -203,6 +248,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mUrlLoadTracker = urlLoadTracker;
+        mClientId = clientId;
+        mAuthorityHost = authorityHost;
     }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -1349,6 +1396,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String appLink = parameters.get(APP_LINK_KEY);
+
+        // MAM Conditional Access onboarding: the service tells us which account is being onboarded
+        // on this redirect. Installing Company Portal usually kills this process, so remember the UPN
+        // now and pre-fill it on the request the user makes when they come back, instead of asking
+        // them to type their address again. No-op unless the flight is on and the redirect is marked
+        // as the MAM-CA path.
+        //
+        // Written inline on the UI thread, deliberately. This is the last moment the process is
+        // guaranteed to be alive: the completion callback below finishes the authorization activity
+        // and the Play Store install that follows very often kills us. Handing the write to a
+        // background thread would risk losing the hint in exactly the case it exists for, and would
+        // trade a bounded, best-effort write - a single encrypted key/value put, with every failure
+        // caught and swallowed inside the store - for a race it cannot win.
+        final Activity installRequestActivity = getActivity();
+        if (installRequestActivity != null) {
+            MamUpnHintStore.saveUpnHintForMamCaInstall(
+                    AndroidPlatformComponentsFactory.createFromContext(
+                            installRequestActivity.getApplicationContext()),
+                    mClientId,
+                    mAuthorityHost,
+                    parameters
+            );
+        }
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
         getCompletionCallback().onChallengeResponseReceived(result);

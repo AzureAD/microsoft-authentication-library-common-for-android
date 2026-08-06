@@ -781,4 +781,16 @@ public enum AttributeName {
     server_caller_data_boundary,
 
     //endregion
+
+    //region MAM Conditional Access onboarding
+
+    /**
+     * What happened when a stored MAM Conditional Access UPN hint could have been applied to an
+     * interactive request. One of a small fixed set of values - see
+     * {@code MamUpnHintStore#applyStoredUpnHintIfAbsent} - so that the pre-fill's reach can be
+     * measured while {@code ENABLE_MAM_CA_UPN_HINT} ramps, without a per-request log dive.
+     */
+    mam_ca_upn_hint_outcome,
+
+    //endregion
 }
