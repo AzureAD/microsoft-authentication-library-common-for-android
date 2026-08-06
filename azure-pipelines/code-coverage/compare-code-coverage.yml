@@ -74,11 +74,25 @@ stages:
           continueOnError: true
         - bash: |
             set -e
+            # Diff-scoped gating (opt-in, backward compatible): if the PR-branch coverage
+            # job published a changed-files list alongside its JaCoCo report, scope the gate
+            # to only the classes the PR touched so unrelated flaky/async classes can't fail
+            # an innocent PR. Absent the file, the gate compares the whole report as before.
+            CHANGED_FILES="$(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/changed-files.txt"
+            CHANGED_ARG=""
+            if [ -s "$CHANGED_FILES" ]; then
+              echo "Diff-scoping coverage gate using $CHANGED_FILES"
+              CHANGED_ARG="--changed-files $CHANGED_FILES"
+            else
+              echo "No changed-files.txt in the PR report artifact; gating on the whole report."
+            fi
             python3 "$(Build.SourcesDirectory)/azure-pipelines/code-coverage/compare_coverage.py" \
               --pr   "$(Pipeline.Workspace)/${{ parameters.prBranchReportArtifact }}/jacocoTestReport.xml" \
               --base "$(Pipeline.Workspace)/${{ parameters.devBranchReportArtifact }}/jacocoTestReport.xml" \
               --metric ${{ parameters.metric }} \
               --tolerance ${{ parameters.tolerance }} \
+              --skip-label '${{ parameters.skipLabel }}' \
+              $CHANGED_ARG \
               $(noFailFlag) \
               --out-md   "$(Build.ArtifactStagingDirectory)/coverage-comparison.md" \
               --out-json "$(Build.ArtifactStagingDirectory)/coverage-comparison.json"

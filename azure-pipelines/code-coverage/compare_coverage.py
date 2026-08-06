@@ -11,7 +11,7 @@ Usage:
   compare_coverage.py --base <dev.xml>...  --pr <pr.xml>...
       [--metric LINE|BRANCH] [--tolerance PP] [--unit-tolerance PP]
       [--min-missed N] [--top N] [--out-md FILE] [--out-json FILE]
-      [--no-fail-on-drop]
+      [--changed-files FILE] [--no-fail-on-drop]
 
 Stdlib only - runs on any pipeline image with Python 3.
 """
@@ -56,6 +56,66 @@ def _aggregate(paths, metric):
     return agg
 
 
+def _class_sources(paths):
+    """Return {dotted_class_name: 'package/sourcefilename'} across JaCoCo reports.
+
+    Maps each JaCoCo class to the source file it was compiled from so the gate can be
+    scoped to only the files a PR actually changed. Inner/anonymous classes (Foo$1)
+    share their outer class's sourcefilename, so they map to the same source file.
+    """
+    sources = {}
+    for path in sorted(set(paths)):
+        try:
+            root = ET.parse(path).getroot()
+        except (ET.ParseError, OSError):
+            continue
+        for pkg in root.iter("package"):
+            pkg_name = pkg.get("name") or ""
+            for cls in pkg.findall("class"):
+                name = (cls.get("name") or "").replace("/", ".")
+                src = cls.get("sourcefilename")
+                if not name or not src:
+                    continue
+                sources[name] = f"{pkg_name}/{src}" if pkg_name else src
+    return sources
+
+
+def _read_changed_files(path):
+    """Read a newline-delimited list of changed repo-relative paths.
+
+    Normalizes separators and keeps only Java/Kotlin source files (the only files that
+    map to JaCoCo classes); tests/resources/YAML are ignored.
+    """
+    try:
+        with open(path, encoding="utf-8") as handle:
+            raw = handle.read().splitlines()
+    except OSError as exc:
+        sys.stderr.write(f"WARNING: could not read --changed-files {path}: {exc}\n")
+        return []
+    out = []
+    for line in raw:
+        candidate = line.strip().replace("\\", "/")
+        if candidate and candidate.lower().endswith((".java", ".kt")):
+            out.append(candidate)
+    return out
+
+
+def _in_scope_classes(sources, changed):
+    """Return the set of dotted class names whose source file the PR changed.
+
+    A class is in scope when its 'package/sourcefilename' suffix is the tail of a
+    changed repo-relative path (e.g. changed 'app/src/main/java/com/x/Foo.java'
+    matches class suffix 'com/x/Foo.java').
+    """
+    scoped = set()
+    for name, suffix in sources.items():
+        for changed_path in changed:
+            if changed_path == suffix or changed_path.endswith("/" + suffix):
+                scoped.add(name)
+                break
+    return scoped
+
+
 # JaCoCo <counter type="..."> values. Guards against silent 0% when a caller passes
 # a typo'd or wrong-cased metric (which would otherwise match no counters).
 VALID_METRICS = {"INSTRUCTION", "LINE", "BRANCH", "COMPLEXITY", "METHOD", "CLASS"}
@@ -92,6 +152,15 @@ def main():
                         help="Show only the top N rows per table (0 = all).")
     parser.add_argument("--out-md", default="", dest="out_md")
     parser.add_argument("--out-json", default="", dest="out_json")
+    parser.add_argument("--skip-label", default="skip-coverage-check", dest="skip_label",
+                        help="Name of the PR label a developer can apply to bypass this "
+                             "gate; surfaced in the failure message.")
+    parser.add_argument("--changed-files", default="", dest="changed_files",
+                        help="Path to a newline-delimited list of PR-changed repo-relative "
+                             "source paths. When given (and non-empty), the pass/fail gate is "
+                             "scoped to only the classes whose source file this PR changed - "
+                             "coverage of unrelated (e.g. flaky/async) classes is ignored. "
+                             "Omit for whole-report gating (backward-compatible default).")
     parser.add_argument("--no-fail-on-drop", action="store_false", dest="fail_on_drop",
                         help="Report the diff but never exit non-zero (non-gating).")
     parser.set_defaults(fail_on_drop=True)
@@ -148,6 +217,38 @@ def main():
         _write_status(args, metric, "SKIPPED", reason, failed=False)
         return 0
 
+    # Diff-scoped gating: when the caller supplies the PR's changed source files, restrict
+    # the pass/fail decision (and the per-class tables) to only the classes whose source
+    # file the PR actually changed. This stops unrelated flaky/async classes - whose
+    # coverage jitters between the two independent test runs - from failing an innocent PR.
+    # Omitting --changed-files preserves the original whole-report behavior.
+    scoped = False
+    scoped_class_count = 0
+    changed_file_count = 0
+    if args.changed_files:
+        # The caller opted into diff-scoping. Once --changed-files is passed we stay in
+        # scoped mode even if it lists no source files (e.g. a YAML/resource-only PR):
+        # in that case nothing maps to a measured class, so there is nothing to gate and
+        # we skip - we must NOT silently fall back to whole-report gating, which would
+        # reintroduce the unrelated-flaky-class false positives this feature prevents.
+        scoped = True
+        changed = _read_changed_files(args.changed_files)
+        changed_file_count = len(changed)
+        sources = _class_sources(base_paths + pr_paths)
+        in_scope = _in_scope_classes(sources, changed) if changed else set()
+        base = {k: v for k, v in base.items() if k in in_scope}
+        pr = {k: v for k, v in pr.items() if k in in_scope}
+        scoped_class_count = len(set(base) | set(pr))
+        if not base and not pr:
+            reason = (f"Diff-scoped gating: none of the {changed_file_count} changed "
+                      "source file(s) map to a measured class in the coverage reports "
+                      "(e.g. only tests, resources, config, or new/uncompiled files "
+                      "changed); there is nothing to gate - skipping the coverage gate "
+                      "(not gating).")
+            sys.stderr.write("WARNING: " + reason + "\n")
+            _write_status(args, metric, "SKIPPED", reason, failed=False)
+            return 0
+
     base_cov = sum(v["Covered"] for v in base.values())
     base_miss = sum(v["Missed"] for v in base.values())
     pr_cov = sum(v["Covered"] for v in pr.values())
@@ -196,10 +297,20 @@ def main():
     ]
     if args.tolerance:
         lines += [f"_Allowed drop (tolerance): {args.tolerance} pp._", ""]
+    if scoped:
+        lines += [f"_Gating is scoped to the {scoped_class_count} class(es) from the "
+                  f"{changed_file_count} source file(s) changed by this PR; coverage of "
+                  "classes this PR did not touch is ignored._", ""]
     if failed:
         lines += [f"**Coverage dropped by {abs(delta)} pp** (base {base_pct}% -> PR "
                   f"{pr_pct}%), exceeding the allowed {args.tolerance} pp. "
                   "Add tests for the classes below to restore coverage.", ""]
+        lines += ["> **Believe this coverage failure is wrong?** "
+                  "(e.g. the regression is in flaky/async code unrelated to your change, "
+                  "or the check itself is misbehaving) you can bypass this gate by adding "
+                  f"the `{args.skip_label}` label to this PR, then **pushing a new commit "
+                  "to the branch so the check fully re-runs** - applying the label alone "
+                  "does not re-trigger the pipeline.", ""]
 
     if regressed:
         top_reg = regressed[:args.top] if args.top > 0 else regressed
@@ -234,6 +345,8 @@ def main():
             json.dump({"metric": metric, "basePercentage": base_pct,
                        "prPercentage": pr_pct, "deltaPp": delta,
                        "tolerancePp": args.tolerance, "failed": failed,
+                       "scoped": scoped, "scopedClasses": scoped_class_count,
+                       "changedFiles": changed_file_count,
                        "removedClasses": removed,
                        "regressed": regressed, "newGaps": new_gaps}, handle, indent=2)
 
@@ -242,6 +355,9 @@ def main():
         print(f"ERROR: PR {metric} coverage {pr_pct}% is below base {base_pct}% "
               f"(drop {abs(delta)} pp > tolerance {args.tolerance} pp). Failing.",
               file=sys.stderr)
+        print(f"If you believe this failure is wrong (e.g. flaky/unrelated coverage), "
+              f"apply the '{args.skip_label}' label to the PR and push a new commit to "
+              "the branch so the check fully re-runs.", file=sys.stderr)
     return 1 if failed else 0
 
 
