@@ -108,6 +108,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import android.webkit.WebResourceError;
@@ -181,7 +183,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * launch, etc.) and {@code lastLoadedDomain} are recorded for the onboarding telemetry blob.
      */
     @Nullable
-    private OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+    private volatile OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+
+    /**
+     * Auth UX server error codes already forwarded to the onboarding recorder during this
+     * authorization request.
+     *
+     * Scoped to this WebView client, which is constructed once per authorization request and
+     * outlives every navigation within it — unlike the JS bridge, which
+     * {@code OAuth2WebViewClient#onPageStarted} rebuilds on each page load and which therefore only
+     * de-duplicates within a single page. Without this, a redirect-heavy flow reports the same
+     * server error once per page load (an on-device run produced {@code ["530003","530003"]}).
+     *
+     * Deliberately kept here rather than in {@link OnboardingTelemetryRecorder}: that recorder's
+     * {@code blocking_errors} list is shared with broker4j and the {@code x-ms-clitelem} parsers and
+     * is contractually append-only and chronological, so de-duplicating there would change
+     * {@code last_blocking_error} from "the last block observed" to "the last distinct block first
+     * observed" for every caller.
+     */
+    private final Set<String> mForwardedAuthUxErrorCodes = ConcurrentHashMap.newKeySet();
 
     /**
      * Callback for tracking URL load events.
@@ -1899,32 +1919,41 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *              non-empty and shape-checked by the bridge); the remaining fields — correlation
      *              id, session / page / tracking ids and contract version — are carried so they can
      *              be recorded without another change to the sink contract.
-     * @return {@code true} when the code was handed to a recorder (or deliberately dropped as
-     *         non-blocking), {@code false} when there is no recorder yet — which keeps the code
-     *         eligible for a retry once the host attaches one, instead of the bridge suppressing it
-     *         as already-forwarded.
+     * @return {@code true} when the code was handed to a recorder, deliberately dropped as
+     *         non-blocking, or already forwarded during this request; {@code false} when there is
+     *         no recorder yet — which keeps the code eligible for a retry once the host attaches
+     *         one, instead of the bridge suppressing it as already-handled. Never returns
+     *         {@code true} for a code that failed to reach the recorder: a throwing recorder
+     *         propagates, and the bridge's own handling suppresses retry without claiming the code
+     *         was forwarded.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
         final String errorCode = event.getErrorCode();
-        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
-        if (recorder == null) {
-            // Not consumed: the recorder is attached by the host and may not be available yet, so
-            // report failure and let the bridge offer this code again.
-            return false;
-        }
+        // Policy check first: it has no dependency on the recorder, so a non-blocking code that
+        // arrives before the recorder is attached is terminal rather than retried against a budget
+        // it can never usefully spend.
         if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
             Logger.info(TAG, event.getCorrelationId(),
                     "Onboarding telemetry: skipping non-blocking Auth UX error code");
             // Consumed: this is a deliberate policy drop, not a "try again later".
             return true;
         }
-        try {
-            recorder.addBlockingError(errorCode);
-        } catch (final Throwable t) {
-            Logger.warn(TAG, event.getCorrelationId(),
-                    "Onboarding telemetry: failed to record Auth UX server error: " + t.getMessage());
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            // Not consumed: the recorder is attached by the host and may not be available yet, so
+            // report failure and let the bridge offer this code again.
+            return false;
         }
+        if (!mForwardedAuthUxErrorCodes.add(errorCode)) {
+            // Already forwarded earlier in this request, on an earlier navigation's bridge
+            // instance. Consumed — re-appending would duplicate it in the uploaded blob.
+            return true;
+        }
+        // Deliberately not wrapped: if the recorder throws, the bridge's own handler suppresses
+        // retry WITHOUT setting the span attribute or logging a "Forwarded" line, which is the
+        // honest outcome. Swallowing it here would return true and produce a span that lies.
+        recorder.addBlockingError(errorCode);
         return true;
     }
 }

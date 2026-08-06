@@ -33,6 +33,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1979,31 +1980,144 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * AB#3688632: the recorder de-duplicates its blocking-errors list. The JS bridge is rebuilt on
+     * AB#3688632: the SINK de-duplicates per authorization request. The JS bridge is rebuilt on
      * every WebView navigation and only de-duplicates within one page load, so without this a
      * redirect-heavy flow records the same server error repeatedly in the uploaded blob — which is
-     * exactly what an earlier device run produced ({@code ["530003","530003"]}).
+     * exactly what an earlier device run produced ({@code ["530003","530003"]}). The de-dup lives on
+     * this client, which outlives every navigation in the request, rather than on the recorder,
+     * whose list is shared with broker4j and must stay chronological.
      */
     @Test
     public void testRecordAuthUxServerErrorCode_DuplicateAcrossRegistrations_RecordedOnce()
             throws Exception {
-        final String seedJson = "{\"schema_version\":\"1.0.0\","
-                + "\"session_correlation_id\":\"abc-123\","
-                + "\"onboarding_mode\":\"brokered\"}";
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
-                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
-                        seedJson, "client-id", "scope1", mContext);
+                newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
 
         // Simulates the same code arriving from two separate bridge instances (two page loads).
-        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
-        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+        assertTrue("a suppressed duplicate is still consumed",
+                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
         assertEquals("duplicate must not reach the blob", 1, errors.length());
         assertEquals("530003", errors.getString(0));
+    }
+
+    /**
+     * AB#3688632: the recorder is shared with broker4j and the {@code x-ms-clitelem} parsers, so its
+     * blocking-errors list must stay append-only and chronological. A → B → A must keep all three
+     * entries and report A as {@code last_blocking_error} — the user ended the flow blocked on A.
+     * De-duplicating here would have re-attributed the block to B.
+     */
+    @Test
+    public void testRecorderBlockingErrors_AreChronologicalNotDeduped() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+
+        recorder.addBlockingError("530003");
+        recorder.addBlockingError("53003");
+        recorder.addBlockingError("530003");
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("repeats must be preserved for other callers", 3, errors.length());
+        assertEquals("530003", errors.getString(0));
+        assertEquals("53003", errors.getString(1));
+        assertEquals("530003", errors.getString(2));
+        assertEquals("last_blocking_error must be the last block OBSERVED", "530003",
+                blob.getString(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: when the recorder throws, the sink must NOT claim the code was forwarded. It
+     * propagates so the bridge's own handling suppresses retry without setting the span attribute
+     * or logging a "Forwarded" line — swallowing it here would produce a span that lies.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_RecorderThrows_Propagates() {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
+                Mockito.mock(
+                        com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
+        Mockito.doThrow(new IllegalStateException("recorder boom"))
+                .when(throwing).addBlockingError(Mockito.anyString());
+        mWebViewClient.setOnboardingTelemetryRecorder(throwing);
+
+        try {
+            mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+            fail("a throwing recorder must propagate rather than be reported as forwarded");
+        } catch (final IllegalStateException expected) {
+            assertEquals("recorder boom", expected.getMessage());
+        }
+    }
+
+    /**
+     * AB#3688632: a non-blocking code is terminal even before a recorder is attached — the policy
+     * check has no dependency on the recorder, so retrying it would burn the bridge's attempt
+     * budget on a code that can never be recorded.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_NonBlockingCode_ConsumedWithoutRecorder() {
+        // No recorder attached.
+        assertTrue("policy drop must be terminal regardless of recorder availability",
+                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")));
+    }
+
+    /**
+     * AB#3688632: removing the shadowed {@code mAuthUxJavaScriptInterfaceAdded} field means
+     * {@code onPageFinished} now reads the base class's flag, which {@code onPageStarted} maintains.
+     * Navigating to a non-allow-listed URL removes the interface, so the {@code postMessageToBroker}
+     * shim must not then be injected over an undefined {@code window.broker}. This path is shared
+     * with number-matching, not just telemetry.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testShimNotInjectedAfterInterfaceRemovedOnNonAllowlistedUrl() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Allow-listed page: interface added.
+        mWebViewClient.onPageStarted(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        // Navigate away to a non-allow-listed origin: interface removed.
+        mWebViewClient.onPageStarted(mockWebView, "https://example.com/page", null);
+        mWebViewClient.onPageFinished(mockWebView, "https://example.com/page");
+
+        Mockito.verify(mockWebView).removeJavascriptInterface(Mockito.anyString());
+        Mockito.verify(mockWebView, Mockito.never())
+                .evaluateJavascript(Mockito.contains("postMessageToBroker"), Mockito.any());
+    }
+
+    /**
+     * AB#3688632: the mirror case. Previously the subclass flag was only ever set by
+     * {@code initializeAuthUxJavaScriptApi}, so if the INITIAL url was not allow-listed the shim was
+     * never injected even after a later navigation added the interface — leaving the Auth UX page
+     * unable to post any message, including {@code number_matching}.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testShimInjectedWhenInterfaceAddedByLaterNavigation() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Initial url not allow-listed: nothing registered.
+        mWebViewClient.initializeAuthUxJavaScriptApi(mockWebView, "https://example.com/start");
+        // A later navigation reaches an allow-listed origin: interface added by onPageStarted.
+        mWebViewClient.onPageStarted(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        mWebViewClient.onPageFinished(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+        Mockito.verify(mockWebView)
+                .evaluateJavascript(Mockito.contains("postMessageToBroker"), Mockito.any());
+    }
+
+    /** Builds a real recorder over a minimal seed; shared by the onboarding-telemetry tests. */
+    private com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder newRecorder() {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        return new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                seedJson, "client-id", "scope1", mContext);
     }
 
     /** Minimal Auth UX telemetry event carrying just the error code under test. */

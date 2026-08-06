@@ -77,13 +77,18 @@ class OnboardingTelemetryRecorder(
     val sessionCorrelationId: String
     private val onboardingMode: String
 
-    // Populated fields
+    // Populated fields. All guarded consistently: addBlockingError is reached from the WebView
+    // JavaBridge thread (via the Auth UX bridge sink) while finalizeBlob serializes on the caller's
+    // thread. The others are UI-thread-only today, but they are hardened the same way so the class
+    // has one coherent story — a half-guarded object reads as safe without being safe, and the next
+    // cross-thread caller should not have to rediscover which fields were left behind.
     private val stepsList: MutableList<StepEntry> = Collections.synchronizedList(mutableListOf())
     private val blockingErrors: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    private val uxFlowUsed: MutableList<String> = Collections.synchronizedList(mutableListOf())
     @Volatile
     private var lastLoadedDomain: String? = null
+    @Volatile
     private var profile: String? = null
-    private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
         val parsed = parseSeed(seedJson)
@@ -132,24 +137,21 @@ class OnboardingTelemetryRecorder(
      * Also persists the session correlation entry to SharedPreferences
      * (best-effort, async) for app-kill resilience.
      *
+     * Append-only and chronological: repeats are kept, so [OnboardingTelemetryConstants.LAST_BLOCKING_ERROR]
+     * means "the last block observed" rather than "the last distinct block first observed". A caller
+     * that must not report the same code twice de-duplicates on its own side — see
+     * `AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode`, which does so for the Auth UX
+     * JS bridge because that bridge is rebuilt on every WebView navigation.
+     *
      * @param errorCode The onboarding blocking-error identifier to record. Either a symbolic
      *                  blocking-error constant (e.g.,
      *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL] or
      *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]) or a numeric
      *                  server/STS error code surfaced by OnboardingBlockingErrorParser or the
      *                  Auth UX JS bridge (e.g., "530003"). Recorded verbatim as an opaque string.
-     *
-     * De-duplicated: a code already present is ignored. The Auth UX JS bridge is re-registered on
-     * every WebView navigation and only de-duplicates within a single page load, so without this
-     * the same server error reported across a redirect-heavy flow would appear repeatedly in the
-     * uploaded blob. This recorder outlives those registrations and owns the blob, so it is the
-     * correct place for the request-wide guarantee.
      */
     override fun addBlockingError(errorCode: String) {
         synchronized(blockingErrors) {
-            if (blockingErrors.contains(errorCode)) {
-                return
-            }
             blockingErrors.add(errorCode)
         }
 
@@ -225,6 +227,7 @@ class OnboardingTelemetryRecorder(
                 // the caller's thread.
                 val stepsSnapshot = synchronized(stepsList) { stepsList.toList() }
                 val errorsSnapshot = synchronized(blockingErrors) { blockingErrors.toList() }
+                val uxFlowSnapshot = synchronized(uxFlowUsed) { uxFlowUsed.toList() }
 
                 val steps = JSONArray()
                 for (entry in stepsSnapshot) {
@@ -265,9 +268,9 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowUsed.isNotEmpty()) {
+                if (uxFlowSnapshot.isNotEmpty()) {
                     val flows = JSONArray()
-                    for (flow in uxFlowUsed) {
+                    for (flow in uxFlowSnapshot) {
                         flows.put(flow)
                     }
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)
