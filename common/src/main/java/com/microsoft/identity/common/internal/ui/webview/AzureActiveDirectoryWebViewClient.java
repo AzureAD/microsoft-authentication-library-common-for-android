@@ -192,13 +192,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * every navigation within that request, unlike the JS bridge, which
      * {@code OAuth2WebViewClient#onPageStarted} rebuilds on each page load and which therefore only
      * de-duplicates within a single page. Without this, a redirect-heavy flow reports the same
-     * server error once per page load (an on-device run produced {@code ["530003","530003"]}). A
-     * rebuilt client starts a fresh set; in practice that does not happen mid-request, since
-     * {@code AuthorizationActivity} handles the configuration changes that would otherwise recreate
-     * it, and on process death the recorder does not survive either.
+     * server error once per page load (an on-device run produced {@code ["530003","530003"]}).
      *
-     * A code is entered only when it is genuinely handed to the recorder: if the append throws, the
-     * entry is retracted so the code is not falsely reported as forwarded on a later offer.
+     * Known limitation: a rebuilt client starts a fresh set while the recorder, held by the
+     * process-static {@code OnboardingRecorderRegistry}, survives — so a code forwarded before the
+     * rebuild can be appended a second time. {@code AuthorizationActivity} declares
+     * {@code configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"},
+     * which covers rotation and the YubiKey keyboard case, but NOT {@code uiMode}, {@code fontScale},
+     * {@code density}, {@code locale} or {@code layoutDirection}. Toggling dark mode mid-flow
+     * therefore can produce a duplicate. This is accepted rather than fixed here: it needs a
+     * deliberate mid-authorization system-settings change to hit, costs one duplicate entry in a
+     * best-effort telemetry list, and the alternatives are worse — de-duplicating in the recorder
+     * would break the shared append-only contract below, and moving this set into the registry
+     * would give the feature a second piece of process-static state to leak.
+     *
+     * A code is entered before the append and retracted in a {@code finally} if the append does not
+     * complete, so a failed forward is never left behind as already-forwarded.
      *
      * Deliberately kept here rather than in {@link OnboardingTelemetryRecorder}: that recorder's
      * {@code blocking_errors} list is shared with broker4j and the {@code x-ms-clitelem} parsers and
@@ -1903,7 +1912,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Best-effort onboarding telemetry hook for Auth UX bridge {@code log_telemetry} events:
+     * Onboarding telemetry hook for Auth UX bridge {@code log_telemetry} events:
      * appends the Auth UX server error code to the onboarding blob's blocking-errors list on the
      * attached recorder, unless the code is in the non-blocking exclusion list
      * ({@link OnboardingBlockingErrorParser#isNonBlockingOnboardingErrorCode(String)}, parity with
@@ -1915,7 +1924,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * an onboarding session — e.g. third-party callers — stay inert). Reads
      * {@link #mOnboardingTelemetryRecorder} lazily so it works whether the recorder was attached
      * before or after the JS interface was registered, and identically for brokered and
-     * non-brokered flows (the same AndroidCommon recorder backs both). Never throws.
+     * non-brokered flows (the same AndroidCommon recorder backs both).
+     *
+     * <p>Unlike the sibling hooks {@code recordOnboardingStep} and {@code recordLastLoadedDomain},
+     * this one is deliberately <strong>not</strong> best-effort and does <strong>not</strong> swallow
+     * failures: a throwing recorder propagates so the bridge reports the offer as failed instead of
+     * setting {@code authux_js_error_code} and logging a "Forwarded" line for telemetry that was
+     * never recorded.
      *
      * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #createAuthUxJavaScriptInterface()}.
      *
@@ -1930,7 +1945,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *         one, instead of the bridge suppressing it as already-handled. Never returns
      *         {@code true} for a code that failed to reach the recorder: a throwing recorder
      *         propagates rather than being reported as forwarded, and the failed code is retracted
-     *         from the de-duplication set so a later offer is not short-circuited either.
+     *         from the de-duplication set so a later offer is not short-circuited either. That
+     *         last guarantee assumes offers are not concurrent, which holds because WebView
+     *         dispatches every {@code @JavascriptInterface} call for a WebView on one private
+     *         JavaBridge thread and the bridge sink is this method's only production caller.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {

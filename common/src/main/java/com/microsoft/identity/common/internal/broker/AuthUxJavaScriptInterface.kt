@@ -133,8 +133,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * `AuthUxJavaScriptInterface`, so this state resets per page load while the consumer it feeds
      * lives for the whole request. This is therefore a per-page flood guard, **not** a
      * request-wide de-duplication guarantee: the same code reported on two page loads is offered
-     * twice, and session-wide de-duplication is the consumer's responsibility (the onboarding
-     * recorder de-duplicates its blocking-errors list for exactly this reason).
+     * twice, and session-wide de-duplication is the consumer's responsibility (see
+     * `AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode`, which de-duplicates for
+     * exactly this reason — the onboarding recorder deliberately does not, because its
+     * blocking-errors list is append-only and chronological for its other callers).
      *
      * Guarded by itself; also guards [telemetryAttempts]. The sink is never invoked while this
      * lock is held.
