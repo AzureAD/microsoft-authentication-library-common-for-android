@@ -128,6 +128,8 @@ object SerializedNames {
     const val OPERATION = "operation"
     const val SESSION_ID = "sessionID"
     const val CODE_MATCH = "code_match"
+
+    /** Payload schema version. `v` is the wire name defined by the Auth UX telemetry contract. */
     const val VERSION = "v"
     const val ERROR_CODE = "errorCode"
     const val PAGE_ID = "pageId"
