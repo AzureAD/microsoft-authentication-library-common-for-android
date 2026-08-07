@@ -143,6 +143,11 @@ class OnboardingTelemetryRecorder(
      * `AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode`, which does so for the Auth UX
      * JS bridge because that bridge is rebuilt on every WebView navigation.
      *
+     * All-or-nothing with respect to exceptions: the persistence step cannot fail this call (see
+     * [persistSessionCorrelation]), so a caller that catches a throw from here can safely assume the
+     * code was not recorded. That is what lets the Auth UX sink retract its de-duplication claim on
+     * failure without risking a duplicate on the next offer.
+     *
      * @param errorCode The onboarding blocking-error identifier to record. Either a symbolic
      *                  blocking-error constant (e.g.,
      *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL] or
@@ -292,6 +297,16 @@ class OnboardingTelemetryRecorder(
      * of user remediation, so the flush window is far longer than typical loss.
      * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
      * Called on block detection.
+     *
+     * Never fails its caller. This is load-bearing, not defensive tidiness: it is what makes
+     * [addBlockingError] all-or-nothing, and `AzureActiveDirectoryWebViewClient` relies on that to
+     * decide whether to retract a de-duplication claim after a failed append. If a persistence
+     * failure escaped here, the code would already be in [blockingErrors] while the caller saw a
+     * throw, and the retraction would let the next offer append it a second time. Widened from
+     * `JSONException` to `Exception` for that reason: `getSharedPreferences` throws
+     * [IllegalStateException] on credential-encrypted storage before first unlock (direct boot).
+     * [Error] is deliberately still allowed to propagate — swallowing an `OutOfMemoryError` to
+     * protect a best-effort telemetry write would be the wrong trade.
      */
     private fun persistSessionCorrelation() {
         if (sessionCorrelationId.isEmpty()) {
@@ -317,7 +332,7 @@ class OnboardingTelemetryRecorder(
                 sessionCorrelationId,
                 "Persisted session correlation entry for key=$key"
             )
-        } catch (e: JSONException) {
+        } catch (e: Exception) {
             Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
         }
     }

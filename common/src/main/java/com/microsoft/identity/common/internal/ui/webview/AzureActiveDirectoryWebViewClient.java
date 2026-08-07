@@ -1983,6 +1983,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // try/finally rather than catch/rethrow: nothing is swallowed, the throw still propagates
         // into the bridge's THREW handling (which suppresses retry for this page load without
         // claiming success), and the cleanup covers any abnormal exit, not only RuntimeException.
+        //
+        // Retracting on ANY abnormal exit is only correct because addBlockingError is
+        // all-or-nothing: its best-effort persistence step cannot throw (it catches Exception), so
+        // a throw from it means the code was not appended. If that ever stops holding, this
+        // retraction turns into a duplicate-producer — the mirror of the bug it fixes.
         boolean recorded = false;
         try {
             recorder.addBlockingError(errorCode);

@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
@@ -279,6 +281,35 @@ class OnboardingTelemetryRecorderTest {
             "Cached data should contain the session correlation ID",
             cached.contains("test-uuid-123")
         )
+    }
+
+    @Test
+    fun testAddBlockingError_PersistenceFailure_DoesNotFailTheCall() {
+        // The Auth UX sink (AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode) retracts
+        // its de-duplication claim whenever this call throws, so a throw MUST mean "not recorded".
+        // persistSessionCorrelation runs after the append and is best-effort; if it could propagate,
+        // the code would be in the blob while the caller saw a failure, and the retraction would let
+        // the next offer append it a second time. getSharedPreferences throws IllegalStateException
+        // on credential-encrypted storage before first unlock (direct boot), which is the real path
+        // this guards.
+        // NOTE: getApplicationContext must return this wrapper. The recorder stores
+        // context.applicationContext (to avoid leaking an Activity), and ContextWrapper delegates
+        // that to the base context — which would hand back the real Robolectric application and
+        // silently discard the override below, making this test vacuous.
+        val hostileContext = object : ContextWrapper(ApplicationProvider.getApplicationContext()) {
+            override fun getApplicationContext(): Context = this
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences =
+                throw IllegalStateException("SharedPreferences unavailable until user unlock")
+        }
+        val recorderOnHostileContext =
+            OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, hostileContext)
+
+        recorderOnHostileContext.addBlockingError("530003")
+
+        val blob = JSONObject(recorderOnHostileContext.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals("the append itself must still have happened", 1, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
     }
 
     companion object {
