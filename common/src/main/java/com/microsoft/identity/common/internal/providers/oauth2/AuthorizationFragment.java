@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
@@ -37,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
@@ -216,6 +218,27 @@ public abstract class AuthorizationFragment extends Fragment {
 
     public void handleBackButtonPressed() {
         cancelAuthorization(true);
+    }
+
+    /**
+     * MAM Conditional Access onboarding: tag the Company Portal install link with this app's package as
+     * the Play install referrer, so Company Portal skips its own sign-in UX and redirects back here after
+     * install.
+     * <p>
+     * Shared by every {@link AuthorizationFragment} subclass that launches the broker install so the
+     * flight- and MAM-CA-gates are evaluated in exactly one place ({@link MamInstallReferrerBuilder}).
+     * Null-safe: with the flight off, on a non-MAM-CA install, or with no attached context, the original
+     * link is returned unchanged.
+     *
+     * @param appLink            the server-provided Play Store install link.
+     * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
+     * @return the decorated link when MAM-CA referrer tagging applies, otherwise the original {@code appLink}.
+     */
+    protected String decorateInstallLinkWithReferrer(final String appLink,
+                                                     final Map<String, String> redirectParameters) {
+        final Context context = getContext();
+        return MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                appLink, context == null ? null : context.getPackageName(), redirectParameters);
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
