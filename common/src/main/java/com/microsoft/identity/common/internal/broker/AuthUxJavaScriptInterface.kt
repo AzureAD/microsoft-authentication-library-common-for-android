@@ -213,6 +213,21 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         private const val MAX_CORRELATION_ID_LENGTH = 128
 
         /**
+         * Upper bound on an optional page-supplied context value (`sessionID`, `pageId`,
+         * `trackingId`, `v`) carried across the sink seam.
+         *
+         * Deliberately its own constant rather than a reuse of [MAX_CORRELATION_ID_LENGTH], even
+         * though the two happen to be equal today: these bound unrelated things, and sharing one
+         * would mean a future change to the correlation-ID bound (a cloud with longer IDs, say)
+         * silently moved the bound on values that have nothing to do with correlation.
+         *
+         * The value is generous on purpose — these fields are recorded, not parsed, so the bound
+         * exists to stop a page pushing an unbounded string into an uploaded blob, not to enforce
+         * a shape. None of the known values comes close to it.
+         */
+        private const val MAX_CARRIED_VALUE_LENGTH = 128
+
+        /**
          * Copy at most [limit] characters of an untrusted, page-supplied string, replacing any
          * control character with a space so a crafted value cannot forge log entries, and appending
          * a marker when the input was longer.
@@ -272,12 +287,12 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * `errorCode` is — there is no contract shape to check — but they cross the same trust
          * boundary and reach the same onboarding blob, so they get the same control-character
          * stripping that keeps a crafted value from forging log entries in whichever consumer
-         * eventually reads them, and the same generous bound so a page cannot push an unbounded
-         * string into an uploaded blob. Null is preserved as null: absent and empty are different
-         * signals to a consumer, so this must not invent a value.
+         * eventually reads them, and a bound ([MAX_CARRIED_VALUE_LENGTH]) so a page cannot push an
+         * unbounded string into an uploaded blob. Null is preserved as null: absent and empty are
+         * different signals to a consumer, so this must not invent a value.
          */
         private fun sanitizeCarriedValue(value: String?): String? =
-            value?.let { sanitizeBounded(it, MAX_CORRELATION_ID_LENGTH) }
+            value?.let { sanitizeBounded(it, MAX_CARRIED_VALUE_LENGTH) }
 
         fun getInterfaceName(): String {
             return JAVASCRIPT_INTERFACE_NAME
