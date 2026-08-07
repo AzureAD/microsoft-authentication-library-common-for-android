@@ -221,4 +221,33 @@ public class RawAuthorizationResultTest {
         Assert.assertNotNull(result.getException());
         Assert.assertEquals(ClientException.UNSUPPORTED_URL, result.getException().getErrorCode());
     }
+
+    /**
+     * A redirect that names {@code app_link} but carries no usable value must not reach
+     * {@link RawAuthorizationResult.ResultCode#BROKER_INSTALLATION_TRIGGERED}.
+     * <p>
+     * The broker-install launch sites read {@code app_link} straight out of the redirect and hand it
+     * to {@code Uri.parse}, so this is what guarantees they never see a null or blank link. The
+     * {@code containsKey} check alone does not: a bare {@code &app_link} parses to a present key with
+     * no value, and {@code &app_link=} to a present key with an empty one. Both are caught by the
+     * allowlist rather than by the presence check, which is easy to lose sight of when reading the
+     * launch sites, so it is pinned here.
+     */
+    @Test
+    public void brokerInstall_isNotTriggered_whenAppLinkHasNoUsableValue() {
+        final String[] redirectsWithUnusableAppLink = {
+                "msauth://wpj/?username=user%40contoso.com&app_link",
+                "msauth://wpj/?username=user%40contoso.com&app_link=",
+                "msauth://wpj/?username=user%40contoso.com&app_link=%20",
+        };
+
+        for (final String redirect : redirectsWithUnusableAppLink) {
+            final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(redirect);
+
+            Assert.assertNotEquals(
+                    "A redirect with no usable app_link must not trigger a broker install: " + redirect,
+                    BROKER_INSTALLATION_TRIGGERED,
+                    result.getResultCode());
+        }
+    }
 }
