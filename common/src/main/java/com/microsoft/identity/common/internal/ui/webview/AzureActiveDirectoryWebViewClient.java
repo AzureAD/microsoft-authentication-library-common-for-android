@@ -88,6 +88,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
@@ -1408,6 +1409,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String appLink = parameters.get(APP_LINK_KEY);
 
         Logger.info(methodTag,"Launching the link to app:" + appLink);
+
+        // MAM Conditional Access onboarding: tag the Company Portal install launch with the calling
+        // app package as the Play install referrer, so Company Portal skips its own sign-in UX and
+        // redirects back to us after install. The flight- and MAM-CA-gates live in
+        // MamInstallReferrerBuilder; when they don't apply the link is launched as before.
+        //
+        // Resolved here rather than inside the delayed Runnable below so the link is built while the
+        // redirect parameters are still in hand, leaving the Runnable with nothing to do but launch
+        // it.
+        //
+        // getActivity() is a final field, so it cannot become non-null later; a null here means the
+        // link simply is not launched, which is what the Runnable already did in that case.
+        final Activity activity = getActivity();
+        final String installLink;
+        if (activity == null || appLink == null) {
+            installLink = null;
+        } else {
+            installLink = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                    activity.getPackageName(),
+                    parameters);
+        }
+
         getCompletionCallback().onChallengeResponseReceived(result);
 
         final Handler handler = new Handler();
@@ -1415,10 +1439,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                String link = appLink
-                        .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-                getActivity().startActivity(intent);
+                // Deliberately no isFinishing()/isDestroyed() check: the result callback above
+                // finishes the AuthorizationActivity, so by the time this fires a second later the
+                // Activity is normally already finishing. Skipping the launch in that state would
+                // suppress the install in the healthy path, which is the whole feature.
+                if (activity == null || installLink == null) {
+                    Logger.warn(methodTag,
+                            "Activity or app_link no longer available; skipping broker install launch.");
+                    view.stopLoading();
+                    return;
+                }
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(installLink));
+                activity.startActivity(intent);
                 view.stopLoading();
             }
         }, threadSleepForCallingActivity);
