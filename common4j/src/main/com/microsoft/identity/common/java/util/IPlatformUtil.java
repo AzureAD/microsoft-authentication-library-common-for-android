@@ -68,6 +68,29 @@ public interface IPlatformUtil {
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
 
     /**
+     * Caller-validating overload of {@link #isValidCallingApp(String, String)} that additionally rejects
+     * request-bundle caller spoofing (AB#3687466). It first asserts that {@code packageName} (the
+     * self-reported caller package from the untrusted request bundle) is owned by the app that owns the
+     * kernel-attested {@code callingUid}; if not, the caller is rejected fail-closed with a
+     * {@code ClientException(unknown_caller)}. Only after that ownership assertion passes does it apply the
+     * redirect-URI validation and return its boolean result. The ownership check is enforced
+     * <em>before</em> any redirect-URI short-circuit, so it cannot be bypassed. Currently wired to the
+     * silent broker token path (gated by {@code VALIDATE_SILENT_CALLER}); the two-argument overload remains
+     * for the interactive path (which does not perform this OS-attested uid check) and for the silent path
+     * when the flight is disabled.
+     *
+     * @param redirectUri  the redirect URI to validate ownership of.
+     * @param packageName  the self-reported caller package from the (untrusted) request bundle.
+     * @param callingUid   the kernel-attested calling uid ({@code Binder.getCallingUid()}).
+     * @return {@code true} if the app owns the redirect URI; {@code false} otherwise.
+     * @throws ClientException with {@code unknown_caller} if {@code packageName} does not match the uid's
+     *                         packages, or the uid resolves to no package.
+     */
+    boolean isValidCallingApp(@NonNull final String redirectUri,
+                              @NonNull final String packageName,
+                              final int callingUid) throws ClientException;
+
+    /**
      * Validates that the calling uid belongs to an acceptable app for web apps.
      *
      * @param callingUid the calling uid to validate
@@ -75,22 +98,6 @@ public interface IPlatformUtil {
      * @throws UnsupportedOperationException if the instance does not support this operation
      */
     void isValidCallingAppForWebApps(int callingUid) throws ClientException, UnsupportedOperationException;
-
-    /**
-     * Validates that a self-reported caller package belongs to the app that owns the kernel-attested
-     * calling uid, rejecting request-bundle caller spoofing (AB#3687466). The supplied
-     * {@code callerPackageName} must be a package owned by {@code callingUid}; otherwise the caller is
-     * rejected fail-closed. Currently wired to the silent broker token path, but the check itself is
-     * flow-agnostic. Mirrors {@link #isValidCallingApp} / {@link #isValidCallingAppForWebApps} by keeping
-     * the platform-specific caller resolution behind the platform util rather than in the parameters.
-     *
-     * @param callingUid        the kernel-attested calling uid ({@code Binder.getCallingUid()}).
-     * @param callerPackageName the self-reported caller package from the (untrusted) request bundle.
-     * @throws ClientException with {@code unknown_caller} if the package does not match the uid's
-     *                         packages, or the uid resolves to no package.
-     */
-    void validateCallingAppForUid(int callingUid,
-                              @NonNull String callerPackageName) throws ClientException;
 
     /**
      * Retrieve the Intune MAM enrollment id for the given user and package from

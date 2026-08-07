@@ -27,8 +27,6 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -58,12 +56,14 @@ import java.util.Collections;
  * Unit tests for the silent-caller validation gate in {@link BrokerSilentTokenCommandParameters#validate()}.
  *
  * <p>Shape C moved the enforcement decision into this (common4j) {@code validate()}: when the
- * {@link CommonFlight#VALIDATE_SILENT_CALLER} flight is enabled (default), it delegates to
- * {@link IPlatformUtil#validateCallingAppForUid} with the request's {@code callerUid} (which the broker
- * entry points overwrite with the kernel-attested {@code Binder.getCallingUid()}) and
- * {@code callerPackageName}, before the redirect-URI check. These tests verify that <em>wiring</em> against
- * a mock {@link IPlatformUtil} — the platform-specific {@code getPackagesForUid} membership behavior is
- * covered separately by {@code AndroidPlatformUtilTest} against the real implementation.
+ * {@link CommonFlight#VALIDATE_SILENT_CALLER} flight is enabled (default), it delegates to the
+ * caller-validating {@link IPlatformUtil#isValidCallingApp(String, String, int)} overload with the
+ * request's {@code callerUid} (which the broker entry points overwrite with the kernel-attested
+ * {@code Binder.getCallingUid()}) and {@code callerPackageName}; that overload enforces uid->package
+ * ownership before the redirect-URI check. With the flight off it falls back to the redirect-only
+ * two-argument overload. These tests verify that <em>wiring</em> against a mock {@link IPlatformUtil} — the
+ * platform-specific {@code getPackagesForUid} membership behavior is covered separately by
+ * {@code AndroidPlatformUtilTest} against the real implementation.
  */
 @RunWith(JUnit4.class)
 public class BrokerSilentTokenCommandParametersTest {
@@ -78,24 +78,24 @@ public class BrokerSilentTokenCommandParametersTest {
     }
 
     /**
-     * Flight on + validateCallingAppForUid accepts: the gate calls the platform util with the request's
-     * {@code callerUid} and {@code callerPackageName}, then validate() completes without throwing.
+     * Flight on + caller accepted: the gate calls the caller-validating overload with the request's
+     * {@code redirectUri}, {@code callerPackageName} and {@code callerUid}, then validate() completes
+     * without throwing.
      */
     @Test
     public void validate_flightOn_callerAccepted_delegatesWithCallerUidAndPackage() throws Exception {
         setValidateSilentCallerFlight(true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
-        when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
-        doNothing().when(platformUtil).validateCallingAppForUid(anyInt(), anyString());
+        when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt())).thenReturn(true);
 
         final BrokerSilentTokenCommandParameters params = params(platformUtil);
         params.validate();
 
-        verify(platformUtil).validateCallingAppForUid(eq(CALLER_UID), eq(CALLER_PACKAGE));
+        verify(platformUtil).isValidCallingApp(eq(REDIRECT_URI), eq(CALLER_PACKAGE), eq(CALLER_UID));
     }
 
     /**
-     * Flight on + validateCallingAppForUid rejects: validate() propagates the {@code UNKNOWN_CALLER}
+     * Flight on + caller rejected: validate() propagates the {@code UNKNOWN_CALLER}
      * {@link ClientException} (a spoofed caller is rejected before token issuance).
      */
     @Test
@@ -103,9 +103,8 @@ public class BrokerSilentTokenCommandParametersTest {
         setValidateSilentCallerFlight(true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         try {
-            when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
-            doThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"))
-                    .when(platformUtil).validateCallingAppForUid(anyInt(), anyString());
+            when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt()))
+                    .thenThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"));
 
             params(platformUtil).validate();
             fail("Expected ClientException(UNKNOWN_CALLER) to propagate from the caller-validation gate.");
@@ -117,21 +116,22 @@ public class BrokerSilentTokenCommandParametersTest {
     }
 
     /**
-     * Flight off (kill-switch): the caller-validation gate is skipped entirely — validateCallingAppForUid is
-     * never invoked even for a caller that would otherwise be rejected, restoring the pre-fix behavior.
+     * Flight off (kill-switch): the caller-validating overload is never invoked — the gate falls back to
+     * the redirect-only two-argument overload even for a caller that would otherwise be rejected, restoring
+     * the pre-fix behavior.
      */
     @Test
     public void validate_flightOff_callerCheckSkipped() throws Exception {
         setValidateSilentCallerFlight(false);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
-        // Would reject if consulted; the flight-off gate must not consult it.
-        doThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"))
-                .when(platformUtil).validateCallingAppForUid(anyInt(), anyString());
+        // Would reject if consulted; the flight-off gate must not consult the caller-validating overload.
+        when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt()))
+                .thenThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"));
 
         params(platformUtil).validate();
 
-        verify(platformUtil, never()).validateCallingAppForUid(anyInt(), anyString());
+        verify(platformUtil, never()).isValidCallingApp(anyString(), anyString(), anyInt());
     }
 
     /**
@@ -142,7 +142,7 @@ public class BrokerSilentTokenCommandParametersTest {
     public void validate_flightOn_forwardsGetCallerUid() throws Exception {
         setValidateSilentCallerFlight(true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
-        when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
+        when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt())).thenReturn(true);
 
         final BrokerSilentTokenCommandParameters params = params(platformUtil);
         assertEquals("Precondition: params must expose the configured caller uid.",
@@ -150,7 +150,7 @@ public class BrokerSilentTokenCommandParametersTest {
 
         params.validate();
 
-        verify(platformUtil).validateCallingAppForUid(eq(params.getCallerUid()), eq(CALLER_PACKAGE));
+        verify(platformUtil).isValidCallingApp(eq(REDIRECT_URI), eq(CALLER_PACKAGE), eq(params.getCallerUid()));
     }
 
     // ---- helpers ------------------------------------------------------------------------------
