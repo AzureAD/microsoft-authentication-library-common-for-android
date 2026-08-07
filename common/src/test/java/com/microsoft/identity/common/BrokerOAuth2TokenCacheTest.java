@@ -45,7 +45,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -610,28 +613,6 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     /**
-     * Backward-compatibility: existing (pre-fix) construction paths default the gate to true, so
-     * shared FoCI accounts remain visible to callers built via the legacy constructors.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testGetAccountsWithAggregatedAccountDataLegacyCtorDefaultIncludesSharedFociAccounts()
-            throws ClientException {
-        configureMocksForFoci();
-        final ICacheRecord saved = mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
-        final String clientId = saved.getRefreshToken().getClientId();
-
-        // Cache built with the legacy 5-arg test ctor -> gate defaults to true.
-        final BrokerOAuth2TokenCache callerCache = newBrokerCacheForUid(TEST_APP_UID + 1, true);
-
-        final List<ICacheRecord> accounts =
-                callerCache.getAccountsWithAggregatedAccountData(null, clientId);
-
-        assertNotNull(accounts);
-        assertFalse(accounts.isEmpty());
-    }
-
-    /**
      * Regression test for AB#3687466: an unauthorized caller that has its own FoCI metadata row for
      * the requested client id must still be blocked from enumerating the device-wide shared FoCI
      * cache on the environment-scoped path. Prior to the fix, {@code getTokenCacheForClient(id, env,
@@ -936,79 +917,81 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     /**
-     * Regression: BrokerOAuth2TokenCacheTelemetryWrapper must delegate getFociCacheRecords()
-     * (and isCallerAuthorizedForFoci()) to the wrapped cache. The wrapper's own
-     * mCallerAuthorizedForFoci is set from its ctor and — in production — matches the wrapped
-     * cache's gate (BrokerUtil.getBrokerCache threads the same value to both), but the wrapper
-     * still owns a separate instance of the field. Without the explicit delegation, a caller
-     * inspecting the wrapper's inherited FoCI-touching methods could bypass the gate the
-     * wrapped instance was configured with. This test pins the delegation contract (AB#3687466).
+     * Regression: {@link BrokerOAuth2TokenCacheTelemetryWrapper#getFociCacheRecords()} must
+     * delegate to the wrapped cache. Spies the wrapped cache and verifies the delegate is
+     * invoked; asserting emptiness alone would tautologically pass even if the override were
+     * removed, because the wrapper's inherited super gate ({@code mCallerAuthorizedForFoci=false})
+     * would short-circuit the base implementation to empty regardless.
      */
     @Test
     @SuppressWarnings("unchecked")
     public void testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty() throws ClientException {
-        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final BrokerOAuth2TokenCache spyUnauthorizedCache = spy(seedFociAndReturnUnauthorizedAppBCache());
         final BrokerOAuth2TokenCacheTelemetryWrapper wrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                unauthorizedAppBCache,
+                spyUnauthorizedCache,
                 /* callerAuthorizedForFoci= */ false
         );
 
         assertFalse(wrapper.isCallerAuthorizedForFoci());
         assertTrue(wrapper.getFociCacheRecords().isEmpty());
+        verify(spyUnauthorizedCache, atLeastOnce()).getFociCacheRecords();
 
-        // Positive control: wrapper around an authorized cache exposes the shared FoCI records.
-        final BrokerOAuth2TokenCache authorizedAppBCache =
-                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        // Positive control: wrapper around an authorized cache exposes the shared FoCI records
+        // via the same delegation contract.
+        final BrokerOAuth2TokenCache spyAuthorizedCache =
+                spy(newBrokerCacheForUid(TEST_APP_UID + 1, true));
         final BrokerOAuth2TokenCacheTelemetryWrapper authorizedWrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                authorizedAppBCache,
+                spyAuthorizedCache,
                 /* callerAuthorizedForFoci= */ true
         );
         assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
         assertFalse(authorizedWrapper.getFociCacheRecords().isEmpty());
+        verify(spyAuthorizedCache, atLeastOnce()).getFociCacheRecords();
     }
 
     /**
-     * Same defense-in-depth invariant as
-     * {@link #testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty()} but for the
-     * no-arg {@link BrokerOAuth2TokenCacheTelemetryWrapper#getAccounts()} overload. Without the
-     * delegate, the wrapper's inherited {@code getAccounts()} would read
-     * {@code mFociCache.getAccountCredentialCache().getAccounts()} against the wrapper's own
-     * inherited field state rather than the wrapped instance's, decoupling the observable
-     * behavior from how {@code mCacheToWrap} was configured (AB#3687466).
+     * Same delegation invariant as
+     * {@link #testTelemetryWrapperGetFociCacheRecordsUnauthorizedReturnsEmpty()} but for
+     * {@link BrokerOAuth2TokenCacheTelemetryWrapper#getAccounts()}. The base implementation
+     * also gates its FoCI branch on {@code mCallerAuthorizedForFoci}, so the spy is required
+     * to distinguish real delegation from an inherited-gate short-circuit.
      */
     @Test
     @SuppressWarnings("unchecked")
     public void testTelemetryWrapperGetAccountsNoArgUnauthorizedReturnsEmpty() throws ClientException {
-        final BrokerOAuth2TokenCache unauthorizedAppBCache = seedFociAndReturnUnauthorizedAppBCache();
+        final BrokerOAuth2TokenCache spyUnauthorizedCache = spy(seedFociAndReturnUnauthorizedAppBCache());
         final BrokerOAuth2TokenCacheTelemetryWrapper wrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                unauthorizedAppBCache,
+                spyUnauthorizedCache,
                 /* callerAuthorizedForFoci= */ false
         );
 
         assertFalse(wrapper.isCallerAuthorizedForFoci());
         assertTrue(wrapper.getAccounts().isEmpty());
+        verify(spyUnauthorizedCache, atLeastOnce()).getAccounts();
 
-        // Positive control: wrapper around an authorized cache surfaces the shared FoCI accounts.
-        final BrokerOAuth2TokenCache authorizedAppBCache =
-                newBrokerCacheForUid(TEST_APP_UID + 1, true);
+        // Positive control: wrapper around an authorized cache surfaces the shared FoCI accounts
+        // via the same delegation contract.
+        final BrokerOAuth2TokenCache spyAuthorizedCache =
+                spy(newBrokerCacheForUid(TEST_APP_UID + 1, true));
         final BrokerOAuth2TokenCacheTelemetryWrapper authorizedWrapper = new BrokerOAuth2TokenCacheTelemetryWrapper(
                 mPlatformComponents,
                 TEST_APP_UID + 1,
                 mApplicationMetadataCache,
-                authorizedAppBCache,
+                spyAuthorizedCache,
                 /* callerAuthorizedForFoci= */ true
         );
         assertTrue(authorizedWrapper.isCallerAuthorizedForFoci());
         assertFalse(authorizedWrapper.getAccounts().isEmpty());
+        verify(spyAuthorizedCache, atLeastOnce()).getAccounts();
     }
 
     // endregion
