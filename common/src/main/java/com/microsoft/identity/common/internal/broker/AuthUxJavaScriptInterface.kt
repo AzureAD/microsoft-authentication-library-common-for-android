@@ -95,13 +95,21 @@ fun interface AuthUxTelemetrySink {
      * itself. Implementations must not block.
      *
      * @param event The validated telemetry context. [AuthUxTelemetryEvent.errorCode] is guaranteed
-     *  non-empty and shape-checked; the remaining fields are best-effort page-supplied context.
-     * @return `true` if the event was consumed and recorded, `false` if it was ignored (for example
-     *  because the host has no active telemetry recorder yet). Returning `false` lets the bridge
-     *  leave the code eligible for a later retry instead of suppressing it as already-forwarded, so
-     *  a code that arrives before the host is ready is not lost.
+     *  non-empty and shape-checked; the remaining fields are best-effort page-supplied context,
+     *  control-character-stripped and length-bounded but not shape-validated.
+     * @return `true` if the sink took responsibility for the event — whether it recorded the code or
+     *  deliberately dropped it by its own policy — and `false` if it is not ready to take it yet (for
+     *  example the host has no active telemetry recorder). Returning `false` leaves the code eligible
+     *  for a later retry instead of suppressing it as already-forwarded, so a code that arrives
+     *  before the host is ready is not lost.
+     *
+     *  **Signal "not ready" by returning `false`, never by throwing.** A throw is treated as a host
+     *  defect: retry is suppressed for the rest of the page load, because re-offering an event to a
+     *  sink that is failing would let a looping page re-invoke it indefinitely. An implementation
+     *  that throws during its own not-ready window would therefore lose the very early-arrival
+     *  events the `false` contract exists to preserve.
      */
-    fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean
+    fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean
 }
 
 /**
@@ -256,6 +264,20 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          */
         private fun sanitizeCorrelationId(value: String): String =
             sanitizeBounded(value, MAX_CORRELATION_ID_LENGTH)
+
+        /**
+         * Make an optional, page-supplied context value safe to carry across the sink seam.
+         *
+         * These fields (`sessionID`, `pageId`, `trackingId`, `v`) are not shape-validated the way
+         * `errorCode` is — there is no contract shape to check — but they cross the same trust
+         * boundary and reach the same onboarding blob, so they get the same control-character
+         * stripping that keeps a crafted value from forging log entries in whichever consumer
+         * eventually reads them, and the same generous bound so a page cannot push an unbounded
+         * string into an uploaded blob. Null is preserved as null: absent and empty are different
+         * signals to a consumer, so this must not invent a value.
+         */
+        private fun sanitizeCarriedValue(value: String?): String? =
+            value?.let { sanitizeBounded(it, MAX_CORRELATION_ID_LENGTH) }
 
         fun getInterfaceName(): String {
             return JAVASCRIPT_INTERFACE_NAME
@@ -564,14 +586,19 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
 
         val outcome = try {
             // Invoked outside the lock: never hold an internal lock across a host callback.
-            if (sink.onAuthUxTelemetry(
+            if (sink.tryConsumeAuthUxTelemetry(
                     AuthUxTelemetryEvent(
                         correlationId = correlationId,
                         errorCode = errorCode,
-                        sessionId = parameters.sessionId,
-                        pageId = parameters.pageId,
-                        trackingId = parameters.trackingId,
-                        version = parameters.version
+                        // Stripped and bounded at the seam, like correlationId above. These are
+                        // page-controlled and reach the same onboarding blob the errorCode
+                        // validation exists to protect; a consumer that logs one would otherwise
+                        // inherit the log-forging hole already closed for correlationId. Not
+                        // shape-validated — unlike errorCode there is no contract shape to check.
+                        sessionId = sanitizeCarriedValue(parameters.sessionId),
+                        pageId = sanitizeCarriedValue(parameters.pageId),
+                        trackingId = sanitizeCarriedValue(parameters.trackingId),
+                        version = sanitizeCarriedValue(parameters.version)
                     )
                 )
             ) {
@@ -615,9 +642,14 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         }
 
         synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
-        // Set only for codes a sink actually took, so the span cannot report codes that downstream
-        // telemetry never received. Single-valued by nature of setAttribute: on a flow reporting
-        // several codes the LAST consumed code wins.
+        // Set for any code a sink CONSUMED. Note "consumed" means the sink took responsibility for
+        // the code, which includes deliberately dropping it by its own policy — so this attribute
+        // records what the PAGE REPORTED and the sink accepted, not what downstream telemetry
+        // ultimately stored. A sink that excludes some codes (as the onboarding sink does for the
+        // non-onboarding AADSTS list) will legitimately produce a span carrying a code the blob does
+        // not. What it can never do is carry a code no sink took: NOT_CONSUMED and THREW both skip
+        // this. Single-valued by nature of setAttribute: on a flow reporting several codes the LAST
+        // consumed code wins.
         SpanExtension.current()
             .setAttribute(AttributeName.authux_js_error_code.name, errorCode)
         Logger.info(

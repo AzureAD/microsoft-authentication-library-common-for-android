@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import io.opentelemetry.api.trace.Span
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -209,7 +211,7 @@ class AuthUxJavaScriptInterfaceTest {
         /** Every invocation, including ones this sink declines. */
         var calls = 0
         val received: List<String> get() = events.map { it.errorCode }
-        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
             calls++
             if (!consume) {
                 return false
@@ -222,10 +224,71 @@ class AuthUxJavaScriptInterfaceTest {
     /** Test double that always throws, to prove a bad sink cannot kill the bridge. */
     private class ThrowingTelemetrySink : AuthUxTelemetrySink {
         var calls = 0
-        override fun onAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
+        override fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean {
             calls++
             throw IllegalStateException("sink boom")
         }
+    }
+
+    /** Runs [block] with [span] installed as the current span. */
+    private fun withCurrentSpan(span: Span, block: () -> Unit) {
+        span.makeCurrent().use { block() }
+    }
+
+    private val authUxErrorCodeAttribute: String
+        get() = AttributeName.authux_js_error_code.name
+
+    @Test
+    fun `test span error-code attribute is set when the sink consumes the code`() {
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink())
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertEquals(mockErrorCode, span.getAttribute(authUxErrorCodeAttribute))
+    }
+
+    @Test
+    fun `test span error-code attribute is unset when the sink declines the code`() {
+        // NOT_CONSUMED means nothing was recorded downstream and the code stays eligible for retry,
+        // so a span carrying it would advertise telemetry that does not exist.
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink(consume = false))
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertFalse(
+            "a declined code must not reach the span",
+            span.hasAttribute(authUxErrorCodeAttribute)
+        )
+    }
+
+    @Test
+    fun `test span error-code attribute is unset when the sink throws`() {
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(ThrowingTelemetrySink())
+
+        withCurrentSpan(span) { interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload) }
+
+        Assert.assertFalse(
+            "a throwing sink recorded nothing, so the span must stay silent",
+            span.hasAttribute(authUxErrorCodeAttribute)
+        )
+    }
+
+    @Test
+    fun `test span error-code attribute holds the last consumed code`() {
+        // setAttribute is single-valued, so a flow reporting several codes keeps only the last one.
+        // Pinned because dashboards read this attribute and the loss is otherwise invisible.
+        val span = RecordingSpan()
+        val interfaceWithSink = AuthUxJavaScriptInterface(RecordingTelemetrySink())
+
+        withCurrentSpan(span) {
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"530003\""))
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53003\""))
+        }
+
+        Assert.assertEquals("53003", span.getAttribute(authUxErrorCodeAttribute))
     }
 
     @Test
