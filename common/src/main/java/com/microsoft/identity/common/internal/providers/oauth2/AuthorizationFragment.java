@@ -77,6 +77,17 @@ public abstract class AuthorizationFragment extends Fragment {
     protected boolean mAuthResultSent = false;
 
     /**
+     * Correlation id of this authorization request, read from the state bundle in
+     * {@link #extractState(Bundle)}.
+     *
+     * <p>Lives here rather than in a subclass because the read is a base-class responsibility: this
+     * class restores the diagnostic context from it, and {@link #onSaveInstanceState(Bundle)} below
+     * round-trips it so a recreated fragment restores that context instead of blanking it. Keeping
+     * the save next to the read means a new subclass cannot forget it.
+     */
+    protected String mCorrelationId;
+
+    /**
      * Listens to an operation cancellation event.
      */
     private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
@@ -165,7 +176,22 @@ public abstract class AuthorizationFragment extends Fragment {
      * @param state a bundle containing data provided when the activity was created
      */
     void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        mCorrelationId = state.getString(DiagnosticContext.CORRELATION_ID);
+        setDiagnosticContextForNewThread(mCorrelationId);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Round-trips the correlation id, which {@link #extractState(Bundle)} reads back on the
+     * recreation path. Without this the key is absent from the saved bundle and a recreated fragment
+     * blanks its diagnostic context, so every subsequent log line for the request loses its join
+     * key — and, for the WebView fragment, the onboarding recorder can no longer be resolved.
+     */
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
     }
 
     /**
