@@ -19,7 +19,9 @@ jobs:
         echo "Fetching labels from $url"
         # Reuse the credential the checkout persisted (empty for public repos, which is fine).
         authHeader=$(git config --get-regexp '^http\..*\.extraheader$' | grep -i 'AUTHORIZATION:' | head -n1 | sed -E 's/^[^ ]+[[:space:]]+[Aa][Uu][Tt][Hh][Oo][Rr][Ii][Zz][Aa][Tt][Ii][Oo][Nn]:[[:space:]]*//')
-        temp=$(curl -s -H "Accept: application/vnd.github+json" -H "User-Agent: azure-pipelines-fetch-pr-labels" ${authHeader:+-H "Authorization: $authHeader"} "$url" | jq -jc '.[] | {name}')
+        curlArgs=(-s -H "Accept: application/vnd.github+json" -H "User-Agent: azure-pipelines-fetch-pr-labels")
+        if [ -n "$authHeader" ]; then curlArgs+=(-H "Authorization: $authHeader"); fi
+        temp=$(curl "${curlArgs[@]}" "$url" | jq -jc '.[] | {name}')
         echo -e "##vso[task.setvariable variable=prLabels;isOutput=true]$temp"
         echo "$temp"
       condition: eq(variables['Build.Reason'], 'PullRequest')
