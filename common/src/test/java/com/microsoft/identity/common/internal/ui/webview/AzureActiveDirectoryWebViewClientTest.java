@@ -2160,6 +2160,73 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /** Builds a real recorder over a minimal seed; shared by the onboarding-telemetry tests. */
+    /**
+     * AB#3688632: broker4j writes SYMBOLIC constants into the same {@code blocking_errors} list for
+     * blocks it detected itself, and every one of them fits the bridge's {@code [A-Za-z0-9_-]{1,32}}
+     * shape. Without a narrower check at this sink, a page could post
+     * {@code DEVICE_REGISTRATION_NEEDED} and nothing downstream could tell it from a real
+     * device-registration block.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_SymbolicCodeIsRejected() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // The two constants broker4j actually writes on a device-registration block.
+        assertTrue("a policy drop is still consumed",
+                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("DEVICE_REGISTRATION_NEEDED")));
+        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(
+                authUxEvent("INSUFFICIENT_DEVICE_REGISTRATION")));
+        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("MDM_FLOW")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertFalse("no page-supplied symbolic code may reach the blob",
+                blob.has(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .BLOCKING_ERRORS)
+                        && blob.getJSONArray(com.microsoft.identity.common.java.telemetry
+                        .OnboardingTelemetryConstants.BLOCKING_ERRORS).length() > 0);
+    }
+
+    /** AB#3688632: a real numeric server code is still accepted after the shape check. */
+    @Test
+    public void testRecordAuthUxServerErrorCode_NumericCodeStillAccepted() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals(1, errors.length());
+        assertEquals("530003", errors.getString(0));
+    }
+
+    /**
+     * AB#3688632: the bridge's caps are per instance and reset on every navigation, so this client's
+     * set is the only bound that spans the request. Without a cap here a page cycling distinct codes
+     * across navigations grows the uploaded blob without limit.
+     */
+    @Test
+    public void testRecordAuthUxServerErrorCode_PerRequestCapBoundsTheBlob() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // 40 DISTINCT codes; duplicates would not count toward the cap.
+        for (int i = 0; i < 40; i++) {
+            assertTrue("a capped code is consumed, not retried",
+                    mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("5300" + i)));
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("the per-request total must be bounded", 10, errors.length());
+    }
+
     private com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder newRecorder() {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","

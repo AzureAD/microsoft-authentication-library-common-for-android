@@ -112,6 +112,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import android.webkit.WebResourceError;
 
@@ -185,6 +186,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     @Nullable
     private volatile OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+
+    /**
+     * Accepted shape for a page-supplied Auth UX server error code.
+     *
+     * Narrower than the bridge's own {@code [A-Za-z0-9_-]{1,32}} shape check on purpose: the bridge
+     * is a generic seam and cannot know a sink's destination, but this sink appends to
+     * {@code blocking_errors}, which broker4j also writes SYMBOLIC constants into for blocks it
+     * detected itself. Server-reported codes are numeric, so restricting to digits keeps
+     * page-supplied values from colliding with our own constants without rejecting anything a page
+     * can legitimately report.
+     */
+    private static final Pattern SERVER_ERROR_CODE_PATTERN = Pattern.compile("^[0-9]{1,32}$");
+
+    /**
+     * Maximum number of distinct Auth UX error codes forwarded per authorization request.
+     *
+     * The bridge's caps are per instance and reset on every navigation, so this is the only bound
+     * that spans the request. Generous: duplicates never count (they are suppressed by
+     * {@link #mForwardedAuthUxErrorCodes}), and a real flow reports one or two distinct blocking
+     * errors, so reaching this needs a page deliberately cycling distinct values.
+     */
+    private static final int MAX_FORWARDED_ERROR_CODES = 10;
+
+    /** One-shot latch so the {@link #MAX_FORWARDED_ERROR_CODES} warning is logged once, not once per code. */
+    private volatile boolean mForwardedErrorCodeCapLogged = false;
 
     /**
      * Auth UX server error codes already forwarded to the onboarding recorder by this client.
@@ -1987,7 +2013,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
         final String errorCode = event.getErrorCode();
-        // Policy check first: it has no dependency on the recorder, so a non-blocking code that
+        // Shape check first: this is the only caller of addBlockingError whose input is untrusted,
+        // and it is terminal, so it runs before anything that depends on the recorder.
+        //
+        // The bridge accepts [A-Za-z0-9_-]{1,32} because it is a generic seam that does not know
+        // where a code ends up. This sink does know: blocking_errors is shared with broker4j, which
+        // writes SYMBOLIC constants there for blocks it detected itself (DEVICE_REGISTRATION_NEEDED,
+        // INSUFFICIENT_DEVICE_REGISTRATION, BROKER_INSTALLATION_TRIGGERED, ...). Every one of those
+        // fits the bridge's shape, so without this a page could post one and nothing downstream —
+        // dashboards included — could tell it from a block the broker actually detected. Server
+        // codes are numeric, so restricting to digits closes the collision without losing anything
+        // a page can legitimately report.
+        if (!SERVER_ERROR_CODE_PATTERN.matcher(errorCode).matches()) {
+            // Safe to log verbatim: the bridge already rejected control characters and anything
+            // over 32 characters.
+            Logger.warn(TAG, event.getCorrelationId(),
+                    "Onboarding telemetry: rejecting non-numeric Auth UX error code [" + errorCode
+                            + "] - only server-reported numeric codes may be page-supplied");
+            // Consumed: a deliberate policy drop, not a "try again later".
+            return true;
+        }
+        // Policy check: it has no dependency on the recorder, so a non-blocking code that
         // arrives before the recorder is attached is terminal rather than retried against a budget
         // it can never usefully spend.
         if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
@@ -2005,6 +2051,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (!mForwardedAuthUxErrorCodes.add(errorCode)) {
             // Already forwarded earlier in this request, on an earlier navigation's bridge
             // instance. Consumed — re-appending would duplicate it in the uploaded blob.
+            return true;
+        }
+        // Bound the per-request total. The bridge's own caps are per INSTANCE, and
+        // OAuth2WebViewClient#onPageStarted rebuilds it on every navigation, so they reset each page
+        // load; this set is the only thing that spans the request. Duplicates are already excluded
+        // above, so reaching this cap needs the page to report MAX_FORWARDED_ERROR_CODES distinct
+        // blocking errors in one authorization request — far beyond any real flow, which reports one
+        // or two. Checked after the atomic add() rather than before it, so the check-and-claim stays
+        // a single operation; the code is removed again when it does not fit.
+        if (mForwardedAuthUxErrorCodes.size() > MAX_FORWARDED_ERROR_CODES) {
+            mForwardedAuthUxErrorCodes.remove(errorCode);
+            if (!mForwardedErrorCodeCapLogged) {
+                // Logged once, on the transition, so hitting the cap is diagnosable without the cap
+                // message becoming the flood it exists to prevent.
+                mForwardedErrorCodeCapLogged = true;
+                Logger.warn(TAG, event.getCorrelationId(),
+                        "Onboarding telemetry: per-request Auth UX error code cap ("
+                                + MAX_FORWARDED_ERROR_CODES + ") reached; ignoring further codes "
+                                + "for this authorization request");
+            }
+            // Consumed: the cap is terminal for this request, so re-offering would only spend the
+            // bridge's retry budget on a code that can never be recorded.
             return true;
         }
         // The claim staked by the add() above is retracted unless the append actually succeeds.
