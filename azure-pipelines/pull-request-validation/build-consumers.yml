@@ -31,7 +31,7 @@ resources:
     ref: dev
     endpoint: ANDROID_GITHUB
   - repository: broker
-    type: githubenterprise
+    type: github
     name: security/ad-accounts-for-android
     ref: dev
     endpoint: MSFT_GHE_SECURITY
