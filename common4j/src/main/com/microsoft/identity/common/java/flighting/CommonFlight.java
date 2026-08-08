@@ -121,6 +121,20 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to enable a TELEMETRY-ONLY Auth UX JavaScript API outside the broker's {@code :auth}
+     * process, so non-brokered (OneAuth) flows can report onboarding error codes. Default is false.
+     *
+     * <p>Separate from {@link #ENABLE_JS_API_FOR_AUTHUX} on purpose: that flight governs the FULL
+     * bridge, which includes the number-match device-store path, and is only ever evaluated inside
+     * the isolated broker {@code :auth} process. This flight widens exposure into the host
+     * application's own process (Teams, Outlook, ...), so it is deliberately narrower — the bridge
+     * registered under it refuses every mutating action and can only append to the onboarding
+     * telemetry blob. Keeping the two flights independent means the brokerless surface can be
+     * turned off without disabling number-matching for the broker.
+     */
+    ENABLE_BROKERLESS_TELEMETRY_JS_API_FOR_AUTHUX("EnableBrokerlessTelemetryJsApiForAuthUx", false),
+
+    /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
     ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),

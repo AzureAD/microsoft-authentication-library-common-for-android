@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -287,9 +288,33 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     protected boolean shouldExposeJavaScriptInterface(final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+        if (!AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)) {
+            return false;
+        }
+        // The two hosts are gated independently: the broker's :auth process gets the full bridge
+        // under its own flight, and any other host gets only the telemetry-only bridge under a
+        // separate, default-off flight. Reusing ENABLE_JS_API_FOR_AUTHUX for both would mean
+        // turning the brokerless surface on for every MSAL client the moment the broker flight
+        // flipped, and turning the brokerless surface off would also disable number-matching.
+        final IFlightsProvider flightsProvider = CommonFlightsManager.INSTANCE.getFlightsProvider();
+        return isTelemetryOnlyAuthUxBridge()
+                ? flightsProvider.isFlightEnabled(CommonFlight.ENABLE_BROKERLESS_TELEMETRY_JS_API_FOR_AUTHUX)
+                : flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
+     * Whether the Auth UX bridge this client registers must be restricted to telemetry.
+     *
+     * <p>Determined by the hosting process, not by the loaded page: outside the broker's isolated
+     * {@code :auth} process the WebView runs in the calling application's own process (a
+     * non-brokered OneAuth flow in Teams, Outlook, ...), where the number-match device store is
+     * neither reachable by the broker nor part of the flow. Such a host therefore only ever needs
+     * to report onboarding error codes, so it gets a bridge that can do nothing else.
+     *
+     * @return {@code true} to construct the bridge in telemetry-only mode.
+     */
+    protected boolean isTelemetryOnlyAuthUxBridge() {
+        return !ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
     }
 
     /**
@@ -302,12 +327,13 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * to the same name, so the later registration wins. Constructing the bridge here — rather than
      * inline at each call site — keeps both registrations identically configured; otherwise a
      * subclass that supplies extra collaborators (e.g. a telemetry sink) would silently have them
-     * dropped the first time a page load re-registered a bare instance.
+     * dropped the first time a page load re-registered a bare instance. For the same reason the
+     * telemetry-only capability is resolved here rather than at either call site.
      *
      * @return the bridge instance to bind under {@link AuthUxJavaScriptInterface#getInterfaceName()}.
      */
     @NonNull
     protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
-        return new AuthUxJavaScriptInterface();
+        return new AuthUxJavaScriptInterface(null, isTelemetryOnlyAuthUxBridge());
     }
 }
