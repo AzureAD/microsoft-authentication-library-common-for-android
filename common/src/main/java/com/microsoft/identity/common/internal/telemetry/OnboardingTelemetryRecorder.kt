@@ -143,10 +143,12 @@ class OnboardingTelemetryRecorder(
      * `AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode`, which does so for the Auth UX
      * JS bridge because that bridge is rebuilt on every WebView navigation.
      *
-     * All-or-nothing with respect to exceptions: the persistence step cannot fail this call (see
-     * [persistSessionCorrelation]), so a caller that catches a throw from here can safely assume the
-     * code was not recorded. That is what lets the Auth UX sink retract its de-duplication claim on
-     * failure without risking a duplicate on the next offer.
+     * All-or-nothing: nothing is recorded unless this call completes, so a caller that catches a
+     * throw from here can safely assume the code was not appended. That is what lets the Auth UX
+     * sink retract its de-duplication claim on failure without risking a duplicate on the next
+     * offer. The guarantee holds against [Error] as well as [Exception], because the only step that
+     * can throw ([persistSessionCorrelation], which deliberately lets [Error] through) runs *before*
+     * the append rather than after it.
      *
      * @param errorCode The onboarding blocking-error identifier to record. Either a symbolic
      *                  blocking-error constant (e.g.,
@@ -156,12 +158,20 @@ class OnboardingTelemetryRecorder(
      *                  Auth UX JS bridge (e.g., "530003"). Recorded verbatim as an opaque string.
      */
     override fun addBlockingError(errorCode: String) {
+        // Persist BEFORE the append, so this method is all-or-nothing against Error as well as
+        // Exception. persistSessionCorrelation catches Exception but deliberately lets Error
+        // through (swallowing an OutOfMemoryError to protect a telemetry write would be the wrong
+        // trade). With the append first, an Error escaping the persist would leave the code in
+        // blockingErrors while the caller saw a throw — and the Auth UX sink, which retracts its
+        // de-duplication claim on any throw, would then let the next offer append it a second time.
+        // Ordering it this way costs nothing: the persist does not depend on the append, and a
+        // persist that succeeds for a block that is then never recorded is harmless (it only
+        // refreshes the session-correlation entry, which is idempotent).
+        persistSessionCorrelation()
+
         synchronized(blockingErrors) {
             blockingErrors.add(errorCode)
         }
-
-        // Persist session correlation to SharedPreferences immediately on block
-        persistSessionCorrelation()
     }
 
     /**
@@ -298,15 +308,18 @@ class OnboardingTelemetryRecorder(
      * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
      * Called on block detection.
      *
-     * Never fails its caller. This is load-bearing, not defensive tidiness: it is what makes
-     * [addBlockingError] all-or-nothing, and `AzureActiveDirectoryWebViewClient` relies on that to
-     * decide whether to retract a de-duplication claim after a failed append. If a persistence
-     * failure escaped here, the code would already be in [blockingErrors] while the caller saw a
-     * throw, and the retraction would let the next offer append it a second time. Widened from
-     * `JSONException` to `Exception` for that reason: `getSharedPreferences` throws
-     * [IllegalStateException] on credential-encrypted storage before first unlock (direct boot).
-     * [Error] is deliberately still allowed to propagate — swallowing an `OutOfMemoryError` to
+     * Swallows [Exception] so a best-effort persistence failure does not fail its caller:
+     * `getSharedPreferences` throws [IllegalStateException] on credential-encrypted storage before
+     * first unlock (direct boot), and losing a correlation entry must not cost the blocking error
+     * itself. [Error] is deliberately allowed to propagate — swallowing an `OutOfMemoryError` to
      * protect a best-effort telemetry write would be the wrong trade.
+     *
+     * Because [Error] can escape, [addBlockingError] calls this **before** appending, so that a
+     * throw from here means nothing was recorded. That ordering is what makes `addBlockingError`
+     * all-or-nothing, which `AzureActiveDirectoryWebViewClient` relies on when deciding whether to
+     * retract a de-duplication claim after a failed append: if the append ran first, an `Error` out
+     * of here would leave the code in [blockingErrors] while the caller saw a throw, and the
+     * retraction would let the next offer append it a second time.
      */
     private fun persistSessionCorrelation() {
         if (sessionCorrelationId.isEmpty()) {

@@ -195,17 +195,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * de-duplicates within a single page. Without this, a redirect-heavy flow reports the same
      * server error once per page load (an on-device run produced {@code ["530003","530003"]}).
      *
-     * Known limitation: a rebuilt client starts a fresh set while the recorder, held by the
-     * process-static {@code OnboardingRecorderRegistry}, survives — so a code forwarded before the
-     * rebuild can be appended a second time. {@code AuthorizationActivity} declares
+     * Known limitation: a rebuilt client starts a fresh set. Whether that produces a duplicate
+     * depends on whether the recorder outlives the rebuild — on this PR the host sets it directly
+     * via {@link #setOnboardingTelemetryRecorder}, so a rebuilt client normally gets a fresh
+     * recorder too and there is nothing to duplicate into. It becomes reachable once a host keeps
+     * the recorder across a client rebuild, which is what the brokered wiring in AB#3708195 does.
+     * {@code AuthorizationActivity} declares
      * {@code configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"},
      * which covers rotation and the YubiKey keyboard case, but NOT {@code uiMode}, {@code fontScale},
-     * {@code density}, {@code locale} or {@code layoutDirection}. Toggling dark mode mid-flow
-     * therefore can produce a duplicate. This is accepted rather than fixed here: it needs a
-     * deliberate mid-authorization system-settings change to hit, costs one duplicate entry in a
-     * best-effort telemetry list, and the alternatives are worse — de-duplicating in the recorder
-     * would break the shared append-only contract below, and moving this set into the registry
-     * would give the feature a second piece of process-static state to leak.
+     * {@code density}, {@code locale} or {@code layoutDirection}. Toggling dark mode mid-flow can
+     * therefore rebuild the client. This is accepted rather than fixed here: it needs a deliberate
+     * mid-authorization system-settings change to hit, costs one duplicate entry in a best-effort
+     * telemetry list, and the alternative is worse — de-duplicating in the recorder would break the
+     * shared append-only contract described below.
      *
      * A code is entered before the append and retracted in a {@code finally} if the append does not
      * complete, so a failed forward is never left behind as already-forwarded.
@@ -2017,9 +2019,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // claiming success), and the cleanup covers any abnormal exit, not only RuntimeException.
         //
         // Retracting on ANY abnormal exit is only correct because addBlockingError is
-        // all-or-nothing: its best-effort persistence step cannot throw (it catches Exception), so
-        // a throw from it means the code was not appended. If that ever stops holding, this
-        // retraction turns into a duplicate-producer — the mirror of the bug it fixes.
+        // all-or-nothing: its best-effort persistence step runs BEFORE the append, so a throw from
+        // it — Exception or Error — means the code was not appended. If that ordering ever changes,
+        // this retraction turns into a duplicate-producer — the mirror of the bug it fixes.
         boolean recorded = false;
         try {
             recorder.addBlockingError(errorCode);
