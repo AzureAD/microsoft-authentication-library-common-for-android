@@ -182,6 +182,12 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * also accepts (e.g. `"BROKER_INSTALL"`), while excluding whitespace and control characters
          * so a page-supplied value can never inject a newline into a log line or an unbounded string
          * into the uploaded onboarding blob.
+         *
+         * This is a **shape** check only, and deliberately does not encode any one sink's policy:
+         * the bridge does not know where a code ends up. A sink whose destination gives meaning to
+         * particular values must narrow further on its own side — the onboarding sink accepts only
+         * numeric server codes, so a page cannot post one of the symbolic constants the broker
+         * writes for blocks it detected itself.
          */
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
 
