@@ -356,6 +356,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 getSwitchBrowserCoordinator(),
                 mUtid,
                 isWebViewWebcpEnabledInBrokerlessCase,
+                mMamCaInstallReferrerEnabled,
                 new IUrlLoadTracker() {
                     @Override
                     public void trackNewUrlStatus(final String url, final String loadingError, final String authError) {

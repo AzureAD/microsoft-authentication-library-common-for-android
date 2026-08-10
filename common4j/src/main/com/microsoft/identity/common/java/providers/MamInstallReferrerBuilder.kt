@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers
 
-import com.microsoft.identity.common.java.flighting.CommonFlight
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.util.CommonURIBuilder
 import java.net.URISyntaxException
@@ -41,8 +39,13 @@ import java.net.URISyntaxException
  *
  * **Scope.** Only the MAM-CA install path is tagged. The same broker-install redirect also drives
  * ordinary device-registration installs, which must keep their existing behavior, so the decoration
- * is gated on [MamCaRedirect.isMamCaInstall] as well as on
- * [CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER].
+ * is gated on [MamCaRedirect.isMamCaInstall] as well as on the host's opt-in.
+ *
+ * **Who turns it on.** The `enabled` flag is supplied by the host SDK (OneAuth/MSAL) rather than read
+ * from a flight here. The gate has to be evaluated in the process that hosts the sign-in UI, and
+ * common4j flights are only initialized in the broker process, so a flight read here would be pinned
+ * to its compile-time default for every app-hosted flow. Defaulting to `false` keeps callers that do
+ * not pass it - including the broker, whose package is not the calling app's - unchanged.
  *
  * The marker is the whole of the scope, deliberately. The server sets `intuneAppProtection=1` only
  * on MAM-CA flows, so once it is present the redirect is known to be one, and the referrer is
@@ -67,22 +70,22 @@ object MamInstallReferrerBuilder {
      * Why a Company Portal install link was, or was not, tagged with an install referrer.
      *
      * Six of the seven outcomes return the caller's `app_link` unchanged, so the returned link alone
-     * cannot say *why* decoration did not happen - "the flight is off" and "the server already named
-     * a referrer" are indistinguishable from it. This enum is what makes those cases separable, in
-     * tests and when reading a call site.
+     * cannot say *why* decoration did not happen - "the host did not opt in" and "the server already
+     * named a referrer" are indistinguishable from it. This enum is what makes those cases separable,
+     * in tests and when reading a call site.
      *
      * Deliberately carries no telemetry tag. Rollout is read off the log lines below - every outcome
-     * the flight actually evaluates names itself in one - not off the onboarding blob: `ux_flow_used`
+     * that is actually evaluated names itself in one - not off the onboarding blob: `ux_flow_used`
      * records which UX-variant cohort a user was in, not per-attempt result codes, so these values do
      * not belong there.
      */
     enum class Outcome {
 
         /**
-         * The flight is off, so nothing was evaluated. With the flight off this feature is meant to
-         * be indistinguishable from its absence, log lines included.
+         * The host did not opt in, so nothing was evaluated. While off this feature is meant to be
+         * indistinguishable from its absence, log lines included.
          */
-        FLIGHT_OFF,
+        NOT_ENABLED,
 
         /** The redirect carried no MAM-CA marker, so it is an ordinary broker install. */
         NOT_MAM_CA,
@@ -118,17 +121,18 @@ object MamInstallReferrerBuilder {
      *
      * Every broker-install launch site (the embedded WebView and the custom-tab / browser
      * authorization fragments) funnels through here, so the gate is evaluated once rather than being
-     * copy-pasted per call site. Returns [appLink] unchanged when the flight is off, when the
+     * copy-pasted per call site. Returns [appLink] unchanged when [enabled] is false, when the
      * redirect is not a MAM-CA install, or when [originPkg] is missing.
      *
-     * Nothing at all happens - not even a log line - while the flight is off, so turning it off is a
-     * complete kill switch. With the flight on, the redirect's parameter *names* are logged for
-     * every broker install, marked or not: whether the server has started marking MAM-CA installs is
-     * exactly the thing being rolled out, and it cannot be read off a log that only fires once the
-     * marker is already there.
+     * Nothing at all happens - not even a log line - while [enabled] is false, so turning it off is a
+     * complete kill switch. Once on, the redirect's parameter *names* are logged for every broker
+     * install, marked or not: whether the server has started marking MAM-CA installs is exactly the
+     * thing being rolled out, and it cannot be read off a log that only fires once the marker is
+     * already there.
      *
      * Use [decorateAppLinkForMamCaInstallWithOutcome] where the caller needs to know *why*.
      *
+     * @param enabled            whether the host opted in to MAM-CA install-referrer tagging.
      * @param appLink            the server-provided Play Store install link.
      * @param originPkg          the calling app package name (typically `Context#getPackageName()`).
      * @param redirectParameters query parameters of the broker-install redirect.
@@ -137,11 +141,12 @@ object MamInstallReferrerBuilder {
      */
     @JvmStatic
     fun decorateAppLinkForMamCaInstall(
+        enabled: Boolean,
         appLink: String?,
         originPkg: String?,
         redirectParameters: Map<String, String>?
     ): String? =
-        decorateAppLinkForMamCaInstallWithOutcome(appLink, originPkg, redirectParameters).appLink
+        decorateAppLinkForMamCaInstallWithOutcome(enabled, appLink, originPkg, redirectParameters).appLink
 
     /**
      * [decorateAppLinkForMamCaInstall], additionally returning *why* the link was or was not
@@ -153,6 +158,7 @@ object MamInstallReferrerBuilder {
      * the marker is the thing being rolled out, so it is the more valuable of the two signals.
      * Both cases return the link unchanged, so the ordering affects only the reported outcome.
      *
+     * @param enabled            whether the host opted in to MAM-CA install-referrer tagging.
      * @param appLink            the server-provided Play Store install link.
      * @param originPkg          the calling app package name (typically `Context#getPackageName()`).
      * @param redirectParameters query parameters of the broker-install redirect.
@@ -160,16 +166,15 @@ object MamInstallReferrerBuilder {
      */
     @JvmStatic
     fun decorateAppLinkForMamCaInstallWithOutcome(
+        enabled: Boolean,
         appLink: String?,
         originPkg: String?,
         redirectParameters: Map<String, String>?
     ): Decoration {
         val methodTag = "$TAG:decorateAppLinkForMamCaInstall"
 
-        if (!CommonFlightsManager.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER)
-        ) {
-            return Decoration(appLink, Outcome.FLIGHT_OFF)
+        if (!enabled) {
+            return Decoration(appLink, Outcome.NOT_ENABLED)
         }
 
         // Names only - the redirect carries the user's UPN, so the URL itself is never logged.

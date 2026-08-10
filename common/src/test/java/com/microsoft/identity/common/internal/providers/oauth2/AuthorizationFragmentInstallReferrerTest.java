@@ -29,14 +29,9 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
-import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.MamCaRedirect;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -79,28 +74,13 @@ public class AuthorizationFragmentInstallReferrerTest {
         }
     }
 
-    @After
-    public void cleanUp() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
     /**
-     * @param enabled whether {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER} should report on.
-     */
-    private void setMamCaInstallReferrerFlight(final boolean enabled) {
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER))
-                .thenReturn(enabled);
-        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
-        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-    }
-
-    /**
-     * @return a fragment whose context reports {@link #CALLING_PACKAGE} as its package name.
+     * @return a fragment whose context reports {@link #CALLING_PACKAGE} as its package name, with
+     * the host opt-in already applied.
      */
     private TestAuthorizationFragment fragmentWithPackage(final String packageName) {
         final TestAuthorizationFragment fragment = new TestAuthorizationFragment();
+        fragment.mMamCaInstallReferrerEnabled = true;
         if (packageName != null) {
             final Context context = Mockito.mock(Context.class);
             when(context.getPackageName()).thenReturn(packageName);
@@ -124,8 +104,6 @@ public class AuthorizationFragmentInstallReferrerTest {
 
     @Test
     public void testDecorate_mamCaInstall_appendsCallingPackageAsReferrer() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(CALLING_PACKAGE)
                 .decorate(CP_APP_LINK, redirectParameters(true));
 
@@ -136,20 +114,18 @@ public class AuthorizationFragmentInstallReferrerTest {
     }
 
     @Test
-    public void testDecorate_flightOff_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(false);
+    public void testDecorate_hostDidNotOptIn_returnsLinkUnchanged() {
+        final TestAuthorizationFragment fragment = fragmentWithPackage(CALLING_PACKAGE);
+        fragment.mMamCaInstallReferrerEnabled = false;
 
-        final String decorated = fragmentWithPackage(CALLING_PACKAGE)
-                .decorate(CP_APP_LINK, redirectParameters(true));
+        final String decorated = fragment.decorate(CP_APP_LINK, redirectParameters(true));
 
-        assertEquals("The flight is a kill switch: the link must be untouched",
+        assertEquals("The host opt-in is a kill switch: the link must be untouched",
                 CP_APP_LINK, decorated);
     }
 
     @Test
     public void testDecorate_notMamCaInstall_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(CALLING_PACKAGE)
                 .decorate(CP_APP_LINK, redirectParameters(false));
 
@@ -163,8 +139,6 @@ public class AuthorizationFragmentInstallReferrerTest {
      */
     @Test
     public void testDecorate_noContext_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(null)
                 .decorate(CP_APP_LINK, redirectParameters(true));
 
@@ -174,15 +148,11 @@ public class AuthorizationFragmentInstallReferrerTest {
 
     @Test
     public void testDecorate_nullAppLink_isTolerated() {
-        setMamCaInstallReferrerFlight(true);
-
         assertNull(fragmentWithPackage(CALLING_PACKAGE).decorate(null, redirectParameters(true)));
     }
 
     @Test
     public void testDecorate_nullRedirectParameters_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         assertEquals(CP_APP_LINK, fragmentWithPackage(CALLING_PACKAGE).decorate(CP_APP_LINK, null));
     }
 }

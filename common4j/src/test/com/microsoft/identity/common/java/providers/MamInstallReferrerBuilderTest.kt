@@ -22,13 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers
 
-import com.microsoft.identity.common.java.flighting.CommonFlight
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager
-import com.microsoft.identity.common.java.flighting.MockFlightsManager
-import com.microsoft.identity.common.java.flighting.MockFlightsProvider
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.util.CommonURIBuilder
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -149,37 +144,31 @@ class MamInstallReferrerBuilderTest {
 
     // endregion
 
-    // region decorateAppLinkForMamCaInstall (flight- and marker-gated)
+    // region decorateAppLinkForMamCaInstall (opt-in- and marker-gated)
 
     @Test
-    fun gated_flightOnAndMarkerPresent_decorates() {
-        setMamCaReferrerFlight(true)
-
+    fun gated_enabledAndMarkerPresent_decorates() {
         assertEquals(
             "$CP_APP_LINK&referrer=$ORIGIN_PKG",
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()
             )
         )
     }
 
     @Test
-    fun gated_flightOff_returnsOriginalUnchanged() {
-        setMamCaReferrerFlight(false)
-
+    fun gated_notEnabled_returnsOriginalUnchanged() {
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
-                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()
+            decorate(
+                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters(), enabled = false
             )
         )
     }
 
     @Test
-    fun gated_flightOnButNotAMamCaInstall_returnsOriginalUnchanged() {
+    fun gated_enabledButNotAMamCaInstall_returnsOriginalUnchanged() {
         // An ordinary device-registration broker install must keep behaving exactly as it does today.
-        setMamCaReferrerFlight(true)
-
         val plainInstall = mapOf(
             "username" to "user@contoso.com",
             "app_link" to CP_APP_LINK
@@ -187,21 +176,19 @@ class MamInstallReferrerBuilderTest {
 
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, ORIGIN_PKG, plainInstall
             )
         )
     }
 
     @Test
-    fun gated_flightOnButMarkerNotEnabledValue_returnsOriginalUnchanged() {
-        setMamCaReferrerFlight(true)
-
+    fun gated_enabledButMarkerNotEnabledValue_returnsOriginalUnchanged() {
         val disabledMarker = mapOf(MamCaRedirect.KEY_INTUNE_APP_PROTECTION to "0")
 
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, ORIGIN_PKG, disabledMarker
             )
         )
@@ -209,75 +196,56 @@ class MamInstallReferrerBuilderTest {
 
     @Test
     fun gated_nullRedirectParameters_returnsOriginalUnchanged() {
-        setMamCaReferrerFlight(true)
-
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(CP_APP_LINK, ORIGIN_PKG, null)
+            decorate(CP_APP_LINK, ORIGIN_PKG, null)
         )
     }
 
     @Test
     fun gated_missingPackage_returnsOriginalUnchanged() {
-        setMamCaReferrerFlight(true)
-
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, null, mamCaRedirectParameters()
             )
         )
         assertEquals(
             CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, "", mamCaRedirectParameters()
             )
         )
     }
 
-    @Test
-    fun gated_noFlightsManager_defaultsOff_returnsOriginalUnchanged() {
-        // With no flights manager initialized, the CommonFlight default (false) applies.
-        assertEquals(
-            CP_APP_LINK,
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
-                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()
-            )
-        )
-    }
-
     /**
-     * Turning the flight off has to be a complete kill switch, and a log line is a side effect like
-     * any other: a tenant that never opted in should not start emitting new diagnostics because the
-     * code shipped.
+     * Not opting in has to be a complete kill switch, and a log line is a side effect like any
+     * other: a host that never opted in should not start emitting new diagnostics because the code
+     * shipped.
      */
     @Test
-    fun gated_flightOff_logsNothingAtAll() {
-        setMamCaReferrerFlight(false)
-
+    fun gated_notEnabled_logsNothingAtAll() {
         val logged = captureLogsWhile {
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
-                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()
+            decorate(
+                CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters(), enabled = false
             )
         }
 
         assertTrue(
-            "The flight is off, so this class should have logged nothing: $logged",
+            "The host did not opt in, so this class should have logged nothing: $logged",
             logged.isEmpty()
         )
     }
 
     /**
-     * With the flight on, the parameter names are logged whether or not the marker is there.
+     * Once the host has opted in, the parameter names are logged whether or not the marker is there.
      * Whether the server has started marking MAM-CA installs is exactly what is being rolled out,
      * and it cannot be read off a log that only fires once the marker has arrived.
      */
     @Test
-    fun gated_flightOnButUnmarkedInstall_stillReportsWhatTheRedirectCarried() {
-        setMamCaReferrerFlight(true)
-
+    fun gated_enabledButUnmarkedInstall_stillReportsWhatTheRedirectCarried() {
         val logged = captureLogsWhile {
-            MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            decorate(
                 CP_APP_LINK, ORIGIN_PKG, mapOf("username" to "user@contoso.com")
             )
         }
@@ -293,15 +261,13 @@ class MamInstallReferrerBuilderTest {
     // region outcome reporting
 
     /**
-     * The outcome is the ramp-safety signal for this flight: it is what makes "has the server
+     * The outcome is the ramp-safety signal for this feature: it is what makes "has the server
      * started marking MAM-CA installs, and are we tagging the marked ones?" answerable from
      * telemetry rather than from device logs. Each bail-out therefore has to be distinguishable
      * from the others, not collapsed into a single "not decorated".
      */
     @Test
     fun outcome_reportsWhyTheLinkWasOrWasNotDecorated() {
-        setMamCaReferrerFlight(true)
-
         assertEquals(
             MamInstallReferrerBuilder.Outcome.DECORATED,
             outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
@@ -335,8 +301,6 @@ class MamInstallReferrerBuilderTest {
      */
     @Test
     fun outcome_missingPackageOnAnUnmarkedInstall_reportsTheMarkerNotThePackage() {
-        setMamCaReferrerFlight(true)
-
         assertEquals(
             MamInstallReferrerBuilder.Outcome.NOT_MAM_CA,
             outcomeOf(CP_APP_LINK, null, mapOf("username" to "user@contoso.com"))
@@ -344,27 +308,23 @@ class MamInstallReferrerBuilderTest {
     }
 
     /**
-     * With the flight off nothing is evaluated, and the outcome says so - the kill switch has to be
-     * distinguishable from "evaluated and declined", since both launch the link unchanged.
+     * Without the host opt-in nothing is evaluated, and the outcome says so - the kill switch has to
+     * be distinguishable from "evaluated and declined", since both launch the link unchanged.
      */
     @Test
-    fun outcome_flightOff_isReportedAsFlightOff() {
-        setMamCaReferrerFlight(false)
-
-        val outcome = outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters())
-        assertEquals(MamInstallReferrerBuilder.Outcome.FLIGHT_OFF, outcome)
+    fun outcome_notEnabled_isReportedAsNotEnabled() {
+        val outcome = outcomeOf(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters(), enabled = false)
+        assertEquals(MamInstallReferrerBuilder.Outcome.NOT_ENABLED, outcome)
     }
 
     /**
-     * Every outcome the flight actually evaluates has to name itself in the log, because with no
+     * Every outcome that is actually evaluated has to name itself in the log, because with no
      * telemetry attached the log is the only ramp signal this class emits. Reading the expected
      * value back off [MamInstallReferrerBuilder.Outcome] rather than hard-coding strings keeps the
      * two from drifting apart.
      */
     @Test
     fun outcome_everyEvaluatedOutcomeNamesItselfInTheLog() {
-        setMamCaReferrerFlight(true)
-
         val cases = mapOf<MamInstallReferrerBuilder.Outcome, Triple<String?, String?, Map<String, String>>>(
             MamInstallReferrerBuilder.Outcome.DECORATED to
                     Triple(CP_APP_LINK, ORIGIN_PKG, mamCaRedirectParameters()),
@@ -407,8 +367,6 @@ class MamInstallReferrerBuilderTest {
      */
     @Test
     fun gated_markedInstall_isDecoratedWhateverTheInstallTargetIs() {
-        setMamCaReferrerFlight(true)
-
         for (appLink in listOf(CP_APP_LINK, AUTHENTICATOR_APP_LINK, CHINA_CP_FWLINK)) {
             val decoration = outcomeDecorationOf(appLink, ORIGIN_PKG, mamCaRedirectParameters())
 
@@ -427,11 +385,9 @@ class MamInstallReferrerBuilderTest {
     /** The reporting overload must not change what is actually launched. */
     @Test
     fun outcome_overloadReturnsTheSameLinkAsTheStringEntryPoint() {
-        setMamCaReferrerFlight(true)
-
         for (params in listOf(mamCaRedirectParameters(), mapOf("username" to "user@contoso.com"))) {
             assertEquals(
-                MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(CP_APP_LINK, ORIGIN_PKG, params),
+                decorate(CP_APP_LINK, ORIGIN_PKG, params),
                 outcomeDecorationOf(CP_APP_LINK, ORIGIN_PKG, params).appLink
             )
         }
@@ -439,26 +395,34 @@ class MamInstallReferrerBuilderTest {
 
     // endregion
 
-    @After
-    fun tearDown() {
-        CommonFlightsManager.resetFlightsManager()
-    }
-
     private fun outcomeDecorationOf(
         appLink: String?,
         originPkg: String?,
-        redirectParameters: Map<String, String>?
+        redirectParameters: Map<String, String>?,
+        enabled: Boolean = true
     ): MamInstallReferrerBuilder.Decoration =
         MamInstallReferrerBuilder.decorateAppLinkForMamCaInstallWithOutcome(
-            appLink, originPkg, redirectParameters
+            enabled, appLink, originPkg, redirectParameters
         )
 
     private fun outcomeOf(
         appLink: String?,
         originPkg: String?,
-        redirectParameters: Map<String, String>?
+        redirectParameters: Map<String, String>?,
+        enabled: Boolean = true
     ): MamInstallReferrerBuilder.Outcome =
-        outcomeDecorationOf(appLink, originPkg, redirectParameters).outcome
+        outcomeDecorationOf(appLink, originPkg, redirectParameters, enabled).outcome
+
+    /** The host opt-in defaults to on here; the tests that need it off pass it explicitly. */
+    private fun decorate(
+        appLink: String?,
+        originPkg: String?,
+        redirectParameters: Map<String, String>?,
+        enabled: Boolean = true
+    ): String? =
+        MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+            enabled, appLink, originPkg, redirectParameters
+        )
 
     private fun mamCaRedirectParameters(): Map<String, String> = mapOf(
         "username" to "user@contoso.com",
@@ -468,15 +432,6 @@ class MamInstallReferrerBuilderTest {
 
     private fun queryParametersOf(url: String): Map<String, String> =
         CommonURIBuilder(url).queryParams.associate { it.name to it.value }
-
-    /** Enables or disables the MAM-CA install referrer flight for the duration of a test. */
-    private fun setMamCaReferrerFlight(enabled: Boolean) {
-        val provider = MockFlightsProvider()
-        provider.addFlight(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER.key, enabled.toString())
-        val manager = MockFlightsManager()
-        manager.setMockBrokerFlightsProvider(provider)
-        CommonFlightsManager.initializeCommonFlightsManager(manager)
-    }
 
     /**
      * Runs [block] with a log sink attached and returns the messages this class emitted while it ran.
