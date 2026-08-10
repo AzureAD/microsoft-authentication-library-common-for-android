@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -286,6 +287,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     }
 
     @Override
+    @SuppressFBWarnings(
+            value = "NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION",
+            justification = "The nullable Kotlin property and Java annotation express the same contract.")
     public void setTelemetrySchema(@Nullable final TelemetrySchema telemetrySchema) {
         this.mTelemetrySchema = telemetrySchema;
     }

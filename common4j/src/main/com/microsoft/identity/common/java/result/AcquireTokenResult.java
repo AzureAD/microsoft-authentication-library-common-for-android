@@ -33,6 +33,8 @@ import com.microsoft.identity.common.java.broker.telemetry.TelemetrySchema;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.annotation.Nullable;
 
 public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IBrokerInfoProvider, ITelemetrySchemaProvider {
@@ -98,6 +100,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     }
 
     @Override
+    @SuppressFBWarnings(
+            value = "NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION",
+            justification = "The nullable Kotlin property and Java annotation express the same contract.")
     public void setTelemetrySchema(@Nullable final TelemetrySchema telemetrySchema) {
         this.mTelemetrySchema = telemetrySchema;
     }
