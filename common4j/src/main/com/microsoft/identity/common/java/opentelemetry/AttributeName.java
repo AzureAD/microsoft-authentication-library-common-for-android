@@ -490,6 +490,21 @@ public enum AttributeName {
     authux_js_operation,
 
     /**
+     * Record the Auth UX server error code forwarded by the {@code log_telemetry} bridge action, so
+     * the telemetry path is queryable in android_spans without waiting for the onboarding blob to
+     * land.
+     *
+     * <p>Set only when the telemetry sink consumes an error code. If multiple codes are consumed
+     * during a flow, this attribute contains the last consumed code.
+     *
+     * <p>"Consumed" means the sink took responsibility for the code, which includes deliberately
+     * dropping it by its own policy — so this reflects what the page reported and the sink accepted,
+     * not necessarily what the onboarding blob ultimately stores. Do not treat it as a mirror of
+     * {@code blocking_errors}.
+     */
+    authux_js_error_code,
+
+    /**
      * Record whether or not the request stored a number match entry.
      */
     stored_number_match_entry,
