@@ -278,7 +278,8 @@ public class StringUtil {
         final StringWriter sw = new StringWriter();
         final PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
-        return pw.toString();
+        pw.flush();
+        return sw.toString();
     }
 
     public static String fromByteArray(final byte[] bytes) {
