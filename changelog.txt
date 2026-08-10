@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Fix a lock-ordering deadlock in AndroidKeyStoreUtil by removing the redundant `synchronized` from applyKeyStoreLocaleWorkarounds() (#3208)
 - [MINOR] MAM Conditional Access onboarding (Phase 1): tag the Company Portal install link with the calling app package as the Play install referrer when the server has not already named one, so Company Portal skips its own sign-in UX and redirects back to the caller after install; scoped to redirects marked intuneAppProtection=1 and gated by ENABLE_MAM_CA_INSTALL_REFERRER CommonFlight (default off) (#3193)
 - [MINOR] Attach an immutable, one-shot return PendingIntent to the openid-vc:// hand-off so a signature-pinned Microsoft Authenticator (VID wallet) can bring the calling app's task back to the foreground after VID completes, via a transparent no-history OpenIdVcReturnActivity trampoline; gated by ENABLE_OPEN_ID_VC_RETURN_TO_CALLER CommonFlight (default on) (#3184)
 - [MINOR] Promote finalizeBlob() onto the IOnboardingTelemetryRecorder interface (as a binary-compatible default method) so callers finalize the onboarding telemetry blob through the interface instead of downcasting to the concrete OnboardingTelemetryRecorder (#3180)
