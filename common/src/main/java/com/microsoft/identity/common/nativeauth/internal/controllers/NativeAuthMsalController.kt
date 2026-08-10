@@ -2710,6 +2710,7 @@ class NativeAuthMsalController : BaseNativeAuthController() {
             .platformComponents(parameters.platformComponents)
             .challengeTypes(parameters.challengeType)
             .capabilities(parameters.capabilities)
+            .requestInterceptor(parameters.requestInterceptor)
             .build()
 
         return parameters

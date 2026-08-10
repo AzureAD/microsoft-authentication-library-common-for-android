@@ -37,33 +37,6 @@ import lombok.NonNull;
 public interface ILabClient {
 
     /**
-     * Load an existing account from Lab Api based on the provided query.
-     *
-     * @param labQuery parameters that determine what kind of account to fetch from lab
-     * @return a {@link LabAccount} object
-     * @throws LabApiException if an error occurs while trying to fetch account from lab
-     */
-    ILabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
-
-    /**
-     * Load an existing account from Lab Api based on the upn given.
-     *
-     * @param upn upn of the desired lab account
-     * @return a {@link LabAccount} object
-     * @throws LabApiException if an error occurs while trying to fetch account from lab
-     */
-    ILabAccount getLabAccount(@NonNull final String upn) throws LabApiException;
-
-    /**
-     * Loads existing account(s) from Lab Api based on the provided query.
-     *
-     * @param labQuery parameters that determine what kind of account(s) to fetch from lab
-     * @return a list of {@link LabAccount} objects
-     * @throws LabApiException if an error occurs while trying to fetch account(s) from lab
-     */
-    List<ILabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
-
-    /**
      * Create and return a new temp AAD user using Lab Api.
      *
      * @param tempUserType the {@link TempUserType} of the user to create
@@ -71,24 +44,6 @@ public interface ILabClient {
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
     ILabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
-
-    /**
-     * Loads guest account from Lab Api based on the provided query.
-     *
-     * @param labQuery parameters that determine what kind of guest account to fetch
-     * @return a {@link LabGuestAccount} object
-     * @throws LabApiException if an error occurs while trying to fetch guest account from lab
-     */
-    LabGuestAccount loadGuestAccountFromLab(final LabQuery labQuery) throws LabApiException;
-
-    /**
-     * Get the password for a guest account.
-     *
-     * @param guestUser the guest account to be fetched from
-     * @return a String containing the password for the guest account
-     * @throws LabApiException if an error occurs while trying to fetch the password
-     */
-    String getPasswordForGuestUser(final LabGuestAccount guestUser) throws LabApiException;
 
     /**
      * Get a secret from the MSIDLABS KeyVault

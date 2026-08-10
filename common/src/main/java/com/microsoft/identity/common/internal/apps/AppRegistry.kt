@@ -29,6 +29,9 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_DEBUG_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_SHA512_RELEASE_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_DEBUG_SIGNATURE
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ONE_AUTH_TEST_APP_SIGNATURE
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -91,7 +94,7 @@ object AppRegistry {
     val CHROME_DEV = App(
         nickName = "Google Chrome Dev",
         packageName = "com.chrome.dev",
-        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7GvHpHu6QOz+XIaXybtzL7A=="
+        signingCertificateThumbprint = "JlOLOTFn6OFBFWuWQJYJ8h/aozEN7/zLFTfioXiXTrU6Yaft4cdEbdpkoJIvmB7Gv2HpHu6QOz+XIaXybtzL7A=="
     )
 
     val CHROME_CANARY = App(
@@ -112,10 +115,34 @@ object AppRegistry {
         signingCertificateThumbprint = INTUNE_APP_SHA512_DEBUG_SIGNATURE
     )
 
+    val TEAMS_IPPHONE_PROD = App(
+        nickName = "Teams IP Phone - Teams Devices (prod)",
+        packageName = IPPHONE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = IPPHONE_APP_SHA512_RELEASE_SIGNATURE
+    )
+
+    val TEAMS_IPPHONE_DEBUG = App(
+        nickName = "Teams IP Phone - Teams Devices (debug)",
+        packageName = IPPHONE_APP_PACKAGE_NAME,
+        signingCertificateThumbprint = IPPHONE_APP_SHA512_DEBUG_SIGNATURE
+    )
+
     val MSAL_TEST_APP = App(
         nickName = "MSAL Test App",
         packageName = "com.msft.identity.client.sample.local",
         signingCertificateThumbprint = AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE_SHA512
+    )
+
+    val MDE_APP_PROD = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "iPULpH0pq8ms1Qy7cOzGsVRQN7/zW4IbW+UKcajvtrTrzM5o5VcaghNEA1Ho4Wq7ay0efqqJcalxa8eHxVnHKA=="
+    )
+
+    val MDE_APP_DEBUG = App(
+        nickName = "Microsoft Defender for Endpoint",
+        packageName = "com.microsoft.scmx",
+        signingCertificateThumbprint = "k0ZSm/+bEPZAq6mXujRXqP3B6+Zb2yXCiqwuvtCooLfKS91zvHCf+D9FFUYIkJyIKmn1onyWbwRXHEWfS5SaHQ=="
     )
 
     @JvmField
@@ -132,10 +159,12 @@ object AppRegistry {
     @JvmField
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
+            add(MDE_APP_DEBUG)
         }
     }
 
@@ -145,12 +174,16 @@ object AppRegistry {
         add(BrokerData.prodCompanyPortal)
         add(INTUNE_CE_PROD)
         add(INTUNE_AOSP_AGENT_PROD)
+        add(TEAMS_IPPHONE_PROD)
+        add(MDE_APP_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(BrokerData.debugCompanyPortal)
             add(INTUNE_CE_DEBUG)
+            add(TEAMS_IPPHONE_DEBUG)
+            add(MDE_APP_DEBUG)
         }
     }
 

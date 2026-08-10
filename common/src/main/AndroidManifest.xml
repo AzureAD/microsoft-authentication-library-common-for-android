@@ -31,6 +31,39 @@
             android:theme="@style/Theme.AppCompat.Light"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|keyboard" />
 
+        <!-- Activity that handles browser-switch operations.
+             Launches the external browser and receives the result from SwitchBrowserRedirectActivity. -->
+        <activity
+            android:name="com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
+        <!-- Activity to handle browser redirects for Switch Browser protocol in non-broker flows.
+             Apps that opt into Switch Browser must override this in their manifest with
+             android:exported="true" and the appropriate intent-filter.
+             taskAffinity="" ensures this activity always creates its own task when launched
+             from the browser (via FLAG_ACTIVITY_NEW_TASK), preventing it from landing in
+             AuthorizationActivity's task where finishAffinity() would kill the WebView. -->
+        <activity
+            android:name="com.microsoft.identity.common.internal.providers.oauth2.SwitchBrowserRedirectActivity"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:exported="false" />
+
+        <!-- Return-to-caller trampoline. Manifest-merged into consuming (MSAL) apps so they do
+             not need to declare it. Authenticator invokes an explicit, immutable PendingIntent
+             targeting this activity after VID completes to reveal the caller's task.
+             Transparent, no-history, not exported; finishes immediately. It is ONLY a navigation
+             signal and never marks VID/auth as successful. -->
+        <activity
+            android:name="com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/OpenIdVcReturnActivityTheme" />
+
     </application>
 
     <!-- Required for API Level 30 to make sure we can detect browsers and other apps we want to

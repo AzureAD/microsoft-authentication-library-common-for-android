@@ -28,7 +28,6 @@ import com.microsoft.identity.labapi.utilities.authentication.client.IPublicAuth
 import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jAuthClient;
 import com.microsoft.identity.labapi.utilities.client.ILabAccount;
 import com.microsoft.identity.labapi.utilities.client.LabClient;
-import com.microsoft.identity.labapi.utilities.client.LabQuery;
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
@@ -80,11 +79,7 @@ public class PublicAuthClientRopcTest {
     }
 
     private IAuthenticationResult performTestWithAuthClient(@NonNull final IPublicAuthClient publicAuthClient) throws LabApiException {
-        final LabQuery query = LabQuery.builder()
-                .userType(UserType.CLOUD)
-                .build();
-
-        final ILabAccount labAccount = labClient.getLabAccount(query);
+        final ILabAccount labAccount = labClient.getAccountFromLabJsonStringInMobileBuildVault(UserType.BASIC);
 
         final TokenParameters.TokenParametersBuilder tokenParametersBuilder = TokenParameters.builder()
                 .clientId(labAccount.getAssociatedClientId());

@@ -132,6 +132,37 @@ stages:
         tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         jdkArchitecture: x64
         jdkVersionOption: "1.17"
+  # msalautomationapp
+  - job: msalAutomationAppValidation
+    displayName: MSAL Automation App
+    dependsOn:
+      - setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    condition: and( succeeded(), not(contains(variables['prLabels'], variables['skipConsumerValidationLabel'])) )
+    steps:
+    - checkout: msal
+      displayName: Checkout msal repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - template: ../templates/steps/automation-cert.yml
+    - task: Gradle@3
+      displayName: Assemble msalautomationapp
+      inputs:
+        jdkArchitecture: x64
+        jdkVersionOption: "1.17"
+        tasks: clean msalautomationapp:assembleLocal
   # broker
   - job: brokerValidation
     displayName: Broker

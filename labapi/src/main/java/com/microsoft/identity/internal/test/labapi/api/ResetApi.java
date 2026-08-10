@@ -61,7 +61,7 @@ public class ResetApi {
         Object localVarPostBody = null;
 
         // create path and map variables
-        String localVarPath = "/api/Reset";
+        String localVarPath = "/api/ResetID4SLab2";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();

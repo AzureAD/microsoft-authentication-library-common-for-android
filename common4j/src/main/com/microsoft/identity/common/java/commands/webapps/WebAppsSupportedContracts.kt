@@ -22,24 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.webapps
 
+import com.microsoft.identity.common.java.util.ObjectMapper
 import java.io.Serializable
 
 /**
  * Supported contracts for Web Apps Sub Operations
  */
 data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
+    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT)
 ) : Serializable {
     companion object {
         const val GET_TOKEN = "GetToken"
         const val SIGN_OUT = "SignOut"
+        // GET_COOKIES contract is currently not needed by Edge (and thus not included in the contracts list),
+        // but we are keeping the const here for future use if needed.
         const val GET_COOKIES = "GetCookies"
     }
 
     override fun toString(): String {
-        return contracts.joinToString(
-            separator = ", ",
-            prefix = "[",
-            postfix = "]")
+        return ObjectMapper.serializeObjectToJsonString(contracts)
     }
 }

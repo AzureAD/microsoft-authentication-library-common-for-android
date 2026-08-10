@@ -38,6 +38,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
@@ -84,6 +86,13 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
      * Should suppress broker native account picker UX.
      */
     private final boolean suppressBrokerAccountPicker;
+
+    /**
+     * Onboarding telemetry seed JSON blob.
+     * Passed through IPC to the broker for step recording and blocking error tracking.
+     */
+    @Nullable
+    private final String onboardingSeedJson;
 
     public boolean getHandleNullTaskAffinity(){
         return handleNullTaskAffinity;

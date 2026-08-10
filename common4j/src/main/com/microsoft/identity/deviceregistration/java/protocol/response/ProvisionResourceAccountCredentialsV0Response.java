@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.deviceregistration.java.protocol.response;
 
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 
 import java.util.UUID;
 
@@ -30,45 +34,44 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
-import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
-import com.microsoft.identity.common.java.exception.ClientException;
-
+/**
+ * Response for the provision resource account credentials protocol.
+ */
 @Accessors(prefix = "m")
-public class ProvisionResourceAccountV0Response extends AbstractDeviceRegistrationProtocolResponse {
+public class ProvisionResourceAccountCredentialsV0Response extends AbstractDeviceRegistrationProtocolResponse {
 
-    private static final IDeviceRegistrationProtocolSerializer<ProvisionResourceAccountV0Response> serializer
-            = new DeviceRegistrationProtocolMoshiSerializer<>(ProvisionResourceAccountV0Response.class);
+    private static final IDeviceRegistrationProtocolSerializer<ProvisionResourceAccountCredentialsV0Response> serializer
+            = new DeviceRegistrationProtocolMoshiSerializer<>(ProvisionResourceAccountCredentialsV0Response.class);
 
     /**
      * Creates a protocol object from a byte array (serialized protocol).
      *
      * @param serializedData protocol data serialized
      */
-    public static ProvisionResourceAccountV0Response create(final byte[] serializedData) throws ClientException {
+    public static ProvisionResourceAccountCredentialsV0Response create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
     }
 
-    public ProvisionResourceAccountV0Response(@NonNull final UUID correlationId,
-                                              @NonNull final String result) {
+    public ProvisionResourceAccountCredentialsV0Response(@NonNull final UUID correlationId,
+                                                         @NonNull final AccountRecord accountRecord) {
         super(correlationId);
-        mResult = result;
+        mAccountRecord = accountRecord;
     }
 
     @Getter
     @NonNull
-    private final String mResult;
+    private final AccountRecord mAccountRecord;
 
     /**
      * Returns the name of the protocol.
      */
     @Override
     public String getProtocolName() {
-        return DeviceRegistrationProtocolConstants.PROVISION_RESOURCE_ACCOUNT_V0;
+        return DeviceRegistrationProtocolConstants.PROVISION_RESOURCE_ACCOUNT_CREDENTIALS_V0;
     }
 
     /**
-     * return the serialized the protocol.
+     * Serialization is handled by the packer layer.
      */
     @Override
     public byte[] serialize() {

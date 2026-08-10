@@ -20,39 +20,34 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
+package com.microsoft.identity.client.ui.automation.app;
 
-import java.util.List;
+import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+
+import lombok.NonNull;
 
 /**
- * A Class to facilitate writing tests for Guest Accounts.
+ * A model for interacting with the NativeAuth Sample App during UI automation tests.
  */
-public class LabGuestAccount {
-    private final String homeUpn;
-    private final String homeTenantId;
-    private final String homeDomain;
-    private final List<String> guestLabTenants;
+public class NativeAuthSampleApp extends App {
 
-    public LabGuestAccount(String homeUpn, String homeDomain, String homeTenantId, List<String> guestLabTenants) {
-        this.homeUpn = homeUpn;
-        this.homeDomain = homeDomain;
-        this.homeTenantId = homeTenantId;
-        this.guestLabTenants = guestLabTenants;
+    public static final String NATIVE_AUTH_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalnativeauthandroidkotlinsampleapp";
+    public static final String NATIVE_AUTH_SAMPLE_APP_NAME = "NativeAuth Sample App";
+    public static final String NATIVE_AUTH_SAMPLE_APK = "NativeAuthSampleApp.apk";
+
+    public NativeAuthSampleApp() {
+        super(NATIVE_AUTH_SAMPLE_PACKAGE_NAME, NATIVE_AUTH_SAMPLE_APP_NAME, new LocalApkInstaller());
+        localApkFileName = NATIVE_AUTH_SAMPLE_APK;
+        localUpdateApkFileName = NATIVE_AUTH_SAMPLE_APK;
     }
 
-    public String getHomeUpn() {
-        return homeUpn;
+    @Override
+    protected void initialiseAppImpl() {
+        // No version-specific implementation needed for NativeAuthSampleApp
     }
 
-    public String getHomeDomain() {
-        return homeDomain;
-    }
-
-    public String getHomeTenantId() {
-        return homeTenantId;
-    }
-
-    public List<String> getGuestLabTenants() {
-        return guestLabTenants;
+    @Override
+    public void handleFirstRun() {
+        // No first-run dialog to handle for NativeAuthSampleApp
     }
 }

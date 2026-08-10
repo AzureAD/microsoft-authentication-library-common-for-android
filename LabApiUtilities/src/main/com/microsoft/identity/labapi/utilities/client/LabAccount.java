@@ -55,6 +55,7 @@ public class LabAccount implements ILabAccount {
     private final String mHomeObjectId;
 
     private final String mAssociatedClientId;
+    private final String mGuestTenantId;
 
     private final String mCloudUrl;
 

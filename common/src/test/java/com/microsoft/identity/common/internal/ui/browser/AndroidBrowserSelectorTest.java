@@ -54,6 +54,7 @@ import org.robolectric.shadows.ShadowPackageManager;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -94,6 +95,20 @@ public class AndroidBrowserSelectorTest {
                     .withBrowserDefaults()
                     .setVersion("1.4.1")
                     .addSignature("DolphinSignature")
+                    .setIsCustomTabsSupported(true)
+                    .build();
+
+    /**
+     * Simulates a multi-signer browser (e.g. Microsoft Edge), which presents two distinct
+     * signatures via APK Signature Scheme v3. Both must be visible to PackageManager when the
+     * host app targets API 28+.
+     */
+    private static final TestBrowser EDGE_MULTI_SIGNER =
+            new TestBrowserBuilder("com.microsoft.emmx")
+                    .withBrowserDefaults()
+                    .setVersion("142")
+                    .addSignature("EdgeOriginalSignature")
+                    .addSignature("EdgeRotatedSignature")
                     .setIsCustomTabsSupported(true)
                     .build();
 
@@ -246,6 +261,55 @@ public class AndroidBrowserSelectorTest {
         final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, preferredBrowser);
         Assert.assertEquals(preferredBrowser.getPackageName(), browser.getPackageName());
         Assert.assertEquals(preferredBrowser.getSignatureHashes(), browser.getSignatureHashes());
+    }
+
+    /**
+     * Regression test for the customer-reported issue where Microsoft Edge as the default browser
+     * caused MSAL to fall back to WebView. Edge ships as a multi-signer APK; when the host app
+     * targets API 28+, PackageManager returns all signers. The safelist contains only one of
+     * those signers, so strict set-equality used to reject the browser. The match must succeed
+     * as long as the descriptor's trusted set intersects the browser's actual signatures.
+     */
+    @Test
+    public void testSelect_Browser_multiSignerBrowserMatchesWithSubsetSafelist() {
+        setBrowserList(EDGE_MULTI_SIGNER);
+
+        // Safelist only carries the original (pre-rotation) Edge signature.
+        final Set<String> safelistHashes = new HashSet<>();
+        safelistHashes.add(PackageHelper.generateSignatureHashes(EDGE_MULTI_SIGNER.mPackageInfo).iterator().next());
+
+        final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(new BrowserDescriptor(
+                EDGE_MULTI_SIGNER.mPackageName,
+                safelistHashes,
+                null,
+                null));
+
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, null);
+        assertNotNull(browser);
+        assertEquals(EDGE_MULTI_SIGNER.mPackageName, browser.getPackageName());
+    }
+
+    /**
+     * A browser whose signatures share no element with any safelisted descriptor must still be
+     * rejected. Guards against accidentally loosening trust beyond "intersection non-empty".
+     */
+    @Test
+    public void testSelect_Browser_signatureMismatchIsRejected() {
+        setBrowserList(EDGE_MULTI_SIGNER);
+
+        final Set<String> unrelatedHashes = new HashSet<>();
+        unrelatedHashes.add("not-a-real-edge-signature-hash");
+
+        final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
+        browserSafelist.add(new BrowserDescriptor(
+                EDGE_MULTI_SIGNER.mPackageName,
+                unrelatedHashes,
+                null,
+                null));
+
+        final Browser browser = new AndroidBrowserSelector(ApplicationProvider.getApplicationContext()).selectBrowser(browserSafelist, null);
+        assertNull(browser);
     }
 
     /**

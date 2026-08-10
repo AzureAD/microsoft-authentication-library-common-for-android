@@ -394,6 +394,21 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     return@let
                 }
 
+                val timeStartIsSupportedByTargetedBroker = System.nanoTime()
+                val isSupportedByTargetedBroker =
+                    ipcStrategy.isSupportedByTargetedBroker(it.packageName)
+                telemetryCallback?.onFinishCheckingIfSupportedByTargetedBroker(
+                    System.nanoTime() - timeStartIsSupportedByTargetedBroker
+                )
+                if (!isSupportedByTargetedBroker) {
+                    Logger.info(
+                        methodTag,
+                        "Clearing cache as the installed app cannot service IPC strategy ${ipcStrategy.getType()}."
+                    )
+                    cache.clearCachedActiveBroker()
+                    return@let
+                }
+
                 Logger.info(methodTag, "Returning cached broker: $it")
                 return it
             }

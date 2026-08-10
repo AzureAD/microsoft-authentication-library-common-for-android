@@ -70,6 +70,7 @@ public enum SpanName {
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
+    PersistToStorageAsync,
     ProcessWebCpEnrollmentRedirect,
     ProcessWebCpAuthorizeUrlRedirect,
     ProcessOpenIdVcRequest,
@@ -111,5 +112,21 @@ public enum SpanName {
     /**
      * Span name for WebView file upload (onShowFileChooser) operations.
      */
-    WebViewFileUpload
+    WebViewFileUpload,
+    /**
+     * Span name for switching browser flow operations.
+     */
+    SwitchBrowserFlow,
+
+    /**
+     * Span name for the battery optimization exemption prompt.
+     */
+    BatteryOptimizationExemption,
+
+    /**
+     * Span name for rendering the request-origin row in the HTTP authentication dialog. Emitted only
+     * when the {@code EnableHttpAuthOriginDisplay} flight is on; used to confirm the flighted path is
+     * executing successfully in dashboards after the flight is ramped.
+     */
+    HttpAuthOriginDisplay
 }

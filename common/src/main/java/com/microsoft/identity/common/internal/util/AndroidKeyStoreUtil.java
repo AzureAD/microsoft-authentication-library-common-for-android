@@ -49,7 +49,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -546,6 +545,66 @@ public class AndroidKeyStoreUtil {
     }
 
     /**
+     * Extracts the exact numeric error code from an {@link android.security.KeyStoreException} found in
+     * the causal chain of the given throwable, if present. This is the most precise error identifier
+     * available for KeyStore failures, distinguishing transient from permanent causes where the
+     * higher-level {@link ClientException} error code cannot.
+     *
+     * @param throwable the throwable to inspect.
+     * @return the numeric error code as a String, or {@code null} when no KeyStoreException is found or
+     *         the API level is below 33 (where the numeric code is unavailable).
+     */
+    public static @Nullable String getKeyStoreExceptionNumericErrorCode(@NonNull final Throwable throwable) {
+        // getNumericErrorCode() is only available on API 33+. Keep the SDK_INT check inline (rather than
+        // relying on findKeyStoreException's internal guard) so lint's NewApi flow analysis is satisfied.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            final android.security.KeyStoreException keyStoreException = findKeyStoreException(throwable);
+            if (keyStoreException != null) {
+                return String.valueOf(keyStoreException.getNumericErrorCode());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Whether a KeyStore failure is transient (worth retrying) or permanent. Lets callers distinguish
+     * recoverable failures from genuine data loss when a secret-key wipe is triggered.
+     */
+    public enum KeyStoreErrorTransience {
+        /** API 33+: KeyStoreException reported the failure as transient (a retry may succeed). */
+        TRANSIENT,
+        /** API 33+: KeyStoreException reported the failure as permanent (a retry will not help). */
+        NOT_TRANSIENT,
+        /** API < 33: transience cannot be determined (KeyStoreException.isTransientFailure() unavailable). */
+        API_TOO_OLD,
+        /** API 33+: no KeyStoreException in the cause chain, so the failure is not a KeyStore error. */
+        NOT_KEYSTORE_ERROR
+    }
+
+    /**
+     * Classifies whether the KeyStore failure in the given throwable's cause chain is transient or
+     * permanent, using {@link android.security.KeyStoreException#isTransientFailure()} (API 33+).
+     * This is more precise than the higher-level {@link ClientException} error code, which cannot
+     * distinguish a retryable failure from one that warrants discarding key material.
+     *
+     * @param throwable the throwable to inspect.
+     * @return one of {@link KeyStoreErrorTransience}; never {@code null}.
+     */
+    public static @NonNull KeyStoreErrorTransience getKeyStoreErrorTransience(@NonNull final Throwable throwable) {
+        // isTransientFailure()/KeyStoreException are only available on API 33+.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return KeyStoreErrorTransience.API_TOO_OLD;
+        }
+        final android.security.KeyStoreException keyStoreException = findKeyStoreException(throwable);
+        if (keyStoreException == null) {
+            return KeyStoreErrorTransience.NOT_KEYSTORE_ERROR;
+        }
+        return keyStoreException.isTransientFailure()
+                ? KeyStoreErrorTransience.TRANSIENT
+                : KeyStoreErrorTransience.NOT_TRANSIENT;
+    }
+
+    /**
      * Returns encryption paddings supported by a KeyStore key pair.
      * <p>
      * Extracts supported padding schemes from the key's metadata on API 23+.
@@ -555,7 +614,8 @@ public class AndroidKeyStoreUtil {
      * @return List of supported padding names (e.g., "PKCS1", "OAEP"),
      *         or empty list on API < 23 or if retrieval fails
      */
-    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair) {
+    public static synchronized List<String> getKeyPairEncryptionPaddings(@NonNull final KeyPair keyPair)
+        throws ClientException {
         final String methodTag = TAG + ":getKeyPairEncryptionPaddings";
         try {
             final PrivateKey privateKey = keyPair.getPrivate();
@@ -570,8 +630,14 @@ public class AndroidKeyStoreUtil {
             Logger.info(methodTag, "Supported encryption paddings: " + encryptionPaddings);
             return encryptionPaddings;
         } catch (final Exception e) {
+            // Do NOT swallow the failure. Propagate with the cause preserved so callers (and the wipe
+            // telemetry they feed) can see the real KeyStoreException in the cause chain.
             Logger.warn(methodTag, "Failed to retrieve key padding information" + ": " + e.getMessage());
+            throw new ClientException(
+                    UNKNOWN_CRYPTO_ERROR,
+                    "Failed to retrieve key pair encryption paddings: " + e.getMessage(),
+                    e
+            );
         }
-        return Collections.emptyList();
     }
 }

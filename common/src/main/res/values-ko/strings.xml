@@ -6,6 +6,7 @@
     <string name="http_auth_dialog_username">사용자 이름</string>
     <string name="http_auth_dialog_password">암호</string>
     <string name="http_auth_dialog_title">자격 증명 입력</string>
+    <string name="http_auth_dialog_origin_host">호스트: %1$s</string>
     <string name="http_auth_dialog_login">로그인</string>
     <string name="http_auth_dialog_cancel">취소</string>
 

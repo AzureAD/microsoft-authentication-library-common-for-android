@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
+
+import javax.annotation.Nullable;
 
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
@@ -32,6 +35,8 @@ public class TokenResult implements IResult {
     private TokenResponse mTokenResponse;
     private TokenErrorResponse mTokenErrorResponse;
     private CliTelemInfo mCliTelemInfo;
+    @Nullable
+    private ClientDataInfo mClientDataInfo;
     private boolean mSuccess = false;
 
     public TokenResult() {
@@ -108,6 +113,25 @@ public class TokenResult implements IResult {
      */
     public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
         mCliTelemInfo = cliTelemInfo;
+    }
+
+    /**
+     * Gets the {@link ClientDataInfo} parsed from the x-ms-clientdata response header.
+     *
+     * @return The ClientDataInfo, or null if the header was absent or unparseable.
+     */
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        return mClientDataInfo;
+    }
+
+    /**
+     * Sets the {@link ClientDataInfo} parsed from the x-ms-clientdata response header.
+     *
+     * @param clientDataInfo The ClientDataInfo to set.
+     */
+    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
+        mClientDataInfo = clientDataInfo;
     }
 
     /**

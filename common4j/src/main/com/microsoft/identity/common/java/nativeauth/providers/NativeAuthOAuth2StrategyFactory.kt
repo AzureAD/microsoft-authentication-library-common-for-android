@@ -39,28 +39,33 @@ class NativeAuthOAuth2StrategyFactory {
             config: NativeAuthOAuth2Configuration,
             strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthOAuth2Strategy {
+            val requestInterceptor = config.requestInterceptor
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
                 signInInteractor = SignInInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                    nativeAuthResponseHandler = NativeAuthResponseHandler(),
+                    requestInterceptor = requestInterceptor
                 ),
                 signUpInteractor = SignUpInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                    nativeAuthResponseHandler = NativeAuthResponseHandler(),
+                    requestInterceptor = requestInterceptor
                 ),
                 resetPasswordInteractor = ResetPasswordInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                    nativeAuthResponseHandler = NativeAuthResponseHandler(),
+                    requestInterceptor = requestInterceptor
                 ),
                 jitInteractor = JITInteractor(
                     httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
-                    nativeAuthResponseHandler = NativeAuthResponseHandler()
+                    nativeAuthResponseHandler = NativeAuthResponseHandler(),
+                    requestInterceptor = requestInterceptor
                 )
             )
         }

@@ -119,7 +119,14 @@ project.afterEvaluate{
                             def dependencyNode = dependenciesNode.appendNode('dependency')
                             dependencyNode.appendNode('groupId', it.group)
                             dependencyNode.appendNode('artifactId', it.name)
-                            dependencyNode.appendNode('version', it.version)
+                            // For project dependencies (e.g. project(':keyvault')), it.version
+                            // reads the sibling project's `version` field — which is
+                            // "unspecified" if that project hasn't been configured yet.
+                            // With Gradle configure-on-demand enabled, that's common.
+                            // All sibling library projects share the same version, so write
+                            // the current artifact's version for project deps.
+                            def depVersion = (it instanceof org.gradle.api.artifacts.ProjectDependency) ? getAppVersionName() : it.version
+                            dependencyNode.appendNode('version', depVersion)
                         }
                     }
                 }

@@ -31,12 +31,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityParameters;
+import com.microsoft.identity.common.internal.providers.oauth2.BrowserRedirectValidator;
+import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.browser.Browser;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -139,6 +146,59 @@ public abstract class BrowserAuthorizationStrategy<
         final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
         setIntentFlag(intent);
         return intent;
+    }
+
+    /**
+     * Validates that no other application is registered for the same custom URL scheme before
+     * delegating to the base {@code launchIntent} to start the authorization UI.
+     * <p>
+     * A {@link ClientException} with error code
+     * {@link com.microsoft.identity.common.java.exception.ErrorStrings#MULTIPLE_APPS_LISTENING_CUSTOM_URL_SCHEME}
+     * is thrown if a conflicting app is detected, ensuring it propagates correctly through the
+     * command pipeline to MSAL's callback adapter layer.
+     */
+    @Override
+    protected void launchIntent(@NonNull final Intent intent) throws ClientException {
+        final String methodTag = TAG + ":launchIntent";
+        final Context appContext = getApplicationContext();
+        if (appContext == null) {
+            Logger.info(methodTag,
+                    "Application context is null; skipping multiple-app URL scheme validation.");
+        } else {
+            final String redirectUri = intent.getStringExtra(
+                    AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI);
+            if (redirectUri == null) {
+                Logger.info(methodTag,
+                        "Redirect URI is null in the intent; skipping multiple-app URL scheme validation.");
+            } else {
+                // Conditions to skip this check (brokered flows only):
+                // 1. Flight SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE is enabled (default: true)
+                // 2. Request is running in the auth process (Broker request)
+                // 3. the caller is a valid broker package
+                if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE) &&
+                        ProcessUtil.isRunningOnAuthService(appContext)) {
+                    // Setup validator inside the flight gate to avoid unnecessary instantiation
+                    final BrokerValidator validator = new BrokerValidator(appContext);
+                    if (validator.isValidBrokerPackage(appContext.getPackageName())) {
+                        Logger.info(methodTag,
+                                "Running in broker auth process; skipping multiple-app URL scheme validation.");
+                    } else {
+                        BrowserRedirectValidator.validateNoMultipleAppsListening(
+                                appContext,
+                                redirectUri,
+                                LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                        );
+                    }
+                } else {
+                    BrowserRedirectValidator.validateNoMultipleAppsListening(
+                            appContext,
+                            redirectUri,
+                            LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()
+                    );
+                }
+            }
+        }
+        super.launchIntent(intent);
     }
 
     protected abstract void setIntentFlag(@NonNull final Intent intent);

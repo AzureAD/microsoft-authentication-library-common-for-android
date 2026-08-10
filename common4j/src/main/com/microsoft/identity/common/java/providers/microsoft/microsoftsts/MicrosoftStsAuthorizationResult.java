@@ -26,6 +26,9 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.telemetry.ClientDataInfo;
+
+import javax.annotation.Nullable;
 
 /**
  * Sub class of {@link MicrosoftAuthorizationResult}.
@@ -33,6 +36,9 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
  */
 public class MicrosoftStsAuthorizationResult
         extends MicrosoftAuthorizationResult<MicrosoftStsAuthorizationResponse, MicrosoftStsAuthorizationErrorResponse> {
+
+    @Nullable
+    private ClientDataInfo mClientDataInfo;
 
     /**
      * Constructor of {@link MicrosoftStsAuthorizationResult}.
@@ -54,4 +60,22 @@ public class MicrosoftStsAuthorizationResult
         super(authStatus, errorResponse);
     }
 
+    /**
+     * Gets the {@link ClientDataInfo} parsed from the clientdata redirect query parameter.
+     *
+     * @return The ClientDataInfo, or null if the parameter was absent or unparseable.
+     */
+    @Nullable
+    public ClientDataInfo getClientDataInfo() {
+        return mClientDataInfo;
+    }
+
+    /**
+     * Sets the {@link ClientDataInfo} parsed from the clientdata redirect query parameter.
+     *
+     * @param clientDataInfo The ClientDataInfo to set.
+     */
+    public void setClientDataInfo(@Nullable final ClientDataInfo clientDataInfo) {
+        mClientDataInfo = clientDataInfo;
+    }
 }

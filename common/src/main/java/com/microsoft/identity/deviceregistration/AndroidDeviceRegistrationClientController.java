@@ -141,12 +141,26 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
             span.setAttribute(AttributeName.device_registration_protocol_name.name(), protocolParameters.getProtocolName());
             span.setAttribute(AttributeName.calling_package_name.name(), mCallerPackageName);
             span.setAttribute(AttributeName.active_broker_package_name.name(), mActiveBrokerPackageName);
+            final Bundle protocolParametersBundle;
+            try {
+                protocolParametersBundle = mProtocolPacker.pack(protocolParameters);
+            } catch (final Throwable throwable) {
+                Logger.error(methodTag, "Serialization error while packing the protocol", throwable);
+                throw new DeviceRegistrationException(
+                        DeviceRegistrationException.INTERNAL_ERROR_CODE,
+                        DeviceRegistrationException.SERIALIZATION_ERROR_MESSAGE,
+                        throwable
+                );
+            }
             for (final IIpcStrategy strategy : mIpcStrategies) {
+                Logger.info(methodTag, "Executing " + protocolParameters.getProtocolName() + " with strategy: " + strategy.getType());
                 try {
-                    byte[] protocolResult = communicateProtocolWithStrategy(protocolParameters, strategy);
+                    final Bundle brokerResultBundle = sendProtocolRequestToBroker(protocolParametersBundle, strategy);
                     setIpcStrategyTelemetryAttributes(strategy.getType(), "OK");
+                    span.setAttribute(AttributeName.ipc_strategy.name(), strategy.getType().name());
                     span.setStatus(StatusCode.OK);
-                    return protocolResult;
+                    mCacheUpdater.updateCachedActiveBrokerFromResultBundle(brokerResultBundle);
+                    return mProtocolPacker.unpackData(brokerResultBundle);
                 } catch (final BrokerCommunicationException communicationException) {
                     setIpcStrategyTelemetryAttributes(strategy.getType(), communicationException.getMessage());
                     // Fails to communicate to the broker. Try next strategy in list.
@@ -172,31 +186,29 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
     }
 
     /**
-     * Communicates the protocol associated with the given parameters using the provided strategy.
+     * Sends the serialized device registration protocol parameters to the active broker over the
+     * provided IPC strategy and returns the raw response bundle.
+     * <p>
+     * The parameters bundle is wrapped in a {@link BrokerOperationBundle} tagged with the
+     * {@link com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation#DEVICE_REGISTRATION_OPERATIONS}
+     * operation and targeted at {@link #mActiveBrokerPackageName}. The returned bundle is the
+     * unmodified payload produced by the broker; unpacking it into a protocol response is the
+     * caller's responsibility (see {@link AndroidDeviceRegistrationProtocolPacker#unpackData}).
+     * </p>
      *
-     * @param protocolParameters protocol parameters to execute.
-     * @param ipcStrategy        strategy to be invoked.
-     * @return a serialized protocol response.
-     * @throws BrokerCommunicationException if the strategy fails.
+     * @param protocolParametersBundle serialized protocol parameters to send to the broker.
+     * @param ipcStrategy              IPC strategy used to deliver the request to the broker.
+     * @return the non-null response {@link Bundle} returned by the broker.
+     * @throws BrokerCommunicationException if the IPC strategy fails to communicate with the
+     *         broker, allowing the caller to fall back to the next available strategy.
+     * @throws ClientException with {@link ClientException#INVALID_BROKER_BUNDLE} if the broker
+     *         returns a {@code null} bundle.
+     * @throws BaseException for any other failure surfaced by the underlying IPC strategy.
      */
     @NonNull
-    private byte[] communicateProtocolWithStrategy(
-            @NonNull final IDeviceRegistrationProtocolParameters protocolParameters,
+    private Bundle sendProtocolRequestToBroker(
+            @NonNull final Bundle protocolParametersBundle,
             @NonNull final IIpcStrategy ipcStrategy) throws BaseException {
-        final String methodTag = TAG + ":executeProtocolWithStrategy";
-        Logger.info(methodTag, "Executing " + protocolParameters.getProtocolName()
-                + " with strategy: " + ipcStrategy.getType());
-        final Bundle protocolParametersBundle;
-        try {
-            protocolParametersBundle = mProtocolPacker.pack(protocolParameters);
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Serialization error while packing the protocol", throwable);
-            throw new DeviceRegistrationException(
-                    DeviceRegistrationException.INTERNAL_ERROR_CODE,
-                    DeviceRegistrationException.SERIALIZATION_ERROR_MESSAGE,
-                    throwable
-            );
-        }
         final Bundle protocolResultBundle = ipcStrategy.communicateToBroker(
                 new BrokerOperationBundle(
                         DEVICE_REGISTRATION_OPERATIONS,
@@ -204,14 +216,10 @@ public class AndroidDeviceRegistrationClientController implements IDeviceRegistr
                         protocolParametersBundle
                 )
         );
-
         if (protocolResultBundle == null) {
-            throw new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Broker returned null bundle");
         }
-
-        mCacheUpdater.updateCachedActiveBrokerFromResultBundle(protocolResultBundle);
-
-        return mProtocolPacker.unpackData(protocolResultBundle);
+        return protocolResultBundle;
     }
 
     /**

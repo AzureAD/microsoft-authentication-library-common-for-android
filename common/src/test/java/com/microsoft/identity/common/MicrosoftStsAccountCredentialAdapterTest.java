@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.base64.Base64Flags;
 import com.microsoft.identity.common.java.base64.Base64Util;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -287,5 +289,35 @@ public class MicrosoftStsAccountCredentialAdapterTest {
     static String createRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
         return Base64Util.encodeToString(StringUtil.toByteArray(claims), Base64Flags.URL_SAFE);
+    }
+
+    @Test
+    public void testCreateAccountRecord_LookupModeWithRealIdToken_ParsesUsername() throws ServiceException {
+        // In lookup mode, if the ID token is a real JWT (not "none"), username should still be parsed.
+        // This covers the interactive fallback scenario where lookup mode params are preserved
+        // but eSTS returns a real ID token.
+        when(mockParameters.isLookupMode()).thenReturn(true);
+        when(mockResponse.getIdToken()).thenReturn(MOCK_ID_TOKEN_WITH_CLAIMS);
+
+        final AccountRecord account = mAccountCredentialAdapter.createAccountRecord(
+                mockParameters, SdkType.MSAL, mockResponse);
+
+        assertNotNull(account);
+        assertEquals("Username should be parsed from real ID token even in lookup mode",
+                MOCK_PREFERRED_USERNAME, account.getUsername());
+    }
+
+    @Test
+    public void testCreateAccountRecord_LookupModeWithNoneIdToken_UsernameIsMissing() throws ServiceException {
+        // In lookup mode with id_token="none", username cannot be derived from the token.
+        when(mockParameters.isLookupMode()).thenReturn(true);
+        when(mockResponse.getIdToken()).thenReturn(AuthenticationConstants.Broker.LOOKUP_MODE_ID_TOKEN_VALUE);
+
+        final AccountRecord account = mAccountCredentialAdapter.createAccountRecord(
+                mockParameters, SdkType.MSAL, mockResponse);
+
+        assertNotNull(account);
+        assertEquals("Username should be MISSING_FROM_THE_TOKEN_RESPONSE when id_token is 'none'",
+                SchemaUtil.MISSING_FROM_THE_TOKEN_RESPONSE, account.getUsername());
     }
 }

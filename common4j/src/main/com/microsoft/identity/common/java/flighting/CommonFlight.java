@@ -57,7 +57,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable passkey registration feature.
      */
-    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", false),
+    ENABLE_PASSKEY_REGISTRATION("EnablePasskeyRegistration", true),
 
     /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
@@ -101,9 +101,9 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_ATTACH_PRT_HEADER_WHEN_CROSS_CLOUD("EnableAttachPrtHeaderWhenCrossCloud", true),
 
     /**
-     * Flight to make the state parameter required for the switch browser protocol.
+     * Flight to make the state parameter required for the switch browser protocol. Overridden in Broker (default: false).
      */
-    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", false),
+    SWITCH_BROWSER_PROTOCOL_REQUIRES_STATE("SwitchBrowserProtocolRequiresState", true),
 
     /**
      * Flight to enable adding x-client-MN and x-client-WPAvailable extra query parameters
@@ -133,12 +133,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control the WrappedSecretKey serializer version
      */
-    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 0),
-
-    /**
-     * Flight to enable handling the UI in edge to edge mode
-     */
-    ENABLE_HANDLING_FOR_EDGE_TO_EDGE("EnableHandlingEdgeToEdge", true),
+    WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 1),
 
     /**
      * Flight to enable the Web CP in WebView.
@@ -149,6 +144,14 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
+
+    /**
+     * Flight to enable post-parse validation of the {@code intent://} broker-install request before it
+     * is launched. When enabled, the parsed intent's component and selector are cleared and its target
+     * package must be the Google Play Store before the activity is started. Defaults to off so the
+     * validation can be rolled out progressively via ECS; when off, the legacy launch behavior is used.
+     */
+    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", false),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
@@ -231,6 +234,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
 
     /**
+     * Flight to enable the OpenID-VC return-to-caller PendingIntent. When enabled, the openid-vc
+     * launch intent handed to Microsoft Authenticator carries a return PendingIntent that brings
+     * the caller's task back to the foreground after the VID flow completes. When disabled, the
+     * pre-existing behavior applies: the openid-vc handler is launched without a return PendingIntent.
+     */
+    ENABLE_OPEN_ID_VC_RETURN_TO_CALLER("EnableOpenIdVcReturnToCaller", true),
+
+    /**
      * Flight to enable sovereign cloud instance discovery routing.
      * When enabled, discovery requests for known sovereign cloud hosts are routed
      * through host of passed in authority if part of known cloud list.
@@ -273,7 +284,43 @@ public enum CommonFlight implements IFlightConfig {
      * references first, then clones only the matching items — avoiding the cost of
      * cloning the entire cache when only a subset is needed.
      */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false);
+    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
+
+    /**
+     * Kill switch for strict redirect-URI matching in
+     * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
+     * ECS to revert to the historical String#startsWith prefix match
+     * (FireWatch c1bf88bd / IcM 31000000624712).
+     */
+    ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true),
+
+    /**
+     * Flight to enable the conservative key generation spec for legacy devices (Android API &lt;= 30).
+     * <p>
+     * On API &lt;= 30 the hardware keymaster predates Keystore 2.0 and frequently rejects the
+     * advanced key generation specs (PURPOSE_WRAP_KEY / SHA-512 / OAEP-MGF1), which causes every
+     * key generation attempt to fail and breaks first-time enrollment. When enabled, advanced specs
+     * are skipped on API &lt;= 30 in favour of a conservative RSA/PKCS1/SHA-256 spec that legacy
+     * keymasters reliably support.
+     * <p>
+     * Enabled by default; can be turned off via ECS to restore the previous behaviour if needed.
+     */
+    ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES("EnableConservativeKeyGenSpecForLegacyDevices", true),
+
+    /**
+     * Flight to skip the multiple-app URL scheme validation when running in the broker
+     * authentication service process with a valid broker redirect URI.
+     * <p>
+     * When enabled (default), the check is bypassed for brokered flows (e.g. COBO/COPE/AM API)
+     * where a broker app's redirect URI is legitimately handled by multiple installed Microsoft
+     * apps. Disable via ECS to force the validation for all flows if needed.
+     */
+    SKIP_MULTIPLE_APP_VALIDATION_IN_AUTH_SERVICE("SkipMultipleAppValidationInAuthService", true),
+
+    /**
+     * Flight to enable request origin display in the HTTP authentication dialog.
+     */
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
 
     private String key;
     private Object defaultValue;

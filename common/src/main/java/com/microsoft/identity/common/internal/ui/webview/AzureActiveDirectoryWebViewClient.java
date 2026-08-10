@@ -24,9 +24,11 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -47,6 +49,7 @@ import androidx.lifecycle.ViewTreeLifecycleOwner;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
@@ -61,8 +64,7 @@ import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractS
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserChallenge;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.SwitchBrowserRequestHandler;
+import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.broker.CommonTenantInfoProvider;
@@ -79,11 +81,18 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -110,8 +119,13 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_BROKER_INSTALL_INTENT_VALIDATION;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT;
+import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_OPEN_ID_VC_RETURN_TO_CALLER;
 import static com.microsoft.identity.common.java.flighting.CommonFlight.ENABLE_PLAYSTORE_URL_LAUNCH;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.CHINA_CLOUD_LEGACY_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.PUBLIC_CLOUD_HOST;
+import static com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.US_GOV_CLOUD_HOST;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
@@ -131,15 +145,22 @@ import io.opentelemetry.context.Scope;
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
 
+    /**
+     * Package name of the Google Play Store, the legitimate launch target for a broker-install
+     * {@code intent://} request.
+     */
+    private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
     // 3 secs wait for the intent to be launched and the current flow is killed for smooth transition.
     private static final int THREAD_SLEEP_FOR_INTENT_LAUNCH_MS = 3;
+    @NonNull
     private final String mRedirectUrl;
     private final CertBasedAuthFactory mCertBasedAuthFactory;
     private AbstractCertBasedAuthChallengeHandler mCertBasedAuthChallengeHandler;
-    private final SwitchBrowserRequestHandler mSwitchBrowserRequestHandler;
+    private final SwitchBrowserProtocolCoordinator mSwitchBrowserProtocolCoordinator;
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
@@ -152,6 +173,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private String mPasskeyRegistrationScript;
 
     /**
+     * Optional onboarding telemetry recorder. Set via {@link #setOnboardingTelemetryRecorder}
+     * after this client is constructed (the recorder is created by the host fragment/activity
+     * when a seed JSON arrives, which is typically later than WebView construction).
+     * When non-null, key URL transitions (broker install, MDM enrollment, Company Portal
+     * launch, etc.) and {@code lastLoadedDomain} are recorded for the onboarding telemetry blob.
+     */
+    @Nullable
+    private OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+
+    /**
      * Callback for tracking URL load events.
      */
     private final IUrlLoadTracker mUrlLoadTracker;
@@ -160,14 +191,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
-        mSwitchBrowserRequestHandler = switchBrowserRequestHandler;
+        mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
@@ -178,10 +209,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl,
-                                             @NonNull final SwitchBrowserRequestHandler switchBrowserRequestHandler,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserRequestHandler, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
     }
 
     /**
@@ -198,10 +229,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * Attach an onboarding telemetry recorder so subsequent WebView page transitions
+     * (broker install prompts, MDM enrollment redirects, Company Portal launches, etc.)
+     * are recorded into the onboarding telemetry blob.
+     *
+     * Recorder is owned by the host fragment / activity (e.g. OneAuthNavigationFragment
+     * on the OneAuth side, AuthorizationActivity on the broker side). May be null when
+     * no seed JSON is available — in which case all hooks become no-ops.
+     */
+    public void setOnboardingTelemetryRecorder(
+            @Nullable final OnboardingTelemetryRecorder recorder) {
+        mOnboardingTelemetryRecorder = recorder;
+    }
+
     @Override
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
+
+        // Onboarding telemetry: record domain navigation (best-effort, no-op if no recorder).
+        recordLastLoadedDomain(url);
 
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
@@ -308,16 +356,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri.");
                 processNonceAndReAttachHeaders(view, url);
-             }
-             else if (isRedirectUrl(formattedURL)) {
-                Logger.info(methodTag,"Navigation starts with the redirect uri.");
-                if (mSwitchBrowserRequestHandler.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
-                    Logger.info(methodTag,"Request to switch browser.");
-                    processSwitchBrowserRequest(url);
-                } else {
-                    Logger.info(methodTag,"It is a redirect request.");
-                    processRedirectUrl(view, url);
-                }
+            }
+            // A switch_browser request arrives as {redirectUrl}/switch_browser?code=...&action_uri=...,
+            // whose path no longer equals the registered redirect URI under strict matching. Detect it
+            // here explicitly instead of nesting it behind isRedirectUrl; otherwise it would fall through
+            // to isInstallRequestUrl/processInstallRequest and the switch_browser continuation code would
+            // be delivered to the completion callback as if it were the final auth code.
+            else if (mSwitchBrowserProtocolCoordinator.isSwitchBrowserRequest(formattedURL, mRedirectUrl)) {
+                Logger.info(methodTag,"Request to switch browser.");
+                processSwitchBrowserRequest(url);
+            } else if (isRedirectUrl(formattedURL)) {
+                Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
+                processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
@@ -336,6 +386,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else if (isAuthAppMFAUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to link account with Authenticator.");
                 processAuthAppMFAUrl(url);
+            } else if (isAuthenticatorActivationAppLink(formattedURL)) {
+                Logger.info(methodTag,"Request to open Authenticator via activation app link.");
+                processAuthenticatorActivationAppLink(view, url);
             } else if (isAmazonAppRedirect(formattedURL)) {
                 Logger.info(methodTag, "It is an Amazon app request");
                 processAmazonAppUri(url);
@@ -399,6 +452,35 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX);
     }
 
+    /**
+     * Checks if the URL is an Authenticator app activation Android App Link.
+     * These are HTTPS URLs from trusted AAD hosts with the activation path,
+     * e.g., https://login.microsoftonline.com/authenticatorApp/activateAccount?...
+     *
+     * Unlike Chrome, WebView does not resolve Android App Links automatically.
+     * We must intercept them and dispatch via Intent.ACTION_VIEW.
+     *
+     * @param url The lowercased URL to check.
+     * @return true if the URL is an Authenticator activation app link.
+     */
+    boolean isAuthenticatorActivationAppLink(@NonNull final String url) {
+        if (!isUriSSLProtected(url)) {
+            return false;
+        }
+        final Uri uri = Uri.parse(url);
+        final String host = uri.getHost();
+        final String path = uri.getPath();
+        if (host == null || path == null) {
+            return false;
+        }
+        final boolean isTrustedHost = host.equalsIgnoreCase(PUBLIC_CLOUD_HOST)
+                || host.equalsIgnoreCase(US_GOV_CLOUD_HOST)
+                || host.equalsIgnoreCase(CHINA_CLOUD_LEGACY_HOST);
+        final boolean isActivationPath = path.equalsIgnoreCase(
+                AuthenticationConstants.Broker.AUTHENTICATOR_APP_LINK_ACTIVATION_PATH);
+        return isTrustedHost && isActivationPath;
+    }
+
     private boolean isPlayStoreUrl(@NonNull final String url) {
         return url.startsWith(PLAY_STORE_INSTALL_PREFIX);
     }
@@ -423,8 +505,119 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(FidoConstants.PASSKEY_PROTOCOL_REDIRECT.toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * Returns true if {@code url} is the OAuth2 redirect carrying the auth code
+     * back to the configured redirect URI.
+     * <p>
+     * Matches scheme + authority + path exactly (query/fragment ignored — they
+     * carry the code/state). Replaces a prior {@code String#startsWith} prefix
+     * match that let attacker-controlled path suffixes through
+     * (FireWatch c1bf88bd / IcM 31000000624712); defense-in-depth, since eSTS
+     * already validates the redirect URI exactly server-side.
+     *
+     * @param url lowercased URL from {@link #handleUrl}; comparison is
+     *            case-insensitive so mixed-case registered URIs still match.
+     */
     private boolean isRedirectUrl(@NonNull final String url) {
-        return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        // mRedirectUrl is @NonNull (set from a @NonNull constructor arg), so only the empty
+        // case needs guarding here.
+        if (mRedirectUrl.isEmpty()) {
+            return false;
+        }
+
+        // Kill switch: revert to the prior prefix match if disabled via ECS.
+        final boolean strictMatchingEnabled = CommonFlightsManager.INSTANCE
+                .getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_STRICT_REDIRECT_URI_MATCHING);
+        if (!strictMatchingEnabled) {
+            return url.startsWith(mRedirectUrl.toLowerCase(Locale.US));
+        }
+
+        // Compare scheme + authority + path explicitly rather than
+        // Uri#buildUpon().clearQuery().fragment(null) + Uri#equals(). Uri#equals is exact and
+        // case-sensitive, so it would reject a legitimate single trailing-slash difference and a
+        // mixed-case registered URI; and for opaque urn: redirects clearQuery() does not strip the
+        // auth code (it lives in the scheme-specific part, not the query), which would collapse the
+        // check to a scheme-only match and reopen the prefix-confusion hole for urn: redirects.
+        try {
+            final Uri actual = Uri.parse(url);
+            final Uri expected = Uri.parse(mRedirectUrl);
+            final String expectedScheme = expected.getScheme();
+
+            // Scheme-less configured URI: fall back to strict equality after stripping any
+            // query/fragment from the incoming URL (it still carries ?code=...). Mirrors the
+            // scheme-less branch of the Kotlin isSwitchBrowserRedirectUrl so both matchers agree.
+            if (expectedScheme == null || expectedScheme.isEmpty()) {
+                return stripQueryAndFragment(url).equalsIgnoreCase(mRedirectUrl);
+            }
+            if (!expectedScheme.equalsIgnoreCase(actual.getScheme())) {
+                return false;
+            }
+
+            // Opaque URIs (e.g. the broker OOB redirect urn:ietf:wg:oauth:2.0:oob)
+            // have null authority/path, so the hierarchical comparison below would
+            // degenerate to scheme-only and accept any same-scheme URI. Compare the
+            // scheme-specific part instead, minus any appended query/fragment.
+            if (expected.isOpaque() || actual.isOpaque()) {
+                if (expected.isOpaque() != actual.isOpaque()) {
+                    return false;
+                }
+                return stripQueryAndFragment(actual.getSchemeSpecificPart())
+                        .equalsIgnoreCase(stripQueryAndFragment(expected.getSchemeSpecificPart()));
+            }
+
+            if (!equalsIgnoreCaseNullSafe(actual.getAuthority(), expected.getAuthority())) {
+                return false;
+            }
+            // Single trailing slash is normalized so "/auth" matches "/auth/".
+            return normalizePath(actual.getPath())
+                    .equalsIgnoreCase(normalizePath(expected.getPath()));
+        } catch (final Throwable t) {
+            // Fail closed on unparseable URLs. Log only the exception type — its
+            // message could embed the URL (and thus the auth code).
+            Logger.warn(TAG, "Failed to parse URL for redirect URI comparison: "
+                    + t.getClass().getSimpleName());
+            return false;
+        }
+    }
+
+    private static boolean equalsIgnoreCaseNullSafe(@Nullable final String a,
+                                                    @Nullable final String b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equalsIgnoreCase(b);
+    }
+
+    private static String nullToEmpty(@Nullable final String s) {
+        return s == null ? "" : s;
+    }
+
+    /** Strips a trailing {@code ?query} and/or {@code #fragment} from {@code s}. */
+    private static String stripQueryAndFragment(@Nullable final String s) {
+        String r = nullToEmpty(s);
+        final int q = r.indexOf('?');
+        if (q >= 0) {
+            r = r.substring(0, q);
+        }
+        final int h = r.indexOf('#');
+        if (h >= 0) {
+            r = r.substring(0, h);
+        }
+        return r;
+    }
+
+    /**
+     * Removes a single trailing slash so "/auth" and "/auth/" compare equal. The empty
+     * path (path-less redirect URI) and root "/" also normalize to the same value, so a
+     * path-less registered URI still matches an incoming redirect with a trailing slash.
+     */
+    private static String normalizePath(@Nullable final String path) {
+        final String p = nullToEmpty(path);
+        if (p.endsWith("/")) {
+            return p.substring(0, p.length() - 1);
+        }
+        return p;
     }
 
     private boolean isNonceRedirect(@NonNull final String url) {
@@ -445,8 +638,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (!url.startsWith(AuthenticationConstants.Broker.INTENT_PREFIX)) {
             return false;
         }
-        // Check if the intent request is for the google play store app
-        if (!url.contains(";package=com.android.vending;")) {
+        // Check if the intent request is for the google play store app. Build the match off the
+        // shared package constant so this gate and the allow-list check cannot drift apart.
+        if (!url.contains(";package=" + GOOGLE_PLAY_STORE_PACKAGE_NAME + ";")) {
             return false;
         }
         // Check if the url query parameter is for a broker app.
@@ -582,29 +776,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Launch the browser with the given action URI and code.
-     * <p>
-     * From the query parameters, extract the action URI and code,
-     * The constructs the URI with the action URI and code.
+     * Launch the browser with the given action URI and code. Disables the WebView until the
+     * async handler resolves so the user cannot interact with a page that is about to be
+     * replaced by SwitchBrowserActivity.
      *
-     * @param url The URL to be opened in the browser.
+     * @param view The WebView delivering the switch_browser redirect.
+     * @param url  The URL to be opened in the browser.
      */
     private void processSwitchBrowserRequest(@NonNull final String url) {
-        final String methodTag = TAG + ":processSwitchBrowserRequest";
-        try {
-            mSwitchBrowserRequestHandler.processChallenge(
-                    SwitchBrowserChallenge.constructFromRedirectUrl(url, mRequestUrl)
-            );
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Switch browser challenge could not be processed.", throwable);
-            final String errorCode;
-            if (throwable instanceof IErrorInformation) {
-                errorCode = ((IErrorInformation) throwable).getErrorCode();
-            } else {
-                errorCode = UNKNOWN_ERROR;
-            }
-            returnError(errorCode, throwable.getMessage());
-        }
+        // The coordinator reports UI status + the terminal result to the fragment's listener.
+        mSwitchBrowserProtocolCoordinator.processSwitchBrowserRedirectAsync(url, mRequestUrl, mRedirectUrl);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -686,6 +867,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
+
+        // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
+        recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
         if (shouldLaunchCompanyPortal()) {
             // If CP is installed, redirect to CP.
@@ -796,6 +980,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // This is a special case where the enrollment is not done in the WebView, but rather in the browser.
     private void processWebCpEnrollmentUrl(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebCpEnrollmentUrl";
+        // Onboarding telemetry: WebCP enrollment is a distinct enrollment path.
+        recordOnboardingStep(STEP_WEB_CP_ENROLLMENT_STARTED);
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpEnrollmentRedirect.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             view.stopLoading();
@@ -824,6 +1010,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // Opens the Google enrollment URL in the browser or the default intent handler (like DPC)
     private void openGoogleEnrollmentUrl(@NonNull final String url) {
         final String methodTag = TAG + ":openGoogleEnrollmentUrl";
+        // Onboarding telemetry: Google enrollment redirect is a distinct enrollment path.
+        recordOnboardingStep(STEP_GOOGLE_ENROLLMENT_STARTED);
         Logger.info(methodTag, "Opening Google enrollment URL");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -848,6 +1036,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
+        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
@@ -867,6 +1056,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final String appPackageName = getBrokerAppPackageNameFromUrl(url);
         Logger.info(methodTag, "Request to open PlayStore to install package : '" + appPackageName + "'");
+        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
 
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_APP_PREFIX + appPackageName));
@@ -885,6 +1075,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private void processAuthAppMFAUrl(String url) {
         final String methodTag = TAG + ":processAuthAppMFAUrl";
+        // Onboarding telemetry: redirect to Authenticator for MFA linking.
+        recordOnboardingStep(STEP_AUTHENTICATOR_MFA_LINKING_STARTED);
         Logger.verbose(methodTag, "Linking Account in Broker for MFA.");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -895,8 +1087,42 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    /**
+     * Handles Authenticator activation Android App Links.
+     * WebView does not resolve Android App Links automatically (unlike Chrome).
+     * This method intercepts the HTTPS activation URL and dispatches it via
+     * Intent.ACTION_VIEW so the system can route it to the Authenticator app.
+     *
+     * @param view The WebView that intercepted the navigation.
+     * @param url  The original (non-lowercased) activation URL.
+     */
+    void processAuthenticatorActivationAppLink(@NonNull final WebView view,
+                                               @NonNull final String url) {
+        final String methodTag = TAG + ":processAuthenticatorActivationAppLink";
+        view.stopLoading();
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                getActivity().startActivity(intent);
+                Logger.info(methodTag, "Launched Authenticator via activation app link.");
+            } else {
+                Logger.warn(methodTag, "No application found to handle activation app link. Opening in browser.");
+                // Browser automatically redirects user to playstore.
+                openLinkInBrowser(url);
+            }
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "Failed to launch Authenticator via activation app link.", e);
+            // Browser automatically redirects user to playstore.
+            openLinkInBrowser(url);
+        }
+    }
+
     private void launchCompanyPortal() {
         final String methodTag = TAG + ":launchCompanyPortal";
+
+        // Onboarding telemetry: Company Portal launch is a discrete onboarding step.
+        recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
 
         Logger.verbose(methodTag, "Sending intent to launch the CompanyPortal.");
         final Intent intent = new Intent();
@@ -932,7 +1158,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+
+            // Resolve after any pinning so the handler check matches the final intent we will launch.
+            final android.content.pm.PackageManager pm = getActivity().getPackageManager();
+
+            // Return-to-caller is wired ONLY for the brokered flow, i.e. when this WebView is
+            // hosted in the broker's auth-service process (Authenticator / Company Portal / Link to
+            // Windows). In the brokerless/embedded case we fall back to the pre-existing behavior
+            // (launch the openid-vc handler without a return PendingIntent) - identical to
+            // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
+            // validated. It is also gated by its own flight so it can be rolled back entirely.
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
+                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+                // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
+                // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
+                // rely on resolveActivity() here: when more than one app claims the scheme it returns
+                // the system chooser (package "android"), which would drop the return PendingIntent
+                // even if the user then picked Authenticator. Pinning to a verified Authenticator
+                // fixes that and avoids showing a wallet chooser for a request only it can fulfill.
+                if (isAuthenticatorOpenIdVcHandler(intent)
+                        && isTrustedVcWalletPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+                    intent.setPackage(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+                    attachReturnPendingIntent(intent, methodTag);
+                } else {
+                    // Authenticator is not an installed/verified openid-vc handler: preserve the
+                    // existing dispatch behavior but do NOT attach a return PendingIntent.
+                    Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
+                }
+            }
+
+            final ComponentName resolved = intent.resolveActivity(pm);
+            if (resolved != null) {
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
                 span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
@@ -952,6 +1208,94 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } finally {
             span.end();
         }
+    }
+
+    /**
+     * Attaches the return {@link PendingIntent} to the openid-vc launch intent so the wallet
+     * (Authenticator) can bring this auth host's task back to the foreground after the VID
+     * hand-off completes.
+     *
+     * <p>It is an explicit, immutable {@link PendingIntent} targeting
+     * {@link com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity} (manifest-merged
+     * into the host app). The PendingIntent is created with the host activity's application
+     * context, so it returns to whichever app currently hosts this WebView.</p>
+     *
+     * <p>It carries no result data and is a navigation signal only; Authenticator never
+     * treats its invocation as proof of VID/auth success.</p>
+     */
+    private void attachReturnPendingIntent(@NonNull final Intent intent, @NonNull final String methodTag) {
+        try {
+            final android.content.Context context = getActivity().getApplicationContext();
+
+            final Intent returnIntent = new Intent(context,
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.class);
+            returnIntent.setAction(
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.ACTION_RETURN_FROM_VID);
+            // NEW_TASK is mandatory for a PendingIntent.getActivity launch fired from another
+            // process. The trampoline declares android:taskAffinity="", so this NEW_TASK launch
+            // lands in an isolated throwaway task instead of an affinity-matched (forgeable) task;
+            // it then finishes itself, letting the broker host's own task surface. NO_ANIMATION
+            // keeps it a clean cut.
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            returnIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+
+            // ONE_SHOT: the wallet consumes this exactly once, so the framework auto-cancels it
+            // after send() and it can never be replayed. IMMUTABLE: the recipient cannot mutate the
+            // intent (including the request-state nonce).
+            final PendingIntent returnPendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    returnIntent,
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+
+            intent.putExtra(
+                    com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA,
+                    returnPendingIntent);
+            Logger.info(methodTag, "Attached return PendingIntent to openid-vc intent.");
+        } catch (final Exception e) {
+            // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
+            Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns true if {@code packageName} is Microsoft Authenticator AND passes signature-pinned
+     * verification via {@link BrokerValidator}. The VID wallet is specifically Authenticator, so we
+     * restrict to its package name in addition to the certificate check — this prevents any other
+     * signed broker (e.g. Company Portal) or a look-alike app that merely claims the openid-vc://
+     * scheme from receiving the return PendingIntent.
+     */
+    private boolean isTrustedVcWalletPackage(@NonNull final String packageName) {
+        if (!AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(packageName)) {
+            return false;
+        }
+        try {
+            return new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Returns true if Microsoft Authenticator is among the apps that can handle {@code intent}
+     * (an openid-vc:// launch intent). Uses {@link android.content.pm.PackageManager#queryIntentActivities}
+     * rather than {@code resolveActivity()}, which returns the system chooser (package "android")
+     * when multiple apps claim the scheme. Authenticator's package is declared in the manifest
+     * {@code <queries>}, so it is visible to the query on API 30+.
+     */
+    private boolean isAuthenticatorOpenIdVcHandler(@NonNull final Intent intent) {
+        final String authenticatorPackage = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+        try {
+            for (final ResolveInfo info : getActivity().getPackageManager().queryIntentActivities(intent, 0)) {
+                if (info.activityInfo != null && authenticatorPackage.equals(info.activityInfo.packageName)) {
+                    return true;
+                }
+            }
+        } catch (final Exception e) {
+            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
+        }
+        return false;
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -984,6 +1328,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // i.e. msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
     private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processInstallRequest";
+
+        // Onboarding telemetry: broker install request reached the WebView client. Record the
+        // step at method entry so we capture intent regardless of the parsed result code.
+        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
 
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
 
@@ -1042,6 +1390,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private void processIntentToInstallBrokerApp(@NonNull final WebView view, @NonNull final String intentUrl) {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
+        // Onboarding telemetry: alternate broker install path (intent-scheme).
+        recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
+        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+            // Flight ON (new behavior): validated launch path, isolated in its own method. When the
+            // flight is off we fall through to the original behavior below, which is unchanged from dev.
+            launchValidatedBrokerInstallIntent(view, intentUrl, methodTag);
+            return;
+        }
         try {
             final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             if (intent != null && intent.getPackage() != null) {
@@ -1060,6 +1417,100 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
             returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
         }
+    }
+
+    /**
+     * Flight-ON broker-install path: validates the parsed intent target before launching and records
+     * the outcome ({@link AttributeName#is_broker_install_intent_blocked}) on the current
+     * WebView-processing span so the fix's behavior (launched / blocked) can be confirmed from
+     * android_spans.
+     *
+     * @param view      The WebView whose context is used to launch the intent.
+     * @param intentUrl The {@code intent://} URL to be parsed and (if allow-listed) launched.
+     * @param methodTag Logging tag propagated from the caller.
+     */
+    private void launchValidatedBrokerInstallIntent(@NonNull final WebView view,
+                                                    @NonNull final String intentUrl,
+                                                    @NonNull final String methodTag) {
+        try {
+            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+            if (intent != null && intent.getPackage() != null) {
+                final Intent sanitizedIntent = sanitizeAndValidateBrokerInstallIntent(intent);
+                if (sanitizedIntent == null) {
+                    Logger.warn(methodTag,
+                            "Blocking intent request to non-allow-listed package: " + intent.getPackage());
+                    SpanExtension.current().setAttribute(
+                            AttributeName.is_broker_install_intent_blocked.name(), true);
+                    return;
+                }
+
+                view.getContext().startActivity(sanitizedIntent);
+                Logger.info(methodTag, "Intent request sent to launch the app: " + sanitizedIntent.getPackage());
+                SpanExtension.current().setAttribute(
+                        AttributeName.is_broker_install_intent_blocked.name(), false);
+            } else {
+                Logger.warn(methodTag, "Unable to parse the intent URI");
+            }
+        } catch (final URISyntaxException e) {
+            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
+            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(methodTag, "No activity found to handle the intent.", e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
+        } catch (final Throwable throwable) {
+            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
+            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
+        }
+    }
+
+    /**
+     * Sanitizes and validates a parsed broker-install intent before it is launched. Any explicit
+     * component or selector is cleared so that activity resolution is driven solely by the target
+     * package; the package is then checked against the allow-list. For an allow-listed target, the
+     * URI-permission grant flags are stripped and {@link Intent#CATEGORY_BROWSABLE} is added,
+     * mirroring the platform's standard WebView intent handling so the launched intent can't carry
+     * an unexpected grant into the store app.
+     * <p>
+     * Package-private so it can be unit-tested directly with a hand-built intent (a selector cannot
+     * be injected through the {@code intent://} URL scheme, so it is not reachable via the public
+     * navigation path).
+     *
+     * @param intent The parsed intent to sanitize; its package must already be non-null.
+     * @return the sanitized intent when its target package is allow-listed, or {@code null} when the
+     *         target is not allow-listed and therefore must not be launched.
+     */
+    @Nullable
+    Intent sanitizeAndValidateBrokerInstallIntent(@NonNull final Intent intent) {
+        // Clear any explicit component or selector carried by the parsed intent so that activity
+        // resolution is driven solely by the validated package.
+        intent.setComponent(null);
+        intent.setSelector(null);
+
+        if (!isAllowedBrokerInstallIntentTarget(intent.getPackage())) {
+            return null;
+        }
+
+        // Strip any URI-permission grant flags that rode in on the parsed intent and add
+        // CATEGORY_BROWSABLE, matching the platform's standard WebView intent handling.
+        intent.setFlags(intent.getFlags()
+                & ~Intent.FLAG_GRANT_READ_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                & ~Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        return intent;
+    }
+
+    /**
+     * Checks whether the parsed broker-install intent targets the allow-listed package. The only
+     * supported launch target for this path is the Google Play Store, which opens the broker app's
+     * store listing, so any other package is not launched.
+     *
+     * @param packageName The target package declared by the parsed intent.
+     * @return {@code true} if the package is allow-listed, {@code false} otherwise.
+     */
+    private boolean isAllowedBrokerInstallIntentTarget(@Nullable final String packageName) {
+        return GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(packageName);
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
@@ -1363,5 +1814,43 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     public void addPasskeyRegistrationJsScript(@NonNull final String script) {
         this.mPasskeyRegistrationScript = script;
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook: records a step on the attached recorder
+     * if one is present. No-op when no recorder has been attached. Never throws.
+     */
+    private void recordOnboardingStep(@NonNull final String stepId) {
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            return;
+        }
+        try {
+            recorder.addStep(stepId);
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
+        }
+    }
+
+    /**
+     * Best-effort onboarding telemetry hook: records the host of the most recently loaded
+     * page on the attached recorder. No-op when no recorder is attached or the URL has no
+     * extractable host. Never throws.
+     */
+    private void recordLastLoadedDomain(@NonNull final String url) {
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null || url.isEmpty()) {
+            return;
+        }
+        try {
+            final String host = Uri.parse(url).getHost();
+            if (host != null && !host.isEmpty()) {
+                recorder.setLastLoadedDomain(host);
+            } else {
+                Logger.verbose(TAG, "Onboarding telemetry: no host extracted from URL");
+            }
+        } catch (final Throwable t) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
+        }
     }
 }

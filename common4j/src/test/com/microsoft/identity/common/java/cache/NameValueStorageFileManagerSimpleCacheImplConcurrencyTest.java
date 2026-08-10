@@ -202,6 +202,8 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
             mocks.close();
         }
         updateFlightForTest(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE, false);
+
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     /**

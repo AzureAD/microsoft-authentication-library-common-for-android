@@ -39,11 +39,14 @@ import com.microsoft.identity.common.java.exception.StrongDeviceRegistrationRequ
 import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
@@ -84,7 +87,16 @@ public class ExceptionAdapter {
 
         if (null != authorizationResult) {
             if (!authorizationResult.getSuccess()) {
-                return exceptionFromAuthorizationResult(authorizationResult, commandParameters);
+                final BaseException authException = exceptionFromAuthorizationResult(authorizationResult, commandParameters);
+                // Attach ClientDataInfo from the authorize redirect (clientdata query param)
+                // so callers can inspect server-side error context on auth failures.
+                if (authorizationResult instanceof MicrosoftStsAuthorizationResult
+                        && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                    authException.setClientDataInfo(
+                            ((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo()
+                    );
+                }
+                return authException;
             }
         } else {
             Logger.warn(
@@ -107,6 +119,17 @@ public class ExceptionAdapter {
             return new ClientException(ClientException.AUTHORIZATION_RESULT_NULL_ERROR_RESPONSE, "Authorization error response is null. Authorization Status: " +authorizationResult.getAuthorizationStatus());
         }
 
+        final BaseException exception = getExceptionByAuthorizationResult(authorizationResult, authorizationErrorResponse);
+        if (authorizationResult instanceof MicrosoftStsAuthorizationResult
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            exception.setClientDataInfo(((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo());
+        }
+
+        return exception;
+    }
+
+    private static BaseException getExceptionByAuthorizationResult(@NonNull final AuthorizationResult authorizationResult, @NonNull final AuthorizationErrorResponse authorizationErrorResponse) {
+        final String methodTag = TAG + ":getExceptionByAuthorizationResult";
         //THERE ARE CURRENTLY NO USAGES of INVALID_REQUEST
         switch (authorizationResult.getAuthorizationStatus()) {
             case FAIL:
@@ -183,6 +206,9 @@ public class ExceptionAdapter {
 
             outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+                outErr.setClientDataInfo(tokenResult.getClientDataInfo());
+            }
         } else {
             Logger.warn(
                     TAG + methodName,
@@ -282,6 +308,12 @@ public class ExceptionAdapter {
         outErr.setSubErrorCode(exception.getSubErrorCode());
         outErr.setHttpResponseHeaders(exception.getHttpResponseHeaders());
         outErr.setHttpResponseBody(exception.getHttpResponseBody());
+
+        if (exception.getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            outErr.setClientDataInfo(exception.getClientDataInfo());
+        }
+
         return outErr;
     }
 
@@ -402,6 +434,22 @@ public class ExceptionAdapter {
 
     @NonNull
     public static ClientException clientExceptionFromException(@NonNull final Throwable exception) {
+        final ClientException outErr = clientExceptionFromExceptionInternal(exception);
+        Throwable sourceException = exception;
+        if (exception instanceof ExecutionException && exception.getCause() != null) {
+            sourceException = exception.getCause();
+        }
+
+        if (sourceException instanceof BaseException
+                && ((BaseException) sourceException).getClientDataInfo() != null
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_SERVER_CLIENT_DATA_TELEMETRY)) {
+            outErr.setClientDataInfo(((BaseException) sourceException).getClientDataInfo());
+        }
+
+        return outErr;
+    }
+
+    private static ClientException clientExceptionFromExceptionInternal(@NonNull final Throwable exception) {
         if (exception instanceof ClientException){
             return (ClientException) exception;
         }

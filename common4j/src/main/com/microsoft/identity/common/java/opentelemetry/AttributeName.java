@@ -266,6 +266,16 @@ public enum AttributeName {
     elapsed_time_cache_get_all_client_ids,
 
     /**
+     * The total number of account records in the in-memory cache at the time of the request.
+     */
+    number_of_accounts_in_cache,
+
+    /**
+     * The total number of credential records in the in-memory cache at the time of the request.
+     */
+    number_of_credentials_in_cache,
+
+    /**
      * The time (in milliseconds) spent on network when acquiring PRT.
      */
     elapsed_time_network_acquire_prt,
@@ -510,11 +520,6 @@ public enum AttributeName {
     is_in_web_cp_flow,
 
     /**
-     * Indicates whether or not in memory cache is used for accounts and credentials.
-     */
-    in_memory_cache_used_for_accounts_and_credentials,
-
-    /**
      * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
      * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
      */
@@ -621,6 +626,12 @@ public enum AttributeName {
      */
     key_pair_gen_elapsed_time,
 
+    /**
+     * Indicates whether the conservative key generation spec for legacy devices (API &lt;= 30)
+     * flight is enabled. Used to validate the rollout/effectiveness of the legacy-device fix.
+     */
+    key_pair_gen_conservative_spec_flight_enabled,
+
     //endregion
 
     //region Secret Key Wrapping
@@ -666,9 +677,46 @@ public enum AttributeName {
     secret_key_serialization_duration,
 
     /**
+     * Indicates which check in the secret-key read path triggered a wipe of existing key material
+     * (e.g. an unrecoverable load error, or an orphaned wrapped-key file whose keystore key is gone).
+     * Legitimate first-time reads (no keystore key and no wrapped-key file) are intentionally not recorded.
+     */
+    secret_key_wipe_reason,
+
+    /**
+     * The actual root cause (simple class name + message) of the exception that caused a secret-key
+     * read failure (e.g. "IOException: /data/.../key (No space left on device)"). This is the
+     * underlying failure the ClientException wraps, captured unconditionally so the real reason is
+     * never lost behind the generic wrapper message, even for deeply nested cause chains.
+     */
+    secret_key_read_root_cause,
+
+    /**
+     * Whether the KeyStore failure that triggered a secret-key wipe is transient (retry may succeed)
+     * or permanent. One of TRANSIENT, NOT_TRANSIENT (API 33+, derived from
+     * KeyStoreException.isTransientFailure()), API_TOO_OLD (API < 33, cannot be determined), or
+     * NOT_KEYSTORE_ERROR (no KeyStoreException in the cause chain).
+     */
+    keystore_error_transience,
+
+    /**
      * Indicates if an external handler was found to handle the openid-vc:// URI.
      */
     is_openid_vc_handler_found,
+
+    /**
+     * Indicates whether a broker-install {@code intent://} request was blocked because its target
+     * package was not the allow-listed store. Set on the current WebView-processing span (emitted
+     * only when the broker-install intent validation flight is enabled).
+     * <p>
+     * Note: this attribute name MUST also be added to the {@code AttributeName} enum in the broker
+     * repository ({@code identity-authnz-teams/ad-accounts-for-android}). This is functionally
+     * required, not just for consistency: the broker's OpenTelemetry exporter drops any attribute
+     * whose name does not resolve in broker's own {@code AttributeName} enum, so if this attribute is
+     * ever set on a span emitted from the broker process it will be silently discarded until it is
+     * mirrored there.
+     */
+    is_broker_install_intent_blocked,
     
     //endregion
 

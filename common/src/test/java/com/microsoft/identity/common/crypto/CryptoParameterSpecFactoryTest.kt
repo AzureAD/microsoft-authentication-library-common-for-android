@@ -27,6 +27,7 @@ import android.os.Build
 import android.security.keystore.KeyProperties
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -35,6 +36,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.util.ReflectionHelpers
 
 /**
  * Unit tests for [CryptoParameterSpecFactory]
@@ -55,6 +57,13 @@ class CryptoParameterSpecFactoryTest {
         // Setup mock flights provider
         mockFlightsProvider = Mockito.mock(IFlightsProvider::class.java)
         mockContext = Mockito.mock(Context::class.java)
+    }
+
+    @After
+    fun tearDown() {
+        // Reliably reset to the class-level Robolectric SDK (API 28) after every test so that
+        // tests which override Build.VERSION.SDK_INT (e.g. the API 30 cases) never leak into others.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.P)
     }
 
 
@@ -208,8 +217,161 @@ class CryptoParameterSpecFactoryTest {
         Assert.assertEquals("legacy_key_gen_spec", specs[1].description)
         Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[1].encryptionPaddings)
     }
-    
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P]) // API 28 (a legacy, <= 30, device)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_LegacyDevice_AttemptsModernThenConservative() {
+        // When the legacy-device fix is enabled on API 28..30, the advanced specs are still
+        // attempted first (telemetry shows a large share of these devices support them, so we must
+        // not downgrade their crypto), with the conservative spec inserted before the deprecated
+        // legacy fallback as the bridge for keymasters that reject the advanced specs.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // Advanced specs first (API 28 satisfies the wrap-key gate), then conservative, then legacy.
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[2].encryptionPaddings)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.VANILLA_ICE_CREAM]) // API 35 (>= 31)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixEnabled_ModernDevice_IncludesAdvancedAndConservative() {
+        // On API >= 31 the advanced specs are supported, so they are elected alongside the
+        // conservative spec and the legacy fallback even when the fix is enabled.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.P]) // API 28 (a legacy, <= 30, device)
+    fun testGetPrioritizedKeyGenParameterSpecs_ConservativeFixDisabled_LegacyDevice_PreservesAdvancedSpecs() {
+        // When the fix flight is OFF (ECS kill-switch), the previous behaviour must be restored:
+        // advanced specs are still offered on API <= 30 and no conservative spec is added.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(false)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // API 28 satisfies the wrap-key gate, so both advanced specs + legacy, no conservative.
+        Assert.assertEquals(3, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals("legacy_key_gen_spec", specs[2].description)
+        Assert.assertFalse(specs.any { it.description == CONSERVATIVE_SPEC })
+    }
+
+    // region API 30 (Android 11) - the exact upper boundary of the regression
+    //
+    // Android 11 (API 30) is the highest API level affected by the regression (it is still
+    // pre-Keystore 2.0). The Robolectric SDK 30 jar is not available in the offline build, so we
+    // force Build.VERSION.SDK_INT to 30 with ReflectionHelpers while running on the class-level
+    // SDK 28 sandbox. The factory only reads Build.VERSION.SDK_INT and (compile-time-inlined)
+    // Build.VERSION_CODES constants, so this faithfully reproduces the API 30 code path.
+
+    @Test
+    fun testApi30_ConservativeFixEnabled_AttemptsModernThenInsertsConservativeBeforeLegacy() {
+        // Pin the device to Android 11 / API 30.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 30)
+
+        // Fix flight ON, with both advanced flags ON (their production defaults).
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // WITH the flight, an API 30 device still attempts the advanced specs first (telemetry shows
+        // many such devices support them), but the conservative (hardware-friendly) spec is inserted
+        // before the deprecated legacy fallback so keymasters that reject the advanced specs still
+        // land on a working modern spec instead of failing every attempt.
+        Assert.assertEquals(4, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals(CONSERVATIVE_SPEC, specs[2].description)
+        Assert.assertEquals(listOf(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1), specs[2].encryptionPaddings)
+        Assert.assertEquals("legacy_key_gen_spec", specs[3].description)
+    }
+
+    @Test
+    fun testApi30_ConservativeFixDisabled_OffersOnlyFailingAdvancedSpecsAndNoConservativeSpec() {
+        // Pin the device to Android 11 / API 30.
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 30)
+
+        // Fix flight OFF (ECS kill-switch) reproduces the pre-fix, broken behaviour.
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_CONSERVATIVE_KEY_GEN_SPEC_FOR_LEGACY_DEVICES))
+            .thenReturn(false)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITH_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        Mockito.`when`(mockFlightsProvider!!.isFlightEnabled(CommonFlight.ENABLE_NEW_KEY_GEN_SPEC_FOR_WRAP_WITHOUT_PURPOSE_WRAP_KEY))
+            .thenReturn(true)
+        cryptoParameterSpecFactory = CryptoParameterSpecFactory(
+            mockContext!!, TEST_KEY_ALIAS,
+            mockFlightsProvider!!
+        )
+
+        val specs = cryptoParameterSpecFactory!!.getPrioritizedKeyGenParameterSpecs()
+
+        // WITHOUT the flight, an API 30 device is offered the advanced specs (PURPOSE_WRAP_KEY /
+        // SHA-512) that the pre-Keystore-2.0 keymaster rejects - which on real hardware fails with
+        // "All key generation attempts failed" - and the working conservative spec is never offered.
+        Assert.assertEquals(3, specs.size.toLong())
+        Assert.assertEquals("modern_spec_with_wrap_key", specs[0].description)
+        Assert.assertEquals("modern_spec_without_wrap_key", specs[1].description)
+        Assert.assertEquals("legacy_key_gen_spec", specs[2].description)
+        Assert.assertFalse(
+            "Without the fix, an API 30 device must not receive the conservative (working) spec",
+            specs.any { it.description == CONSERVATIVE_SPEC }
+        )
+    }
+    // endregion
+
     companion object {
         private const val TEST_KEY_ALIAS = "test_key_alias"
+        private const val CONSERVATIVE_SPEC = "conservative_spec_for_api_30_and_below"
     }
 }

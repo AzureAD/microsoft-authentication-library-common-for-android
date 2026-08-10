@@ -229,11 +229,21 @@ public abstract class AuthorizationFragment extends Fragment {
         // Track the final result code we got for this authorization flow
         mFinalResultCode = result.getResultCode();
 
-        final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
-        propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
+        final PropertyBag propertyBag = propertyBagFromAuthorizationResult(result);
 
         LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
         mAuthResultSent = true;
+    }
+
+    /**
+     * Creates a {@link PropertyBag} from the given authorization result.
+     * Subclasses may override to add additional fields.
+     */
+    @NonNull
+    protected PropertyBag propertyBagFromAuthorizationResult(@NonNull final RawAuthorizationResult result) {
+        final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
+        propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
+        return propertyBag;
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {

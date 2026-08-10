@@ -36,5 +36,5 @@ public final class DeviceRegistrationProtocolConstants {
     public static final String UNREGISTER_DEVICE_V0 = "protocol.unregister.v0";
     public static final String INSTALL_CERTIFICATE_SILENTLY_V0 = "protocol.install.certificate.silently.v0";
     public static final String GET_DEVICE_REGISTRATION_RECORD_VO = "get.device.registration.record.v0";
-    public static final String PROVISION_RESOURCE_ACCOUNT_V0 = "protocol.provision.resource.account.v0";
+    public static final String PROVISION_RESOURCE_ACCOUNT_CREDENTIALS_V0 = "protocol.provision.resource.account.credentials.v0";
 }

@@ -43,6 +43,7 @@ import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -100,7 +101,12 @@ public class AndroidBrowserSelector implements IBrowserSelector {
             return false;
         }
 
-        if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
+        // An installed browser may present multiple signatures (e.g. APK Signature Scheme v3
+        // lineage). Trust the browser as long as at least one of its signatures appears in the
+        // descriptor's trusted set. Strict set-equality previously rejected multi-signer apps
+        // such as Microsoft Edge once the host app started targeting API 28+ and PackageManager
+        // began returning all signers instead of just the first one.
+        if (Collections.disjoint(descriptor.getSignatureHashes(), browser.getSignatureHashes())) {
             Logger.warn(methodTag,LOGGING_MSG_BROWSER + browser.getPackageName() + " signature hash not match");
             return false;
         }

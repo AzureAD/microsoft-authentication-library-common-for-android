@@ -22,42 +22,48 @@
 // THE SOFTWARE.
 package com.microsoft.identity.deviceregistration.java.protocol.parameters;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
+import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
 
 import java.util.UUID;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import com.microsoft.identity.deviceregistration.java.protocol.packer.DeviceRegistrationProtocolMoshiSerializer;
-import com.microsoft.identity.deviceregistration.java.protocol.packer.IDeviceRegistrationProtocolSerializer;
-import com.microsoft.identity.common.java.exception.ClientException;
-
 /**
- * Implements a protocol parameters for provisioning a resource account.
+ * Implements protocol parameters for provisioning resource account credentials.
  */
 @Accessors(prefix = "m")
-public class ProvisionResourceAccountV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
+public class ProvisionResourceAccountCredentialsV0Parameters extends AbstractDeviceRegistrationProtocolParameters {
 
-    private static final IDeviceRegistrationProtocolSerializer<ProvisionResourceAccountV0Parameters> serializer
-            = new DeviceRegistrationProtocolMoshiSerializer<>(ProvisionResourceAccountV0Parameters.class);
+    private static final IDeviceRegistrationProtocolSerializer<ProvisionResourceAccountCredentialsV0Parameters> serializer
+            = new DeviceRegistrationProtocolMoshiSerializer<>(ProvisionResourceAccountCredentialsV0Parameters.class);
 
     /**
      * Creates a protocol object from a byte array (serialized protocol).
      *
      * @param serializedData protocol data serialized
      */
-    public static ProvisionResourceAccountV0Parameters create(final byte[] serializedData) throws ClientException {
+    public static ProvisionResourceAccountCredentialsV0Parameters create(final byte[] serializedData) throws ClientException {
         return serializer.deserialize(serializedData);
     }
 
-    public ProvisionResourceAccountV0Parameters(@NonNull final UUID correlationId,
-                                                @NonNull final String tenantId,
-                                                @NonNull final String raObjectId) {
+    public ProvisionResourceAccountCredentialsV0Parameters(@NonNull final UUID correlationId,
+                                                           @NonNull final String tenantId,
+                                                           @NonNull final String raObjectId,
+                                                           @Nullable final String sdkType,
+                                                           @Nullable final String sdkVersion,
+                                                           @Nullable final String drsDiscoveryEndpoint) {
         super(correlationId);
         mTenantId = tenantId;
         mRaObjectId = raObjectId;
+        mSdkType = sdkType;
+        mSdkVersion = sdkVersion;
+        mDrsDiscoveryEndpoint = drsDiscoveryEndpoint;
     }
 
     @Getter
@@ -68,10 +74,22 @@ public class ProvisionResourceAccountV0Parameters extends AbstractDeviceRegistra
     @NonNull
     private final String mRaObjectId;
 
+    @Getter
+    @Nullable
+    private final String mSdkType;
+
+    @Getter
+    @Nullable
+    private final String mSdkVersion;
+
+    @Getter
+    @Nullable
+    private final String mDrsDiscoveryEndpoint;
+
     @Override
     @NonNull
     public String getProtocolName() {
-        return DeviceRegistrationProtocolConstants.PROVISION_RESOURCE_ACCOUNT_V0;
+        return DeviceRegistrationProtocolConstants.PROVISION_RESOURCE_ACCOUNT_CREDENTIALS_V0;
     }
 
     /**

@@ -7,6 +7,15 @@
     android:paddingLeft="@dimen/http_auth_dialog_padding_left"
     android:paddingRight="@dimen/http_auth_dialog_padding_right" >
 
+    <TextView
+        android:id="@+id/httpAuthOriginText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/http_auth_dialog_padding_top"
+        android:text=""
+        android:visibility="gone"
+        tools:visibility="visible" />
+
     <EditText
         android:inputType="text"
         android:id="@+id/editUserName"

@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
 import com.microsoft.identity.client.ui.automation.app.OneAuthTestApp;
 import com.microsoft.identity.client.ui.automation.app.MsalTestApp;
+import com.microsoft.identity.client.ui.automation.app.NativeAuthSampleApp;
 import com.microsoft.identity.client.ui.automation.app.OneDriveApp;
 import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.app.TeamsApp;
@@ -75,7 +76,8 @@ public class CopyFileRule implements TestRule {
             OneAuthTestApp.ONEAUTH_TESTAPP_APK,
             OneAuthTestApp.OLD_ONEAUTH_TESTAPP_APK,
             MsalTestApp.MSAL_TEST_APP_APK,
-            MsalTestApp.OLD_MSAL_TEST_APP_APK
+            MsalTestApp.OLD_MSAL_TEST_APP_APK,
+            NativeAuthSampleApp.NATIVE_AUTH_SAMPLE_APK
     };
 
     public CopyFileRule() {
