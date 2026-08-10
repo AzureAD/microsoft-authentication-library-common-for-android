@@ -7,12 +7,13 @@
 #              works as a Build Validation branch policy on the common repo.
 name: $(date:yyyyMMdd)$(rev:.r)
 
-# Runs on PRs targeting dev. CI (branch) builds are disabled.
+trigger: none  # Disable CI trigger if you only want PR-based runs
 pr:
   branches:
     include:
-    - dev
-trigger: none
+      - dev
+      - release/*
+
 
 resources:
   repositories:
