@@ -64,8 +64,44 @@ public interface IPlatformUtil {
     /**
      * Validate that the app owns the redirect URI.
      * Returns true if nothing goes wrong.
+     *
+     * @deprecated This overload performs only the redirect-URI ownership check and does <em>not</em>
+     * validate the caller against the OS-attested calling uid. For the silent broker token path prefer
+     * {@link #isValidCallingApp(String, String, int)}, which additionally rejects request-bundle caller
+     * spoofing (AB#3687466). Retained for the interactive path and platforms/flows that have no
+     * OS-attested per-app caller uid.
      */
+    @Deprecated
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
+
+    /**
+     * Caller-validating overload of {@link #isValidCallingApp(String, String)} that additionally rejects
+     * request-bundle caller spoofing (AB#3687466). An implementation with an OS-attested per-app caller
+     * model (e.g. {@code AndroidPlatformUtil}) <strong>must override</strong> this to first assert that
+     * {@code packageName} (the self-reported caller package from the untrusted request bundle) is owned by
+     * the app that owns the kernel-attested {@code callingUid}, rejecting a mismatch fail-closed with
+     * {@code ClientException(unknown_caller)}, before applying the redirect-URI check. That ownership check
+     * must run <em>before</em> any redirect-URI short-circuit, so it cannot be bypassed.
+     *
+     * <p>The default implementation performs <em>no</em> uid check and simply delegates to
+     * {@link #isValidCallingApp(String, String)} — appropriate for platforms with no per-app uid model
+     * (e.g. Linux) and for test doubles. Currently wired to the silent broker token path (gated by
+     * {@code VALIDATE_SILENT_CALLER}); the two-argument overload is used directly for the interactive path
+     * and for the silent path when the flight is disabled.
+     *
+     * @param redirectUri  the redirect URI to validate ownership of.
+     * @param packageName  the self-reported caller package from the (untrusted) request bundle.
+     * @param callingUid   the kernel-attested calling uid ({@code Binder.getCallingUid()}).
+     * @return {@code true} if the app owns the redirect URI; {@code false} otherwise.
+     * @throws ClientException with {@code unknown_caller} if an overriding implementation determines that
+     *                         {@code packageName} does not match the uid's packages, or the uid resolves to
+     *                         no package.
+     */
+    default boolean isValidCallingApp(@NonNull final String redirectUri,
+                                      @NonNull final String packageName,
+                                      final int callingUid) throws ClientException {
+        return isValidCallingApp(redirectUri, packageName);
+    }
 
     /**
      * Validates that the calling uid belongs to an acceptable app for web apps.
