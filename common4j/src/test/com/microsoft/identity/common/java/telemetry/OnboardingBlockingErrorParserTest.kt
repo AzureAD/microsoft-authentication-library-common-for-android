@@ -264,4 +264,32 @@ class OnboardingBlockingErrorParserTest {
         Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(""))
         Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("   "))
     }
+
+    @Test
+    fun isNonBlocking_ZeroSentinelIsExcluded() {
+        // eSTS's "no error" sentinel. A direct caller (the Auth UX JS bridge sink) never goes
+        // through the header/response parsers that filter it, and a numeric shape check passes it,
+        // so this policy check is the only thing standing between a page-reported "0" and a
+        // blocking_errors entry asserting a failure the server never reported.
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("0"))
+    }
+
+    @Test
+    fun isNonBlocking_ZeroExclusionMatchesTheExtractionPaths() {
+        // The KDoc's promise is that a direct caller applies the SAME policy as the header and
+        // response parsers. Pin the two together so they cannot drift again: both must agree that
+        // the header's "no error" sentinel is not a blocking error.
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError("1,0,0,,"))
+        Assert.assertTrue(
+            OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("0")
+        )
+    }
+
+    @Test
+    fun isNonBlocking_MultiDigitZeroIsStillBlocking() {
+        // Only the exact sentinel is excluded, matching the extraction paths' `!= "0"`. "00" is not
+        // an eSTS sentinel, and silently widening the rule here would diverge from them — the very
+        // drift this change exists to close.
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("00"))
+    }
 }
