@@ -441,7 +441,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
 
         // Reuse the existing handler rather than duplicating its dialog-identity checks.
-        new AadLoginComponentHandler().handleBatteryOptimizationIgnoreSystemPrompt();
+        try {
+            new AadLoginComponentHandler().handleBatteryOptimizationIgnoreSystemPrompt();
+        } catch (final AssertionError e) {
+            Logger.w(TAG, "Battery-optimization system prompt did not appear; continuing to FRX.", e);
+        }
     }
 
     @Override
