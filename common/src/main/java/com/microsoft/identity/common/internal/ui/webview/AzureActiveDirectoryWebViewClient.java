@@ -210,6 +210,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mUrlLoadTracker = urlLoadTracker;
     }
 
+    @VisibleForTesting
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -221,6 +222,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker);
     }
 
+    @VisibleForTesting
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,

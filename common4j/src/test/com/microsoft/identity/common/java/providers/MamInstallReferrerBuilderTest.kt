@@ -262,9 +262,9 @@ class MamInstallReferrerBuilderTest {
 
     /**
      * The outcome is the ramp-safety signal for this feature: it is what makes "has the server
-     * started marking MAM-CA installs, and are we tagging the marked ones?" answerable from
-     * telemetry rather than from device logs. Each bail-out therefore has to be distinguishable
-     * from the others, not collapsed into a single "not decorated".
+     * started marking MAM-CA installs, and are we tagging the marked ones?" answerable at all.
+     * Each bail-out therefore has to be distinguishable from the others, not collapsed into a
+     * single "not decorated".
      */
     @Test
     fun outcome_reportsWhyTheLinkWasOrWasNotDecorated() {
