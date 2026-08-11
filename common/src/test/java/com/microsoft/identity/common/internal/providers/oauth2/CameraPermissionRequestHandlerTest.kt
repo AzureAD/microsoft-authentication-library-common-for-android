@@ -23,12 +23,11 @@
 package com.microsoft.identity.common.internal.providers.oauth2
 
 import android.Manifest
-import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Looper
 import android.webkit.PermissionRequest
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -41,6 +40,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanName
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -49,17 +49,14 @@ import io.mockk.verify
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import org.junit.After
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowAlertDialog
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
@@ -127,6 +124,35 @@ class CameraPermissionRequestHandlerTest {
         every { context.packageManager } returns pm
         every { pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) } returns hasHardware
         return context
+    }
+
+    /**
+     * A real Robolectric context, needed for flows that construct an [AlertDialog.Builder] -
+     * its constructor resolves the dialog theme, which a relaxed mock context cannot supply.
+     */
+    private fun realContext(): Context = RuntimeEnvironment.getApplication()
+
+    /**
+     * Stubs [AlertDialog.Builder] so the rationale dialog can be exercised without touching the
+     * library's string resources (which Robolectric doesn't merge into the test resource table).
+     * The builder's chained setters return the real constructed instance so button listeners are
+     * captured; [show] is a no-op.
+     */
+    private fun stubRationaleDialogBuilder(
+        positiveSlot: CapturingSlot<DialogInterface.OnClickListener> = slot(),
+        negativeSlot: CapturingSlot<DialogInterface.OnClickListener> = slot()
+    ) {
+        mockkConstructor(AlertDialog.Builder::class)
+        every { anyConstructed<AlertDialog.Builder>().setMessage(any<Int>()) } answers { self as AlertDialog.Builder }
+        every { anyConstructed<AlertDialog.Builder>().setTitle(any<Int>()) } answers { self as AlertDialog.Builder }
+        every { anyConstructed<AlertDialog.Builder>().setCancelable(any()) } answers { self as AlertDialog.Builder }
+        every {
+            anyConstructed<AlertDialog.Builder>().setPositiveButton(any<Int>(), capture(positiveSlot))
+        } answers { self as AlertDialog.Builder }
+        every {
+            anyConstructed<AlertDialog.Builder>().setNegativeButton(any<Int>(), capture(negativeSlot))
+        } answers { self as AlertDialog.Builder }
+        every { anyConstructed<AlertDialog.Builder>().show() } returns mockk(relaxed = true)
     }
 
     private fun grantAppCameraPermission(granted: Boolean) {
@@ -240,21 +266,20 @@ class CameraPermissionRequestHandlerTest {
         grantAppCameraPermission(true)
         every { SdmQrPinManager.getPreferredAuthConfig() } returns QRPIN
         every { SdmQrPinManager.isCameraConsentSuppressed() } returns false
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val positiveSlot = slot<DialogInterface.OnClickListener>()
+        // Fully mock the dialog builder so the test doesn't depend on the library's string
+        // resources being present in Robolectric's resource table (they aren't merged here).
+        stubRationaleDialogBuilder(positiveSlot = positiveSlot)
         val request = cameraRequest(MICROSOFT_CLOUD_URL)
 
-        handler.handle(request, activity)
+        handler.handle(request, realContext())
 
         verifyFlow("qrpin_rationale")
-        // No decision has been made yet; the dialog is awaiting user input.
         verify(exactly = 0) { request.grant(any()) }
         verify(exactly = 0) { request.deny() }
 
-        val dialog = ShadowAlertDialog.getLatestAlertDialog()
-        assertNotNull(dialog)
-        dialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick()
-        // AlertController posts the click through the main looper; run it before verifying.
-        shadowOf(Looper.getMainLooper()).idle()
+        // Simulate the user tapping "Allow".
+        positiveSlot.captured.onClick(mockk(relaxed = true), DialogInterface.BUTTON_POSITIVE)
 
         verify { launcher.launch(Manifest.permission.CAMERA) }
     }
@@ -264,18 +289,16 @@ class CameraPermissionRequestHandlerTest {
         grantAppCameraPermission(true)
         every { SdmQrPinManager.getPreferredAuthConfig() } returns QRPIN
         every { SdmQrPinManager.isCameraConsentSuppressed() } returns false
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val negativeSlot = slot<DialogInterface.OnClickListener>()
+        stubRationaleDialogBuilder(negativeSlot = negativeSlot)
         val request = cameraRequest(MICROSOFT_CLOUD_URL)
 
-        handler.handle(request, activity)
+        handler.handle(request, realContext())
 
         verifyFlow("qrpin_rationale")
 
-        val dialog = ShadowAlertDialog.getLatestAlertDialog()
-        assertNotNull(dialog)
-        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).performClick()
-        // AlertController posts the click through the main looper; run it before verifying.
-        shadowOf(Looper.getMainLooper()).idle()
+        // Simulate the user tapping "Block".
+        negativeSlot.captured.onClick(mockk(relaxed = true), DialogInterface.BUTTON_NEGATIVE)
 
         verify { request.deny() }
         verifySuccess("denied")

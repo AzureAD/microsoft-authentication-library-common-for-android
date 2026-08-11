@@ -184,11 +184,6 @@ android {
     }
 
     testOptions {
-        unitTests {
-            // Required for Robolectric to resolve real app resources (e.g. R.string.*) instead of
-            // throwing "No package ID 7f found" / Resources.NotFoundException.
-            includeAndroidResources = true
-        }
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
