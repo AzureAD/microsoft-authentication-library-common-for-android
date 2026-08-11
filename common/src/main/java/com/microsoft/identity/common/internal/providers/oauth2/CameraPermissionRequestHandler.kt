@@ -69,6 +69,14 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
 
         /** Non-QR camera request; app does not hold CAMERA — the OS runtime permission prompt is shown. */
         private const val FLOW_DEFAULT_OS_PROMPT = "default_os_prompt"
+
+        // Values for the `camera_permission_result` telemetry attribute — the unexpected-failure outcomes.
+
+        /** A prior, still-pending request was overwritten by a new one before it completed. */
+        private const val RESULT_SUPERSEDED = "superseded"
+
+        /** An unexpected error occurred while dispatching the permission request. */
+        private const val RESULT_ERROR = "error"
     }
 
     private val activityResultLauncher: ActivityResultLauncher<String> =
@@ -112,12 +120,22 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             // isValid() already logged the reason and handled the request (deny / repeated grant); return without extra noise.
             return
         }
+        // End any span left in-flight by a prior, still-pending request so it isn't orphaned.
+        if (span != null) {
+            endSpanWithError(RESULT_SUPERSEDED)
+        }
         span = OTelUtility.createSpan(SpanName.CameraPermissionRequest.name)
         span?.setAttribute(AttributeName.has_camera_hardware.name, deviceHasCameraHardware(context))
-        if (isQrPinRequest()) {
-            qrPinHandler(context)
-        } else {
-            defaultHandler(context)
+        try {
+            if (isQrPinRequest()) {
+                qrPinHandler(context)
+            } else {
+                defaultHandler(context)
+            }
+        } catch (t: Throwable) {
+            // Unexpected failure while dispatching; end the span so it isn't leaked, then rethrow.
+            endSpanWithError(RESULT_ERROR)
+            throw t
         }
     }
 
@@ -153,11 +171,25 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
 
     /**
      * Records the outcome on the camera permission span (if any) and ends it.
+     * Grant and deny are both successful completions of the request flow.
      */
     private fun endSpan(result: String) {
         span?.let {
             it.setAttribute(AttributeName.camera_permission_result.name, result)
             it.setStatus(StatusCode.OK)
+            it.end()
+        }
+        span = null
+    }
+
+    /**
+     * Ends the span for an unexpected failure (dispatch exception or a superseded, orphaned request),
+     * so ERROR stays a real health signal rather than tracking normal user denials.
+     */
+    private fun endSpanWithError(result: String) {
+        span?.let {
+            it.setAttribute(AttributeName.camera_permission_result.name, result)
+            it.setStatus(StatusCode.ERROR)
             it.end()
         }
         span = null
