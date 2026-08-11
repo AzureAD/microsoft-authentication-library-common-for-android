@@ -187,11 +187,19 @@ public abstract class AuthorizationFragment extends Fragment {
      * recreation path. Without this the key is absent from the saved bundle and a recreated fragment
      * blanks its diagnostic context, so every subsequent log line for the request loses its join
      * key — and, for the WebView fragment, the onboarding recorder can no longer be resolved.
+     *
+     * <p>A null id is not written at all rather than stored as a null value. Storing it is harmless
+     * today — {@code RequestContext extends HashMap}, so the downstream {@code put} accepts null,
+     * and the only reader substitutes a random UUID — but that safety is load-bearing on the map
+     * type. Skipping the write keeps the absent case indistinguishable from "never saved", which is
+     * already handled, instead of relying on a null surviving every layer below.
      */
     @Override
     public void onSaveInstanceState(@NonNull final Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
+        if (mCorrelationId != null) {
+            outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
+        }
     }
 
     /**

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -128,6 +129,29 @@ public class AuthorizationFragmentCorrelationIdTest {
         assertNotNull("the recorder must still be resolvable after recreation",
                 OnboardingRecorderRegistry.get(recreated.correlationId()));
         assertSame(recorder, OnboardingRecorderRegistry.get(recreated.correlationId()));
+    }
+
+    @Test
+    public void testNullCorrelationId_IsNotWrittenToTheSavedBundle() {
+        // A fragment that never saw a correlation id (an MSAL client with no diagnostic context)
+        // must not persist a null under the key. Storing one is harmless today only because
+        // RequestContext extends HashMap and the sole reader substitutes a UUID for null — safety
+        // that would evaporate if the map type ever became a ConcurrentHashMap/Hashtable, where
+        // put(key, null) throws. Leaving the key absent keeps this identical to the already-handled
+        // "never saved" case rather than depending on null surviving every layer below.
+        final TestAuthorizationFragment fragment = new TestAuthorizationFragment();
+        fragment.extractState(new Bundle()); // no CORRELATION_ID present -> mCorrelationId is null
+
+        final Bundle savedState = new Bundle();
+        fragment.onSaveInstanceState(savedState);
+
+        assertFalse("a null correlation id must not be written under the key",
+                savedState.containsKey(DiagnosticContext.CORRELATION_ID));
+
+        // And the recreation path still behaves: absent key reads back as null, no throw.
+        final TestAuthorizationFragment recreated = new TestAuthorizationFragment();
+        recreated.extractState(savedState);
+        assertNull(recreated.correlationId());
     }
 
     @Test
