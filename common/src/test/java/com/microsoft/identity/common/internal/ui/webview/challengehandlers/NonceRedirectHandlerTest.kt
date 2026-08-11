@@ -197,6 +197,41 @@ class NonceRedirectHandlerTest {
         )
     }
 
+    /**
+     * CWE-918 (Finding B): HTTP header names are case-insensitive (RFC 9110) and the request-header
+     * map originates outside this module (broker / MSAL via the REQUEST_HEADERS intent extra), so a
+     * producer that supplies the PRT header under a different casing than the canonical constant must
+     * still have it stripped on an untrusted host. A case-sensitive strip would forward the
+     * credential verbatim — the exact leak this fix exists to close.
+     */
+    @Test
+    fun `untrusted host strips a differently-cased PRT credential header`() {
+        val differentlyCasedPrtKey = "X-MS-REFRESHTOKENCREDENTIAL"
+        val customHeaders = HashMap<String, String>()
+        customHeaders[differentlyCasedPrtKey] = prtHeaderValue
+        customHeaders[NON_CREDENTIAL_HEADER] = nonCredentialHeaderValue
+        val customWebView = mock(WebView::class.java)
+        val customHandler = NonceRedirectHandler(customWebView, customHeaders, span)
+        val url = "https://$UNTRUSTED_HOST/authorize?sso_nonce=abc"
+
+        customHandler.processChallenge(URL(url))
+
+        @Suppress("UNCHECKED_CAST")
+        val headersCaptor = ArgumentCaptor.forClass(Map::class.java)
+            as ArgumentCaptor<Map<String, String>>
+        verify(customWebView).loadUrl(eq(url), headersCaptor.capture())
+        val forwarded = headersCaptor.value
+        assertFalse(
+            "A differently-cased PRT credential header must be stripped for an untrusted host.",
+            forwarded.containsKey(differentlyCasedPrtKey)
+        )
+        assertEquals(
+            "Non-credential headers must survive the case-insensitive credential strip.",
+            nonCredentialHeaderValue,
+            forwarded[NON_CREDENTIAL_HEADER]
+        )
+    }
+
     @Test
     fun `isRedirectTrustedForHeaderForwarding contract`() {
         assertTrue(

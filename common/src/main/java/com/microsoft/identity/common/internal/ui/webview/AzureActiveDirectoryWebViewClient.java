@@ -354,7 +354,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         oTelContext,
                         ViewTreeLifecycleOwner.get(view));
                 challengeHandler.processChallenge(challenge);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
+                    && isNonceRedirect(formattedURL)
+                    && isNonceRedirectSchemeAllowed(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri.");
                 processNonceAndReAttachHeaders(view, url);
             }
@@ -623,6 +625,34 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isNonceRedirect(@NonNull final String url) {
         return url.contains(AuthenticationConstants.Broker.SSO_NONCE_PARAMETER);
+    }
+
+    /**
+     * SECURITY (CWE-918): decides whether the {@code sso_nonce} redirect branch in
+     * {@link #handleUrl(WebView, String)} may be taken for the given, already-lowercased URL.
+     * <p>
+     * The nonce branch is evaluated before the {@link #isUriSSLProtected(String)} hard block, and
+     * {@link #isNonceRedirect(String)} is a bare substring match, so without this gate a cleartext
+     * URL merely containing {@code sso_nonce} would take the nonce branch and never reach the SSL
+     * block. When enforcement is on we therefore require the target to be HTTPS; a non-HTTPS nonce
+     * URL falls through to {@link #processSSLProtectionCheck(WebView, String)} and is rejected.
+     * <p>
+     * Gated behind the same kill-switch as the credential-header validation
+     * ({@link CommonFlight#ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION}, default on). The
+     * flight read is the left operand of the {@code ||} and Java short-circuits, so when the
+     * kill-switch is off {@link #isUriSSLProtected(String)} is never evaluated and this returns
+     * {@code true}, reducing the branch condition to exactly the pre-fix
+     * {@code ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED && isNonceRedirect(formattedURL)}. Do
+     * not reorder these operands.
+     *
+     * @param formattedUrl the lowercased navigation URL.
+     * @return {@code true} if the nonce branch may be taken; {@code false} to fall through to the
+     * SSL protection check.
+     */
+    private boolean isNonceRedirectSchemeAllowed(@NonNull final String formattedUrl) {
+        return !CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
+                || isUriSSLProtected(formattedUrl);
     }
 
     /**
@@ -1598,16 +1628,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // SECURITY (CWE-918): mirror the trust gate applied inside NonceRedirectHandler so the
                 // fallback navigation cannot forward the PRT credential header to an untrusted or
                 // cleartext target. Trusted AAD hosts keep the headers; everything else loads without
-                // the credential rather than dead-ending the flow. Gated behind the same kill-switch
-                // flight (default on) so flight-off is a complete revert to pre-fix behavior.
-                final boolean nonceCredentialValidationEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION);
-                // The flight check is deliberately the LEFT operand of the ||. Java short-circuits, so
-                // when the kill-switch is off (nonceCredentialValidationEnabled == false) the right
-                // operand isRedirectTrustedForHeaderForwarding(url) is never evaluated and this reduces
-                // to the pre-fix line view.loadUrl(url, mRequestHeaders). Do not reorder these operands.
-                if (!nonceCredentialValidationEnabled
-                        || NonceRedirectHandler.isRedirectTrustedForHeaderForwarding(url)) {
+                // the credential rather than dead-ending the flow. The kill-switch read and the trust
+                // check are owned by NonceRedirectHandler.shouldForwardCredentialHeaders so this
+                // fallback and the handler's primary path share one predicate that cannot drift.
+                // Flight-off makes that helper return true, reducing this to the pre-fix line
+                // view.loadUrl(url, mRequestHeaders).
+                if (NonceRedirectHandler.shouldForwardCredentialHeaders(url)) {
                     view.loadUrl(url, mRequestHeaders);
                 } else {
                     Logger.warn(methodTag, "Nonce redirect target is not a trusted HTTPS AAD host; "

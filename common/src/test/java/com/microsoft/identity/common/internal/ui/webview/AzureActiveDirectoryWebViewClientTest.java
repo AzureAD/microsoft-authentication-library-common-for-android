@@ -1121,6 +1121,47 @@ public class AzureActiveDirectoryWebViewClientTest {
                 loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
     }
 
+    /**
+     * CWE-918 (Finding A): the sso_nonce branch in handleUrl is evaluated before the SSL hard block,
+     * and isNonceRedirect is a bare substring match, so a cleartext URL merely containing "sso_nonce"
+     * used to take the nonce branch and never reach the SSL check. With enforcement on, a non-HTTPS
+     * nonce URL must instead fall through every intermediate branch to processSSLProtectionCheck,
+     * which hard-blocks it (stopLoading + WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED). This proves the
+     * cleartext URL is not swallowed by any intermediate branch and never reaches the credential sink.
+     */
+    @Test
+    public void testCleartextNonceUrlIsSslBlockedWhenFlightOn() {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false
+        );
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        installNonceRedirectFlights(true);
+        final String url = "http://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final boolean result = webViewClient.shouldOverrideUrlLoading(mockWebView, url);
+
+        assertTrue("shouldOverrideUrlLoading must return true (intercepted by SSL check)", result);
+        // The nonce branch must NOT be taken: the cleartext URL falls through to the SSL hard block.
+        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals("Cleartext sso_nonce URL must be rejected by the SSL protection check",
+                ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED,
+                ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+        // And it must never reach the credential-bearing loadUrl path.
+        Mockito.verify(mockWebView, Mockito.never())
+                .loadUrl(Mockito.anyString(), Mockito.anyMap());
+    }
+
     @Test
     @Config(shadows = {
             ShadowProcessUtil.class})

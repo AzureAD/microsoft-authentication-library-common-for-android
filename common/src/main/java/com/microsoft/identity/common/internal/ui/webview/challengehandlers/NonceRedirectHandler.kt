@@ -56,11 +56,12 @@ class NonceRedirectHandler(
         // cloud host. Otherwise strip the credential and still load the page, so an untrusted hop
         // simply loses SSO instead of dead-ending sign-in.
         // Gated behind ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION (default on) so the
-        // enforcement can be reverted via ECS: flight-off skips the trust check entirely and falls
-        // through to the original loadUrl(url, headers), i.e. exactly the pre-fix behavior.
-        val validationEnabled = CommonFlightsManager.getFlightsProvider()
-            .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
-        if (validationEnabled && !isRedirectTrustedForHeaderForwarding(input.toString())) {
+        // enforcement can be reverted via ECS: flight-off forwards unconditionally, i.e. exactly the
+        // pre-fix behavior. The flight read and the trust check live in exactly one place
+        // ([shouldForwardCredentialHeaders]); the caller's fallback path in
+        // AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders routes through the same
+        // helper so the security predicate cannot drift between the two sinks.
+        if (!shouldForwardCredentialHeaders(input.toString())) {
             Logger.warn(
                 methodTag,
                 "Nonce redirect target is not a trusted HTTPS AAD host; " +
@@ -168,6 +169,33 @@ class NonceRedirectHandler(
         }
 
         /**
+         * Single decision point for whether the PRT credential header(s) may be forwarded to the
+         * given nonce-redirect target. Both the primary sink ([processChallenge]) and the caller's
+         * `catch (Throwable)` fallback in
+         * `AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders` route through this
+         * helper, so the kill-switch read and the trust check exist in exactly one place and cannot
+         * drift between the two paths.
+         *
+         * Behaviour:
+         * - Kill-switch [CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION] **off** ->
+         *   always `true` (pre-fix behaviour: forward unconditionally). The flight read is the left
+         *   operand of the `||`, so [isRedirectTrustedForHeaderForwarding] is short-circuited away and
+         *   never evaluated when the kill-switch is off. Do not reorder these operands.
+         * - Kill-switch **on** -> `true` only for an HTTPS, validated AAD cloud host, i.e. the result
+         *   of [isRedirectTrustedForHeaderForwarding].
+         *
+         * @param url the redirect target URL, including scheme and host.
+         * @return `true` if credential headers may be forwarded to [url], `false` if they must be
+         * stripped before the redirect is loaded.
+         */
+        @JvmStatic
+        fun shouldForwardCredentialHeaders(url: String): Boolean {
+            return !CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION) ||
+                isRedirectTrustedForHeaderForwarding(url)
+        }
+
+        /**
          * Returns a copy of [headers] with every credential-bearing header in [CREDENTIAL_HEADERS]
          * removed.
          *
@@ -176,14 +204,22 @@ class NonceRedirectHandler(
          * (e.g. passkey/FIDO protocol, telemetry) are deliberately preserved so an
          * untrusted-but-legitimate hop keeps that functionality.
          *
+         * Header names are case-insensitive on the wire (RFC 9110) and this map originates outside
+         * this module (see [CREDENTIAL_HEADERS]), so a producer that uses different casing than the
+         * canonical constant must not be able to slip a credential past the strip. Removal therefore
+         * matches keys case-insensitively rather than relying on exact-case map removal.
+         *
          * @param headers the request headers to sanitize.
          * @return a new map without any credential-bearing header.
          */
         @JvmStatic
         fun withoutCredentialHeaders(headers: HashMap<String, String>): HashMap<String, String> {
             val sanitized = HashMap(headers)
-            for (credentialHeader in CREDENTIAL_HEADERS) {
-                sanitized.remove(credentialHeader)
+            val keysToRemove = sanitized.keys.filter { key ->
+                CREDENTIAL_HEADERS.any { credentialHeader -> credentialHeader.equals(key, ignoreCase = true) }
+            }
+            for (key in keysToRemove) {
+                sanitized.remove(key)
             }
             return sanitized
         }
