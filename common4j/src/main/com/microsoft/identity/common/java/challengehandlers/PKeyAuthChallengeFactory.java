@@ -269,10 +269,13 @@ public class PKeyAuthChallengeFactory {
         // only, so a legitimate backslash in a path or query value cannot false-reject the challenge.
         final String submitAuthority = extractAuthority(submitUrl);
         if (submitAuthority != null && submitAuthority.indexOf('\\') >= 0) {
+            // Do not log the authority itself: on this path it is attacker-shaped (it reached here
+            // precisely because it contains a backslash) and the two parsers disagree on what its host
+            // even is, so there is no trustworthy host to record. An integer length is the only safe
+            // triage signal. See the hosts/scheme-only warnPII discipline at the sibling sites below.
             Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: SubmitUrl authority contains a backslash (parser-differential guard).");
-            Logger.warnPII(methodTag,
-                    "PKeyAuth SubmitUrl rejected: backslash in authority component. submitAuthority=" + submitAuthority);
+                    "PKeyAuth challenge rejected: SubmitUrl authority contains a backslash "
+                            + "(parser-differential guard). authorityLength=" + submitAuthority.length());
             throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
                     "PKeyAuth SubmitUrl authority must not contain a backslash.");
         }

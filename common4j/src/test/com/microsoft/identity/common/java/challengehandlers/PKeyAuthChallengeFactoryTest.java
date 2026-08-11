@@ -51,9 +51,10 @@ import java.io.UnsupportedEncodingException;
 @RunWith(JUnit4.class)
 public class PKeyAuthChallengeFactoryTest {
 
-    // A trusted challenging origin whose host matches the SubmitUrl host in the webview-redirect
-    // fixtures (login.microsoftonline.com). The path/query intentionally differ from the SubmitUrl
-    // to show that only the host participates in the same-origin check.
+    // A trusted challenging origin whose scheme, host and (normalized) port match the SubmitUrl in the
+    // webview-redirect fixtures (https + login.microsoftonline.com + default port 443). The fixture
+    // intentionally differs from the SubmitUrl only in path and query: the same-origin check compares
+    // scheme, host and normalized port, and must ignore path/query.
     private static final String CHALLENGING_ORIGIN =
             "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000000-0000-0000-0000-000000000000";
 
