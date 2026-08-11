@@ -52,7 +52,6 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -291,15 +290,41 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         if (!AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)) {
             return false;
         }
-        // The two hosts are gated independently: the broker's :auth process gets the full bridge
-        // under its own flight, and any other host gets only the telemetry-only bridge under a
-        // separate, default-off flight. Reusing ENABLE_JS_API_FOR_AUTHUX for both would mean
-        // turning the brokerless surface on for every MSAL client the moment the broker flight
-        // flipped, and turning the brokerless surface off would also disable number-matching.
-        final IFlightsProvider flightsProvider = CommonFlightsManager.INSTANCE.getFlightsProvider();
-        return isTelemetryOnlyAuthUxBridge()
-                ? flightsProvider.isFlightEnabled(CommonFlight.ENABLE_BROKERLESS_TELEMETRY_JS_API_FOR_AUTHUX)
-                : flightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+        if (isTelemetryOnlyAuthUxBridge()) {
+            // Outside the broker's :auth process the gate is NOT a flight, deliberately. Flights
+            // resolve through CommonFlightsManager, which only ever returns real ECS values in a
+            // process that called initializeCommonFlightsManager -- and the broker is the only
+            // caller. In a host application's own process (OneAuth, or any MSAL client) the manager
+            // falls back to DefaultValueFlightsProvider and returns the compiled-in default, so a
+            // flight here could never be turned on in production no matter how it was ramped: it
+            // would be a permanently-false gate wearing the costume of a kill switch.
+            //
+            // Exposure follows the ONBOARDING SEED instead, which is a better gate on its own
+            // merits. This bridge exists only to append to the onboarding blob, so with no recorder
+            // it can have no effect at all; and a recorder exists only when the caller deliberately
+            // seeded onboarding telemetry for this request. Plain MSAL clients never seed one and
+            // are therefore never exposed, and the off switch is "stop seeding" -- a decision the
+            // caller already owns per request, in a process where it actually takes effect.
+            return hasOnboardingTelemetryRecorder();
+        }
+        // Inside :auth the flight is real, and the full bridge (which includes the number-match
+        // device store) stays behind the flight it has always used.
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
+     * Whether this client has an onboarding telemetry recorder for the current request.
+     *
+     * <p>The brokerless gate above uses this in place of a flight. Subclasses that can carry a
+     * recorder override it; the base client never has one, so the telemetry-only bridge is not
+     * exposed for a WebView host that has nothing to record into.
+     *
+     * @return {@code true} when a recorder is attached and the telemetry-only bridge would have
+     *         somewhere to write.
+     */
+    protected boolean hasOnboardingTelemetryRecorder() {
+        return false;
     }
 
     /**

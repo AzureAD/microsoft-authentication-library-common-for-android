@@ -335,6 +335,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mOnboardingTelemetryRecorder = recorder;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Read on every navigation rather than captured once, because the host attaches the recorder
+     * after this client is constructed — see {@link #setOnboardingTelemetryRecorder}.
+     */
+    @Override
+    protected boolean hasOnboardingTelemetryRecorder() {
+        return mOnboardingTelemetryRecorder != null;
+    }
+
     @Override
     public void onPageFinished(final WebView view,
                                final String url) {

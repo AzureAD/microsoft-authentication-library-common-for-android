@@ -2356,50 +2356,78 @@ public class AzureActiveDirectoryWebViewClientTest {
                     + "\"sessionID\":\"" + NUMBER_MATCH_SESSION_ID + "\",\"code_match\":\"42\"}}";
 
     /**
-     * Points the flights manager at a provider that answers both Auth UX bridge flights, so each
-     * gate test states exactly which surface it is turning on. {@code cleanUp} resets the manager.
+     * Points the flights manager at a provider answering the broker's Auth UX bridge flight.
+     * {@code cleanUp} resets the manager.
      *
-     * @param fullBridge        whether {@link CommonFlight#ENABLE_JS_API_FOR_AUTHUX} reports on.
-     * @param brokerlessBridge  whether
-     *  {@link CommonFlight#ENABLE_BROKERLESS_TELEMETRY_JS_API_FOR_AUTHUX} reports on.
+     * @param fullBridge whether {@link CommonFlight#ENABLE_JS_API_FOR_AUTHUX} reports on.
      */
-    private void setAuthUxBridgeFlights(final boolean fullBridge, final boolean brokerlessBridge) {
+    private void setAuthUxBridgeFlight(final boolean fullBridge) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
                 .thenReturn(fullBridge);
-        when(mockFlightsProvider.isFlightEnabled(
-                CommonFlight.ENABLE_BROKERLESS_TELEMETRY_JS_API_FOR_AUTHUX))
-                .thenReturn(brokerlessBridge);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
+    /** Attaches a real recorder, which is what opens the brokerless gate. */
+    private OnboardingTelemetryRecorder attachRecorder() {
+        final OnboardingTelemetryRecorder recorder = new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"abc-123\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        return recorder;
+    }
+
     /**
-     * The brokerless surface is off by default: without its own flight, a host outside the broker's
-     * {@code :auth} process must get no bridge at all, even with the broker's flight on. This is the
-     * regression that matters most — the widening must not expose the bridge to every MSAL client.
+     * The brokerless surface is closed by default: a host outside the broker's {@code :auth}
+     * process that never seeded onboarding telemetry gets no bridge at all, even with the broker's
+     * flight on. This is the regression that matters most — the widening must not expose the bridge
+     * to every MSAL client.
      */
     @Test
-    public void testShouldExposeJavaScriptInterface_BrokerlessHost_RequiresItsOwnFlight() {
-        setAuthUxBridgeFlights(true, false);
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_ClosedWithoutARecorder() {
+        setAuthUxBridgeFlight(true);
 
         assertFalse("the broker's flight must not expose a bridge outside the :auth process",
                 mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
     }
 
-    /** With the brokerless flight on, an allow-listed Auth UX page does get a bridge. */
+    /**
+     * With a recorder attached — i.e. the caller seeded onboarding telemetry for this request — an
+     * allow-listed Auth UX page does get the (telemetry-only) bridge.
+     *
+     * <p>Deliberately with the broker's flight OFF: the brokerless gate must not depend on a flight
+     * at all, because outside {@code :auth} nothing initializes the flights manager and every
+     * flight would resolve to its compiled-in default in production.
+     */
     @Test
-    public void testShouldExposeJavaScriptInterface_BrokerlessHost_ExposedByItsOwnFlight() {
-        setAuthUxBridgeFlights(false, true);
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_OpenedByTheRecorder() {
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
 
         assertTrue(mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+    }
+
+    /** Detaching the recorder closes the gate again — the check is per navigation, not once. */
+    @Test
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_ClosesWhenRecorderCleared() {
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
+        assertTrue(mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+
+        mWebViewClient.setOnboardingTelemetryRecorder(null);
+
+        assertFalse("the gate must be re-evaluated, not captured at first navigation",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
     }
 
     /** The host allow-list (H1) still gates the brokerless surface. */
     @Test
     public void testShouldExposeJavaScriptInterface_BrokerlessHost_StillHonoursUriAllowList() {
-        setAuthUxBridgeFlights(true, true);
+        setAuthUxBridgeFlight(true);
+        attachRecorder();
 
         assertFalse("a non-allow-listed origin must never get the bridge",
                 mWebViewClient.shouldExposeJavaScriptInterface("https://evil.example.com/"));
@@ -2407,16 +2435,18 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     /**
      * Inside the broker's {@code :auth} process the gate is unchanged: the broker's own flight
-     * decides, and the brokerless flight is irrelevant.
+     * decides, and a recorder is neither required nor sufficient.
      */
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
     public void testShouldExposeJavaScriptInterface_AuthService_UsesTheBrokerFlight() {
-        setAuthUxBridgeFlights(true, false);
-        assertTrue(mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+        setAuthUxBridgeFlight(true);
+        assertTrue("the broker's flight alone opens the gate in :auth, with no recorder",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
 
-        setAuthUxBridgeFlights(false, true);
-        assertFalse("the brokerless flight must not stand in for the broker's own",
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
+        assertFalse("a recorder must not stand in for the broker's flight",
                 mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
     }
 
