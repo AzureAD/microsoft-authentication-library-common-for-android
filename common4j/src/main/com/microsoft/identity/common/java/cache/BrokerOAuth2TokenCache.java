@@ -482,11 +482,29 @@ public class BrokerOAuth2TokenCache
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
             }
 
-            final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
-                    oAuth2Strategy,
-                    request,
-                    response
-            );
+            final List<ICacheRecord> result;
+            if (isFoci && !mCallerAuthorizedForFoci) {
+                // AB#3687466: mirror the gate in saveAndLoadAggregatedAccountDataOptimized.
+                // targetCache is selected off the server-supplied familyId without going
+                // through either FoCI chokepoint, and the delegated call performs a
+                // cross-tenant merge over the shared mFociCache. For an unauthorized
+                // caller that could surface other apps' FoCI records for the same
+                // home account, so save without the merge and return only the
+                // newly-saved record.
+                Logger.info(
+                        TAG + methodName,
+                        "Unauthorized FoCI caller; skipping shared FoCI aggregation."
+                );
+                result = Collections.singletonList(
+                        targetCache.save(oAuth2Strategy, request, response)
+                );
+            } else {
+                result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+            }
 
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
