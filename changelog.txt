@@ -12,6 +12,7 @@ vNext
 - [MINOR] Expose DiagnosticContext.UNSET_CORRELATION_ID so callers that use the correlation id as a key, rather than only logging it, can reject the shared unset sentinel explicitly (#3204)
 - [PATCH] Round-trip the authorization request's correlation id through AuthorizationFragment's saved instance state, so a recreated fragment restores its diagnostic context instead of blanking it (affects all three authorization fragments; previously every log line after a recreation lost its correlation id) (#3204)
 - [PATCH] Stop a best-effort session-correlation persistence failure (e.g. SharedPreferences unavailable on credential-encrypted storage before first unlock) from propagating out of OnboardingTelemetryRecorder.addBlockingError after the error was already appended, which also affects the broker's blocking-error call sites (#3201)
+- [MINOR] Record the Auth UX log_telemetry server error code in the onboarding telemetry blob's blocking-errors list, and fix Auth UX bridge availability when the initial authorization URL is not allow-listed (#3201)
 
 Version 24.5.0
 ----------
