@@ -146,6 +146,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
 
     /**
+     * Flight to enable post-parse validation of the {@code intent://} broker-install request before it
+     * is launched. When enabled, the parsed intent's component and selector are cleared and its target
+     * package must be the Google Play Store before the activity is started. Defaults to off so the
+     * validation can be rolled out progressively via ECS; when off, the legacy launch behavior is used.
+     */
+    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", false),
+
+    /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
      * The web resource running into SSL will itself not be loaded.
      */
@@ -176,6 +184,15 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to disable Web Apps API.
      */
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
+
+    /**
+     * Flight controlling silent-caller validation: when enabled (default), a silent broker token
+     * request whose self-reported caller package is not owned by the kernel-attested calling uid
+     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466). Acts as a
+     * secure-by-default, ECS-backed kill-switch for the check in
+     * {@code BrokerSilentTokenCommandParameters.validate()}.
+     */
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
 
     /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
@@ -224,6 +241,14 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable open-id vc redirect handling in webview.
      */
     ENABLE_OPEN_ID_VC_REDIRECT("EnableOpenIdVcRedirect", true),
+
+    /**
+     * Flight to enable the OpenID-VC return-to-caller PendingIntent. When enabled, the openid-vc
+     * launch intent handed to Microsoft Authenticator carries a return PendingIntent that brings
+     * the caller's task back to the foreground after the VID flow completes. When disabled, the
+     * pre-existing behavior applies: the openid-vc handler is launched without a return PendingIntent.
+     */
+    ENABLE_OPEN_ID_VC_RETURN_TO_CALLER("EnableOpenIdVcReturnToCaller", true),
 
     /**
      * Flight to enable sovereign cloud instance discovery routing.
@@ -304,7 +329,21 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * MAM Conditional Access onboarding, Phase 1 - Company Portal auto-redirect.
+     * <p>
+     * When an interactive request is blocked by a Conditional-Access "install Company Portal"
+     * response marked {@code intuneAppProtection=1}, the Play Store install launch is tagged with
+     * the calling app package as the install referrer, so Company Portal skips its own sign-in UX
+     * and redirects the user straight back to the calling app. That avoids the user signing in to
+     * Company Portal and accidentally enrolling into MDM.
+     * <p>
+     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off the install
+     * launch is unchanged.
+     */
+    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false);
 
     private String key;
     private Object defaultValue;

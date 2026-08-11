@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
 import org.json.JSONObject
 import org.junit.Assert
@@ -71,6 +72,25 @@ class OnboardingTelemetryRecorderTest {
     }
 
     // --- finalizeBlob ---
+
+    @Test
+    fun testFinalizeBlob_AccessibleViaInterfaceType() {
+        // finalizeBlob() is promoted onto IOnboardingTelemetryRecorder (AB#3647677), so callers
+        // that program to the interface (e.g. AccountChooserActivity) can finalize without an
+        // instanceof downcast to the concrete recorder. Exercise the whole recording surface —
+        // addStep, addBlockingError, finalizeBlob — purely through the interface-typed reference.
+        val interfaceRecorder: IOnboardingTelemetryRecorder = recorder
+        interfaceRecorder.addStep(OnboardingTelemetryConstants.STEP_AUTHENTICATION_STARTED)
+        interfaceRecorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
+
+        val result = interfaceRecorder.finalizeBlob()
+        Assert.assertFalse(result.isEmpty())
+
+        val blob = JSONObject(result)
+        Assert.assertEquals("test-uuid-123", blob.getString("session_correlation_id"))
+        Assert.assertEquals("AuthenticationStarted", blob.getString("last_completed_step"))
+        Assert.assertEquals("BROKER_INSTALLATION_TRIGGERED", blob.getString("last_blocking_error"))
+    }
 
     @Test
     fun testFinalizeBlob_NoBlockingErrors_StillEmitsBlobWithSeedFields() {

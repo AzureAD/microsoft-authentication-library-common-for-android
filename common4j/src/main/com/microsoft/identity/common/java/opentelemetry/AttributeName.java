@@ -436,6 +436,11 @@ public enum AttributeName {
     auth_tab_fallback_to_custom_tabs,
 
     /**
+     * Records the version of the browser package handling the switch browser flow.
+     */
+    browser_version,
+
+    /**
      * The tenant id for the home tenant of the account for which PRT is required.
      */
     tenant_id,
@@ -483,6 +488,21 @@ public enum AttributeName {
      * Record operation name from Webview JavaScript Payload
      */
     authux_js_operation,
+
+    /**
+     * Record the Auth UX server error code forwarded by the {@code log_telemetry} bridge action, so
+     * the telemetry path is queryable in android_spans without waiting for the onboarding blob to
+     * land.
+     *
+     * <p>Set only when the telemetry sink consumes an error code. If multiple codes are consumed
+     * during a flow, this attribute contains the last consumed code.
+     *
+     * <p>"Consumed" means the sink took responsibility for the code, which includes deliberately
+     * dropping it by its own policy — so this reflects what the page reported and the sink accepted,
+     * not necessarily what the onboarding blob ultimately stores. Do not treat it as a mirror of
+     * {@code blocking_errors}.
+     */
+    authux_js_error_code,
 
     /**
      * Record whether or not the request stored a number match entry.
@@ -703,6 +723,20 @@ public enum AttributeName {
      * Indicates if an external handler was found to handle the openid-vc:// URI.
      */
     is_openid_vc_handler_found,
+
+    /**
+     * Indicates whether a broker-install {@code intent://} request was blocked because its target
+     * package was not the allow-listed store. Set on the current WebView-processing span (emitted
+     * only when the broker-install intent validation flight is enabled).
+     * <p>
+     * Note: this attribute name MUST also be added to the {@code AttributeName} enum in the broker
+     * repository ({@code identity-authnz-teams/ad-accounts-for-android}). This is functionally
+     * required, not just for consistency: the broker's OpenTelemetry exporter drops any attribute
+     * whose name does not resolve in broker's own {@code AttributeName} enum, so if this attribute is
+     * ever set on a span emitted from the broker process it will be silently discarded until it is
+     * mirrored there.
+     */
+    is_broker_install_intent_blocked,
     
     //endregion
 
