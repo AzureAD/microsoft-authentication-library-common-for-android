@@ -1945,7 +1945,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * onboarding blob's blocking-errors list (and surfaces as {@code last_blocking_error}).
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_AppendsToOnboardingBlob() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_AppendsToOnboardingBlob() throws Exception {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","
                 + "\"onboarding_mode\":\"non-brokered\"}";
@@ -1954,7 +1954,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         seedJson, "client-id", "scope1", mContext);
 
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
-        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+        mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
@@ -1970,7 +1970,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * {@code nonBlockingOnboardingErrorCodes}) are NOT appended to the blob.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_NonBlockingCode_NotAppended() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_NotAppended() throws Exception {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","
                 + "\"onboarding_mode\":\"non-brokered\"}";
@@ -1979,7 +1979,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         seedJson, "client-id", "scope1", mContext);
 
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
-        mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")); // UserInformationNotProvided — excluded
+        mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")); // UserInformationNotProvided — excluded
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertEquals("excluded code must not be appended", 0, blob.getJSONArray(
@@ -1989,14 +1989,43 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
+     * AB#3688632: eSTS's "no error" sentinel must not become a blocking error.
+     *
+     * <p>The header and response parsers have always filtered {@code "0"}, but the Auth UX sink
+     * reaches the policy check directly and its shape guard accepts {@code "0"} as a well-formed
+     * numeric code — so before this was folded into the shared check, a page reporting
+     * {@code errorCode: 0} produced a {@code blocking_errors} entry, and it won
+     * {@code last_blocking_error}, asserting a failure the server never reported.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_ZeroSentinel_NotAppended() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final boolean consumed = mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("0"));
+
+        assertTrue("a policy drop is terminal, not a retry", consumed);
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals("the no-error sentinel must not be appended", 0, blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS).length());
+        assertFalse("\"0\" must never become last_blocking_error", blob.has(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
      * AB#3688632: when no recorder is attached the hook is a no-op, never throws, and reports that
      * it did NOT consume the event so the bridge keeps the code eligible for a later retry.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_NoRecorder_IsNoOp() {
+    public void testtryConsumeAuthUxServerErrorCode_NoRecorder_IsNoOp() {
         // Default mWebViewClient has no recorder attached. This must not throw.
         assertFalse("no recorder means not consumed",
-                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
     }
 
     /**
@@ -2004,7 +2033,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * re-offering it would be pointless churn.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_NonBlockingCode_IsConsumed() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_IsConsumed() throws Exception {
         final String seedJson = "{\"schema_version\":\"1.0.0\","
                 + "\"session_correlation_id\":\"abc-123\","
                 + "\"onboarding_mode\":\"non-brokered\"}";
@@ -2014,7 +2043,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
 
         assertTrue("policy drop still counts as consumed",
-                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")));
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")));
     }
 
     /**
@@ -2026,16 +2055,16 @@ public class AzureActiveDirectoryWebViewClientTest {
      * whose list is shared with broker4j and must stay chronological.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_DuplicateAcrossRegistrations_RecordedOnce()
+    public void testtryConsumeAuthUxServerErrorCode_DuplicateAcrossRegistrations_RecordedOnce()
             throws Exception {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
                 newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
 
         // Simulates the same code arriving from two separate bridge instances (two page loads).
-        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
         assertTrue("a suppressed duplicate is still consumed",
-                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
@@ -2050,7 +2079,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * or logging a "Forwarded" line — swallowing it here would produce a span that lies.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_RecorderThrows_Propagates() {
+    public void testtryConsumeAuthUxServerErrorCode_RecorderThrows_Propagates() {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
                 Mockito.mock(
                         com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
@@ -2059,7 +2088,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.setOnboardingTelemetryRecorder(throwing);
 
         try {
-            mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+            mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
             fail("a throwing recorder must propagate rather than be reported as forwarded");
         } catch (final IllegalStateException expected) {
             assertEquals("recorder boom", expected.getMessage());
@@ -2072,10 +2101,10 @@ public class AzureActiveDirectoryWebViewClientTest {
      * budget on a code that can never be recorded.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_NonBlockingCode_ConsumedWithoutRecorder() {
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_ConsumedWithoutRecorder() {
         // No recorder attached.
         assertTrue("policy drop must be terminal regardless of recorder availability",
-                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("50058")));
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")));
     }
 
     /**
@@ -2130,7 +2159,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * the bridge would set the span attribute and log "Forwarded" for telemetry that never existed.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_ThrowDoesNotPoisonDedupeSet() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_ThrowDoesNotPoisonDedupeSet() throws Exception {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
                 Mockito.mock(
                         com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
@@ -2139,7 +2168,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         mWebViewClient.setOnboardingTelemetryRecorder(throwing);
 
         try {
-            mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003"));
+            mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
             fail("expected the throwing recorder to propagate");
         } catch (final IllegalStateException expected) {
             // expected — the first attempt fails
@@ -2149,7 +2178,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder healthy =
                 newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(healthy);
-        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
 
         final org.json.JSONObject blob = new org.json.JSONObject(healthy.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
@@ -2168,17 +2197,17 @@ public class AzureActiveDirectoryWebViewClientTest {
      * device-registration block.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_SymbolicCodeIsRejected() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_SymbolicCodeIsRejected() throws Exception {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
                 newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
 
         // The two constants broker4j actually writes on a device-registration block.
         assertTrue("a policy drop is still consumed",
-                mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("DEVICE_REGISTRATION_NEEDED")));
-        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("DEVICE_REGISTRATION_NEEDED")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(
                 authUxEvent("INSUFFICIENT_DEVICE_REGISTRATION")));
-        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("MDM_FLOW")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("MDM_FLOW")));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertFalse("no page-supplied symbolic code may reach the blob",
@@ -2190,12 +2219,12 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     /** AB#3688632: a real numeric server code is still accepted after the shape check. */
     @Test
-    public void testRecordAuthUxServerErrorCode_NumericCodeStillAccepted() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_NumericCodeStillAccepted() throws Exception {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
                 newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
 
-        assertTrue(mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("530003")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray errors = blob.getJSONArray(
@@ -2210,7 +2239,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      * across navigations grows the uploaded blob without limit.
      */
     @Test
-    public void testRecordAuthUxServerErrorCode_PerRequestCapBoundsTheBlob() throws Exception {
+    public void testtryConsumeAuthUxServerErrorCode_PerRequestCapBoundsTheBlob() throws Exception {
         final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
                 newRecorder();
         mWebViewClient.setOnboardingTelemetryRecorder(recorder);
@@ -2218,7 +2247,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         // 40 DISTINCT codes; duplicates would not count toward the cap.
         for (int i = 0; i < 40; i++) {
             assertTrue("a capped code is consumed, not retried",
-                    mWebViewClient.recordAuthUxServerErrorCode(authUxEvent("5300" + i)));
+                    mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("5300" + i)));
         }
 
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());

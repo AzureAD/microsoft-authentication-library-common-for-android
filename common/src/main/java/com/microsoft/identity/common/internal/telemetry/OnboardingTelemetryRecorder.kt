@@ -140,7 +140,7 @@ class OnboardingTelemetryRecorder(
      * Append-only and chronological: repeats are kept, so [OnboardingTelemetryConstants.LAST_BLOCKING_ERROR]
      * means "the last block observed" rather than "the last distinct block first observed". A caller
      * that must not report the same code twice de-duplicates on its own side — see
-     * `AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode`, which does so for the Auth UX
+     * `AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode`, which does so for the Auth UX
      * JS bridge because that bridge is rebuilt on every WebView navigation.
      *
      * All-or-nothing: nothing is recorded unless this call completes, so a caller that catches a

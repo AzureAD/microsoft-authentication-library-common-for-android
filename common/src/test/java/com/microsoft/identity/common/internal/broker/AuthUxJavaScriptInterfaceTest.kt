@@ -368,7 +368,7 @@ class AuthUxJavaScriptInterfaceTest {
         // Documents the per-instance scope called out in handledErrorCodes' KDoc: the WebView host
         // rebuilds the bridge on every navigation, so the same code reported across two page loads
         // reaches the sink twice. Request-wide de-duplication is the consumer's job — see
-        // AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode, which de-duplicates for
+        // AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode, which de-duplicates for
         // exactly this reason. The onboarding recorder deliberately does not: its blocking-errors
         // list is append-only and chronological for its other callers.
         val sink = RecordingTelemetrySink()
