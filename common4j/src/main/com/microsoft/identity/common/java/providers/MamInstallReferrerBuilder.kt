@@ -41,11 +41,10 @@ import java.net.URISyntaxException
  * ordinary device-registration installs, which must keep their existing behavior, so the decoration
  * is gated on [MamCaRedirect.isMamCaInstall] as well as on the host's opt-in.
  *
- * **Who turns it on.** The `enabled` flag is supplied by the host SDK (OneAuth/MSAL) rather than read
- * from a flight here. The gate has to be evaluated in the process that hosts the sign-in UI, and
- * common4j flights are only initialized in the broker process, so a flight read here would be pinned
- * to its compile-time default for every app-hosted flow. Defaulting to `false` keeps callers that do
- * not pass it - including the broker, whose package is not the calling app's - unchanged.
+ * **Who turns it on.** The `enabled` flag comes from the host SDK (OneAuth/MSAL), not from a flight
+ * read here: common4j flights are only initialized in the broker process, so a flight read on this
+ * path would always be its compile-time default. Defaults to `false`, so hosts that do not pass it
+ * are unchanged.
  *
  * The marker is the whole of the scope, deliberately. The server sets `intuneAppProtection=1` only
  * on MAM-CA flows, so once it is present the redirect is known to be one, and the referrer is

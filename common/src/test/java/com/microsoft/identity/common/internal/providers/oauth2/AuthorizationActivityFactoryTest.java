@@ -140,25 +140,31 @@ public class AuthorizationActivityFactoryTest {
     @SneakyThrows
     @Test
     public void testMamCaInstallReferrerIsCarriedToTheActivityWhenTheHostAsksForIt() {
-        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                authorizationActivityParameters.copy(
-                        context,
-                        authIntent,
-                        requestUrl,
-                        redirectUri,
-                        requestHeaders,
-                        authorizationAgent,
-                        webViewZoomEnabled,
-                        webViewZoomControlsEnabled,
-                        sourceLibraryName,
-                        sourceLibraryVersion,
-                        null,
-                        null,
-                        false,
-                        false,
-                        true
-                )
+        // Named locals: the three trailing parameters are all booleans, so a positional call alone
+        // would not show which one is being turned on.
+        final boolean webViewWebCpEnabled = false;
+        final boolean switchBrowserEnabled = false;
+        final boolean mamCaInstallReferrerEnabled = true;
+        final AuthorizationActivityParameters params = new AuthorizationActivityParameters(
+                context,
+                authIntent,
+                requestUrl,
+                redirectUri,
+                requestHeaders,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion,
+                null,
+                null,
+                webViewWebCpEnabled,
+                switchBrowserEnabled,
+                mamCaInstallReferrerEnabled
         );
+
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(params);
+
         assertTrue(resultIntent.getBooleanExtra(MAM_CA_INSTALL_REFERRER_ENABLED, false));
     }
 
