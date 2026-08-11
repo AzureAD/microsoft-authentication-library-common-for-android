@@ -300,7 +300,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *
      * <p>Threads the onboarding telemetry recorder into the bridge via a sink so a
      * {@code log_telemetry} event can append the Auth UX server error code to the onboarding blob
-     * (AB#3688632). The sink ({@link #recordAuthUxServerErrorCode}) reads
+     * (AB#3688632). The sink ({@link #tryConsumeAuthUxServerErrorCode}) reads
      * {@code mOnboardingTelemetryRecorder} lazily, so it still works when the recorder is attached
      * after registration.
      *
@@ -312,7 +312,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @NonNull
     @Override
     protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
-        return new AuthUxJavaScriptInterface(this::recordAuthUxServerErrorCode);
+        return new AuthUxJavaScriptInterface(this::tryConsumeAuthUxServerErrorCode);
     }
 
     /**
@@ -1989,8 +1989,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <p>Unlike the sibling hooks {@code recordOnboardingStep} and {@code recordLastLoadedDomain},
      * this one is deliberately <strong>not</strong> best-effort and does <strong>not</strong> swallow
      * failures: a throwing recorder propagates so the bridge reports the offer as failed instead of
-     * setting {@code authux_js_error_code} and logging a "Forwarded" line for telemetry that was
-     * never recorded.
+     * setting {@code authux_js_error_code} for telemetry that was never recorded.
+     *
+     * <p><strong>Consumed is not recorded.</strong> The name says {@code tryConsume} rather than
+     * {@code record} because {@code true} is the answer to "is this code terminal here?", not "was
+     * it stored?" — it covers a code handed to the recorder, one dropped by policy (non-blocking or
+     * the no-error sentinel), one refused as non-numeric, one already forwarded, and one over the
+     * per-request cap. Each of those logs its own reason, so the decision is recoverable from
+     * logcat even though the return value cannot distinguish them.
      *
      * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #createAuthUxJavaScriptInterface()}.
      *
@@ -1999,19 +2005,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *              non-empty and shape-checked by the bridge); the remaining fields — correlation
      *              id, session / page / tracking ids and contract version — are carried so they can
      *              be recorded without another change to the sink contract.
-     * @return {@code true} when the code was handed to a recorder, deliberately dropped as
-     *         non-blocking, or already forwarded by this client; {@code false} when there is
-     *         no recorder yet — which keeps the code eligible for a retry once the host attaches
-     *         one, instead of the bridge suppressing it as already-handled. Never returns
-     *         {@code true} for a code that failed to reach the recorder: a throwing recorder
-     *         propagates rather than being reported as forwarded, and the failed code is retracted
+     * @return {@code true} when the code is terminal for this client — handed to a recorder,
+     *         deliberately dropped by policy, refused, capped, or already forwarded; {@code false}
+     *         when there is no recorder yet — which keeps the code eligible for a retry once the
+     *         host attaches one, instead of the bridge suppressing it as already-handled. Never
+     *         returns {@code true} for a code that failed to reach the recorder: a throwing recorder
+     *         propagates rather than being reported as consumed, and the failed code is retracted
      *         from the de-duplication set so a later offer is not short-circuited either. That
      *         last guarantee assumes offers are not concurrent, which holds because WebView
      *         dispatches every {@code @JavascriptInterface} call for a WebView on one private
      *         JavaBridge thread and the bridge sink is this method's only production caller.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    boolean recordAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
+    boolean tryConsumeAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
         final String errorCode = event.getErrorCode();
         // Shape check first: this is the only caller of addBlockingError whose input is untrusted,
         // and it is terminal, so it runs before anything that depends on the recorder.

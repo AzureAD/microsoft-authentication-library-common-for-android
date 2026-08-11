@@ -285,7 +285,7 @@ class OnboardingTelemetryRecorderTest {
 
     @Test
     fun testAddBlockingError_PersistenceFailure_DoesNotFailTheCall() {
-        // The Auth UX sink (AzureActiveDirectoryWebViewClient.recordAuthUxServerErrorCode) retracts
+        // The Auth UX sink (AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode) retracts
         // its de-duplication claim whenever this call throws, so a throw MUST mean "not recorded".
         // persistSessionCorrelation is best-effort and must not propagate an Exception to its
         // caller; getSharedPreferences throws IllegalStateException on credential-encrypted storage
