@@ -323,6 +323,20 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
 
     /**
+     * MAM Conditional Access onboarding, Phase 1 - Company Portal auto-redirect.
+     * <p>
+     * When an interactive request is blocked by a Conditional-Access "install Company Portal"
+     * response marked {@code intuneAppProtection=1}, the Play Store install launch is tagged with
+     * the calling app package as the install referrer, so Company Portal skips its own sign-in UX
+     * and redirects the user straight back to the calling app. That avoids the user signing in to
+     * Company Portal and accidentally enrolling into MDM.
+     * <p>
+     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off the install
+     * launch is unchanged.
+     */
+    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false),
+
+    /**
      * Kill switch for validating the redirect target before the PRT credential header
      * ({@code x-ms-RefreshTokenCredential}) is forwarded on an {@code sso_nonce} redirect in
      * {@code NonceRedirectHandler} (CWE-918). When enabled (default), the credential header is

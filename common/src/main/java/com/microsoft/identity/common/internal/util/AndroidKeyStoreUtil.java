@@ -291,8 +291,11 @@ public class AndroidKeyStoreUtil {
 
     /**
      * See: https://issuetracker.google.com/issues/37095309
+     * <p>
+     * Must not be {@code synchronized}: callers already hold LOCALE_CHANGE_LOCK, so the class
+     * monitor adds nothing, but taking it here closed an ABBA cycle with generateKeyPair.
      */
-    public static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    public static void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
             Locale.setDefault(Locale.ENGLISH);

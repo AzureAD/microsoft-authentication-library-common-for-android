@@ -539,6 +539,11 @@ public final class ErrorStrings {
     public static final String AUTH_TAB_REDIRECT_URI_MISSING = "BROKER_REDIRECT_URI is required to launch Auth Tab";
 
     /**
+     * Auth Tab flow: BROWSER_PACKAGE_NAME is missing from the intent extras.
+     */
+    public static final String AUTH_TAB_BROWSER_PACKAGE_MISSING = "BROWSER_PACKAGE_NAME is required to launch Auth Tab";
+
+    /**
      * Auth Tab result code: the user cancelled authentication.
      */
     public static final String AUTH_TAB_CANCELED = "CANCELED";
