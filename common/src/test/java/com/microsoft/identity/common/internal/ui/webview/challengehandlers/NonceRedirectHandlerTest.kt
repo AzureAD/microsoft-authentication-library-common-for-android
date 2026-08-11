@@ -24,11 +24,13 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers
 
 import android.webkit.WebView
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
+import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialProvider
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.flighting.IFlightConfig
 import com.microsoft.identity.common.java.flighting.IFlightsManager
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
+import com.microsoft.identity.common.java.interfaces.IRefreshTokenCredentialProvider
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
 import io.opentelemetry.api.trace.Span
@@ -36,6 +38,7 @@ import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -103,6 +106,16 @@ class NonceRedirectHandlerTest {
         // Reset the flights manager so a flight override installed by an individual test (e.g. the
         // kill-switch-off case) cannot leak into the other tests, which rely on the default (on).
         CommonFlightsManager.resetFlightsManager()
+
+        // CommonRefreshTokenCredentialProvider is a JVM-global object whose backing provider is a
+        // private var, null by default. The swap test below injects a fake; without this reset that
+        // fake would persist for the rest of the module's tests and silently enable the credential
+        // swap in tests that assume it never fires. The injector's param is non-null so we cannot
+        // pass null; instead we re-inject a fake that returns null, restoring the default no-swap
+        // semantics (getRefreshTokenCredentialUsingNewNonce == null -> original PRT left in place).
+        CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(
+            NoSwapRefreshTokenCredentialProvider
+        )
     }
 
     @Test
@@ -231,6 +244,68 @@ class NonceRedirectHandlerTest {
         )
     }
 
+    /**
+     * The credential swap is the whole point of the handler: on a trusted host that carries a
+     * `login_hint`, [NonceRedirectHandler] must replace the ORIGINAL PRT with a fresh, nonce-bound
+     * one (via [CommonRefreshTokenCredentialProvider.getRefreshTokenCredentialUsingNewNonce]) before
+     * it is forwarded. Every other test here omits `login_hint`, so the swap short-circuits and the
+     * original PRT passes through unchanged — which means a silently no-op'd swap (forwarding the
+     * stale PRT) would still satisfy them. This test pins the swap end-to-end: trusted host +
+     * `login_hint` => the NEW nonce-bound credential is forwarded, explicitly NOT the original, and
+     * the provider is invoked with the nonce and login_hint parsed from the redirect URL (so a swap
+     * that fires with the wrong nonce also fails).
+     */
+    @Test
+    fun `trusted host with login_hint forwards the nonce-bound PRT, not the original`() {
+        val nonce = "abc"
+        val loginHint = "testuser"
+        val nonceBoundPrt = "NONCE_BOUND_PRT_SENTINEL"
+        var capturedNonce: String? = null
+        var capturedUsername: String? = null
+        CommonRefreshTokenCredentialProvider.initializeCommonRefreshTokenCredentialProvider(
+            object : IRefreshTokenCredentialProvider {
+                override fun getRefreshTokenCredentialUsingNewNonce(
+                    inputUrl: String,
+                    username: String,
+                    nonce: String
+                ): String {
+                    capturedNonce = nonce
+                    capturedUsername = username
+                    return nonceBoundPrt
+                }
+
+                override fun getRefreshTokenCredential(inputUrl: String, username: String): String? =
+                    null
+            }
+        )
+        val url = "https://$TRUSTED_HOST/authorize?sso_nonce=$nonce&login_hint=$loginHint"
+
+        handler.processChallenge(URL(url))
+
+        val forwarded = captureLoadedHeaders(url)
+        assertEquals(
+            "The nonce-bound PRT credential must be the one forwarded to a trusted host with a login_hint.",
+            nonceBoundPrt,
+            forwarded[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]
+        )
+        assertNotEquals(
+            "The ORIGINAL PRT must not be forwarded once a nonce-bound credential is available; a " +
+                "silently no-op'd swap would otherwise leak the stale PRT.",
+            prtHeaderValue,
+            forwarded[AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]
+        )
+        assertEquals(
+            "The provider must be invoked with the nonce parsed from the redirect URL.",
+            nonce,
+            capturedNonce
+        )
+        assertEquals(
+            "The provider must be invoked with the login_hint parsed from the redirect URL.",
+            loginHint,
+            capturedUsername
+        )
+    }
+
     private fun captureLoadedHeaders(expectedUrl: String): Map<String, String> {
         @Suppress("UNCHECKED_CAST")
         val headersCaptor = ArgumentCaptor.forClass(Map::class.java)
@@ -254,6 +329,22 @@ class NonceRedirectHandlerTest {
         private const val TRUSTED_HOST = "trusted.contoso.example"
         private const val UNTRUSTED_HOST = "malicious.contoso.example"
         private const val NON_CREDENTIAL_HEADER = "x-ms-PasskeyProtocol"
+
+        /**
+         * A [IRefreshTokenCredentialProvider] that never produces a credential. Used by `@After` to
+         * restore [CommonRefreshTokenCredentialProvider]'s default no-swap semantics after the swap
+         * test injects a real fake, since the injector requires a non-null provider and cannot be
+         * reset to `null` directly.
+         */
+        private object NoSwapRefreshTokenCredentialProvider : IRefreshTokenCredentialProvider {
+            override fun getRefreshTokenCredentialUsingNewNonce(
+                inputUrl: String,
+                username: String,
+                nonce: String
+            ): String? = null
+
+            override fun getRefreshTokenCredential(inputUrl: String, username: String): String? = null
+        }
 
         /**
          * Inline test [IFlightsManager] whose provider returns `false` only for
