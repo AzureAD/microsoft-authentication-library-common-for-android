@@ -302,7 +302,11 @@ class DeviceRegistrationClientApplicationTest {
         Assert.assertEquals("device.token.jwt", result.accessToken)
         Assert.assertNull(result.deviceInfo)
         Assert.assertNull(result.tokenType)
+        Assert.assertNull(result.resource)
         Assert.assertNull(result.expiresIn)
+        Assert.assertNull(result.extExpiresIn)
+        Assert.assertNull(result.expiresOn)
+        Assert.assertNull(result.notBefore)
     }
 
     @Test
