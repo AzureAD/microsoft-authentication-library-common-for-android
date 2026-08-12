@@ -366,6 +366,26 @@ public enum AttributeName {
     is_new_refresh_token_cred_header_attached,
 
     /**
+     * Indicates whether the sso_nonce redirect target was a trusted host (HTTPS + validated AAD
+     * cloud host) eligible to receive the PRT credential header. Boolean, non-PII (no host emitted).
+     */
+    nonce_redirect_host_trusted,
+
+    /**
+     * Indicates whether the PRT credential header(s) were stripped before loading the sso_nonce
+     * redirect because the target was untrusted while validation enforcement was on. Boolean,
+     * non-PII.
+     */
+    nonce_redirect_credential_header_stripped,
+
+    /**
+     * Indicates whether the nonce-redirect credential-header validation flight
+     * (EnableNonceRedirectCredentialHeaderValidation) was enabled when the redirect was processed.
+     * Boolean, non-PII.
+     */
+    nonce_redirect_validation_flight_enabled,
+
+    /**
      * The time (in milliseconds) spent on generating a keypair.
      */
     elapsed_time_keypair_generation,

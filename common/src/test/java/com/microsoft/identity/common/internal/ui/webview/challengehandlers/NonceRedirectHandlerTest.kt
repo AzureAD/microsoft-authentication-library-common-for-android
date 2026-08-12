@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.flighting.IFlightConfig
 import com.microsoft.identity.common.java.flighting.IFlightsManager
 import com.microsoft.identity.common.java.flighting.IFlightsProvider
 import com.microsoft.identity.common.java.interfaces.IRefreshTokenCredentialProvider
+import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud
 import io.opentelemetry.api.trace.Span
@@ -339,6 +340,52 @@ class NonceRedirectHandlerTest {
             loginHint,
             capturedUsername
         )
+    }
+
+    /**
+     * Telemetry (Round 8): a trusted HTTPS AAD host records the credential-forwarding decision on the
+     * span as booleans only — flight enabled, host trusted, nothing stripped. No host, URL, header
+     * value, PRT, sso_nonce or login_hint is ever emitted.
+     */
+    @Test
+    fun `trusted host records credential-forwarding telemetry`() {
+        val url = "https://$TRUSTED_HOST/authorize?sso_nonce=abc"
+
+        handler.processChallenge(URL(url))
+
+        verify(span).setAttribute(AttributeName.nonce_redirect_validation_flight_enabled.name, true)
+        verify(span).setAttribute(AttributeName.nonce_redirect_host_trusted.name, true)
+        verify(span).setAttribute(AttributeName.nonce_redirect_credential_header_stripped.name, false)
+    }
+
+    /**
+     * Telemetry (Round 8): an untrusted host with the validation flight on records host-not-trusted
+     * and credential-header-stripped, distinguishing a genuine strip from a trusted forward.
+     */
+    @Test
+    fun `untrusted host records credential-forwarding telemetry`() {
+        val url = "https://$UNTRUSTED_HOST/authorize?sso_nonce=abc"
+
+        handler.processChallenge(URL(url))
+
+        verify(span).setAttribute(AttributeName.nonce_redirect_validation_flight_enabled.name, true)
+        verify(span).setAttribute(AttributeName.nonce_redirect_host_trusted.name, false)
+        verify(span).setAttribute(AttributeName.nonce_redirect_credential_header_stripped.name, true)
+    }
+
+    /**
+     * Telemetry (Round 8): with the kill-switch flight OFF the fix is a no-op — the flight attribute
+     * reports disabled and nothing is stripped, even for an untrusted cleartext target.
+     */
+    @Test
+    fun `flight off records credential-forwarding telemetry as a no-op`() {
+        CommonFlightsManager.initializeCommonFlightsManager(NonceValidationOffFlightsManager)
+        val url = "http://$UNTRUSTED_HOST/authorize?sso_nonce=abc"
+
+        handler.processChallenge(URL(url))
+
+        verify(span).setAttribute(AttributeName.nonce_redirect_validation_flight_enabled.name, false)
+        verify(span).setAttribute(AttributeName.nonce_redirect_credential_header_stripped.name, false)
     }
 
     private fun captureLoadedHeaders(expectedUrl: String): Map<String, String> {

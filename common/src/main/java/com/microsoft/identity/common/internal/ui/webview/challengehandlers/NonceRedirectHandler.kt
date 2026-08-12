@@ -61,13 +61,20 @@ class NonceRedirectHandler(
         // ([shouldForwardCredentialHeaders]); the caller's fallback path in
         // AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders routes through the same
         // helper so the security predicate cannot drift between the two sinks.
-        if (!shouldForwardCredentialHeaders(input.toString())) {
+        val urlString = input.toString()
+        // Single evaluation of the consolidated gate (Round 7, mohitc1 Finding C). The result is
+        // recorded on the span exactly once, here, before the navigation that is the likely throw
+        // source (loadUrl); the caller's catch(Throwable) fallback shares this same Span instance
+        // and therefore never re-emits (see recordCredentialForwardingTelemetry).
+        val forwardCredentialHeaders = shouldForwardCredentialHeaders(urlString)
+        recordCredentialForwardingTelemetry(urlString, forwardCredentialHeaders)
+        if (!forwardCredentialHeaders) {
             Logger.warn(
                 methodTag,
                 "Nonce redirect target is not a trusted HTTPS AAD host; " +
                     "loading without the PRT credential header."
             )
-            webView.loadUrl(input.toString(), withoutCredentialHeaders(headers))
+            webView.loadUrl(urlString, withoutCredentialHeaders(headers))
             return null
         }
         val nonce = getNonceFromRedirectUrl(input)
@@ -115,6 +122,37 @@ class NonceRedirectHandler(
     private fun getUserNameFromWebViewUrl(url: String): String? {
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
         return parameters["login_hint"]
+    }
+
+    /**
+     * Records non-PII telemetry describing the credential-header forwarding decision on [span].
+     *
+     * All attributes are booleans; no host, URL, header value, PRT, sso_nonce or login_hint is ever
+     * emitted. This is invoked exactly once per redirect, from [processChallenge], before the
+     * navigation ([WebView.loadUrl]) that is the most likely throw source. The caller's
+     * `catch (Throwable)` fallback in
+     * `AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders` operates on this same [Span]
+     * instance (the one passed to this handler's constructor), so it deliberately does not re-emit
+     * these attributes — keeping the trusted/untrusted signal to exactly one record per redirect.
+     *
+     * @param url the redirect target, used only to evaluate host trust (never emitted).
+     * @param forwardCredentialHeaders the consolidated gate result
+     * ([shouldForwardCredentialHeaders]); credential headers are stripped when this is `false`.
+     */
+    private fun recordCredentialForwardingTelemetry(url: String, forwardCredentialHeaders: Boolean) {
+        span.setAttribute(
+            AttributeName.nonce_redirect_validation_flight_enabled.name,
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
+        )
+        span.setAttribute(
+            AttributeName.nonce_redirect_host_trusted.name,
+            isRedirectTrustedForHeaderForwarding(url)
+        )
+        span.setAttribute(
+            AttributeName.nonce_redirect_credential_header_stripped.name,
+            !forwardCredentialHeaders
+        )
     }
 
     companion object {
