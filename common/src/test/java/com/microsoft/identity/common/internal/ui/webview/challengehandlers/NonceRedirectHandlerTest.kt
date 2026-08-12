@@ -46,8 +46,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.net.URL
@@ -374,8 +376,12 @@ class NonceRedirectHandlerTest {
     }
 
     /**
-     * Telemetry (Round 8): with the kill-switch flight OFF the fix is a no-op — the flight attribute
-     * reports disabled and nothing is stripped, even for an untrusted cleartext target.
+     * Telemetry (Round 8/9): with the kill-switch flight OFF the fix is a no-op — the flight
+     * attribute reports disabled and nothing is stripped, even for an untrusted cleartext target.
+     * host_trusted is intentionally NOT emitted in this state: the trust helper must not run when the
+     * kill-switch is disengaged (that is exactly what shouldForwardCredentialHeaders short-circuits
+     * away), so pulling the switch stays byte-identical to pre-fix behavior. The never() assertion
+     * pins that invariant so a regression that re-introduces the trust evaluation fails the build.
      */
     @Test
     fun `flight off records credential-forwarding telemetry as a no-op`() {
@@ -386,6 +392,7 @@ class NonceRedirectHandlerTest {
 
         verify(span).setAttribute(AttributeName.nonce_redirect_validation_flight_enabled.name, false)
         verify(span).setAttribute(AttributeName.nonce_redirect_credential_header_stripped.name, false)
+        verify(span, never()).setAttribute(eq(AttributeName.nonce_redirect_host_trusted.name), anyBoolean())
     }
 
     private fun captureLoadedHeaders(expectedUrl: String): Map<String, String> {

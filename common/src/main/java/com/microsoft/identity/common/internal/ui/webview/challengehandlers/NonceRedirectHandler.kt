@@ -67,7 +67,7 @@ class NonceRedirectHandler(
         // source (loadUrl); the caller's catch(Throwable) fallback shares this same Span instance
         // and therefore never re-emits (see recordCredentialForwardingTelemetry).
         val forwardCredentialHeaders = shouldForwardCredentialHeaders(urlString)
-        recordCredentialForwardingTelemetry(urlString, forwardCredentialHeaders)
+        recordCredentialForwardingTelemetry(forwardCredentialHeaders)
         if (!forwardCredentialHeaders) {
             Logger.warn(
                 methodTag,
@@ -135,24 +135,38 @@ class NonceRedirectHandler(
      * instance (the one passed to this handler's constructor), so it deliberately does not re-emit
      * these attributes — keeping the trusted/untrusted signal to exactly one record per redirect.
      *
-     * @param url the redirect target, used only to evaluate host trust (never emitted).
+     * `nonce_redirect_host_trusted` is emitted **only when the kill-switch is enabled**. With the
+     * flight on, [shouldForwardCredentialHeaders] reduces algebraically to
+     * [isRedirectTrustedForHeaderForwarding] (`!true || x == x`), so [forwardCredentialHeaders] is
+     * already the host-trust result and is reused verbatim — the trust helper is never evaluated a
+     * second time. With the flight **off** the fix is fully disengaged and the trust helper must not
+     * run at all (that evaluation is exactly what [shouldForwardCredentialHeaders] short-circuits
+     * away in the disengaged state); the attribute is therefore intentionally omitted rather than
+     * derived from a redundant call, so pulling the kill-switch remains byte-identical to the pre-fix
+     * behavior. The flight-off population is expected to be ~0% of traffic (default on) and is an
+     * emergency state, not a measurement state, so no analytical signal is lost.
+     *
      * @param forwardCredentialHeaders the consolidated gate result
-     * ([shouldForwardCredentialHeaders]); credential headers are stripped when this is `false`.
+     * ([shouldForwardCredentialHeaders]); credential headers are stripped when this is `false`, and
+     * when the flight is on this value is also the host-trust result.
      */
-    private fun recordCredentialForwardingTelemetry(url: String, forwardCredentialHeaders: Boolean) {
+    private fun recordCredentialForwardingTelemetry(forwardCredentialHeaders: Boolean) {
+        val validationFlightEnabled = CommonFlightsManager.getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
         span.setAttribute(
             AttributeName.nonce_redirect_validation_flight_enabled.name,
-            CommonFlightsManager.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
-        )
-        span.setAttribute(
-            AttributeName.nonce_redirect_host_trusted.name,
-            isRedirectTrustedForHeaderForwarding(url)
+            validationFlightEnabled
         )
         span.setAttribute(
             AttributeName.nonce_redirect_credential_header_stripped.name,
             !forwardCredentialHeaders
         )
+        if (validationFlightEnabled) {
+            span.setAttribute(
+                AttributeName.nonce_redirect_host_trusted.name,
+                forwardCredentialHeaders
+            )
+        }
     }
 
     companion object {
