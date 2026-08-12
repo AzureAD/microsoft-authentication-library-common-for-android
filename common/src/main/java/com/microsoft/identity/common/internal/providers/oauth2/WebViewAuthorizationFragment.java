@@ -313,7 +313,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final String methodTag = TAG + ":onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -321,7 +320,27 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
-        mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
+        mAADWebViewClient = createAADWebViewClient(activity);
+        setUpWebView(view, mAADWebViewClient);
+        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
+        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
+        return view;
+    }
+
+    /**
+     * Builds the WebView client this fragment drives the sign-in page with.
+     * <p>
+     * Split out of {@link #onCreateView} so the state this fragment restored - notably the host's
+     * MAM-CA install-referrer opt-in - can be verified to actually reach the client without
+     * inflating a layout, which this module's unit tests cannot do.
+     *
+     * @param activity the hosting activity, already null-checked by the caller.
+     */
+    @VisibleForTesting
+    @NonNull
+    AzureActiveDirectoryWebViewClient createAADWebViewClient(@NonNull final FragmentActivity activity) {
+        final String methodTag = TAG + ":createAADWebViewClient";
+        return new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
@@ -374,10 +393,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 }
         );
-        setUpWebView(view, mAADWebViewClient);
-        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
-        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
-        return view;
     }
 
     @Override
