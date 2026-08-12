@@ -41,7 +41,7 @@ class EventCollectorTest {
 
         collector.addEvent(EventTag.BrokerRequestReceived)
 
-        val schema = collector.toTelemetrySchema()
+        val schema = collector.toBrokerIpcTelemetry()
         val events = schema.performanceRecord?.executionFlow
         assertNotNull(events)
         assertEquals(1, events!!.size)
@@ -52,12 +52,12 @@ class EventCollectorTest {
     fun addEvent_withDiagnosticAndErrorCode_fieldsArePresentInEvent() {
         val collector = EventCollector(testCorrelationId)
 
-        collector.addEvent(EventTag.BrokerRequestFailed, diagnosticCode = 42, errorCode = 100)
+        collector.addEvent(EventTag.BrokerRequestFailed, statusCode = 42, errorCode = 100)
 
-        val events = collector.toTelemetrySchema().performanceRecord?.executionFlow
+        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
         assertNotNull(events)
         val event = events!![0]
-        assertEquals(42, event.diagnosticCode)
+        assertEquals(42, event.statusCode)
         assertEquals(100, event.errorCode)
     }
 
@@ -67,9 +67,9 @@ class EventCollectorTest {
 
         collector.addEvent(EventTag.BrokerCacheHit)
 
-        val event = collector.toTelemetrySchema().performanceRecord?.executionFlow?.get(0)
+        val event = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow?.get(0)
         assertNotNull(event)
-        assertNull(event!!.diagnosticCode)
+        assertNull(event!!.statusCode)
         assertNull(event.errorCode)
     }
 
@@ -85,37 +85,37 @@ class EventCollectorTest {
 
         tags.forEach { collector.addEvent(it) }
 
-        val events = collector.toTelemetrySchema().performanceRecord?.executionFlow
+        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
         assertNotNull(events)
         assertEquals(tags.size, events!!.size)
         tags.forEachIndexed { index, tag -> assertEquals(tag, events[index].tag) }
     }
 
     @Test
-    fun toTelemetrySchema_correlationIdMatchesConstructorArg() {
+    fun toBrokerIpcTelemetry_correlationIdMatchesConstructorArg() {
         val collector = EventCollector(testCorrelationId)
 
-        val schema = collector.toTelemetrySchema()
+        val schema = collector.toBrokerIpcTelemetry()
 
         assertEquals(testCorrelationId, schema.correlationId)
     }
 
     @Test
-    fun toTelemetrySchema_performanceRecordHasNonNegativeDuration() {
+    fun toBrokerIpcTelemetry_performanceRecordHasNonNegativeDuration() {
         val collector = EventCollector(testCorrelationId)
         collector.addEvent(EventTag.BrokerRequestReceived)
 
-        val schema = collector.toTelemetrySchema()
+        val schema = collector.toBrokerIpcTelemetry()
 
         assertNotNull(schema.performanceRecord)
         assertTrue(schema.performanceRecord!!.duration >= 0)
     }
 
     @Test
-    fun toTelemetrySchema_startTimeIsIso8601Format() {
+    fun toBrokerIpcTelemetry_startTimeIsIso8601Format() {
         val collector = EventCollector(testCorrelationId)
 
-        val schema = collector.toTelemetrySchema()
+        val schema = collector.toBrokerIpcTelemetry()
 
         val startTime = schema.performanceRecord?.startTime
         assertNotNull(startTime)
@@ -139,7 +139,7 @@ class EventCollectorTest {
         threads.forEach { it.start() }
         threads.forEach { it.join() }
 
-        val schema = collector.toTelemetrySchema()
+        val schema = collector.toBrokerIpcTelemetry()
         val events = schema.performanceRecord?.executionFlow
         assertNotNull(events)
         assertEquals(threadCount * eventsPerThread, events!!.size)
@@ -163,12 +163,12 @@ class EventCollectorTest {
     fun addEventSafely_withNonNullCollector_addsEvent() {
         val collector = EventCollector(testCorrelationId)
 
-        TelemetryHelper.addEventSafely(collector, EventTag.BrokerTokenAcquired, diagnosticCode = 1)
+        TelemetryHelper.addEventSafely(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
 
-        val events = collector.toTelemetrySchema().performanceRecord?.executionFlow
+        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
         assertNotNull(events)
         assertEquals(1, events!!.size)
         assertEquals(EventTag.BrokerTokenAcquired, events[0].tag)
-        assertEquals(1, events[0].diagnosticCode)
+        assertEquals(1, events[0].statusCode)
     }
 }

@@ -605,9 +605,9 @@ public class AuthenticationConstants {
         public static final String BROKER_TELEMETRY_REQUEST = "broker_telemetry_request";
 
         /**
-         * Bundle key for the serialized broker telemetry schema.
+         * Bundle key for the serialized broker IPC telemetry (broker&rarr;client response).
          */
-        public static final String BROKER_TELEMETRY_SCHEMA = "broker_telemetry_schema";
+        public static final String BROKER_IPC_TELEMETRY = "broker_ipc_telemetry";
 
         /**
          * Broker application version name.

@@ -30,43 +30,43 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Unit tests for Gson round-trip serialization/deserialization of [TelemetrySchema] and
+ * Unit tests for Gson round-trip serialization/deserialization of [BrokerIpcTelemetry] and
  * its nested types.
  */
-class TelemetrySchemaSerializationTest {
+class BrokerIpcTelemetrySerializationTest {
 
     private val gson: Gson = GsonBuilder().create()
 
     // ------------------------------------------------------------------
-    // TelemetrySchema round-trip
+    // BrokerIpcTelemetry round-trip
     // ------------------------------------------------------------------
 
     @Test
-    fun telemetrySchema_roundTrip_preservesCorrelationId() {
+    fun brokerIpcTelemetry_roundTrip_preservesCorrelationId() {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.correlationId, restored.correlationId)
     }
 
     @Test
-    fun telemetrySchema_roundTrip_preservesSchemaVersion() {
+    fun brokerIpcTelemetry_roundTrip_preservesSchemaVersion() {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
-        assertEquals(TelemetrySchema.CURRENT_VERSION, restored.schemaVersion)
+        assertEquals(BrokerIpcTelemetry.CURRENT_VERSION, restored.schemaVersion)
     }
 
     @Test
-    fun telemetrySchema_roundTrip_preservesOptionalFields() {
+    fun brokerIpcTelemetry_roundTrip_preservesOptionalFields() {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.authOutcome, restored.authOutcome)
         assertEquals(original.errorCode, restored.errorCode)
@@ -76,11 +76,11 @@ class TelemetrySchemaSerializationTest {
     }
 
     @Test
-    fun telemetrySchema_roundTrip_withNullOptionalFields_remainsNull() {
-        val original = TelemetrySchema(correlationId = "corr-null-opts")
+    fun brokerIpcTelemetry_roundTrip_withNullOptionalFields_remainsNull() {
+        val original = BrokerIpcTelemetry(correlationId = "corr-null-opts")
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertNull(restored.authOutcome)
         assertNull(restored.errorCode)
@@ -96,7 +96,7 @@ class TelemetrySchemaSerializationTest {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.performanceRecord!!.duration, restored.performanceRecord!!.duration)
     }
@@ -106,7 +106,7 @@ class TelemetrySchemaSerializationTest {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.performanceRecord!!.startTime, restored.performanceRecord!!.startTime)
     }
@@ -120,7 +120,7 @@ class TelemetrySchemaSerializationTest {
         val original = buildFullSchema()
 
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         val originalEvents = original.performanceRecord!!.executionFlow
         val restoredEvents = restored.performanceRecord!!.executionFlow
@@ -145,14 +145,14 @@ class TelemetrySchemaSerializationTest {
         val event = ExecutionEvent(
             tag = EventTag.BrokerNetworkCallFailed,
             timestampMs = 5000L,
-            diagnosticCode = 7,
+            statusCode = 7,
             errorCode = 503
         )
 
         val json = gson.toJson(event)
         val restored = gson.fromJson(json, ExecutionEvent::class.java)
 
-        assertEquals(7, restored.diagnosticCode)
+        assertEquals(7, restored.statusCode)
         assertEquals(503, restored.errorCode)
     }
 
@@ -163,7 +163,7 @@ class TelemetrySchemaSerializationTest {
         val json = gson.toJson(event)
         val restored = gson.fromJson(json, ExecutionEvent::class.java)
 
-        assertNull(restored.diagnosticCode)
+        assertNull(restored.statusCode)
         assertNull(restored.errorCode)
     }
 
@@ -186,19 +186,19 @@ class TelemetrySchemaSerializationTest {
     }
 
     // ------------------------------------------------------------------
-    // EventCollector → TelemetrySchema integration
+    // EventCollector → BrokerIpcTelemetry integration
     // ------------------------------------------------------------------
 
     @Test
-    fun eventCollector_toTelemetrySchema_roundTripsCorrectly() {
+    fun eventCollector_toBrokerIpcTelemetry_roundTripsCorrectly() {
         val collector = EventCollector("round-trip-corr-id")
         collector.addEvent(EventTag.BrokerRequestReceived)
         collector.addEvent(EventTag.BrokerCacheCheckStart)
         collector.addEvent(EventTag.BrokerResponseSent)
 
-        val original = collector.toTelemetrySchema()
+        val original = collector.toBrokerIpcTelemetry()
         val json = gson.toJson(original)
-        val restored = gson.fromJson(json, TelemetrySchema::class.java)
+        val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.correlationId, restored.correlationId)
         assertEquals(3, restored.performanceRecord?.executionFlow?.size)
@@ -209,7 +209,7 @@ class TelemetrySchemaSerializationTest {
     // Helpers
     // ------------------------------------------------------------------
 
-    private fun buildFullSchema(): TelemetrySchema {
+    private fun buildFullSchema(): BrokerIpcTelemetry {
         val events = listOf(
             ExecutionEvent(tag = EventTag.BrokerRequestReceived, timestampMs = 0L),
             ExecutionEvent(tag = EventTag.BrokerCacheHit, timestampMs = 10L),
@@ -220,7 +220,7 @@ class TelemetrySchemaSerializationTest {
             duration = 50L,
             executionFlow = events
         )
-        return TelemetrySchema(
+        return BrokerIpcTelemetry(
             correlationId = "test-corr-id",
             name = "AcquireTokenSilent",
             version = "test-sdk-1.0",

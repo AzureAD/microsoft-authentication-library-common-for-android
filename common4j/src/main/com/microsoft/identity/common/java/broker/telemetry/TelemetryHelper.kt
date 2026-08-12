@@ -32,16 +32,16 @@ object TelemetryHelper {
      *
      * @param collector The [EventCollector] to record the event into, or null.
      * @param tag The [EventTag] identifying the phase.
-     * @param diagnosticCode Optional diagnostic code for additional context.
+     * @param statusCode Optional status code (arbitrary integer, e.g. HTTP status or cache-expiry minutes).
      * @param errorCode Optional error code if this event represents a failure.
      */
     @JvmStatic
     fun addEventSafely(
         collector: EventCollector?,
         tag: EventTag,
-        diagnosticCode: Int? = null,
+        statusCode: Int? = null,
         errorCode: Int? = null
     ) {
-        collector?.addEvent(tag, diagnosticCode, errorCode)
+        collector?.addEvent(tag, statusCode, errorCode)
     }
 }

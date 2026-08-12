@@ -23,13 +23,13 @@
 package com.microsoft.identity.common.java.broker.telemetry
 
 /**
- * Implemented by objects that can carry a [TelemetrySchema].
+ * Implemented by objects that can carry a [BrokerIpcTelemetry].
  * Mainly used to pass the structured broker telemetry between broker and client.
  *
- * Thread-safety note: [telemetrySchema] must be set before the implementing object
+ * Thread-safety note: [brokerIpcTelemetry] must be set before the implementing object
  * is shared across threads. The IPC boundary (Binder transaction) provides the
  * memory barrier. This follows the same contract as [IBrokerPerformanceMetricsProvider].
  */
-interface ITelemetrySchemaProvider {
-    var telemetrySchema: TelemetrySchema?
+interface IBrokerIpcTelemetryProvider {
+    var brokerIpcTelemetry: BrokerIpcTelemetry?
 }

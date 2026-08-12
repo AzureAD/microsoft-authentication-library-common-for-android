@@ -30,13 +30,13 @@ import com.google.gson.annotations.SerializedName
  * @param tag The [EventTag] identifying which phase this event captures.
  * @param timestampMs Elapsed time in milliseconds from the start of the flow.
  * @param threadId The ID of the thread that recorded this event.
- * @param diagnosticCode Optional diagnostic code for additional context.
+ * @param statusCode Optional status code (arbitrary integer, e.g. HTTP status or cache-expiry minutes).
  * @param errorCode Optional error code if the event represents a failure.
  */
 data class ExecutionEvent(
     @SerializedName("t") val tag: EventTag,
     @SerializedName("ts") val timestampMs: Long,
     @SerializedName("tid") val threadId: Long = Thread.currentThread().id,
-    @SerializedName("d") val diagnosticCode: Int? = null,
+    @SerializedName("s") val statusCode: Int? = null,
     @SerializedName("e") val errorCode: Int? = null
 )

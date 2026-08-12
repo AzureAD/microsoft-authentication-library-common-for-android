@@ -29,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Thread-safe accumulator for [ExecutionEvent]s during an authentication flow.
  *
  * Create one instance per authentication request and call [addEvent] at each phase boundary.
- * When the flow completes, call [toTelemetrySchema] to obtain the structured result.
+ * When the flow completes, call [toBrokerIpcTelemetry] to obtain the structured result.
  *
  * @param correlationId The correlation ID of the authentication request being tracked.
  */
@@ -52,34 +52,34 @@ class EventCollector(private val correlationId: String) {
      * with client-side (OneAuth) thread IDs during Kusto stitching.
      *
      * @param tag The [EventTag] identifying this phase.
-     * @param diagnosticCode Optional diagnostic code for additional context.
+     * @param statusCode Optional status code (arbitrary integer, e.g. HTTP status or cache-expiry minutes).
      * @param errorCode Optional error code if this event represents a failure.
      */
-    fun addEvent(tag: EventTag, diagnosticCode: Int? = null, errorCode: Int? = null) {
+    fun addEvent(tag: EventTag, statusCode: Int? = null, errorCode: Int? = null) {
         events.add(
             ExecutionEvent(
                 tag = tag,
                 timestampMs = System.currentTimeMillis() - startTimeMs,
                 threadId = Thread.currentThread().id + BROKER_THREAD_ID_OFFSET,
-                diagnosticCode = diagnosticCode,
+                statusCode = statusCode,
                 errorCode = errorCode
             )
         )
     }
 
     /**
-     * Builds a [TelemetrySchema] from all events collected so far.
+     * Builds a [BrokerIpcTelemetry] from all events collected so far.
      *
      * Snapshots the event list first, then captures the end time, ensuring
      * that [PerformanceRecord.duration] is always >= the last event's timestamp.
      *
-     * @return A [TelemetrySchema] containing a [PerformanceRecord] with all collected events.
+     * @return A [BrokerIpcTelemetry] containing a [PerformanceRecord] with all collected events.
      */
-    fun toTelemetrySchema(): TelemetrySchema {
+    fun toBrokerIpcTelemetry(): BrokerIpcTelemetry {
         // Snapshot events first, then capture end time — guarantees duration >= last event ts.
         val eventSnapshot = events.toList()
         val duration = System.currentTimeMillis() - startTimeMs
-        return TelemetrySchema(
+        return BrokerIpcTelemetry(
             correlationId = correlationId,
             performanceRecord = PerformanceRecord(
                 startTime = Instant.ofEpochMilli(startTimeMs).toString(),

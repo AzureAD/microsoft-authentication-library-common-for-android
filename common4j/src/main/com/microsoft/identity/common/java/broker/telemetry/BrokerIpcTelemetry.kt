@@ -40,7 +40,7 @@ import com.google.gson.annotations.SerializedName
  * @param deviceIdle Optional flag indicating whether the device was in idle mode.
  * @param performanceRecord Optional [PerformanceRecord] containing the detailed event timeline.
  */
-data class TelemetrySchema(
+data class BrokerIpcTelemetry(
     @SerializedName("schema_version") val schemaVersion: String = CURRENT_VERSION,
     @SerializedName("correlation_id") val correlationId: String,
     @SerializedName("name") val name: String? = null,
