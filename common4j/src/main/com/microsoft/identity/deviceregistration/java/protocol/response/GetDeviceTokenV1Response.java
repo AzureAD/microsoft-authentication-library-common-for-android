@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.deviceregistration.java.protocol.response;
 
+import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult;
 import com.microsoft.identity.deviceregistration.java.protocol.DeviceRegistrationProtocolConstants;
 
 import java.util.UUID;
@@ -52,14 +53,15 @@ public class GetDeviceTokenV1Response extends AbstractDeviceRegistrationProtocol
         return serializer.deserialize(serializedData);
     }
 
-    public GetDeviceTokenV1Response(@NonNull final UUID correlationId, @NonNull final String deviceToken) {
+    public GetDeviceTokenV1Response(@NonNull final UUID correlationId,
+                                    @NonNull final DeviceTokenResult deviceTokenResult) {
         super(correlationId);
-        mDeviceToken = deviceToken;
+        mDeviceTokenResult = deviceTokenResult;
     }
 
     @Getter
     @NonNull
-    private final String mDeviceToken;
+    private final DeviceTokenResult mDeviceTokenResult;
 
     /**
      * Returns the name of the protocol.

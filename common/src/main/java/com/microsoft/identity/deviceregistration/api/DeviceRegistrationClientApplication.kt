@@ -41,6 +41,7 @@ import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationClient
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.DrsDiscoveryEndpoint
+import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationPreAuthorizedV0Parameters
@@ -316,6 +317,7 @@ class DeviceRegistrationClientApplication {
      * @param scope                    optional scope.
      */
     @Throws(BaseException::class)
+    @JvmOverloads
     fun getDeviceToken(
         deviceRegistrationRecord: IDeviceRegistrationRecord,
         resources: String,
@@ -323,14 +325,14 @@ class DeviceRegistrationClientApplication {
         clientId: String,
         redirectUri: String,
         scope: String? = null
-    ): String {
+    ): DeviceTokenResult {
         val methodTag = "$TAG:getDeviceToken"
         Logger.info(methodTag, "GetDeviceToken (V1) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
             GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, redirectUri, scope)
         )
         Logger.info(methodTag, "Get device token ended successfully.")
-        return GetDeviceTokenV1Response.create(responseSerialized).deviceToken
+        return GetDeviceTokenV1Response.create(responseSerialized).deviceTokenResult
     }
 
     /**

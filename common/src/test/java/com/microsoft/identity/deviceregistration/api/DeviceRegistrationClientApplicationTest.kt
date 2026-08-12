@@ -35,6 +35,7 @@ import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationProtoc
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.api.DeviceRegistrationRecord
+import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
@@ -252,9 +253,18 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     @Test
-    fun getDeviceToken_v1_returnsDeviceToken() {
-        val expectedToken = "device.token.jwt"
-        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+    fun getDeviceToken_v1_returnsAllResultFields() {
+        val expected = DeviceTokenResult.builder()
+            .accessToken("device.token.jwt")
+            .deviceInfo("device.info.jwt")
+            .tokenType("Bearer")
+            .resource("https://resource.example.com")
+            .expiresIn(3599L)
+            .extExpiresIn(3599L)
+            .expiresOn(1782373775L)
+            .notBefore(1782369875L)
+            .build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
         val result = drca.getDeviceToken(
@@ -265,13 +275,40 @@ class DeviceRegistrationClientApplicationTest {
             "msauth://com.test.app/callback"
         )
 
-        Assert.assertEquals(expectedToken, result)
+        Assert.assertEquals("device.token.jwt", result.accessToken)
+        Assert.assertEquals("device.info.jwt", result.deviceInfo)
+        Assert.assertEquals("Bearer", result.tokenType)
+        Assert.assertEquals("https://resource.example.com", result.resource)
+        Assert.assertEquals(3599L, result.expiresIn!!)
+        Assert.assertEquals(3599L, result.extExpiresIn!!)
+        Assert.assertEquals(1782373775L, result.expiresOn!!)
+        Assert.assertEquals(1782369875L, result.notBefore!!)
+    }
+
+    @Test
+    fun getDeviceToken_v1_optionalFieldsAbsent_returnsNulls() {
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
+        val drca = createDrca(successStrategy(packer.pack(response)))
+
+        val result = drca.getDeviceToken(
+            DeviceRegistrationRecord("tenant", "upn", "device", false, false),
+            "https://resource.example.com",
+            UUID.randomUUID(),
+            "test-client-id",
+            "msauth://com.test.app/callback"
+        )
+
+        Assert.assertEquals("device.token.jwt", result.accessToken)
+        Assert.assertNull(result.deviceInfo)
+        Assert.assertNull(result.tokenType)
+        Assert.assertNull(result.expiresIn)
     }
 
     @Test
     fun getDeviceToken_v1_withScope_returnsDeviceToken() {
-        val expectedToken = "device.token.jwt.scoped"
-        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+        val expected = DeviceTokenResult.builder().accessToken("device.token.jwt.scoped").build()
+        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
         val result = drca.getDeviceToken(
@@ -283,14 +320,16 @@ class DeviceRegistrationClientApplicationTest {
             "openid profile"
         )
 
-        Assert.assertEquals(expectedToken, result)
+        Assert.assertEquals("device.token.jwt.scoped", result.accessToken)
     }
 
     @Test
     fun getDeviceToken_v1_passesClientIdToIpc() {
         val correlationId = UUID.randomUUID()
-        val expectedToken = "device.token.jwt"
-        val response = GetDeviceTokenV1Response(UUID.randomUUID(), expectedToken)
+        val response = GetDeviceTokenV1Response(
+            UUID.randomUUID(),
+            DeviceTokenResult.builder().accessToken("device.token.jwt").build()
+        )
         val strategy: IIpcStrategy = mock()
         whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
         whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
