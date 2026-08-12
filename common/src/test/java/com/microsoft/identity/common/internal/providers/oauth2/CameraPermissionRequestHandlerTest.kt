@@ -400,6 +400,7 @@ class CameraPermissionRequestHandlerTest {
             assertSame(boom, t)
         }
 
+        verify { span.recordException(boom) }
         verifyError("error")
     }
 

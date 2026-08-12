@@ -132,6 +132,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             }
         } catch (t: Throwable) {
             // Unexpected failure while dispatching; end the span so it isn't leaked, then rethrow.
+            span?.recordException(t)
             endSpanWithError(RESULT_ERROR)
             throw t
         }
