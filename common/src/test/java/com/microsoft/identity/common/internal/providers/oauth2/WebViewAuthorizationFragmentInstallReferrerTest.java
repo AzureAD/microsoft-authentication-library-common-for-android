@@ -166,7 +166,8 @@ public class WebViewAuthorizationFragmentInstallReferrerTest {
 
     /**
      * The mirror case, and the one MSAL and the broker actually get: no opt-in in the bundle means
-     * the install link is launched exactly as the server sent it.
+     * the install link is launched exactly as the server sent it. Guards against the opt-in being
+     * read with an inverted default.
      */
     @Test
     public void testCreateWebViewClient_optInAbsentFromState_clientLeavesInstallUnchanged() {
@@ -180,7 +181,8 @@ public class WebViewAuthorizationFragmentInstallReferrerTest {
 
     /**
      * An explicit {@code false} differs from an absent key only in the bundle; the launched link
-     * must be identical. Guards against the opt-in being read with an inverted default.
+     * must be identical. Guards against the opt-in being read by key presence rather than by value
+     * - a read the test above cannot catch, since there the key is absent either way.
      */
     @Test
     public void testCreateWebViewClient_hostOptedOut_clientLeavesInstallUnchanged() {

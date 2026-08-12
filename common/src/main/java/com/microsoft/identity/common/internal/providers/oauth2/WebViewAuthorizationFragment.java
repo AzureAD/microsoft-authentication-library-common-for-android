@@ -333,6 +333,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Split out of {@link #onCreateView} so the state this fragment restored - notably the host's
      * MAM-CA install-referrer opt-in - can be verified to actually reach the client without
      * inflating a layout, which this module's unit tests cannot do.
+     * <p>
+     * The returned client's page-loaded callback touches view state that only {@link #onCreateView}
+     * establishes, so a caller that skips it must not drive a page load.
      *
      * @param activity the hosting activity, already null-checked by the caller.
      */
