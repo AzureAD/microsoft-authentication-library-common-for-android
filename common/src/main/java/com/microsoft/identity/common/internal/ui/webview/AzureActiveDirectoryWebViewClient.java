@@ -358,6 +358,19 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // runs and the factory receives null and no-ops (AB#3706623).
                 final String challengingOrigin = isPKeyAuthSubmitUrlOriginValidationEnabled()
                         ? getChallengingOrigin(view) : null;
+                // Record navigation-context telemetry (main-frame flag + where the origin came from)
+                // on the current span. This lives here, not in the common4j factory, because only the
+                // WebView client knows these facts; it is flight-gated with the same predicate so that,
+                // with the master switch off, no telemetry is emitted (a true end-to-end no-op). Note:
+                // handleUrl also runs for subframe navigations (isForMainFrame carries that), so a
+                // PKeyAuth challenge delivered in an iframe is validated against the MAIN-FRAME origin.
+                // We deliberately do NOT relax validation for subframes — a PASS is safe (the assertion
+                // can only go to the legitimate main-frame origin) and a FAIL may be a false-reject of a
+                // legitimate cross-origin iframe challenge, which is exactly what this flag measures
+                // before we decide whether to special-case it.
+                if (isPKeyAuthSubmitUrlOriginValidationEnabled()) {
+                    recordPKeyAuthChallengeContext(isForMainFrame, challengingOrigin);
+                }
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url, challengingOrigin);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
@@ -595,6 +608,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return mLastCommittedRequestUrl;
         }
         return view.getUrl();
+    }
+
+    /**
+     * Emits navigation-context telemetry for a PKeyAuth challenge onto the current span: whether the
+     * challenge arrived on the main frame, and where its challenging origin was derived from
+     * ({@code recorded} last-committed https URL, a {@code webview_url} fallback to
+     * {@link WebView#getUrl()}, or {@code none}). These are the facts only the WebView client knows;
+     * the common4j factory emits the validation verdict itself. Uses {@link SpanExtension#current()},
+     * which returns a no-op span outside an active trace, so this is always safe. All attributes are
+     * non-PII (a boolean and a small enum-like source label); no hostname or URL is emitted. Callers
+     * must gate this on {@link #isPKeyAuthSubmitUrlOriginValidationEnabled()} so it is a no-op when
+     * the feature flight is off.
+     *
+     * @param isForMainFrame  whether the challenge navigation targeted the main frame. On the
+     *                        pre-API-24 {@code shouldOverrideUrlLoading(WebView, String)} overload
+     *                        this frame information is unavailable and is passed as {@code false}.
+     * @param challengingOrigin the origin resolved by {@link #getChallengingOrigin(WebView)}.
+     */
+    private void recordPKeyAuthChallengeContext(final boolean isForMainFrame,
+                                                @Nullable final String challengingOrigin) {
+        final String source;
+        if (!StringUtil.isNullOrEmpty(mLastCommittedRequestUrl)) {
+            source = "recorded";
+        } else if (!StringUtil.isNullOrEmpty(challengingOrigin)) {
+            source = "webview_url";
+        } else {
+            source = "none";
+        }
+        final Span span = SpanExtension.current();
+        span.setAttribute(AttributeName.pkeyauth_challenge_is_main_frame.name(), isForMainFrame);
+        span.setAttribute(AttributeName.pkeyauth_challenging_origin_source.name(), source);
     }
 
     private boolean isPasskeyUrl(@NonNull final String url) {

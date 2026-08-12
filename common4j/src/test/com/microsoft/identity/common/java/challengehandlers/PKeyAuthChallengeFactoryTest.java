@@ -42,6 +42,7 @@ import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -276,19 +277,35 @@ public class PKeyAuthChallengeFactoryTest {
                 challenge.getSubmitUrl());
     }
 
-    // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
-    // the flight OFF the factory must fall back to the pre-fix behavior and construct the challenge
-    // even for a cross-origin SubmitUrl — proving the disable path actually bypasses enforcement.
-    @Test
-    public void testWebViewRedirect_OriginValidationFlightOff_CrossOriginAccepted()
-            throws ClientException {
+    // Baseline for the enforcing tests below: master switch on AND enforcement on, so a non-ALLOWED
+    // verdict throws (the pre-round-8 behavior). Shadow-mode and flight-off tests reconfigure this.
+    @Before
+    public void setUp() {
+        setFlights(true, true);
+    }
+
+    // Reconfigures the two PKeyAuth origin-validation flights. enable = master switch
+    // (recording/evaluation/telemetry); enforce = whether a rejected verdict actually blocks.
+    private void setFlights(final boolean enable, final boolean enforce) {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         final MockFlightsProvider flightsProvider = new MockFlightsProvider();
         flightsProvider.addFlight(
-                CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), "false");
+                CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), Boolean.toString(enable));
+        flightsProvider.addFlight(
+                CommonFlight.ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), Boolean.toString(enforce));
         final MockFlightsManager flightsManager = new MockFlightsManager();
         flightsManager.setMockBrokerFlightsProvider(flightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
+
+    // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
+    // the master flight OFF the factory must fall back to the pre-fix behavior and construct the
+    // challenge even for a cross-origin SubmitUrl — proving the disable path actually bypasses
+    // enforcement (and, being a total no-op, emits no telemetry and records nothing).
+    @Test
+    public void testWebViewRedirect_OriginValidationFlightOff_CrossOriginAccepted()
+            throws ClientException {
+        setFlights(false, false);
 
         final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory()
                 .getPKeyAuthChallengeFromWebViewRedirect(
@@ -298,10 +315,50 @@ public class PKeyAuthChallengeFactoryTest {
         Assert.assertEquals("https://evil.example.com/steal", challenge.getSubmitUrl());
     }
 
+    // AB#3706623 (CWE-918) shadow mode: master switch ON but enforcement OFF. Every rejection reason
+    // is still evaluated and logged (and telemetry emitted), but the challenge is RETURNED rather than
+    // blocked, so real-world origin pairs can be measured before enforcement is ramped.
+    @Test
+    public void testWebViewRedirect_ShadowMode_CrossOriginHost_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals("https://evil.example.com/steal", challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_CleartextHttp_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals("http://login.microsoftonline.com/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_NullOrigin_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                PKEYAUTH_AUTH_ENDPOINT_URL,
+                null);
+        Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_SUBMIT_URL, challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_BackslashAuthority_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals(
+                "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+    }
+
     @After
     public void tearDown() {
-        // Prevent flight state from a disable-path test leaking into other tests (default-on
-        // enforcement must remain the baseline everywhere else).
+        // Prevent flight state from a disable-path test leaking into other tests (the @Before baseline
+        // re-establishes enforcement for each test anyway; this is belt-and-suspenders).
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 

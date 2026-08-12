@@ -29,8 +29,13 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
+
+import io.opentelemetry.api.trace.Span;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -220,25 +225,31 @@ public class PKeyAuthChallengeFactory {
      * origin. If {@code challengingUrl} cannot be resolved to an HTTPS URL with a host the challenge is
      * rejected (fail closed) rather than accepted, since same-origin cannot otherwise be proven.
      *
-     * <p>Enforcement is gated by the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}
-     * flight (default on). When the flight is disabled via ECS this method is a no-op and the
-     * pre-fix behavior (no scheme/origin enforcement) is preserved exactly — a kill-switch for the
-     * unlikely case that a federation topology defeats origin derivation and legitimate device auth
-     * is rejected.
+     * <p>Rollout is staged via two flights. The master switch
+     * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} (default on) gates the whole
+     * feature: with it off this method is a true no-op — no evaluation, no telemetry — and the
+     * pre-fix behavior (no scheme/origin enforcement) is preserved exactly. While the master switch
+     * is on the verdict is always computed and emitted to telemetry, but the challenge is only
+     * <em>blocked</em> when {@link CommonFlight#ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}
+     * (default off) is also on. With enforcement off the method runs in <em>shadow mode</em>: it
+     * measures and logs the verdict but does not throw, so real-world origin pairs can be observed
+     * before enforcement is ramped. This staging exists because a false reject fails the entire
+     * authorization request (the {@code handleUrl} catch turns the {@link ClientException} into
+     * {@code returnError} + {@code stopLoading}).
      *
      * <p>Same-origin here means scheme, host, and port must all match. Both endpoints are pinned to
-     * HTTPS (a cleartext {@code SubmitUrl} or challenging origin is rejected above), so scheme
+     * HTTPS (a cleartext {@code SubmitUrl} or challenging origin is rejected), so scheme
      * equality is implied. Host is compared case-insensitively. Port is compared after normalizing
      * the implicit HTTPS port: {@code https://host} ({@link URL#getPort()} {@code == -1}) and
      * {@code https://host:443} both resolve to 443 via {@link URL#getDefaultPort()}, so a naive
      * {@code getPort()} comparison must not be substituted here — it would falsely reject that
      * legitimate same-origin pair and, via {@code handleUrl}, fail the entire authorization request.
-     * On any rejection a value-free warning is logged to the primary channel; a companion PII-channel
-     * warning ({@link Logger#warnPII}) carries the disagreeing <em>hosts (and ports) only</em> —
-     * never the header, signed JWT, nonce, {@code Context}, or full {@code SubmitUrl} — so an on-call
-     * engineer can tell a genuine block from an origin-derivation bug. A {@link ClientException} is
-     * thrown before the challenge object exists, so the device key is never exercised on a rejected
-     * challenge.
+     * On any rejection a value-free warning is logged to the primary channel (carrying only the
+     * {@code enforced=} state and non-PII shape hints); a companion PII-channel warning
+     * ({@link Logger#warnPII}) carries the disagreeing <em>hosts (and ports) only</em> — never the
+     * header, signed JWT, nonce, {@code Context}, or full {@code SubmitUrl}. When enforcement is on a
+     * {@link ClientException} is thrown before the challenge object exists, so the device key is
+     * never exercised on a rejected challenge.
      *
      * <p>Note on {@code CertAuthorities}: that field is also attacker-suppliable from the same
      * redirect, but same-origin enforcement means any resulting signed assertion can only be
@@ -247,9 +258,9 @@ public class PKeyAuthChallengeFactory {
      *
      * @param submitUrl      the {@code SubmitUrl} value taken verbatim from the redirect.
      * @param challengingUrl the trusted origin that issued the challenge; may be {@code null}/blank.
-     * @throws ClientException if {@code submitUrl} is not an absolute HTTPS URL, if the challenging
-     *                         origin cannot be resolved or is not HTTPS, or if the two are not
-     *                         same-origin (host or port differ).
+     * @throws ClientException if enforcement is on and {@code submitUrl} is not an absolute HTTPS URL,
+     *                         if the challenging origin cannot be resolved or is not HTTPS, or if the
+     *                         two are not same-origin (host or port differ).
      */
     private void validateSubmitUrlOrigin(@Nullable final String submitUrl,
                                          @Nullable final String challengingUrl) throws ClientException {
@@ -257,12 +268,84 @@ public class PKeyAuthChallengeFactory {
 
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION)) {
-            // Kill-switch OFF: skip enforcement entirely and preserve the historical behavior.
+            // Master switch OFF: skip evaluation, telemetry and enforcement entirely so the whole
+            // feature is a true no-op and the historical behavior is preserved exactly.
             Logger.info(methodTag,
                     "PKeyAuth SubmitUrl origin validation is disabled via flight; skipping enforcement.");
             return;
         }
 
+        final boolean enforced = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION);
+
+        // Compute the verdict (and do the rejection logging) without throwing, so telemetry can be
+        // emitted on every path — including ALLOWED and, in shadow mode, every rejection.
+        final OriginValidation validation = computeOriginValidation(submitUrl, challengingUrl, methodTag, enforced);
+
+        emitOriginValidationTelemetry(validation, enforced);
+
+        if (enforced && validation.result != OriginValidationResult.ALLOWED) {
+            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID, validation.result.rejectionMessage);
+        }
+    }
+
+    /**
+     * The outcome of evaluating a webview-redirect {@code SubmitUrl} against its challenging origin.
+     * Each rejection value carries the {@link ClientException} message historically thrown for that
+     * reason so enforcement can reuse it verbatim.
+     */
+    private enum OriginValidationResult {
+        ALLOWED(null),
+        REJECTED_BACKSLASH_AUTHORITY(
+                "PKeyAuth SubmitUrl authority must not contain a backslash."),
+        REJECTED_SUBMIT_NOT_HTTPS(
+                "PKeyAuth SubmitUrl must be an absolute HTTPS URL."),
+        REJECTED_ORIGIN_UNRESOLVABLE(
+                "PKeyAuth challenging origin is unavailable or not HTTPS; cannot validate SubmitUrl."),
+        REJECTED_ORIGIN_MISMATCH(
+                "PKeyAuth SubmitUrl is not same-origin (scheme/host/port) with the challenging endpoint.");
+
+        @Nullable
+        private final String rejectionMessage;
+
+        OriginValidationResult(@Nullable final String rejectionMessage) {
+            this.rejectionMessage = rejectionMessage;
+        }
+    }
+
+    /**
+     * Holds a verdict together with the parsed {@link URL}s that produced it, so the telemetry site
+     * can derive non-PII cloud-membership booleans without re-parsing. A URL field is {@code null}
+     * when it could not be safely parsed (e.g. the backslash guard fired before the {@code SubmitUrl}
+     * was parsed).
+     */
+    private static final class OriginValidation {
+        private final OriginValidationResult result;
+        @Nullable
+        private final URL submitUri;
+        @Nullable
+        private final URL originUri;
+
+        OriginValidation(final OriginValidationResult result,
+                         @Nullable final URL submitUri,
+                         @Nullable final URL originUri) {
+            this.result = result;
+            this.submitUri = submitUri;
+            this.originUri = originUri;
+        }
+    }
+
+    /**
+     * Evaluates {@code submitUrl} against {@code challengingUrl} and returns the verdict, logging on
+     * each rejection path exactly as before (a value-free {@link Logger#warn} plus, where a
+     * trustworthy host exists, a hosts/ports-only {@link Logger#warnPII}). Never throws; the caller
+     * decides whether a non-{@code ALLOWED} verdict blocks the challenge. The {@code enforced} flag is
+     * appended to each warn so on-call can tell a real block from a shadow observation.
+     */
+    private OriginValidation computeOriginValidation(@Nullable final String submitUrl,
+                                                     @Nullable final String challengingUrl,
+                                                     @NonNull final String methodTag,
+                                                     final boolean enforced) {
         // Guard against a parser differential before any other check: java.net.URL (used below to
         // validate) and the WHATWG parser used by WebView#loadUrl (where the response is actually
         // sent) disagree on a backslash in the authority. Reject it here, in the authority component
@@ -275,9 +358,9 @@ public class PKeyAuthChallengeFactory {
             // triage signal. See the hosts/scheme-only warnPII discipline at the sibling sites below.
             Logger.warn(methodTag,
                     "PKeyAuth challenge rejected: SubmitUrl authority contains a backslash "
-                            + "(parser-differential guard). authorityLength=" + submitAuthority.length());
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth SubmitUrl authority must not contain a backslash.");
+                            + "(parser-differential guard). authorityLength=" + submitAuthority.length()
+                            + " enforced=" + enforced);
+            return new OriginValidation(OriginValidationResult.REJECTED_BACKSLASH_AUTHORITY, null, null);
         }
 
         final URL submitUri = parseAbsoluteUri(submitUrl);
@@ -285,14 +368,13 @@ public class PKeyAuthChallengeFactory {
                 || !HTTPS_SCHEME.equalsIgnoreCase(submitUri.getProtocol())
                 || StringUtil.isNullOrEmpty(submitUri.getHost())) {
             Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: SubmitUrl is not an absolute HTTPS URL.");
+                    "PKeyAuth challenge rejected: SubmitUrl is not an absolute HTTPS URL. enforced=" + enforced);
             Logger.warnPII(methodTag,
                     "PKeyAuth SubmitUrl rejected (not absolute HTTPS). scheme="
                             + (submitUri == null ? "<unparseable>" : submitUri.getProtocol())
                             + " host="
                             + (submitUri == null || submitUri.getHost() == null ? "<none>" : submitUri.getHost()));
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth SubmitUrl must be an absolute HTTPS URL.");
+            return new OriginValidation(OriginValidationResult.REJECTED_SUBMIT_NOT_HTTPS, submitUri, null);
         }
 
         final URL originUri = parseAbsoluteUri(challengingUrl);
@@ -302,28 +384,63 @@ public class PKeyAuthChallengeFactory {
             // Fail closed: without a resolvable HTTPS challenging origin we cannot prove same-origin.
             // A cleartext http origin is rejected here so it can never authorize an https SubmitUrl.
             Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: the challenging origin could not be determined or is not HTTPS.");
+                    "PKeyAuth challenge rejected: the challenging origin could not be determined or is not HTTPS. "
+                            + "enforced=" + enforced);
             Logger.warnPII(methodTag,
                     "PKeyAuth challenge rejected: challenging origin unresolvable or not HTTPS. originScheme="
                             + (originUri == null ? "<unparseable>" : originUri.getProtocol())
                             + " submitHost=" + submitUri.getHost());
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth challenging origin is unavailable or not HTTPS; cannot validate SubmitUrl.");
+            return new OriginValidation(OriginValidationResult.REJECTED_ORIGIN_UNRESOLVABLE, submitUri, originUri);
         }
 
         final int submitPort = submitUri.getPort() == -1 ? submitUri.getDefaultPort() : submitUri.getPort();
         final int originPort = originUri.getPort() == -1 ? originUri.getDefaultPort() : originUri.getPort();
         if (!submitUri.getHost().equalsIgnoreCase(originUri.getHost()) || submitPort != originPort) {
             Logger.warn(methodTag,
-                    "PKeyAuth challenge rejected: SubmitUrl is not same-origin with the challenging endpoint.");
+                    "PKeyAuth challenge rejected: SubmitUrl is not same-origin with the challenging endpoint. "
+                            + "enforced=" + enforced);
             Logger.warnPII(methodTag,
                     "PKeyAuth SubmitUrl origin mismatch. challengingHost=" + originUri.getHost()
                             + " challengingPort=" + originPort
                             + " submitHost=" + submitUri.getHost()
                             + " submitPort=" + submitPort);
-            throw new ClientException(DEVICE_CERTIFICATE_REQUEST_INVALID,
-                    "PKeyAuth SubmitUrl is not same-origin (scheme/host/port) with the challenging endpoint.");
+            return new OriginValidation(OriginValidationResult.REJECTED_ORIGIN_MISMATCH, submitUri, originUri);
         }
+
+        return new OriginValidation(OriginValidationResult.ALLOWED, submitUri, originUri);
+    }
+
+    /**
+     * Emits the PKeyAuth {@code SubmitUrl} origin-validation verdict to the current span. All
+     * attributes are non-PII (an enum verdict, booleans): never a hostname, URL, nonce, or
+     * {@code Context}. Emitted on every evaluated challenge (including {@code ALLOWED}) so shadow-mode
+     * rejection rates can be measured. Uses {@link SpanExtension#current()}, which returns a no-op
+     * span outside an active trace, so setting attributes here is always safe. The cloud-membership
+     * booleans use {@link AzureActiveDirectory#isValidCloudHost(URL)} and are {@code false} when the
+     * corresponding URL could not be safely parsed.
+     *
+     * <p>The {@code aad_cloud_list_initialized} signal requested for triage is intentionally omitted:
+     * {@link AzureActiveDirectory} exposes no public API to report whether its cloud list has been
+     * populated, and this fix does not invent one.
+     */
+    private void emitOriginValidationTelemetry(@NonNull final OriginValidation validation,
+                                               final boolean enforced) {
+        final Span span = SpanExtension.current();
+        span.setAttribute(AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                validation.result.name());
+        span.setAttribute(AttributeName.pkeyauth_submit_url_origin_enforced.name(), enforced);
+        span.setAttribute(AttributeName.pkeyauth_submit_host_is_aad_cloud.name(),
+                isValidatedAadCloudHost(validation.submitUri));
+        span.setAttribute(AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(),
+                isValidatedAadCloudHost(validation.originUri));
+    }
+
+    /**
+     * @return {@code true} when {@code url} is non-null and its host is a validated AAD cloud host.
+     * Never throws and never logs the host.
+     */
+    private boolean isValidatedAadCloudHost(@Nullable final URL url) {
+        return url != null && AzureActiveDirectory.isValidCloudHost(url);
     }
 
     /**

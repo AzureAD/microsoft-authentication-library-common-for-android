@@ -337,17 +337,36 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false),
 
     /**
-     * Kill switch for same-origin validation of a PKeyAuth {@code SubmitUrl} parsed from an
-     * untrusted WebView redirect ({@code urn:http-auth:PKeyAuth?...}). When enabled (the default),
-     * the {@code SubmitUrl} must be an absolute HTTPS URL whose host matches the challenging
-     * endpoint's host before the device key signs or the response is submitted, closing the
-     * CWE-918 / SSRF hole (AB#3706623). Turn off via ECS to revert to the historical behavior
-     * (no scheme/origin enforcement) if a federation topology is found where the challenging
-     * origin cannot be derived correctly and legitimate device auth is rejected.
+     * Master switch for the CWE-918 / SSRF hardening of a PKeyAuth {@code SubmitUrl} parsed from an
+     * untrusted WebView redirect ({@code urn:http-auth:PKeyAuth?...}) (AB#3706623). When enabled
+     * (the default) the challenging origin is recorded and derived, the {@code SubmitUrl} is
+     * evaluated against it (absolute HTTPS, same scheme/host/port), and the verdict is emitted to
+     * telemetry. Whether a rejected verdict actually blocks the challenge is controlled separately by
+     * {@link #ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: with this flight on but enforcement off
+     * the code runs in <em>shadow mode</em> — it measures and reports, but the challenge still
+     * proceeds. Turn this flight off via ECS to make the whole feature a true end-to-end no-op (no
+     * recording, no origin derivation, no evaluation, no telemetry), reverting to the exact pre-fix
+     * behavior.
      * <p>
      * Default is true.
      */
-    ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true);
+    ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true),
+
+    /**
+     * Enforcement switch for PKeyAuth {@code SubmitUrl} same-origin validation (AB#3706623). Gated
+     * under {@link #ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: it takes effect only while the
+     * master switch is on. When this flight is enabled a non-{@code ALLOWED} verdict throws and the
+     * challenge is abandoned before the device key signs or the response is submitted. When it is
+     * disabled (the default) the same evaluation and telemetry run, but a rejected challenge is
+     * <em>not</em> blocked — shadow mode — so real-world origin pairs can be measured before
+     * enforcement is ramped. This staged rollout exists because a false reject fails the entire
+     * authorization request (the {@code handleUrl} catch turns a {@link
+     * com.microsoft.identity.common.java.exception.ClientException} into
+     * {@code returnError} + {@code stopLoading}), so eSTS/ADFS topologies must be observed first.
+     * <p>
+     * Default is false.
+     */
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
 
     private String key;
     private Object defaultValue;
