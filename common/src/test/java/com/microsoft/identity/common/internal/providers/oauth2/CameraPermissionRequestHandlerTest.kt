@@ -402,4 +402,24 @@ class CameraPermissionRequestHandlerTest {
 
         verifyError("error")
     }
+
+    @Test
+    fun cancel_inFlightRequest_endsSpanAsAbandoned() {
+        grantAppCameraPermission(false)
+        handler.handle(cameraRequest(), contextWithCamera())
+
+        handler.cancel()
+
+        verifyError("abandoned")
+    }
+
+    @Test
+    fun cancel_completedRequest_doesNotEndSpanAgain() {
+        grantAppCameraPermission(true)
+        handler.handle(cameraRequest(), contextWithCamera())
+
+        handler.cancel()
+
+        verify(exactly = 1) { span.end() }
+    }
 }

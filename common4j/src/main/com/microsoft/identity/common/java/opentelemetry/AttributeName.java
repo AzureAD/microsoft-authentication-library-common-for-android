@@ -136,7 +136,8 @@ public enum AttributeName {
     has_camera_hardware,
 
     /**
-     * Outcome of a WebView camera permission request ("granted" or "denied").
+     * Outcome of a WebView camera permission request: "granted" or "denied" (OK),
+     * "superseded", "error", or "abandoned" (ERROR).
      */
     camera_permission_result,
 

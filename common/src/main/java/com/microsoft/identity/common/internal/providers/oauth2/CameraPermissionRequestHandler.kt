@@ -70,13 +70,11 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
         /** Non-QR camera request; app does not hold CAMERA — the OS runtime permission prompt is shown. */
         private const val FLOW_DEFAULT_OS_PROMPT = "default_os_prompt"
 
-        // Values for the `camera_permission_result` telemetry attribute — the unexpected-failure outcomes.
-
-        /** A prior, still-pending request was overwritten by a new one before it completed. */
+        private const val RESULT_GRANTED = "granted"
+        private const val RESULT_DENIED = "denied"
         private const val RESULT_SUPERSEDED = "superseded"
-
-        /** An unexpected error occurred while dispatching the permission request. */
         private const val RESULT_ERROR = "error"
+        private const val RESULT_ABANDONED = "abandoned"
     }
 
     private val activityResultLauncher: ActivityResultLauncher<String> =
@@ -148,7 +146,7 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             it.grant(cameraResource)
             isGranted = true
         }
-        endSpan("granted")
+        endSpan(RESULT_GRANTED)
     }
 
     /**
@@ -159,7 +157,12 @@ class CameraPermissionRequestHandler(fragment: WebViewAuthorizationFragment) {
             it.deny()
             isGranted = false
         }
-        endSpan("denied")
+        endSpan(RESULT_DENIED)
+    }
+
+    /** Ends telemetry for an in-flight permission request. */
+    fun cancel() {
+        endSpanWithError(RESULT_ABANDONED)
     }
 
     /**
