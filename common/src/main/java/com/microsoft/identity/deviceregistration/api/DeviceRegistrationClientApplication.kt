@@ -307,7 +307,7 @@ class DeviceRegistrationClientApplication {
     }
 
     /**
-     * Gets the device token for a device registration record.
+     * Gets the device token, and the rest of the token response, for a device registration record.
      *
      * @param deviceRegistrationRecord record to get token for.
      * @param resources                resource requiring device token.
@@ -318,7 +318,7 @@ class DeviceRegistrationClientApplication {
      */
     @Throws(BaseException::class)
     @JvmOverloads
-    fun getDeviceToken(
+    fun getDeviceTokenResult(
         deviceRegistrationRecord: IDeviceRegistrationRecord,
         resources: String,
         correlationId: UUID,
@@ -326,7 +326,7 @@ class DeviceRegistrationClientApplication {
         redirectUri: String,
         scope: String? = null
     ): DeviceTokenResult {
-        val methodTag = "$TAG:getDeviceToken"
+        val methodTag = "$TAG:getDeviceTokenResult"
         Logger.info(methodTag, "GetDeviceToken (V1) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
             GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, redirectUri, scope)
@@ -337,7 +337,7 @@ class DeviceRegistrationClientApplication {
 
     /**
      * Gets the device token for a device registration record.
-     * @deprecated Use the overload that accepts clientId parameter.
+     * @deprecated Use getDeviceTokenResult, which takes the caller's clientId and redirectUri.
      *
      * @param deviceRegistrationRecord record to get token for.
      * @param resources                resource requiring device token.
@@ -345,7 +345,7 @@ class DeviceRegistrationClientApplication {
      * @param scope                    optional scope.
      */
     @Deprecated(
-        message = "Use the overload that accepts clientId parameter."
+        message = "Use getDeviceTokenResult, which takes the caller's clientId and redirectUri."
     )
     @Throws(BaseException::class)
     @JvmOverloads

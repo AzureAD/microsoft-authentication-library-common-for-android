@@ -253,7 +253,7 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     @Test
-    fun getDeviceToken_v1_returnsAllResultFields() {
+    fun getDeviceTokenResult_v1_returnsAllResultFields() {
         val expected = DeviceTokenResult.builder()
             .accessToken("device.token.jwt")
             .deviceInfo("device.info.jwt")
@@ -267,7 +267,7 @@ class DeviceRegistrationClientApplicationTest {
         val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
-        val result = drca.getDeviceToken(
+        val result = drca.getDeviceTokenResult(
             DeviceRegistrationRecord("tenant", "upn", "device", false, false),
             "https://resource.example.com",
             UUID.randomUUID(),
@@ -286,12 +286,12 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     @Test
-    fun getDeviceToken_v1_optionalFieldsAbsent_returnsNulls() {
+    fun getDeviceTokenResult_v1_optionalFieldsAbsent_returnsNulls() {
         val expected = DeviceTokenResult.builder().accessToken("device.token.jwt").build()
         val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
-        val result = drca.getDeviceToken(
+        val result = drca.getDeviceTokenResult(
             DeviceRegistrationRecord("tenant", "upn", "device", false, false),
             "https://resource.example.com",
             UUID.randomUUID(),
@@ -306,12 +306,12 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     @Test
-    fun getDeviceToken_v1_withScope_returnsDeviceToken() {
+    fun getDeviceTokenResult_v1_withScope_returnsDeviceToken() {
         val expected = DeviceTokenResult.builder().accessToken("device.token.jwt.scoped").build()
         val response = GetDeviceTokenV1Response(UUID.randomUUID(), expected)
         val drca = createDrca(successStrategy(packer.pack(response)))
 
-        val result = drca.getDeviceToken(
+        val result = drca.getDeviceTokenResult(
             DeviceRegistrationRecord("tenant", "upn", "device", false, false),
             "https://resource.example.com",
             UUID.randomUUID(),
@@ -324,7 +324,7 @@ class DeviceRegistrationClientApplicationTest {
     }
 
     @Test
-    fun getDeviceToken_v1_passesClientIdToIpc() {
+    fun getDeviceTokenResult_v1_passesClientIdToIpc() {
         val correlationId = UUID.randomUUID()
         val response = GetDeviceTokenV1Response(
             UUID.randomUUID(),
@@ -334,6 +334,7 @@ class DeviceRegistrationClientApplicationTest {
         whenever(strategy.getType()).thenReturn(IIpcStrategy.Type.CONTENT_PROVIDER)
         whenever(strategy.communicateToBroker(any())).thenAnswer { invocation ->
             val bundle = (invocation.arguments[0] as BrokerOperationBundle).bundle
+            Assert.assertEquals("protocol.get.device.token.v1", bundle?.getString("protocol.name"))
             val protocolData = bundle?.getByteArray("protocol.data")
             Assert.assertNotNull(protocolData)
             val parameters = GetDeviceTokenV1Parameters.create(protocolData)
@@ -347,7 +348,7 @@ class DeviceRegistrationClientApplicationTest {
         }
 
         val drca = createDrca(strategy)
-        drca.getDeviceToken(
+        drca.getDeviceTokenResult(
             DeviceRegistrationRecord("tenant", "upn", "device", false, false),
             "https://resource.example.com",
             correlationId,

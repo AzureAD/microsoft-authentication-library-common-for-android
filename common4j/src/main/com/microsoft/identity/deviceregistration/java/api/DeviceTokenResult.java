@@ -31,6 +31,8 @@ import lombok.experimental.Accessors;
 /**
  * Result of a device token request, carrying the full token response returned by the
  * token endpoint.
+ *
+ * <p>Do not add {@code @ToString}/{@code @Data}: it would place the access token in logs.</p>
  */
 @Builder
 @Getter
