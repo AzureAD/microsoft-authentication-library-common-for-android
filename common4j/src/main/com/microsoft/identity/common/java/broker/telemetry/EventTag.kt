@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.broker.telemetry
 /**
  * Enum of event tags representing phases of the broker authentication flow.
  * Serialized as human-readable enum names (e.g., "BrokerCacheHit") on the IPC wire format.
- * Compact JSON keys on [ExecutionEvent] fields (t, ts, tid, d, e) minimize payload size.
+ * Compact JSON keys on [ExecutionEvent] fields (t, ts, tid, s, e) minimize payload size.
  */
 enum class EventTag {
     // BrokerEntry (5)
