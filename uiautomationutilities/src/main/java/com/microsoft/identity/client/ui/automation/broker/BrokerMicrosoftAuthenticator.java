@@ -48,6 +48,7 @@ import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
@@ -397,11 +398,53 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
             // Continue button
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("Continue");
+            // Non-skippable battery optimization page, between privacy and FRX sign-in
+            handleBatteryOptimizationFrePage();
             // the skip button
             UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
             // This is required for auth app as it has increased the compile sdk version to 34
             UiAutomatorUtils.handleButtonClickForObjectWithTextSafely("NOT NOW", FIND_UI_ELEMENT_TIMEOUT_SHORT);
             shouldHandleFirstRun = false;
+        }
+    }
+
+    /**
+     * Handle Authenticator's non-skippable "Turn off battery optimization" page, which sits
+     * between the privacy screens and the FRX sign-in screen.
+     *
+     * Best-effort: the page only renders when the OS reports Authenticator as subject to battery
+     * optimization, so an already-exempt device, the kill-switch flight being off, or an older
+     * Authenticator build all mean we continue straight to FRX.
+     *
+     * When it does render, tapping the button fires
+     * {@link android.provider.Settings#ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS}, so the OS
+     * dialog has to be dismissed as well before the app advances.
+     */
+    private void handleBatteryOptimizationFrePage() {
+        // The page is Compose, so its id is published via testTagsAsResourceId and is the bare
+        // tag rather than the "package:id/name" form the XML FRE screens use.
+        final UiObject turnOffButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "fre_battery_opt_button",
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+
+        if (!turnOffButton.exists()) {
+            Logger.i(TAG, "Battery optimization FRE page not shown; continuing to FRX.");
+            return;
+        }
+
+        Logger.i(TAG, "Battery optimization FRE page shown. Tapping the action button..");
+        try {
+            turnOffButton.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError("Failed to click 'Turn off battery optimization'.", e);
+        }
+
+        // Reuse the existing handler rather than duplicating its dialog-identity checks.
+        try {
+            new AadLoginComponentHandler().handleBatteryOptimizationIgnoreSystemPrompt();
+        } catch (final AssertionError e) {
+            Logger.w(TAG, "Battery-optimization system prompt did not appear; continuing to FRX.", e);
         }
     }
 
