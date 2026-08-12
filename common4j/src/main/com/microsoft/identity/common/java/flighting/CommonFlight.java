@@ -32,12 +32,9 @@ import lombok.NonNull;
 /**
  * List of Active Common flights.
  * <p>
- * These are only meaningful in the <strong>broker</strong> process. {@link CommonFlightsManager} is
- * initialized from the broker alone, so in an MSAL or OneAuth app process every flight here resolves
- * to the compile-time default below and no ECS entry can change it. Gating app-process code on a
- * flight therefore pins it to that default - see #3193/#3212, where a feature shipped behind a gate
- * that could never be turned on. Code that runs in the app process should take the decision as an
- * input from the host SDK instead.
+ * {@link CommonFlightsManager} is initialized by the broker only, so in an MSAL or OneAuth app
+ * process these resolve to the compile-time defaults below and no ECS entry can change them. Code
+ * running in the app process should take the decision from the host SDK instead.
  */
 public enum CommonFlight implements IFlightConfig {
     /**
