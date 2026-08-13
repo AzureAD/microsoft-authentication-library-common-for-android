@@ -133,15 +133,14 @@ class TemporaryEmailService internal constructor(
     }
 
     private fun messageTime(message: MailTmMessage): Long {
-        val value = message.updatedAt ?: message.createdAt
-        return parseTimestamp(value) ?: Long.MIN_VALUE
+        return parseTimestamp(message.createdAt) ?: Long.MIN_VALUE
     }
 
     private fun isAfterCheckpoint(message: MailTmMessage, state: InboxState): Boolean {
         if (message.id in state.consumedMessageIds) {
             return false
         }
-        val timestamp = message.updatedAt ?: message.createdAt
+        val timestamp = message.createdAt
         val time = messageTime(message)
         return if (timestamp.contains('.')) {
             time > state.checkpointMillis

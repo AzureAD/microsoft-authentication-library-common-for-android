@@ -85,10 +85,22 @@ class TemporaryEmailServiceTest {
     fun retrieveCodeFromInbox_checkpointIgnoresStaleMessages() {
         val transport = FakeMailTmTransport(
             """{"token":"mail-tm-token"}""",
-            messages(
-                "stale-message" to "2026-08-12T19:59:59.000Z",
-                "fresh-message" to "2026-08-12T20:00:01.000Z"
-            ),
+            """
+                {
+                    "hydra:member": [
+                        {
+                            "id":"stale-message",
+                            "createdAt":"2026-08-12T19:59:59.000Z",
+                            "updatedAt":"2026-08-12T20:00:03.000Z"
+                        },
+                        {
+                            "id":"fresh-message",
+                            "createdAt":"2026-08-12T20:00:01.000Z",
+                            "updatedAt":"2026-08-12T20:00:01.000Z"
+                        }
+                    ]
+                }
+            """.trimIndent(),
             source("Account verification code: 654321")
         )
         val service = createService(
