@@ -262,15 +262,17 @@ internal class MailTmApi(
     fun getMessages(token: String): List<MailTmMessage> {
         val type = TypeToken.getParameterized(
             MailTmCollection::class.java,
-            MailTmMessage::class.java
+            MailTmMessageResponse::class.java
         ).type
-        val response = parse<MailTmCollection<MailTmMessage>>(
+        val response = parse<MailTmCollection<MailTmMessageResponse>>(
             transport.execute(MailTmRequest("/messages", GET, headers(token = token))),
             type,
             "/messages"
         )
-        return response.members.orEmpty().filter {
-            it.id.isNotBlank() && it.createdAt.isNotBlank()
+        return response.members.orEmpty().mapNotNull { message ->
+            val id = message.id?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+            val createdAt = message.createdAt?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+            MailTmMessage(id, createdAt, message.updatedAt)
         }
     }
 
@@ -370,6 +372,12 @@ private data class MailTmCredentials(
 )
 
 private data class MailTmToken(val token: String?)
+
+private data class MailTmMessageResponse(
+    val id: String?,
+    val createdAt: String?,
+    val updatedAt: String?
+)
 
 internal data class MailTmMessage(
     val id: String,

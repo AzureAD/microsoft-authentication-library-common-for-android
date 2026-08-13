@@ -143,6 +143,26 @@ class TemporaryEmailServiceTest {
     }
 
     @Test
+    fun retrieveCodeFromInbox_ignoresMalformedMessageEntries() {
+        val transport = FakeMailTmTransport(
+            """{"token":"mail-tm-token"}""",
+            """
+                {
+                    "hydra:member": [
+                        {"createdAt":"2026-08-12T20:00:01.000Z"},
+                        {"id":"missing-created-at"},
+                        {"id":"message-1","createdAt":"2026-08-12T20:00:00.000Z"}
+                    ]
+                }
+            """.trimIndent(),
+            source("Account verification code: 333333")
+        )
+
+        assertEquals("333333", createService(transport).retrieveCodeFromInbox(ADDRESS))
+        assertTrue(transport.requests.any { it.endpoint == "/sources/message-1" })
+    }
+
+    @Test
     fun retrieveCodeFromInbox_extractsStandaloneOtp() {
         val transport = FakeMailTmTransport(
             """{"token":"mail-tm-token"}""",
