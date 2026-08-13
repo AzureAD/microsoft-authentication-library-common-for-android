@@ -41,6 +41,7 @@ import com.microsoft.identity.deviceregistration.AndroidDeviceRegistrationClient
 import com.microsoft.identity.deviceregistration.DeviceRegistrationIpcStrategiesProvider
 import com.microsoft.identity.deviceregistration.java.DeviceState
 import com.microsoft.identity.deviceregistration.java.DrsDiscoveryEndpoint
+import com.microsoft.identity.deviceregistration.java.api.DeviceTokenResult
 import com.microsoft.identity.deviceregistration.java.api.IDeviceRegistrationRecord
 import com.microsoft.identity.deviceregistration.java.exception.DeviceRegistrationException
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.DeviceRegistrationPreAuthorizedV0Parameters
@@ -48,6 +49,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.parameters.Device
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceRegistrationRecordsV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV0Parameters
+import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetDeviceTokenV1Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetInstallWpjCertificateIntentRequestV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.GetRegistrationStateV0Parameters
 import com.microsoft.identity.deviceregistration.java.protocol.parameters.InstallCertificateSilentlyV0Parameters
@@ -59,6 +61,7 @@ import com.microsoft.identity.deviceregistration.java.protocol.response.DeviceRe
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceRegistrationRecordsV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response
+import com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV1Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetInstallWpjCertificateIntentRequestV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.GetRegistrationStateV0Response
 import com.microsoft.identity.deviceregistration.java.protocol.response.InstallCertificateSilentlyV0Response
@@ -304,13 +307,46 @@ class DeviceRegistrationClientApplication {
     }
 
     /**
+     * Gets the device token, and the rest of the token response, for a device registration record.
+     *
+     * @param deviceRegistrationRecord record to get token for.
+     * @param resources                resource requiring device token.
+     * @param correlationId            correlation ID for request tracing.
+     * @param clientId                 client ID of the calling application.
+     * @param redirectUri              redirect URI of the calling application.
+     * @param scope                    optional scope.
+     */
+    @Throws(BaseException::class)
+    @JvmOverloads
+    fun getDeviceTokenResult(
+        deviceRegistrationRecord: IDeviceRegistrationRecord,
+        resources: String,
+        correlationId: UUID,
+        clientId: String,
+        redirectUri: String,
+        scope: String? = null
+    ): DeviceTokenResult {
+        val methodTag = "$TAG:getDeviceTokenResult"
+        Logger.info(methodTag, "GetDeviceToken (V1) started. CorrelationId: $correlationId")
+        val responseSerialized = mController.execute(
+            GetDeviceTokenV1Parameters(correlationId, deviceRegistrationRecord, resources, clientId, redirectUri, scope)
+        )
+        Logger.info(methodTag, "Get device token ended successfully.")
+        return GetDeviceTokenV1Response.create(responseSerialized).deviceTokenResult
+    }
+
+    /**
      * Gets the device token for a device registration record.
+     * @deprecated Use getDeviceTokenResult, which takes the caller's clientId and redirectUri.
      *
      * @param deviceRegistrationRecord record to get token for.
      * @param resources                resource requiring device token.
      * @param correlationId            correlation ID for request tracing.
      * @param scope                    optional scope.
      */
+    @Deprecated(
+        message = "Use getDeviceTokenResult, which takes the caller's clientId and redirectUri."
+    )
     @Throws(BaseException::class)
     @JvmOverloads
     fun getDeviceToken(
@@ -320,7 +356,7 @@ class DeviceRegistrationClientApplication {
         scope: String? = null
     ): String {
         val methodTag = "$TAG:getDeviceToken"
-        Logger.info(methodTag, "GetDeviceToken started. CorrelationId: $correlationId")
+        Logger.info(methodTag, "GetDeviceToken (V0, deprecated) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
             GetDeviceTokenV0Parameters(correlationId, deviceRegistrationRecord, resources, scope)
         )
