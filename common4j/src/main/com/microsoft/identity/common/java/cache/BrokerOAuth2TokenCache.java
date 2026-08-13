@@ -355,8 +355,7 @@ public class BrokerOAuth2TokenCache
             // Chokepoint #2 nulls the target for an unauthorized FoCI caller (AB#3687466).
             // Only caller is saveAndLoadAggregatedAccountData post-save; return the just-saved
             // record as a singleton so BrokerLocalController.acquireTokenSilent's .get(0)
-            // resolves without NPE while cross-app FoCI aggregation stays blocked. Mirrors
-            // the sparse-singleton contract on the optimized (flighted) sibling path.
+            // resolves without NPE while cross-app FoCI aggregation stays blocked.
             if (!mCallerAuthorizedForFoci) {
                 return Collections.singletonList(cacheRecord);
             }
