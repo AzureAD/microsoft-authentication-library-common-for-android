@@ -39,6 +39,13 @@ import java.util.TimeZone
 class TemporaryEmailServiceTest {
 
     @Test
+    fun constructor_withoutPassword_remainsSourceCompatible() {
+        val service = TemporaryEmailService()
+
+        assertTrue(service.generateRandomUnregisteredEmailAddress().endsWith("@mail.tm"))
+    }
+
+    @Test
     fun okHttpTransport_forcesHttp11ForMailTmCompatibility() {
         val apiClient = ApiClient("https://api.mail.tm")
 

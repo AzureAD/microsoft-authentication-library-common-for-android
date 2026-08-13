@@ -26,6 +26,7 @@ package com.microsoft.identity.internal.testutils.nativeauth.api
 import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.internal.test.labapi.ApiClient
 import com.microsoft.identity.internal.test.labapi.ApiException
@@ -57,6 +58,8 @@ class TemporaryEmailService internal constructor(
         sleeper = { Thread.sleep(it) },
         pollingDelaysMs = DEFAULT_POLLING_DELAYS_MS
     )
+
+    constructor() : this(BuildValues.getEmailProviderPassword())
 
     private val inboxes = mutableMapOf<String, InboxState>()
 
