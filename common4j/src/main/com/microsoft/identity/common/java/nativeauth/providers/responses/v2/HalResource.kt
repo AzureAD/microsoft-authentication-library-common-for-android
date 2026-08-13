@@ -62,7 +62,9 @@ internal class HalResource private constructor(
      */
     fun int(key: String): Int? = when (val value = properties[key]) {
         is Int -> value
-        is Number -> value.toInt()
+        is Number -> runCatching {
+            java.math.BigDecimal(value.toString()).intValueExact()
+        }.getOrNull()
         else -> null
     }
 
