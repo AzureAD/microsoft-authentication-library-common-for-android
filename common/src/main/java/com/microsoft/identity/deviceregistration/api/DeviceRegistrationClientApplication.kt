@@ -337,16 +337,12 @@ class DeviceRegistrationClientApplication {
 
     /**
      * Gets the device token for a device registration record.
-     * @deprecated Use getDeviceTokenResult, which takes the caller's clientId and redirectUri.
      *
      * @param deviceRegistrationRecord record to get token for.
      * @param resources                resource requiring device token.
      * @param correlationId            correlation ID for request tracing.
      * @param scope                    optional scope.
      */
-    @Deprecated(
-        message = "Use getDeviceTokenResult, which takes the caller's clientId and redirectUri."
-    )
     @Throws(BaseException::class)
     @JvmOverloads
     fun getDeviceToken(
@@ -356,7 +352,7 @@ class DeviceRegistrationClientApplication {
         scope: String? = null
     ): String {
         val methodTag = "$TAG:getDeviceToken"
-        Logger.info(methodTag, "GetDeviceToken (V0, deprecated) started. CorrelationId: $correlationId")
+        Logger.info(methodTag, "GetDeviceToken (V0) started. CorrelationId: $correlationId")
         val responseSerialized = mController.execute(
             GetDeviceTokenV0Parameters(correlationId, deviceRegistrationRecord, resources, scope)
         )
