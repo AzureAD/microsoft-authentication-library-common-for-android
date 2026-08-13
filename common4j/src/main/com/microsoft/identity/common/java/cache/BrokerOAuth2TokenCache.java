@@ -118,30 +118,14 @@ public class BrokerOAuth2TokenCache
      * ({@link #getTokenCachesForClientId(String)} and
      * {@link #getTokenCacheForClient(BrokerApplicationMetadata)}) plus explicit gates at
      * each loader / device-wide enumeration call site ({@link #load},
-     * {@link #loadWithAggregatedAccountData}, {@link #saveAndLoadAggregatedAccountDataOptimized},
-     * {@link #loadAggregatedAccountData}, {@link #getAccounts()}, {@link #getFociCacheRecords()}).
+     * {@link #loadWithAggregatedAccountData}, {@link #loadAggregatedAccountData},
+     * {@link #getAccounts()}, {@link #getFociCacheRecords()}).
      * Must be supplied explicitly by every production constructor — there is deliberately no
      * convenience overload that omits it, so a missed wiring fails at compile time rather than
      * silently reverting to pre-fix behavior. See AB#3687466.
      */
     private final boolean mCallerAuthorizedForFoci;
     private ProcessUidCacheFactory mDelegate = null;
-
-    /**
-     * Static map of locks for ensuring atomicity of compound save/update/load operations.
-     * Since each thread creates a new BrokerOAuth2TokenCache instance, we need locks
-     * shared across all instances to prevent race conditions when multiple instances
-     * access the same underlying storage (FOCI cache or UID-specific cache).
-     * <p>
-     * Keys are cache identifiers:
-     * <ul>
-     *   <li>"FOCI" - for Family of Client IDs cache (shared by all FOCI apps)</li>
-     *   <li>"UID_<uid>" - for process UID-specific caches (one per UID)</li>
-     * </ul>
-     * This ensures that operations on the same logical cache are serialized, even
-     * when invoked through different BrokerOAuth2TokenCache instances.
-     */
-    private static final ConcurrentHashMap<String, Object> CACHE_OPERATION_LOCKS = new ConcurrentHashMap<>();
 
     /**
      * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
@@ -167,9 +151,8 @@ public class BrokerOAuth2TokenCache
      * {@link #getTokenCachesForClientId(String)}) and the env!=null resolution path
      * (chokepoint #2 in {@link #getTokenCacheForClient(BrokerApplicationMetadata)}), plus the
      * device-wide enumeration ({@link #getFociCacheRecords()}) and the loader-fallback
-     * carve-outs at {@link #load}, {@link #loadWithAggregatedAccountData},
-     * {@link #loadAggregatedAccountData}, and
-     * {@link #saveAndLoadAggregatedAccountDataOptimized}. AB#3687466.
+     * carve-outs at {@link #load}, {@link #loadWithAggregatedAccountData}, and
+     * {@link #loadAggregatedAccountData}. AB#3687466.
      *
      * @param components               The current platform components.
      * @param uid                      UID of the current unix user.
@@ -327,21 +310,8 @@ public class BrokerOAuth2TokenCache
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
             final boolean shouldSkipAccountAggregation) throws ClientException {
-        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
         SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
                 shouldSkipAccountAggregation);
-
-        if (isFlightEnabled) {
-            return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord,
-                    familyId,
-                    authScheme,
-                    shouldSkipAccountAggregation);
-        }
 
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
@@ -484,12 +454,11 @@ public class BrokerOAuth2TokenCache
 
             final List<ICacheRecord> result;
             if (isFoci && !mCallerAuthorizedForFoci) {
-                // AB#3687466: mirror the gate in saveAndLoadAggregatedAccountDataOptimized.
-                // targetCache is selected off the server-supplied familyId without going
-                // through either FoCI chokepoint, and the delegated call performs a
-                // cross-tenant merge over the shared mFociCache. For an unauthorized
-                // caller that could surface other apps' FoCI records for the same
-                // home account, so save without the merge and return only the
+                // AB#3687466: targetCache is selected off the server-supplied familyId
+                // without going through either FoCI chokepoint, and the delegated call
+                // performs a cross-tenant merge over the shared mFociCache. For an
+                // unauthorized caller that could surface other apps' FoCI records for
+                // the same home account, so save without the merge and return only the
                 // newly-saved record.
                 Logger.info(
                         TAG + methodName,
@@ -1889,10 +1858,9 @@ public class BrokerOAuth2TokenCache
      * <b>Caller contract:</b> a {@code null} return means "no cache available for
      * this caller" — <b>not</b> "fall back to shared FoCI". Readers and writers
      * on the env!=null path already treat {@code null} as empty / no-op and are
-     * safe. Loaders ({@code load}, {@code loadWithAggregatedAccountData},
-     * {@code saveAndLoadAggregatedAccountDataOptimized}) previously interpreted
-     * {@code null} as a FoCI fallback trigger and now carry their own explicit
-     * {@link #mCallerAuthorizedForFoci} gates.
+     * safe. Loaders ({@code load}, {@code loadWithAggregatedAccountData}) previously
+     * interpreted {@code null} as a FoCI fallback trigger and now carry their own
+     * explicit {@link #mCallerAuthorizedForFoci} gates.
      */
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@Nullable final BrokerApplicationMetadata metadata) {
@@ -1961,129 +1929,4 @@ public class BrokerOAuth2TokenCache
         return getTokenCacheForClient(metadata);
     }
 
-    /**
-     * Synchronized version of save and load aggregated account data that resolves the target cache
-     * only once, improving performance by avoiding redundant cache lookups.
-     * <p>
-     * This method saves the provided account and credential records to the appropriate cache
-     * (FOCI or process UID cache based on familyId), then loads and returns aggregated account
-     * data including any guest tenant credentials.
-     * <p>
-     * <b>Optimization:</b> Unlike the original implementation which called
-     * {@code getTokenCacheForClient} twice (once during save, once during load), this method
-     * determines the target cache once and reuses it for both operations, reducing overhead.
-     * <p>
-     * This method is synchronized to ensure thread safety for save and load operations.
-     * <p>
-     * The caller should inspect the result carefully. See {@link #loadWithAggregatedAccountData}
-     * for details on interpreting the returned ICacheRecord list.
-     *
-     * @param accountRecord        The AccountRecord to save. Must not be null.
-     * @param idTokenRecord        The IdTokenRecord to save. Must not be null.
-     * @param accessTokenRecord    The AccessTokenRecord to save. Must not be null.
-     * @param refreshTokenRecord   The RefreshTokenRecord to save. May be null.
-     * @param familyId             The family ID for FOCI apps. If non-null and non-empty, saves to
-     *                             FOCI cache; otherwise saves to process UID cache.
-     * @param authScheme           The authentication scheme to use when loading credentials.
-     *                             Must not be null.
-     * @return A List of ICacheRecords containing the saved account and all associated credentials
-     *         across tenants (home + guest). May include multiple records if guest tenant tokens exist.
-     * @throws ClientException If an error occurs during save or load operations.
-     */
-    private List<ICacheRecord> saveAndLoadAggregatedAccountDataOptimized(
-            final @NonNull AccountRecord accountRecord,
-            final @NonNull IdTokenRecord idTokenRecord,
-            final @NonNull AccessTokenRecord accessTokenRecord,
-            final @Nullable RefreshTokenRecord refreshTokenRecord,
-            final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme,
-            final boolean shouldSkipAccountAggregation
-    ) throws ClientException{
-        final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
-                "refreshTokenRecord, familyId, authScheme)";
-
-        final ICacheRecord cacheRecord;
-        final long saveAndLoadStartTime = System.currentTimeMillis();
-
-        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
-        // Determine lock key based on which cache we're operating on
-        final String lockKey = isFoci ? "FOCI" : "UID_" + mUid;
-        final Object lock = CACHE_OPERATION_LOCKS.computeIfAbsent(lockKey, k -> new Object());
-
-        synchronized (lock) {
-            final MsalOAuth2TokenCache targetCache;
-
-            if (isFoci) {
-                // Save to the foci cache....
-                targetCache = mFociCache;
-                Logger.info(TAG + methodName, "Saving data to FOCI cache");
-            } else {
-                // Save to the processUid cache... or create a new one
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
-                Logger.info(TAG + methodName, "Saving data to Process Uid cache");
-            }
-
-            cacheRecord = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord
-            );
-            Logger.info(TAG + methodName, "Account data saved to cache");
-
-            AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
-            if (cachedAccessTokenRecord == null) {
-                throw new ClientException("Access token is null in cache record");
-            }
-            final String clientId = cachedAccessTokenRecord.getClientId();
-            final String environment = cachedAccessTokenRecord.getEnvironment();
-            final String target = cachedAccessTokenRecord.getTarget();
-            final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
-            final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
-
-            if (clientId == null) {
-                throw new ClientException("Access token in cache record has null clientId");
-            }
-            if (environment == null) {
-                throw new ClientException("Access token in cache record has null environment");
-            }
-            updateApplicationMetadataCache(
-                    clientId,
-                    environment,
-                    familyId,
-                    mUid
-            );
-
-            if(!shouldSkipAccountAggregation) {
-                if (isFoci && !mCallerAuthorizedForFoci) {
-                    // AB#3687466: this path selects targetCache from the server-supplied
-                    // familyId without going through either FoCI chokepoint. Skip the
-                    // shared-cache aggregation for unauthorized callers and return only
-                    // the newly-saved record.
-                    Logger.info(TAG + methodName,
-                            "Unauthorized FoCI caller; skipping shared FoCI aggregation.");
-                    return Collections.singletonList(cacheRecord);
-                }
-                Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-                List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
-                        clientId,
-                        applicationIdentifier,
-                        mamEnrollmentIdentifier,
-                        target,
-                        cacheRecord.getAccount(),
-                        authScheme
-                );
-                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
-                        saveAndLoadStartTime);
-                return cacheRecordList;
-            } else {
-                // return a list with only the cacheRecord associated with the request
-                Logger.info(TAG, methodName, "Skipping account aggregation.");
-                return Collections.singletonList(cacheRecord);
-            }
-        }
-    }
 }
