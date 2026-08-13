@@ -25,6 +25,7 @@ package com.microsoft.identity.internal.testutils.nativeauth.api
 
 import com.microsoft.identity.internal.test.labapi.ApiClient
 import com.microsoft.identity.internal.test.labapi.ApiException
+import com.squareup.okhttp.Protocol
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -36,6 +37,15 @@ import java.util.Locale
 import java.util.TimeZone
 
 class TemporaryEmailServiceTest {
+
+    @Test
+    fun okHttpTransport_forcesHttp11ForMailTmCompatibility() {
+        val apiClient = ApiClient("https://api.mail.tm")
+
+        createOkHttpTransport(apiClient)
+
+        assertEquals(listOf(Protocol.HTTP_1_1), apiClient.getHttpClient().protocols)
+    }
 
     @Test
     fun retrieveCodeFromInbox_requestsHydraJsonLdAndPostsJsonCredentials() {
@@ -233,11 +243,15 @@ class TemporaryEmailServiceTest {
     )
 
     private fun createOkHttpTransport(baseUrl: String): MailTmTransport {
+        return createOkHttpTransport(ApiClient(baseUrl))
+    }
+
+    private fun createOkHttpTransport(apiClient: ApiClient): MailTmTransport {
         val constructor = Class.forName(
             "com.microsoft.identity.internal.testutils.nativeauth.api.OkHttpMailTmTransport"
         ).getDeclaredConstructor(ApiClient::class.java)
         constructor.isAccessible = true
-        return constructor.newInstance(ApiClient(baseUrl)) as MailTmTransport
+        return constructor.newInstance(apiClient) as MailTmTransport
     }
 
     private fun messages(vararg messages: Pair<String, String>): String {

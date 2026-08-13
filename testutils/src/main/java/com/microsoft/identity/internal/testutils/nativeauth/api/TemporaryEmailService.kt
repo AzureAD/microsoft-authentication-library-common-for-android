@@ -31,6 +31,7 @@ import com.microsoft.identity.internal.test.labapi.ApiClient
 import com.microsoft.identity.internal.test.labapi.ApiException
 import com.microsoft.identity.internal.test.labapi.JSON
 import com.microsoft.identity.internal.test.labapi.Pair
+import com.squareup.okhttp.Protocol
 import com.squareup.okhttp.Request
 import com.squareup.okhttp.ResponseBody
 import java.io.IOException
@@ -311,6 +312,10 @@ internal class MailTmApi(
 private class OkHttpMailTmTransport(
     private val apiClient: ApiClient = ApiClient(ApiConstants.TemporaryMailService.BASE_URL)
 ) : MailTmTransport {
+    init {
+        apiClient.getHttpClient().protocols = listOf(Protocol.HTTP_1_1)
+    }
+
     override fun execute(request: MailTmRequest): String {
         var responseBody: ResponseBody? = null
         return try {
