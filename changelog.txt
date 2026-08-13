@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation.
+- [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation (#3218)
 - [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
 - [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)
 - [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId and redirectUri, exposed as DeviceRegistrationClientApplication.getDeviceTokenResult returning the full token response (access token, device info, token type, resource, expiry fields). Deprecate getDeviceToken in favour of it (#3147)
