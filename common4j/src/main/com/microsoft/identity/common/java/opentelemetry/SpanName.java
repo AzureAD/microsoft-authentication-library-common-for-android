@@ -114,6 +114,10 @@ public enum SpanName {
      */
     WebViewFileUpload,
     /**
+     * Span name for a WebView camera permission request (e.g. QR + PIN scanning).
+     */
+    CameraPermissionRequest,
+    /**
      * Span name for switching browser flow operations.
      */
     SwitchBrowserFlow,
