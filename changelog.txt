@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Native Auth password-reset SSPR V2 protocol, continuation, command, controller, result, and telemetry support across Common and Common4J (#3207)
 - [PATCH] Security: reject silent broker token requests whose request-bundle caller package is not owned by the kernel-attested calling uid (Binder.getCallingUid()), via the caller-validating IPlatformUtil.isValidCallingApp(redirectUri, packageName, callingUid) overload (AndroidPlatformUtil) invoked from BrokerSilentTokenCommandParameters.validate() (unknown_caller). Gated by the VALIDATE_SILENT_CALLER CommonFlight (default on) as a secure-by-default kill-switch; validates the broker-attested callerUid (AB#3687466) (#3198)
 - [MINOR] Deprecate IPlatformUtil.isValidCallingApp(String, String) in favor of the caller-validating isValidCallingApp(String, String, int) overload for the silent broker path; the two-argument overload is retained for the interactive path and flows without an OS-attested per-app caller uid (AB#3687466) (#3198)
 - [PATCH] Fix a lock-ordering deadlock in AndroidKeyStoreUtil by removing the redundant `synchronized` from applyKeyStoreLocaleWorkarounds() (#3208)
