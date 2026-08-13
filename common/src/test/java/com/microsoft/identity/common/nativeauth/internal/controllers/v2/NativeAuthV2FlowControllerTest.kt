@@ -325,6 +325,64 @@ class NativeAuthV2FlowControllerTest {
         assertEquals(readyState, result.continuationState)
     }
 
+    @Test
+    fun testSubmitNewPasswordReturnsAPIErrorWhenPollingIsInterrupted() {
+        val inputState = mockContinuationState()
+        val pollState = mockContinuationState()
+        val parameters = submitNewPasswordParameters(inputState)
+        controller = NativeAuthV2FlowController(
+            sleeper = NativeAuthV2PollingSleeper { false }
+        )
+
+        every {
+            mockStrategy.performUpdatePassword(state = any(), newPassword = any())
+        } returns NativeAuthV2InteractionApiResult.PollInProgress(
+            correlationId = correlationId,
+            continuationState = pollState,
+            retryAfterMillis = 0L
+        )
+
+        val result = controller.submitNewPassword(parameters)
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals(correlationId, result.correlationId)
+        assertEquals("poll_interrupted", result.error)
+        verify(exactly = 0) { mockStrategy.performPoll(state = any()) }
+    }
+
+    @Test
+    fun testSubmitNewPasswordReturnsPasswordResetFailedAfterMaximumPollAttempts() {
+        val inputState = mockContinuationState()
+        val pollState = mockContinuationState()
+        val parameters = submitNewPasswordParameters(inputState)
+
+        every {
+            mockStrategy.performUpdatePassword(state = any(), newPassword = any())
+        } returns NativeAuthV2InteractionApiResult.PollInProgress(
+            correlationId = correlationId,
+            continuationState = pollState,
+            retryAfterMillis = 0L
+        )
+        every {
+            mockStrategy.performPoll(state = any())
+        } returns NativeAuthV2InteractionApiResult.PollInProgress(
+            correlationId = correlationId,
+            continuationState = pollState,
+            retryAfterMillis = 0L
+        )
+
+        val result = controller.submitNewPassword(parameters)
+
+        assertTrue(result is NativeAuthV2CommandResult.PasswordResetFailed)
+        result as NativeAuthV2CommandResult.PasswordResetFailed
+        assertEquals(correlationId, result.correlationId)
+        assertEquals("poll_timeout", result.error)
+        verify(exactly = NativeAuthV2FlowController.MAX_POLL_ATTEMPTS) {
+            mockStrategy.performPoll(state = any())
+        }
+    }
+
     // -----------------------------------------------------------------------------------------
     // signInAfterResetPassword — the new explicit token-exchange entry point
     // -----------------------------------------------------------------------------------------
