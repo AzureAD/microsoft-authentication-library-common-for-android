@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ConnectionError;
-import com.microsoft.identity.common.java.logging.ILoggerCallback;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.http.MockConnection;
 import com.microsoft.identity.http.ResponseBody;
@@ -57,8 +56,13 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLContext;
 
@@ -73,8 +77,9 @@ public final class UrlConnectionHttpClientTest {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
     private static final String CONTENT_TYPE_KEY = "Content-Type";
     private static final String CONTENT_TYPE_VALUE = "application/x-www-form-urlencoded";
-    private static final String TEST_LOGGER_IDENTIFIER = "UrlConnectionHttpClientTest";
-    private static final long LOGGER_TIMEOUT_MILLISECONDS = 1000L;
+    private static final String TAG_UNDER_TEST = UrlConnectionHttpClient.class.getSimpleName();
+    private static final String LOGGER_FENCE_TAG = "UrlConnectionHttpClientTest-fence";
+    private static final long LOGGER_TIMEOUT_SECONDS = 30L;
 
     // The UrlConnectionHttpClient.getDefaultInstance() comes with a retry logic.
     // For non-retry scenario, we need to create a separate client.
@@ -86,7 +91,6 @@ public final class UrlConnectionHttpClientTest {
     public void tearDown() {
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
         SSLSocketFactoryWrapper.setLastHandshakeTLSversion("");
-        Logger.setLogger(TEST_LOGGER_IDENTIFIER, null);
         Logger.setAllowPii(false);
         Logger.setLogLevel(Logger.LogLevel.VERBOSE);
     }
@@ -797,22 +801,22 @@ public final class UrlConnectionHttpClientTest {
                         HttpURLConnection.HTTP_BAD_REQUEST,
                         "response-stream-fallback-body"
                 );
-        final ILoggerCallback loggerCallback = mockWarnLogger();
 
         HttpUrlConnectionFactory.addMockedConnection(mockedFailureConnection);
 
-        try {
+        final List<String> loggedWarnings = captureLogsWhile(() -> {
             assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
             final HttpResponse response = sendWithMethodWithoutRetry(HttpTestMethod.GET);
             assertNotNull(response);
             assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.getStatusCode());
             assertEquals("response-stream-fallback-body", response.getBody());
-            assertWarnLogged(loggerCallback, "IOException while reading response stream: IOException");
-        } catch (final IOException e) {
-            fail();
-        }
+        });
 
         assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+        assertSingleCapturedWarning(
+                loggedWarnings,
+                "IOException while reading response stream: IOException"
+        );
 
         final InOrder inOrder = Mockito.inOrder(mockedFailureConnection);
         inOrder.verify(mockedFailureConnection).getInputStream();
@@ -827,27 +831,28 @@ public final class UrlConnectionHttpClientTest {
     public void testHttpGetWithUnparseableStatusLineReturnsResponseAndLogsWarning() throws Exception {
         final HttpURLConnection mockedConnection =
                 getMockedConnectionWithUnparseableStatusLine(ResponseBody.SUCCESS, HttpTestMethod.GET.name());
-        final ILoggerCallback loggerCallback = mockWarnLogger();
 
         HttpUrlConnectionFactory.addMockedConnection(mockedConnection);
 
-        try {
+        final List<String> loggedWarnings = captureLogsWhile(() -> {
             assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
             final HttpResponse response = sendWithMethodWithoutRetry(HttpTestMethod.GET);
             assertNotNull(response);
             assertEquals(-1, response.getStatusCode());
             assertEquals(ResponseBody.SUCCESS, response.getBody());
-            assertWarnLogged(loggerCallback, "Received an unparseable HTTP status line (statusCode=-1) for GET request.");
-        } catch (final IOException e) {
-            fail();
-        }
+        });
 
         assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+        assertSingleCapturedWarning(
+                loggedWarnings,
+                "Received an unparseable HTTP status line (statusCode=-1) for GET request."
+        );
 
         final InOrder inOrder = Mockito.inOrder(mockedConnection);
         inOrder.verify(mockedConnection).getInputStream();
         inOrder.verify(mockedConnection).getResponseCode();
         inOrder.verify(mockedConnection).getRequestMethod();
+        inOrder.verify(mockedConnection).getDate();
         inOrder.verify(mockedConnection).getHeaderFields();
         inOrder.verifyNoMoreInteractions();
     }
@@ -1182,20 +1187,56 @@ public final class UrlConnectionHttpClientTest {
         return mockedConnection;
     }
 
-    private ILoggerCallback mockWarnLogger() {
-        final ILoggerCallback loggerCallback = Mockito.mock(ILoggerCallback.class);
-        Logger.setLogLevel(Logger.LogLevel.WARN);
-        Logger.setLogger(TEST_LOGGER_IDENTIFIER, loggerCallback);
-        return loggerCallback;
+    private List<String> captureLogsWhile(final ThrowingRunnable block) throws Exception {
+        final List<String> captured = new CopyOnWriteArrayList<>();
+        final String identifier = "UrlConnectionHttpClientTest-" + System.nanoTime();
+        final Logger.LogLevel originalLogLevel = Logger.getLogLevel();
+        final AtomicReference<CountDownLatch> delivered = new AtomicReference<>(new CountDownLatch(1));
+
+        Logger.setLogLevel(Logger.LogLevel.INFO);
+        assertTrue(Logger.setLogger(identifier, (tag, level, message, containsPii) -> {
+            if (LOGGER_FENCE_TAG.equals(tag)) {
+                delivered.get().countDown();
+            } else if (TAG_UNDER_TEST.equals(tag)) {
+                captured.add(message);
+            }
+        }));
+
+        try {
+            awaitLoggerDrain(delivered.get());
+            captured.clear();
+
+            delivered.set(new CountDownLatch(1));
+            block.run();
+            awaitLoggerDrain(delivered.get());
+        } finally {
+            Logger.setLogger(identifier, null);
+            Logger.setLogLevel(originalLogLevel);
+        }
+
+        return captured;
     }
 
-    private void assertWarnLogged(final ILoggerCallback loggerCallback, final String expectedMessage) {
-        Mockito.verify(loggerCallback, Mockito.timeout(LOGGER_TIMEOUT_MILLISECONDS)).log(
-                Mockito.eq(UrlConnectionHttpClient.class.getSimpleName()),
-                Mockito.eq(Logger.LogLevel.WARN),
-                Mockito.contains(expectedMessage),
-                Mockito.eq(false)
+    private void awaitLoggerDrain(final CountDownLatch delivered) throws InterruptedException {
+        Logger.info(LOGGER_FENCE_TAG, "Waiting for the log executor to drain.");
+        assertTrue(
+                "The log executor never drained, so the captured lines cannot be trusted.",
+                delivered.await(LOGGER_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         );
+    }
+
+    private void assertSingleCapturedWarning(final List<String> loggedWarnings,
+                                             final String expectedWarningMessage) {
+        assertEquals(loggedWarnings.toString(), 1, loggedWarnings.size());
+        assertTrue(
+                loggedWarnings.toString(),
+                loggedWarnings.get(0).contains(expectedWarningMessage)
+        );
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run() throws Exception;
     }
 
     private URL getRequestUrl() throws MalformedURLException {
