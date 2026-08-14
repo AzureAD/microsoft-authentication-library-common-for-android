@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestIntercep
 import io.mockk.*
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -447,7 +448,8 @@ class NativeAuthV2InteractorTest {
             mapOf(
                 "continuationToken" to CONTINUATION_TOKEN,
                 "newPassword" to String(NEW_PASSWORD)
-            )
+            ),
+            secretKeys = setOf("newPassword")
         )
         assertPasswordCleared(newPassword)
         verify(exactly = 1) { requestProvider.createUpdatePasswordRequest(state, newPassword) }
@@ -493,7 +495,8 @@ class NativeAuthV2InteractorTest {
             mapOf(
                 "continuationToken" to CONTINUATION_TOKEN,
                 "newPassword" to String(NEW_PASSWORD)
-            )
+            ),
+            secretKeys = setOf("newPassword")
         )
         assertPasswordCleared(newPassword)
         verify(exactly = 1) { requestProvider.createUpdatePasswordRequest(state, newPassword) }
@@ -608,6 +611,176 @@ class NativeAuthV2InteractorTest {
         verify { responseParser wasNot Called }
     }
 
+    @Test
+    fun performChallenge_propagatesResponseHandlerExceptionWithoutParsing() {
+        val state = continuationState(
+            NativeAuthV2LinkRelation.CHALLENGE to "/nativeauth/v2/challenge"
+        )
+        val request = NativeAuthV2ChallengeRequest.create(
+            clientId = CLIENT_ID,
+            continuationToken = CONTINUATION_TOKEN,
+            requestUrl = challengeUrl.toString(),
+            headers = jsonHeaders()
+        )
+        val httpResponse = HttpResponse(200, """{"action":"verify"}""", emptyMap())
+        val expectedFailure = IllegalStateException("handler failure")
+        capturePost(httpResponse)
+
+        every { requestProvider.createChallengeRequest(state) } returns request
+        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } throws expectedFailure
+
+        try {
+            createInteractor().performChallenge(state)
+            fail("Expected performChallenge to rethrow the response handler failure")
+        } catch (actual: IllegalStateException) {
+            assertSame(expectedFailure, actual)
+        }
+
+        verify(exactly = 1) { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) }
+        verify { responseParser wasNot Called }
+    }
+
+    @Test
+    fun performVerify_propagatesResponseParserExceptionWithoutConvertingToSuccess() {
+        val state = continuationState(
+            NativeAuthV2LinkRelation.VERIFY to "/nativeauth/v2/verify"
+        )
+        val request = NativeAuthV2VerifyRequest.create(
+            clientId = CLIENT_ID,
+            continuationToken = CONTINUATION_TOKEN,
+            otp = OTP,
+            requestUrl = verifyUrl.toString(),
+            headers = jsonHeaders()
+        )
+        val httpResponse = HttpResponse(200, """{"action":"update"}""", emptyMap())
+        val halResponse = mockk<NativeAuthV2HalApiResponse>(relaxed = true)
+        val expectedFailure = IllegalStateException("parser failure")
+        capturePost(httpResponse)
+
+        every { requestProvider.createVerifyRequest(state, OTP) } returns request
+        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
+        every {
+            responseParser.parseInteraction(
+                response = halResponse,
+                previousState = state,
+                operation = NativeAuthV2Operation.VERIFY
+            )
+        } throws expectedFailure
+
+        try {
+            createInteractor().performVerify(state, OTP)
+            fail("Expected performVerify to rethrow the response parser failure")
+        } catch (actual: IllegalStateException) {
+            assertSame(expectedFailure, actual)
+        }
+
+        verify(exactly = 1) {
+            responseParser.parseInteraction(
+                response = halResponse,
+                previousState = state,
+                operation = NativeAuthV2Operation.VERIFY
+            )
+        }
+    }
+
+    @Test
+    fun performAuthorizeChallengeStart_propagatesResponseParserExceptionWithoutConvertingToSuccess() {
+        val scopes = listOf("openid", "profile")
+        val request = AuthorizeChallengeStartRequest.create(
+            clientId = CLIENT_ID,
+            challengeType = CHALLENGE_TYPE,
+            requestUrl = authorizeChallengeUrl.toString(),
+            headers = formHeaders()
+        )
+        val httpResponse = HttpResponse(200, """{"state":"continue"}""", emptyMap())
+        val halResponse = mockk<NativeAuthV2HalApiResponse>(relaxed = true)
+        val expectedFailure = IllegalStateException("parser failure")
+        capturePost(httpResponse)
+
+        every { requestProvider.createAuthorizeChallengeStartRequest(CORRELATION_ID) } returns request
+        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
+        every {
+            responseParser.parseAuthorizeChallenge(
+                response = halResponse,
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = scopes
+            )
+        } throws expectedFailure
+
+        try {
+            createInteractor().performAuthorizeChallengeStart(
+                correlationId = CORRELATION_ID,
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = scopes
+            )
+            fail("Expected performAuthorizeChallengeStart to rethrow the response parser failure")
+        } catch (actual: IllegalStateException) {
+            assertSame(expectedFailure, actual)
+        }
+    }
+
+    @Test
+    fun performTokenRequest_propagatesResponseHandlerException() {
+        val scopes = listOf("User.Read", "offline_access")
+        val request = NativeAuthV2TokenRequest.create(
+            clientId = CLIENT_ID,
+            code = AUTHORIZATION_CODE,
+            scopes = scopes,
+            requestUrl = tokenUrl.toString(),
+            headers = formHeaders()
+        )
+        val httpResponse = HttpResponse(200, """{"access_token":"secret"}""", emptyMap())
+        val expectedFailure = IllegalStateException("handler failure")
+        capturePost(httpResponse)
+
+        every {
+            requestProvider.createTokenRequest(
+                code = AUTHORIZATION_CODE,
+                scopes = scopes,
+                correlationId = CORRELATION_ID
+            )
+        } returns request
+        every { responseHandler.getTokenApiResponse(CORRELATION_ID, httpResponse) } throws expectedFailure
+
+        try {
+            createInteractor().performTokenRequest(
+                code = AUTHORIZATION_CODE,
+                scopes = scopes,
+                correlationId = CORRELATION_ID
+            )
+            fail("Expected performTokenRequest to rethrow the response handler failure")
+        } catch (actual: IllegalStateException) {
+            assertSame(expectedFailure, actual)
+        }
+
+        verify { responseParser wasNot Called }
+    }
+
+    @Test
+    fun assertJsonBody_neverLeaksSecretKeyValueOnMismatch() {
+        val actualPassword = String(NEW_PASSWORD)
+        val expectedPassword = "a-different-password"
+        val body = """{"newPassword":"$actualPassword"}""".toByteArray(StandardCharsets.UTF_8)
+
+        val error = try {
+            assertJsonBody(
+                body,
+                mapOf("newPassword" to expectedPassword),
+                secretKeys = setOf("newPassword")
+            )
+            fail("Expected assertJsonBody to fail for a mismatched secret field")
+            null
+        } catch (failure: AssertionError) {
+            failure
+        }
+
+        val message = error?.message.orEmpty()
+        assertFalse("Failure message must not contain the actual secret value", message.contains(actualPassword))
+        assertFalse("Failure message must not contain the expected secret value", message.contains(expectedPassword))
+    }
+
     private fun assertMergedHeaders(headers: Map<String, String?>, expectedContentType: String) {
         assertEquals(expectedContentType, headers[HttpConstants.HeaderField.CONTENT_TYPE])
         assertEquals(BASE_CLIENT_SKU, headers["x-client-SKU"])
@@ -618,11 +791,25 @@ class NativeAuthV2InteractorTest {
         assertEquals(expected, parseFormBody(body))
     }
 
-    private fun assertJsonBody(body: ByteArray, expected: Map<String, String>) {
+    /**
+     * [secretKeys] identifies fields (e.g. "newPassword") whose values must never appear in a
+     * JUnit assertion failure message. For those keys a boolean check with a value-free message
+     * is used instead of [assertEquals], which would otherwise print both the expected and actual
+     * secret values into (potentially shared) test/CI logs on mismatch.
+     */
+    private fun assertJsonBody(
+        body: ByteArray,
+        expected: Map<String, String>,
+        secretKeys: Set<String> = emptySet()
+    ) {
         val json = JSONObject(String(body, StandardCharsets.UTF_8))
         assertEquals(expected.size, json.length())
         expected.forEach { (key, value) ->
-            assertEquals(value, json.getString(key))
+            if (key in secretKeys) {
+                assertTrue("Request body field '$key' did not match the expected value", json.getString(key) == value)
+            } else {
+                assertEquals(value, json.getString(key))
+            }
         }
     }
 
