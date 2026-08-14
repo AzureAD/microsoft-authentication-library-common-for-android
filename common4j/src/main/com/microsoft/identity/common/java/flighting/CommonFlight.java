@@ -31,6 +31,10 @@ import lombok.NonNull;
 
 /**
  * List of Active Common flights.
+ * <p>
+ * {@link CommonFlightsManager} is initialized by the broker only, so in an MSAL or OneAuth app
+ * process these resolve to the compile-time defaults below and no ECS entry can change them. Code
+ * running in the app process should take the decision from the host SDK instead.
  */
 public enum CommonFlight implements IFlightConfig {
     /**
@@ -185,14 +189,18 @@ public enum CommonFlight implements IFlightConfig {
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
     /**
+     * Flight controlling silent-caller validation: when enabled (default), a silent broker token
+     * request whose self-reported caller package is not owned by the kernel-attested calling uid
+     * ({@code Binder.getCallingUid()}) is rejected with {@code unknown_caller} (AB#3687466). Acts as a
+     * secure-by-default, ECS-backed kill-switch for the check in
+     * {@code BrokerSilentTokenCommandParameters.validate()}.
+     */
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
+
+    /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
      */
     USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS("UseInMemoryCacheForAccountsAndCredentials", false),
-
-    /**
-     * Flight to control whether or not to use the optimized saveAndLoadAggregatedAccountData() method.
-     */
-    CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD("UseRefactoredSaveAndLoadAggregatedAccountMethod", false),
 
     /**
      * Flight to disable the unnecessary crypto operation purposes in device pop manager like encrypt, decrypt and wrap.
@@ -319,21 +327,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
-
-    /**
-     * MAM Conditional Access onboarding, Phase 1 - Company Portal auto-redirect.
-     * <p>
-     * When an interactive request is blocked by a Conditional-Access "install Company Portal"
-     * response marked {@code intuneAppProtection=1}, the Play Store install launch is tagged with
-     * the calling app package as the install referrer, so Company Portal skips its own sign-in UX
-     * and redirects the user straight back to the calling app. That avoids the user signing in to
-     * Company Portal and accidentally enrolling into MDM.
-     * <p>
-     * Default off for safe rollout; ramp / kill-switch via ECS. With the flight off the install
-     * launch is unchanged.
-     */
-    ENABLE_MAM_CA_INSTALL_REFERRER("EnableMamCaInstallReferrer", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
 
     private String key;
     private Object defaultValue;

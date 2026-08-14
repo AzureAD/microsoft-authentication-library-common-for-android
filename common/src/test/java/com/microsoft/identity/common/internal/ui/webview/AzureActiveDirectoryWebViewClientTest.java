@@ -2320,18 +2320,36 @@ public class AzureActiveDirectoryWebViewClientTest {
     // -----------------------------------------------------------------------
 
     /**
-     * Points the flights manager at a provider whose only opinion is the MAM-CA install-referrer
-     * flight, so each test states the gate it is exercising. {@code cleanUp} resets the manager.
-     *
-     * @param enabled whether {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER} should report on.
+     * @param mamCaInstallReferrerEnabled whether the host has opted this client in to MAM-CA
+     *                                    install-referrer decoration.
+     * @return a client configured exactly like {@link #mWebViewClient} apart from the opt-in.
      */
-    private void setMamCaInstallReferrerFlight(final boolean enabled) {
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER))
-                .thenReturn(enabled);
-        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
-        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    private AzureActiveDirectoryWebViewClient mamCaWebViewClient(
+            final boolean mamCaInstallReferrerEnabled) {
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                new IAuthorizationCompletionCallback() {
+                    @Override
+                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+                    }
+
+                    @Override
+                    public void setPKeyAuthStatus(boolean status) {
+                    }
+                },
+                new OnPageLoadedCallback() {
+                    @Override
+                    public void onPageLoaded(final String url) {
+                    }
+                },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false,
+                mamCaInstallReferrerEnabled,
+                null);
+        client.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
+        return client;
     }
 
     // -----------------------------------------------------------------------
@@ -2491,12 +2509,14 @@ public class AzureActiveDirectoryWebViewClientTest {
      * the intent exists. Robolectric pauses the looper by default, which is what makes this
      * observable at all.
      *
+     * @param client             the WebView client to drive.
      * @param installRedirectUrl the {@code msauth://wpj} redirect to feed the WebView client.
      * @return the launched install intent, or null if none was launched.
      */
-    private Intent launchInstallAndCaptureIntent(final String installRedirectUrl) {
+    private Intent launchInstallAndCaptureIntent(final AzureActiveDirectoryWebViewClient client,
+                                                 final String installRedirectUrl) {
         assertTrue("A broker-install redirect must be handled by the WebView client",
-                mWebViewClient.shouldOverrideUrlLoading(mMockWebView, installRedirectUrl));
+                client.shouldOverrideUrlLoading(mMockWebView, installRedirectUrl));
         Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(2));
         return Shadows.shadowOf(mActivity).getNextStartedActivity();
     }
@@ -2508,9 +2528,8 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     @Test
     public void testProcessInstallRequest_mamCaInstall_tagsCallingAppAsInstallReferrer() {
-        setMamCaInstallReferrerFlight(true);
-
-        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL);
 
         assertNotNull("Expected the Company Portal install link to be launched", launched);
         assertEquals(Intent.ACTION_VIEW, launched.getAction());
@@ -2521,17 +2540,17 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * The flight is a complete kill switch: with it off the install link is launched byte-for-byte
-     * as the server sent it.
+     * The host opt-in is a complete kill switch: without it the install link is launched
+     * byte-for-byte as the server sent it. This is also what every host that never sets it - MSAL,
+     * and the broker process - gets.
      */
     @Test
-    public void testProcessInstallRequest_mamCaInstall_flightOff_leavesLinkUnchanged() {
-        setMamCaInstallReferrerFlight(false);
+    public void testProcessInstallRequest_mamCaInstall_hostDidNotOptIn_leavesLinkUnchanged() {
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(false), TEST_MAM_CA_INSTALL_REQUEST_URL);
 
-        final Intent launched = launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL);
-
-        assertNotNull("The install must still be launched with the flight off", launched);
-        assertFalse("With the flight off nothing may be appended to the install link, but was: "
+        assertNotNull("The install must still be launched without the opt-in", launched);
+        assertFalse("Without the opt-in nothing may be appended to the install link, but was: "
                         + launched.getDataString(),
                 launched.getDataString().contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "="));
     }
@@ -2542,9 +2561,8 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     @Test
     public void testProcessInstallRequest_notMamCaInstall_leavesLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
-        final Intent launched = launchInstallAndCaptureIntent(TEST_PLAIN_INSTALL_REQUEST_URL);
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_PLAIN_INSTALL_REQUEST_URL);
 
         assertNotNull("A device-registration install must still be launched", launched);
         assertFalse("An unmarked install must not be tagged as MAM-CA, but was: "
@@ -2559,10 +2577,8 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     @Test
     public void testProcessInstallRequest_serverSuppliedReferrer_isNotOverridden() {
-        setMamCaInstallReferrerFlight(true);
-
-        final Intent launched =
-                launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER);
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL_SERVER_REFERRER);
 
         assertNotNull(launched);
         final String launchedLink = launched.getDataString();
@@ -2583,10 +2599,8 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     @Test
     public void testProcessInstallRequest_browserPrefixedAppLink_isRejectedByTheAllowlist() {
-        setMamCaInstallReferrerFlight(true);
-
-        final Intent launched =
-                launchInstallAndCaptureIntent(TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
+        final Intent launched = launchInstallAndCaptureIntent(
+                mamCaWebViewClient(true), TEST_MAM_CA_INSTALL_REQUEST_URL_BROWSER_PREFIX);
 
         assertNull("An app_link that is not https must never be launched, but was: "
                         + (launched == null ? "" : launched.getDataString()),
