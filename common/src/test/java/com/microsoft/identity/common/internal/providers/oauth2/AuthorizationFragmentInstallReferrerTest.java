@@ -26,17 +26,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
 
 import android.content.Context;
+import android.os.Bundle;
 
-import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.MamCaRedirect;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -79,27 +76,21 @@ public class AuthorizationFragmentInstallReferrerTest {
         }
     }
 
-    @After
-    public void cleanUp() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
     /**
-     * @param enabled whether {@link CommonFlight#ENABLE_MAM_CA_INSTALL_REFERRER} should report on.
-     */
-    private void setMamCaInstallReferrerFlight(final boolean enabled) {
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_MAM_CA_INSTALL_REFERRER))
-                .thenReturn(enabled);
-        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
-        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-    }
-
-    /**
-     * @return a fragment whose context reports {@link #CALLING_PACKAGE} as its package name.
+     * @return a fragment whose context reports {@link #CALLING_PACKAGE} as its package name, with
+     * the host opt-in already applied.
      */
     private TestAuthorizationFragment fragmentWithPackage(final String packageName) {
+        final TestAuthorizationFragment fragment = fragmentAwaitingState(packageName);
+        fragment.mMamCaInstallReferrerEnabled = true;
+        return fragment;
+    }
+
+    /**
+     * @return a fragment with a package name but no host opt-in yet, so a test can supply it the
+     * way the activity does - through {@link AuthorizationFragment#extractState(Bundle)}.
+     */
+    private TestAuthorizationFragment fragmentAwaitingState(final String packageName) {
         final TestAuthorizationFragment fragment = new TestAuthorizationFragment();
         if (packageName != null) {
             final Context context = Mockito.mock(Context.class);
@@ -124,8 +115,6 @@ public class AuthorizationFragmentInstallReferrerTest {
 
     @Test
     public void testDecorate_mamCaInstall_appendsCallingPackageAsReferrer() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(CALLING_PACKAGE)
                 .decorate(CP_APP_LINK, redirectParameters(true));
 
@@ -136,20 +125,18 @@ public class AuthorizationFragmentInstallReferrerTest {
     }
 
     @Test
-    public void testDecorate_flightOff_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(false);
+    public void testDecorate_hostDidNotOptIn_returnsLinkUnchanged() {
+        final TestAuthorizationFragment fragment = fragmentWithPackage(CALLING_PACKAGE);
+        fragment.mMamCaInstallReferrerEnabled = false;
 
-        final String decorated = fragmentWithPackage(CALLING_PACKAGE)
-                .decorate(CP_APP_LINK, redirectParameters(true));
+        final String decorated = fragment.decorate(CP_APP_LINK, redirectParameters(true));
 
-        assertEquals("The flight is a kill switch: the link must be untouched",
+        assertEquals("The host opt-in is a kill switch: the link must be untouched",
                 CP_APP_LINK, decorated);
     }
 
     @Test
     public void testDecorate_notMamCaInstall_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(CALLING_PACKAGE)
                 .decorate(CP_APP_LINK, redirectParameters(false));
 
@@ -163,8 +150,6 @@ public class AuthorizationFragmentInstallReferrerTest {
      */
     @Test
     public void testDecorate_noContext_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         final String decorated = fragmentWithPackage(null)
                 .decorate(CP_APP_LINK, redirectParameters(true));
 
@@ -174,15 +159,53 @@ public class AuthorizationFragmentInstallReferrerTest {
 
     @Test
     public void testDecorate_nullAppLink_isTolerated() {
-        setMamCaInstallReferrerFlight(true);
-
         assertNull(fragmentWithPackage(CALLING_PACKAGE).decorate(null, redirectParameters(true)));
     }
 
     @Test
     public void testDecorate_nullRedirectParameters_returnsLinkUnchanged() {
-        setMamCaInstallReferrerFlight(true);
-
         assertEquals(CP_APP_LINK, fragmentWithPackage(CALLING_PACKAGE).decorate(CP_APP_LINK, null));
+    }
+
+    /**
+     * The opt-in reaches the fragment as an intent extra rather than being set on the field, so
+     * cover that hop and the save/restore round trip it has to survive if the process is killed
+     * mid-flow. The tests above assign the field directly and so would not notice if either the
+     * read in {@link AuthorizationFragment#extractState(Bundle)} or the write in
+     * {@link AuthorizationFragment#onSaveInstanceState(Bundle)} were removed.
+     */
+    @Test
+    public void testExtractState_hostOptIn_reachesDecorationAndSurvivesSaveRestore() {
+        final Bundle launchState = new Bundle();
+        launchState.putBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, true);
+
+        final TestAuthorizationFragment fragment = fragmentAwaitingState(CALLING_PACKAGE);
+        fragment.extractState(launchState);
+
+        assertTrue("The opt-in must reach the decoration through the fragment state",
+                fragment.decorate(CP_APP_LINK, redirectParameters(true))
+                        .contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + CALLING_PACKAGE));
+
+        final Bundle savedState = new Bundle();
+        fragment.onSaveInstanceState(savedState);
+
+        final TestAuthorizationFragment restored = fragmentAwaitingState(CALLING_PACKAGE);
+        restored.extractState(savedState);
+
+        assertTrue("The opt-in must survive being saved and restored across process death",
+                restored.decorate(CP_APP_LINK, redirectParameters(true))
+                        .contains(MamInstallReferrerBuilder.REFERRER_QUERY_PARAM + "=" + CALLING_PACKAGE));
+    }
+
+    /**
+     * MSAL and the broker never set the extra, so an absent key has to read as off.
+     */
+    @Test
+    public void testExtractState_optInAbsentFromState_returnsLinkUnchanged() {
+        final TestAuthorizationFragment fragment = fragmentAwaitingState(CALLING_PACKAGE);
+        fragment.extractState(new Bundle());
+
+        assertEquals("A host that does not set the extra must be left alone",
+                CP_APP_LINK, fragment.decorate(CP_APP_LINK, redirectParameters(true)));
     }
 }

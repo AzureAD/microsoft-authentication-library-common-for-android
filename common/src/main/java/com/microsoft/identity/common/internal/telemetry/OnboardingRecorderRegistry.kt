@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry
 
+import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
 import com.microsoft.identity.common.java.logging.DiagnosticContext
 import com.microsoft.identity.common.logging.Logger
@@ -102,8 +103,10 @@ object OnboardingRecorderRegistry {
         }
     }
 
-    // Written under the registry lock by removeEldestEntry, read and cleared by register()
-    // immediately after the lock is released, so the warning is logged off-lock.
+    // Written by removeEldestEntry, which runs inside put() and therefore already under the registry
+    // lock, then read and cleared by register() in that same critical section. Only the resulting
+    // warning is logged after the lock is released, so nothing on this class logs on-lock.
+    @GuardedBy("recorders")
     private var evictedKey: String? = null
 
     /**

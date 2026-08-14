@@ -324,7 +324,50 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (activity == null) {
             return null;
         }
-        mAADWebViewClient = new AzureActiveDirectoryWebViewClient(
+        mAADWebViewClient = createAADWebViewClient(activity);
+        setUpWebView(view, mAADWebViewClient);
+
+        // Onboarding telemetry (brokered): if AccountChooser seeded a recorder for this request,
+        // hand it to the WebView client so WebView-observed onboarding steps (MDM enrollment,
+        // Company Portal launch, broker install) and the Auth UX log_telemetry error code are
+        // recorded into the same blob the broker finalizes and returns. Keyed by correlationId via
+        // OnboardingRecorderRegistry (owner + WebView both run in the broker :auth process). No-op
+        // when the request seeded no recorder, or when the correlation id is unusable as a key.
+        // Must stay ahead of initializeAuthUxJavaScriptApi and launchWebView below, so the client
+        // already holds the recorder before the first page can reach the bridge. AB#3708195.
+        final OnboardingTelemetryRecorder onboardingRecorder =
+                OnboardingRecorderRegistry.get(mCorrelationId);
+        if (onboardingRecorder != null) {
+            Logger.info(methodTag, mCorrelationId,
+                    "Onboarding telemetry: attaching recorder to WebView client");
+            mAADWebViewClient.setOnboardingTelemetryRecorder(onboardingRecorder);
+        } else {
+            Logger.verbose(methodTag, mCorrelationId,
+                    "Onboarding telemetry: no recorder registered for this request");
+        }
+
+        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
+        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
+        return view;
+    }
+
+    /**
+     * Builds the WebView client this fragment drives the sign-in page with.
+     * <p>
+     * Split out of {@link #onCreateView} so the state this fragment restored - notably the host's
+     * MAM-CA install-referrer opt-in - can be verified to actually reach the client without
+     * inflating a layout, which this module's unit tests cannot do.
+     * <p>
+     * The returned client's page-loaded callback touches view state that only {@link #onCreateView}
+     * establishes, so a caller that skips it must not drive a page load.
+     *
+     * @param activity the hosting activity, already null-checked by the caller.
+     */
+    @VisibleForTesting
+    @NonNull
+    AzureActiveDirectoryWebViewClient createAADWebViewClient(@NonNull final FragmentActivity activity) {
+        final String methodTag = TAG + ":createAADWebViewClient";
+        return new AzureActiveDirectoryWebViewClient(
                 activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
@@ -359,6 +402,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 getSwitchBrowserCoordinator(),
                 mUtid,
                 isWebViewWebcpEnabledInBrokerlessCase,
+                mMamCaInstallReferrerEnabled,
                 new IUrlLoadTracker() {
                     @Override
                     public void trackNewUrlStatus(final String url, final String loadingError, final String authError) {
@@ -376,29 +420,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     }
                 }
         );
-        setUpWebView(view, mAADWebViewClient);
-
-        // Onboarding telemetry (brokered): if AccountChooser seeded a recorder for this request,
-        // hand it to the WebView client so WebView-observed onboarding steps (MDM enrollment,
-        // Company Portal launch, broker install) and the Auth UX log_telemetry error code are
-        // recorded into the same blob the broker finalizes and returns. Keyed by correlationId via
-        // OnboardingRecorderRegistry (owner + WebView both run in the broker :auth process). No-op
-        // when the request seeded no recorder, or when the correlation id is unusable as a key.
-        // AB#3708195.
-        final OnboardingTelemetryRecorder onboardingRecorder =
-                OnboardingRecorderRegistry.get(mCorrelationId);
-        if (onboardingRecorder != null) {
-            Logger.info(methodTag, mCorrelationId,
-                    "Onboarding telemetry: attaching recorder to WebView client");
-            mAADWebViewClient.setOnboardingTelemetryRecorder(onboardingRecorder);
-        } else {
-            Logger.verbose(methodTag, mCorrelationId,
-                    "Onboarding telemetry: no recorder registered for this request");
-        }
-
-        mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
-        launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
-        return view;
     }
 
     @Override
@@ -731,6 +752,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mSwitchBrowserProtocolCoordinator != null) {
             mSwitchBrowserProtocolCoordinator.cancel();
         }
+        mCameraPermissionRequestHandler.cancel();
         if (mAADWebViewClient != null) {
             mAADWebViewClient.onDestroy();
         } else {
