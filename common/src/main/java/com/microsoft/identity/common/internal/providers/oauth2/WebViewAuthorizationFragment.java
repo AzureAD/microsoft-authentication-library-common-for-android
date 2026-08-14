@@ -75,6 +75,9 @@ import com.microsoft.identity.common.internal.ui.webview.ProcessUtil;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserStatusCallback;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
+import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -313,6 +316,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final String methodTag = TAG + ":onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -322,6 +326,26 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         mAADWebViewClient = createAADWebViewClient(activity);
         setUpWebView(view, mAADWebViewClient);
+
+        // Onboarding telemetry (brokered): if AccountChooser seeded a recorder for this request,
+        // hand it to the WebView client so WebView-observed onboarding steps (MDM enrollment,
+        // Company Portal launch, broker install) and the Auth UX log_telemetry error code are
+        // recorded into the same blob the broker finalizes and returns. Keyed by correlationId via
+        // OnboardingRecorderRegistry (owner + WebView both run in the broker :auth process). No-op
+        // when the request seeded no recorder, or when the correlation id is unusable as a key.
+        // Must stay ahead of initializeAuthUxJavaScriptApi and launchWebView below, so the client
+        // already holds the recorder before the first page can reach the bridge. AB#3708195.
+        final OnboardingTelemetryRecorder onboardingRecorder =
+                OnboardingRecorderRegistry.get(mCorrelationId);
+        if (onboardingRecorder != null) {
+            Logger.info(methodTag, mCorrelationId,
+                    "Onboarding telemetry: attaching recorder to WebView client");
+            mAADWebViewClient.setOnboardingTelemetryRecorder(onboardingRecorder);
+        } else {
+            Logger.verbose(methodTag, mCorrelationId,
+                    "Onboarding telemetry: no recorder registered for this request");
+        }
+
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
