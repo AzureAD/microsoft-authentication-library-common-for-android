@@ -522,6 +522,21 @@ class NativeAuthV2ResponseParserTest {
         }
     }
 
+    @Test
+    fun parseInteraction_whenVerifyCodeLengthIsNotPositive_returnsUnknownError() {
+        listOf(
+            """{"continuationToken":"t","action":"verify","codeLength":0,"hint":"h","type":"email","_links":{"verify":{"href":"/x"}}}""",
+            """{"continuationToken":"t","action":"verify","codeLength":-1,"hint":"h","type":"email","_links":{"verify":{"href":"/x"}}}"""
+        ).forEach { json ->
+            val result = parser.parseInteraction(responseFrom(json), previousState(), NativeAuthV2Operation.VERIFY)
+
+            assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+            val error = result as NativeAuthV2InteractionApiResult.UnknownError
+            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+            assertTrue(error.errorDescription.contains("codeLength"))
+        }
+    }
+
     // endregion
 
     // region parseInteraction - action = update

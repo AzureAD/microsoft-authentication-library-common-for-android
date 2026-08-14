@@ -356,7 +356,7 @@ class NativeAuthV2Interactor(
     //region update password
     /**
      * Submits a new password via HTTP PUT. The password buffer is zeroed in a `finally` block that
-     * runs even if body serialisation or the network call throws, exactly as
+     * runs even if request construction, body serialisation or the network call throws, exactly as
      * [ResetPasswordInteractor.performResetPasswordSubmit] does today.
      */
     fun performUpdatePassword(
@@ -369,16 +369,16 @@ class NativeAuthV2Interactor(
             methodName = "$TAG.performUpdatePassword"
         )
 
-        val request = requestProvider.createUpdatePasswordRequest(state = state, newPassword = newPassword)
-
-        Logger.infoWithObject(
-            "$TAG.performUpdatePassword",
-            state.correlationId,
-            "request = ",
-            request
-        )
-
         try {
+            val request = requestProvider.createUpdatePasswordRequest(state = state, newPassword = newPassword)
+
+            Logger.infoWithObject(
+                "$TAG.performUpdatePassword",
+                state.correlationId,
+                "request = ",
+                request
+            )
+
             val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
             val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
                 .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
@@ -404,7 +404,7 @@ class NativeAuthV2Interactor(
 
             return result
         } finally {
-            StringUtil.overwriteWithNull(request.parameters.newPassword)
+            StringUtil.overwriteWithNull(newPassword)
         }
     }
     //endregion

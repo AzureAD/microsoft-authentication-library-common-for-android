@@ -505,6 +505,28 @@ class NativeAuthV2InteractorTest {
     }
 
     @Test
+    fun performUpdatePassword_clearsPasswordWhenRequestCreationFails() {
+        val state = continuationState(
+            NativeAuthV2LinkRelation.UPDATE to "/nativeauth/v2/update-password"
+        )
+        val newPassword = NEW_PASSWORD.clone()
+        val expectedFailure = RuntimeException("Missing update relation")
+
+        every { requestProvider.createUpdatePasswordRequest(state, newPassword) } throws expectedFailure
+
+        try {
+            createInteractor().performUpdatePassword(state, newPassword)
+            fail("Expected performUpdatePassword to rethrow the request creation failure")
+        } catch (actual: RuntimeException) {
+            assertSame(expectedFailure, actual)
+        }
+
+        assertPasswordCleared(newPassword)
+        verify { responseHandler wasNot Called }
+        verify { responseParser wasNot Called }
+    }
+
+    @Test
     fun performPoll_postsJsonBodyAndParsesInteractionResult() {
         val state = continuationState(
             NativeAuthV2LinkRelation.POLL to "/nativeauth/v2/poll"

@@ -232,6 +232,9 @@ class NativeAuthV2ResponseParser {
 
         val codeLength = response.codeLength
             ?: return missingFieldError(response.correlationId, CODE_LENGTH_FIELD)
+        if (codeLength <= 0) {
+            return invalidFieldError(response.correlationId, CODE_LENGTH_FIELD)
+        }
         val challengeTargetLabel = firstMethod?.hint ?: response.challengeTargetLabel
             ?: return missingFieldError(response.correlationId, CHALLENGE_TARGET_LABEL_FIELD)
         val challengeChannel = firstMethod?.type ?: response.challengeChannel
@@ -391,6 +394,15 @@ class NativeAuthV2ResponseParser {
         correlationId = correlationId,
         error = ApiErrorResult.INVALID_STATE,
         errorDescription = "Native Auth V2 'verify' response is missing required field '$fieldName'."
+    )
+
+    private fun invalidFieldError(
+        correlationId: String,
+        fieldName: String
+    ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
+        correlationId = correlationId,
+        error = ApiErrorResult.INVALID_STATE,
+        errorDescription = "Native Auth V2 'verify' response contains an invalid value for field '$fieldName'."
     )
 
     private fun missingActionError(
