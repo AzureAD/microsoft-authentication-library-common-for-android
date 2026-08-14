@@ -168,6 +168,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
+    // Whether the host opted in to MAM-CA install-referrer tagging for this request.
+    private final boolean mMamCaInstallReferrerEnabled;
     private final SpanContext mSpanContext;
     private final String mUtid;
 
@@ -195,6 +197,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             final boolean mamCaInstallReferrerEnabled,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
@@ -203,9 +206,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mUtid = utid;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
+        mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
         mUrlLoadTracker = urlLoadTracker;
     }
 
+    @VisibleForTesting
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @NonNull final String redirectUrl,
+                                             @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
+                                             @Nullable final String utid,
+                                             final boolean isWebViewWebCpEnabledInBrokerlessCase,
+                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker);
+    }
+
+    @VisibleForTesting
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
@@ -213,7 +230,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null);
     }
 
     /**
@@ -1355,7 +1372,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         // MAM Conditional Access onboarding: tag the Company Portal install launch with the calling
         // app package as the Play install referrer, so Company Portal skips its own sign-in UX and
-        // redirects back to us after install. The flight- and MAM-CA-gates live in
+        // redirects back to us after install. The host opt-in and MAM-CA gates live in
         // MamInstallReferrerBuilder; when they don't apply the link is launched as before.
         //
         // Resolved here rather than inside the delayed Runnable below so the link is built while the
@@ -1370,6 +1387,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             installLink = null;
         } else {
             installLink = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                    mMamCaInstallReferrerEnabled,
                     appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
                     activity.getPackageName(),
                     parameters);
