@@ -46,6 +46,20 @@ class TemporaryEmailServiceTest {
     }
 
     @Test
+    fun generateRandomEmailAddressLocally_createsAuthenticatedInboxForCompatibility() {
+        val transport = FakeMailTmTransport(
+            """{"hydra:member":[{"domain":"example.mail.tm","isActive":true,"isPrivate":false}]}""",
+            "",
+            """{"token":"mail-tm-token"}"""
+        )
+
+        val address = createService(transport).generateRandomEmailAddressLocally()
+
+        assertTrue(address.endsWith("@example.mail.tm"))
+        assertEquals(listOf("/domains", "/accounts", "/token"), transport.requests.map { it.endpoint })
+    }
+
+    @Test
     fun okHttpTransport_forcesHttp11ForMailTmCompatibility() {
         val apiClient = ApiClient("https://api.mail.tm")
 

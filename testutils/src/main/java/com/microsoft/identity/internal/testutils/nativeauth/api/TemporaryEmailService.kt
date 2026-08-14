@@ -77,6 +77,14 @@ class TemporaryEmailService internal constructor(
     }
 
     /**
+     * Creates a random Mail.tm inbox for compatibility with downstream consumers.
+     *
+     * TODO: Remove after downstream consumers migrate to [createRandomEmailAddress] or
+     * [generateRandomUnregisteredEmailAddress], according to whether they require an inbox.
+     */
+    fun generateRandomEmailAddressLocally(): String = createRandomEmailAddress()
+
+    /**
      * Returns a random, validly formatted address without creating an inbox.
      */
     fun generateRandomUnregisteredEmailAddress(): String {
