@@ -30,6 +30,8 @@ import static org.junit.Assert.fail;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ConnectionError;
+import com.microsoft.identity.common.java.logging.ILoggerCallback;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.http.MockConnection;
 import com.microsoft.identity.http.ResponseBody;
 
@@ -40,6 +42,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -70,6 +73,8 @@ public final class UrlConnectionHttpClientTest {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
     private static final String CONTENT_TYPE_KEY = "Content-Type";
     private static final String CONTENT_TYPE_VALUE = "application/x-www-form-urlencoded";
+    private static final String TEST_LOGGER_IDENTIFIER = "UrlConnectionHttpClientTest";
+    private static final long LOGGER_TIMEOUT_MILLISECONDS = 1000L;
 
     // The UrlConnectionHttpClient.getDefaultInstance() comes with a retry logic.
     // For non-retry scenario, we need to create a separate client.
@@ -81,6 +86,9 @@ public final class UrlConnectionHttpClientTest {
     public void tearDown() {
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
         SSLSocketFactoryWrapper.setLastHandshakeTLSversion("");
+        Logger.setLogger(TEST_LOGGER_IDENTIFIER, null);
+        Logger.setAllowPii(false);
+        Logger.setLogLevel(Logger.LogLevel.VERBOSE);
     }
 
     /**
@@ -782,6 +790,68 @@ public final class UrlConnectionHttpClientTest {
         testHttpMethodFailedNoRetryNoResponseBody(HttpTestMethod.GET);
     }
 
+    @Test
+    public void testHttpGetIOExceptionFallsBackToErrorStreamAndLogsWarning() throws Exception {
+        final HttpURLConnection mockedFailureConnection =
+                MockConnection.getMockedConnectionWithFailureResponse(
+                        HttpURLConnection.HTTP_BAD_REQUEST,
+                        "response-stream-fallback-body"
+                );
+        final ILoggerCallback loggerCallback = mockWarnLogger();
+
+        HttpUrlConnectionFactory.addMockedConnection(mockedFailureConnection);
+
+        try {
+            assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+            final HttpResponse response = sendWithMethodWithoutRetry(HttpTestMethod.GET);
+            assertNotNull(response);
+            assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.getStatusCode());
+            assertEquals("response-stream-fallback-body", response.getBody());
+            assertWarnLogged(loggerCallback, "IOException while reading response stream: IOException");
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+
+        final InOrder inOrder = Mockito.inOrder(mockedFailureConnection);
+        inOrder.verify(mockedFailureConnection).getInputStream();
+        inOrder.verify(mockedFailureConnection).getErrorStream();
+        inOrder.verify(mockedFailureConnection).getResponseCode();
+        inOrder.verify(mockedFailureConnection).getDate();
+        inOrder.verify(mockedFailureConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    public void testHttpGetWithUnparseableStatusLineReturnsResponseAndLogsWarning() throws Exception {
+        final HttpURLConnection mockedConnection =
+                getMockedConnectionWithUnparseableStatusLine(ResponseBody.SUCCESS, HttpTestMethod.GET.name());
+        final ILoggerCallback loggerCallback = mockWarnLogger();
+
+        HttpUrlConnectionFactory.addMockedConnection(mockedConnection);
+
+        try {
+            assertEquals(1, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+            final HttpResponse response = sendWithMethodWithoutRetry(HttpTestMethod.GET);
+            assertNotNull(response);
+            assertEquals(-1, response.getStatusCode());
+            assertEquals(ResponseBody.SUCCESS, response.getBody());
+            assertWarnLogged(loggerCallback, "Received an unparseable HTTP status line (statusCode=-1) for GET request.");
+        } catch (final IOException e) {
+            fail();
+        }
+
+        assertEquals(0, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
+
+        final InOrder inOrder = Mockito.inOrder(mockedConnection);
+        inOrder.verify(mockedConnection).getInputStream();
+        inOrder.verify(mockedConnection).getResponseCode();
+        inOrder.verify(mockedConnection).getRequestMethod();
+        inOrder.verify(mockedConnection).getHeaderFields();
+        inOrder.verifyNoMoreInteractions();
+    }
+
     /**
      * Verify that initial http post fails with {@link HttpURLConnection#HTTP_INTERNAL_ERROR}(retryable status code
      * 500/503/504), retry fails with {@link HttpURLConnection#HTTP_UNAUTHORIZED}(non retryable status code).
@@ -1099,6 +1169,33 @@ public final class UrlConnectionHttpClientTest {
     private void mockRequestBody(final HttpURLConnection mockedConnection) throws IOException {
         Mockito.when(mockedConnection.getOutputStream())
                 .thenReturn(Mockito.mock(OutputStream.class));
+    }
+
+    private HttpURLConnection getMockedConnectionWithUnparseableStatusLine(final String responseBody,
+                                                                           final String requestMethod)
+            throws IOException {
+        final HttpURLConnection mockedConnection = MockConnection.getCommonHttpUrlConnection();
+        Mockito.when(mockedConnection.getInputStream())
+                .thenReturn(new ByteArrayInputStream(responseBody.getBytes(UTF8)));
+        Mockito.when(mockedConnection.getResponseCode()).thenReturn(-1);
+        Mockito.when(mockedConnection.getRequestMethod()).thenReturn(requestMethod);
+        return mockedConnection;
+    }
+
+    private ILoggerCallback mockWarnLogger() {
+        final ILoggerCallback loggerCallback = Mockito.mock(ILoggerCallback.class);
+        Logger.setLogLevel(Logger.LogLevel.WARN);
+        Logger.setLogger(TEST_LOGGER_IDENTIFIER, loggerCallback);
+        return loggerCallback;
+    }
+
+    private void assertWarnLogged(final ILoggerCallback loggerCallback, final String expectedMessage) {
+        Mockito.verify(loggerCallback, Mockito.timeout(LOGGER_TIMEOUT_MILLISECONDS)).log(
+                Mockito.eq(UrlConnectionHttpClient.class.getSimpleName()),
+                Mockito.eq(Logger.LogLevel.WARN),
+                Mockito.contains(expectedMessage),
+                Mockito.eq(false)
+        );
     }
 
     private URL getRequestUrl() throws MalformedURLException {
