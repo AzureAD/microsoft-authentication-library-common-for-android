@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 - [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation (#3218)
 - [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
 - [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)
