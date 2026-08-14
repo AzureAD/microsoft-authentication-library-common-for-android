@@ -54,7 +54,6 @@ import static org.mockito.Mockito.when;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
-import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
@@ -76,9 +75,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -867,67 +863,15 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     /**
-     * Regression test for AB#3687466 (Round 7): the optimized save-and-load path
-     * ({@link BrokerOAuth2TokenCache#saveAndLoadAggregatedAccountDataOptimized}) selects
-     * its target cache directly from the server-supplied familyId, bypassing both FoCI
-     * chokepoints. Assert the explicit caller-authorization gate returns only the
-     * just-saved record for an unauthorized FoCI caller, preventing aggregation across
-     * the shared cache.
-     */
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testSaveAndLoadAggregatedAccountDataOptimizedFociUnauthorizedReturnsJustSavedRecord()
-            throws ClientException {
-        // Force the optimized code path via the flight.
-        final IFlightsProvider mockFlightsProvider = mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(
-                CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD))
-                .thenReturn(true);
-        final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
-        mockFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
-        try {
-            // Seed the shared FoCI cache with App A + a family record for App B under
-            // the authorized instance so aggregation would otherwise return > 1 record.
-            configureMocksForFoci();
-            mBrokerOAuth2TokenCache.save(mockStrategy, mockRequest, mockResponse);
-            final BrokerOAuth2TokenCache authorizedAppBCache =
-                    newBrokerCacheForUid(TEST_APP_UID + 1, true);
-            authorizedAppBCache.save(mockStrategy, mockRequest, mockResponse);
-
-            final BrokerOAuth2TokenCache unauthorizedAppBCache =
-                    newBrokerCacheForUid(TEST_APP_UID + 1, false);
-
-            final List<ICacheRecord> unauthorized =
-                    unauthorizedAppBCache.saveAndLoadAggregatedAccountData(
-                            mDefaultFociTestBundle.mGeneratedAccount,
-                            mDefaultFociTestBundle.mGeneratedIdToken,
-                            mDefaultFociTestBundle.mGeneratedAccessToken,
-                            mDefaultFociTestBundle.mGeneratedRefreshToken,
-                            mDefaultFociTestBundle.mGeneratedRefreshToken.getFamilyId(),
-                            BEARER_AUTHENTICATION_SCHEME,
-                            false
-                    );
-            assertNotNull(unauthorized);
-            assertEquals("Unauthorized FoCI caller must receive only the just-saved record.",
-                    1, unauthorized.size());
-        } finally {
-            CommonFlightsManager.INSTANCE.resetFlightsManager();
-        }
-    }
-
-    /**
-     * Regression test for AB#3687466: mirrors the optimized-path gate
-     * ({@link #testSaveAndLoadAggregatedAccountDataOptimizedFociUnauthorizedReturnsJustSavedRecord()})
-     * for the plain three-arg {@code saveAndLoadAggregatedAccountData(strategy, request, response)}
-     * overload. That overload also selects its target cache directly from the server-supplied
-     * {@code familyId}, bypassing both FoCI chokepoints, and delegates to
+     * Regression test for AB#3687466: the plain three-arg
+     * {@code saveAndLoadAggregatedAccountData(strategy, request, response)} overload selects its
+     * target cache directly from the server-supplied {@code familyId}, bypassing both FoCI
+     * chokepoints, and delegates to
      * {@link MsalOAuth2TokenCache#saveAndLoadAggregatedAccountData} which performs a shared
      * cross-tenant merge on {@code mFociCache}. Without the gate, an unauthorized FoCI caller
      * could receive other apps' FoCI records for the same home account through that merge.
-     * Assert that only the just-saved record is returned. This overload runs when the
-     * {@code CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD} flight is off and is
-     * also reachable via {@code BrokerOAuth2TokenCacheTelemetryWrapper}.
+     * Assert that only the just-saved record is returned. This overload is also reachable via
+     * {@code BrokerOAuth2TokenCacheTelemetryWrapper}.
      */
     @Test
     @SuppressWarnings("unchecked")
