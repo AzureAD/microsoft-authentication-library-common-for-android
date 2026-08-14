@@ -24,9 +24,13 @@
 package com.microsoft.identity.common.java.nativeauth.providers
 
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.NativeAuthV2Interactor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 
@@ -40,33 +44,45 @@ class NativeAuthOAuth2StrategyFactory {
             strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthOAuth2Strategy {
             val requestInterceptor = config.requestInterceptor
+            val httpClient = UrlConnectionHttpClient.getDefaultInstance()
+            val nativeAuthV2RequestProvider = NativeAuthV2RequestProvider(config = config)
+            val nativeAuthV2ResponseHandler = NativeAuthV2ResponseHandler()
+            val nativeAuthV2ResponseParser = NativeAuthV2ResponseParser()
+            val nativeAuthV2Interactor = NativeAuthV2Interactor(
+                httpClient = httpClient,
+                requestProvider = nativeAuthV2RequestProvider,
+                responseHandler = nativeAuthV2ResponseHandler,
+                responseParser = nativeAuthV2ResponseParser,
+                requestInterceptor = requestInterceptor
+            )
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
                 signInInteractor = SignInInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    httpClient = httpClient,
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
                 ),
                 signUpInteractor = SignUpInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    httpClient = httpClient,
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
                 ),
                 resetPasswordInteractor = ResetPasswordInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    httpClient = httpClient,
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
                 ),
                 jitInteractor = JITInteractor(
-                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    httpClient = httpClient,
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
-                )
+                ),
+                nativeAuthV2Interactor = nativeAuthV2Interactor
             )
         }
     }

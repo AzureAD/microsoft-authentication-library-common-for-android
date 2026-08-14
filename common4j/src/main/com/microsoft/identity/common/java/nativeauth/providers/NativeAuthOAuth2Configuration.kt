@@ -65,6 +65,7 @@ class NativeAuthOAuth2Configuration(
         private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
         private const val SIGN_IN_INTROSPECT_ENDPOINT_SUFFIX = "/oauth2/v2.0/introspect"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
+        private const val AUTHORIZE_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/authorize-challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
         private const val JIT_INTROSPECT_ENDPOINT_SUFFIX = "/register/v1.0/introspect"
         private const val JIT_CHALLENGE_ENDPOINT_SUFFIX = "/register/v1.0/challenge"
@@ -196,6 +197,18 @@ class NativeAuthOAuth2Configuration(
         return getEndpointUrlFromRootAndTenantAndSuffix(
             root = getAuthorityUrl(),
             endpointSuffix = SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
+     * Get the endpoint to be used for making an oauth2/v2.0/authorize-challenge request.
+     *
+     * @return URL the endpoint
+     */
+    fun getAuthorizeChallengeEndpoint(): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getAuthorityUrl(),
+            endpointSuffix = AUTHORIZE_CHALLENGE_ENDPOINT_SUFFIX
         )
     }
 
