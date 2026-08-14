@@ -16,6 +16,7 @@ vNext
 - [MINOR] Add a non-mutating log_telemetry action to the Auth UX JavaScript bridge that forwards a validated, page-reported server error code to an onboarding telemetry sink seam, kept strictly separate from the number-matching device-store path (#3197)
 - [MINOR] Record the Auth UX log_telemetry server error code in the onboarding telemetry blob's blocking-errors list, and fix Auth UX bridge availability when the initial authorization URL is not allow-listed (#3201)
 - [MINOR] Wire the broker's onboarding telemetry recorder into the :auth WebView host, and fix AuthorizationFragment losing the request's correlation id across recreation (affects all three authorization fragments) (#3204)
+- [MINOR] Expose a telemetry-only Auth UX JavaScript bridge to non-brokered (OneAuth) flows, gated on the request carrying an onboarding telemetry recorder; it refuses every mutating action, including number-matching (#3209)
 
 Version 24.5.0
 ----------

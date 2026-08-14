@@ -325,11 +325,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * the sink attached: {@code onPageStarted} re-registers the bridge on every navigation, and a
      * bare instance registered there would otherwise replace the sink-carrying one and silently turn
      * the whole {@code log_telemetry} path into a no-op.
+     *
+     * <p>The telemetry-only capability is taken from {@link #isTelemetryOnlyAuthUxBridge()} for the
+     * same reason, so a brokerless host gets the restricted bridge on every navigation and not just
+     * the first.
      */
     @NonNull
     @Override
     protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
-        return new AuthUxJavaScriptInterface(this::tryConsumeAuthUxServerErrorCode);
+        return new AuthUxJavaScriptInterface(
+                this::tryConsumeAuthUxServerErrorCode,
+                isTelemetryOnlyAuthUxBridge());
     }
 
     /**
@@ -344,6 +350,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public void setOnboardingTelemetryRecorder(
             @Nullable final OnboardingTelemetryRecorder recorder) {
         mOnboardingTelemetryRecorder = recorder;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Read on every navigation rather than captured once, because the host attaches the recorder
+     * after this client is constructed — see {@link #setOnboardingTelemetryRecorder}.
+     */
+    @Override
+    protected boolean hasOnboardingTelemetryRecorder() {
+        return mOnboardingTelemetryRecorder != null;
     }
 
     @Override

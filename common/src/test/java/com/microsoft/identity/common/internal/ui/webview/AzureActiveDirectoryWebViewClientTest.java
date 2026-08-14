@@ -63,6 +63,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
+import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
@@ -278,6 +279,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+        // The number-match store is process-static; clear it so a bridge test cannot leak an entry
+        // into a later test that asserts the store stayed empty.
+        NumberMatchHelper.Companion.getNumberMatchMap().clear();
         // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
         // OnboardingTelemetryRecorder.addBlockingError persists to this store.
         if (mContext != null) {
@@ -2346,6 +2350,155 @@ public class AzureActiveDirectoryWebViewClientTest {
                 null);
         client.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
         return client;
+    }
+
+    // -----------------------------------------------------------------------
+    // Auth UX bridge exposure: full (broker :auth) vs telemetry-only (brokerless)
+    // -----------------------------------------------------------------------
+
+    private static final String AUTH_UX_URL = "https://login.microsoftonline.com/common/oauth2/authorize";
+
+    /**
+     * Session id for the number-match payload below. {@code NumberMatchHelper.storeNumberMatch}
+     * only accepts a GUID or an 8-character alphanumeric id, and silently drops anything else — a
+     * malformed id here would make "the store stayed empty" true for the wrong reason.
+     */
+    private static final String NUMBER_MATCH_SESSION_ID = "12345678";
+
+    /** A number-match message in the wire shape the Auth UX page actually posts. */
+    private static final String NUMBER_MATCH_PAYLOAD =
+            "{\"correlationID\":\"corr-1\","
+                    + "\"action_name\":\"write_data\","
+                    + "\"action_component\":\"broker\","
+                    + "\"params\":{\"operation\":\"number_matching\","
+                    + "\"sessionID\":\"" + NUMBER_MATCH_SESSION_ID + "\",\"code_match\":\"42\"}}";
+
+    /**
+     * Points the flights manager at a provider answering the broker's Auth UX bridge flight.
+     * {@code cleanUp} resets the manager.
+     *
+     * @param fullBridge whether {@link CommonFlight#ENABLE_JS_API_FOR_AUTHUX} reports on.
+     */
+    private void setAuthUxBridgeFlight(final boolean fullBridge) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX))
+                .thenReturn(fullBridge);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    /** Attaches a real recorder, which is what opens the brokerless gate. */
+    private OnboardingTelemetryRecorder attachRecorder() {
+        final OnboardingTelemetryRecorder recorder = new OnboardingTelemetryRecorder(
+                "{\"schema_version\":\"1.0.0\",\"session_correlation_id\":\"abc-123\","
+                        + "\"onboarding_mode\":\"non-brokered\"}",
+                "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        return recorder;
+    }
+
+    /**
+     * The brokerless surface is closed by default: a host outside the broker's {@code :auth}
+     * process that never seeded onboarding telemetry gets no bridge at all, even with the broker's
+     * flight on. This is the regression that matters most — the widening must not expose the bridge
+     * to every MSAL client.
+     */
+    @Test
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_ClosedWithoutARecorder() {
+        setAuthUxBridgeFlight(true);
+
+        assertFalse("the broker's flight must not expose a bridge outside the :auth process",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+    }
+
+    /**
+     * With a recorder attached — i.e. the caller seeded onboarding telemetry for this request — an
+     * allow-listed Auth UX page does get the (telemetry-only) bridge.
+     *
+     * <p>Deliberately with the broker's flight OFF: the brokerless gate must not depend on a flight
+     * at all, because outside {@code :auth} nothing initializes the flights manager and every
+     * flight would resolve to its compiled-in default in production.
+     */
+    @Test
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_OpenedByTheRecorder() {
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
+
+        assertTrue(mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+    }
+
+    /** Detaching the recorder closes the gate again — the check is per navigation, not once. */
+    @Test
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_ClosesWhenRecorderCleared() {
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
+        assertTrue(mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+
+        mWebViewClient.setOnboardingTelemetryRecorder(null);
+
+        assertFalse("the gate must be re-evaluated, not captured at first navigation",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+    }
+
+    /** The host allow-list (H1) still gates the brokerless surface. */
+    @Test
+    public void testShouldExposeJavaScriptInterface_BrokerlessHost_StillHonoursUriAllowList() {
+        setAuthUxBridgeFlight(true);
+        attachRecorder();
+
+        assertFalse("a non-allow-listed origin must never get the bridge",
+                mWebViewClient.shouldExposeJavaScriptInterface("https://evil.example.com/"));
+    }
+
+    /**
+     * Inside the broker's {@code :auth} process the gate is unchanged: the broker's own flight
+     * decides, and a recorder is neither required nor sufficient.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testShouldExposeJavaScriptInterface_AuthService_UsesTheBrokerFlight() {
+        setAuthUxBridgeFlight(true);
+        assertTrue("the broker's flight alone opens the gate in :auth, with no recorder",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+
+        setAuthUxBridgeFlight(false);
+        attachRecorder();
+        assertFalse("a recorder must not stand in for the broker's flight",
+                mWebViewClient.shouldExposeJavaScriptInterface(AUTH_UX_URL));
+    }
+
+    /**
+     * The capability must ride on the factory, not on a single call site: {@code onPageStarted}
+     * rebuilds the bridge on every navigation, so a bridge built anywhere else would silently drop
+     * the restriction on the next page load.
+     *
+     * <p>No {@code ShadowProcessUtil} here, so this runs as a brokerless host.
+     */
+    @Test
+    public void testCreateAuthUxJavaScriptInterface_BrokerlessHost_IsTelemetryOnly() {
+        mWebViewClient.createAuthUxJavaScriptInterface()
+                .receiveAuthUxMessage(NUMBER_MATCH_PAYLOAD);
+
+        assertTrue("a brokerless host must never be able to write the number-match store",
+                NumberMatchHelper.Companion.getNumberMatchMap().isEmpty());
+    }
+
+    /**
+     * Inside {@code :auth} the very same payload still reaches the number-match store.
+     *
+     * <p>Also the control for the test above: without this, a payload that silently failed
+     * {@code storeNumberMatch}'s own session-id/code validation would leave the map empty for the
+     * wrong reason and make the telemetry-only assertion vacuous.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testCreateAuthUxJavaScriptInterface_AuthService_KeepsTheFullBridge() {
+        mWebViewClient.createAuthUxJavaScriptInterface()
+                .receiveAuthUxMessage(NUMBER_MATCH_PAYLOAD);
+
+        assertEquals("42",
+                NumberMatchHelper.Companion.getNumberMatchMap().get(NUMBER_MATCH_SESSION_ID));
     }
 
     /**

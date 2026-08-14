@@ -122,9 +122,21 @@ fun interface AuthUxTelemetrySink {
  *  onboarding telemetry. When null (the default), `log_telemetry` messages are still parsed and
  *  validated but produce no telemetry side effect. Supplying a default keeps existing no-arg
  *  construction (e.g. from the WebView host) source-compatible.
+ * @property telemetryOnly When `true`, this instance serves [ActionNames.LOG_TELEMETRY] and refuses
+ *  every other action, so the only effect a page can have is appending to the onboarding telemetry
+ *  blob. Defaults to `false`, which preserves the full broker bridge.
+ *
+ *  Exists because the two hosts that register this bridge do not warrant the same trust. Inside the
+ *  broker's isolated `:auth` process the full bridge is appropriate; outside it — in a non-brokered
+ *  (OneAuth) flow the bridge runs in the host application's own process (Teams, Outlook, ...), where
+ *  the number-match device store is neither needed nor readable by the broker anyway. Enforcing the
+ *  restriction *here*, at dispatch, rather than only at the registration gate means a future caller
+ *  that constructs the bridge for a brokerless host cannot accidentally re-expose the mutating path
+ *  by forgetting a check at its own call site.
  */
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
-    private val telemetrySink: AuthUxTelemetrySink? = null
+    private val telemetrySink: AuthUxTelemetrySink? = null,
+    private val telemetryOnly: Boolean = false
 ) {
 
     /**
@@ -450,11 +462,25 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 actionName == ActionNames.LOG_TELEMETRY ->
                     handleLogTelemetry(correlationId, parameters, methodTag)
 
-                operation == OperationNames.NUMBER_MATCHING ->
-                    NumberMatchHelper.storeNumberMatch(
-                        parameters.sessionId,
-                        parameters.codeMatch
-                    )
+                operation == OperationNames.NUMBER_MATCHING -> {
+                    if (telemetryOnly) {
+                        // Registered outside the broker's :auth process: the only action this
+                        // instance serves is log_telemetry (see the telemetryOnly KDoc). Refused
+                        // here rather than only at the registration gate so the mutating path is
+                        // unreachable regardless of how the instance was constructed.
+                        Logger.warn(
+                            methodTag,
+                            correlationId,
+                            "Refusing operation [${OperationNames.NUMBER_MATCHING}]: this bridge " +
+                                "is registered in telemetry-only mode."
+                        )
+                    } else {
+                        NumberMatchHelper.storeNumberMatch(
+                            parameters.sessionId,
+                            parameters.codeMatch
+                        )
+                    }
+                }
 
                 else ->
                     Logger.warn(

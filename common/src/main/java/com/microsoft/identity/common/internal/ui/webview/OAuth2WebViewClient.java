@@ -287,9 +287,59 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     protected boolean shouldExposeJavaScriptInterface(final String url) {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+        if (!AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)) {
+            return false;
+        }
+        if (isTelemetryOnlyAuthUxBridge()) {
+            // Outside the broker's :auth process the gate is NOT a flight, deliberately. Flights
+            // resolve through CommonFlightsManager, which only ever returns real ECS values in a
+            // process that called initializeCommonFlightsManager -- and the broker is the only
+            // caller. In a host application's own process (OneAuth, or any MSAL client) the manager
+            // falls back to DefaultValueFlightsProvider and returns the compiled-in default, so a
+            // flight here could never be turned on in production no matter how it was ramped: it
+            // would be a permanently-false gate wearing the costume of a kill switch.
+            //
+            // Exposure follows the ONBOARDING SEED instead, which is a better gate on its own
+            // merits. This bridge exists only to append to the onboarding blob, so with no recorder
+            // it can have no effect at all; and a recorder exists only when the caller deliberately
+            // seeded onboarding telemetry for this request. Plain MSAL clients never seed one and
+            // are therefore never exposed, and the off switch is "stop seeding" -- a decision the
+            // caller already owns per request, in a process where it actually takes effect.
+            return hasOnboardingTelemetryRecorder();
+        }
+        // Inside :auth the flight is real, and the full bridge (which includes the number-match
+        // device store) stays behind the flight it has always used.
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
+     * Whether this client has an onboarding telemetry recorder for the current request.
+     *
+     * <p>The brokerless gate above uses this in place of a flight. Subclasses that can carry a
+     * recorder override it; the base client never has one, so the telemetry-only bridge is not
+     * exposed for a WebView host that has nothing to record into.
+     *
+     * @return {@code true} when a recorder is attached and the telemetry-only bridge would have
+     *         somewhere to write.
+     */
+    protected boolean hasOnboardingTelemetryRecorder() {
+        return false;
+    }
+
+    /**
+     * Whether the Auth UX bridge this client registers must be restricted to telemetry.
+     *
+     * <p>Determined by the hosting process, not by the loaded page: outside the broker's isolated
+     * {@code :auth} process the WebView runs in the calling application's own process (a
+     * non-brokered OneAuth flow in Teams, Outlook, ...), where the number-match device store is
+     * neither reachable by the broker nor part of the flow. Such a host therefore only ever needs
+     * to report onboarding error codes, so it gets a bridge that can do nothing else.
+     *
+     * @return {@code true} to construct the bridge in telemetry-only mode.
+     */
+    protected boolean isTelemetryOnlyAuthUxBridge() {
+        return !ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
     }
 
     /**
@@ -302,12 +352,13 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * to the same name, so the later registration wins. Constructing the bridge here — rather than
      * inline at each call site — keeps both registrations identically configured; otherwise a
      * subclass that supplies extra collaborators (e.g. a telemetry sink) would silently have them
-     * dropped the first time a page load re-registered a bare instance.
+     * dropped the first time a page load re-registered a bare instance. For the same reason the
+     * telemetry-only capability is resolved here rather than at either call site.
      *
      * @return the bridge instance to bind under {@link AuthUxJavaScriptInterface#getInterfaceName()}.
      */
     @NonNull
     protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
-        return new AuthUxJavaScriptInterface();
+        return new AuthUxJavaScriptInterface(null, isTelemetryOnlyAuthUxBridge());
     }
 }
