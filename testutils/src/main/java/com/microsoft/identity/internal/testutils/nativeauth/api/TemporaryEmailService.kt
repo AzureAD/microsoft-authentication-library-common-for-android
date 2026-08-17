@@ -26,7 +26,6 @@ package com.microsoft.identity.internal.testutils.nativeauth.api
 import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.nativeauth.ApiConstants
 import com.microsoft.identity.internal.test.labapi.ApiClient
 import com.microsoft.identity.internal.test.labapi.ApiException
@@ -40,6 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
+
+private const val EMAIL_PROVIDER_PASSWORD_ENVIRONMENT_VARIABLE = "EMAIL_PROVIDER_PASSWORD"
+
+internal fun resolveEmailProviderPassword(environment: Map<String, String>): String {
+    return environment[EMAIL_PROVIDER_PASSWORD_ENVIRONMENT_VARIABLE].orEmpty()
+}
 
 /**
  * Mail.tm inbox helper for Native Auth end-to-end tests.
@@ -59,7 +64,7 @@ class TemporaryEmailService internal constructor(
         pollingDelaysMs = DEFAULT_POLLING_DELAYS_MS
     )
 
-    constructor() : this(BuildValues.getEmailProviderPassword())
+    constructor() : this(resolveEmailProviderPassword(System.getenv()))
 
     private val inboxes = mutableMapOf<String, InboxState>()
 

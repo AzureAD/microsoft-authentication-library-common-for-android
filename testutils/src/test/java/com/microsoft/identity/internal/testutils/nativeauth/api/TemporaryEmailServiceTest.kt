@@ -40,6 +40,20 @@ import java.util.TimeZone
 class TemporaryEmailServiceTest {
 
     @Test
+    fun resolveEmailProviderPassword_whenEnvironmentContainsPassword_returnsPassword() {
+        val password = resolveEmailProviderPassword(
+            mapOf("EMAIL_PROVIDER_PASSWORD" to PASSWORD)
+        )
+
+        assertEquals(PASSWORD, password)
+    }
+
+    @Test
+    fun resolveEmailProviderPassword_whenEnvironmentDoesNotContainPassword_returnsEmptyString() {
+        assertEquals("", resolveEmailProviderPassword(emptyMap()))
+    }
+
+    @Test
     fun constructor_withoutPassword_remainsSourceCompatible() {
         val service = TemporaryEmailService()
 
