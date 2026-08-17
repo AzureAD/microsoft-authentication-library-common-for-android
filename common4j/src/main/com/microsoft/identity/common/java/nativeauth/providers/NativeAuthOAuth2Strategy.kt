@@ -99,7 +99,7 @@ class NativeAuthOAuth2Strategy(
         resetPasswordInteractor = resetPasswordInteractor,
         jitInteractor = jitInteractor,
         nativeAuthV2Interactor = NativeAuthV2Interactor(
-            httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+            httpClient = NativeAuthOAuth2StrategyFactory.createNativeAuthV2HttpClient(),
             requestProvider = NativeAuthV2RequestProvider(config = config),
             responseHandler = NativeAuthV2ResponseHandler(),
             responseParser = NativeAuthV2ResponseParser(),

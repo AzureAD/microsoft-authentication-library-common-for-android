@@ -69,7 +69,7 @@ class NativeAuthV2RequestProvider(
         return AuthorizeChallengeStartRequest.create(
             clientId = config.clientId,
             challengeType = config.challengeType,
-            requestUrl = config.getAuthorizeChallengeEndpoint().toString(),
+            requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toString(),
             headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
         )
     }
@@ -88,7 +88,7 @@ class NativeAuthV2RequestProvider(
         return AuthorizeChallengeContinueRequest.create(
             clientId = config.clientId,
             continuationToken = state.continuationToken,
-            requestUrl = config.getAuthorizeChallengeEndpoint().toString(),
+            requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(state.correlationId).toString(),
             headers = getV2RequestHeaders(state.correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
         )
     }
@@ -178,7 +178,7 @@ class NativeAuthV2RequestProvider(
             clientId = config.clientId,
             code = code,
             scopes = scopes,
-            requestUrl = config.getSignInTokenEndpoint().toString(),
+            requestUrl = config.getNativeAuthV2TokenEndpoint(correlationId).toString(),
             headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
         )
     }

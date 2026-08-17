@@ -25,8 +25,6 @@ package com.microsoft.identity.common.java.nativeauth.providers.v2
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -43,10 +41,15 @@ class NativeAuthV2HrefResolverTest {
         authorityUrl: String = "https://login.contoso.com/tenant",
         useMockApi: Boolean = false
     ): NativeAuthV2HrefResolver {
-        val config = mockk<NativeAuthOAuth2Configuration> {
-            every { getAuthorityUrl() } returns URL(authorityUrl)
-            every { useMockApiForNativeAuth } returns useMockApi
-        }
+        val config = NativeAuthOAuth2Configuration(
+            authorityUrl = URL(authorityUrl),
+            clientId = "client-id",
+            challengeType = "oob",
+            capabilities = null,
+            requestInterceptor = null,
+            useMockApiForNativeAuth = useMockApi,
+            MOCK_API_URL_WITH_NATIVE_AUTH_TENANT = authorityUrl
+        )
         return NativeAuthV2HrefResolver(config)
     }
 
@@ -189,6 +192,21 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
+    fun resolve_whenRelativeHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
+        listOf(
+            "/unexpected/api/v0.1/auth/challenge",
+            "/unexpected/tenant/oauth2/v2.0/token"
+        ).forEach { href ->
+            val exception = assertClientException {
+                resolver().resolve(href, CORRELATION_ID)
+            }
+
+            assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
+            assertEquals(CORRELATION_ID, exception.correlationId)
+        }
+    }
+
+    @Test
     fun resolve_whenRelativeHrefHasTrailingSlash_allowsTrailingSlash() {
         val url = resolver().resolve("/api/v0.1/auth/challenge/", CORRELATION_ID)
 
@@ -219,6 +237,76 @@ class NativeAuthV2HrefResolverTest {
             "https://login.contoso.com:8443/api/v0.1/auth/challenge",
             explicitPortUrl.toString()
         )
+    }
+
+    @Test
+    fun resolve_whenAbsoluteHrefUsesTenantPrefixedSupportedPath_preservesPathAndQueryBytes() {
+        val url = resolver().resolve(
+            "https://login.contoso.com/tenant/api/v0.1/auth/challenge?value=%2B&item=one%2Ftwo",
+            CORRELATION_ID
+        )
+
+        assertEquals(
+            "https://login.contoso.com/tenant/api/v0.1/auth/challenge?value=%2B&item=one%2Ftwo",
+            url.toString()
+        )
+    }
+
+    @Test
+    fun resolve_whenAbsoluteHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
+        listOf(
+            "https://login.contoso.com/unexpected/api/v0.1/auth/challenge",
+            "https://login.contoso.com/unexpected/tenant/oauth2/v2.0/token"
+        ).forEach { href ->
+            val exception = assertClientException {
+                resolver().resolve(href, CORRELATION_ID)
+            }
+
+            assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
+            assertEquals(CORRELATION_ID, exception.correlationId)
+        }
+    }
+
+    @Test
+    fun resolve_whenAbsoluteHrefContainsDotOrEmptySegments_rejectsMalformedUrl() {
+        listOf(
+            "https://login.contoso.com/api/v0.1//challenge",
+            "https://login.contoso.com/api/v0.1/auth/%2E/challenge",
+            "https://login.contoso.com/tenant/oauth2/v2.0/%2e%2E/token"
+        ).forEach { href ->
+            val exception = assertClientException {
+                resolver().resolve(href, CORRELATION_ID)
+            }
+
+            assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
+            assertEquals(CORRELATION_ID, exception.correlationId)
+        }
+    }
+
+    @Test
+    fun resolve_whenProductionAuthorityUsesHttp_rejectsRelativeHref() {
+        val exception = assertClientException {
+            resolver(
+                authorityUrl = "http://login.contoso.com/tenant",
+                useMockApi = false
+            ).resolve("/api/v0.1/auth/challenge", CORRELATION_ID)
+        }
+
+        assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+    }
+
+    @Test
+    fun resolve_whenMockModeUsesHttpsAuthority_rejectsHttpHref() {
+        val exception = assertClientException {
+            resolver(
+                authorityUrl = "https://login.contoso.com/tenant",
+                useMockApi = true
+            ).resolve("http://login.contoso.com/api/v0.1/auth/challenge", CORRELATION_ID)
+        }
+
+        assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
     }
 
     @Test

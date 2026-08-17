@@ -47,10 +47,14 @@ class NativeAuthV2ResponseHandler {
     private val TAG: String = NativeAuthV2ResponseHandler::class.java.simpleName
 
     companion object {
+        private val HTTP_REDIRECT_STATUS_CODE_RANGE = 300..399
         private const val EMPTY_BODY_ERROR_CODE = "empty_body_error"
         private const val PARSE_ERROR_CODE = "response_parse_error"
+        private const val REDIRECT_RESPONSE_ERROR_CODE = "redirect_response_error"
         private const val EMPTY_BODY_ERROR_MESSAGE = "V2 HAL response body was empty or blank."
         private const val PARSE_ERROR_MESSAGE = "V2 HAL response body was not valid JSON."
+        private const val REDIRECT_RESPONSE_ERROR_MESSAGE =
+            "Native Auth V2 does not allow HTTP redirect responses."
     }
 
     /**
@@ -70,7 +74,15 @@ class NativeAuthV2ResponseHandler {
 
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
-        return if (response.body.isNullOrBlank()) {
+        return if (response.statusCode in HTTP_REDIRECT_STATUS_CODE_RANGE) {
+            Logger.warn(TAG, "V2 HAL redirect response is not supported for statusCode=${response.statusCode}.")
+            buildSyntheticErrorResponse(
+                statusCode = response.statusCode,
+                correlationId = correlationId,
+                errorCode = REDIRECT_RESPONSE_ERROR_CODE,
+                errorMessage = REDIRECT_RESPONSE_ERROR_MESSAGE
+            )
+        } else if (response.body.isNullOrBlank()) {
             Logger.warn(TAG, "V2 HAL response body is empty for statusCode=${response.statusCode}.")
             buildSyntheticErrorResponse(
                 statusCode = response.statusCode,

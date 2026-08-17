@@ -101,6 +101,27 @@ class NativeAuthV2ResponseHandlerTest {
     }
 
     @Test
+    fun getHalApiResponse_whenStatusIsRedirect_returnsSyntheticRedirectErrorWithoutParsingBody() {
+        val result = handler.getHalApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(
+                statusCode = 302,
+                body = """{"continuationToken":"tok-1","_links":{"resetPassword":{"href":"/reset"}}}"""
+            )
+        )
+
+        assertEquals(CORRELATION_ID, result.correlationId)
+        assertEquals(302, result.statusCode)
+        assertEquals("redirect_response_error", result.serverError?.code)
+        assertEquals(
+            "Native Auth V2 does not allow HTTP redirect responses.",
+            result.serverError?.message
+        )
+        assertNull(result.continuationToken)
+        assertEquals(emptyMap<String, String>(), result.links)
+    }
+
+    @Test
     fun getHalApiResponse_whenResponseHeaderHasCorrelationId_usesHeaderValueOverRequestCorrelationId() {
         val headers = mapOf(AuthenticationConstants.AAD.CLIENT_REQUEST_ID to listOf("header-correlation-id"))
 

@@ -39,17 +39,22 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2StrategyFactory {
     companion object {
+        internal fun createNativeAuthV2HttpClient(): UrlConnectionHttpClient {
+            return UrlConnectionHttpClient.createDefaultConfiguredInstance(false)
+        }
+
         fun createStrategy(
             config: NativeAuthOAuth2Configuration,
             strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthOAuth2Strategy {
             val requestInterceptor = config.requestInterceptor
             val httpClient = UrlConnectionHttpClient.getDefaultInstance()
+            val nativeAuthV2HttpClient = createNativeAuthV2HttpClient()
             val nativeAuthV2RequestProvider = NativeAuthV2RequestProvider(config = config)
             val nativeAuthV2ResponseHandler = NativeAuthV2ResponseHandler()
             val nativeAuthV2ResponseParser = NativeAuthV2ResponseParser()
             val nativeAuthV2Interactor = NativeAuthV2Interactor(
-                httpClient = httpClient,
+                httpClient = nativeAuthV2HttpClient,
                 requestProvider = nativeAuthV2RequestProvider,
                 responseHandler = nativeAuthV2ResponseHandler,
                 responseParser = nativeAuthV2ResponseParser,
