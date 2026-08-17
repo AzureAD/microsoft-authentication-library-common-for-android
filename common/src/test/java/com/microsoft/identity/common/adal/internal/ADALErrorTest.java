@@ -62,7 +62,7 @@ public class ADALErrorTest {
     }
 
     @Test
-    public void descriptions_areUniqueEnoughAndValuesResolvable() {
+    public void names_areUniqueAndValuesResolvable() {
         final Set<String> names = new HashSet<>();
         for (final ADALError error : ADALError.values()) {
             names.add(error.name());
