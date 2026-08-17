@@ -362,9 +362,8 @@ class DeviceRegistrationClientApplicationTest {
         )
     }
 
-    @Suppress("DEPRECATION")
     @Test
-    fun getDeviceToken_v0Deprecated_stillWorks() {
+    fun getDeviceToken_v0_stillWorks() {
         val expectedToken = "device.token.v0"
         val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(
             UUID.randomUUID(), expectedToken
@@ -381,9 +380,8 @@ class DeviceRegistrationClientApplicationTest {
         Assert.assertEquals(expectedToken, result)
     }
 
-    @Suppress("DEPRECATION")
     @Test
-    fun getDeviceToken_v0Deprecated_usesV0Protocol() {
+    fun getDeviceToken_v0_usesV0Protocol() {
         val correlationId = UUID.randomUUID()
         val expectedToken = "device.token.v0"
         val response = com.microsoft.identity.deviceregistration.java.protocol.response.GetDeviceTokenV0Response(

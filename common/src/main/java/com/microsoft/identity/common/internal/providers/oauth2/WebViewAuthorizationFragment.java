@@ -728,6 +728,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mSwitchBrowserProtocolCoordinator != null) {
             mSwitchBrowserProtocolCoordinator.cancel();
         }
+        mCameraPermissionRequestHandler.cancel();
         if (mAADWebViewClient != null) {
             mAADWebViewClient.onDestroy();
         } else {

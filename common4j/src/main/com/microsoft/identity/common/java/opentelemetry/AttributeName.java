@@ -117,6 +117,31 @@ public enum AttributeName {
     application_name,
 
     /**
+     * The preferred authentication method requested by the caller (e.g. "qrpin" for QR + PIN,
+     * "none" when unset), taken from the interactive request parameters.
+     */
+    preferred_auth_method,
+
+    /**
+     * The decision path taken for a WebView camera permission request. One of:
+     * "qrpin_silent_grant", "qrpin_rationale", "qrpin_os_prompt",
+     * "default_silent_grant", "default_os_prompt".
+     */
+    camera_permission_flow,
+
+    /**
+     * Whether the device has any camera hardware (FEATURE_CAMERA_ANY). Recorded on the camera
+     * permission span; does not affect handling.
+     */
+    has_camera_hardware,
+
+    /**
+     * Outcome of a WebView camera permission request: "granted" or "denied" (OK),
+     * "superseded", "error", or "abandoned" (ERROR).
+     */
+    camera_permission_result,
+
+    /**
      * The correlation id sent from client app
      */
     correlation_id,
