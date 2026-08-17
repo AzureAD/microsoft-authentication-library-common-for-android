@@ -49,6 +49,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -75,6 +76,11 @@ public abstract class AuthorizationFragment extends Fragment {
      * Determines if authentication result has been sent.
      */
     protected boolean mAuthResultSent = false;
+
+    /**
+     * Whether the host opted in to MAM-CA install-referrer tagging for this request.
+     */
+    protected boolean mMamCaInstallReferrerEnabled = false;
 
     /**
      * Listens to an operation cancellation event.
@@ -166,6 +172,13 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        mMamCaInstallReferrerEnabled = state.getBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, false);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, mMamCaInstallReferrerEnabled);
     }
 
     /**
@@ -226,9 +239,9 @@ public abstract class AuthorizationFragment extends Fragment {
      * install.
      * <p>
      * Shared by every {@link AuthorizationFragment} subclass that launches the broker install so the
-     * flight- and MAM-CA-gates are evaluated in exactly one place ({@link MamInstallReferrerBuilder}).
-     * Null-safe: with the flight off, on a non-MAM-CA install, or with no attached context, the original
-     * link is returned unchanged.
+     * host opt-in and MAM-CA gates are evaluated in exactly one place ({@link MamInstallReferrerBuilder}).
+     * Null-safe: when the host did not opt in, on a non-MAM-CA install, or with no attached context, the
+     * original link is returned unchanged.
      *
      * @param appLink            the server-provided Play Store install link.
      * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
@@ -238,6 +251,7 @@ public abstract class AuthorizationFragment extends Fragment {
                                                      final Map<String, String> redirectParameters) {
         final Context context = getContext();
         return MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                mMamCaInstallReferrerEnabled,
                 appLink, context == null ? null : context.getPackageName(), redirectParameters);
     }
 
