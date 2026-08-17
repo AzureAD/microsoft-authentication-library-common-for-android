@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import java.io.Serializable
+
 /**
  * A HAL `_links` relation name used by V2 Native Auth responses.
  *
@@ -31,8 +33,10 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
  * simply not followed by the SDK; it does not need to fail parsing.
  */
 @JvmInline
-value class NativeAuthV2LinkRelation(val value: String) {
+value class NativeAuthV2LinkRelation(val value: String) : Serializable {
     companion object {
+        private const val serialVersionUID = 1L
+
         val CHALLENGE = NativeAuthV2LinkRelation("challenge")
         val VERIFY = NativeAuthV2LinkRelation("verify")
         val RESEND = NativeAuthV2LinkRelation("resend")

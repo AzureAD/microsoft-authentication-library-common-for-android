@@ -83,15 +83,25 @@ class NativeAuthV2ResponseParser {
             )
         }
 
-        response.authorizationCode?.let { code ->
+        response.authorizationCode?.takeUnless { it.isBlank() }?.let { code ->
             return AuthorizeChallengeApiResult.AuthorizationCode(
                 correlationId = response.correlationId,
                 code = code
             )
         }
 
-        if (response.continuationToken != null) {
-            if (response.links[entryRelation.value] == null) {
+        val continuationToken = response.continuationToken
+        if (continuationToken != null) {
+            if (continuationToken.isBlank()) {
+                return AuthorizeChallengeApiResult.UnknownError(
+                    correlationId = response.correlationId,
+                    error = ApiErrorResult.INVALID_STATE,
+                    errorDescription = "Native Auth V2 authorize-challenge response contains a " +
+                            "blank continuation token."
+                )
+            }
+
+            if (response.links[entryRelation.value].isNullOrBlank()) {
                 return AuthorizeChallengeApiResult.UnknownError(
                     correlationId = response.correlationId,
                     error = ApiErrorResult.INVALID_STATE,
@@ -102,13 +112,9 @@ class NativeAuthV2ResponseParser {
 
             val continuationState = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
                 response = response,
+                continuationToken = continuationToken,
                 scopes = scopes,
                 entryRelation = entryRelation
-            ) ?: return AuthorizeChallengeApiResult.UnknownError(
-                correlationId = response.correlationId,
-                error = ApiErrorResult.INVALID_STATE,
-                errorDescription = "Native Auth V2 authorize-challenge response is missing a " +
-                        "continuation token."
             )
 
             return AuthorizeChallengeApiResult.ContinuationRequired(

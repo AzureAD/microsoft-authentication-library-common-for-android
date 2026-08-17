@@ -92,6 +92,32 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseAuthorizeChallenge_whenAuthorizationCodeIsBlank_returnsUnknownError() {
+        listOf("", "   ").forEach { code ->
+            assertInvalidState("""{"code":"$code"}""")
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenAuthorizationCodeIsBlankAndContinuationIsValid_returnsContinuationRequired() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "code": "   ",
+                  "continuation_token": "flow-token",
+                  "reset_password": "/tenant/api/v0.1/auth/resetpassword"
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.ContinuationRequired)
+    }
+
+    @Test
     fun parseAuthorizeChallenge_whenCodeAndContinuationTokenPresent_prefersAuthorizationCode() {
         val result = parser.parseAuthorizeChallenge(
             response = responseFrom(
@@ -133,18 +159,46 @@ class NativeAuthV2ResponseParserTest {
 
     @Test
     fun parseAuthorizeChallenge_whenContinuationTokenPresentButEntryLinkMissing_returnsUnknownError() {
-        listOf("flow-token", "").forEach { token ->
-            val result = parser.parseAuthorizeChallenge(
-                response = responseFrom("""{"continuationToken":"$token"}"""),
-                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
-                scopes = listOf("User.Read")
-            )
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom("""{"continuationToken":"flow-token"}"""),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
 
-            assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
-            val error = result as AuthorizeChallengeApiResult.UnknownError
-            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
-            assertTrue(error.errorDescription.contains("resetPassword"))
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("resetPassword"))
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenContinuationTokenIsBlankAndEntryLinkPresent_returnsUnknownError() {
+        listOf("", "   ").forEach { token ->
+            assertInvalidState(
+                """
+                {
+                  "continuation_token": "$token",
+                  "reset_password": "/tenant/api/v0.1/auth/resetpassword"
+                }
+                """.trimIndent()
+            )
         }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenEntryLinkIsBlank_returnsUnknownError() {
+        assertInvalidState(
+            """
+            {
+              "continuation_token": "flow-token",
+              "_links": {
+                "resetPassword": {
+                  "href": "   "
+                }
+              }
+            }
+            """.trimIndent()
+        )
     }
 
     @Test
@@ -171,6 +225,27 @@ class NativeAuthV2ResponseParserTest {
             statusCode = 200,
             correlationId = CORRELATION_ID
         )
+
+    private fun assertInvalidState(json: String) {
+        val parsed = runCatching {
+            parser.parseAuthorizeChallenge(
+                response = responseFrom(json),
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+        }
+
+        assertTrue(
+            "Parser should return UnknownError instead of throwing ${parsed.exceptionOrNull()}",
+            parsed.isSuccess
+        )
+        val result = parsed.getOrThrow()
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(
+            ApiErrorResult.INVALID_STATE,
+            (result as AuthorizeChallengeApiResult.UnknownError).error
+        )
+    }
 
     private companion object {
         private const val CORRELATION_ID = "corr-123"

@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import com.microsoft.identity.common.java.util.ArgUtils
+import java.io.Serializable
 import java.util.Collections
 
 /**
@@ -31,9 +33,9 @@ import java.util.Collections
  * the entry relation that started the flow.
  *
  * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
- * they cannot inspect [continuationToken], [links], [scopes], or [entryRelation], because those members
- * and [entryRelation] are `internal` to this module. Only common4j Native Auth V2 protocol code (this package and
- * `nativeauth.providers.v2`) can read them, e.g. to build the next request. [toString] and
+ * they cannot inspect [continuationToken], [links], [scopes], or [entryRelation], because those
+ * members are `internal` and therefore visible throughout common4j but not outside that module.
+ * [toString] and
  * [toUnsanitizedString] deliberately reveal none of this state, not even to internal callers,
  * since accidentally logging this object anywhere would otherwise be a single point of failure
  * for a continuation-token leak.
@@ -44,7 +46,7 @@ class NativeAuthV2ContinuationState private constructor(
     internal val scopes: List<String>,
     val correlationId: String,
     internal val entryRelation: NativeAuthV2LinkRelation
-) : ILoggable {
+) : ILoggable, Serializable {
 
     /**
      * Returns a defensive copy of the scopes this state was created with, for use in token
@@ -64,6 +66,7 @@ class NativeAuthV2ContinuationState private constructor(
     override fun toString(): String = REDACTED_STRING
 
     companion object {
+        private const val serialVersionUID = 1L
         private const val REDACTED_STRING = "NativeAuthV2ContinuationState(<redacted>)"
 
         /**
@@ -84,18 +87,21 @@ class NativeAuthV2ContinuationState private constructor(
         )
 
         /**
-         * Builds the first continuation state from an authorize-challenge response, or `null` if
-         * [response] did not carry a continuation token (e.g. it returned an authorization code or
-         * a redirect instead).
+         * Builds the first continuation state from an authorize-challenge [response] and its
+         * already-validated, nonblank [continuationToken].
+         *
+         * @throws com.microsoft.identity.common.java.exception.ClientException if
+         * [continuationToken] is blank.
          */
         internal fun fromAuthorizeChallengeResponse(
             response: NativeAuthV2HalApiResponse,
+            continuationToken: String,
             scopes: List<String>,
             entryRelation: NativeAuthV2LinkRelation
-        ): NativeAuthV2ContinuationState? {
-            val token = response.continuationToken ?: return null
+        ): NativeAuthV2ContinuationState {
+            ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             return NativeAuthV2ContinuationState(
-                continuationToken = token,
+                continuationToken = continuationToken,
                 links = retainSupportedRelations(response.links),
                 scopes = defensiveCopy(scopes),
                 correlationId = response.correlationId,
@@ -105,7 +111,7 @@ class NativeAuthV2ContinuationState private constructor(
 
         /**
          * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
-         * `null` if [response] did not carry a continuation token.
+         * `null` if [response] did not carry a nonblank continuation token.
          *
          * [selectedMethod]'s links (if any) are merged with [response]'s top-level links, with the
          * selected embedded-method links taking precedence on a relation collision, before the
@@ -119,7 +125,7 @@ class NativeAuthV2ContinuationState private constructor(
             response: NativeAuthV2HalApiResponse,
             selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = response.methods.firstOrNull()
         ): NativeAuthV2ContinuationState? {
-            val token = response.continuationToken ?: return null
+            val token = response.continuationToken?.takeUnless { it.isBlank() } ?: return null
             val merged = LinkedHashMap<String, String>()
             merged.putAll(response.links)
             selectedMethod?.links?.let { merged.putAll(it) }

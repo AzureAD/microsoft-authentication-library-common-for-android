@@ -62,6 +62,10 @@ data class NativeAuthV2TokenRequest private constructor(
             ArgUtils.validateNonNullArg(code, "code")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
+            ArgUtils.validateNonNullArg(scopes, "scopes")
+            scopes.forEachIndexed { index, scope ->
+                ArgUtils.validateNonNullArg(scope, "scopes[$index]")
+            }
 
             return NativeAuthV2TokenRequest(
                 requestUrl = URL(requestUrl),
