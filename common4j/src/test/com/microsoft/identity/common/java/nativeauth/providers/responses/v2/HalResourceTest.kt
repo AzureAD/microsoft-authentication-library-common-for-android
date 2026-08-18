@@ -169,4 +169,25 @@ class HalResourceTest {
         assertTrue(method.links.isEmpty())
         assertNull(method.href("verify"))
     }
+
+    @Test
+    fun from_whenTemplatedLinkOnlyExpandsLeadingTenant_retainsThatRelation() {
+        val resource = HalResource.from(
+            """
+            {
+              "_links": {
+                "challenge": {
+                  "href": "/{tenant}/api/v0.1/auth/challenge",
+                  "templated": true
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        assertEquals(
+            "/{tenant}/api/v0.1/auth/challenge",
+            resource.href("challenge")
+        )
+    }
 }

@@ -44,6 +44,15 @@ import java.net.URL
 class NativeAuthOAuth2StrategyTest {
 
     @Test
+    fun nativeAuthV2Configuration_doesNotExposeUnguardedAuthorizeChallengeEndpoint() {
+        assertFalse(
+            NativeAuthOAuth2Configuration::class.java.methods.any {
+                it.name == "getAuthorizeChallengeEndpoint"
+            }
+        )
+    }
+
+    @Test
     fun secondaryConstructor_createsDedicatedNativeAuthV2ClientWithoutRedirects() {
         val strategy = NativeAuthOAuth2Strategy(
             strategyParameters = OAuth2StrategyParameters.builder().build(),

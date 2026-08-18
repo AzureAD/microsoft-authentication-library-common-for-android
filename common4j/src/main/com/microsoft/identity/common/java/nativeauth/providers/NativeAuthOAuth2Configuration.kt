@@ -204,18 +204,6 @@ class NativeAuthOAuth2Configuration(
     }
 
     /**
-     * Get the endpoint to be used for making an oauth2/v2.0/authorize-challenge request.
-     *
-     * @return URL the endpoint
-     */
-    fun getAuthorizeChallengeEndpoint(): URL {
-        return getEndpointUrlFromRootAndTenantAndSuffix(
-            root = getAuthorityUrl(),
-            endpointSuffix = AUTHORIZE_CHALLENGE_ENDPOINT_SUFFIX
-        )
-    }
-
-    /**
      * Get the endpoint to be used for making an oauth2/v2.0/introspect request.
      *
      * @return URL the endpoint

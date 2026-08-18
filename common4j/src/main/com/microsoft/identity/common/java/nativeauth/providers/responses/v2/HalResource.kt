@@ -88,6 +88,7 @@ internal class HalResource private constructor(
         private const val HREF_KEY = "href"
         private const val NAME_KEY = "name"
         private const val TEMPLATED_KEY = "templated"
+        private const val TENANT_TEMPLATE = "{tenant}"
 
         /**
          * Parses [json] into a [HalResource].
@@ -156,9 +157,21 @@ internal class HalResource private constructor(
         }
 
         private fun toHalLinkList(value: Any?): List<HalLink> = when (value) {
-            is List<*> -> value.mapNotNull { toHalLink(it) }.filterNot { it.templated }
-            is Map<*, *> -> listOfNotNull(toHalLink(value)).filterNot { it.templated }
+            is List<*> -> value.mapNotNull { toHalLink(it) }.filter { isFollowable(it) }
+            is Map<*, *> -> listOfNotNull(toHalLink(value)).filter { isFollowable(it) }
             else -> emptyList()
+        }
+
+        private fun isFollowable(link: HalLink): Boolean =
+            !link.templated || isSupportedTenantTemplate(link.href)
+
+        private fun isSupportedTenantTemplate(href: String): Boolean {
+            val withoutLeadingSlash = href.removePrefix("/")
+            if (!withoutLeadingSlash.startsWith("$TENANT_TEMPLATE/")) {
+                return false
+            }
+            val remainder = withoutLeadingSlash.removePrefix(TENANT_TEMPLATE)
+            return !remainder.contains('{') && !remainder.contains('}')
         }
 
         private fun toHalLink(value: Any?): HalLink? {

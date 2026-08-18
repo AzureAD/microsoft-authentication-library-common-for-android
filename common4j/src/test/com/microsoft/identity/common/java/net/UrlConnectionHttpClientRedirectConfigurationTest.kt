@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.net
 
 import com.microsoft.identity.http.MockConnection
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.verify
 import java.net.URL
@@ -64,5 +65,14 @@ class UrlConnectionHttpClientRedirectConfigurationTest {
         client.get(URL("https://login.contoso.com/tenant"), emptyMap())
 
         verify(connection).setInstanceFollowRedirects(false)
+    }
+
+    @Test
+    fun createDefaultConfiguredInstance_whenRedirectsDisabled_preservesDefaultRetryPolicy() {
+        val client = UrlConnectionHttpClient.createDefaultConfiguredInstance(false)
+        val retryPolicyField = UrlConnectionHttpClient::class.java.getDeclaredField("retryPolicy")
+        retryPolicyField.isAccessible = true
+
+        assertTrue(retryPolicyField.get(client) is StatusCodeAndExceptionRetry)
     }
 }

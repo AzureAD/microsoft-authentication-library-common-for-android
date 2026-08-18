@@ -224,26 +224,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .retryPolicy(StatusCodeAndExceptionRetry.builder()
-                            .number(1)
-                            .extensionFactor(2)
-                            .isAcceptable(new Function<HttpResponse, Boolean>() {
-                                public Boolean apply(HttpResponse response) {
-                                    return response != null && response.getStatusCode() < 400;
-                                }
-                            })
-                            .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                            .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
-                                public Boolean apply(HttpResponse response, Integer attemptNumber) {
-                                    return response != null && isRetryableError(response.getStatusCode());
-                                }
-                            })
-                            .isRetryableException(new Function<Exception, Boolean>() {
-                                public Boolean apply(Exception e) {
-                                    return ConnectionError.CONNECTION_TIMEOUT.compare(e);
-                                }
-                            })
-                            .build())
+                    .retryPolicy(createDefaultRetryPolicy())
                     .build());
             reference = defaultReference.get();
         }
@@ -252,7 +233,31 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     public static UrlConnectionHttpClient createDefaultConfiguredInstance(final boolean followRedirects) {
         return UrlConnectionHttpClient.builder()
+                .retryPolicy(createDefaultRetryPolicy())
                 .followRedirects(followRedirects)
+                .build();
+    }
+
+    private static IRetryPolicy<HttpResponse> createDefaultRetryPolicy() {
+        return StatusCodeAndExceptionRetry.builder()
+                .number(1)
+                .extensionFactor(2)
+                .isAcceptable(new Function<HttpResponse, Boolean>() {
+                    public Boolean apply(HttpResponse response) {
+                        return response != null && response.getStatusCode() < 400;
+                    }
+                })
+                .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
+                .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
+                    public Boolean apply(HttpResponse response, Integer attemptNumber) {
+                        return response != null && isRetryableError(response.getStatusCode());
+                    }
+                })
+                .isRetryableException(new Function<Exception, Boolean>() {
+                    public Boolean apply(Exception e) {
+                        return ConnectionError.CONNECTION_TIMEOUT.compare(e);
+                    }
+                })
                 .build();
     }
 
