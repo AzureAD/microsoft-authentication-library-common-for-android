@@ -623,6 +623,7 @@ public class MsalOAuth2TokenCacheTest {
                     rts.add(credential);
                     break;
                 case IdToken:
+                case V1IdToken:
                     ids.add(credential);
                     break;
                 default:
