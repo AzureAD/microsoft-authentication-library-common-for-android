@@ -1,6 +1,8 @@
 vNext
 ----------
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
+- [PATCH] Security (CWE-918): stop the sso_nonce WebView redirect handler (NonceRedirectHandler) from forwarding the PRT credential header (x-ms-RefreshTokenCredential) to untrusted or cleartext redirect targets; only forward to validated HTTPS AAD cloud hosts and otherwise load the page without the credential, gated by ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION CommonFlight (default on) (#3199)
+- [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId and redirectUri, exposed as DeviceRegistrationClientApplication.getDeviceTokenResult returning the full token response (access token, device info, token type, resource, expiry fields). Deprecate getDeviceToken in favour of it (#3147)
 - [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation (#3218)
 - [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
 - [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)
