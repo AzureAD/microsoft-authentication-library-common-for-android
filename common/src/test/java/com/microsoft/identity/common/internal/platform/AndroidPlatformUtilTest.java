@@ -22,15 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -110,5 +120,81 @@ public class AndroidPlatformUtilTest {
     public void testUpdateWithOrDeleteWebAuthnParam_alreadyInListWebAuthnCapableLowOs() {
         final ArrayList<Map.Entry<String, String>> list = AndroidPlatformUtil.updateWithOrDeleteWebAuthnParam(alreadyInList, true);
         assertFalse(list.contains(webauthnParam));
+    }
+
+    // ---- isValidCallingApp(redirectUri, packageName, callingUid) (AB#3687466): real getPackagesForUid
+    //      caller-ownership membership. The uid-ownership check runs before the redirect-URI check, so a
+    //      spoofed caller is rejected with UNKNOWN_CALLER regardless of the redirect argument; an owned
+    //      caller falls through to the redirect check (which returns false here for these synthetic
+    //      packages, i.e. no exception). ----------------------------------------------------------------
+
+    private static final int OWNER_UID = 20001;
+    private static final int UNMAPPED_UID = 99999;
+    private static final String OWNED_PACKAGE = "com.test.callerapp";
+    private static final String COMPANION_PACKAGE = "com.test.callerapp.companion";
+    private static final String OTHER_PACKAGE = "com.microsoft.emmx";
+    private static final String DUMMY_REDIRECT = "msauth://com.test.callerapp/signature";
+
+    private AndroidPlatformUtil platformUtil() {
+        return new AndroidPlatformUtil(ApplicationProvider.getApplicationContext(), null);
+    }
+
+    private ShadowPackageManager shadowPackageManager() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        return Shadows.shadowOf(context.getPackageManager());
+    }
+
+    private void assertUnknownCaller(final int callingUid, final String callerPackageName) {
+        try {
+            platformUtil().isValidCallingApp(DUMMY_REDIRECT, callerPackageName, callingUid);
+            fail("Expected ClientException(UNKNOWN_CALLER) for uid=" + callingUid
+                    + " caller=" + callerPackageName);
+        } catch (final ClientException e) {
+            assertEquals(ErrorStrings.UNKNOWN_CALLER, e.getErrorCode());
+        }
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_callerOwnedByUid_passesCallerCheck() throws ClientException {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
+
+        // The self-reported caller package is owned by the attested uid: the caller-ownership check does not
+        // throw (the redirect-URI result is irrelevant to this assertion).
+        platformUtil().isValidCallingApp(DUMMY_REDIRECT, OWNED_PACKAGE, OWNER_UID);
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_sharedUidCallerIsOneOfPackages_passesCallerCheck() throws ClientException {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE, COMPANION_PACKAGE);
+
+        // A shared-uid caller naming any package the uid owns is accepted by the caller-ownership check.
+        platformUtil().isValidCallingApp(DUMMY_REDIRECT, COMPANION_PACKAGE, OWNER_UID);
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_callerNotOwnedByUid_throwsUnknownCaller() {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
+
+        // The uid owns OWNED_PACKAGE, but the request self-reports a victim package it does not own.
+        assertUnknownCaller(OWNER_UID, OTHER_PACKAGE);
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_emptyCallerPackage_throwsUnknownCaller() {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
+
+        // An empty caller package is not owned by the uid: rejected fail-closed (no backfill).
+        assertUnknownCaller(OWNER_UID, "");
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_uidResolvesToNoPackage_throwsUnknownCaller() {
+        // No packages mapped for the uid: getPackagesForUid returns null -> empty owned set -> fail closed.
+        assertUnknownCaller(UNMAPPED_UID, OWNED_PACKAGE);
     }
 }
