@@ -804,7 +804,14 @@ public class BrokerOAuth2TokenCache
                                     @NonNull final String homeAccountId,
                                     @Nullable final String realm) {
         final String methodName = ":getAccount";
-
+        Logger.info(
+                TAG + methodName,
+                "Get account for clientId ["
+                        + clientId
+                        + "] and homeAccountId ["
+                        + homeAccountId
+                        + "]"
+        ););
         OAuth2TokenCache targetCache = null;
 
         AccountRecord result = null;
@@ -818,13 +825,13 @@ public class BrokerOAuth2TokenCache
 
             if (null == targetCache) {
                 if (!mCallerAuthorizedForFoci) {
-                    Logger.verbose(
+                    Logger.info(
                             TAG + methodName,
                             "No target cache resolved and caller not FoCI-authorized; returning null."
                     );
                     return null;
                 }
-                Logger.verbose(
+                Logger.info(
                         TAG + methodName,
                         "Target cache was null. Using FOCI cache."
                 );
