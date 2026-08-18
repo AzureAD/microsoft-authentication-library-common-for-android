@@ -29,12 +29,44 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalR
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
+import com.microsoft.identity.common.java.net.HttpConstants
+import com.microsoft.identity.common.java.util.ObjectMapper
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.net.URL
 
 class NativeAuthV2RequestProviderTest {
+
+    @Test
+    fun createAuthorizeChallengeRequests_useFixedAuthorizeChallengeEndpointAndFormBodiesWithoutScopes() {
+        val provider = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        )
+
+        val startRequest = provider.createAuthorizeChallengeStartRequest(CORRELATION_ID)
+        val continueRequest = provider.createAuthorizeChallengeContinueRequest(continuationState())
+
+        assertEquals(
+            URL("https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"),
+            startRequest.requestUrl
+        )
+        assertEquals(startRequest.requestUrl, continueRequest.requestUrl)
+        assertCommonHeaders(startRequest.headers, FORM_URL_ENCODED_CONTENT_TYPE)
+        assertCommonHeaders(continueRequest.headers, FORM_URL_ENCODED_CONTENT_TYPE)
+
+        val startBody = ObjectMapper.serializeObjectToFormUrlEncoded(startRequest.parameters)
+        val continueBody = ObjectMapper.serializeObjectToFormUrlEncoded(continueRequest.parameters)
+
+        assertTrue(startBody.contains("client_id=$CLIENT_ID"))
+        assertTrue(startBody.contains("challenge_type=$CHALLENGE_TYPE"))
+        assertFalse(startBody.contains("scope="))
+        assertTrue(continueBody.contains("continuation_token=flow-token"))
+        assertFalse(continueBody.contains("scope="))
+    }
 
     @Test
     fun createAuthorizeChallengeStartRequest_whenProductionAuthorityIsHttp_rejectsInsecureEndpoint() {
@@ -86,6 +118,78 @@ class NativeAuthV2RequestProviderTest {
 
         assertEquals(ClientException.UNSUPPORTED_URL, exception.errorCode)
         assertEquals(CORRELATION_ID, exception.correlationId)
+    }
+
+    @Test
+    fun createChallengeResendVerifyAndPollRequests_useResolvedLinksJsonBodiesAndExpectedContentTypes() {
+        val state = continuationState()
+        val provider = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        )
+
+        val challengeRequest = provider.createChallengeRequest(state)
+        val resendRequest = provider.createResendRequest(state)
+        val verifyRequest = provider.createVerifyRequest(state, otp = "123456")
+        val pollRequest = provider.createPollRequest(state)
+
+        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/challenge"), challengeRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/resend"), resendRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/verify"), verifyRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/poll"), pollRequest.requestUrl)
+
+        listOf(challengeRequest.headers, resendRequest.headers, verifyRequest.headers, pollRequest.headers)
+            .forEach { assertCommonHeaders(it, JSON_CONTENT_TYPE) }
+
+        val challengeBody = ObjectMapper.serializeObjectToJsonString(challengeRequest.parameters)
+        val resendBody = ObjectMapper.serializeObjectToJsonString(resendRequest.parameters)
+        val verifyBody = ObjectMapper.serializeObjectToJsonString(verifyRequest.parameters)
+        val pollBody = ObjectMapper.serializeObjectToJsonString(pollRequest.parameters)
+
+        listOf(challengeBody, resendBody, verifyBody, pollBody).forEach { body ->
+            assertTrue(body.contains("continuationToken"))
+            assertFalse(body.contains("clientId"))
+            assertFalse(body.contains("scope"))
+        }
+        assertTrue(verifyBody.contains("otp"))
+    }
+
+    @Test
+    fun createTokenRequest_buildsTokenExchangeRequestAndIsOnlyRequestThatCarriesScopes() {
+        val provider = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        )
+
+        val request = provider.createTokenRequest(
+            code = "authorization-code",
+            scopes = SCOPES,
+            correlationId = CORRELATION_ID
+        )
+
+        assertEquals(URL("https://login.contoso.com/tenant/oauth2/v2.0/token"), request.requestUrl)
+        assertCommonHeaders(request.headers, FORM_URL_ENCODED_CONTENT_TYPE)
+
+        val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+
+        assertTrue(formBody.contains("code=authorization-code"))
+        assertTrue(formBody.contains("grant_type=authorization_code"))
+        assertTrue(formBody.contains("scope=openid+profile"))
+        assertTrue(formBody.contains("client_info=true"))
+    }
+
+    @Test
+    fun createVerifyRequest_whenRequiredRelationIsMissing_throwsMissingParameterWithCorrelationId() {
+        val exception = assertClientException {
+            provider(
+                authorityUrl = "https://login.contoso.com/tenant",
+                useMockApi = false
+            ).createVerifyRequest(continuationStateWithout(NativeAuthV2LinkRelation.VERIFY), otp = "123456")
+        }
+
+        assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+        assertTrue(exception.message.orEmpty().contains(NativeAuthV2LinkRelation.VERIFY.value))
     }
 
     @Test
@@ -148,6 +252,15 @@ class NativeAuthV2RequestProviderTest {
                       "_links": {
                         "challenge": {
                           "href": "/api/v0.1/auth/challenge"
+                        },
+                        "resend": {
+                          "href": "/api/v0.1/auth/resend"
+                        },
+                        "verify": {
+                          "href": "/api/v0.1/auth/verify"
+                        },
+                        "poll": {
+                          "href": "/api/v0.1/auth/poll"
                         }
                       }
                     }
@@ -156,6 +269,59 @@ class NativeAuthV2RequestProviderTest {
                 statusCode = 401,
                 correlationId = CORRELATION_ID
             ),
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scopes = SCOPES
+        ) as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
+
+    private fun continuationStateWithout(relation: NativeAuthV2LinkRelation) =
+        (NativeAuthV2ResponseParser().parseAuthorizeChallenge(
+            response = NativeAuthV2HalApiResponse.from(
+                halResource = HalResource.from(
+                    """
+                    {
+                      "continuation_token": "flow-token",
+                      "sign_in": "/oauth2/v2.0/authorize-challenge",
+                      "_links": {
+                        "challenge": {
+                          "href": "/api/v0.1/auth/challenge"
+                        },
+                        "resend": {
+                          "href": "/api/v0.1/auth/resend"
+                        },
+                        "verify": {
+                          "href": "/api/v0.1/auth/verify"
+                        },
+                        "poll": {
+                          "href": "/api/v0.1/auth/poll"
+                        }
+                      }
+                    }
+                    """.trimIndent()
+                ),
+                statusCode = 401,
+                correlationId = CORRELATION_ID
+            ).let { response ->
+                val filteredLinks = response.links - relation.value
+                NativeAuthV2HalApiResponse.from(
+                    halResource = HalResource.from(
+                        buildString {
+                            append("{\"continuation_token\":\"flow-token\",\"sign_in\":\"/oauth2/v2.0/authorize-challenge\"")
+                            if (filteredLinks.isNotEmpty()) {
+                                append(",\"_links\":{")
+                                append(
+                                    filteredLinks.entries.joinToString(",") { (key, href) ->
+                                        """"$key":{"href":"$href"}"""
+                                    }
+                                )
+                                append("}")
+                            }
+                            append("}")
+                        }
+                    ),
+                    statusCode = response.statusCode,
+                    correlationId = response.correlationId
+                )
+            },
             entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
             scopes = SCOPES
         ) as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
@@ -170,10 +336,19 @@ class NativeAuthV2RequestProviderTest {
         throw AssertionError("Unreachable")
     }
 
+    private fun assertCommonHeaders(headers: Map<String, String?>, expectedContentType: String) {
+        assertEquals(CORRELATION_ID, headers[com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLIENT_REQUEST_ID])
+        assertEquals(expectedContentType, headers[HttpConstants.HeaderField.CONTENT_TYPE])
+        assertFalse(headers[com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT].isNullOrBlank())
+        assertFalse(headers[com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION].isNullOrBlank())
+    }
+
     private companion object {
         private const val CLIENT_ID = "client-id"
         private const val CHALLENGE_TYPE = "oob"
         private const val CORRELATION_ID = "correlation-id"
         private val SCOPES = listOf("openid", "profile")
+        private const val JSON_CONTENT_TYPE = HttpConstants.MediaType.APPLICATION_JSON
+        private const val FORM_URL_ENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded"
     }
 }

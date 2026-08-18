@@ -88,6 +88,151 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun next_whenContinuationTokenIsMissing_returnsNull() {
+        assertNull(NativeAuthV2ContinuationState.next(createState(), responseFrom("""{}""")))
+    }
+
+    @Test
+    fun fromAuthorizeChallengeResponse_filtersUnsupportedRelationsAndDefensivelyCopiesScopes() {
+        val originalScopes = mutableListOf("openid", "User.Read")
+        val response = responseFrom(
+            """
+            {
+              "continuation_token": "$CONTINUATION_TOKEN",
+              "_links": {
+                "resetPassword": {
+                  "href": "$RESET_PASSWORD_HREF"
+                },
+                "unsupported": {
+                  "href": "/tenant/unsupported"
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val state = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response = response,
+            continuationToken = CONTINUATION_TOKEN,
+            scopes = originalScopes,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD
+        )
+
+        originalScopes += "Mail.Read"
+        val returnedScopes = state.scopesForTokenRequest() as MutableList<String>
+        returnedScopes += "Calendars.Read"
+
+        assertEquals(listOf("openid", "User.Read"), state.scopesForTokenRequest())
+        assertEquals(RESET_PASSWORD_HREF, state.href(NativeAuthV2LinkRelation.RESET_PASSWORD))
+        assertNull(state.href(NativeAuthV2LinkRelation("unsupported")))
+    }
+
+    @Test
+    fun next_whenSelectedMethodContainsRelation_prefersSelectedMethodLinkOverTopLevel() {
+        val next = NativeAuthV2ContinuationState.next(
+            previous = createState(),
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "next-token",
+                  "_links": {
+                    "challenge": {
+                      "href": "/tenant/top-level-challenge"
+                    },
+                    "verify": {
+                      "href": "/tenant/top-level-verify"
+                    }
+                  },
+                  "_embedded": {
+                    "methods": [
+                      {
+                        "id": "email",
+                        "_links": {
+                          "challenge": {
+                            "href": "/tenant/embedded-challenge"
+                          },
+                          "verify": {
+                            "href": "/tenant/embedded-verify"
+                          },
+                          "unsupported": {
+                            "href": "/tenant/unsupported"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+                """.trimIndent()
+            ),
+            selectedMethod = responseFrom(
+                """
+                {
+                  "_embedded": {
+                    "methods": [
+                      {
+                        "id": "email",
+                        "_links": {
+                          "challenge": {
+                            "href": "/tenant/embedded-challenge"
+                          },
+                          "verify": {
+                            "href": "/tenant/embedded-verify"
+                          },
+                          "unsupported": {
+                            "href": "/tenant/unsupported"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+                """.trimIndent()
+            ).methods.single()
+        )
+
+        requireNotNull(next)
+        assertEquals("/tenant/embedded-challenge", next.href(NativeAuthV2LinkRelation.CHALLENGE))
+        assertEquals("/tenant/embedded-verify", next.href(NativeAuthV2LinkRelation.VERIFY))
+        assertNull(next.href(NativeAuthV2LinkRelation("unsupported")))
+    }
+
+    @Test
+    fun next_whenSelectedMethodLacksRelation_fallsBackToTopLevelLink() {
+        val response = responseFrom(
+            """
+            {
+              "continuation_token": "next-token",
+              "_links": {
+                "resend": {
+                  "href": "/tenant/top-level-resend"
+                }
+              },
+              "_embedded": {
+                "methods": {
+                  "id": "email",
+                  "_links": {
+                    "challenge": {
+                      "href": "/tenant/embedded-challenge"
+                    }
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val next = NativeAuthV2ContinuationState.next(
+            previous = createState(),
+            response = response,
+            selectedMethod = response.methods.single()
+        )
+
+        requireNotNull(next)
+        assertEquals("/tenant/top-level-resend", next.href(NativeAuthV2LinkRelation.RESEND))
+        assertEquals("/tenant/embedded-challenge", next.href(NativeAuthV2LinkRelation.CHALLENGE))
+    }
+
+    @Test
     fun fromAuthorizeChallengeResponse_whenContinuationTokenIsBlank_throwsClientException() {
         val response = responseFrom(
             """

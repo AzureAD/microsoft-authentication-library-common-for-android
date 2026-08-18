@@ -30,7 +30,9 @@ import java.util.Collections
 /**
  * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
  * token, the server-provided relation-to-href map, the requested scopes, the correlation ID, and
- * the entry relation that started the flow.
+ * the entry relation that started the flow. The retained scopes exist only so the SDK can later
+ * exchange a returned authorization code for tokens; they are never re-sent on authorize-
+ * challenge calls.
  *
  * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
  * they cannot inspect [continuationToken], [links], [scopes], or [entryRelation], because those
@@ -49,9 +51,9 @@ class NativeAuthV2ContinuationState private constructor(
 ) : ILoggable, Serializable {
 
     /**
-     * Returns a defensive copy of the scopes this state was created with, for use in token
-     * requests at flow completion. Controllers outside common4j access scopes only via this method,
-     * keeping the internal [scopes] field opaque.
+     * Returns a defensive copy of the scopes this state was created with, for the later
+     * authorization-code token request at flow completion. Controllers outside common4j access
+     * scopes only via this method, keeping the internal [scopes] field opaque.
      */
     fun scopesForTokenRequest(): List<String> = ArrayList(scopes)
 

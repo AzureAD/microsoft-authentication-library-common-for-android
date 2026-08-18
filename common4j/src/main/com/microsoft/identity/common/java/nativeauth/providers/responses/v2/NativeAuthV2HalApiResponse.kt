@@ -39,10 +39,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiRes
  *   `error: String?`, because [HalServerError] carries structured detail that is not
  *   assignment-compatible with that member's type.
  *
- * Instances are only ever produced via [from]; the primary constructor is private so that
- * [isWebFallbackRequired] can never be constructed out of sync with [serverError] and [state].
+ * Instances are only ever produced via [from]. This remains a regular class (not a data class) so
+ * no `copy(...)` API can bypass the factory, and [isWebFallbackRequired] is derived from
+ * [serverError] and [state] on every read rather than stored separately.
  */
-data class NativeAuthV2HalApiResponse private constructor(
+class NativeAuthV2HalApiResponse private constructor(
     override val statusCode: Int,
     internal val correlationIdValue: String,
     override val continuationToken: String?,
@@ -54,8 +55,7 @@ data class NativeAuthV2HalApiResponse private constructor(
     val challengeTargetLabel: String?,
     val challengeChannel: String?,
     val authorizationCode: String?,
-    val serverError: HalServerError?,
-    val isWebFallbackRequired: Boolean
+    val serverError: HalServerError?
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
     data class EmbeddedAuthMethod(
@@ -71,6 +71,10 @@ data class NativeAuthV2HalApiResponse private constructor(
         val innerErrorCode: String?,
         val correlationId: String?
     )
+
+    val isWebFallbackRequired: Boolean
+        get() = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
+                state == WEB_FALLBACK_REQUIRED_STATE
 
     /**
      * PII-bearing string. Still never includes [continuationToken], [authorizationCode], any href
@@ -117,7 +121,9 @@ data class NativeAuthV2HalApiResponse private constructor(
         private const val INNER_ERROR_KEY = "innerError"
         private const val ERROR_CODE_KEY = "code"
         private const val ERROR_MESSAGE_KEY = "message"
+        private const val ERROR_DESCRIPTION_KEY = "error_description"
         private const val ERROR_CORRELATION_ID_KEY = "correlationId"
+        private const val ERROR_CORRELATION_ID_SNAKE_KEY = "correlation_id"
         private const val REDIRECT_TO_WEB_ERROR_CODE = "redirect_to_web"
         private const val WEB_FALLBACK_REQUIRED_STATE = "webFallbackRequired"
 
@@ -151,9 +157,7 @@ data class NativeAuthV2HalApiResponse private constructor(
                 challengeChannel = halResource.string(TYPE_KEY),
                 authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
                     ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
-                serverError = serverError,
-                isWebFallbackRequired = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
-                        state == WEB_FALLBACK_REQUIRED_STATE
+                serverError = serverError
             )
         }
 
@@ -196,14 +200,27 @@ data class NativeAuthV2HalApiResponse private constructor(
         }
 
         private fun extractServerError(halResource: HalResource): HalServerError? {
-            val errorMap = halResource.properties[ERROR_KEY] as? Map<*, *> ?: return null
-            val innerErrorMap = errorMap[INNER_ERROR_KEY] as? Map<*, *>
-            return HalServerError(
-                code = errorMap[ERROR_CODE_KEY] as? String,
-                message = errorMap[ERROR_MESSAGE_KEY] as? String,
-                innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
-                correlationId = errorMap[ERROR_CORRELATION_ID_KEY] as? String
-            )
+            return when (val errorValue = halResource.properties[ERROR_KEY]) {
+                is Map<*, *> -> {
+                    val innerErrorMap = errorValue[INNER_ERROR_KEY] as? Map<*, *>
+                    HalServerError(
+                        code = errorValue[ERROR_CODE_KEY] as? String,
+                        message = errorValue[ERROR_MESSAGE_KEY] as? String,
+                        innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
+                        correlationId = errorValue[ERROR_CORRELATION_ID_KEY] as? String
+                    )
+                }
+
+                is String -> HalServerError(
+                    code = errorValue,
+                    message = halResource.string(ERROR_DESCRIPTION_KEY),
+                    innerErrorCode = null,
+                    correlationId = halResource.string(ERROR_CORRELATION_ID_SNAKE_KEY)
+                        ?: halResource.string(ERROR_CORRELATION_ID_KEY)
+                )
+
+                else -> null
+            }
         }
     }
 }

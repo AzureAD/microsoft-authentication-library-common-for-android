@@ -54,7 +54,8 @@ class NativeAuthV2ResponseParser {
      * @param response The parsed HAL wire model for this response.
      * @param entryRelation The `_links` relation the next request must follow (flow-specific entry
      * point, e.g. `resetPassword`).
-     * @param scopes The scopes requested for this flow, retained for later requests.
+     * @param scopes The scopes requested for this flow, retained only for the later
+     * authorization-code token exchange. They are not sent on authorize-challenge requests.
      */
     internal fun parseAuthorizeChallenge(
         response: NativeAuthV2HalApiResponse,

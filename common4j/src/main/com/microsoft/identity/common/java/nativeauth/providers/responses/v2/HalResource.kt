@@ -28,7 +28,9 @@ import com.microsoft.identity.common.java.exception.ClientException
 
 /**
  * A single `_links` entry. HAL allows a relation to carry either one link object or an array of
- * link objects; both shapes are normalized to a list by [HalResource].
+ * link objects; both shapes are normalized to a list by [HalResource]. Templated links the SDK
+ * cannot expand are parsed only to recognize and discard them; retained links are always directly
+ * followable.
  */
 internal data class HalLink(
     val href: String,
@@ -154,8 +156,8 @@ internal class HalResource private constructor(
         }
 
         private fun toHalLinkList(value: Any?): List<HalLink> = when (value) {
-            is List<*> -> value.mapNotNull { toHalLink(it) }
-            is Map<*, *> -> listOfNotNull(toHalLink(value))
+            is List<*> -> value.mapNotNull { toHalLink(it) }.filterNot { it.templated }
+            is Map<*, *> -> listOfNotNull(toHalLink(value)).filterNot { it.templated }
             else -> emptyList()
         }
 

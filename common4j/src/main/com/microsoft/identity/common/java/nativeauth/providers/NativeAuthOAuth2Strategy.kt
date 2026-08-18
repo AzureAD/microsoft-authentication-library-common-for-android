@@ -304,15 +304,20 @@ class NativeAuthOAuth2Strategy(
 
     /**
      * Starts a V2 Native Auth authorize-challenge flow.
+     *
+     * [entryRelation] is accepted as a raw relation string at this public boundary for Java
+     * interoperability, then wrapped immediately into [NativeAuthV2LinkRelation] for internal
+     * type safety. [scopes] are retained only for the later authorization-code token exchange;
+     * they are not sent on the authorize-challenge request itself.
      */
     fun performAuthorizeChallengeStart(
         correlationId: String,
-        entryRelation: NativeAuthV2LinkRelation,
+        entryRelation: String,
         scopes: List<String>
     ): AuthorizeChallengeApiResult {
         return nativeAuthV2Interactor.performAuthorizeChallengeStart(
             correlationId = correlationId,
-            entryRelation = entryRelation,
+            entryRelation = NativeAuthV2LinkRelation(entryRelation),
             scopes = scopes
         )
     }

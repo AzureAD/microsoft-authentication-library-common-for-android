@@ -33,10 +33,11 @@ import com.microsoft.identity.common.java.net.HttpResponse
 /**
  * Converts raw [HttpResponse] objects into V2 Native Auth typed response models.
  *
- * The defining rule for [getHalApiResponse]: parse the body on every HTTP status. The authorize-
- * challenge `401` is a success signal carrying the continuation token and HAL links; several 4xx
- * bodies carry flow state. Status alone is never treated as terminal — the status code is recorded
- * and the body is always parsed; classification is the parser's responsibility.
+ * The defining rule for [getHalApiResponse]: HTTP 3xx is terminal and never body-parsed, because
+ * Native Auth V2 must not follow redirects. All non-3xx statuses still parse the body: the
+ * authorize-challenge `401` is a success signal carrying the continuation token and HAL links, and
+ * several 4xx bodies carry flow state. Status alone is otherwise not treated as terminal — the
+ * status code is recorded and the body is parsed; classification is the parser's responsibility.
  *
  * Empty and non-JSON bodies return a synthetic [NativeAuthV2HalApiResponse] carrying a
  * [NativeAuthV2HalApiResponse.HalServerError] with a safe error code rather than throwing.
@@ -59,8 +60,9 @@ class NativeAuthV2ResponseHandler {
 
     /**
      * Converts a raw [HttpResponse] from any V2 Native Auth HAL endpoint into a
-     * [NativeAuthV2HalApiResponse]. The body is parsed regardless of HTTP status; a missing or
-     * malformed body produces a synthetic safe error response rather than an exception.
+     * [NativeAuthV2HalApiResponse]. HTTP 3xx returns a synthetic redirect error without parsing
+     * the body; all other statuses attempt body parsing, and a missing or malformed body produces
+     * a synthetic safe error response rather than an exception.
      */
     fun getHalApiResponse(
         requestCorrelationId: String,

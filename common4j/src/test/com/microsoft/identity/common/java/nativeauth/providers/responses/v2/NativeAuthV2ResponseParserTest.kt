@@ -158,6 +158,39 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseAuthorizeChallenge_whenFlatOAuthErrorBodyPresent_returnsUnknownErrorUsingFlatFields() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """{"error":"invalid_grant","error_description":"Try again later. AADSTS70011"}"""
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals("invalid_grant", error.error)
+        assertEquals("Try again later. AADSTS70011", error.errorDescription)
+        assertEquals(listOf(70011), error.errorCodes)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenFlatRedirectToWebErrorPresent_returnsRedirect() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """{"error":"redirect_to_web","error_description":"Browser required."}"""
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+        val redirect = result as AuthorizeChallengeApiResult.Redirect
+        assertEquals(CORRELATION_ID, redirect.correlationId)
+        assertEquals("redirect_to_web", redirect.redirectReason)
+    }
+
+    @Test
     fun parseAuthorizeChallenge_whenContinuationTokenPresentButEntryLinkMissing_returnsUnknownError() {
         val result = parser.parseAuthorizeChallenge(
             response = responseFrom("""{"continuationToken":"flow-token"}"""),
@@ -169,6 +202,31 @@ class NativeAuthV2ResponseParserTest {
         val error = result as AuthorizeChallengeApiResult.UnknownError
         assertEquals(ApiErrorResult.INVALID_STATE, error.error)
         assertTrue(error.errorDescription.contains("resetPassword"))
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenEntryLinkIsTemplatedOnly_returnsUnknownError() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "flow-token",
+                  "_links": {
+                    "resetPassword": {
+                      "href": "/reset-password{?dc}",
+                      "templated": true
+                    }
+                  }
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(ApiErrorResult.INVALID_STATE, (result as AuthorizeChallengeApiResult.UnknownError).error)
+        assertTrue(result.errorDescription.contains("resetPassword"))
     }
 
     @Test

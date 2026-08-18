@@ -30,7 +30,9 @@ import java.net.URL
 /**
  * Represents a request to the Native Auth V2 `/oauth2/v2.0/authorize-challenge` endpoint used to
  * start a flow, and provides a create() function to instantiate the request using the provided
- * parameters. The body is form-encoded, matching the V1 OAuth-style endpoints.
+ * parameters. The body is form-encoded, matching the V1 OAuth-style endpoints. No `scope`
+ * parameter is sent here; requested scopes are retained in continuation state only for the later
+ * authorization-code token exchange.
  */
 data class AuthorizeChallengeStartRequest private constructor(
     override var requestUrl: URL,
@@ -75,6 +77,7 @@ data class AuthorizeChallengeStartRequest private constructor(
     /**
      * NativeAuthAuthorizeChallengeStartRequestParameters represents the request parameters sent as
      * part of the `/oauth2/v2.0/authorize-challenge` API call that starts a Native Auth V2 flow.
+     * The wire body intentionally includes only `client_id` and `challenge_type`, not `scope`.
      */
     data class NativeAuthAuthorizeChallengeStartRequestParameters(
         @SerializedName("client_id") override val clientId: String,

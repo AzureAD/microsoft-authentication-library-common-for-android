@@ -22,14 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.nativeauth.providers.interactors.NativeAuthV2Interactor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.JITInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.ResetPasswordInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignInInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
 import org.junit.Test
 import java.net.URL
@@ -64,6 +71,71 @@ class NativeAuthOAuth2StrategyTest {
 
         assertNotSame(UrlConnectionHttpClient.getDefaultInstance(), v2Client)
         assertFalse(readFollowRedirects(v2Client))
+    }
+
+    @Test
+    fun performAuthorizeChallengeStart_exposesUnmangledJavaSignatureWithStringEntryRelation() {
+        val method = NativeAuthOAuth2Strategy::class.java.getMethod(
+            "performAuthorizeChallengeStart",
+            String::class.java,
+            String::class.java,
+            List::class.java
+        )
+
+        assertNotNull(method)
+        assertEquals(
+            listOf(String::class.java, String::class.java, List::class.java),
+            method.parameterTypes.toList()
+        )
+    }
+
+    @Test
+    fun performAuthorizeChallengeStart_wrapsStringEntryRelationBeforeDelegatingToInteractor() {
+        val nativeAuthV2Interactor = mockk<NativeAuthV2Interactor>()
+        every {
+            nativeAuthV2Interactor.performAuthorizeChallengeStart(
+                correlationId = "correlation-id",
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scopes = listOf("openid")
+            )
+        } returns AuthorizeChallengeApiResult.Redirect(
+            correlationId = "correlation-id",
+            redirectReason = "redirect_to_web"
+        )
+
+        val strategy = NativeAuthOAuth2Strategy(
+            strategyParameters = OAuth2StrategyParameters.builder().build(),
+            config = config(),
+            signInInteractor = mockk<SignInInteractor>(relaxed = true),
+            signUpInteractor = mockk<SignUpInteractor>(relaxed = true),
+            resetPasswordInteractor = mockk<ResetPasswordInteractor>(relaxed = true),
+            jitInteractor = mockk<JITInteractor>(relaxed = true),
+            nativeAuthV2Interactor = nativeAuthV2Interactor
+        )
+
+        val method = NativeAuthOAuth2Strategy::class.java.getMethod(
+            "performAuthorizeChallengeStart",
+            String::class.java,
+            String::class.java,
+            List::class.java
+        )
+
+        val result = method.invoke(strategy, "correlation-id", "signIn", listOf("openid"))
+
+        assertEquals(
+            AuthorizeChallengeApiResult.Redirect(
+                correlationId = "correlation-id",
+                redirectReason = "redirect_to_web"
+            ),
+            result
+        )
+        verify(exactly = 1) {
+            nativeAuthV2Interactor.performAuthorizeChallengeStart(
+                correlationId = "correlation-id",
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scopes = listOf("openid")
+            )
+        }
     }
 
     private fun config() = NativeAuthOAuth2Configuration(
