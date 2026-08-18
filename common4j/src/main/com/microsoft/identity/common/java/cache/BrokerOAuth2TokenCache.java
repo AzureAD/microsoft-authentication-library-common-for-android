@@ -811,7 +811,7 @@ public class BrokerOAuth2TokenCache
                         + "] and homeAccountId ["
                         + homeAccountId
                         + "]"
-        ););
+        );
         OAuth2TokenCache targetCache = null;
 
         AccountRecord result = null;
