@@ -33,7 +33,7 @@ resources:
   - repository: broker
     type: github
     name: security/ad-accounts-for-android
-    ref: djanardhan/fix-robolectric-domain-verification-tests
+    ref: dev
     endpoint: MSFT_GHE_SECURITY
 
 stages:
