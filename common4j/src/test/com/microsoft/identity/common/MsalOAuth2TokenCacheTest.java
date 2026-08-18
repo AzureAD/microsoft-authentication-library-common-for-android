@@ -590,6 +590,7 @@ public class MsalOAuth2TokenCacheTest {
         assertNull(entry2.getRefreshToken());
     }
 
+    @Test
     public void save2ArgOverloadMethodV1Compat() {
         // This test asserts that if an IdToken is returned in the v1 format (broker cases),
         // it is saved properly.

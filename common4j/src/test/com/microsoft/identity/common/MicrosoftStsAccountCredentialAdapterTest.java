@@ -129,8 +129,10 @@ public class MicrosoftStsAccountCredentialAdapterTest {
             idTokenWithClaims = signedJWT.serialize();
 
         } catch (JOSEException e) {
-            e.printStackTrace();
-            idTokenWithClaims = null;
+            // Fail fast: a signing failure here is a test-setup error, not an expected
+            // condition. Surfacing it immediately avoids confusing downstream NPEs/assertion
+            // failures caused by a null MOCK_ID_TOKEN_WITH_CLAIMS.
+            throw new RuntimeException("Failed to build mock ID token for tests", e);
         }
 
         MOCK_ID_TOKEN_WITH_CLAIMS = idTokenWithClaims;

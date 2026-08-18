@@ -1890,7 +1890,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
-        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
         // Generate a cache key
@@ -1908,7 +1908,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
         refreshToken.setEnvironment(ENVIRONMENT);
-        refreshToken.setCredentialType(CredentialType.AccessToken.name());
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
         refreshToken.setClientId(CLIENT_ID);
 
         // Generate a cache key
