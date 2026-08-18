@@ -1385,6 +1385,14 @@ public class MsalOAuth2TokenCache
     public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable final String environment,
                                                                    @NonNull final String clientId) {
         final String methodName = ":getAccountsWithAggregatedAccountData";
+        Logger.info(
+                TAG + methodName,
+                "Get all accounts with aggregated account data for environment: ["
+                        + environment
+                        + "] and clientId: ["
+                        + clientId
+                        + "]"
+        );
         final List<ICacheRecord> result = new ArrayList<>();
 
         final List<AccountRecord> allMatchingAccounts = getAccounts(

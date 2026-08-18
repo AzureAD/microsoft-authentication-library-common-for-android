@@ -953,6 +953,10 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
                 if (null != metadata.getFoci() && !containsFoci) {
+                    Logger.info(
+                            TAG + ":getTokenCachesForClientId",
+                            "Adding FoCI cache for clientId [" + clientId + "]"
+                    );
                     // Add the shared FoCI cache, but only once, and only when the calling app is authorized
                     // to share FoCI tokens (AB#3687466). An unauthorized caller must not enumerate the
                     // device-wide shared FoCI accounts. This gate suppresses only the shared FoCI cache;
@@ -961,8 +965,21 @@ public class BrokerOAuth2TokenCache
                     if (mCallerAuthorizedForFoci) {
                         result.add(mFociCache);
                         containsFoci = true;
+                        Logger.info(
+                                TAG + ":getTokenCachesForClientId",
+                                "Added FoCI cache for clientId [" + clientId + "]"
+                        );
+                    } else {
+                        Logger.info(
+                                TAG + ":getTokenCachesForClientId",
+                                "Skipping FoCI cache for unauthorized caller inside getTokenCachesForClientId"
+                        );
                     }
                 } else if (!processUidCacheInitialized) {
+                    Logger.info(
+                            TAG + ":getTokenCachesForClientId",
+                            "Adding UID-partitioned cache for clientId [" + clientId + "]"
+                    );
                     // App is not foci, see if we can find its real cache...
                     final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
 
@@ -971,6 +988,11 @@ public class BrokerOAuth2TokenCache
                         processUidCacheInitialized = true;
                     }
                 }
+            } else {
+                Logger.info(
+                        TAG + ":getTokenCachesForClientId",
+                        "Skipping cache for clientId: " + metadata.getClientId() + " because it does not match the requested clientId: " + clientId
+                );
             }
         }
 
@@ -1203,13 +1225,14 @@ public class BrokerOAuth2TokenCache
         final List<ICacheRecord> result;
         OAuth2TokenCache targetCache;
 
+        Logger.info(TAG + methodName, "environment =  " + environment);
         if (null != environment) {
             targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
                     mUid
             );
-
+            Logger.info(TAG + methodName, "targetCache = " + targetCache);
             // Fail-closed for unauthorized callers when no client-specific cache exists.
             // getTokenCacheForClient can no longer return mFociCache to an unauthorized caller
             // (SECURITY CHOKEPOINT #2 in getTokenCacheForClient(BrokerApplicationMetadata) already
@@ -1217,6 +1240,7 @@ public class BrokerOAuth2TokenCache
             // found or the caller would have resolved to mFociCache but was suppressed. In both
             // cases, an unauthorized caller must not fall back to the shared FoCI cache. See AB#3687466.
             if (null == targetCache) {
+
                 if (!mCallerAuthorizedForFoci) {
                     Logger.verbose(
                             TAG + methodName,
@@ -1247,7 +1271,10 @@ public class BrokerOAuth2TokenCache
             result = new ArrayList<>();
 
             for (final OAuth2TokenCache cache : caches) {
-
+                Logger.info(
+                        TAG + methodName,
+                        "Inspecting cache: " + cache
+                );
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
                 List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(null, clientId);
