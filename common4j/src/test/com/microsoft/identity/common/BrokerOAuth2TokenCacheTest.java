@@ -889,7 +889,8 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents),
+                /* callerAuthorizedForFoci= */ true
         );
 
         assertEquals(
@@ -900,7 +901,8 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents),
+                /* callerAuthorizedForFoci= */ true
         );
 
         assertEquals(
