@@ -91,6 +91,46 @@ class EventCollectorTest {
         tags.forEachIndexed { index, tag -> assertEquals(tag, events[index].tag) }
     }
 
+    /**
+     * Guards the broker/client stitching contract by verifying broker events offset thread IDs.
+     */
+    @Test
+    fun addEvent_threadIdIncludesBrokerOffset() {
+        val collector = EventCollector(testCorrelationId)
+        val expectedThreadId = Thread.currentThread().id + EventCollector.BROKER_THREAD_ID_OFFSET
+
+        collector.addEvent(EventTag.BrokerRequestReceived)
+
+        val event = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow?.get(0)
+        assertNotNull(event)
+        assertEquals(expectedThreadId, event!!.threadId)
+    }
+
+    /**
+     * Guards the monotonic elapsed-time contract by ensuring sequential event timestamps never go backwards.
+     */
+    @Test
+    fun addEvent_multipleEvents_timestampsAreNonDecreasing() {
+        val collector = EventCollector(testCorrelationId)
+        val tags = listOf(
+            EventTag.BrokerRequestReceived,
+            EventTag.BrokerCacheCheckStart,
+            EventTag.BrokerCacheHit,
+            EventTag.BrokerResponseSent
+        )
+
+        tags.forEach { collector.addEvent(it) }
+
+        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
+        assertNotNull(events)
+        events!!.zipWithNext().forEach { (previousEvent, nextEvent) ->
+            assertTrue(
+                "Event timestamp ${nextEvent.timestampMs} must be >= previous timestamp ${previousEvent.timestampMs}",
+                nextEvent.timestampMs >= previousEvent.timestampMs
+            )
+        }
+    }
+
     @Test
     fun toBrokerIpcTelemetry_correlationIdMatchesConstructorArg() {
         val collector = EventCollector(testCorrelationId)
