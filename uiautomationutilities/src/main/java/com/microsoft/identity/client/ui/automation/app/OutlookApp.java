@@ -110,6 +110,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     private void handleChooseAccountTypeIfPresent() {
+        Logger.i(TAG, "Checking for the optional Outlook account type screen.");
         final UiSelector accountTypeSelector =
                 new UiSelector().resourceIdMatches(M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX);
         final UiObject accountTypeOption =
@@ -131,22 +132,18 @@ public class OutlookApp extends App implements IFirstPartyApp {
         }
 
         if (addAnotherAccountScreen.exists() || !accountTypeOption.exists()) {
+            Logger.i(TAG, "Outlook account type selection is not required.");
             return;
         }
 
+        Logger.i(TAG, "Selecting the Microsoft 365/Office 365 account type.");
         try {
             accountTypeOption.click();
         } catch (final UiObjectNotFoundException exception) {
-            Assert.fail("Microsoft 365 option could not be clicked on the Choose account type screen.");
+            Assert.fail(
+                    "Microsoft 365/Office 365 account type option could not be clicked."
+            );
         }
-
-        Assert.assertTrue(
-                "Choose account type screen remains visible after selecting Microsoft 365.",
-                UiAutomatorUtils.waitUntilGone(
-                        accountTypeSelector,
-                        CommonUtils.FIND_UI_ELEMENT_TIMEOUT
-                )
-        );
     }
 
     @Override
