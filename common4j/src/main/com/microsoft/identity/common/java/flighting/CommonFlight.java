@@ -215,10 +215,6 @@ public enum CommonFlight implements IFlightConfig {
     RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
 
     /**
-     * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
-     */
-    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false),
-    /**
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
