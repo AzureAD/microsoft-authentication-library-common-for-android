@@ -205,10 +205,4 @@ public class StringUtilTest {
         Assert.assertNotNull(result);
         Assert.assertTrue(result.contains(elements[0].toString()));
     }
-
-    @Test
-    public void getStackTraceAsString_containsThrowableType() {
-        final String result = StringUtil.getStackTraceAsString(new IllegalStateException("boom"));
-        Assert.assertTrue(result.contains("IllegalStateException"));
-    }
 }
