@@ -53,7 +53,21 @@ data class BrokerIpcTelemetry(
     @SerializedName("perf") val performanceRecord: PerformanceRecord? = null
 ) {
     companion object {
+        /**
+         * Current schema version emitted by the broker, in `MAJOR.MINOR.PATCH` form.
+         */
         const val CURRENT_VERSION = "1.0.0"
+
+        /**
+         * Minimum schema **major** version a consumer is able to deserialize.
+         *
+         * Only the major component is compared, not the full [CURRENT_VERSION] string:
+         * under semantic versioning a major bump signals a breaking schema change, while
+         * minor and patch bumps remain backward-compatible and must not be rejected.
+         *
+         * Reserved for the schema version negotiation introduced with the flight-gated
+         * broker integration; no consumer exists yet, and v1 accepts all payloads.
+         */
         const val MIN_SUPPORTED_MAJOR = 1
     }
 }

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.broker.telemetry
 
 import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 
 /**
  * Thread-safe accumulator for [ExecutionEvent]s during an authentication flow.
@@ -35,7 +36,22 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 class EventCollector(private val correlationId: String) {
     private val events = CopyOnWriteArrayList<ExecutionEvent>()
+
+    /**
+     * Wall-clock anchor, used solely to render [PerformanceRecord.startTime] as an
+     * absolute instant. The unified broker telemetry contract types this field as a
+     * datetime; ISO 8601 UTC is our chosen encoding, pending confirmation from the
+     * OneAuth team.
+     * Never used for elapsed-time arithmetic — see [startTimeNanos].
+     */
     private val startTimeMs: Long = System.currentTimeMillis()
+
+    /**
+     * Monotonic origin for all elapsed-time measurements. Unlike the wall clock,
+     * [System.nanoTime] is immune to NTP corrections and device clock changes, so
+     * elapsed values can never go backwards. Reported on the wire in milliseconds.
+     */
+    private val startTimeNanos: Long = System.nanoTime()
 
     companion object {
         /**
@@ -45,6 +61,15 @@ class EventCollector(private val correlationId: String) {
          */
         const val BROKER_THREAD_ID_OFFSET = 10_000L
     }
+
+    /**
+     * Milliseconds elapsed since this collector was created, measured on the
+     * monotonic clock. Non-negative because [System.nanoTime] never decreases
+     * within a JVM; sub-millisecond precision is truncated, so rapid successive
+     * events may share a timestamp.
+     */
+    private fun elapsedMs(): Long =
+        TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTimeNanos)
 
     /**
      * Records a new [ExecutionEvent] with the current elapsed time.
@@ -59,7 +84,7 @@ class EventCollector(private val correlationId: String) {
         events.add(
             ExecutionEvent(
                 tag = tag,
-                timestampMs = System.currentTimeMillis() - startTimeMs,
+                timestampMs = elapsedMs(),
                 threadId = Thread.currentThread().id + BROKER_THREAD_ID_OFFSET,
                 statusCode = statusCode,
                 errorCode = errorCode
@@ -78,7 +103,7 @@ class EventCollector(private val correlationId: String) {
     fun toBrokerIpcTelemetry(): BrokerIpcTelemetry {
         // Snapshot events first, then capture end time — guarantees duration >= last event ts.
         val eventSnapshot = events.toList()
-        val duration = System.currentTimeMillis() - startTimeMs
+        val duration = elapsedMs()
         return BrokerIpcTelemetry(
             correlationId = correlationId,
             performanceRecord = PerformanceRecord(
