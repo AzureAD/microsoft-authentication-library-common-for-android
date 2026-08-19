@@ -65,6 +65,7 @@ import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -77,6 +78,7 @@ import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.shadows.ShadowProcessUtil;
 
@@ -93,8 +95,10 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
+import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Map;
 
 import io.opentelemetry.api.trace.Span;
 
@@ -999,6 +1003,163 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesCrossCloudRedirectUrl() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_CROSS_CLOUD_REDIRECT_URL));
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // CWE-918: caller-side (catch(Throwable)) fallback gate in processNonceAndReAttachHeaders.
+    //
+    // The 7 NonceRedirectHandlerTest cases cover the handler's PRIMARY gate. The tests below cover
+    // the MIRRORED gate that lives in this class: when NonceRedirectHandler.processChallenge throws
+    // mid-processing, the catch(Throwable) fallback still navigates and must apply the same trust
+    // check so the PRT credential header (x-ms-RefreshTokenCredential) is not forwarded to an
+    // untrusted or cleartext host. NonceRedirectHandler construction is mocked so processChallenge
+    // throws, deterministically forcing the fallback branch, and the header map handed to
+    // WebView.loadUrl is captured to assert whether the credential survived.
+    // ---------------------------------------------------------------------------------------------
+
+    private static final String CWE918_TRUSTED_NONCE_HOST = "trusted.contoso.example";
+    private static final String CWE918_UNTRUSTED_NONCE_HOST = "malicious.contoso.example";
+    private static final String CWE918_NON_CREDENTIAL_HEADER_KEY = "x-ms-PasskeyProtocol";
+    private static final String CWE918_NON_CREDENTIAL_HEADER_VALUE = "passkey-protocol-v1";
+    private static final String CWE918_PRT_HEADER_VALUE = "original-aad-bound-prt-credential";
+
+    /**
+     * @param credentialHeaderValidationEnabled value returned for
+     *                                          {@link CommonFlight#ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION}.
+     *                                          The attach-nonce feature flight is always stubbed on so
+     *                                          the isNonceRedirect branch in handleUrl is reached.
+     */
+    private void installNonceRedirectFlights(final boolean credentialHeaderValidationEnabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION))
+                .thenReturn(credentialHeaderValidationEnabled);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
+
+    private HashMap<String, String> nonceRequestHeadersWithPrt() {
+        final HashMap<String, String> headers = new HashMap<>();
+        headers.put(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER, CWE918_PRT_HEADER_VALUE);
+        headers.put(CWE918_NON_CREDENTIAL_HEADER_KEY, CWE918_NON_CREDENTIAL_HEADER_VALUE);
+        return headers;
+    }
+
+    /**
+     * Drives shouldOverrideUrlLoading with an sso_nonce redirect while forcing
+     * NonceRedirectHandler.processChallenge to throw, and returns the header map that the
+     * catch(Throwable) fallback passes to WebView.loadUrl for the given url.
+     */
+    private Map<String, String> captureFallbackLoadUrlHeaders(final String url) throws Exception {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        try (final MockedConstruction<NonceRedirectHandler> ignored = mockConstruction(
+                NonceRedirectHandler.class,
+                (mock, ctx) -> when(mock.processChallenge(any(URL.class)))
+                        .thenThrow(new RuntimeException("forced failure to exercise catch(Throwable)")))) {
+            mWebViewClient.shouldOverrideUrlLoading(mockWebView, url);
+        }
+
+        final ArgumentCaptor<Map> headersCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(mockWebView).loadUrl(eq(url), headersCaptor.capture());
+        //noinspection unchecked
+        return headersCaptor.getValue();
+    }
+
+    @Test
+    public void testNonceFallbackStripsPrtForUntrustedHostWhenFlightOn() throws Exception {
+        installNonceRedirectFlights(true);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "https://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        assertFalse("PRT credential header must be stripped on the untrusted fallback path",
+                loadedHeaders.containsKey(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals("Non-credential headers must survive the strip",
+                CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    @Test
+    public void testNonceFallbackForwardsPrtForUntrustedHostWhenFlightOff() throws Exception {
+        installNonceRedirectFlights(false);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "http://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        // Kill-switch off is a complete revert to pre-fix behavior: the full header map, PRT included,
+        // is forwarded even to an untrusted cleartext host. This proves the flight short-circuits the
+        // trust check (the right operand of the || is never evaluated).
+        assertEquals("Flight-off must forward the original PRT credential header unchanged",
+                CWE918_PRT_HEADER_VALUE,
+                loadedHeaders.get(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals(CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    @Test
+    public void testNonceFallbackForwardsPrtForTrustedHostWhenFlightOn() throws Exception {
+        // Seed a synthetic validated cloud host so isValidCloudHost runs for real (not mocked). A
+        // test-only host is used deliberately: putCloud writes into the JVM-global sAadClouds, so a
+        // real production host would stay validated for the rest of the module's tests.
+        AzureActiveDirectory.putCloud(CWE918_TRUSTED_NONCE_HOST, new AzureActiveDirectoryCloud(true));
+        installNonceRedirectFlights(true);
+        mWebViewClient.setRequestHeaders(nonceRequestHeadersWithPrt());
+        final String url = "https://" + CWE918_TRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final Map<String, String> loadedHeaders = captureFallbackLoadUrlHeaders(url);
+
+        assertEquals("Trusted HTTPS AAD host must keep the PRT credential header",
+                CWE918_PRT_HEADER_VALUE,
+                loadedHeaders.get(AuthenticationConstants.Broker.PRT_RESPONSE_HEADER));
+        assertEquals(CWE918_NON_CREDENTIAL_HEADER_VALUE,
+                loadedHeaders.get(CWE918_NON_CREDENTIAL_HEADER_KEY));
+    }
+
+    /**
+     * CWE-918 (Finding A): the sso_nonce branch in handleUrl is evaluated before the SSL hard block,
+     * and isNonceRedirect is a bare substring match, so a cleartext URL merely containing "sso_nonce"
+     * used to take the nonce branch and never reach the SSL check. With enforcement on, a non-HTTPS
+     * nonce URL must instead fall through every intermediate branch to processSSLProtectionCheck,
+     * which hard-blocks it (stopLoading + WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED). This proves the
+     * cleartext URL is not swallowed by any intermediate branch and never reaches the credential sink.
+     */
+    @Test
+    public void testCleartextNonceUrlIsSslBlockedWhenFlightOn() {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false
+        );
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        installNonceRedirectFlights(true);
+        final String url = "http://" + CWE918_UNTRUSTED_NONCE_HOST + "/authorize?sso_nonce=ABCD";
+
+        final boolean result = webViewClient.shouldOverrideUrlLoading(mockWebView, url);
+
+        assertTrue("shouldOverrideUrlLoading must return true (intercepted by SSL check)", result);
+        // The nonce branch must NOT be taken: the cleartext URL falls through to the SSL hard block.
+        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals("Cleartext sso_nonce URL must be rejected by the SSL protection check",
+                ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED,
+                ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+        // And it must never reach the credential-bearing loadUrl path.
+        Mockito.verify(mockWebView, Mockito.never())
+                .loadUrl(Mockito.anyString(), Mockito.anyMap());
     }
 
     @Test
