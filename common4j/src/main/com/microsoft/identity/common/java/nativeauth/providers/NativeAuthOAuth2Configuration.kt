@@ -230,10 +230,11 @@ class NativeAuthOAuth2Configuration(
     internal fun getNativeAuthV2AuthorityUrl(correlationId: String): URL {
         val effectiveAuthorityUrl = getAuthorityUrl()
         val isHttpsAuthority = effectiveAuthorityUrl.protocol.equals(HTTPS_SCHEME, ignoreCase = true)
-        val isExplicitMockHttpAuthority = useMockApiForNativeAuth &&
+        /** HTTPS is always accepted, including for mock; this clause only relaxes the scheme for a plaintext mock API. */
+        val isPlaintextMockAuthorityAllowed = useMockApiForNativeAuth &&
             effectiveAuthorityUrl.protocol.equals(HTTP_SCHEME, ignoreCase = true)
 
-        if (isHttpsAuthority || isExplicitMockHttpAuthority) {
+        if (isHttpsAuthority || isPlaintextMockAuthorityAllowed) {
             return effectiveAuthorityUrl
         }
 

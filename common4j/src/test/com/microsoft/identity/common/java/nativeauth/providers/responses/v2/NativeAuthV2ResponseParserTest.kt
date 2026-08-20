@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -75,6 +78,31 @@ class NativeAuthV2ResponseParserTest {
             assertEquals(CORRELATION_ID, redirect.correlationId)
             assertEquals(expectedReason, redirect.redirectReason)
         }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenWebFallbackErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "redirect_to_web",
+                    "message": "Browser required.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+        assertEquals(
+            "server-error-correlation-id",
+            (result as AuthorizeChallengeApiResult.Redirect).correlationId
+        )
     }
 
     @Test
@@ -155,6 +183,64 @@ class NativeAuthV2ResponseParserTest {
         assertEquals("temporarily_unavailable", error.error)
         assertEquals("Service is busy. AADSTS90001", error.errorDescription)
         assertEquals(listOf(90001), error.errorCodes)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenServerErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val response = NativeAuthV2ResponseHandler().getHalApiResponse(
+            requestCorrelationId = "request-correlation-id",
+            response = HttpResponse(
+                400,
+                """
+                {
+                  "error": {
+                    "code": "temporarily_unavailable",
+                    "message": "Service is busy.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent(),
+                mapOf(
+                    AuthenticationConstants.AAD.CLIENT_REQUEST_ID to
+                        listOf("response-header-correlation-id")
+                )
+            )
+        )
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertEquals("response-header-correlation-id", response.correlationId)
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(
+            "server-error-correlation-id",
+            (result as AuthorizeChallengeApiResult.UnknownError).correlationId
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenServerErrorCorrelationIdIsBlank_fallsBackToResponseCorrelationId() {
+        listOf("temporarily_unavailable", "redirect_to_web").forEach { errorCode ->
+            val result = parser.parseAuthorizeChallenge(
+                response = responseFrom(
+                    """
+                    {
+                      "error": {
+                        "code": "$errorCode",
+                        "message": "Service error.",
+                        "correlationId": "   "
+                      }
+                    }
+                    """.trimIndent()
+                ),
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+
+            assertEquals(CORRELATION_ID, result.correlationId)
+        }
     }
 
     @Test

@@ -70,14 +70,16 @@ class NativeAuthV2ResponseParser {
 
         if (response.isWebFallbackRequired) {
             return AuthorizeChallengeApiResult.Redirect(
-                correlationId = response.correlationId,
+                correlationId = response.serverError?.correlationId
+                    ?.takeUnless { it.isBlank() } ?: response.correlationId,
                 redirectReason = response.serverError?.code ?: response.state ?: WEB_FALLBACK_REDIRECT_REASON
             )
         }
 
         response.serverError?.let { serverError ->
             return AuthorizeChallengeApiResult.UnknownError(
-                correlationId = response.correlationId,
+                correlationId = serverError.correlationId
+                    ?.takeUnless { it.isBlank() } ?: response.correlationId,
                 error = serverError.code ?: ApiErrorResult.INVALID_STATE,
                 errorDescription = serverError.message.orEmpty(),
                 errorCodes = extractAadstsCodes(serverError.message)
