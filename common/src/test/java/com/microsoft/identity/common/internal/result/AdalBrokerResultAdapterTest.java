@@ -29,7 +29,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.SPE_RING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,8 +81,9 @@ public class AdalBrokerResultAdapterTest {
         assertEquals("user@contoso.com", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_USERID_DISPLAYABLE));
         assertEquals("Ada", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_GIVEN_NAME));
         assertEquals("Lovelace", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_FAMILY_NAME));
-        // ID token is not a parseable JWT, so SchemaUtil.getIdentityProvider(...) returns null.
-        assertNull(bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_IDENTITY_PROVIDER));
+        // The ID token is a JWT carrying an "idp" claim, so SchemaUtil.getIdentityProvider(...)
+        // returns that claim value.
+        assertEquals("live.com", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_IDENTITY_PROVIDER));
         assertEquals("tenant-id", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_USERINFO_TENANTID));
         assertEquals(expiresOn.getTime(), bundle.getLong(AuthenticationConstants.Broker.ACCOUNT_EXPIREDATE));
         assertEquals("https://login.microsoftonline.com/tenant-id", bundle.getString(AuthenticationConstants.Broker.ACCOUNT_AUTHORITY));
