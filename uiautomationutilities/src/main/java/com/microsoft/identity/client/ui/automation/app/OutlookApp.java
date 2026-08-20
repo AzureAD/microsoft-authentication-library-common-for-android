@@ -24,8 +24,12 @@ package com.microsoft.identity.client.ui.automation.app;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 
+import android.os.SystemClock;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
@@ -48,6 +52,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     public static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
     public static final String OUTLOOK_APK = "Outlook.apk";
+    private static final String ADD_ANOTHER_ACCOUNT_TEXT = "Add another account";
+    private static final String M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX =
+            "com\\.microsoft\\.office\\.outlook:id/btn_add_account_(m365|o365)_rest";
+    private static final long ACCOUNT_TYPE_POLL_INTERVAL_MILLISECONDS =
+            TimeUnit.SECONDS.toMillis(1);
 
     public OutlookApp() {
         super(OUTLOOK_PACKAGE_NAME, OUTLOOK_APP_NAME, new PlayStore());
@@ -84,12 +93,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void onAccountAdded() {
         Logger.i(TAG, "Handling UI after account is added on the App..");
 
-        // Sometime Outlook asks user to choose account type after entering password. I'm not sure what
-        // causes this UI to pop up, but adding a safe check here to choose Office account
-        UiAutomatorUtils.handleButtonClickSafely("com.microsoft.office.outlook:id/btn_add_account_o365_rest", CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+        handleChooseAccountTypeIfPresent();
 
         // Make sure we are on add another account (shows up after an account is added)
-        final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account", TimeUnit.SECONDS.toMillis(45));
+        final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText(
+                ADD_ANOTHER_ACCOUNT_TEXT,
+                TimeUnit.SECONDS.toMillis(45)
+        );
 
         Assert.assertTrue(
                 "Add another account screen doesn't appear in Outlook.", addAnotherAccountScreen.exists()
@@ -97,6 +107,43 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         // click may be later
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
+    }
+
+    private void handleChooseAccountTypeIfPresent() {
+        Logger.i(TAG, "Checking for the optional Outlook account type screen.");
+        final UiSelector accountTypeSelector =
+                new UiSelector().resourceIdMatches(M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX);
+        final UiObject accountTypeOption =
+                UiAutomatorUtils.obtainUiObjectWithUiSelector(accountTypeSelector, 0);
+        final UiObject addAnotherAccountScreen =
+                UiAutomatorUtils.obtainUiObjectWithText(ADD_ANOTHER_ACCOUNT_TEXT, 0);
+        final long timeout = SystemClock.elapsedRealtime() + FIND_UI_ELEMENT_TIMEOUT_LONG;
+
+        while (!accountTypeOption.exists()
+                && !addAnotherAccountScreen.exists()
+                && SystemClock.elapsedRealtime() < timeout) {
+            final long remainingTimeout = timeout - SystemClock.elapsedRealtime();
+            accountTypeOption.waitForExists(
+                    Math.min(
+                            ACCOUNT_TYPE_POLL_INTERVAL_MILLISECONDS,
+                            Math.max(0, remainingTimeout)
+                    )
+            );
+        }
+
+        if (addAnotherAccountScreen.exists() || !accountTypeOption.exists()) {
+            Logger.i(TAG, "Outlook account type selection is not required.");
+            return;
+        }
+
+        Logger.i(TAG, "Selecting the Microsoft 365/Office 365 account type.");
+        try {
+            accountTypeOption.click();
+        } catch (final UiObjectNotFoundException exception) {
+            Assert.fail(
+                    "Microsoft 365/Office 365 account type option could not be clicked."
+            );
+        }
     }
 
     @Override
