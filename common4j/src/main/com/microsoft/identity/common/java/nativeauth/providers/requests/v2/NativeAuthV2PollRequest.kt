@@ -28,10 +28,7 @@ import java.net.URL
 
 /**
  * Represents a request to a Native Auth V2 flow's HAL-resolved `poll` endpoint, and provides a
- * create() function to instantiate the request using the provided parameters. The request URL is
- * resolved from the flow's server-provided `poll` link relation by
- * [com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider]. The
- * body is JSON, using the wire's own camelCase field names.
+ * create() function to instantiate the request using the provided parameters.
  */
 data class NativeAuthV2PollRequest private constructor(
     override var requestUrl: URL,
@@ -40,20 +37,11 @@ data class NativeAuthV2PollRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
-        /**
-         * Returns a request object using the provided parameters.
-         * The request URL and headers passed will be set directly.
-         *
-         * Parameters that are null or empty will throw a ClientException.
-         * @see com.microsoft.identity.common.java.exception.ClientException
-         */
         fun create(
-            clientId: String,
             continuationToken: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): NativeAuthV2PollRequest {
-            ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -62,7 +50,6 @@ data class NativeAuthV2PollRequest private constructor(
                 requestUrl = URL(requestUrl),
                 headers = headers,
                 parameters = NativeAuthV2PollRequestParameters(
-                    clientId = clientId,
                     continuationToken = continuationToken
                 )
             )
@@ -75,16 +62,12 @@ data class NativeAuthV2PollRequest private constructor(
 
     /**
      * NativeAuthV2PollRequestParameters represents the JSON request body sent to a Native Auth V2
-     * flow's `poll` endpoint. [clientId] is not part of the wire body — the resolved href already
-     * scopes the request — so it is marked [Transient] to keep it out of the serialized JSON while
-     * still satisfying [NativeAuthRequestParameters]. [continuationToken] is never included in
-     * either string representation.
+     * flow's `poll` endpoint.
      */
     data class NativeAuthV2PollRequestParameters(
-        @Transient override val clientId: String,
         val continuationToken: String
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthV2PollRequestParameters(clientId=$clientId)"
+        override fun toUnsanitizedString(): String = "NativeAuthV2PollRequestParameters()"
 
         override fun toString(): String = toUnsanitizedString()
     }

@@ -354,6 +354,8 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
     }
 
     private fun stripLeadingTenantTemplate(href: String): String {
+        // TODO: Remove this workaround when service hrefs can be appended directly to the
+        // Authority without stripping the leading tenant template segment.
         val hrefWithoutLeadingSlash = href.removePrefix(PATH_SEPARATOR)
         return when {
             hrefWithoutLeadingSlash == TENANT_TEMPLATE -> ""

@@ -30,9 +30,7 @@ import java.net.URL
 /**
  * Represents a request to the Native Auth V2 `/oauth2/v2.0/authorize-challenge` endpoint used to
  * start a flow, and provides a create() function to instantiate the request using the provided
- * parameters. The body is form-encoded, matching the V1 OAuth-style endpoints. No `scope`
- * parameter is sent here; requested scopes are retained in continuation state only for the later
- * authorization-code token exchange.
+ * parameters.
  */
 data class AuthorizeChallengeStartRequest private constructor(
     override var requestUrl: URL,
@@ -41,21 +39,12 @@ data class AuthorizeChallengeStartRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
-        /**
-         * Returns a request object using the provided parameters.
-         * The request URL and headers passed will be set directly.
-         *
-         * Parameters that are null or empty will throw a ClientException.
-         * @see com.microsoft.identity.common.java.exception.ClientException
-         */
         fun create(
             clientId: String,
-            challengeType: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): AuthorizeChallengeStartRequest {
             ArgUtils.validateNonNullArg(clientId, "clientId")
-            ArgUtils.validateNonNullArg(challengeType, "challengeType")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
@@ -63,8 +52,7 @@ data class AuthorizeChallengeStartRequest private constructor(
                 requestUrl = URL(requestUrl),
                 headers = headers,
                 parameters = NativeAuthAuthorizeChallengeStartRequestParameters(
-                    clientId = clientId,
-                    challengeType = challengeType
+                    clientId = clientId
                 )
             )
         }
@@ -77,13 +65,11 @@ data class AuthorizeChallengeStartRequest private constructor(
     /**
      * NativeAuthAuthorizeChallengeStartRequestParameters represents the request parameters sent as
      * part of the `/oauth2/v2.0/authorize-challenge` API call that starts a Native Auth V2 flow.
-     * The wire body intentionally includes only `client_id` and `challenge_type`, not `scope`.
      */
     data class NativeAuthAuthorizeChallengeStartRequestParameters(
-        @SerializedName("client_id") override val clientId: String,
-        @SerializedName("challenge_type") val challengeType: String
+        @SerializedName("client_id") override val clientId: String
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthAuthorizeChallengeStartRequestParameters(clientId=$clientId, challengeType=$challengeType)"
+        override fun toUnsanitizedString(): String = "NativeAuthAuthorizeChallengeStartRequestParameters(clientId=$clientId)"
 
         override fun toString(): String = toUnsanitizedString()
     }

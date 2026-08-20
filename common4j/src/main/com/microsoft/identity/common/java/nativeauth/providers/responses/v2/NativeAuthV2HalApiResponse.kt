@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiRes
 /**
  * Single wire model for every V2 HAL Native Auth API response body. There are no response
  * subclasses per state/action pair; [state] and [action] are the discriminator that the parser
- * (T4) resolves into a typed SDK outcome.
+ * resolves into a typed SDK outcome.
  *
  * Two shapes are intentionally adapted from the design vocabulary to fit [INativeAuthApiResponse],
  * common4j's existing (non-open) V1 response base class:
@@ -131,7 +131,7 @@ class NativeAuthV2HalApiResponse private constructor(
          * Builds a [NativeAuthV2HalApiResponse] by mechanically mapping [halResource]'s wire
          * shape onto this model's fields (including handling both continuation-token spellings
          * the service may use). This performs no state/action-based interpretation, error mapping,
-         * or operation-specific business logic; that is the parser's job (T4/T6). [halResource]
+         * or operation-specific business logic; that is the parser's job. [halResource]
          * itself is never retained or logged.
          */
         internal fun from(

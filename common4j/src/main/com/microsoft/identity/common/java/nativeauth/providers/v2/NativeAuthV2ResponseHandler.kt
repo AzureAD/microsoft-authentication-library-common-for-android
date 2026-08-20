@@ -68,9 +68,7 @@ class NativeAuthV2ResponseHandler {
 
     /**
      * Converts a raw [HttpResponse] from any V2 Native Auth HAL endpoint into a
-     * [NativeAuthV2HalApiResponse]. An HTTP 3xx status is rejected as a synthetic error without
-     * parsing the body; all other statuses attempt body parsing, and a missing or malformed body
-     * produces a synthetic safe error response rather than an exception.
+     * [NativeAuthV2HalApiResponse].
      */
     fun getHalApiResponse(
         requestCorrelationId: String,
@@ -122,9 +120,7 @@ class NativeAuthV2ResponseHandler {
 
     /**
      * Builds a [NativeAuthV2HalApiResponse] carrying a synthetic [NativeAuthV2HalApiResponse.HalServerError]
-     * for cases where the response body was absent or could not be parsed. Uses the normal
-     * [NativeAuthV2HalApiResponse.from] factory via a synthesized minimal HAL JSON body so
-     * invariants enforced by the private constructor are preserved.
+     * for cases where the response body was absent or could not be parsed.
      */
     private fun buildSyntheticErrorResponse(
         statusCode: Int,

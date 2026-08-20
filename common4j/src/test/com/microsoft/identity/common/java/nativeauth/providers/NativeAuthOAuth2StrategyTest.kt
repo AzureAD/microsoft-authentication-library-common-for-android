@@ -147,12 +147,65 @@ class NativeAuthOAuth2StrategyTest {
         }
     }
 
+    @Test
+    fun performAuthorizeChallengeStart_withClaims_delegatesClaimsToInteractor() {
+        val nativeAuthV2Interactor = mockk<NativeAuthV2Interactor>()
+        every {
+            nativeAuthV2Interactor.performAuthorizeChallengeStart(
+                correlationId = "correlation-id",
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scopes = listOf("openid"),
+                claimsRequestJson = CLAIMS_REQUEST_JSON
+            )
+        } returns AuthorizeChallengeApiResult.Redirect(
+            correlationId = "correlation-id",
+            redirectReason = "redirect_to_web"
+        )
+
+        val strategy = NativeAuthOAuth2Strategy(
+            strategyParameters = OAuth2StrategyParameters.builder().build(),
+            config = config(),
+            signInInteractor = mockk<SignInInteractor>(relaxed = true),
+            signUpInteractor = mockk<SignUpInteractor>(relaxed = true),
+            resetPasswordInteractor = mockk<ResetPasswordInteractor>(relaxed = true),
+            jitInteractor = mockk<JITInteractor>(relaxed = true),
+            nativeAuthV2Interactor = nativeAuthV2Interactor
+        )
+
+        val result = strategy.performAuthorizeChallengeStart(
+            correlationId = "correlation-id",
+            entryRelation = "signIn",
+            scopes = listOf("openid"),
+            claimsRequestJson = CLAIMS_REQUEST_JSON
+        )
+
+        assertEquals(
+            AuthorizeChallengeApiResult.Redirect(
+                correlationId = "correlation-id",
+                redirectReason = "redirect_to_web"
+            ),
+            result
+        )
+        verify(exactly = 1) {
+            nativeAuthV2Interactor.performAuthorizeChallengeStart(
+                correlationId = "correlation-id",
+                entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scopes = listOf("openid"),
+                claimsRequestJson = CLAIMS_REQUEST_JSON
+            )
+        }
+    }
+
     private fun config() = NativeAuthOAuth2Configuration(
         authorityUrl = URL("https://login.contoso.com/tenant"),
         clientId = "client-id",
         challengeType = "oob",
         capabilities = null
     )
+
+    private companion object {
+        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
+    }
 
     private fun getNativeAuthV2Client(strategy: NativeAuthOAuth2Strategy): Any {
         val interactorField = NativeAuthOAuth2Strategy::class.java.getDeclaredField("nativeAuthV2Interactor")

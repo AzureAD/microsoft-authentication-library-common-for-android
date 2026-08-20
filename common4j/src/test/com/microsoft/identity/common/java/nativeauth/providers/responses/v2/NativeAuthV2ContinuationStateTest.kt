@@ -128,6 +128,38 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun next_carriesClaimsForwardForTokenRequest() {
+        val previous = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "$CONTINUATION_TOKEN",
+                  "sign_in": "$SIGN_IN_HREF"
+                }
+                """.trimIndent()
+            ),
+            continuationToken = CONTINUATION_TOKEN,
+            scopes = SCOPES,
+            claimsRequestJson = CLAIMS_REQUEST_JSON,
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN
+        )
+
+        val next = NativeAuthV2ContinuationState.next(
+            previous = previous,
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "next-token",
+                  "sign_in": "$SIGN_IN_HREF"
+                }
+                """.trimIndent()
+            )
+        )
+
+        assertEquals(CLAIMS_REQUEST_JSON, next?.claimsRequestJsonForTokenRequest())
+    }
+
+    @Test
     fun next_whenSelectedMethodContainsRelation_prefersSelectedMethodLinkOverTopLevel() {
         val next = NativeAuthV2ContinuationState.next(
             previous = createState(),
@@ -282,6 +314,7 @@ class NativeAuthV2ContinuationStateTest {
         )
 
     private companion object {
+        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         private const val CONTINUATION_TOKEN = "flow-token"
         private const val RESET_PASSWORD_HREF = "/tenant/reset-password"
         private const val SIGN_IN_HREF = "/tenant/sign-in"

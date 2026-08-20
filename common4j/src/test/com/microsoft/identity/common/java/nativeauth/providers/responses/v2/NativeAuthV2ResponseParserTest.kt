@@ -62,6 +62,29 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseAuthorizeChallenge_whenClaimsAreProvided_retainsClaimsForTokenRequest() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "flow-token",
+                  "sign_in": "/tenant/api/v0.1/signin/start"
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scopes = listOf("User.Read"),
+            claimsRequestJson = CLAIMS_REQUEST_JSON
+        )
+
+        val continuation = result as AuthorizeChallengeApiResult.ContinuationRequired
+        assertEquals(
+            CLAIMS_REQUEST_JSON,
+            continuation.continuationState.claimsRequestJsonForTokenRequest()
+        )
+    }
+
+    @Test
     fun parseAuthorizeChallenge_whenWebFallbackRequired_returnsRedirect() {
         listOf(
             """{"error":{"code":"redirect_to_web","message":"Browser required."}}""" to "redirect_to_web",
@@ -392,6 +415,7 @@ class NativeAuthV2ResponseParserTest {
     }
 
     private companion object {
+        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         private const val CORRELATION_ID = "corr-123"
     }
 }

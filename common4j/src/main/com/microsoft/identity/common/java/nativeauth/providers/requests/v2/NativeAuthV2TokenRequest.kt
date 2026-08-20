@@ -29,9 +29,7 @@ import java.net.URL
 
 /**
  * Represents a request to the existing OAuth `/oauth2/v2.0/token` endpoint, exchanging a Native
- * Auth V2 authorization code for tokens, and provides a create() function to instantiate the
- * request using the provided parameters. The body is form-encoded, matching the V1 OAuth-style
- * endpoints; `grant_type` is fixed to `authorization_code` for this request.
+ * Auth V2 authorization code for tokens.
  */
 data class NativeAuthV2TokenRequest private constructor(
     override var requestUrl: URL,
@@ -42,19 +40,11 @@ data class NativeAuthV2TokenRequest private constructor(
     companion object {
         private const val GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code"
 
-        /**
-         * Returns a request object using the provided parameters.
-         * The request URL and headers passed will be set directly. [scopes] are joined into a
-         * single space-delimited `scope` value, matching the existing OAuth convention used by
-         * [com.microsoft.identity.common.java.nativeauth.providers.requests.signin.SignInTokenRequest].
-         *
-         * Parameters that are null or empty will throw a ClientException.
-         * @see com.microsoft.identity.common.java.exception.ClientException
-         */
         fun create(
             clientId: String,
             code: String,
             scopes: List<String>,
+            claimsRequestJson: String? = null,
             requestUrl: String,
             headers: Map<String, String?>
         ): NativeAuthV2TokenRequest {
@@ -74,7 +64,8 @@ data class NativeAuthV2TokenRequest private constructor(
                     clientId = clientId,
                     grantType = GRANT_TYPE_AUTHORIZATION_CODE,
                     code = code,
-                    scope = scopes.joinToString(" ")
+                    scope = scopes.joinToString(" "),
+                    claimsRequestJson = claimsRequestJson
                 )
             )
         }
@@ -87,13 +78,13 @@ data class NativeAuthV2TokenRequest private constructor(
     /**
      * NativeAuthV2TokenRequestParameters represents the request parameters sent as part of the
      * `/oauth2/v2.0/token` API call that exchanges a Native Auth V2 authorization code for tokens.
-     * [code] is never included in either string representation.
      */
     data class NativeAuthV2TokenRequestParameters(
         @SerializedName("client_id") override val clientId: String,
         @SerializedName("grant_type") val grantType: String,
         @SerializedName("code") val code: String,
         @SerializedName("scope") val scope: String,
+        @SerializedName("claims") val claimsRequestJson: String?,
         @SerializedName("client_info") private val clientInfo: Boolean = true
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String = "NativeAuthV2TokenRequestParameters(clientId=$clientId, grantType=$grantType, scope=$scope, clientInfo=$clientInfo)"

@@ -29,9 +29,7 @@ import java.net.URL
 
 /**
  * Represents a request to the Native Auth V2 `/oauth2/v2.0/authorize-challenge` endpoint used to
- * continue a flow with a continuation token, and provides a create() function to instantiate the
- * request using the provided parameters. The body is form-encoded, matching the V1 OAuth-style
- * endpoints.
+ * continue a flow with a continuation token.
  */
 data class AuthorizeChallengeContinueRequest private constructor(
     override var requestUrl: URL,
@@ -40,20 +38,11 @@ data class AuthorizeChallengeContinueRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
-        /**
-         * Returns a request object using the provided parameters.
-         * The request URL and headers passed will be set directly.
-         *
-         * Parameters that are null or empty will throw a ClientException.
-         * @see com.microsoft.identity.common.java.exception.ClientException
-         */
         fun create(
-            clientId: String,
             continuationToken: String,
             requestUrl: String,
             headers: Map<String, String?>
         ): AuthorizeChallengeContinueRequest {
-            ArgUtils.validateNonNullArg(clientId, "clientId")
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
@@ -62,7 +51,6 @@ data class AuthorizeChallengeContinueRequest private constructor(
                 requestUrl = URL(requestUrl),
                 headers = headers,
                 parameters = NativeAuthAuthorizeChallengeContinueRequestParameters(
-                    clientId = clientId,
                     continuationToken = continuationToken
                 )
             )
@@ -76,14 +64,12 @@ data class AuthorizeChallengeContinueRequest private constructor(
     /**
      * NativeAuthAuthorizeChallengeContinueRequestParameters represents the request parameters sent
      * as part of the `/oauth2/v2.0/authorize-challenge` API call that continues a Native Auth V2
-     * flow using a continuation token. [continuationToken] is never included in either string
-     * representation.
+     * flow using a continuation token.
      */
     data class NativeAuthAuthorizeChallengeContinueRequestParameters(
-        @SerializedName("client_id") override val clientId: String,
         @SerializedName("continuation_token") val continuationToken: String
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthAuthorizeChallengeContinueRequestParameters(clientId=$clientId)"
+        override fun toUnsanitizedString(): String = "NativeAuthAuthorizeChallengeContinueRequestParameters()"
 
         override fun toString(): String = toUnsanitizedString()
     }

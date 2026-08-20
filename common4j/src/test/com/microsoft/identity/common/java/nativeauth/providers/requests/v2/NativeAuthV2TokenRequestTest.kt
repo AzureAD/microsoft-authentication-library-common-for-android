@@ -24,9 +24,12 @@ package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.util.ObjectMapper
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class NativeAuthV2TokenRequestTest {
 
@@ -59,12 +62,39 @@ class NativeAuthV2TokenRequestTest {
         assertTrue(formBody.contains("scope=openid+offline_access+User.Read"))
     }
 
-    private fun createRequest(scopes: List<String>): NativeAuthV2TokenRequest =
+    @Test
+    fun create_whenClaimsAreProvided_serializesClaimsInFinalFormBody() {
+        val request = createRequest(
+            scopes = listOf("openid"),
+            claimsRequestJson = CLAIMS_REQUEST_JSON
+        )
+
+        val formBody = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
+
+        assertEquals(CLAIMS_REQUEST_JSON, parseFormBody(formBody)["claims"])
+    }
+
+    private fun createRequest(
+        scopes: List<String>,
+        claimsRequestJson: String? = null
+    ): NativeAuthV2TokenRequest =
         NativeAuthV2TokenRequest.create(
             clientId = "client-id",
             code = "authorization-code",
             scopes = scopes,
+            claimsRequestJson = claimsRequestJson,
             requestUrl = "https://login.microsoftonline.com/tenant/oauth2/v2.0/token",
             headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")
         )
+
+    private fun parseFormBody(body: String): Map<String, String> =
+        body.split("&").associate { parameter ->
+            val (name, value) = parameter.split("=", limit = 2)
+            URLDecoder.decode(name, StandardCharsets.UTF_8.name()) to
+                URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+        }
+
+    private companion object {
+        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
+    }
 }

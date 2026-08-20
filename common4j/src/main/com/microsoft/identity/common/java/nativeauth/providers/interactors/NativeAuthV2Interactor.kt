@@ -52,7 +52,8 @@ class NativeAuthV2Interactor(
     fun performAuthorizeChallengeStart(
         correlationId: String,
         entryRelation: NativeAuthV2LinkRelation,
-        scopes: List<String>
+        scopes: List<String>,
+        claimsRequestJson: String? = null
     ): AuthorizeChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -76,7 +77,8 @@ class NativeAuthV2Interactor(
         val result = responseParser.parseAuthorizeChallenge(
             response = halResponse,
             entryRelation = entryRelation,
-            scopes = scopes
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson
         )
 
         Logger.infoWithObject(
@@ -116,7 +118,8 @@ class NativeAuthV2Interactor(
         val result = responseParser.parseAuthorizeChallenge(
             response = halResponse,
             entryRelation = state.entryRelation,
-            scopes = state.scopes
+            scopes = state.scopes,
+            claimsRequestJson = state.claimsRequestJson
         )
 
         Logger.infoWithObject(

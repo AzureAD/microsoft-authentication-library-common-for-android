@@ -29,10 +29,10 @@ import java.util.Collections
 
 /**
  * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
- * token, the server-provided relation-to-href map, the requested scopes, the correlation ID, and
- * the entry relation that started the flow. The retained scopes exist only so the SDK can later
- * exchange a returned authorization code for tokens; they are never re-sent on authorize-
- * challenge calls.
+ * token, the server-provided relation-to-href map, the requested scopes and claims, the correlation
+ * ID, and the entry relation that started the flow. The retained scopes and claims exist only so
+ * the SDK can later exchange a returned authorization code for tokens; they are never re-sent on
+ * authorize-challenge calls.
  *
  * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
  * they cannot inspect [continuationToken], [links], [scopes], or [entryRelation], because those
@@ -46,6 +46,7 @@ class NativeAuthV2ContinuationState private constructor(
     internal val continuationToken: String,
     internal val links: Map<String, String>,
     internal val scopes: List<String>,
+    internal val claimsRequestJson: String?,
     val correlationId: String,
     internal val entryRelation: NativeAuthV2LinkRelation
 ) : ILoggable, Serializable {
@@ -56,6 +57,11 @@ class NativeAuthV2ContinuationState private constructor(
      * scopes only via this method, keeping the internal [scopes] field opaque.
      */
     fun scopesForTokenRequest(): List<String> = ArrayList(scopes)
+
+    /**
+     * Returns the optional claims request retained for the authorization-code token exchange.
+     */
+    fun claimsRequestJsonForTokenRequest(): String? = claimsRequestJson
 
     /**
      * Returns the href retained for [relation], or `null` if that relation was not present, or was
@@ -99,6 +105,7 @@ class NativeAuthV2ContinuationState private constructor(
             response: NativeAuthV2HalApiResponse,
             continuationToken: String,
             scopes: List<String>,
+            claimsRequestJson: String? = null,
             entryRelation: NativeAuthV2LinkRelation
         ): NativeAuthV2ContinuationState {
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
@@ -106,6 +113,7 @@ class NativeAuthV2ContinuationState private constructor(
                 continuationToken = continuationToken,
                 links = retainSupportedRelations(response.links),
                 scopes = defensiveCopy(scopes),
+                claimsRequestJson = claimsRequestJson,
                 correlationId = response.correlationId,
                 entryRelation = entryRelation
             )
@@ -135,6 +143,7 @@ class NativeAuthV2ContinuationState private constructor(
                 continuationToken = token,
                 links = retainSupportedRelations(merged),
                 scopes = defensiveCopy(previous.scopes),
+                claimsRequestJson = previous.claimsRequestJson,
                 correlationId = response.correlationId,
                 entryRelation = previous.entryRelation
             )

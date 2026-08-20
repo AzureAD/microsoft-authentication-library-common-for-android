@@ -29,10 +29,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
  * Parses [NativeAuthV2HalApiResponse] wire models into the typed [AuthorizeChallengeApiResult] and
  * result family.
  *
- * This is business logic layered on top of T3's mechanical wire extraction
- * ([NativeAuthV2HalApiResponse.from]): no HAL/JSON parsing happens here, only interpretation of
- * the already-extracted fields (`state`, `action`, links, embedded methods, error) into an SDK
- * outcome.
+ * This is business logic layered on top of [NativeAuthV2HalApiResponse.from]: no HAL/JSON parsing
+ * happens here, only interpretation of the already-extracted fields (`state`, `action`, links,
+ * embedded methods, error) into an SDK outcome.
  *
  * The entry point is `internal`, not `public`, because the parser remains module-local
  * request/response plumbing. This mirrors the same constraint applied to
@@ -56,11 +55,14 @@ class NativeAuthV2ResponseParser {
      * point, e.g. `resetPassword`).
      * @param scopes The scopes requested for this flow, retained only for the later
      * authorization-code token exchange. They are not sent on authorize-challenge requests.
+     * @param claimsRequestJson Optional claims requested for the later authorization-code token
+     * exchange. They are not sent on authorize-challenge requests.
      */
     internal fun parseAuthorizeChallenge(
         response: NativeAuthV2HalApiResponse,
         entryRelation: NativeAuthV2LinkRelation,
-        scopes: List<String>
+        scopes: List<String>,
+        claimsRequestJson: String? = null
     ): AuthorizeChallengeApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -117,6 +119,7 @@ class NativeAuthV2ResponseParser {
                 response = response,
                 continuationToken = continuationToken,
                 scopes = scopes,
+                claimsRequestJson = claimsRequestJson,
                 entryRelation = entryRelation
             )
 

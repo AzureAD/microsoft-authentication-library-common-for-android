@@ -37,35 +37,55 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.net.URL
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class NativeAuthV2RequestProviderTest {
 
     @Test
-    fun createAuthorizeChallengeRequests_useFixedAuthorizeChallengeEndpointAndFormBodiesWithoutScopes() {
+    fun createAuthorizeChallengeStartRequest_matchesIosFormBody() {
         val provider = provider(
             authorityUrl = "https://login.contoso.com/tenant",
             useMockApi = false
         )
 
         val startRequest = provider.createAuthorizeChallengeStartRequest(CORRELATION_ID)
-        val continueRequest = provider.createAuthorizeChallengeContinueRequest(continuationState())
 
         assertEquals(
             URL("https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"),
             startRequest.requestUrl
         )
-        assertEquals(startRequest.requestUrl, continueRequest.requestUrl)
         assertCommonHeaders(startRequest.headers, FORM_URL_ENCODED_CONTENT_TYPE)
-        assertCommonHeaders(continueRequest.headers, FORM_URL_ENCODED_CONTENT_TYPE)
 
         val startBody = ObjectMapper.serializeObjectToFormUrlEncoded(startRequest.parameters)
+
+        assertEquals(
+            mapOf("client_id" to CLIENT_ID),
+            parseFormBody(startBody)
+        )
+    }
+
+    @Test
+    fun createAuthorizeChallengeContinueRequest_matchesIosFormBody() {
+        val provider = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        )
+
+        val continueRequest = provider.createAuthorizeChallengeContinueRequest(continuationState())
+
+        assertEquals(
+            URL("https://login.contoso.com/tenant/oauth2/v2.0/authorize-challenge"),
+            continueRequest.requestUrl
+        )
+        assertCommonHeaders(continueRequest.headers, FORM_URL_ENCODED_CONTENT_TYPE)
+
         val continueBody = ObjectMapper.serializeObjectToFormUrlEncoded(continueRequest.parameters)
 
-        assertTrue(startBody.contains("client_id=$CLIENT_ID"))
-        assertTrue(startBody.contains("challenge_type=$CHALLENGE_TYPE"))
-        assertFalse(startBody.contains("scope="))
-        assertTrue(continueBody.contains("continuation_token=flow-token"))
-        assertFalse(continueBody.contains("scope="))
+        assertEquals(
+            mapOf("continuation_token" to "flow-token"),
+            parseFormBody(continueBody)
+        )
     }
 
     @Test
@@ -342,6 +362,13 @@ class NativeAuthV2RequestProviderTest {
         assertFalse(headers[com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT].isNullOrBlank())
         assertFalse(headers[com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION].isNullOrBlank())
     }
+
+    private fun parseFormBody(body: String): Map<String, String> =
+        body.split("&").associate { parameter ->
+            val (name, value) = parameter.split("=", limit = 2)
+            URLDecoder.decode(name, StandardCharsets.UTF_8.name()) to
+                URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+        }
 
     private companion object {
         private const val CLIENT_ID = "client-id"

@@ -39,8 +39,8 @@ internal data class HalLink(
 )
 
 /**
- * Generic HAL+JSON splitter with no Native Auth-specific knowledge. Splits a JSON object into its
- * plain properties, its `_links` (relation -> one or more [HalLink]), and its `_embedded`
+ * Generic HAL+JSON splitter. Splits a JSON object into its plain properties, its `_links`
+ * (relation -> one or more [HalLink]), and its `_embedded`
  * (relation -> one or more nested resources, kept as raw property maps so that [embeddedResources]
  * can re-split them on demand).
  *
