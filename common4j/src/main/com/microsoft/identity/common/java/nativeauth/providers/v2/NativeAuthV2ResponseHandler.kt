@@ -33,11 +33,19 @@ import com.microsoft.identity.common.java.net.HttpResponse
 /**
  * Converts raw [HttpResponse] objects into V2 Native Auth typed response models.
  *
- * The defining rule for [getHalApiResponse]: HTTP 3xx is terminal and never body-parsed, because
- * Native Auth V2 must not follow redirects. All non-3xx statuses still parse the body: the
- * authorize-challenge `401` is a success signal carrying the continuation token and HAL links, and
- * several 4xx bodies carry flow state. Status alone is otherwise not treated as terminal — the
- * status code is recorded and the body is parsed; classification is the parser's responsibility.
+ * The defining rule for [getHalApiResponse]: an HTTP 3xx status is rejected outright and never
+ * body-parsed. V2 request bodies carry the continuation token (and the OTP on verify), and
+ * [NativeAuthV2HrefResolver] is the only authority check applied to a request target, so following
+ * a redirect would route a secret-bearing body around that check.
+ *
+ * Note this is transport-level redirect *rejection*, and is unrelated to
+ * [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult.Redirect],
+ * which is the application-level web-fallback signal produced by the parser.
+ *
+ * All non-3xx statuses still parse the body: the authorize-challenge `401` is a success signal
+ * carrying the continuation token and HAL links, and several 4xx bodies carry flow state. Status
+ * alone is otherwise not treated as terminal — the status code is recorded and the body is parsed;
+ * classification is the parser's responsibility.
  *
  * Empty and non-JSON bodies return a synthetic [NativeAuthV2HalApiResponse] carrying a
  * [NativeAuthV2HalApiResponse.HalServerError] with a safe error code rather than throwing.
@@ -48,7 +56,7 @@ class NativeAuthV2ResponseHandler {
     private val TAG: String = NativeAuthV2ResponseHandler::class.java.simpleName
 
     companion object {
-        private val HTTP_REDIRECT_STATUS_CODE_RANGE = 300..399
+        private val UNSUPPORTED_REDIRECT_STATUS_CODES = 300..399
         private const val EMPTY_BODY_ERROR_CODE = "empty_body_error"
         private const val PARSE_ERROR_CODE = "response_parse_error"
         private const val REDIRECT_RESPONSE_ERROR_CODE = "redirect_response_error"
@@ -60,9 +68,9 @@ class NativeAuthV2ResponseHandler {
 
     /**
      * Converts a raw [HttpResponse] from any V2 Native Auth HAL endpoint into a
-     * [NativeAuthV2HalApiResponse]. HTTP 3xx returns a synthetic redirect error without parsing
-     * the body; all other statuses attempt body parsing, and a missing or malformed body produces
-     * a synthetic safe error response rather than an exception.
+     * [NativeAuthV2HalApiResponse]. An HTTP 3xx status is rejected as a synthetic error without
+     * parsing the body; all other statuses attempt body parsing, and a missing or malformed body
+     * produces a synthetic safe error response rather than an exception.
      */
     fun getHalApiResponse(
         requestCorrelationId: String,
@@ -76,8 +84,8 @@ class NativeAuthV2ResponseHandler {
 
         val correlationId = retrieveCorrelationId(response, requestCorrelationId)
 
-        return if (response.statusCode in HTTP_REDIRECT_STATUS_CODE_RANGE) {
-            Logger.warn(TAG, "V2 HAL redirect response is not supported for statusCode=${response.statusCode}.")
+        return if (response.statusCode in UNSUPPORTED_REDIRECT_STATUS_CODES) {
+            Logger.warn(TAG, "Rejecting Native Auth V2 redirect response; redirects are not followed. statusCode=${response.statusCode}.")
             buildSyntheticErrorResponse(
                 statusCode = response.statusCode,
                 correlationId = correlationId,
