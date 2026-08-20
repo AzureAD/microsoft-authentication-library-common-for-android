@@ -43,12 +43,6 @@ import java.util.TreeMap
 /**
  * Creates request objects that encapsulate all information required for making Native Auth V2 REST
  * API calls.
- *
- * The surface is verbs, not endpoints: mid-flow methods take an opaque
- * [NativeAuthV2ContinuationState] and this provider is the only place that selects the required
- * `_links` relation and resolves its href (via [hrefResolver]) immediately before attaching the
- * continuation token to the outgoing request. Callers — including the controller — never receive
- * a raw href or continuation token as a separate argument.
  */
 class NativeAuthV2RequestProvider(
     private val config: NativeAuthOAuth2Configuration,
@@ -155,8 +149,7 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the request object exchanging a Native Auth V2 authorization [code] for tokens at
-     * the existing `/oauth2/v2.0/token` endpoint.
+     * Creates the request object for a flow's token exchange.
      */
     fun createTokenRequest(
         code: String,
@@ -196,11 +189,7 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Selects [relation] from [state] and resolves it to an absolute URL via [hrefResolver],
-     * immediately before the caller attaches the continuation token to the outgoing request.
-     *
-     * @throws ClientException with [ClientException.MISSING_PARAMETER] if [state] does not carry
-     * an href for [relation].
+     * Selects [relation] from [state] and resolves it to an absolute URL.
      */
     private fun resolveHref(state: NativeAuthV2ContinuationState, relation: NativeAuthV2LinkRelation): URL {
         val href = state.href(relation) ?: throw missingRelationException(relation, state.correlationId)

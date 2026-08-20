@@ -317,8 +317,7 @@ class NativeAuthOAuth2Strategy(
     )
 
     /**
-     * Starts a V2 Native Auth authorize-challenge flow and retains [claimsRequestJson] for the
-     * authorization-code token exchange.
+     * Starts a V2 Native Auth authorize-challenge flow.
      */
     fun performAuthorizeChallengeStart(
         correlationId: String,

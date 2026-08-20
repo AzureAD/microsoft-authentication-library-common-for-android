@@ -43,11 +43,6 @@ internal data class HalLink(
  * (relation -> one or more [HalLink]), and its `_embedded`
  * (relation -> one or more nested resources, kept as raw property maps so that [embeddedResources]
  * can re-split them on demand).
- *
- * [properties] can contain server-controlled, potentially secret-bearing values (e.g. an
- * authorization code or a continuation token can legally live alongside ordinary properties in a
- * HAL body). Callers must never pass a [HalResource] to object logging; extract only the specific
- * fields that are safe to log.
  */
 internal class HalResource private constructor(
     val properties: Map<String, Any?>,
@@ -92,9 +87,6 @@ internal class HalResource private constructor(
 
         /**
          * Parses [json] into a [HalResource].
-         *
-         * @throws ClientException if [json] is blank, is not syntactically valid JSON, or its
-         * root element is not a JSON object (for example, a JSON array).
          */
         @Throws(ClientException::class)
         fun from(json: String): HalResource {

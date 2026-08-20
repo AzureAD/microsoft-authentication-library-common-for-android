@@ -30,8 +30,7 @@ import org.junit.Test
 
 /**
  * Covers the Native Auth V2 authority scheme rule in
- * [NativeAuthOAuth2Configuration.getNativeAuthV2AuthorityUrl]: HTTPS is always accepted, including
- * for the mock API, and the scheme is relaxed only for a plaintext mock authority.
+ * [NativeAuthOAuth2Configuration.getNativeAuthV2AuthorityUrl].
  */
 class NativeAuthOAuth2ConfigurationTest {
 

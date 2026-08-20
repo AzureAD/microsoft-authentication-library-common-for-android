@@ -28,9 +28,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 /**
  * Represents the potential result types returned from the Native Auth V2 authorize-challenge
  * endpoint.
- *
- * No case ever includes [NativeAuthV2ContinuationState] or an authorization code value in either
- * [ApiResult.toString] or [ApiResult.toUnsanitizedString].
  */
 sealed interface AuthorizeChallengeApiResult : ApiResult {
 
@@ -49,8 +46,6 @@ sealed interface AuthorizeChallengeApiResult : ApiResult {
     /**
      * The server returned an authorization code directly, without requiring further
      * authorize-challenge interaction.
-     *
-     * [code] is never included in either string form.
      */
     data class AuthorizationCode(
         override val correlationId: String,

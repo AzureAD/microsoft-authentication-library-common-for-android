@@ -28,35 +28,17 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErro
 /**
  * Parses [NativeAuthV2HalApiResponse] wire models into the typed [AuthorizeChallengeApiResult] and
  * result family.
- *
- * This is business logic layered on top of [NativeAuthV2HalApiResponse.from]: no HAL/JSON parsing
- * happens here, only interpretation of the already-extracted fields (`state`, `action`, links,
- * embedded methods, error) into an SDK outcome.
- *
- * The entry point is `internal`, not `public`, because the parser remains module-local
- * request/response plumbing. This mirrors the same constraint applied to
- * [NativeAuthV2ContinuationState]'s factories.
  */
 class NativeAuthV2ResponseParser {
 
     /**
      * Parses the response from the Native Auth V2 authorize-challenge endpoint.
      *
-     * Evaluated in order: [NativeAuthV2HalApiResponse.isWebFallbackRequired] always wins and is
-     * mapped to [AuthorizeChallengeApiResult.Redirect]; otherwise a server error is mapped to
-     * [AuthorizeChallengeApiResult.UnknownError]; an [NativeAuthV2HalApiResponse.authorizationCode]
-     * wins over a continuation token; a continuation token requires [entryRelation] to be present
-     * in [NativeAuthV2HalApiResponse.links] (else [AuthorizeChallengeApiResult.UnknownError]) before a successor
-     * [NativeAuthV2ContinuationState] is built and returned as [AuthorizeChallengeApiResult.ContinuationRequired];
-     * a response with none of the above is also [AuthorizeChallengeApiResult.UnknownError].
-     *
      * @param response The parsed HAL wire model for this response.
      * @param entryRelation The `_links` relation the next request must follow (flow-specific entry
      * point, e.g. `resetPassword`).
      * @param scopes The scopes requested for this flow, retained only for the later
-     * authorization-code token exchange. They are not sent on authorize-challenge requests.
-     * @param claimsRequestJson Optional claims requested for the later authorization-code token
-     * exchange. They are not sent on authorize-challenge requests.
+     * authorization-code token exchange.
      */
     internal fun parseAuthorizeChallenge(
         response: NativeAuthV2HalApiResponse,

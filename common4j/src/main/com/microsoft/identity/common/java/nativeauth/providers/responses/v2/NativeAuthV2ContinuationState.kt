@@ -28,19 +28,7 @@ import java.io.Serializable
 import java.util.Collections
 
 /**
- * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
- * token, the server-provided relation-to-href map, the requested scopes and claims, the correlation
- * ID, and the entry relation that started the flow. The retained scopes and claims exist only so
- * the SDK can later exchange a returned authorization code for tokens; they are never re-sent on
- * authorize-challenge calls.
- *
- * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
- * they cannot inspect [continuationToken], [links], [scopes], or [entryRelation], because those
- * members are `internal` and therefore visible throughout common4j but not outside that module.
- * [toString] and
- * [toUnsanitizedString] deliberately reveal none of this state, not even to internal callers,
- * since accidentally logging this object anywhere would otherwise be a single point of failure
- * for a continuation-token leak.
+ * Opaque, common4j-owned mid-flow state for V2 Native Auth.
  */
 class NativeAuthV2ContinuationState private constructor(
     internal val continuationToken: String,
@@ -95,11 +83,7 @@ class NativeAuthV2ContinuationState private constructor(
         )
 
         /**
-         * Builds the first continuation state from an authorize-challenge [response] and its
-         * already-validated, nonblank [continuationToken].
-         *
-         * @throws com.microsoft.identity.common.java.exception.ClientException if
-         * [continuationToken] is blank.
+         * Builds the first continuation state from an authorize-challenge [response].
          */
         internal fun fromAuthorizeChallengeResponse(
             response: NativeAuthV2HalApiResponse,
@@ -122,13 +106,6 @@ class NativeAuthV2ContinuationState private constructor(
         /**
          * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
          * `null` if [response] did not carry a nonblank continuation token.
-         *
-         * [selectedMethod]'s links (if any) are merged with [response]'s top-level links, with the
-         * selected embedded-method links taking precedence on a relation collision, before the
-         * merged map is filtered down to [SUPPORTED_RELATIONS]. It defaults to the first embedded
-         * method on [response], which is sufficient while a response only ever carries a single
-         * contact method; callers that need a different method (e.g. once the SDK supports choosing
-         * among several) can pass it explicitly.
          */
         internal fun next(
             previous: NativeAuthV2ContinuationState,

@@ -28,20 +28,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiRes
  * Single wire model for every V2 HAL Native Auth API response body. There are no response
  * subclasses per state/action pair; [state] and [action] are the discriminator that the parser
  * resolves into a typed SDK outcome.
- *
- * Two shapes are intentionally adapted from the design vocabulary to fit [INativeAuthApiResponse],
- * common4j's existing (non-open) V1 response base class:
- * - [INativeAuthApiResponse.correlationId] is a non-`open` `var` on the base class, so it cannot be
- *   overridden here. It is instead re-declared under a different name, [correlationIdValue] (an
- *   `internal` property, forwarded to the base constructor), and the inherited `correlationId`
- *   member remains the one other common4j code should read.
- * - the HAL server error is exposed as [serverError] rather than overriding the base class's
- *   `error: String?`, because [HalServerError] carries structured detail that is not
- *   assignment-compatible with that member's type.
- *
- * Instances are only ever produced via [from]. This remains a regular class (not a data class) so
- * no `copy(...)` API can bypass the factory, and [isWebFallbackRequired] is derived from
- * [serverError] and [state] on every read rather than stored separately.
  */
 class NativeAuthV2HalApiResponse private constructor(
     override val statusCode: Int,
@@ -110,8 +96,7 @@ class NativeAuthV2HalApiResponse private constructor(
 
         /**
          * The authorize-challenge response returns the authorization code as a top-level `code`
-         * property. This is distinct from [ERROR_CODE_KEY], which is only ever read from inside
-         * the nested `error` object, so the two cannot collide.
+         * property.
          */
         private const val AUTHORIZATION_CODE_SHORT_KEY = "code"
         private const val CONTINUATION_TOKEN_CAMEL_KEY = "continuationToken"
@@ -128,11 +113,8 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val WEB_FALLBACK_REQUIRED_STATE = "webFallbackRequired"
 
         /**
-         * Builds a [NativeAuthV2HalApiResponse] by mechanically mapping [halResource]'s wire
-         * shape onto this model's fields (including handling both continuation-token spellings
-         * the service may use). This performs no state/action-based interpretation, error mapping,
-         * or operation-specific business logic; that is the parser's job. [halResource]
-         * itself is never retained or logged.
+         * Builds a [NativeAuthV2HalApiResponse] by mapping [halResource]'s wire shape onto this
+         * model's fields.
          */
         internal fun from(
             halResource: HalResource,

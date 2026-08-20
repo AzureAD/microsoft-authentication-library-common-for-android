@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
@@ -69,25 +70,14 @@ class NativeAuthV2Interactor(
             request
         )
 
-        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-        val encoded = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
-            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(correlationId, httpResponse)
-        val result = responseParser.parseAuthorizeChallenge(
-            response = halResponse,
+        return performAuthorizeChallenge(
+            request = request,
+            correlationId = correlationId,
             entryRelation = entryRelation,
             scopes = scopes,
-            claimsRequestJson = claimsRequestJson
+            claimsRequestJson = claimsRequestJson,
+            methodName = "$TAG.performAuthorizeChallengeStart"
         )
-
-        Logger.infoWithObject(
-            "$TAG.performAuthorizeChallengeStart",
-            result.correlationId,
-            "result = ",
-            result
-        )
-        return result
     }
 
     /**
@@ -110,25 +100,42 @@ class NativeAuthV2Interactor(
             request
         )
 
+        return performAuthorizeChallenge(
+            request = request,
+            correlationId = state.correlationId,
+            entryRelation = state.entryRelation,
+            scopes = state.scopes,
+            claimsRequestJson = state.claimsRequestJson,
+            methodName = "$TAG.performAuthorizeChallengeContinue"
+        )
+    }
+
+    private fun performAuthorizeChallenge(
+        request: NativeAuthRequest,
+        correlationId: String,
+        entryRelation: NativeAuthV2LinkRelation,
+        scopes: List<String>,
+        claimsRequestJson: String?,
+        methodName: String
+    ): AuthorizeChallengeApiResult {
         val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val encoded = ObjectMapper.serializeObjectToFormUrlEncoded(request.parameters)
             .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
         val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(state.correlationId, httpResponse)
+        val halResponse = responseHandler.getHalApiResponse(correlationId, httpResponse)
         val result = responseParser.parseAuthorizeChallenge(
             response = halResponse,
-            entryRelation = state.entryRelation,
-            scopes = state.scopes,
-            claimsRequestJson = state.claimsRequestJson
+            entryRelation = entryRelation,
+            scopes = scopes,
+            claimsRequestJson = claimsRequestJson
         )
 
         Logger.infoWithObject(
-            "$TAG.performAuthorizeChallengeContinue",
+            methodName,
             result.correlationId,
             "result = ",
             result
         )
         return result
     }
-
 }
