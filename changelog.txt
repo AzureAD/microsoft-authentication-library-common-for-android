@@ -1,7 +1,7 @@
 vNext
 ----------
 
-Version 24.6.0-RC3
+Version 24.6.0
 ----------
 - [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
 - [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)
