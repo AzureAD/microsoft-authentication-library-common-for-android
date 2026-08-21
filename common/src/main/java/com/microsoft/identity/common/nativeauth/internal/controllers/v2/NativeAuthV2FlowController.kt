@@ -79,10 +79,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * Starts the V2 SSPR flow: authorize-challenge start → reset-password entry → challenge.
      *
      * Returns [NativeAuthV2CommandResult.CodeRequired] when the server issues a one-time code,
-     * [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] if the challenge step
-     * fast-forwards to completion, [INativeAuthCommandResult.Redirect] for browser-redirect
-     * outcomes, or an [INativeAuthCommandResult.APIError] / [NativeAuthV2CommandResult.UserNotFound]
-     * for errors.
+     * [INativeAuthCommandResult.Redirect] for browser-redirect outcomes, or an
+     * [INativeAuthCommandResult.APIError] / [NativeAuthV2CommandResult.UserNotFound] for errors.
+     *
+     * A [NativeAuthV2InteractionApiResult.ReadyToComplete] at either the reset-password entry or
+     * the challenge step is rejected as an [INativeAuthCommandResult.APIError]: no credential has
+     * been proven at that point, so the flow must not hand back a state that is exchangeable for
+     * tokens.
      */
     fun resetPasswordStart(parameters: ResetPasswordV2StartCommandParameters): NativeAuthV2ResetPasswordStartCommandResult {
         LogSession.logMethodCall(
@@ -137,10 +140,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             val afterStartState = when (startResult) {
                 is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult.continuationState
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> return NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
-                    correlationId = startResult.correlationId,
-                    continuationState = startResult.continuationState
-                )
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
                     error = startResult.error,
@@ -164,10 +163,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     challengeTargetLabel = challengeResult.challengeTargetLabel,
                     challengeChannel = challengeResult.challengeChannel
                 )
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
-                    correlationId = challengeResult.correlationId,
-                    continuationState = challengeResult.continuationState
-                )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = challengeResult.correlationId,
                     redirectReason = challengeResult.redirectReason
@@ -186,9 +181,12 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Submits the one-time code. Returns [NativeAuthV2CommandResult.NewPasswordRequired] on
-     * success, [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state) on a bad
-     * code, or [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] if the server
-     * fast-forwards to completion.
+     * success or [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state) on a bad
+     * code.
+     *
+     * A [NativeAuthV2InteractionApiResult.ReadyToComplete] here is rejected as an
+     * [INativeAuthCommandResult.APIError]: the reset cannot have completed before a new password
+     * was submitted.
      */
     fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult {
         LogSession.logMethodCall(
@@ -207,10 +205,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.UpdateRequired -> NativeAuthV2CommandResult.NewPasswordRequired(
-                    correlationId = verifyResult.correlationId,
-                    continuationState = verifyResult.continuationState
-                )
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(
                     correlationId = verifyResult.correlationId,
                     continuationState = verifyResult.continuationState
                 )

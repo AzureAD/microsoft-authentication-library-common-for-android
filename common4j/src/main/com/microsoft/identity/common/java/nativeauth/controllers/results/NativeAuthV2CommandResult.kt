@@ -82,15 +82,16 @@ interface NativeAuthV2CommandResult {
      * The password reset has completed server-side. The app must explicitly invoke the
      * sign-in-after-reset command with [continuationState] to exchange it for tokens and persist
      * them to cache; no token exchange or cache write happens until then.
-     * Applies to any step that reaches server-side completion (start, submit-code, and
-     * submit-new-password — including its fast-forward and poll-completion paths).
+     *
+     * Applies only to the submit-new-password step, including its fast-forward and poll-completion
+     * paths. It is deliberately not reachable from the start, challenge, or submit-code steps: no
+     * new password has been supplied at those points, so the flow rejects a server-side completion
+     * signal there rather than returning a state that is exchangeable for tokens.
      */
     data class SignInAfterResetPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SubmitCodeCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult {
+    ) : NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterResetPasswordRequired(correlationId=$correlationId)"
 

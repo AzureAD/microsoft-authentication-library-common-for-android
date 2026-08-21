@@ -182,7 +182,7 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
-    fun testResetPasswordStartReturnsSignInAfterResetPasswordRequiredWhenChallengeReadyToComplete() {
+    fun testResetPasswordStartReturnsAPIErrorWhenChallengeReadyToComplete() {
         val afterStartState = mockContinuationState()
         val readyState = mockContinuationState()
         val parameters = resetPasswordStartParameters()
@@ -215,14 +215,16 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.resetPasswordStart(parameters)
 
-        assertTrue(result is NativeAuthV2CommandResult.SignInAfterResetPasswordRequired)
-        result as NativeAuthV2CommandResult.SignInAfterResetPasswordRequired
+        // No credential has been proven at the challenge step, so a server-side completion signal
+        // must not yield a token-exchangeable state.
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)
-        assertEquals(readyState, result.continuationState)
+        assertEquals("unexpected_api_result", result.error)
     }
 
     @Test
-    fun testResetPasswordStartReturnsSignInAfterResetPasswordRequiredWhenStartReadyToComplete() {
+    fun testResetPasswordStartReturnsAPIErrorWhenStartReadyToComplete() {
         val afterAuthorizeState = mockContinuationState()
         val readyState = mockContinuationState()
         val parameters = resetPasswordStartParameters()
@@ -248,14 +250,14 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.resetPasswordStart(parameters)
 
-        assertTrue(result is NativeAuthV2CommandResult.SignInAfterResetPasswordRequired)
-        result as NativeAuthV2CommandResult.SignInAfterResetPasswordRequired
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)
-        assertEquals(readyState, result.continuationState)
+        assertEquals("unexpected_api_result", result.error)
     }
 
     @Test
-    fun testSubmitCodeReturnsSignInAfterResetPasswordRequiredWhenVerifyReadyToComplete() {
+    fun testSubmitCodeReturnsAPIErrorWhenVerifyReadyToComplete() {
         val inputState = mockContinuationState()
         val readyState = mockContinuationState()
         val parameters = submitCodeParameters(inputState)
@@ -269,10 +271,11 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.submitCode(parameters)
 
-        assertTrue(result is NativeAuthV2CommandResult.SignInAfterResetPasswordRequired)
-        result as NativeAuthV2CommandResult.SignInAfterResetPasswordRequired
+        // The reset cannot have completed before a new password was submitted.
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)
-        assertEquals(readyState, result.continuationState)
+        assertEquals("unexpected_api_result", result.error)
     }
 
     @Test
