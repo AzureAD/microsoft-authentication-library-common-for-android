@@ -69,6 +69,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
 import io.opentelemetry.api.trace.Span;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -84,6 +85,7 @@ import lombok.NonNull;
  * <p>
  * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
+@AllArgsConstructor
 @ThreadSafe
 public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static final String TAG = UrlConnectionHttpClient.class.getSimpleName();
@@ -135,28 +137,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final SSLSocketFactoryWrapper sslSocketFactory;
 
     /**
-     * Whether the underlying connection follows HTTP redirects automatically.
-     */
-    private final boolean followRedirects;
-
-    public UrlConnectionHttpClient(@Nullable final IRetryPolicy<HttpResponse> retryPolicy,
-                                   final int streamBufferSize,
-                                   final int connectTimeoutMs,
-                                   final int readTimeoutMs,
-                                   @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
-                                   @Nullable final Supplier<Integer> readTimeoutMsSupplier,
-                                   @Nullable final SSLSocketFactoryWrapper sslSocketFactory) {
-        this.retryPolicy = retryPolicy;
-        this.streamBufferSize = streamBufferSize;
-        this.connectTimeoutMs = connectTimeoutMs;
-        this.readTimeoutMs = readTimeoutMs;
-        this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
-        this.readTimeoutMsSupplier = readTimeoutMsSupplier;
-        this.sslSocketFactory = sslSocketFactory;
-        this.followRedirects = true;
-    }
-
-    /**
      * Default Constructor, for constructing Lombok's Builder only. Do not expose.
      */
     @Builder
@@ -167,8 +147,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                     @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
                                     @Nullable final Supplier<Integer> readTimeoutMsSupplier,
                                     @Nullable final List<String> supportedSslProtocols,
-                                    @Nullable final SSLContext sslContext,
-                                    @Nullable final Boolean followRedirects) {
+                                    @Nullable final SSLContext sslContext) {
 
         this.retryPolicy = retryPolicy != null ?
                 retryPolicy : new NoRetryPolicy();
@@ -180,7 +159,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 readTimeoutMs : CommonFlightsManager.INSTANCE.getFlightsProvider().getIntValue(CommonFlight.URL_CONNECTION_READ_TIME_OUT);
         this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
         this.readTimeoutMsSupplier = readTimeoutMsSupplier;
-        this.followRedirects = followRedirects != null ? followRedirects : true;
 
         final List<String> protocol = supportedSslProtocols != null ?
                 supportedSslProtocols : SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
@@ -204,41 +182,30 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .retryPolicy(createDefaultRetryPolicy())
+                    .retryPolicy(StatusCodeAndExceptionRetry.builder()
+                            .number(1)
+                            .extensionFactor(2)
+                            .isAcceptable(new Function<HttpResponse, Boolean>() {
+                                public Boolean apply(HttpResponse response) {
+                                    return response != null && response.getStatusCode() < 400;
+                                }
+                            })
+                            .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
+                            .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
+                                public Boolean apply(HttpResponse response, Integer attemptNumber) {
+                                    return response != null && isRetryableError(response.getStatusCode());
+                                }
+                            })
+                            .isRetryableException(new Function<Exception, Boolean>() {
+                                public Boolean apply(Exception e) {
+                                    return ConnectionError.CONNECTION_TIMEOUT.compare(e);
+                                }
+                            })
+                            .build())
                     .build());
             reference = defaultReference.get();
         }
         return reference;
-    }
-
-    public static UrlConnectionHttpClient createDefaultConfiguredInstance(final boolean followRedirects) {
-        return UrlConnectionHttpClient.builder()
-                .retryPolicy(createDefaultRetryPolicy())
-                .followRedirects(followRedirects)
-                .build();
-    }
-
-    private static IRetryPolicy<HttpResponse> createDefaultRetryPolicy() {
-        return StatusCodeAndExceptionRetry.builder()
-                .number(1)
-                .extensionFactor(2)
-                .isAcceptable(new Function<HttpResponse, Boolean>() {
-                    public Boolean apply(HttpResponse response) {
-                        return response != null && response.getStatusCode() < 400;
-                    }
-                })
-                .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                .isRetryable(new BiFunction<HttpResponse,Integer, Boolean>() {
-                    public Boolean apply(HttpResponse response, Integer attemptNumber) {
-                        return response != null && isRetryableError(response.getStatusCode());
-                    }
-                })
-                .isRetryableException(new Function<Exception, Boolean>() {
-                    public Boolean apply(Exception e) {
-                        return ConnectionError.CONNECTION_TIMEOUT.compare(e);
-                    }
-                })
-                .build();
     }
 
     /**
@@ -531,7 +498,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         urlConnection.setRequestMethod(request.getRequestMethod());
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
-        urlConnection.setInstanceFollowRedirects(followRedirects);
+        urlConnection.setInstanceFollowRedirects(true);
         urlConnection.setUseCaches(true);
         urlConnection.setDoInput(true);
 

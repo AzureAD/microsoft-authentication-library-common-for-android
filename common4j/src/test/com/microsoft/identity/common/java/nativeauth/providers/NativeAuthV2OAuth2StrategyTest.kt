@@ -37,7 +37,7 @@ import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Test
 import java.net.URL
 
@@ -53,7 +53,7 @@ class NativeAuthV2OAuth2StrategyTest {
     }
 
     @Test
-    fun createV2Strategy_createsDedicatedNativeAuthV2ClientWithoutRedirects() {
+    fun createV2Strategy_reusesDefaultHttpClient() {
         val strategy = NativeAuthOAuth2StrategyFactory.createV2Strategy(
             config = config(),
             strategyParameters = OAuth2StrategyParameters.builder().build()
@@ -61,8 +61,7 @@ class NativeAuthV2OAuth2StrategyTest {
 
         val v2Client = getNativeAuthV2Client(strategy)
 
-        assertNotSame(UrlConnectionHttpClient.getDefaultInstance(), v2Client)
-        assertFalse(readFollowRedirects(v2Client))
+        assertSame(UrlConnectionHttpClient.getDefaultInstance(), v2Client)
     }
 
     @Test
@@ -230,9 +229,4 @@ class NativeAuthV2OAuth2StrategyTest {
         return clientField.get(interactor)
     }
 
-    private fun readFollowRedirects(client: Any): Boolean {
-        val followRedirectsField = client.javaClass.getDeclaredField("followRedirects")
-        followRedirectsField.isAccessible = true
-        return followRedirectsField.getBoolean(client)
-    }
 }

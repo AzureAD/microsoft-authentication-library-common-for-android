@@ -76,19 +76,17 @@ class NativeAuthOAuth2StrategyFactory {
         }
 
         /**
-         * Creates a Native Authentication V2 strategy with redirects disabled.
+         * Creates a Native Authentication V2 strategy.
          */
         fun createV2Strategy(
             config: NativeAuthOAuth2Configuration,
             strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthV2OAuth2Strategy {
-            val nativeAuthV2HttpClient =
-                UrlConnectionHttpClient.createDefaultConfiguredInstance(false)
             return NativeAuthV2OAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
                 nativeAuthV2Interactor = NativeAuthV2Interactor(
-                    httpClient = nativeAuthV2HttpClient,
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
                     requestProvider = NativeAuthV2RequestProvider(config = config),
                     responseHandler = NativeAuthV2ResponseHandler(),
                     responseParser = NativeAuthV2ResponseParser(),

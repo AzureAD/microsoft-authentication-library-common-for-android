@@ -99,6 +99,9 @@ class NativeAuthV2ContinuationStateTest {
                 "resetPassword": {
                   "href": "$RESET_PASSWORD_HREF"
                 },
+                "self": {
+                  "href": "/tenant/self"
+                },
                 "unsupported": {
                   "href": "/tenant/unsupported"
                 }
@@ -120,6 +123,7 @@ class NativeAuthV2ContinuationStateTest {
 
         assertEquals(listOf("openid", "User.Read"), state.scopesForTokenRequest())
         assertEquals(RESET_PASSWORD_HREF, state.href(NativeAuthV2LinkRelation.RESET_PASSWORD))
+        assertNull(state.href(NativeAuthV2LinkRelation("self")))
         assertNull(state.href(NativeAuthV2LinkRelation("unsupported")))
     }
 
