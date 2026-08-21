@@ -62,6 +62,35 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
+    fun parseAuthorizeChallenge_whenInitialUnauthorizedResponseContainsContinuation_returnsContinuationRequired() {
+        val response = responseFrom(
+            """
+            {
+              "error": "InsufficientAuthorization",
+              "error_description": "AADSTS500127: No authenticated credentials found in request.",
+              "error_codes": [500127],
+              "continuation_token": "flow-token",
+              "reset_password": "/tenant/api/v0.1/auth/resetpassword?dc=TEST"
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.ContinuationRequired)
+        val continuation = result as AuthorizeChallengeApiResult.ContinuationRequired
+        assertEquals("flow-token", continuation.continuationState.continuationToken)
+        assertEquals(
+            "/tenant/api/v0.1/auth/resetpassword?dc=TEST",
+            continuation.continuationState.href(NativeAuthV2LinkRelation.RESET_PASSWORD)
+        )
+    }
+
+    @Test
     fun parseAuthorizeChallenge_whenClaimsAreProvided_retainsClaimsForTokenRequest() {
         val result = parser.parseAuthorizeChallenge(
             response = responseFrom(

@@ -60,7 +60,11 @@ class NativeAuthV2ResponseParser {
             )
         }
 
-        response.serverError?.let { serverError ->
+        val continuationToken = response.continuationToken
+        val hasValidContinuation = !continuationToken.isNullOrBlank() &&
+            !response.links[entryRelation.value].isNullOrBlank()
+
+        response.serverError?.takeUnless { hasValidContinuation }?.let { serverError ->
             return AuthorizeChallengeApiResult.UnknownError(
                 correlationId = serverError.correlationId
                     ?.takeUnless { it.isBlank() } ?: response.correlationId,
@@ -77,7 +81,6 @@ class NativeAuthV2ResponseParser {
             )
         }
 
-        val continuationToken = response.continuationToken
         if (continuationToken != null) {
             if (continuationToken.isBlank()) {
                 return AuthorizeChallengeApiResult.UnknownError(

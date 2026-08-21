@@ -192,6 +192,21 @@ class NativeAuthV2HrefResolverTest {
     }
 
     @Test
+    fun resolve_whenRelativeHrefUsesTenantIdPrefix_replacesItWithConfiguredTenantPath() {
+        val url = resolver(
+            authorityUrl = "https://login.contoso.com/tenant-alias"
+        ).resolve(
+            "/00000000-0000-0000-0000-000000000001/api/v0.1/auth/resetpassword?dc=westus",
+            CORRELATION_ID
+        )
+
+        assertEquals(
+            "https://login.contoso.com/tenant-alias/api/v0.1/auth/resetpassword?dc=westus",
+            url.toString()
+        )
+    }
+
+    @Test
     fun resolve_whenRelativeHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
         listOf(
             "/unexpected/api/v0.1/auth/challenge",
@@ -256,6 +271,7 @@ class NativeAuthV2HrefResolverTest {
     fun resolve_whenAbsoluteHrefUsesUnexpectedPrefixBeforeSupportedPath_rejectsUnsupportedUrl() {
         listOf(
             "https://login.contoso.com/unexpected/api/v0.1/auth/challenge",
+            "https://login.contoso.com/00000000-0000-0000-0000-000000000001/api/v0.1/auth/challenge",
             "https://login.contoso.com/unexpected/tenant/oauth2/v2.0/token"
         ).forEach { href ->
             val exception = assertClientException {

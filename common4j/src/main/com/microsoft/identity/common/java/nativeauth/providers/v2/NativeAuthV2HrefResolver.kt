@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.util.CommonURIBuilder
+import com.microsoft.identity.common.java.util.StringUtil
 import org.apache.hc.core5.http.NameValuePair
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import java.net.MalformedURLException
@@ -190,6 +191,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         val apiPath = validateSupportedApiPath(
             path = uri.path.orEmpty(),
             configuredAuthorityPath = normalizeConfiguredAuthorityPath(authorityUrl.path),
+            allowTenantIdPrefix = true,
             correlationId = correlationId
         )
 
@@ -309,10 +311,15 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
     private fun validateSupportedApiPath(
         path: String,
         configuredAuthorityPath: String,
+        allowTenantIdPrefix: Boolean = false,
         correlationId: String
     ): String {
         val normalizedPath = if (path.startsWith(PATH_SEPARATOR)) path else "$PATH_SEPARATOR$path"
-        val apiPath = extractSupportedApiPath(normalizedPath, configuredAuthorityPath)
+        val apiPath = extractSupportedApiPath(
+            normalizedPath = normalizedPath,
+            configuredAuthorityPath = configuredAuthorityPath,
+            allowTenantIdPrefix = allowTenantIdPrefix
+        )
             ?: throw clientException(
                 errorCode = ClientException.UNSUPPORTED_URL,
                 message = "Native Auth V2 href does not contain a supported API path.",
@@ -327,7 +334,8 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
 
     private fun extractSupportedApiPath(
         normalizedPath: String,
-        configuredAuthorityPath: String
+        configuredAuthorityPath: String,
+        allowTenantIdPrefix: Boolean
     ): String? {
         SUPPORTED_API_PATH_PREFIXES.firstOrNull { normalizedPath.startsWith(it) }?.let {
             return normalizedPath
@@ -338,6 +346,18 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
                 normalizedPath.startsWith("$configuredAuthorityPath$prefix")
             }?.let {
                 return normalizedPath.removePrefix(configuredAuthorityPath)
+            }
+        }
+
+        if (allowTenantIdPrefix) {
+            val tenantId = normalizedPath.removePrefix(PATH_SEPARATOR).substringBefore(PATH_SEPARATOR)
+            if (tenantId.length == UUID_STRING_LENGTH && StringUtil.isUuid(tenantId)) {
+                val tenantPath = "$PATH_SEPARATOR$tenantId"
+                SUPPORTED_API_PATH_PREFIXES.firstOrNull { prefix ->
+                    normalizedPath.startsWith("$tenantPath$prefix")
+                }?.let {
+                    return normalizedPath.removePrefix(tenantPath)
+                }
             }
         }
 
@@ -408,6 +428,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         private const val DC_QUERY_PARAMETER = "dc"
         private const val CURRENT_DIRECTORY_SEGMENT = "."
         private const val PARENT_DIRECTORY_SEGMENT = ".."
+        private const val UUID_STRING_LENGTH = 36
         private val SUPPORTED_API_PATH_PREFIXES = listOf(API_PATH_PREFIX, OAUTH2_PATH_PREFIX)
     }
 }
