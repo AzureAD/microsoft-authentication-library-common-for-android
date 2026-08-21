@@ -45,19 +45,15 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.util.StringUtil
+import com.microsoft.identity.common.java.util.ThreadUtils
 import com.microsoft.identity.common.nativeauth.internal.controllers.BaseNativeAuthController
 import lombok.EqualsAndHashCode
 
 /**
  * V2 Native Auth SSPR flow controller.
- *
- * @param sleeper Injected sleep abstraction used by the bounded poll loop in [submitNewPassword].
- *   The default is the production implementation; tests substitute a no-op fake.
  */
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-class NativeAuthV2FlowController(
-    private val sleeper: NativeAuthV2PollingSleeper = ProductionNativeAuthV2PollingSleeper()
-) : BaseNativeAuthController() {
+class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     companion object {
         private val TAG = NativeAuthV2FlowController::class.java.simpleName
@@ -350,7 +346,13 @@ class NativeAuthV2FlowController(
         var currentDelay = delayMs
 
         repeat(MAX_POLL_ATTEMPTS) { attempt ->
-            if (!sleeper.sleep(currentDelay)) {
+            ThreadUtils.sleepSafely(
+                currentDelay.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
+                TAG,
+                "Waiting between reset password polls"
+            )
+
+            if (Thread.currentThread().isInterrupted) {
                 Logger.warn(TAG, currentState.correlationId, "Poll interrupted at attempt ${attempt + 1}.")
                 return INativeAuthCommandResult.APIError(
                     error = POLL_INTERRUPTED_ERROR,

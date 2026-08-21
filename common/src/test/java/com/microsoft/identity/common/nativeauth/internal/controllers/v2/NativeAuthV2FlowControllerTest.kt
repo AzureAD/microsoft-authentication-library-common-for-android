@@ -82,8 +82,7 @@ class NativeAuthV2FlowControllerTest {
         mockAuthority = mockk(relaxed = true)
         every { mockAuthority.createOAuth2StrategyV2(any()) } returns mockStrategy
 
-        // No-op sleeper so the poll-completion test does not incur a real delay.
-        controller = NativeAuthV2FlowController(sleeper = NativeAuthV2PollingSleeper { true })
+        controller = NativeAuthV2FlowController()
     }
 
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
@@ -407,19 +406,22 @@ class NativeAuthV2FlowControllerTest {
         val inputState = mockContinuationState()
         val pollState = mockContinuationState()
         val parameters = submitNewPasswordParameters(inputState)
-        controller = NativeAuthV2FlowController(
-            sleeper = NativeAuthV2PollingSleeper { false }
-        )
 
         every {
             mockStrategy.performUpdatePassword(state = any(), newPassword = any())
         } returns NativeAuthV2InteractionApiResult.PollInProgress(
             correlationId = correlationId,
             continuationState = pollState,
-            retryAfterMillis = 0L
+            retryAfterMillis = 1L
         )
 
-        val result = controller.submitNewPassword(parameters)
+        val result = try {
+            Thread.currentThread().interrupt()
+            controller.submitNewPassword(parameters)
+        } finally {
+            // Clear the flag so it cannot leak into any subsequent test on this thread.
+            Thread.interrupted()
+        }
 
         assertTrue(result is INativeAuthCommandResult.APIError)
         result as INativeAuthCommandResult.APIError
