@@ -30,11 +30,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
  * for a V2 Native Auth mid-flow (post authorize-challenge) response, scoped in this round to the
  * SSPR (reset-password) operations in [NativeAuthV2Operation].
  *
- * No case ever includes [NativeAuthV2ContinuationState], a continuation token, an href, or an
- * authorization code in either [ApiResult.toString] or [ApiResult.toUnsanitizedString]. Only
- * [InvalidCode] and [InvalidPassword] carry a retry state ([retryState][InvalidCode.retryState]),
- * which is always the caller's previous state, unchanged, so the same step can be retried without
- * restarting the flow; terminal and protocol errors do not carry any continuation state.
+ * No error case includes [NativeAuthV2ContinuationState], a continuation token, an href, or an
+ * authorization code. The caller retains the state used for an operation when it needs to retry.
+ * No case includes sensitive continuation data in either [ApiResult.toString] or
+ * [ApiResult.toUnsanitizedString].
  */
 sealed interface NativeAuthV2InteractionApiResult : ApiResult {
 
@@ -144,16 +143,14 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     }
 
     /**
-     * The submitted verification code was invalid. [retryState] is the caller's previous
-     * continuation state, unchanged, so the same `verify` step can be retried.
+     * The submitted verification code was invalid.
      */
     data class InvalidCode(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        override val errorCodes: List<Int>? = null,
-        val retryState: NativeAuthV2ContinuationState
+        override val errorCodes: List<Int>? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,
@@ -167,16 +164,14 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     }
 
     /**
-     * The submitted password was invalid (for example, too weak). [retryState] is the caller's
-     * previous continuation state, unchanged, so the same `update` step can be retried.
+     * The submitted password was invalid (for example, too weak).
      */
     data class InvalidPassword(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        override val errorCodes: List<Int>? = null,
-        val retryState: NativeAuthV2ContinuationState
+        override val errorCodes: List<Int>? = null
     ) : ApiErrorResult(
         error = error,
         subError = subError,

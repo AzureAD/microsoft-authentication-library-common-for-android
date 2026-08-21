@@ -213,7 +213,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     error = verifyResult.error,
                     errorDescription = verifyResult.errorDescription,
                     subError = verifyResult.subError,
-                    retryState = verifyResult.retryState,
                     errorCodes = verifyResult.errorCodes
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
@@ -310,7 +309,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     error = updateResult.error,
                     errorDescription = updateResult.errorDescription,
                     subError = updateResult.subError,
-                    retryState = updateResult.retryState,
                     errorCodes = updateResult.errorCodes
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(

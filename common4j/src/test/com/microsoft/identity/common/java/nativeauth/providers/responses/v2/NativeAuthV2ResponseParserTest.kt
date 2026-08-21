@@ -30,7 +30,6 @@ import com.microsoft.identity.common.java.net.HttpResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -291,7 +290,7 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenVerificationCodeIsInvalid_returnsRetryableInvalidCode() {
+    fun parseInteraction_whenVerificationCodeIsInvalid_returnsInvalidCode() {
         val previousState = previousState()
         val response = responseFrom(
             """{"error":{"code":"invalid_grant","message":"Code is invalid.","innerError":{"code":"invalid_oob_value"}}}"""
@@ -304,11 +303,10 @@ class NativeAuthV2ResponseParserTest {
         ) as NativeAuthV2InteractionApiResult.InvalidCode
 
         assertEquals("invalid_oob_value", result.subError)
-        assertSame(previousState, result.retryState)
     }
 
     @Test
-    fun parseInteraction_whenV2VerificationCodeIsInvalid_returnsRetryableInvalidCode() {
+    fun parseInteraction_whenV2VerificationCodeIsInvalid_returnsInvalidCode() {
         val previousState = previousState()
         val response = responseFrom(
             """{"error":{"code":"invalidGrant","message":"Code is invalid.","innerError":{"code":"invalidContinuationToken"}}}"""
@@ -321,7 +319,6 @@ class NativeAuthV2ResponseParserTest {
         ) as NativeAuthV2InteractionApiResult.InvalidCode
 
         assertEquals("invalidContinuationToken", result.subError)
-        assertSame(previousState, result.retryState)
     }
 
     @Test

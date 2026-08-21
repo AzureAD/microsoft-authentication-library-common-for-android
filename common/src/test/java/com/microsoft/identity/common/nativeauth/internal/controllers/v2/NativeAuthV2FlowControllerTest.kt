@@ -289,8 +289,7 @@ class NativeAuthV2FlowControllerTest {
                 error = "invalid_grant",
                 errorDescription = "Code is invalid.",
                 subError = "invalid_oob_value",
-                errorCodes = errorCodes,
-                retryState = state
+                errorCodes = errorCodes
             )
 
         val result = controller.submitCode(submitCodeParameters(state)) as
@@ -332,8 +331,7 @@ class NativeAuthV2FlowControllerTest {
                 error = "invalid_request",
                 errorDescription = "Password is too weak.",
                 subError = "password_too_weak",
-                errorCodes = errorCodes,
-                retryState = state
+                errorCodes = errorCodes
             )
 
         val result = controller.submitNewPassword(submitNewPasswordParameters(state)) as

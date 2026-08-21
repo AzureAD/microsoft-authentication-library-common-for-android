@@ -123,7 +123,7 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The server rejected the submitted OTP.
-     * [retryState] is the caller's previous continuation state so the same verify step can be retried.
+     * The developer can retry through the state object used for the failed call.
      * Applies to the submit-code step.
      */
     data class IncorrectCode(
@@ -131,7 +131,6 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val subError: String,
-        val retryState: NativeAuthV2ContinuationState,
         val errorCodes: List<Int>? = null,
     ) : NativeAuthV2SubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
@@ -143,7 +142,7 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The supplied password did not meet policy requirements.
-     * [retryState] is the caller's previous continuation state so the same update step can be retried.
+     * The developer can retry through the state object used for the failed call.
      * Applies to the submit-new-password step.
      */
     data class PasswordNotAccepted(
@@ -151,7 +150,6 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val subError: String,
-        val retryState: NativeAuthV2ContinuationState,
         val errorCodes: List<Int>? = null,
     ) : NativeAuthV2SubmitNewPasswordCommandResult {
         override fun toUnsanitizedString(): String =

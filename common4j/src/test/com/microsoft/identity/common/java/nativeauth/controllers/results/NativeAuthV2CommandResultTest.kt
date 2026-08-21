@@ -51,15 +51,13 @@ class NativeAuthV2CommandResultTest {
                 CORRELATION_ID,
                 ERROR,
                 ERROR_DESCRIPTION,
-                SUB_ERROR,
-                state
+                SUB_ERROR
             ),
             NativeAuthV2CommandResult.PasswordNotAccepted(
                 CORRELATION_ID,
                 ERROR,
                 ERROR_DESCRIPTION,
-                SUB_ERROR,
-                state
+                SUB_ERROR
             ),
             NativeAuthV2CommandResult.PasswordResetFailed(
                 CORRELATION_ID,

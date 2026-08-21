@@ -152,8 +152,7 @@ class NativeAuthV2ResponseParser {
      *
      * @param response The parsed HAL wire model for this response.
      * @param previousState The continuation state that led to this response, used to build the
-     * successor state (or, for [NativeAuthV2InteractionApiResult.InvalidCode]/[NativeAuthV2InteractionApiResult.InvalidPassword],
-     * returned unchanged as the retry state).
+     * successor state.
      * @param operation The SDK-issued operation that produced [response], used only for
      * operation-scoped error mapping.
      */
@@ -182,8 +181,7 @@ class NativeAuthV2ResponseParser {
             return mapInteractionError(
                 correlationId = errorCorrelationId,
                 serverError = serverError,
-                operation = operation,
-                previousState = previousState
+                operation = operation
             )
         }
 
@@ -318,8 +316,7 @@ class NativeAuthV2ResponseParser {
     private fun mapInteractionError(
         correlationId: String,
         serverError: NativeAuthV2HalApiResponse.HalServerError,
-        operation: NativeAuthV2Operation,
-        previousState: NativeAuthV2ContinuationState
+        operation: NativeAuthV2Operation
     ): NativeAuthV2InteractionApiResult {
         val code = serverError.code
         val innerErrorCode = serverError.innerErrorCode
@@ -335,8 +332,7 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode,
-                    errorCodes = errorCodes,
-                    retryState = previousState
+                    errorCodes = errorCodes
                 )
 
             innerErrorCode in INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
@@ -350,8 +346,7 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes,
-                    retryState = previousState
+                    errorCodes = errorCodes
                 )
 
             operation == NativeAuthV2Operation.RESET_PASSWORD_START &&
@@ -376,8 +371,7 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
-                    errorCodes = errorCodes,
-                    retryState = previousState
+                    errorCodes = errorCodes
                 )
 
             else -> unknownInteractionError(correlationId, code, message, errorCodes)
