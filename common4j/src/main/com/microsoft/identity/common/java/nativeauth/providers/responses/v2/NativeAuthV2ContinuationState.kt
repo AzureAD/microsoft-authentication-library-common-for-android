@@ -22,13 +22,24 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.util.ILoggable
 import com.microsoft.identity.common.java.util.ArgUtils
 import java.io.Serializable
 import java.util.Collections
 
 /**
- * Opaque, common4j-owned mid-flow state for V2 Native Auth.
+ * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
+ * token, the server-provided relation-to-href map, the requested scopes, the correlation ID, the
+ * flow entry relation, and the internal flow scenario that produced it.
+ *
+ * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
+ * they cannot inspect [continuationToken], [links], [scopes], [entryRelation], or [scenario],
+ * because those members are `internal` to this module. Only common4j Native Auth V2 protocol code
+ * (this package and `nativeauth.providers.v2`) can read them, e.g. to build the next request.
+ * [toString] and [toUnsanitizedString] deliberately reveal none of this state, not even to
+ * internal callers, since accidentally logging this object anywhere would otherwise be a single
+ * point of failure for a continuation-token leak.
  *
  * [Serializable] so MSAL can retain it across process death via `Parcel.writeSerializable` without
  * reading its `internal` members, as V1 already does for its opaque
@@ -41,7 +52,8 @@ class NativeAuthV2ContinuationState private constructor(
     internal val scopes: List<String>,
     internal val claimsRequestJson: String?,
     val correlationId: String,
-    internal val entryRelation: NativeAuthV2LinkRelation
+    internal val entryRelation: NativeAuthV2LinkRelation,
+    internal val scenario: NativeAuthV2FlowScenario
 ) : ILoggable, Serializable {
 
     /**
@@ -94,7 +106,8 @@ class NativeAuthV2ContinuationState private constructor(
             continuationToken: String,
             scopes: List<String>,
             claimsRequestJson: String? = null,
-            entryRelation: NativeAuthV2LinkRelation
+            entryRelation: NativeAuthV2LinkRelation,
+            scenario: NativeAuthV2FlowScenario
         ): NativeAuthV2ContinuationState {
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             return NativeAuthV2ContinuationState(
@@ -103,7 +116,8 @@ class NativeAuthV2ContinuationState private constructor(
                 scopes = defensiveCopy(scopes),
                 claimsRequestJson = claimsRequestJson,
                 correlationId = response.correlationId,
-                entryRelation = entryRelation
+                entryRelation = entryRelation,
+                scenario = scenario
             )
         }
 
@@ -126,7 +140,8 @@ class NativeAuthV2ContinuationState private constructor(
                 scopes = defensiveCopy(previous.scopes),
                 claimsRequestJson = previous.claimsRequestJson,
                 correlationId = response.correlationId,
-                entryRelation = previous.entryRelation
+                entryRelation = previous.entryRelation,
+                scenario = previous.scenario
             )
         }
 

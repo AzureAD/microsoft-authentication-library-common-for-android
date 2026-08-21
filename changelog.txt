@@ -8,6 +8,7 @@ Version 24.6.0
 - [PATCH] Security (CWE-918): stop the sso_nonce WebView redirect handler (NonceRedirectHandler) from forwarding the PRT credential header (x-ms-RefreshTokenCredential) to untrusted or cleartext redirect targets; only forward to validated HTTPS AAD cloud hosts and otherwise load the page without the credential, gated by ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION CommonFlight (default on) (#3199)
 - [MINOR] Add GET_DEVICE_TOKEN_V1 protocol with required clientId and redirectUri, exposed as DeviceRegistrationClientApplication.getDeviceTokenResult returning the full token response (access token, device info, token type, resource, expiry fields). Deprecate getDeviceToken in favour of it (#3147)
 - [MINOR] Add the Native Auth V2 platform foundation in common4j: HAL response model and parser, typed challenge/poll/verify/token request and response contracts, href validation before continuation state or user input is sent, and V2 request construction, response handling, and HTTP client support (AB#3693580) (#3220)
+- [MINOR] Add Native Auth password-reset SSPR V2 protocol, continuation, command, controller, result, and telemetry support across Common and Common4J (#3221)
 - [PATCH] Remove the abandoned CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD flight and its unused optimized cache save-and-load implementation (#3218)
 - [PATCH] Improve Auth Tab / browser-selection logging and add browser-package-missing error string (#3191)
 - [MINOR] Add QR+PIN preference and camera-permission flow telemetry to android_spans (#3202)

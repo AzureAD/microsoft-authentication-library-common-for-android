@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignI
 import com.microsoft.identity.common.java.nativeauth.providers.interactors.SignUpInteractor
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import io.mockk.every
@@ -106,12 +107,18 @@ class NativeAuthV2OAuth2StrategyTest {
             "performAuthorizeChallengeStart",
             String::class.java,
             String::class.java,
+            NativeAuthV2FlowScenario::class.java,
             List::class.java
         )
 
         assertNotNull(method)
         assertEquals(
-            listOf(String::class.java, String::class.java, List::class.java),
+            listOf(
+                String::class.java,
+                String::class.java,
+                NativeAuthV2FlowScenario::class.java,
+                List::class.java
+            ),
             method.parameterTypes.toList()
         )
     }
@@ -123,6 +130,7 @@ class NativeAuthV2OAuth2StrategyTest {
             nativeAuthV2Interactor.performAuthorizeChallengeStart(
                 correlationId = "correlation-id",
                 entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
                 scopes = listOf("openid")
             )
         } returns AuthorizeChallengeApiResult.Redirect(
@@ -140,10 +148,11 @@ class NativeAuthV2OAuth2StrategyTest {
             "performAuthorizeChallengeStart",
             String::class.java,
             String::class.java,
+            NativeAuthV2FlowScenario::class.java,
             List::class.java
         )
 
-        val result = method.invoke(strategy, "correlation-id", "signIn", listOf("openid"))
+        val result = method.invoke(strategy, "correlation-id", "signIn", NativeAuthV2FlowScenario.RESET_PASSWORD, listOf("openid"))
 
         assertEquals(
             AuthorizeChallengeApiResult.Redirect(
@@ -156,6 +165,7 @@ class NativeAuthV2OAuth2StrategyTest {
             nativeAuthV2Interactor.performAuthorizeChallengeStart(
                 correlationId = "correlation-id",
                 entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
                 scopes = listOf("openid")
             )
         }
@@ -168,6 +178,7 @@ class NativeAuthV2OAuth2StrategyTest {
             nativeAuthV2Interactor.performAuthorizeChallengeStart(
                 correlationId = "correlation-id",
                 entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
                 scopes = listOf("openid"),
                 claimsRequestJson = CLAIMS_REQUEST_JSON
             )
@@ -185,6 +196,7 @@ class NativeAuthV2OAuth2StrategyTest {
         val result = strategy.performAuthorizeChallengeStart(
             correlationId = "correlation-id",
             entryRelation = "signIn",
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
             scopes = listOf("openid"),
             claimsRequestJson = CLAIMS_REQUEST_JSON
         )
@@ -200,6 +212,7 @@ class NativeAuthV2OAuth2StrategyTest {
             nativeAuthV2Interactor.performAuthorizeChallengeStart(
                 correlationId = "correlation-id",
                 entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
                 scopes = listOf("openid"),
                 claimsRequestJson = CLAIMS_REQUEST_JSON
             )
