@@ -102,22 +102,19 @@ class NativeAuthV2ResponseHandler {
 
     /**
      * Builds a [NativeAuthV2HalApiResponse] carrying a synthetic [NativeAuthV2HalApiResponse.HalServerError]
-     * for cases where the response body was absent or could not be parsed.
+     * for cases where the response body was absent, could not be parsed, or was not eligible for parsing.
      */
     private fun buildSyntheticErrorResponse(
         statusCode: Int,
         correlationId: String,
         errorCode: String,
         errorMessage: String
-    ): NativeAuthV2HalApiResponse {
-        val syntheticJson = """{"error":{"code":"$errorCode","message":"$errorMessage"}}"""
-        val halResource = HalResource.from(syntheticJson)
-        return NativeAuthV2HalApiResponse.from(
-            halResource = halResource,
-            statusCode = statusCode,
-            correlationId = correlationId
-        )
-    }
+    ): NativeAuthV2HalApiResponse = NativeAuthV2HalApiResponse.error(
+        statusCode = statusCode,
+        correlationId = correlationId,
+        errorCode = errorCode,
+        errorMessage = errorMessage
+    )
 
     private fun retrieveCorrelationId(response: HttpResponse, requestCorrelationId: String): String {
         val responseCorrelationId = response.getHeaderValue(

@@ -146,26 +146,6 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                                    @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
                                    @Nullable final Supplier<Integer> readTimeoutMsSupplier,
                                    @Nullable final SSLSocketFactoryWrapper sslSocketFactory) {
-        this(
-                retryPolicy,
-                streamBufferSize,
-                connectTimeoutMs,
-                readTimeoutMs,
-                connectTimeoutMsSupplier,
-                readTimeoutMsSupplier,
-                sslSocketFactory,
-                true
-        );
-    }
-
-    public UrlConnectionHttpClient(@Nullable final IRetryPolicy<HttpResponse> retryPolicy,
-                                   final int streamBufferSize,
-                                   final int connectTimeoutMs,
-                                   final int readTimeoutMs,
-                                   @Nullable final Supplier<Integer> connectTimeoutMsSupplier,
-                                   @Nullable final Supplier<Integer> readTimeoutMsSupplier,
-                                   @Nullable final SSLSocketFactoryWrapper sslSocketFactory,
-                                   final boolean followRedirects) {
         this.retryPolicy = retryPolicy;
         this.streamBufferSize = streamBufferSize;
         this.connectTimeoutMs = connectTimeoutMs;
@@ -173,7 +153,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         this.connectTimeoutMsSupplier = connectTimeoutMsSupplier;
         this.readTimeoutMsSupplier = readTimeoutMsSupplier;
         this.sslSocketFactory = sslSocketFactory;
-        this.followRedirects = followRedirects;
+        this.followRedirects = true;
     }
 
     /**

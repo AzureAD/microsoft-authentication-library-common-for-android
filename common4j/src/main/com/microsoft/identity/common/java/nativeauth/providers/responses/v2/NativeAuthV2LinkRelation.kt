@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
-import java.io.Serializable
-
 /**
  * A HAL `_links` relation name used by V2 Native Auth responses.
  *
@@ -31,12 +29,14 @@ import java.io.Serializable
  * know about, and an enum would force that value to `null`, erasing the raw string needed for
  * diagnosis. [value] always preserves exactly what the server sent. An unrecognised relation is
  * simply not followed by the SDK; it does not need to fail parsing.
+ *
+ * Not [java.io.Serializable]: as a non-null, non-generic property it is always flattened to its
+ * underlying `String`, so it is never boxed into the stream when [NativeAuthV2ContinuationState]
+ * is serialized.
  */
 @JvmInline
-value class NativeAuthV2LinkRelation(val value: String) : Serializable {
+value class NativeAuthV2LinkRelation(val value: String) {
     companion object {
-        private const val serialVersionUID = 1L
-
         val CHALLENGE = NativeAuthV2LinkRelation("challenge")
         val VERIFY = NativeAuthV2LinkRelation("verify")
         val RESEND = NativeAuthV2LinkRelation("resend")

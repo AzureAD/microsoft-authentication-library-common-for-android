@@ -31,6 +31,48 @@ import org.junit.Test
 class NativeAuthV2HalApiResponseTest {
 
     @Test
+    fun error_buildsClientSideErrorWithoutFlowState() {
+        val response = NativeAuthV2HalApiResponse.error(
+            statusCode = 500,
+            correlationId = REQUEST_CORRELATION_ID,
+            errorCode = "empty_body_error",
+            errorMessage = "V2 HAL response body was empty or blank."
+        )
+
+        assertEquals(500, response.statusCode)
+        assertEquals(REQUEST_CORRELATION_ID, response.correlationId)
+        assertEquals("empty_body_error", response.serverError?.code)
+        assertEquals("V2 HAL response body was empty or blank.", response.serverError?.message)
+        assertEquals(REQUEST_CORRELATION_ID, response.serverError?.correlationId)
+        assertNull(response.serverError?.innerErrorCode)
+        assertNull(response.continuationToken)
+        assertNull(response.state)
+        assertNull(response.action)
+        assertNull(response.authorizationCode)
+        assertEquals(emptyMap<String, String>(), response.links)
+        assertTrue(response.methods.isEmpty())
+        assertFalse(response.isWebFallbackRequired)
+    }
+
+    /**
+     * Guards the reason [NativeAuthV2HalApiResponse.error] exists: the message is carried as data,
+     * so JSON metacharacters survive verbatim instead of corrupting a synthesised JSON document.
+     */
+    @Test
+    fun error_preservesMessagesContainingJsonMetacharacters() {
+        val message = """Unexpected token "}" in body \ at offset 3"""
+
+        val response = NativeAuthV2HalApiResponse.error(
+            statusCode = 400,
+            correlationId = REQUEST_CORRELATION_ID,
+            errorCode = "response_parse_error",
+            errorMessage = message
+        )
+
+        assertEquals(message, response.serverError?.message)
+    }
+
+    @Test
     fun from_whenOAuthErrorBodyIsFlat_preservesFlatErrorFields() {
         val response = responseFrom(
             """

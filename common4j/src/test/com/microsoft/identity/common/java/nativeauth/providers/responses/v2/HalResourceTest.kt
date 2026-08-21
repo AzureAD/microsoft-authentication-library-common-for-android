@@ -26,8 +26,8 @@ import com.microsoft.identity.common.java.exception.ClientException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HalResourceTest {
@@ -118,14 +118,19 @@ class HalResourceTest {
         )
 
         assertEquals("/self", resource.href("self"))
-        assertEquals("/challenge/first", resource.href("challenge"))
-        assertEquals(listOf("/challenge/first", "/challenge/second"), resource.links["challenge"]?.map { it.href })
+        assertEquals("/challenge{?dc}", resource.href("challenge"))
+        assertEquals(
+            listOf("/challenge{?dc}", "/challenge/first", "/challenge/second"),
+            resource.links["challenge"]?.map { it.href }
+        )
+        assertTrue(resource.links.getValue("challenge").first().templated)
         assertFalse(resource.links.containsKey("curies"))
 
         val methods = resource.embeddedResources("methods")
         assertEquals(1, methods.size)
         assertEquals("email", methods.single().string("id"))
-        assertEquals("/verify/email", methods.single().href("verify"))
+        assertEquals("/verify{?dc}", methods.single().href("verify"))
+        assertTrue(methods.single().links.getValue("verify").first().templated)
 
         val options = resource.embeddedResources("options")
         assertEquals(2, options.size)
@@ -138,7 +143,7 @@ class HalResourceTest {
     }
 
     @Test
-    fun from_whenRelationContainsOnlyTemplatedLinks_omitsThatRelationAtEveryLevel() {
+    fun from_whenLinksAreTemplated_retainsLinkMetadataAtEveryLevel() {
         val resource = HalResource.from(
             """
             {
@@ -162,12 +167,12 @@ class HalResourceTest {
             """.trimIndent()
         )
 
-        assertTrue(resource.links.isEmpty())
-        assertNull(resource.href("challenge"))
+        assertEquals("/challenge{?dc}", resource.href("challenge"))
+        assertTrue(resource.links.getValue("challenge").single().templated)
 
         val method = resource.embeddedResources("methods").single()
-        assertTrue(method.links.isEmpty())
-        assertNull(method.href("verify"))
+        assertEquals("/verify{?dc}", method.href("verify"))
+        assertTrue(method.links.getValue("verify").single().templated)
     }
 
     @Test

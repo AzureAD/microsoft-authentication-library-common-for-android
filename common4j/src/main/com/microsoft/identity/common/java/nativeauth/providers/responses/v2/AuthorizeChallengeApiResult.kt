@@ -44,8 +44,8 @@ sealed interface AuthorizeChallengeApiResult : ApiResult {
     }
 
     /**
-     * The server returned an authorization code directly, without requiring further
-     * authorize-challenge interaction.
+     * The flow completed with an authorization code returned by the final
+     * authorize-challenge continue request.
      */
     data class AuthorizationCode(
         override val correlationId: String,

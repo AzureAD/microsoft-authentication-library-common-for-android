@@ -22,11 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
-import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthContentType
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthSdkHeaders
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeStartRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2ChallengeRequest
@@ -36,9 +36,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.Nativ
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.net.HttpConstants
-import com.microsoft.identity.common.java.platform.Device
 import java.net.URL
-import java.util.TreeMap
 
 /**
  * Creates request objects that encapsulate all information required for making Native Auth V2 REST
@@ -63,7 +61,7 @@ class NativeAuthV2RequestProvider(
         return AuthorizeChallengeStartRequest.create(
             clientId = config.clientId,
             requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toString(),
-            headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
@@ -81,7 +79,7 @@ class NativeAuthV2RequestProvider(
         return AuthorizeChallengeContinueRequest.create(
             continuationToken = state.continuationToken,
             requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(state.correlationId).toString(),
-            headers = getV2RequestHeaders(state.correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
@@ -126,7 +124,7 @@ class NativeAuthV2RequestProvider(
             continuationToken = state.continuationToken,
             otp = otp,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
@@ -144,7 +142,7 @@ class NativeAuthV2RequestProvider(
         return NativeAuthV2PollRequest.create(
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
@@ -169,7 +167,7 @@ class NativeAuthV2RequestProvider(
             scopes = scopes,
             claimsRequestJson = claimsRequestJson,
             requestUrl = config.getNativeAuthV2TokenEndpoint(correlationId).toString(),
-            headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
@@ -184,7 +182,7 @@ class NativeAuthV2RequestProvider(
         return NativeAuthV2ChallengeRequest.create(
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
@@ -206,24 +204,18 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Builds the standard SDK headers for a Native Auth V2 request.
+     * Builds the headers for a Native Auth V2 request: the shared SDK identity block plus the
+     * V2-specific `Content-Type`. Future V2-only headers (a HAL `Accept` value, caller-supplied
+     * interceptor headers, V2 telemetry) belong here rather than in [NativeAuthSdkHeaders], so they
+     * cannot affect the shipped V1 flows.
      */
-    private fun getV2RequestHeaders(correlationId: String, contentType: String): Map<String, String?> {
-        val headers: MutableMap<String, String?> = TreeMap()
-        if (correlationId != UNSET_CORRELATION_ID) {
-            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
-        }
-        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
-        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
-        headers.putAll(Device.getPlatformIdParameters())
-        headers[HttpConstants.HeaderField.CONTENT_TYPE] = contentType
+    private fun getV2RequestHeaders(correlationId: String, contentType: NativeAuthContentType): Map<String, String?> {
+        val headers = NativeAuthSdkHeaders.base(correlationId)
+        headers[HttpConstants.HeaderField.CONTENT_TYPE] = contentType.value
         return headers
     }
 
     private companion object {
         private val TAG: String = NativeAuthV2RequestProvider::class.java.simpleName
-        private const val UNSET_CORRELATION_ID = "UNSET"
-        private const val JSON_CONTENT_TYPE = HttpConstants.MediaType.APPLICATION_JSON
-        private const val FORM_URL_ENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded"
     }
 }

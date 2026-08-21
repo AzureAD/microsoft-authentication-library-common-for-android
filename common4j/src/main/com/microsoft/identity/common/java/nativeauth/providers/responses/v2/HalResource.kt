@@ -28,9 +28,7 @@ import com.microsoft.identity.common.java.exception.ClientException
 
 /**
  * A single `_links` entry. HAL allows a relation to carry either one link object or an array of
- * link objects; both shapes are normalized to a list by [HalResource]. Templated links the SDK
- * cannot expand are parsed only to recognize and discard them; retained links are always directly
- * followable.
+ * link objects; both shapes are normalized to a list by [HalResource].
  */
 internal data class HalLink(
     val href: String,
@@ -83,7 +81,6 @@ internal class HalResource private constructor(
         private const val HREF_KEY = "href"
         private const val NAME_KEY = "name"
         private const val TEMPLATED_KEY = "templated"
-        private const val TENANT_TEMPLATE = "{tenant}"
 
         /**
          * Parses [json] into a [HalResource].
@@ -149,21 +146,9 @@ internal class HalResource private constructor(
         }
 
         private fun toHalLinkList(value: Any?): List<HalLink> = when (value) {
-            is List<*> -> value.mapNotNull { toHalLink(it) }.filter { isFollowable(it) }
-            is Map<*, *> -> listOfNotNull(toHalLink(value)).filter { isFollowable(it) }
+            is List<*> -> value.mapNotNull { toHalLink(it) }
+            is Map<*, *> -> listOfNotNull(toHalLink(value))
             else -> emptyList()
-        }
-
-        private fun isFollowable(link: HalLink): Boolean =
-            !link.templated || isSupportedTenantTemplate(link.href)
-
-        private fun isSupportedTenantTemplate(href: String): Boolean {
-            val withoutLeadingSlash = href.removePrefix("/")
-            if (!withoutLeadingSlash.startsWith("$TENANT_TEMPLATE/")) {
-                return false
-            }
-            val remainder = withoutLeadingSlash.removePrefix(TENANT_TEMPLATE)
-            return !remainder.contains('{') && !remainder.contains('}')
         }
 
         private fun toHalLink(value: Any?): HalLink? {

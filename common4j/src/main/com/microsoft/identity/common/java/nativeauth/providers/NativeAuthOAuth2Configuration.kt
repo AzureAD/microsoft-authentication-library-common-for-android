@@ -227,23 +227,25 @@ class NativeAuthOAuth2Configuration(
         )
     }
 
+    /**
+     * True when [scheme] may be used for the Native Auth V2 authority: HTTPS always, and plain HTTP
+     * only when the SDK is pointed at the plaintext mock API.
+     */
+    private fun isNativeAuthV2SchemeAllowed(scheme: String?): Boolean =
+        scheme.equals(HTTPS_SCHEME, ignoreCase = true) ||
+            (useMockApiForNativeAuth && scheme.equals(HTTP_SCHEME, ignoreCase = true))
+
     internal fun getNativeAuthV2AuthorityUrl(correlationId: String): URL {
-        val effectiveAuthorityUrl = getAuthorityUrl()
-        val isHttpsAuthority = effectiveAuthorityUrl.protocol.equals(HTTPS_SCHEME, ignoreCase = true)
-        /** HTTPS is always accepted, including for mock; this clause only relaxes the scheme for a plaintext mock API. */
-        val isPlaintextMockAuthorityAllowed = useMockApiForNativeAuth &&
-            effectiveAuthorityUrl.protocol.equals(HTTP_SCHEME, ignoreCase = true)
-
-        if (isHttpsAuthority || isPlaintextMockAuthorityAllowed) {
-            return effectiveAuthorityUrl
+        val authorityUrl = getAuthorityUrl()
+        if (!isNativeAuthV2SchemeAllowed(authorityUrl.protocol)) {
+            val exception = ClientException(
+                ClientException.UNSUPPORTED_URL,
+                "Native Auth V2 requires an HTTPS authority unless the configured mock API authority itself uses HTTP."
+            )
+            exception.setCorrelationId(correlationId)
+            throw exception
         }
-
-        val exception = ClientException(
-            ClientException.UNSUPPORTED_URL,
-            "Native Auth V2 requires an HTTPS authority unless the configured mock API authority itself uses HTTP."
-        )
-        exception.setCorrelationId(correlationId)
-        throw exception
+        return authorityUrl
     }
 
     internal fun getNativeAuthV2AuthorizeChallengeEndpoint(correlationId: String): URL {

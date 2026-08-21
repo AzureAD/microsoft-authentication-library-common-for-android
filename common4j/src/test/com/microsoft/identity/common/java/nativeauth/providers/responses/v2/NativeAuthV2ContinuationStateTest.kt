@@ -46,10 +46,6 @@ class NativeAuthV2ContinuationStateTest {
             1L,
             ObjectStreamClass.lookup(NativeAuthV2ContinuationState::class.java).serialVersionUID
         )
-        assertEquals(
-            1L,
-            ObjectStreamClass.lookup(NativeAuthV2LinkRelation::class.java).serialVersionUID
-        )
 
         val serialized = ByteArrayOutputStream().use { bytes ->
             ObjectOutputStream(bytes).use { it.writeObject(original) }

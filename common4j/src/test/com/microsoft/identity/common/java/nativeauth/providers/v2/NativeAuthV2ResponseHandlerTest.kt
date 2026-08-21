@@ -122,8 +122,18 @@ class NativeAuthV2ResponseHandlerTest {
     }
 
     @Test
-    fun getHalApiResponse_whenResponseHeaderHasCorrelationId_usesHeaderValueOverRequestCorrelationId() {
-        val headers = mapOf(AuthenticationConstants.AAD.CLIENT_REQUEST_ID to listOf("header-correlation-id"))
+    fun getHalApiResponse_whenBodyIsBlank_syntheticErrorCarriesCorrelationId() {
+        val result = handler.getHalApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 200, body = "")
+        )
+
+        assertEquals(CORRELATION_ID, result.serverError?.correlationId)
+        assertNull(result.serverError?.innerErrorCode)
+    }
+
+    @Test
+    fun getHalApiResponse_whenResponseHeaderHasCorrelationId_usesHeaderValueOverRequestCorrelationId() {        val headers = mapOf(AuthenticationConstants.AAD.CLIENT_REQUEST_ID to listOf("header-correlation-id"))
 
         val result = handler.getHalApiResponse(
             requestCorrelationId = CORRELATION_ID,

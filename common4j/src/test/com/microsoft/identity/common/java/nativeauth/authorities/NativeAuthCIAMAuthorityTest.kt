@@ -20,34 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers
+package com.microsoft.identity.common.java.nativeauth.authorities
 
-import com.microsoft.identity.common.java.nativeauth.providers.interactors.NativeAuthV2Interactor
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.net.URL
 
-class NativeAuthOAuth2StrategyTest {
+class NativeAuthCIAMAuthorityTest {
 
     @Test
-    fun createStrategy_doesNotIncludeNativeAuthV2Interactor() {
-        NativeAuthOAuth2StrategyFactory.createStrategy(
-            config = config(),
-            strategyParameters = OAuth2StrategyParameters.builder().build()
-        )
+    fun createOAuth2Strategy_returnsV1Strategy() {
+        val strategy = authority().createOAuth2Strategy(strategyParameters())
 
-        assertFalse(
-            NativeAuthOAuth2Strategy::class.java.declaredFields.any {
-                it.type == NativeAuthV2Interactor::class.java
-            }
-        )
+        assertEquals(NativeAuthOAuth2Strategy::class.java, strategy.javaClass)
     }
 
-    private fun config() = NativeAuthOAuth2Configuration(
-        authorityUrl = URL("https://login.contoso.com/tenant"),
-        clientId = "client-id",
-        challengeType = "oob",
-        capabilities = null
+    @Test
+    fun createOAuth2StrategyV2_returnsV2Strategy() {
+        val strategy = authority().createOAuth2StrategyV2(strategyParameters())
+
+        assertEquals(NativeAuthV2OAuth2Strategy::class.java, strategy.javaClass)
+    }
+
+    private fun authority() = NativeAuthCIAMAuthority(
+        authorityUrl = "https://login.contoso.com/tenant",
+        clientId = "client-id"
     )
+
+    private fun strategyParameters() = OAuth2StrategyParameters.builder().build()
 }

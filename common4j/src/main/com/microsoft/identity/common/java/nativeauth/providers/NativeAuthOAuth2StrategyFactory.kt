@@ -39,27 +39,12 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParamet
  */
 class NativeAuthOAuth2StrategyFactory {
     companion object {
-        internal fun createNativeAuthV2HttpClient(): UrlConnectionHttpClient {
-            return UrlConnectionHttpClient.createDefaultConfiguredInstance(false)
-        }
-
         fun createStrategy(
             config: NativeAuthOAuth2Configuration,
             strategyParameters: OAuth2StrategyParameters,
         ): NativeAuthOAuth2Strategy {
             val requestInterceptor = config.requestInterceptor
             val httpClient = UrlConnectionHttpClient.getDefaultInstance()
-            val nativeAuthV2HttpClient = createNativeAuthV2HttpClient()
-            val nativeAuthV2RequestProvider = NativeAuthV2RequestProvider(config = config)
-            val nativeAuthV2ResponseHandler = NativeAuthV2ResponseHandler()
-            val nativeAuthV2ResponseParser = NativeAuthV2ResponseParser()
-            val nativeAuthV2Interactor = NativeAuthV2Interactor(
-                httpClient = nativeAuthV2HttpClient,
-                requestProvider = nativeAuthV2RequestProvider,
-                responseHandler = nativeAuthV2ResponseHandler,
-                responseParser = nativeAuthV2ResponseParser,
-                requestInterceptor = requestInterceptor
-            )
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
@@ -86,8 +71,29 @@ class NativeAuthOAuth2StrategyFactory {
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
-                ),
-                nativeAuthV2Interactor = nativeAuthV2Interactor
+                )
+            )
+        }
+
+        /**
+         * Creates a Native Authentication V2 strategy with redirects disabled.
+         */
+        fun createV2Strategy(
+            config: NativeAuthOAuth2Configuration,
+            strategyParameters: OAuth2StrategyParameters,
+        ): NativeAuthV2OAuth2Strategy {
+            val nativeAuthV2HttpClient =
+                UrlConnectionHttpClient.createDefaultConfiguredInstance(false)
+            return NativeAuthV2OAuth2Strategy(
+                strategyParameters = strategyParameters,
+                config = config,
+                nativeAuthV2Interactor = NativeAuthV2Interactor(
+                    httpClient = nativeAuthV2HttpClient,
+                    requestProvider = NativeAuthV2RequestProvider(config = config),
+                    responseHandler = NativeAuthV2ResponseHandler(),
+                    responseParser = NativeAuthV2ResponseParser(),
+                    requestInterceptor = config.requestInterceptor
+                )
             )
         }
     }

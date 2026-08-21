@@ -143,6 +143,40 @@ class NativeAuthV2HalApiResponse private constructor(
             )
         }
 
+        /**
+         * Builds a [NativeAuthV2HalApiResponse] carrying only a client-side [HalServerError], for
+         * responses the SDK rejects before (or instead of) mapping a server body: an empty body, a
+         * body that is not valid JSON, or a status the SDK refuses to body-parse.
+         *
+         * Constructs the model directly rather than round-tripping a synthesised JSON document
+         * through [HalResource], which would re-parse data the caller already holds and would break
+         * on any [errorMessage] containing JSON metacharacters.
+         */
+        internal fun error(
+            statusCode: Int,
+            correlationId: String,
+            errorCode: String,
+            errorMessage: String
+        ): NativeAuthV2HalApiResponse = NativeAuthV2HalApiResponse(
+            statusCode = statusCode,
+            correlationIdValue = correlationId,
+            continuationToken = null,
+            state = null,
+            action = null,
+            links = emptyMap(),
+            methods = emptyList(),
+            codeLength = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            authorizationCode = null,
+            serverError = HalServerError(
+                code = errorCode,
+                message = errorMessage,
+                innerErrorCode = null,
+                correlationId = correlationId
+            )
+        )
+
         private fun toEmbeddedAuthMethod(resource: HalResource): EmbeddedAuthMethod = EmbeddedAuthMethod(
             id = resource.string("id"),
             type = resource.string(TYPE_KEY),
@@ -151,8 +185,22 @@ class NativeAuthV2HalApiResponse private constructor(
         )
 
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
-            links.mapNotNull { (relation, halLinks) -> halLinks.firstOrNull()?.let { relation to it.href } }
+            links.mapNotNull { (relation, halLinks) ->
+                halLinks.firstOrNull { isFollowable(it) }?.let { relation to it.href }
+            }
                 .toMap()
+
+        private fun isFollowable(link: HalLink): Boolean =
+            !link.templated || isSupportedTenantTemplate(link.href)
+
+        private fun isSupportedTenantTemplate(href: String): Boolean {
+            val withoutLeadingSlash = href.removePrefix("/")
+            if (!withoutLeadingSlash.startsWith("$TENANT_TEMPLATE/")) {
+                return false
+            }
+            val remainder = withoutLeadingSlash.removePrefix(TENANT_TEMPLATE)
+            return !remainder.contains('{') && !remainder.contains('}')
+        }
 
         /**
          * Flat top-level link properties (snake_case) the authorize-challenge *start* response
@@ -164,6 +212,8 @@ class NativeAuthV2HalApiResponse private constructor(
             "sign_in" to NativeAuthV2LinkRelation.SIGN_IN.value,
             "sign_up" to NativeAuthV2LinkRelation.SIGN_UP.value
         )
+
+        private const val TENANT_TEMPLATE = "{tenant}"
 
         /**
          * Builds the relation-to-href map from both wire shapes the service uses: the flat

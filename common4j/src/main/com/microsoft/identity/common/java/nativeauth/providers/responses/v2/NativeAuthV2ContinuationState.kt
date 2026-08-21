@@ -29,6 +29,11 @@ import java.util.Collections
 
 /**
  * Opaque, common4j-owned mid-flow state for V2 Native Auth.
+ *
+ * [Serializable] so MSAL can retain it across process death via `Parcel.writeSerializable` without
+ * reading its `internal` members, as V1 already does for its opaque
+ * `NativeAuthPublicClientApplicationConfiguration`. `serialVersionUID` is pinned rather than
+ * derived from the class shape.
  */
 class NativeAuthV2ContinuationState private constructor(
     internal val continuationToken: String,
