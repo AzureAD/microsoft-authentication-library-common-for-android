@@ -20,35 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
-package com.microsoft.identity.common.java.nativeauth.providers.requests
-
-import com.microsoft.identity.common.java.nativeauth.util.ILoggable
-import org.json.JSONObject
-import java.net.URL
+package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 /**
- * Base class to represent all Native Auth API requests.
+ * The `action` a V2 Native Auth HAL response asks the SDK to take next.
+ *
+ * Deliberately not an enum: the server can send an action value this SDK version does not yet
+ * know about, and an enum would force that value to `null`, erasing the raw string needed for
+ * diagnosis. [value] always preserves exactly what the server sent.
  */
-abstract class NativeAuthRequest : ILoggable {
-    abstract var requestUrl: URL
-    abstract var headers: Map<String, String?>
-    abstract val parameters: NativeAuthRequestParameters
-
-    /**
-     * Base class to represent parameters for all Native Auth API requests. These parameters
-     * are sent as part of HTTP POST request.
-     */
-    abstract class NativeAuthRequestParameters : ILoggable {
-        /**
-         * Client identifier when required by the endpoint, or `null` for server-href requests.
-         */
-        open val clientId: String? = null
-    }
-
+@JvmInline
+value class NativeAuthV2HalAction(val value: String) {
     companion object {
-        fun <K, V> Map<K, V>.toJsonString(map: Map<String, String>): String {
-            return JSONObject(map).toString()
-        }
+        val CHALLENGE = NativeAuthV2HalAction("challenge")
+        val VERIFY = NativeAuthV2HalAction("verify")
+        val UPDATE = NativeAuthV2HalAction("update")
+        val POLL = NativeAuthV2HalAction("poll")
+        val ENROLL = NativeAuthV2HalAction("enroll")
+        val REGISTER = NativeAuthV2HalAction("register")
+        val ACTIVATE = NativeAuthV2HalAction("activate")
+        val COLLECT_ATTRIBUTES = NativeAuthV2HalAction("collectAttributes")
     }
 }

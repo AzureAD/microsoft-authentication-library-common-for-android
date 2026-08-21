@@ -1,0 +1,113 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers.v2
+
+import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
+import com.microsoft.identity.common.java.net.HttpResponse
+
+/**
+ * Converts raw [HttpResponse] objects into V2 Native Auth typed response models.
+ */
+class NativeAuthV2ResponseHandler {
+
+    private val TAG: String = NativeAuthV2ResponseHandler::class.java.simpleName
+
+    companion object {
+        private const val EMPTY_BODY_ERROR_CODE = "empty_body_error"
+        private const val PARSE_ERROR_CODE = "response_parse_error"
+        private const val EMPTY_BODY_ERROR_MESSAGE = "V2 HAL response body was empty or blank."
+        private const val PARSE_ERROR_MESSAGE = "V2 HAL response body was not valid JSON."
+    }
+
+    /**
+     * Converts a raw [HttpResponse] from any V2 Native Auth HAL endpoint into a
+     * [NativeAuthV2HalApiResponse].
+     */
+    fun getHalApiResponse(
+        requestCorrelationId: String,
+        response: HttpResponse
+    ): NativeAuthV2HalApiResponse {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "$TAG.getHalApiResponse"
+        )
+
+        val correlationId = retrieveCorrelationId(response, requestCorrelationId)
+
+        return if (response.body.isNullOrBlank()) {
+            Logger.warn(TAG, "V2 HAL response body is empty for statusCode=${response.statusCode}.")
+            buildSyntheticErrorResponse(
+                statusCode = response.statusCode,
+                correlationId = correlationId,
+                errorCode = EMPTY_BODY_ERROR_CODE,
+                errorMessage = EMPTY_BODY_ERROR_MESSAGE
+            )
+        } else {
+            try {
+                val halResource = HalResource.from(response.body)
+                NativeAuthV2HalApiResponse.from(
+                    halResource = halResource,
+                    statusCode = response.statusCode,
+                    correlationId = correlationId
+                )
+            } catch (e: ClientException) {
+                Logger.warn(TAG, "V2 HAL response body could not be parsed: ${e.message}")
+                buildSyntheticErrorResponse(
+                    statusCode = response.statusCode,
+                    correlationId = correlationId,
+                    errorCode = PARSE_ERROR_CODE,
+                    errorMessage = PARSE_ERROR_MESSAGE
+                )
+            }
+        }
+    }
+
+    /**
+     * Builds a [NativeAuthV2HalApiResponse] carrying a synthetic [NativeAuthV2HalApiResponse.HalServerError]
+     * for cases where the response body was absent, could not be parsed, or was not eligible for parsing.
+     */
+    private fun buildSyntheticErrorResponse(
+        statusCode: Int,
+        correlationId: String,
+        errorCode: String,
+        errorMessage: String
+    ): NativeAuthV2HalApiResponse = NativeAuthV2HalApiResponse.error(
+        statusCode = statusCode,
+        correlationId = correlationId,
+        errorCode = errorCode,
+        errorMessage = errorMessage
+    )
+
+    private fun retrieveCorrelationId(response: HttpResponse, requestCorrelationId: String): String {
+        val responseCorrelationId = response.getHeaderValue(
+            AuthenticationConstants.AAD.CLIENT_REQUEST_ID, 0
+        )
+        return if (responseCorrelationId.isNullOrBlank()) requestCorrelationId else responseCorrelationId
+    }
+}
