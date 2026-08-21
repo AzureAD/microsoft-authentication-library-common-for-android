@@ -293,9 +293,7 @@ class NativeAuthV2ResponseParser {
         return NativeAuthV2InteractionApiResult.PollInProgress(
             correlationId = response.correlationId,
             continuationState = successor,
-            // T3's wire model does not yet expose a retry-interval field; always null until a
-            // later task adds mechanical extraction for it.
-            retryAfterMillis = null
+            retryAfterMillis = response.pollIntervalMillis?.takeIf { it > 0 }?.toLong()
         )
     }
 

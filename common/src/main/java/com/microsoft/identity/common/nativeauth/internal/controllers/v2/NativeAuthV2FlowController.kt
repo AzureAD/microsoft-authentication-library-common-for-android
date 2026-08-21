@@ -49,13 +49,7 @@ import com.microsoft.identity.common.nativeauth.internal.controllers.BaseNativeA
 import lombok.EqualsAndHashCode
 
 /**
- * V2 Native Auth SSPR flow controller. Sibling of [com.microsoft.identity.common.nativeauth.internal.controllers.NativeAuthMsalController];
- * does not modify V1 controller behaviour.
- *
- * Each public method is a single command: it builds strategy from parameters, calls the relevant
- * V2 strategy pass-through(s), maps protocol results to command results, and returns. The
- * controller never inspects the continuation token, hrefs, or scopes embedded inside
- * [NativeAuthV2ContinuationState]; it transports the state opaquely between commands.
+ * V2 Native Auth SSPR flow controller.
  *
  * @param sleeper Injected sleep abstraction used by the bounded poll loop in [submitNewPassword].
  *   The default is the production implementation; tests substitute a no-op fake.
@@ -106,7 +100,6 @@ class NativeAuthV2FlowController(
             val mergedScopes = addDefaultScopes(parameters.scopes)
             val correlationId = parameters.getCorrelationId()
 
-            // Step 1 — authorize-challenge start
             val authChallengeResult = oAuth2Strategy.performAuthorizeChallengeStart(
                 correlationId = correlationId,
                 entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD.value,
@@ -141,7 +134,6 @@ class NativeAuthV2FlowController(
                 }
             }
 
-            // Step 2 — reset-password entry (/start equivalent)
             val startResult = oAuth2Strategy.performResetPasswordStart(
                 username = parameters.username,
                 state = initialState
@@ -166,7 +158,6 @@ class NativeAuthV2FlowController(
                 else -> return mapInteractionError(startResult)
             }
 
-            // Step 3 — challenge
             val challengeResult = oAuth2Strategy.performChallenge(state = afterStartState)
 
             return when (challengeResult) {
@@ -454,7 +445,6 @@ class NativeAuthV2FlowController(
             methodName = "$TAG.completeFlow"
         )
 
-        // Step 1 — authorize-challenge continue → authorization code
         val continueResult = oAuth2Strategy.performAuthorizeChallengeContinue(state = state)
         val code = when (continueResult) {
             is AuthorizeChallengeApiResult.AuthorizationCode -> continueResult.code
@@ -477,7 +467,6 @@ class NativeAuthV2FlowController(
             }
         }
 
-        // Step 2 — token request
         val scopes = state.scopesForTokenRequest()
         val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
             ?: state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
@@ -508,7 +497,6 @@ class NativeAuthV2FlowController(
             }
         }
 
-        // Step 3 — save tokens and build result
         val complete = saveAndReturnTokens(
             oAuth2Strategy = oAuth2Strategy,
             parametersWithScopes = parametersWithScopes,

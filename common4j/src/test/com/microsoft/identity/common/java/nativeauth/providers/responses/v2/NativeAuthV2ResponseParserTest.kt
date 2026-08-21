@@ -910,7 +910,7 @@ class NativeAuthV2ResponseParserTest {
     // region parseInteraction - action = poll
 
     @Test
-    fun parseInteraction_whenActionIsPoll_returnsPollInProgressWithNullRetryAfter() {
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsAbsent_returnsPollInProgressWithNullRetryAfter() {
         val response = responseFrom("""{"continuationToken":"t","action":"poll","_links":{"poll":{"href":"/p"}}}""")
 
         val result = parser.parseInteraction(
@@ -921,6 +921,36 @@ class NativeAuthV2ResponseParserTest {
 
         assertNull(result.retryAfterMillis)
         assertEquals("/p", result.continuationState.href(NativeAuthV2LinkRelation.POLL))
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsPresent_returnsPollInProgressWithRetryAfterMillis() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"poll","pollInterval":3000,"_links":{"poll":{"href":"/p"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.POLL
+        ) as NativeAuthV2InteractionApiResult.PollInProgress
+
+        assertEquals(3000L, result.retryAfterMillis)
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsNotPositive_returnsPollInProgressWithNullRetryAfter() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"poll","pollInterval":0,"_links":{"poll":{"href":"/p"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.POLL
+        ) as NativeAuthV2InteractionApiResult.PollInProgress
+
+        assertNull(result.retryAfterMillis)
     }
 
     @Test
