@@ -864,7 +864,7 @@ public enum AttributeName {
      * non-{@code ALLOWED} verdict blocked the challenge). {@code false} means shadow mode: the verdict
      * was measured and reported but the challenge still proceeded.
      */
-    pkeyauth_submit_url_origin_enforced,
+    pkeyauth_submit_url_origin_validation_enforced,
 
     /**
      * Whether the PKeyAuth {@code SubmitUrl} host is a validated AAD cloud host (per

@@ -270,8 +270,6 @@ public class PKeyAuthChallengeFactory {
                 .isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION)) {
             // Master switch OFF: skip evaluation, telemetry and enforcement entirely so the whole
             // feature is a true no-op and the historical behavior is preserved exactly.
-            Logger.info(methodTag,
-                    "PKeyAuth SubmitUrl origin validation is disabled via flight; skipping enforcement.");
             return;
         }
 
@@ -428,7 +426,7 @@ public class PKeyAuthChallengeFactory {
         final Span span = SpanExtension.current();
         span.setAttribute(AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
                 validation.result.name());
-        span.setAttribute(AttributeName.pkeyauth_submit_url_origin_enforced.name(), enforced);
+        span.setAttribute(AttributeName.pkeyauth_submit_url_origin_validation_enforced.name(), enforced);
         span.setAttribute(AttributeName.pkeyauth_submit_host_is_aad_cloud.name(),
                 isValidatedAadCloudHost(validation.submitUri));
         span.setAttribute(AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(),
