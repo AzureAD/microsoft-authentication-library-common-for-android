@@ -317,7 +317,10 @@ abstract class BaseNativeAuthController : BaseController() {
 
         // The first element in the returned list is the item we *just* saved, the rest of
         // the elements are necessary to construct the full IAccount + TenantProfile
-        val newestRecord = records[0]
+        val newestRecord = records.firstOrNull() ?: throw ClientException(
+            ClientException.TOKEN_CACHE_SAVE_FAILED,
+            "Token cache returned no records after saving tokens."
+        )
 
         return SignInCommandResult.Complete(
             authenticationResult = LocalAuthenticationResult(

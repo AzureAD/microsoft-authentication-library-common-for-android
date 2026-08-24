@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
@@ -743,5 +744,41 @@ class NativeAuthV2FlowControllerTest {
 
         assertEquals("Stop after cache request capture.", thrown.message)
         assertEquals(flowScopes.joinToString(" "), cacheRequestSlot.captured.scope)
+    }
+
+    @Test
+    fun testSignInAfterResetPasswordWhenCacheReturnsNoRecordsThrowsClientException() {
+        val state = mockContinuationState()
+        val mockTokenCache =
+            mockk<OAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest, MicrosoftStsTokenResponse>>()
+        val mockTokenResponse = mockk<MicrosoftStsTokenResponse>(relaxed = true)
+
+        every { state.scopesForTokenRequest() } returns emptyList()
+        every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every {
+            mockStrategy.performTokenRequest(any(), any(), any(), any())
+        } returns SignInTokenApiResult.Success(
+            correlationId = correlationId,
+            tokenResponse = mockTokenResponse
+        )
+        every { mockStrategy.getAuthority() } returns "https://login.contoso.com/common"
+        every {
+            mockTokenCache.saveAndLoadAggregatedAccountData(any(), any(), any())
+        } returns emptyList()
+
+        val parameters = signInAfterResetPasswordParameters(state)
+            .toBuilder()
+            .oAuth2TokenCache(mockTokenCache)
+            .clientId("client-id")
+            .callerPackageName("com.contoso.app")
+            .callerSignature("signature")
+            .build()
+
+        val thrown = assertThrows(ClientException::class.java) {
+            controller.signInAfterResetPassword(parameters)
+        }
+
+        assertEquals(ClientException.TOKEN_CACHE_SAVE_FAILED, thrown.errorCode)
     }
 }
