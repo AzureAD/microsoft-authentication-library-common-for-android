@@ -39,9 +39,14 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
+import com.microsoft.identity.common.java.util.ThreadUtils
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -400,6 +405,42 @@ class NativeAuthV2FlowControllerTest {
         result as NativeAuthV2CommandResult.SignInAfterResetPasswordRequired
         assertEquals(correlationId, result.correlationId)
         assertEquals(readyState, result.continuationState)
+    }
+
+    @Test
+    fun testSubmitNewPasswordCapsOversizedPollDelay() {
+        val inputState = mockContinuationState()
+        val pollState = mockContinuationState()
+        val readyState = mockContinuationState()
+        val parameters = submitNewPasswordParameters(inputState)
+        val sleepDelay = slot<Int>()
+
+        every {
+            mockStrategy.performUpdatePassword(state = any(), newPassword = any())
+        } returns NativeAuthV2InteractionApiResult.PollInProgress(
+            correlationId = correlationId,
+            continuationState = pollState,
+            retryAfterMillis = Int.MAX_VALUE.toLong()
+        )
+        every {
+            mockStrategy.performPoll(state = any())
+        } returns NativeAuthV2InteractionApiResult.ReadyToComplete(
+            correlationId = correlationId,
+            continuationState = readyState
+        )
+
+        mockkStatic(ThreadUtils::class)
+        try {
+            every {
+                ThreadUtils.sleepSafely(capture(sleepDelay), any(), any())
+            } just Runs
+
+            controller.submitNewPassword(parameters)
+
+            assertEquals(30_000, sleepDelay.captured)
+        } finally {
+            unmockkStatic(ThreadUtils::class)
+        }
     }
 
     @Test

@@ -64,6 +64,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         /** Fallback inter-poll delay when the server does not supply a retry-after hint. */
         const val FALLBACK_POLL_DELAY_MS = 1500L
 
+        /** Maximum server-suggested delay honored between poll attempts. */
+        const val MAX_POLL_DELAY_MS = 30_000L
+
         private const val POLL_TIMEOUT_ERROR = "poll_timeout"
         private const val POLL_TIMEOUT_DESCRIPTION = "Password reset completion polling timed out after $MAX_POLL_ATTEMPTS attempts."
         private const val POLL_INTERRUPTED_ERROR = "poll_interrupted"
@@ -339,7 +342,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         repeat(MAX_POLL_ATTEMPTS) { attempt ->
             ThreadUtils.sleepSafely(
-                currentDelay.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
+                currentDelay.coerceIn(0L, MAX_POLL_DELAY_MS).toInt(),
                 TAG,
                 "Waiting between reset password polls"
             )
