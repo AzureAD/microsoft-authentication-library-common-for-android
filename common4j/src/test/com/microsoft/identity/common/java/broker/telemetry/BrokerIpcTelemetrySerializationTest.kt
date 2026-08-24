@@ -141,7 +141,7 @@ class BrokerIpcTelemetrySerializationTest {
     }
 
     @Test
-    fun executionEvent_roundTrip_preservesOptionalDiagnosticAndErrorCode() {
+    fun executionEvent_roundTrip_preservesOptionalStatusCodeAndErrorCode() {
         val event = ExecutionEvent(
             tag = EventTag.BrokerNetworkCallFailed,
             timestampMs = 5000L,
