@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 
 Version 24.6.0
 ----------

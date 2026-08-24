@@ -132,6 +132,8 @@ stages:
         tasks: msal:testLocalDebugUnitTest -Plabtest -PlabSecret=$(LabVaultAppCert) -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}} -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
         jdkArchitecture: x64
         jdkVersionOption: "1.17"
+      env:
+        EMAIL_PROVIDER_PASSWORD: $(EMAIL_PROVIDER_PASSWORD)
   # msalautomationapp
   - job: msalAutomationAppValidation
     displayName: MSAL Automation App
