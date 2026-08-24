@@ -49,7 +49,7 @@ class EventCollectorTest {
     }
 
     @Test
-    fun addEvent_withDiagnosticAndErrorCode_fieldsArePresentInEvent() {
+    fun addEvent_withStatusCodeAndErrorCode_fieldsArePresentInEvent() {
         val collector = EventCollector(testCorrelationId)
 
         collector.addEvent(EventTag.BrokerRequestFailed, statusCode = 42, errorCode = 100)
