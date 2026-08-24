@@ -20,17 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers
 
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
-
-import com.google.gson.annotations.SerializedName
+import com.microsoft.identity.common.java.net.HttpConstants
 
 /**
+ * The `Content-Type` values used by Native Auth requests.
  *
+ * Native Auth V1 sends form-url-encoded bodies exclusively, while Native Auth V2 sends
+ * form-url-encoded bodies to the `authorize-challenge` and `token` endpoints and JSON bodies to the
+ * HAL-driven `challenge`, `resend`, `verify` and `poll` endpoints.
  */
-data class InboxContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String // TODO make DateTimeObject
-)
+internal enum class NativeAuthContentType(val value: String) {
+    FORM_URL_ENCODED("application/x-www-form-urlencoded"),
+    JSON(HttpConstants.MediaType.APPLICATION_JSON)
+}
