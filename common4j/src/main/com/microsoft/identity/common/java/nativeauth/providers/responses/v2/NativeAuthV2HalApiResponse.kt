@@ -41,6 +41,7 @@ class NativeAuthV2HalApiResponse private constructor(
     val challengeTargetLabel: String?,
     val challengeChannel: String?,
     val authorizationCode: String?,
+    val pollIntervalMillis: Int?,
     val serverError: HalServerError?
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
@@ -95,6 +96,12 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val AUTHORIZATION_CODE_KEY = "authorizationCode"
 
         /**
+         * Server-suggested delay, in milliseconds, before the next poll of an in-progress
+         * operation.
+         */
+        private const val POLL_INTERVAL_KEY = "pollInterval"
+
+        /**
          * The authorize-challenge response returns the authorization code as a top-level `code`
          * property.
          */
@@ -139,6 +146,7 @@ class NativeAuthV2HalApiResponse private constructor(
                 challengeChannel = halResource.string(TYPE_KEY),
                 authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
                     ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
+                pollIntervalMillis = halResource.int(POLL_INTERVAL_KEY),
                 serverError = serverError
             )
         }
@@ -169,6 +177,7 @@ class NativeAuthV2HalApiResponse private constructor(
             challengeTargetLabel = null,
             challengeChannel = null,
             authorizationCode = null,
+            pollIntervalMillis = null,
             serverError = HalServerError(
                 code = errorCode,
                 message = errorMessage,

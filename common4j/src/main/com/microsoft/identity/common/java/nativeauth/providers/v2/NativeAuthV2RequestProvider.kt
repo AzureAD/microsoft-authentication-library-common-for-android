@@ -30,8 +30,10 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthSdkHead
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeStartRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2ChallengeRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2EntryRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PollRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2TokenRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2UpdatePasswordRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2VerifyRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
@@ -84,7 +86,29 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the request object for a flow's `challenge` call.
+     * Creates the request object for the reset-password flow's entry (`/start`-equivalent) call,
+     * resolved via the [NativeAuthV2LinkRelation.RESET_PASSWORD] relation on [state].
+     */
+    fun createResetPasswordStartRequest(username: String, state: NativeAuthV2ContinuationState): NativeAuthV2EntryRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createResetPasswordStartRequest"
+        )
+
+        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.RESET_PASSWORD)
+        return NativeAuthV2EntryRequest.create(
+            clientId = config.clientId,
+            username = username,
+            continuationToken = state.continuationToken,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for a flow's `challenge` call, resolved via the
+     * [NativeAuthV2LinkRelation.CHALLENGE] relation on [state].
      */
     fun createChallengeRequest(state: NativeAuthV2ContinuationState): NativeAuthV2ChallengeRequest {
         LogSession.logMethodCall(
@@ -129,7 +153,33 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the request object for a flow's `poll` call.
+     * Creates the request object for a flow's `update` call, resolved via the
+     * [NativeAuthV2LinkRelation.UPDATE] relation on [state]. [newPassword] is passed through as the
+     * caller's own array, not copied, so the interactor's `finally` block can clear the same buffer
+     * it passed in.
+     */
+    fun createUpdatePasswordRequest(state: NativeAuthV2ContinuationState, newPassword: CharArray): NativeAuthV2UpdatePasswordRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createUpdatePasswordRequest"
+        )
+
+        val requestUrl = state.href(NativeAuthV2LinkRelation.UPDATE)?.let {
+            hrefResolver.resolve(it, state.correlationId)
+        } ?: throw missingRelationException(NativeAuthV2LinkRelation.UPDATE, state.correlationId)
+        return NativeAuthV2UpdatePasswordRequest.create(
+            clientId = config.clientId,
+            continuationToken = state.continuationToken,
+            newPassword = newPassword,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for a flow's `poll` call, resolved via the
+     * [NativeAuthV2LinkRelation.POLL] relation on [state].
      */
     fun createPollRequest(state: NativeAuthV2ContinuationState): NativeAuthV2PollRequest {
         LogSession.logMethodCall(

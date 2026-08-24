@@ -27,7 +27,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2C
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -244,6 +246,95 @@ class NativeAuthV2RequestProviderTest {
         )
     }
 
+    @Test
+    fun createResetPasswordStartRequest_resolvesResetPasswordRelationAndUsesJsonBody() {
+        val request = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        ).createResetPasswordStartRequest(
+            username = "ada@contoso.com",
+            state = entryContinuationState()
+        )
+
+        assertEquals(
+            URL("https://login.contoso.com/tenant/api/v0.1/auth/resetpassword"),
+            request.requestUrl
+        )
+        assertCommonHeaders(request.headers, JSON_CONTENT_TYPE)
+
+        val body = ObjectMapper.serializeObjectToJsonString(request.parameters)
+        assertTrue(body.contains("continuationToken"))
+        assertTrue(body.contains("ada@contoso.com"))
+    }
+
+    @Test
+    fun createUpdatePasswordRequest_whenUpdateRelationPresent_usesUpdateRelation() {
+        val request = provider(
+            authorityUrl = "https://login.contoso.com/tenant",
+            useMockApi = false
+        ).createUpdatePasswordRequest(
+            state = entryContinuationState(),
+            newPassword = "new-password".toCharArray()
+        )
+
+        assertEquals(
+            URL("https://login.contoso.com/tenant/api/v0.1/auth/update"),
+            request.requestUrl
+        )
+        assertCommonHeaders(request.headers, JSON_CONTENT_TYPE)
+    }
+
+    @Test
+    fun createUpdatePasswordRequest_whenOnlySelfRelationIsPresent_throwsMissingParameter() {
+        val exception = assertClientException {
+            provider(
+                authorityUrl = "https://login.contoso.com/tenant",
+                useMockApi = false
+            ).createUpdatePasswordRequest(
+                state = entryContinuationState(includeUpdateRelation = false),
+                newPassword = "new-password".toCharArray()
+            )
+        }
+
+        assertEquals(ClientException.MISSING_PARAMETER, exception.errorCode)
+        assertEquals(CORRELATION_ID, exception.correlationId)
+        assertTrue(exception.message.orEmpty().contains(NativeAuthV2LinkRelation.UPDATE.value))
+    }
+
+    private fun entryContinuationState(includeUpdateRelation: Boolean = true): NativeAuthV2ContinuationState {
+        val updateLink = if (includeUpdateRelation) {
+            """"update": { "href": "/api/v0.1/auth/update" },"""
+        } else {
+            ""
+        }
+        return (NativeAuthV2ResponseParser().parseAuthorizeChallenge(
+            response = NativeAuthV2HalApiResponse.from(
+                halResource = HalResource.from(
+                    """
+                    {
+                      "continuation_token": "flow-token",
+                      "sign_in": "/oauth2/v2.0/authorize-challenge",
+                      "_links": {
+                        "resetPassword": {
+                          "href": "/api/v0.1/auth/resetpassword"
+                        },
+                        $updateLink
+                        "self": {
+                          "href": "/api/v0.1/auth/self"
+                        }
+                      }
+                    }
+                    """.trimIndent()
+                ),
+                statusCode = 401,
+                correlationId = CORRELATION_ID
+            ),
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = SCOPES
+        ) as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
+    }
+
     private fun provider(
         authorityUrl: String,
         useMockApi: Boolean,
@@ -290,6 +381,7 @@ class NativeAuthV2RequestProviderTest {
                 correlationId = CORRELATION_ID
             ),
             entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
             scopes = SCOPES
         ) as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
 
@@ -343,6 +435,7 @@ class NativeAuthV2RequestProviderTest {
                 )
             },
             entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
             scopes = SCOPES
         ) as AuthorizeChallengeApiResult.ContinuationRequired).continuationState
 
