@@ -20,35 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.providers
 
-package com.microsoft.identity.common.java.nativeauth.providers.requests
-
-import com.microsoft.identity.common.java.nativeauth.util.ILoggable
-import org.json.JSONObject
-import java.net.URL
+import com.microsoft.identity.common.java.net.HttpConstants
 
 /**
- * Base class to represent all Native Auth API requests.
+ * The `Content-Type` values used by Native Auth requests.
+ *
+ * Native Auth V1 sends form-url-encoded bodies exclusively, while Native Auth V2 sends
+ * form-url-encoded bodies to the `authorize-challenge` and `token` endpoints and JSON bodies to the
+ * HAL-driven `challenge`, `resend`, `verify` and `poll` endpoints.
  */
-abstract class NativeAuthRequest : ILoggable {
-    abstract var requestUrl: URL
-    abstract var headers: Map<String, String?>
-    abstract val parameters: NativeAuthRequestParameters
-
-    /**
-     * Base class to represent parameters for all Native Auth API requests. These parameters
-     * are sent as part of HTTP POST request.
-     */
-    abstract class NativeAuthRequestParameters : ILoggable {
-        /**
-         * Client identifier when required by the endpoint, or `null` for server-href requests.
-         */
-        open val clientId: String? = null
-    }
-
-    companion object {
-        fun <K, V> Map<K, V>.toJsonString(map: Map<String, String>): String {
-            return JSONObject(map).toString()
-        }
-    }
+internal enum class NativeAuthContentType(val value: String) {
+    FORM_URL_ENCODED("application/x-www-form-urlencoded"),
+    JSON(HttpConstants.MediaType.APPLICATION_JSON)
 }
