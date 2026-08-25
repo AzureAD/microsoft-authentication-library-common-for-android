@@ -495,6 +495,9 @@ public class AzureActiveDirectory
             if (scheme == null) {
                 throw new ClientException(ClientException.MALFORMED_URL, "Missing scheme in sender url");
             }
+            if (!"https".equalsIgnoreCase(scheme)) {
+                throw new ClientException(ClientException.MALFORMED_URL, "Sender url must use HTTPS");
+            }
             final String host = uri.getHost();
             if (host == null) {
                 throw new ClientException(ClientException.MALFORMED_URL, "Missing host in sender url");

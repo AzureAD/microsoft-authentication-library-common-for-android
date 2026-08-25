@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import com.microsoft.identity.common.java.authorities.Authority
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority
 import com.microsoft.identity.common.java.authorities.Environment
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.flighting.MockFlightsManager
@@ -34,6 +35,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -166,6 +168,29 @@ class AzureActiveDirectoryTest {
 
         assertTrue(AzureActiveDirectory.hasCloudHost(URL("https://$host/common")))
         assertFalse(AzureActiveDirectory.isValidCloudHost(URL("https://$host/common")))
+    }
+
+    @Test
+    fun testBuildAndValidateAuthorityFromWebAppSender_httpsKnownHost_returnsAuthority() {
+        val host = "login.testcloud.com"
+        AzureActiveDirectory.putCloud(host, AzureActiveDirectoryCloud(host, host))
+
+        assertEquals(
+            "https://$host/common",
+            AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender("https://$host/path")
+        )
+    }
+
+    @Test
+    fun testBuildAndValidateAuthorityFromWebAppSender_httpKnownHost_throwsMalformedUrl() {
+        val host = "login.testcloud.com"
+        AzureActiveDirectory.putCloud(host, AzureActiveDirectoryCloud(host, host))
+
+        val exception = assertThrows(ClientException::class.java) {
+            AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender("http://$host/path")
+        }
+
+        assertEquals(ClientException.MALFORMED_URL, exception.errorCode)
     }
 
     // --- ensureCloudDiscoveryForAuthority caching behavior ---

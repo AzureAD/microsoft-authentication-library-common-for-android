@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Require HTTPS for WebApps sender authority validation (AB#3715681)
 - [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 - [MINOR] Reenable the GetCookies WebApps API contract for broker discovery (#3230)
