@@ -104,6 +104,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 
@@ -1413,6 +1414,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
         final Span mockSpan = Mockito.mock(Span.class);
+        final Scope mockScope = Mockito.mock(Scope.class);
 
         try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
              final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
@@ -1420,12 +1422,18 @@ public class AzureActiveDirectoryWebViewClientTest {
              final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
                      mockConstruction(PKeyAuthChallengeHandler.class)) {
             spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+            spanExtension.when(() -> SpanExtension.makeCurrentSpan(any())).thenReturn(mockScope);
 
             // Record an https main-frame origin, then dispatch a main-frame PKeyAuth challenge.
             mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
 
+            // The challenge is dispatched inside a real recording span scope (AB#3706623, round 12):
+            // handleUrl now makes a ProcessPKeyAuthChallenge span current before the telemetry sites
+            // run, so their SpanExtension.current() resolves to a recording span rather than the
+            // silently-dropped non-recording default.
+            spanExtension.verify(() -> SpanExtension.makeCurrentSpan(any()));
             Mockito.verify(mockSpan).setAttribute(
                     AttributeName.pkeyauth_challenge_is_main_frame.name(), true);
             Mockito.verify(mockSpan).setAttribute(
@@ -1445,6 +1453,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
         final Span mockSpan = Mockito.mock(Span.class);
+        final Scope mockScope = Mockito.mock(Scope.class);
 
         try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
              final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
@@ -1452,6 +1461,7 @@ public class AzureActiveDirectoryWebViewClientTest {
              final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
                      mockConstruction(PKeyAuthChallengeHandler.class)) {
             spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+            spanExtension.when(() -> SpanExtension.makeCurrentSpan(any())).thenReturn(mockScope);
 
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, false)));
@@ -1484,7 +1494,59 @@ public class AzureActiveDirectoryWebViewClientTest {
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
 
+            // Flight off: no recording span is established and no attribute is emitted — a true
+            // end-to-end no-op relative to pre-fix behavior (AB#3706623, round 12).
+            spanExtension.verify(() -> SpanExtension.makeCurrentSpan(any()), Mockito.never());
             Mockito.verifyNoInteractions(mockSpan);
+        }
+    }
+
+    /**
+     * When origin validation rejects a cross-origin {@code SubmitUrl}, the factory throws a
+     * {@link ClientException}. That exception is thrown from inside the round-12 recording-span
+     * scope; it must be rethrown (not swallowed) so handleUrl's outer catch runs the rejection path:
+     * surface the error to the completion callback, stop the WebView, and never reach the
+     * credential-bearing {@code loadUrl}. This pins the Finding-1 hard constraint that wrapping the
+     * dispatch in a span did not alter the rejection semantics (AB#3706623, round 12).
+     */
+    @Test
+    public void testPKeyAuthValidationRejected_SurfacesErrorStopsLoadingAndNeverLoadsUrl() {
+        enablePKeyAuthOriginValidationFlight();
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
+                PKeyAuthChallengeFactory.class,
+                (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
+                        .thenThrow(new ClientException(
+                                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                                "SubmitUrl host is not same-origin with the challenging origin.")))) {
+
+            final boolean result = webViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
+
+            assertTrue("shouldOverrideUrlLoading must return true (challenge intercepted and rejected)",
+                    result);
+            Mockito.verify(mockWebView).stopLoading();
+            Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+            assertEquals("A rejected SubmitUrl must surface the device-cert-request-invalid error",
+                    ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                    ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+            // The device-key-signed assertion must never be delivered to any URL.
+            Mockito.verify(mockWebView, Mockito.never())
+                    .loadUrl(Mockito.anyString(), Mockito.anyMap());
         }
     }
 

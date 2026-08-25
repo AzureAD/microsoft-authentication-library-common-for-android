@@ -1,7 +1,7 @@
 vNext
 ----------
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
-- [PATCH] Security: validate a PKeyAuth WebView-redirect SubmitUrl (attacker-controllable) as an absolute HTTPS URL that is same-origin with the challenging endpoint before signing or submitting, rejecting cross-origin/cleartext targets at challenge construction so the device key is never used to sign for them; staged for safe rollout via two CommonFlights — ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION (default on) gates origin recording, evaluation and non-PII verdict telemetry, while ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION (default off) gates only the block, so the feature runs in shadow mode (measure, don't fail) until real-world origin pairs are observed; the trusted token-endpoint construction path is unaffected (CWE-918 / AB#3706623)
+- [MINOR] Security: validate a PKeyAuth WebView-redirect SubmitUrl (attacker-controllable) as an HTTPS URL same-origin with the challenging endpoint before the device key signs or the WebView submits; flight-gated and ships in shadow mode (CWE-918 / AB#3706623)
 
 Version 24.6.0
 ----------

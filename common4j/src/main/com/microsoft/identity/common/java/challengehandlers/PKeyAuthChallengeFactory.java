@@ -412,8 +412,12 @@ public class PKeyAuthChallengeFactory {
      * Emits the PKeyAuth {@code SubmitUrl} origin-validation verdict to the current span. All
      * attributes are non-PII (an enum verdict, booleans): never a hostname, URL, nonce, or
      * {@code Context}. Emitted on every evaluated challenge (including {@code ALLOWED}) so shadow-mode
-     * rejection rates can be measured. Uses {@link SpanExtension#current()}, which returns a no-op
-     * span outside an active trace, so setting attributes here is always safe. The cloud-membership
+     * rejection rates can be measured. Writes to {@link SpanExtension#current()}: on the
+     * webview-redirect path the WebView client establishes a recording
+     * {@code ProcessPKeyAuthChallenge} span as current before this runs (the call is synchronous on
+     * the same thread), so the verdict lands on an exported span; outside an active trace
+     * {@code current()} is a no-op span, so setting attributes here is always safe. The
+     * cloud-membership
      * booleans use {@link AzureActiveDirectory#isValidCloudHost(URL)} and are {@code false} when the
      * corresponding URL could not be safely parsed.
      *
