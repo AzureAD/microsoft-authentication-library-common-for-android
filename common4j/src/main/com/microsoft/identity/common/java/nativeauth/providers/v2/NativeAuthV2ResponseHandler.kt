@@ -26,12 +26,42 @@ import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.NativeAuthMicrosoftStsTokenResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResponse
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
+import com.microsoft.identity.common.java.nativeauth.util.isRedirect
 import com.microsoft.identity.common.java.net.HttpResponse
+import com.microsoft.identity.common.java.util.ObjectMapper
+import java.net.HttpURLConnection
 
 /**
  * Converts raw [HttpResponse] objects into V2 Native Auth typed response models.
+ *
+ * The defining rule for [getHalApiResponse]: an HTTP 3xx status is rejected outright and never
+ * body-parsed. V2 request bodies carry the continuation token (and the OTP on verify), and
+ * [NativeAuthV2HrefResolver] is the only authority check applied to a request target, so following
+ * a redirect would route a secret-bearing body around that check.
+ *
+ * Note this is transport-level redirect *rejection*, and is unrelated to
+ * [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult.Redirect],
+ * which is the application-level web-fallback signal produced by the parser.
+ *
+ * All non-3xx statuses still parse the body: the authorize-challenge `401` is a success signal
+ * carrying the continuation token and HAL links, and several 4xx bodies carry flow state. Status
+ * alone is otherwise not treated as terminal — the status code is recorded and the body is parsed;
+ * classification is the parser's responsibility.
+ *
+ * Empty and non-JSON bodies return a synthetic [NativeAuthV2HalApiResponse] carrying a
+ * [NativeAuthV2HalApiResponse.HalServerError] with a safe error code rather than throwing.
+ *
+ * [getTokenApiResponse] follows standard OAuth conventions: 4xx/5xx status codes map through
+ * [SignInTokenApiResponse.toErrorResult]; 2xx responses are deserialized as
+ * [NativeAuthMicrosoftStsTokenResponse] and returned as [SignInTokenApiResult.Success] (or
+ * [SignInTokenApiResult.Redirect] when the service requests a browser redirect).
  */
 class NativeAuthV2ResponseHandler {
 
@@ -42,6 +72,9 @@ class NativeAuthV2ResponseHandler {
         private const val PARSE_ERROR_CODE = "response_parse_error"
         private const val EMPTY_BODY_ERROR_MESSAGE = "V2 HAL response body was empty or blank."
         private const val PARSE_ERROR_MESSAGE = "V2 HAL response body was not valid JSON."
+        private const val UNAVAILABLE_STATUS_CODE = -1
+        private const val JSON_NULL = "null"
+        private const val UNAVAILABLE_STATUS_ERROR_MESSAGE = "Token response HTTP status code was unavailable."
     }
 
     /**
@@ -87,6 +120,114 @@ class NativeAuthV2ResponseHandler {
             }
         }
     }
+
+    /**
+     * Converts a raw [HttpResponse] from the `/oauth2/v2.0/token` endpoint into a
+     * [SignInTokenApiResult]. Follows standard OAuth error conventions: non-2xx status codes map
+     * through [SignInTokenApiResponse.toErrorResult]; 2xx responses are deserialized as
+     * [NativeAuthMicrosoftStsTokenResponse].
+     */
+    fun getTokenApiResponse(
+        requestCorrelationId: String,
+        response: HttpResponse
+    ): SignInTokenApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = requestCorrelationId,
+            methodName = "$TAG.getTokenApiResponse"
+        )
+
+        val correlationId = retrieveCorrelationId(response, requestCorrelationId)
+
+        if (response.statusCode == UNAVAILABLE_STATUS_CODE) {
+            return buildTokenErrorResult(
+                statusCode = response.statusCode,
+                correlationId = correlationId,
+                errorCode = ApiErrorResult.INVALID_STATE,
+                errorMessage = UNAVAILABLE_STATUS_ERROR_MESSAGE
+            )
+        }
+
+        val isSuccessfulStatus = response.statusCode in
+            HttpURLConnection.HTTP_OK until HttpURLConnection.HTTP_MULT_CHOICE
+
+        if ((isSuccessfulStatus && response.body.isNullOrBlank()) ||
+            response.body?.trim() == JSON_NULL
+        ) {
+            return buildTokenErrorResult(
+                statusCode = response.statusCode,
+                correlationId = correlationId,
+                errorCode = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR,
+                errorMessage = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION
+            )
+        }
+
+        return if (!isSuccessfulStatus) {
+            val apiResponse = if (response.body.isNullOrBlank()) {
+                SignInTokenApiResponse(
+                    statusCode = response.statusCode,
+                    correlationId = correlationId,
+                    continuationToken = null,
+                    error = null,
+                    errorDescription = null,
+                    errorUri = null,
+                    subError = null,
+                    errorCodes = null
+                )
+            } else {
+                ObjectMapper.deserializeJsonStringToObject(
+                    response.body,
+                    SignInTokenApiResponse::class.java
+                ) ?: return buildTokenErrorResult(
+                    statusCode = response.statusCode,
+                    correlationId = correlationId,
+                    errorCode = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR,
+                    errorMessage = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION
+                )
+            }
+            apiResponse.statusCode = response.statusCode
+            apiResponse.correlationId = correlationId
+            apiResponse.toErrorResult()
+        } else {
+            val tokenResponse = ObjectMapper.deserializeJsonStringToObject(
+                response.body,
+                NativeAuthMicrosoftStsTokenResponse::class.java
+            ) ?: return buildTokenErrorResult(
+                statusCode = response.statusCode,
+                correlationId = correlationId,
+                errorCode = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR,
+                errorMessage = NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION
+            )
+            if (tokenResponse.challengeType.isRedirect()) {
+                SignInTokenApiResult.Redirect(
+                    correlationId = correlationId,
+                    redirectReason = tokenResponse.redirectReason.orEmpty()
+                )
+            } else {
+                SignInTokenApiResult.Success(
+                    correlationId = correlationId,
+                    tokenResponse = tokenResponse
+                )
+            }
+        }
+    }
+
+    private fun buildTokenErrorResult(
+        statusCode: Int,
+        correlationId: String,
+        errorCode: String,
+        errorMessage: String
+    ): SignInTokenApiResult =
+        SignInTokenApiResponse(
+            statusCode = statusCode,
+            correlationId = correlationId,
+            continuationToken = null,
+            error = errorCode,
+            errorDescription = errorMessage,
+            errorUri = null,
+            subError = null,
+            errorCodes = null
+        ).toErrorResult()
 
     /**
      * Builds a [NativeAuthV2HalApiResponse] carrying a synthetic [NativeAuthV2HalApiResponse.HalServerError]

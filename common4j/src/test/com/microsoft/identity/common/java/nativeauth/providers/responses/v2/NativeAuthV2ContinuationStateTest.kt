@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -114,7 +115,8 @@ class NativeAuthV2ContinuationStateTest {
             response = response,
             continuationToken = CONTINUATION_TOKEN,
             scopes = originalScopes,
-            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
         )
 
         originalScopes += "Mail.Read"
@@ -141,7 +143,8 @@ class NativeAuthV2ContinuationStateTest {
             continuationToken = CONTINUATION_TOKEN,
             scopes = SCOPES,
             claimsRequestJson = CLAIMS_REQUEST_JSON,
-            entryRelation = NativeAuthV2LinkRelation.SIGN_IN
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
         )
 
         val next = NativeAuthV2ContinuationState.next(
@@ -281,8 +284,9 @@ class NativeAuthV2ContinuationStateTest {
                     response = response,
                     continuationToken = token,
                     scopes = SCOPES,
-                    entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD
-                )
+                    entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
+        )
             }
         }
     }
@@ -300,6 +304,7 @@ class NativeAuthV2ContinuationStateTest {
         val result = NativeAuthV2ResponseParser().parseAuthorizeChallenge(
             response = response,
             entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
             scopes = SCOPES
         )
 
