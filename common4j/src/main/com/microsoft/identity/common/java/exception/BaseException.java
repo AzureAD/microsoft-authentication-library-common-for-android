@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.telemetry.events.ErrorEvent;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
 import com.microsoft.identity.common.java.broker.IBrokerPerformanceMetricsProvider;
+import com.microsoft.identity.common.java.broker.telemetry.IBrokerIpcTelemetryProvider;
+import com.microsoft.identity.common.java.broker.telemetry.BrokerIpcTelemetry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,11 +40,12 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider, IBrokerInfoProvider {
+public class BaseException extends Exception implements IErrorInformation, ITelemetryAccessor, IBrokerPerformanceMetricsProvider, IBrokerInfoProvider, IBrokerIpcTelemetryProvider {
 
     // This is needed for backward compatibility with older versions of MSAL (pre 3.0.0)
     // When MSAL converts the result bundle it looks for this value to know about exception type
@@ -107,6 +110,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
+
+    @Nullable
+    private BrokerIpcTelemetry mBrokerIpcTelemetry;
 
     /**
      * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
@@ -278,6 +284,20 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Override
     public BrokerPerformanceMetrics getBrokerPerformanceMetrics() {
         return this.mBrokerPerformanceMetrics;
+    }
+
+    @Override
+    @SuppressFBWarnings(
+            value = "NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION",
+            justification = "The nullable Kotlin property and Java annotation express the same contract.")
+    public void setBrokerIpcTelemetry(@Nullable final BrokerIpcTelemetry brokerIpcTelemetry) {
+        this.mBrokerIpcTelemetry = brokerIpcTelemetry;
+    }
+
+    @Override
+    @Nullable
+    public BrokerIpcTelemetry getBrokerIpcTelemetry() {
+        return this.mBrokerIpcTelemetry;
     }
 
     public void setUsername(@Nullable final String username) {
