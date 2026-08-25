@@ -503,7 +503,7 @@ public class AzureActiveDirectory
                 throw new ClientException(ClientException.MALFORMED_URL, "Missing host in sender url");
             }
 
-            final URI normalized = new URI(scheme + "://" + host + "/common");
+            final URI normalized = new URI("https://" + host + "/common");
             final URL authorityUrl = normalized.toURL();
 
             ensureCloudDiscoveryForAuthority(authorityUrl);

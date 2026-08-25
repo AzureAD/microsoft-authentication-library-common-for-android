@@ -182,6 +182,17 @@ class AzureActiveDirectoryTest {
     }
 
     @Test
+    fun testBuildAndValidateAuthorityFromWebAppSender_uppercaseHttps_returnsNormalizedAuthority() {
+        val host = "login.testcloud.com"
+        AzureActiveDirectory.putCloud(host, AzureActiveDirectoryCloud(host, host))
+
+        assertEquals(
+            "https://$host/common",
+            AzureActiveDirectory.buildAndValidateAuthorityFromWebAppSender("HTTPS://$host/path")
+        )
+    }
+
+    @Test
     fun testBuildAndValidateAuthorityFromWebAppSender_httpKnownHost_throwsMalformedUrl() {
         val host = "login.testcloud.com"
         AzureActiveDirectory.putCloud(host, AzureActiveDirectoryCloud(host, host))
