@@ -370,39 +370,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
                 if (isPKeyAuthSubmitUrlOriginValidationEnabled()) {
-                    // Origin-validation flight ON: dispatch the challenge inside a real recording span.
-                    // Both telemetry sites for this feature attach to SpanExtension.current() — the
-                    // navigation context recorded here (recordPKeyAuthChallengeContext) and the
-                    // origin-validation verdict emitted deep in the common4j factory. handleUrl's two
-                    // callers (the shouldOverrideUrlLoading overloads) open no scope, so without this
-                    // span those attributes would land on the non-recording default span and never
-                    // export. The factory call is synchronous on this thread inside the scope, so its
-                    // SpanExtension.current() resolves to this same span (AB#3706623).
-                    final Span span = createSpanWithAttributesFromParent(SpanName.ProcessPKeyAuthChallenge.name());
-                    try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-                        // getChallengingOrigin() reads the recorded origin / view.getUrl().
-                        final String challengingOrigin = getChallengingOrigin(view);
-                        // Record navigation-context telemetry (main-frame flag + where the origin came
-                        // from). handleUrl also runs for subframe navigations (isForMainFrame carries
-                        // that), so a PKeyAuth challenge delivered in an iframe is validated against the
-                        // MAIN-FRAME origin. We deliberately do NOT relax validation for subframes — a
-                        // PASS is safe (the assertion can only go to the legitimate main-frame origin)
-                        // and a FAIL may be a false-reject of a legitimate cross-origin iframe
-                        // challenge, which is exactly what this flag measures before we decide whether
-                        // to special-case it.
-                        recordPKeyAuthChallengeContext(isForMainFrame, challengingOrigin);
-                        dispatchPKeyAuthChallenge(view, url, challengingOrigin);
-                        span.setStatus(StatusCode.OK);
-                    } catch (final ClientException e) {
-                        // Rejection path: record on the span, then rethrow so handleUrl's outer
-                        // ClientException catch runs returnError(...) + view.stopLoading() exactly as
-                        // before. Never swallow — a failed validation must still surface to the user.
-                        span.recordException(e);
-                        span.setStatus(StatusCode.ERROR);
-                        throw e;
-                    } finally {
-                        span.end();
-                    }
+                    handlePKeyAuthChallengeWithOriginValidation(view, url, isForMainFrame);
                 } else {
                     // Master switch OFF: a true end-to-end no-op relative to pre-fix behavior. No span,
                     // no telemetry; the factory receives a null origin and skips origin validation.
@@ -504,14 +472,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
-                // Record the challenging origin only here — past branch dispatch — so we capture a URL
-                // solely when we actually defer it to the WebView to load (not one we override and hand
-                // off elsewhere), and only for main-frame navigations so a subframe cannot poison the
-                // PKeyAuth same-origin reference (AB#3706623). The record itself is additionally gated
-                // on the flight inside recordLastCommittedHttpsRequestUrl.
-                if (isForMainFrame) {
-                    recordLastCommittedHttpsRequestUrl(url);
-                }
                 return false;
             }
         } catch (final ClientException exception) {
@@ -590,6 +550,54 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
+     * Handles a PKeyAuth WebView-redirect challenge on the origin-validation-on path: dispatches the
+     * challenge inside a real recording span so its telemetry actually exports.
+     *
+     * <p>Both telemetry sites for this feature attach to {@link SpanExtension#current()} — the
+     * navigation context recorded here ({@link #recordPKeyAuthChallengeContext}) and the
+     * origin-validation verdict emitted deep in the common4j factory. {@link #handleUrl}'s two callers
+     * (the {@code shouldOverrideUrlLoading} overloads) open no scope, so without this span those
+     * attributes would land on the non-recording default span and never export. The factory call is
+     * synchronous on this thread inside the scope, so its {@link SpanExtension#current()} resolves to
+     * this same span (AB#3706623).
+     *
+     * <p>A validation failure surfaces as a {@link ClientException}: it is recorded on the span and
+     * rethrown so {@link #handleUrl}'s outer {@code ClientException} catch runs {@code returnError(...)}
+     * + {@code view.stopLoading()} exactly as before. It is never swallowed here.
+     *
+     * @param view           the WebView handling the challenge.
+     * @param url            the raw (non-lowercased) challenge redirect URI.
+     * @param isForMainFrame whether the challenge navigation targeted the main frame; recorded as
+     *                       telemetry. {@code handleUrl} also runs for subframe navigations, so a
+     *                       PKeyAuth challenge delivered in an iframe is validated against the
+     *                       MAIN-FRAME origin. We deliberately do NOT relax validation for subframes —
+     *                       a PASS is safe (the assertion can only go to the legitimate main-frame
+     *                       origin) and a FAIL may be a false-reject of a legitimate cross-origin
+     *                       iframe challenge, which is exactly what this flag measures before we decide
+     *                       whether to special-case it.
+     * @throws ClientException if the challenge is malformed or its {@code SubmitUrl} fails origin
+     *                         validation.
+     */
+    private void handlePKeyAuthChallengeWithOriginValidation(@NonNull final WebView view,
+                                                             @NonNull final String url,
+                                                             final boolean isForMainFrame) throws ClientException {
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessPKeyAuthChallenge.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            // getChallengingOrigin() reads the recorded origin / view.getUrl().
+            final String challengingOrigin = getChallengingOrigin(view);
+            recordPKeyAuthChallengeContext(isForMainFrame, challengingOrigin);
+            dispatchPKeyAuthChallenge(view, url, challengingOrigin);
+            span.setStatus(StatusCode.OK);
+        } catch (final ClientException e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+
+    /**
      * Builds the PKeyAuth challenge from a WebView-redirect {@code urn:http-auth:PKeyAuth} URI and
      * hands it to {@link PKeyAuthChallengeHandler}. Shared by both the origin-validation-on and -off
      * branches of {@link #handleUrl} so the two paths cannot drift.
@@ -622,8 +630,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <p>The whole recording path is gated on the
      * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch so that, with the
      * flight off, this is a complete no-op and the client behaves exactly as it did before
-     * AB#3706623. Callers are responsible for the main-frame constraint (see {@link #handleUrl} and
-     * {@link #onPageStarted}); this method only enforces the https-scheme and flight gates.
+     * AB#3706623. The sole caller is {@link #onPageStarted}, which the Android framework invokes only
+     * for main-frame page loads, so the main-frame constraint holds by contract without an explicit
+     * check here; this method only enforces the https-scheme and flight gates.
      *
      * @param url the URL from a navigation callback; may be {@code null}.
      */

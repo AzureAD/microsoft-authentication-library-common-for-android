@@ -1212,9 +1212,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     /**
-     * A main-frame https navigation that we defer to the WebView (returns {@code false}) is recorded as
-     * the challenging origin, and a subsequent PKeyAuth challenge validates its SubmitUrl against that
-     * recorded URL — taking precedence over {@link WebView#getUrl()}.
+     * The realistic main-frame sequence: an https navigation is deferred to the WebView (returns
+     * {@code false}), the WebView then actually loads it (firing {@code onPageStarted}), and a
+     * subsequent PKeyAuth challenge validates its SubmitUrl against that committed URL — taking
+     * precedence over {@link WebView#getUrl()}. {@code onPageStarted} is the single source of truth
+     * for the challenging origin; the deferral itself records nothing.
      */
     @Test
     public void testPKeyAuthOriginTracking_MainFrameHttpsNavigation_BecomesChallengingOrigin() throws ClientException {
@@ -1227,11 +1229,13 @@ public class AzureActiveDirectoryWebViewClientTest {
              final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
                      mockConstruction(PKeyAuthChallengeHandler.class)) {
 
-            // Main-frame https navigation deferred to the WebView -> recorded as the challenging origin.
+            // Main-frame https navigation deferred to the WebView...
             assertFalse(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_INVALID_URL, true)));
+            // ...then the WebView actually loads it, which is what records the challenging origin.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
 
-            // Subsequent PKeyAuth challenge derives its challenging origin from the recorded URL.
+            // Subsequent PKeyAuth challenge derives its challenging origin from the committed URL.
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
 
@@ -1239,7 +1243,44 @@ public class AzureActiveDirectoryWebViewClientTest {
             final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
             Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
                     eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
-            assertEquals("Recorded main-frame https URL must be the challenging origin",
+            assertEquals("Committed main-frame https URL must be the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * Coverage for the gap mohitc1 surfaced: URLs that an override branch loads via
+     * {@code view.loadUrl(...)} never pass through {@code handleUrl}'s defer branch, yet
+     * {@code onPageStarted} still fires for them. So even when a main-frame URL is overridden
+     * (handled, {@code shouldOverrideUrlLoading} returns {@code true}), the https target the WebView
+     * subsequently loads is recorded via {@code onPageStarted} and becomes the challenging origin.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OverrideBranchLoadUrlTarget_RecordedViaOnPageStarted() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame URL that is overridden (header-forwarding branch, returns true) -> the defer
+            // branch never runs, so it records nothing on its own.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_MSA_HEADER_FORWARDING_POSITIVE_URL, true)));
+            // The https target that override loads via view.loadUrl(...) is caught by onPageStarted.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("A loadUrl target caught by onPageStarted must become the challenging origin",
                     TEST_INVALID_URL, originCaptor.getValue());
         }
     }
