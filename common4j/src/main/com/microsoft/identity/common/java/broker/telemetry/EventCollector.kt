@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.broker.telemetry
 
-import java.time.Instant
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
@@ -60,6 +63,29 @@ class EventCollector(private val correlationId: String) {
          * stitched in Kusto via correlation_id.
          */
         const val BROKER_THREAD_ID_OFFSET = 10_000L
+
+        /**
+         * ISO 8601 / RFC 3339 UTC pattern with millisecond precision,
+         * e.g. `2026-01-13T10:30:45.123Z`.
+         *
+         * [java.time.Instant] is deliberately not used here: it was introduced in Android
+         * API 26, while this module ships to consumers with a minSdk of 24 and core library
+         * desugaring disabled (`common4j/build.gradle`). [SimpleDateFormat] is available
+         * since API 1.
+         */
+        private const val ISO_8601_UTC_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+
+        /**
+         * Formats [epochMs] as an ISO 8601 UTC timestamp.
+         *
+         * The [SimpleDateFormat] is allocated per call rather than shared, because it is
+         * not thread-safe and [EventCollector] is documented as thread-safe. The allocation
+         * cost is negligible: this runs once per authentication request.
+         */
+        private fun formatIso8601Utc(epochMs: Long): String =
+            SimpleDateFormat(ISO_8601_UTC_PATTERN, Locale.US)
+                .apply { timeZone = TimeZone.getTimeZone("UTC") }
+                .format(Date(epochMs))
     }
 
     /**
@@ -98,16 +124,30 @@ class EventCollector(private val correlationId: String) {
      * Snapshots the event list first, then captures the end time, ensuring
      * that [PerformanceRecord.duration] is always >= the last event's timestamp.
      *
+     * The broker identity and outcome are supplied by the caller rather than tracked by this
+     * collector: they are only known once the flow terminates, and the parent Unified Broker
+     * Telemetry contract marks all three as required.
+     *
+     * @param name Logical name of the broker producing this payload, e.g. `authenticator`.
+     * @param version Version string of the broker application.
+     * @param authOutcome Outcome of the authentication, e.g. `success` or `failure`.
      * @return A [BrokerIpcTelemetry] containing a [PerformanceRecord] with all collected events.
      */
-    fun toBrokerIpcTelemetry(): BrokerIpcTelemetry {
+    fun toBrokerIpcTelemetry(
+        name: String,
+        version: String,
+        authOutcome: String
+    ): BrokerIpcTelemetry {
         // Snapshot events first, then capture end time — guarantees duration >= last event ts.
         val eventSnapshot = events.toList()
         val duration = elapsedMs()
         return BrokerIpcTelemetry(
             correlationId = correlationId,
+            name = name,
+            version = version,
+            authOutcome = authOutcome,
             performanceRecord = PerformanceRecord(
-                startTime = Instant.ofEpochMilli(startTimeMs).toString(),
+                startTime = formatIso8601Utc(startTimeMs),
                 duration = duration,
                 executionFlow = eventSnapshot
             )

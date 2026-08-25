@@ -27,6 +27,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+import kotlin.math.abs
 
 /**
  * Unit tests for [EventCollector].
@@ -41,10 +45,10 @@ class EventCollectorTest {
 
         collector.addEvent(EventTag.BrokerRequestReceived)
 
-        val schema = collector.toBrokerIpcTelemetry()
-        val events = schema.performanceRecord?.executionFlow
+        val schema = collector.toTestTelemetry()
+        val events = schema.performanceRecord.executionFlow
         assertNotNull(events)
-        assertEquals(1, events!!.size)
+        assertEquals(1, events.size)
         assertEquals(EventTag.BrokerRequestReceived, events[0].tag)
     }
 
@@ -54,22 +58,22 @@ class EventCollectorTest {
 
         collector.addEvent(EventTag.BrokerRequestFailed, statusCode = 42, errorCode = 100)
 
-        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
+        val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)
-        val event = events!![0]
+        val event = events[0]
         assertEquals(42, event.statusCode)
         assertEquals(100, event.errorCode)
     }
 
     @Test
-    fun addEvent_whenNoOptionalCodes_diagnosticAndErrorCodeAreNull() {
+    fun addEvent_whenNoOptionalCodes_statusCodeAndErrorCodeAreNull() {
         val collector = EventCollector(testCorrelationId)
 
         collector.addEvent(EventTag.BrokerCacheHit)
 
-        val event = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow?.get(0)
+        val event = collector.toTestTelemetry().performanceRecord.executionFlow.get(0)
         assertNotNull(event)
-        assertNull(event!!.statusCode)
+        assertNull(event.statusCode)
         assertNull(event.errorCode)
     }
 
@@ -85,9 +89,9 @@ class EventCollectorTest {
 
         tags.forEach { collector.addEvent(it) }
 
-        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
+        val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)
-        assertEquals(tags.size, events!!.size)
+        assertEquals(tags.size, events.size)
         tags.forEachIndexed { index, tag -> assertEquals(tag, events[index].tag) }
     }
 
@@ -101,9 +105,9 @@ class EventCollectorTest {
 
         collector.addEvent(EventTag.BrokerRequestReceived)
 
-        val event = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow?.get(0)
+        val event = collector.toTestTelemetry().performanceRecord.executionFlow.get(0)
         assertNotNull(event)
-        assertEquals(expectedThreadId, event!!.threadId)
+        assertEquals(expectedThreadId, event.threadId)
     }
 
     /**
@@ -121,9 +125,9 @@ class EventCollectorTest {
 
         tags.forEach { collector.addEvent(it) }
 
-        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
+        val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)
-        events!!.zipWithNext().forEach { (previousEvent, nextEvent) ->
+        events.zipWithNext().forEach { (previousEvent, nextEvent) ->
             assertTrue(
                 "Event timestamp ${nextEvent.timestampMs} must be >= previous timestamp ${previousEvent.timestampMs}",
                 nextEvent.timestampMs >= previousEvent.timestampMs
@@ -135,7 +139,7 @@ class EventCollectorTest {
     fun toBrokerIpcTelemetry_correlationIdMatchesConstructorArg() {
         val collector = EventCollector(testCorrelationId)
 
-        val schema = collector.toBrokerIpcTelemetry()
+        val schema = collector.toTestTelemetry()
 
         assertEquals(testCorrelationId, schema.correlationId)
     }
@@ -145,22 +149,36 @@ class EventCollectorTest {
         val collector = EventCollector(testCorrelationId)
         collector.addEvent(EventTag.BrokerRequestReceived)
 
-        val schema = collector.toBrokerIpcTelemetry()
+        val schema = collector.toTestTelemetry()
 
         assertNotNull(schema.performanceRecord)
-        assertTrue(schema.performanceRecord!!.duration >= 0)
+        assertTrue(schema.performanceRecord.duration >= 0)
     }
 
     @Test
     fun toBrokerIpcTelemetry_startTimeIsIso8601Format() {
         val collector = EventCollector(testCorrelationId)
 
-        val schema = collector.toBrokerIpcTelemetry()
+        val schema = collector.toTestTelemetry()
 
-        val startTime = schema.performanceRecord?.startTime
+        val startTime = schema.performanceRecord.startTime
         assertNotNull(startTime)
-        // ISO 8601 instant strings end with 'Z'
-        assertTrue(startTime!!.endsWith("Z"))
+        // Fixed-width ISO 8601 / RFC 3339 UTC with millisecond precision, e.g. 2026-01-13T10:30:45.123Z
+        val iso8601UtcMillis = Regex("""^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$""")
+        assertTrue(
+            "startTime '$startTime' is not ISO 8601 UTC with millisecond precision",
+            iso8601UtcMillis.matches(startTime)
+        )
+
+        // Parse back in UTC: guards against the formatter silently using the default time zone,
+        // which would still satisfy the pattern above but encode the wrong instant.
+        val parsed = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            .apply { timeZone = TimeZone.getTimeZone("UTC") }
+            .parse(startTime)
+        assertTrue(
+            "startTime '$startTime' should decode to approximately the current UTC instant",
+            abs(parsed.time - System.currentTimeMillis()) < 60_000L
+        )
     }
 
     @Test
@@ -179,14 +197,14 @@ class EventCollectorTest {
         threads.forEach { it.start() }
         threads.forEach { it.join() }
 
-        val schema = collector.toBrokerIpcTelemetry()
-        val events = schema.performanceRecord?.executionFlow
+        val schema = collector.toTestTelemetry()
+        val events = schema.performanceRecord.executionFlow
         assertNotNull(events)
-        assertEquals(threadCount * eventsPerThread, events!!.size)
+        assertEquals(threadCount * eventsPerThread, events.size)
 
         // Verify duration invariant: duration >= max event timestamp (race condition regression test)
         val maxEventTs = events.maxOf { it.timestampMs }
-        val duration = schema.performanceRecord!!.duration
+        val duration = schema.performanceRecord.duration
         assertTrue(
             "Duration ($duration) must be >= max event timestamp ($maxEventTs)",
             duration >= maxEventTs
@@ -205,10 +223,14 @@ class EventCollectorTest {
 
         TelemetryHelper.addEventSafely(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
 
-        val events = collector.toBrokerIpcTelemetry().performanceRecord?.executionFlow
+        val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)
-        assertEquals(1, events!!.size)
+        assertEquals(1, events.size)
         assertEquals(EventTag.BrokerTokenAcquired, events[0].tag)
         assertEquals(1, events[0].statusCode)
     }
+
+    /** Supplies the contract-required broker identity and outcome fields for tests. */
+    private fun EventCollector.toTestTelemetry(): BrokerIpcTelemetry =
+        toBrokerIpcTelemetry(name = "authenticator", version = "test-broker-1.0", authOutcome = "success")
 }

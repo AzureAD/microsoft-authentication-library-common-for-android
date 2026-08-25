@@ -77,14 +77,27 @@ class BrokerIpcTelemetrySerializationTest {
 
     @Test
     fun brokerIpcTelemetry_roundTrip_withNullOptionalFields_remainsNull() {
-        val original = BrokerIpcTelemetry(correlationId = "corr-null-opts")
+        val original = BrokerIpcTelemetry(
+            correlationId = "corr-null-opts",
+            name = "authenticator",
+            version = "test-broker-1.0",
+            authOutcome = "success",
+            performanceRecord = PerformanceRecord(
+                startTime = "2024-01-01T00:00:00.000Z",
+                duration = 0L,
+                executionFlow = emptyList()
+            )
+        )
 
         val json = gson.toJson(original)
         val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
-        assertNull(restored.authOutcome)
+        // Contract-required fields survive; genuinely optional ones stay absent.
+        assertEquals("success", restored.authOutcome)
         assertNull(restored.errorCode)
-        assertNull(restored.performanceRecord)
+        assertNull(restored.responseStarvationDuration)
+        assertNull(restored.powerPolicy)
+        assertNull(restored.deviceIdle)
     }
 
     // ------------------------------------------------------------------
@@ -98,7 +111,7 @@ class BrokerIpcTelemetrySerializationTest {
         val json = gson.toJson(original)
         val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
-        assertEquals(original.performanceRecord!!.duration, restored.performanceRecord!!.duration)
+        assertEquals(original.performanceRecord.duration, restored.performanceRecord.duration)
     }
 
     @Test
@@ -108,7 +121,7 @@ class BrokerIpcTelemetrySerializationTest {
         val json = gson.toJson(original)
         val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
-        assertEquals(original.performanceRecord!!.startTime, restored.performanceRecord!!.startTime)
+        assertEquals(original.performanceRecord.startTime, restored.performanceRecord.startTime)
     }
 
     // ------------------------------------------------------------------
@@ -122,8 +135,8 @@ class BrokerIpcTelemetrySerializationTest {
         val json = gson.toJson(original)
         val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
-        val originalEvents = original.performanceRecord!!.executionFlow
-        val restoredEvents = restored.performanceRecord!!.executionFlow
+        val originalEvents = original.performanceRecord.executionFlow
+        val restoredEvents = restored.performanceRecord.executionFlow
         assertEquals(originalEvents.size, restoredEvents.size)
         originalEvents.forEachIndexed { i, event ->
             assertEquals(event.tag, restoredEvents[i].tag)
@@ -196,18 +209,22 @@ class BrokerIpcTelemetrySerializationTest {
         collector.addEvent(EventTag.BrokerCacheCheckStart)
         collector.addEvent(EventTag.BrokerResponseSent)
 
-        val original = collector.toBrokerIpcTelemetry()
+        val original = collector.toTestTelemetry()
         val json = gson.toJson(original)
         val restored = gson.fromJson(json, BrokerIpcTelemetry::class.java)
 
         assertEquals(original.correlationId, restored.correlationId)
-        assertEquals(3, restored.performanceRecord?.executionFlow?.size)
-        assertEquals(EventTag.BrokerResponseSent, restored.performanceRecord?.executionFlow?.last()?.tag)
+        assertEquals(3, restored.performanceRecord.executionFlow.size)
+        assertEquals(EventTag.BrokerResponseSent, restored.performanceRecord.executionFlow.last().tag)
     }
 
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
+
+    /** Supplies the contract-required broker identity and outcome fields for tests. */
+    private fun EventCollector.toTestTelemetry(): BrokerIpcTelemetry =
+        toBrokerIpcTelemetry(name = "authenticator", version = "test-broker-1.0", authOutcome = "success")
 
     private fun buildFullSchema(): BrokerIpcTelemetry {
         val events = listOf(
@@ -222,8 +239,8 @@ class BrokerIpcTelemetrySerializationTest {
         )
         return BrokerIpcTelemetry(
             correlationId = "test-corr-id",
-            name = "AcquireTokenSilent",
-            version = "test-sdk-1.0",
+            name = "authenticator",
+            version = "test-broker-1.0",
             authOutcome = "success",
             errorCode = null,
             responseStarvationDuration = 5,
