@@ -233,7 +233,7 @@ class BrokerIpcTelemetrySerializationTest {
             ExecutionEvent(tag = EventTag.BrokerResponseSent, timestampMs = 50L)
         )
         val perfRecord = PerformanceRecord(
-            startTime = "2024-01-01T00:00:00Z",
+            startTime = "2024-01-01T00:00:00.000Z",
             duration = 50L,
             executionFlow = events
         )
