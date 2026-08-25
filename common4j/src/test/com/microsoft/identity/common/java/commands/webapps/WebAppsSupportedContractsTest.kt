@@ -22,22 +22,26 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.webapps
 
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-/**
- * Supported contracts for Web Apps Sub Operations
- */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
+class WebAppsSupportedContractsTest {
 
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
+    @Test
+    fun defaultContracts_includeGetCookies() {
+        val supportedContracts = WebAppsSupportedContracts()
+
+        assertEquals(
+            listOf(
+                WebAppsSupportedContracts.GET_TOKEN,
+                WebAppsSupportedContracts.SIGN_OUT,
+                WebAppsSupportedContracts.GET_COOKIES
+            ),
+            supportedContracts.contracts
+        )
+        assertEquals(
+            "[\"GetToken\",\"SignOut\",\"GetCookies\"]",
+            supportedContracts.toString()
+        )
     }
 }
