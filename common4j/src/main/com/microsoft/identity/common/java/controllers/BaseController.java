@@ -35,6 +35,8 @@ import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudien
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.ITokenAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.broker.telemetry.EventTag;
+import com.microsoft.identity.common.java.broker.telemetry.TelemetryHelper;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter;
@@ -218,7 +220,11 @@ public abstract class BaseController {
                 parametersWithScopes
         );
 
-        final TokenResult tokenResult = oAuth2Strategy.requestToken(ropcTokenRequest);
+        final TokenResult tokenResult = strategyRequestToken(
+                oAuth2Strategy,
+                ropcTokenRequest,
+                parametersWithScopes
+        );
 
         acquireTokenResult.setTokenResult(tokenResult);
 
@@ -424,7 +430,8 @@ public abstract class BaseController {
         ResultUtil.logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
-        @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult =
+                strategyRequestToken(strategy, tokenRequest, parameters);
 
         ResultUtil.logResult(TAG, tokenResult);
 
@@ -458,7 +465,7 @@ public abstract class BaseController {
         );
         ResultUtil.logExposedFieldsOfObject(methodTag, tokenRequest);
         // Execute Token Request
-        TokenResult tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+        TokenResult tokenResult = strategyRequestToken(oAuth2Strategy, tokenRequest, parameters);
 
         // Validate request success, may throw MsalServiceException
         validateDeviceCodeFlowServiceResult(tokenResult);
@@ -903,13 +910,51 @@ public abstract class BaseController {
             );
         }
 
-        return strategyRequestToken(strategy, refreshTokenRequest);
+        return strategyRequestToken(strategy, refreshTokenRequest, parameters);
     }
 
     // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the call to requestToken method
     @SuppressWarnings(WarningType.unchecked_warning)
-    private TokenResult strategyRequestToken(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2Strategy strategy, TokenRequest refreshTokenRequest) throws IOException, ClientException {
-        return strategy.requestToken(refreshTokenRequest);
+    private TokenResult strategyRequestToken(
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @NonNull final TokenRequest tokenRequest,
+            @NonNull final CommandParameters parameters) throws IOException, ClientException {
+        TelemetryHelper.addEventSafely(
+                parameters.getEventCollector(),
+                EventTag.BrokerNetworkCallStart
+        );
+        TelemetryHelper.addEventSafely(
+                parameters.getEventCollector(),
+                EventTag.CommonHttpRequestExecute
+        );
+        try {
+            final TokenResult tokenResult;
+            try {
+                tokenResult = strategy.requestToken(tokenRequest);
+                TelemetryHelper.addEventSafely(
+                        parameters.getEventCollector(),
+                        EventTag.CommonHttpResponseReceived
+                );
+            } finally {
+                TelemetryHelper.addEventSafely(
+                        parameters.getEventCollector(),
+                        EventTag.BrokerNetworkCallEnd
+                );
+            }
+            TelemetryHelper.addEventSafely(
+                    parameters.getEventCollector(),
+                    tokenResult.getSuccess()
+                            ? EventTag.BrokerTokenAcquired
+                            : EventTag.BrokerNetworkCallFailed
+            );
+            return tokenResult;
+        } catch (final IOException | ClientException | RuntimeException e) {
+            TelemetryHelper.addEventSafely(
+                    parameters.getEventCollector(),
+                    EventTag.BrokerNetworkCallFailed
+            );
+            throw e;
+        }
     }
 
     protected List<ICacheRecord> saveTokens(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,

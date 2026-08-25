@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.result;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_REQUEST_RECEIVED_TIMESTAMP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_RESPONSE_GENERATION_TIMESTAMP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_SILENT_EXECUTOR_POOL_SIZE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerContentProvider.BROKER_IPC_TELEMETRY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
@@ -55,6 +56,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
@@ -64,6 +67,7 @@ import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.internal.util.WebAppsUtil;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.broker.BrokerPerformanceMetrics;
+import com.microsoft.identity.common.java.broker.telemetry.BrokerIpcTelemetry;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
@@ -128,6 +132,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getSimpleName();
     public static final Gson GSON = new Gson();
+    private static final Gson BROKER_IPC_TELEMETRY_GSON = new GsonBuilder()
+            .registerTypeAdapterFactory(new BrokerIpcTelemetryTypeAdapterFactory())
+            .create();
 
     private static final Long INVALID_TIMESTAMP = -1L;
     private static final String DCF_NOT_SUPPORTED_ERROR = "deviceCodeFlowAuthRequest() not supported in BrokerMsalController";
@@ -581,6 +588,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final String exceptionType = brokerResult.getExceptionType();
         final BrokerPerformanceMetrics metrics = getBrokerPerformanceMetricsFromBundle(resultBundle);
+        final BrokerIpcTelemetry brokerIpcTelemetry = getBrokerIpcTelemetryFromBundle(resultBundle);
         final BaseException baseException;
 
         if (!StringUtil.isNullOrEmpty(exceptionType)) {
@@ -597,6 +605,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (metrics != null) {
             baseException.setBrokerPerformanceMetrics(metrics);
         }
+        baseException.setBrokerIpcTelemetry(brokerIpcTelemetry);
 
         // Restore ClientDataInfo (server telemetry) from the broker result so callers
         // catching the exception can inspect server-side error context.
@@ -661,6 +670,25 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             );
         } else {
             Logger.warn(TAG, "Broker performance metrics not found in the result bundle.");
+            return null;
+        }
+    }
+
+    /**
+     * Extracts broker IPC telemetry from the result bundle if available and valid.
+     *
+     * @param resultBundle The result bundle returned from the broker.
+     * @return {@link BrokerIpcTelemetry} if available and valid, null otherwise.
+     */
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public BrokerIpcTelemetry getBrokerIpcTelemetryFromBundle(@NonNull final Bundle resultBundle) {
+        final String methodTag = TAG + ":getBrokerIpcTelemetryFromBundle";
+        final String telemetryJson = resultBundle.getString(BROKER_IPC_TELEMETRY);
+        try {
+            return BROKER_IPC_TELEMETRY_GSON.fromJson(telemetryJson, BrokerIpcTelemetry.class);
+        } catch (final JsonSyntaxException e) {
+            Logger.warn(methodTag, "Failed to deserialize broker IPC telemetry.");
             return null;
         }
     }
@@ -1129,6 +1157,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
                 final ILocalAuthenticationResult authResult = authenticationResultFromBundle(resultBundle);
                 acquireTokenResult.setLocalAuthenticationResult(authResult);
+                acquireTokenResult.setBrokerIpcTelemetry(
+                        getBrokerIpcTelemetryFromBundle(resultBundle)
+                );
 
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
@@ -1166,6 +1197,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             if (metrics != null) {
                 acquireTokenResult.setBrokerPerformanceMetrics(metrics);
             }
+            acquireTokenResult.setBrokerIpcTelemetry(
+                    resultAdapter.getBrokerIpcTelemetryFromBundle(resultBundle)
+            );
 
             // Set broker app info if available
             if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {

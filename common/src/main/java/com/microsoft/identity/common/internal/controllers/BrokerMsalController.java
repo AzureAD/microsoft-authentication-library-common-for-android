@@ -46,6 +46,7 @@ import static com.microsoft.identity.common.internal.controllers.BrokerOperation
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerContentProvider.BROKER_TELEMETRY_REQUEST;
 
 import android.app.Activity;
 import android.content.Context;
@@ -155,6 +156,17 @@ public class BrokerMsalController extends BaseController {
     private BrokerOperationExecutor mOperationExecutor;
 
     private String mMaxMsalBrokerProtocolVersion;
+
+    @NonNull
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
+                                     @NonNull final CommandParameters parameters) {
+        requestBundle.putString(
+                BROKER_TELEMETRY_REQUEST,
+                ObjectMapper.serializeObjectToJsonString(parameters.getEventCollector())
+        );
+        return requestBundle;
+    }
 
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
@@ -502,7 +514,13 @@ public class BrokerMsalController extends BaseController {
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
                         intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForAcquireTokenInteractive(
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                )
                         );
                         return intent;
                     }
@@ -544,10 +562,14 @@ public class BrokerMsalController extends BaseController {
                     public BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(MSAL_FETCH_DCF_AUTH_RESULT,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
-                                        mApplicationContext,
-                                        parameters,
-                                        negotiatedBrokerProtocolVersion));
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
+                                                mApplicationContext,
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                ));
                     }
 
                     @Override
@@ -600,11 +622,15 @@ public class BrokerMsalController extends BaseController {
                         // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
-                                        mApplicationContext,
-                                        parameters,
-                                        authorizationResult,
-                                        negotiatedBrokerProtocolVersion));
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
+                                                mApplicationContext,
+                                                parameters,
+                                                authorizationResult,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                ));
                     }
 
                     @Override
@@ -671,10 +697,13 @@ public class BrokerMsalController extends BaseController {
                     BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_SILENT,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForAcquireTokenSilent(
-                                        mApplicationContext,
-                                        parameters,
-                                        negotiatedBrokerProtocolVersion
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForAcquireTokenSilent(
+                                                mApplicationContext,
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
                                 ));
                     }
 

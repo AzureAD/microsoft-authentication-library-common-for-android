@@ -42,6 +42,8 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.broker.telemetry.EventTag;
+import com.microsoft.identity.common.java.broker.telemetry.TelemetryHelper;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
@@ -612,6 +614,10 @@ public class CommandDispatcher {
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    TelemetryHelper.addEventSafely(
+                            commandParameters.getEventCollector(),
+                            EventTag.BrokerCommandExecutionStart
+                    );
                     // Get the cancellation signal owned by this future and set it on
                     // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
                     final CancellationSignal cancellationSignal = finalFuture.getCancellationSignal();
@@ -702,6 +708,10 @@ public class CommandDispatcher {
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
             }));
+            TelemetryHelper.addEventSafely(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             return finalFuture;
         }
     }
@@ -735,6 +745,10 @@ public class CommandDispatcher {
             sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    TelemetryHelper.addEventSafely(
+                            commandParameters.getEventCollector(),
+                            EventTag.BrokerCommandExecutionStart
+                    );
 
                     try {
                         //initializing again since the request is transferred to a different thread pool
@@ -756,6 +770,10 @@ public class CommandDispatcher {
 
                 }
             }));
+            TelemetryHelper.addEventSafely(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             return finalFuture;
         }
     }
@@ -1031,6 +1049,10 @@ public class CommandDispatcher {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
+                        TelemetryHelper.addEventSafely(
+                                commandParameters.getEventCollector(),
+                                EventTag.BrokerCommandExecutionStart
+                        );
                         final String correlationId = initializeDiagnosticContext(
                                 commandParameters.getCorrelationId(),
                                 commandParameters.getSdkType() == null ?
@@ -1085,6 +1107,10 @@ public class CommandDispatcher {
                         }
                     }
                 }));
+                TelemetryHelper.addEventSafely(
+                        command.getParameters().getEventCollector(),
+                        EventTag.BrokerCommandQueued
+                );
             }
         }
 
@@ -1327,4 +1353,3 @@ public class CommandDispatcher {
         resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
-
