@@ -27,6 +27,8 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
@@ -52,6 +54,15 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     public static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
     public static final String OUTLOOK_APK = "Outlook.apk";
+
+    private final static String ACCOUNT_BUTTON_RESOURCE_ID = OUTLOOK_PACKAGE_NAME + ":id/account_button";
+
+    /**
+     * Number of times we open the navigation drawer looking for the signed-in account before giving
+     * up. Outlook can raise a transient teaching callout over the drawer which hides the drawer from
+     * the accessibility tree; dismissing it and re-opening the drawer clears the condition.
+     */
+    private final static int CONFIRM_ACCOUNT_MAX_ATTEMPTS = 3;
     private static final String ADD_ANOTHER_ACCOUNT_TEXT = "Add another account";
     private static final String M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX =
             "com\\.microsoft\\.office\\.outlook:id/btn_add_account_(m365|o365)_rest";
@@ -170,15 +181,54 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         handleIntroDialogueAfterSignIn();
 
-        // Click the account drawer
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
+        for (int attempt = 1; attempt <= CONFIRM_ACCOUNT_MAX_ATTEMPTS; attempt++) {
+            // Click the account drawer
+            UiAutomatorUtils.handleButtonClick(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
 
-        // Make sure our account is listed in the account drawer
-        final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);
-        Assert.assertTrue(
-                "Provided user account exists in Outlook App.",
-                testAccountLabel.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
-        );
+            // Make sure our account is listed in the account drawer. Give the first attempt the full
+            // timeout; retries only need to outlast the drawer animation as the account is either
+            // already there or genuinely absent.
+            final long lookupTimeout = (attempt == 1)
+                    ? FIND_UI_ELEMENT_TIMEOUT_LONG
+                    : CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT;
+
+            if (UiAutomatorUtils.obtainUiObjectWithText(username, lookupTimeout).exists()) {
+                Logger.i(TAG, "Account confirmed in the Outlook account drawer on attempt " + attempt + ".");
+                return;
+            }
+
+            Logger.w(TAG, "Account was not listed in the Outlook account drawer on attempt " + attempt
+                    + " of " + CONFIRM_ACCOUNT_MAX_ATTEMPTS + ". Dismissing any transient popup and retrying..");
+
+            dismissDrawerAndTransientPopups();
+        }
+
+        Assert.fail("Expected account " + username + " to be listed in the Outlook account drawer, "
+                + "but it was not found after " + CONFIRM_ACCOUNT_MAX_ATTEMPTS + " attempts.");
+    }
+
+    /**
+     * Taps the scrim to the right of the Outlook navigation drawer to dismiss any transient popup
+     * and close the drawer.
+     * <p>
+     * Outlook intermittently raises a teaching callout (for example the "Now your folders on mobile
+     * match the same order you have in other Outlook apps" tip) in its own popup window shortly
+     * after the drawer opens. While that popup is up, UiAutomator resolves selectors against the
+     * popup's window, so the drawer's account label is unreachable even though it is plainly visible
+     * on screen. Tapping outside dismisses the callout and closes the drawer so the next attempt
+     * starts from a clean state; the callout is only shown once, so it does not reappear.
+     */
+    private void dismissDrawerAndTransientPopups() {
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // The drawer and the callout occupy the left portion of the screen, so a tap near the right
+        // edge lands on the scrim rather than on any drawer or callout content.
+        final int x = (int) (device.getDisplayWidth() * 0.95);
+        final int y = device.getDisplayHeight() / 2;
+
+        Logger.i(TAG, "Dismissing the Outlook navigation drawer and any transient popup..");
+        device.click(x, y);
+        device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
     }
 
     private void handleIntroDialogueAfterSignIn() {
