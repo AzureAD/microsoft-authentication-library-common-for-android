@@ -68,10 +68,9 @@ class EventCollector(private val correlationId: String) {
          * ISO 8601 / RFC 3339 UTC pattern with millisecond precision,
          * e.g. `2026-01-13T10:30:45.123Z`.
          *
-         * [java.time.Instant] is deliberately not used here: it was introduced in Android
-         * API 26, while this module ships to consumers with a minSdk of 24 and core library
-         * desugaring disabled (`common4j/build.gradle`). [SimpleDateFormat] is available
-         * since API 1.
+         * [java.time.Instant] is deliberately not used here: this library is consumed on Android, and
+         * core library desugaring is disabled (`common4j/build.gradle`), so `java.time` APIs are not
+         * available on older Android runtimes. [SimpleDateFormat] is available since API 1.
          */
         private const val ISO_8601_UTC_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
 
