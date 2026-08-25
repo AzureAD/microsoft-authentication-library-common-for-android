@@ -22,14 +22,46 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
+import com.google.gson.JsonSyntaxException
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthResponseHandler
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.net.HttpResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeAuthV2ResponseHandlerTest {
     private val handler = NativeAuthV2ResponseHandler()
+
+    @Test
+    fun getTokenApiResponse_whenStatusCodeUnavailable_returnsTypedUnknownError() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = -1, body = "{not-json")
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        val error = result as SignInTokenApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenSuccessfulStatusHasBlankBody_returnsTypedUnknownError() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 200, body = " ")
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        val error = result as SignInTokenApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR, error.error)
+        assertEquals(NativeAuthResponseHandler.EMPTY_RESPONSE_ERROR_ERROR_DESCRIPTION, error.errorDescription)
+    }
 
     // region getHalApiResponse
 
@@ -137,6 +169,122 @@ class NativeAuthV2ResponseHandlerTest {
         )
 
         assertEquals("header-correlation-id", result.correlationId)
+    }
+
+    // endregion
+
+    // region getTokenApiResponse - success/error bodies
+
+    @Test
+    fun getTokenApiResponse_whenSuccessStatusHasValidBody_returnsSuccessWithTokenResponse() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 200, body = """{"access_token":"AT","token_type":"Bearer"}""")
+        )
+
+        assertTrue(result is SignInTokenApiResult.Success)
+        val success = result as SignInTokenApiResult.Success
+        assertEquals(CORRELATION_ID, success.correlationId)
+        assertEquals("AT", success.tokenResponse.accessToken)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenSuccessStatusIndicatesRedirect_returnsRedirectResult() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(
+                statusCode = 200,
+                body = """{"challenge_type":"redirect","redirect_reason":"sms_not_supported"}"""
+            )
+        )
+
+        assertTrue(result is SignInTokenApiResult.Redirect)
+        val redirect = result as SignInTokenApiResult.Redirect
+        assertEquals(CORRELATION_ID, redirect.correlationId)
+        assertEquals("sms_not_supported", redirect.redirectReason)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenErrorStatusHasBody_returnsMappedErrorResult() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(
+                statusCode = 400,
+                body = """{"error":"invalid_request","error_description":"Bad request."}"""
+            )
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        val error = result as SignInTokenApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals("invalid_request", error.error)
+        assertEquals("Bad request.", error.errorDescription)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenErrorStatusHasBlankBody_returnsSyntheticErrorResult() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 400, body = "")
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        val error = result as SignInTokenApiResult.UnknownError
+        assertEquals(CORRELATION_ID, error.correlationId)
+        assertEquals("", error.error)
+        assertEquals("", error.errorDescription)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenRedirectStatusHasTokenBody_returnsTypedError() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(
+                statusCode = 302,
+                body = """{"access_token":"AT","token_type":"Bearer"}"""
+            )
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        assertEquals(CORRELATION_ID, result.correlationId)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenSuccessBodyIsJsonNull_returnsTypedError() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 200, body = "null")
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        assertEquals(CORRELATION_ID, result.correlationId)
+    }
+
+    @Test
+    fun getTokenApiResponse_whenErrorBodyIsJsonNull_returnsTypedError() {
+        val result = handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 400, body = "null")
+        )
+
+        assertTrue(result is SignInTokenApiResult.UnknownError)
+        assertEquals(CORRELATION_ID, result.correlationId)
+    }
+
+    @Test(expected = JsonSyntaxException::class)
+    fun getTokenApiResponse_whenSuccessBodyIsMalformedJson_propagatesDeserializationException() {
+        handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 200, body = "{not-json")
+        )
+    }
+
+    @Test(expected = JsonSyntaxException::class)
+    fun getTokenApiResponse_whenErrorStatusBodyIsMalformedJson_propagatesDeserializationException() {
+        handler.getTokenApiResponse(
+            requestCorrelationId = CORRELATION_ID,
+            response = response(statusCode = 400, body = "{not-json")
+        )
     }
 
     // endregion
