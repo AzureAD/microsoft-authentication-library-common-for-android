@@ -20,24 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.webapps
+package com.microsoft.identity.common.java.broker.telemetry
 
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+import com.google.gson.annotations.SerializedName
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Aggregation container for the performance data captured during an authentication flow.
+ *
+ * @param version Schema version for this perf section. Independent of [BrokerIpcTelemetry.CURRENT_VERSION].
+ * @param startTime ISO 8601 UTC timestamp when the flow started.
+ * @param duration Total elapsed time in milliseconds for the authentication flow.
+ * @param executionFlow Ordered list of [ExecutionEvent]s captured during the flow.
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
+data class PerformanceRecord(
+    @SerializedName("version") val version: String = CURRENT_PERF_VERSION,
+    @SerializedName("start_time") val startTime: String,
+    @SerializedName("duration") val duration: Long,
+    @SerializedName("execution_flow") val executionFlow: List<ExecutionEvent>
+) {
     companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
-
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
+        /**
+         * Version of the perf section schema. Informational only — not used in
+         * version negotiation (which uses root-level [BrokerIpcTelemetry.CURRENT_VERSION]).
+         * Evolves independently from the top-level schema version.
+         */
+        const val CURRENT_PERF_VERSION = "1.0.0"
     }
 }

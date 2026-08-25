@@ -20,24 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.webapps
+package com.microsoft.identity.common.java.broker.telemetry
 
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+import com.google.gson.annotations.SerializedName
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Represents a single timed event within the broker authentication flow.
+ *
+ * @param tag The [EventTag] identifying which phase this event captures.
+ * @param timestampMs Elapsed time in milliseconds from the start of the flow.
+ * @param threadId The ID of the thread that recorded this event.
+ * @param statusCode Optional status code (arbitrary integer, e.g. HTTP status or cache-expiry minutes).
+ * @param errorCode Optional error code if the event represents a failure.
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
-
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
-    }
-}
+data class ExecutionEvent(
+    @SerializedName("t") val tag: EventTag,
+    @SerializedName("ts") val timestampMs: Long,
+    @SerializedName("tid") val threadId: Long = Thread.currentThread().id,
+    @SerializedName("s") val statusCode: Int? = null,
+    @SerializedName("e") val errorCode: Int? = null
+)

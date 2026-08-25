@@ -20,24 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.webapps
-
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+package com.microsoft.identity.common.java.broker.telemetry
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Null-safe utility for recording events into an [EventCollector].
+ * Callers may hold a nullable collector reference and use this helper to avoid null checks.
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
-
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
+object TelemetryHelper {
+    /**
+     * Adds an event to the given [collector] if it is non-null; otherwise does nothing.
+     *
+     * @param collector The [EventCollector] to record the event into, or null.
+     * @param tag The [EventTag] identifying the phase.
+     * @param statusCode Optional status code (arbitrary integer, e.g. HTTP status or cache-expiry minutes).
+     * @param errorCode Optional error code if this event represents a failure.
+     */
+    @JvmStatic
+    fun addEventSafely(
+        collector: EventCollector?,
+        tag: EventTag,
+        statusCode: Int? = null,
+        errorCode: Int? = null
+    ) {
+        collector?.addEvent(tag, statusCode, errorCode)
     }
 }

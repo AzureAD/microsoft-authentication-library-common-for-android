@@ -20,24 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.webapps
-
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+package com.microsoft.identity.common.java.broker.telemetry
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Implemented by objects that can carry a [BrokerIpcTelemetry].
+ * Mainly used to pass the structured broker telemetry between broker and client.
+ *
+ * Thread-safety note: [brokerIpcTelemetry] must be set before the implementing object
+ * is shared across threads. The IPC boundary (Binder transaction) provides the
+ * memory barrier. This follows the same contract as [IBrokerPerformanceMetricsProvider].
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
-
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
-    }
+interface IBrokerIpcTelemetryProvider {
+    var brokerIpcTelemetry: BrokerIpcTelemetry?
 }

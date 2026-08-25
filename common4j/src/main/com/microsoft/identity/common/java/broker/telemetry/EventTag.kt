@@ -20,24 +20,42 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.commands.webapps
-
-import com.microsoft.identity.common.java.util.ObjectMapper
-import java.io.Serializable
+package com.microsoft.identity.common.java.broker.telemetry
 
 /**
- * Supported contracts for Web Apps Sub Operations
+ * Enum of event tags representing phases of the broker authentication flow.
+ * Serialized as human-readable enum names (e.g., "BrokerCacheHit") on the IPC wire format.
+ * Compact JSON keys on [ExecutionEvent] fields (t, ts, tid, s, e) minimize payload size.
  */
-data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
-) : Serializable {
-    companion object {
-        const val GET_TOKEN = "GetToken"
-        const val SIGN_OUT = "SignOut"
-        const val GET_COOKIES = "GetCookies"
-    }
-
-    override fun toString(): String {
-        return ObjectMapper.serializeObjectToJsonString(contracts)
-    }
+enum class EventTag {
+    // BrokerEntry (5)
+    BrokerRequestReceived,
+    BrokerRequestDeserialized,
+    BrokerAccountLookupStart,
+    BrokerAccountLookupEnd,
+    BrokerRequestValidated,
+    // BrokerDispatch (3)
+    BrokerControllerSelected,
+    BrokerCommandQueued,
+    BrokerCommandExecutionStart,
+    // BrokerCache (6)
+    BrokerCacheCheckStart,
+    BrokerCacheCheckEnd,
+    BrokerCacheHit,
+    BrokerCacheMiss,
+    BrokerCacheWriteStart,
+    BrokerCacheWriteEnd,
+    // BrokerNetwork (5)
+    BrokerPrtLoadStart,
+    BrokerNetworkCallStart,
+    BrokerNetworkCallEnd,
+    BrokerTokenAcquired,
+    BrokerNetworkCallFailed,
+    // BrokerResponse (3)
+    BrokerResponseSerialized,
+    BrokerResponseSent,
+    BrokerRequestFailed,
+    // CommonStrategy (2)
+    CommonHttpRequestExecute,
+    CommonHttpResponseReceived
 }
