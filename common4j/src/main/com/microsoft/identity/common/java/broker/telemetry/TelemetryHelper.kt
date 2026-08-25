@@ -36,6 +36,7 @@ object TelemetryHelper {
      * @param errorCode Optional error code if this event represents a failure.
      */
     @JvmStatic
+    @JvmOverloads
     fun addEventSafely(
         collector: EventCollector?,
         tag: EventTag,
