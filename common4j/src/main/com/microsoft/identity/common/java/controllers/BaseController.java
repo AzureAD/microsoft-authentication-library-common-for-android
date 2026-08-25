@@ -921,11 +921,15 @@ public abstract class BaseController {
             @NonNull final CommandParameters parameters) throws IOException, ClientException {
         TelemetryHelper.addEventSafely(
                 parameters.getEventCollector(),
-                EventTag.BrokerNetworkCallStart
+                EventTag.BrokerNetworkCallStart,
+                null,
+                null
         );
         TelemetryHelper.addEventSafely(
                 parameters.getEventCollector(),
-                EventTag.CommonHttpRequestExecute
+                EventTag.CommonHttpRequestExecute,
+                null,
+                null
         );
         try {
             final TokenResult tokenResult;
@@ -933,25 +937,33 @@ public abstract class BaseController {
                 tokenResult = strategy.requestToken(tokenRequest);
                 TelemetryHelper.addEventSafely(
                         parameters.getEventCollector(),
-                        EventTag.CommonHttpResponseReceived
+                        EventTag.CommonHttpResponseReceived,
+                        null,
+                        null
                 );
             } finally {
                 TelemetryHelper.addEventSafely(
                         parameters.getEventCollector(),
-                        EventTag.BrokerNetworkCallEnd
+                        EventTag.BrokerNetworkCallEnd,
+                        null,
+                        null
                 );
             }
             TelemetryHelper.addEventSafely(
                     parameters.getEventCollector(),
                     tokenResult.getSuccess()
                             ? EventTag.BrokerTokenAcquired
-                            : EventTag.BrokerNetworkCallFailed
+                            : EventTag.BrokerNetworkCallFailed,
+                    null,
+                    null
             );
             return tokenResult;
         } catch (final IOException | ClientException | RuntimeException e) {
             TelemetryHelper.addEventSafely(
                     parameters.getEventCollector(),
-                    EventTag.BrokerNetworkCallFailed
+                    EventTag.BrokerNetworkCallFailed,
+                    null,
+                    null
             );
             throw e;
         }

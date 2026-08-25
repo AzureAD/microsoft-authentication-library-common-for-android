@@ -616,7 +616,9 @@ public class CommandDispatcher {
                 public void run() {
                     TelemetryHelper.addEventSafely(
                             commandParameters.getEventCollector(),
-                            EventTag.BrokerCommandExecutionStart
+                            EventTag.BrokerCommandExecutionStart,
+                            null,
+                            null
                     );
                     // Get the cancellation signal owned by this future and set it on
                     // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
@@ -710,7 +712,9 @@ public class CommandDispatcher {
             }));
             TelemetryHelper.addEventSafely(
                     commandParameters.getEventCollector(),
-                    EventTag.BrokerCommandQueued
+                    EventTag.BrokerCommandQueued,
+                    null,
+                    null
             );
             return finalFuture;
         }
@@ -747,7 +751,9 @@ public class CommandDispatcher {
                 public void run() {
                     TelemetryHelper.addEventSafely(
                             commandParameters.getEventCollector(),
-                            EventTag.BrokerCommandExecutionStart
+                            EventTag.BrokerCommandExecutionStart,
+                            null,
+                            null
                     );
 
                     try {
@@ -772,7 +778,9 @@ public class CommandDispatcher {
             }));
             TelemetryHelper.addEventSafely(
                     commandParameters.getEventCollector(),
-                    EventTag.BrokerCommandQueued
+                    EventTag.BrokerCommandQueued,
+                    null,
+                    null
             );
             return finalFuture;
         }
@@ -1051,7 +1059,9 @@ public class CommandDispatcher {
                         final CommandParameters commandParameters = command.getParameters();
                         TelemetryHelper.addEventSafely(
                                 commandParameters.getEventCollector(),
-                                EventTag.BrokerCommandExecutionStart
+                                EventTag.BrokerCommandExecutionStart,
+                                null,
+                                null
                         );
                         final String correlationId = initializeDiagnosticContext(
                                 commandParameters.getCorrelationId(),
@@ -1109,7 +1119,9 @@ public class CommandDispatcher {
                 }));
                 TelemetryHelper.addEventSafely(
                         command.getParameters().getEventCollector(),
-                        EventTag.BrokerCommandQueued
+                        EventTag.BrokerCommandQueued,
+                        null,
+                        null
                 );
             }
         }
