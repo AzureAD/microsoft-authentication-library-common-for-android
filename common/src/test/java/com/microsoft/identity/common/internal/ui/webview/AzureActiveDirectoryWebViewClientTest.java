@@ -102,11 +102,19 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
 /**
  * Tests for {@link AzureActiveDirectoryWebViewClient}.
@@ -290,6 +298,10 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+        // Round 15 (mohitc1): the reworked PKeyAuth telemetry tests inject a capturing span factory via
+        // OTelUtility.setSpanFactory, which mutates a JVM-global @Volatile with no getter to restore. Reset
+        // it to the production default after every test so a leaked test factory cannot corrupt later tests.
+        OTelUtility.setSpanFactory(new DefaultOTelSpanFactory());
         // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
         // OnboardingTelemetryRecorder.addBlockingError persists to this store.
         if (mContext != null) {
@@ -1443,42 +1455,54 @@ public class AzureActiveDirectoryWebViewClientTest {
     // The WebView client annotates the current span with two non-PII navigation-context attributes it
     // alone knows: whether the challenge is on the main frame, and where the challenging origin was
     // derived from (recorded https URL vs a view.getUrl() fallback vs none). These are set only when
-    // the master flight is on. We mock SpanExtension.current() to capture the attributes.
+    // the master flight is on.
+    //
+    // Round 15 (mohitc1): these two tests previously stubbed SpanExtension.current() and
+    // makeCurrentSpan() independently via MockedStatic, so current() returned a mock span
+    // unconditionally and verify(makeCurrentSpan(any())) only proved *some* span was made current.
+    // That could not detect production making span A current but writing the attributes to span B -
+    // exactly the wrong-span class of bug melissaahn originally caught in round 12. We now inject a
+    // capturing IOTelSpanFactory through the existing OTelUtility.setSpanFactory seam and let
+    // makeCurrentSpan()/current() round-trip through real OTel context (no MockedStatic<SpanExtension>),
+    // then assert the attributes landed on the *captured* span - the same object the production code
+    // created and made current. The OTel context round-trip works without an SDK (it is the pure
+    // opentelemetry-context ThreadLocal), and the factory/handler stay mocked so no signing occurs.
 
     /**
      * A main-frame PKeyAuth challenge with a recorded https origin annotates the current span with
      * {@code pkeyauth_challenge_is_main_frame=true} and {@code pkeyauth_challenging_origin_source=recorded}.
+     * The attributes are asserted on the span captured from the injected factory, proving they land on
+     * the exact span the production code made current (round 15, mohitc1).
      */
     @Test
     public void testPKeyAuthContextTelemetry_MainFrameRecordedOrigin_Emitted() {
         enablePKeyAuthOriginValidationFlight();
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
-        final Span mockSpan = Mockito.mock(Span.class);
-        final Scope mockScope = Mockito.mock(Scope.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
 
-        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
-             final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
                      mockConstruction(PKeyAuthChallengeFactory.class);
              final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
                      mockConstruction(PKeyAuthChallengeHandler.class)) {
-            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
-            spanExtension.when(() -> SpanExtension.makeCurrentSpan(any())).thenReturn(mockScope);
 
             // Record an https main-frame origin, then dispatch a main-frame PKeyAuth challenge.
             mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
 
-            // The challenge is dispatched inside a real recording span scope (AB#3706623, round 12):
-            // handleUrl now makes a ProcessPKeyAuthChallenge span current before the telemetry sites
-            // run, so their SpanExtension.current() resolves to a recording span rather than the
-            // silently-dropped non-recording default.
-            spanExtension.verify(() -> SpanExtension.makeCurrentSpan(any()));
-            Mockito.verify(mockSpan).setAttribute(
-                    AttributeName.pkeyauth_challenge_is_main_frame.name(), true);
-            Mockito.verify(mockSpan).setAttribute(
-                    AttributeName.pkeyauth_challenging_origin_source.name(), "recorded");
+            // handleUrl creates a ProcessPKeyAuthChallenge span and makes it current before the two
+            // telemetry sites run. Because current()/makeCurrentSpan() round-trip for real, current()
+            // inside the scope resolves to exactly the captured span - so a wrong-span write would
+            // leave this captured span empty and fail the assertions below.
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.TRUE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("recorded",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
         }
     }
 
@@ -1486,31 +1510,163 @@ public class AzureActiveDirectoryWebViewClientTest {
      * A subframe PKeyAuth challenge with nothing recorded annotates the span with
      * {@code pkeyauth_challenge_is_main_frame=false} and {@code pkeyauth_challenging_origin_source=webview_url}
      * (the {@link WebView#getUrl()} fallback). Validation is not relaxed for subframes; only the
-     * main-frame flag is recorded so a cross-origin iframe challenge can be measured.
+     * main-frame flag is recorded so a cross-origin iframe challenge can be measured. Asserted on the
+     * captured span for the same wrong-span reason as the main-frame case (round 15, mohitc1).
      */
     @Test
     public void testPKeyAuthContextTelemetry_SubframeFallbackOrigin_Emitted() {
         enablePKeyAuthOriginValidationFlight();
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
-        final Span mockSpan = Mockito.mock(Span.class);
-        final Scope mockScope = Mockito.mock(Scope.class);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
 
-        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
-             final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
                      mockConstruction(PKeyAuthChallengeFactory.class);
              final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
                      mockConstruction(PKeyAuthChallengeHandler.class)) {
-            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
-            spanExtension.when(() -> SpanExtension.makeCurrentSpan(any())).thenReturn(mockScope);
 
             assertTrue(mWebViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, false)));
 
-            Mockito.verify(mockSpan).setAttribute(
-                    AttributeName.pkeyauth_challenge_is_main_frame.name(), false);
-            Mockito.verify(mockSpan).setAttribute(
-                    AttributeName.pkeyauth_challenging_origin_source.name(), "webview_url");
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.FALSE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("webview_url",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
+        }
+    }
+
+    /**
+     * A capturing {@link IOTelSpanFactory} that intercepts the {@code ProcessPKeyAuthChallenge} span
+     * the production code creates and returns a real {@link RecordingSpan}, delegating every other span
+     * to {@link DefaultOTelSpanFactory}. Injected via {@link OTelUtility#setSpanFactory} and restored to
+     * the production default in {@link #cleanUp()}. Used to assert PKeyAuth navigation-context
+     * attributes land on the exact span made current (round 15, mohitc1).
+     */
+    private static final class CapturingSpanFactory implements IOTelSpanFactory {
+        private final String mTargetName;
+        private final IOTelSpanFactory mDelegate = new DefaultOTelSpanFactory();
+        private RecordingSpan mCaptured;
+
+        CapturingSpanFactory(final String targetName) {
+            mTargetName = targetName;
+        }
+
+        /** The recording span captured for the target name, or {@code null} if it was never created. */
+        RecordingSpan captured() {
+            return mCaptured;
+        }
+
+        @Override
+        public Span createSpan(final String name) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name);
+        }
+
+        @Override
+        public Span createSpan(final String name, final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name, callingPackageName);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext,
+                                         final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext, callingPackageName);
+        }
+    }
+
+    /**
+     * A minimal real {@link Span} implementation (NOT a Mockito mock) that records the attributes set
+     * on it. It deliberately does not override {@link Span#makeCurrent()}, so the default OTel context
+     * round-trip runs: making this span current stores it under the span key and
+     * {@link SpanExtension#current()} resolves back to this same instance. That is what lets the two
+     * telemetry tests prove the attributes landed on the span that was actually made current, rather
+     * than on an independently-stubbed mock (round 15, mohitc1).
+     */
+    private static final class RecordingSpan implements Span {
+        private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
+
+        /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
+        Object attribute(final String keyName) {
+            for (final Map.Entry<AttributeKey<?>, Object> entry : mAttributes.entrySet()) {
+                if (entry.getKey().getKey().equals(keyName)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public <T> Span setAttribute(final AttributeKey<T> key, final T value) {
+            mAttributes.put(key, value);
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes) {
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes, final long timestamp,
+                             final TimeUnit unit) {
+            return this;
+        }
+
+        @Override
+        public Span setStatus(final StatusCode statusCode, final String description) {
+            return this;
+        }
+
+        @Override
+        public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
+            return this;
+        }
+
+        @Override
+        public Span updateName(final String name) {
+            return this;
+        }
+
+        @Override
+        public void end() {
+        }
+
+        @Override
+        public void end(final long timestamp, final TimeUnit unit) {
+        }
+
+        @Override
+        public SpanContext getSpanContext() {
+            return SpanContext.getInvalid();
+        }
+
+        @Override
+        public boolean isRecording() {
+            return true;
         }
     }
 

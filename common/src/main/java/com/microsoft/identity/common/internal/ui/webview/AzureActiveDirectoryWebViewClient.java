@@ -171,17 +171,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * same-origin reference when validating a PKeyAuth challenge's attacker-controlled
      * {@code SubmitUrl} (CWE-918 / AB#3706623). Only {@code https} URLs are recorded: a cleartext
      * {@code http} page must never become a trusted challenging origin, and if an https flow briefly
-     * detours through http this field correctly retains the last https origin. Recorded only for
-     * main-frame navigations (a subframe must never poison the origin) from {@link #onPageStarted}
-     * (main-frame-only by the Android contract) and, past branch dispatch, from {@link #handleUrl}
-     * for URLs actually deferred to the WebView to load. The pre-API-24
-     * {@link #shouldOverrideUrlLoading(WebView, String)} overload carries no frame information and so
-     * never records; on those API levels {@link #onPageStarted} is the sole source. All recording is
-     * gated on {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}. Preferred over
-     * {@link WebView#getUrl()} because {@code getUrl()} only reflects the last *committed* page and
-     * can lag behind a redirect-delivered challenge (e.g. an ADFS hop that 302s straight to the
-     * PKeyAuth {@code urn:} without ever committing). Read and written only on the UI thread, so no
-     * synchronization is required.
+     * detours through http this field correctly retains the last https origin. {@link #onPageStarted}
+     * is the sole writer, on every API level: it fires for main-frame navigations only (by the Android
+     * contract), so a subframe can never poison the origin. All recording is gated on
+     * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}. Preferred over
+     * {@link WebView#getUrl()} because {@code onPageStarted} fires when a main-frame load <em>starts</em>,
+     * whereas {@code getUrl()} only advances to a page once it has <em>committed</em>; a PKeyAuth
+     * challenge delivered mid-load, before the challenging document commits, is therefore visible here
+     * but not yet reflected by {@code getUrl()}, which is retained only as a defensive fallback. Read
+     * and written only on the UI thread, so no synchronization is required.
      */
     @Nullable
     private String mLastCommittedRequestUrl;

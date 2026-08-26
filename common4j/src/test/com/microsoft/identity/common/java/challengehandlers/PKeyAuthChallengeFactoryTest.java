@@ -373,8 +373,13 @@ public class PKeyAuthChallengeFactoryTest {
     // origin, and that hoisting the parse did not change any verdict.
 
     // A synthetic, test-only host seeded as a validated AAD cloud. A real production host is avoided on
-    // purpose: putCloud writes into the JVM-global sAadClouds, which would stay validated for the rest
-    // of the module's tests.
+    // purpose: AzureActiveDirectory.putCloud writes into the JVM-global sAadClouds, and there is no
+    // public API to remove a single seeded host again (round 15, mohitc1). setEnvironment(...) is the
+    // only clear path, but it clears only when the environment actually changes (a no-op here) and,
+    // when it does fire, destructively wipes and re-seeds all cloud discovery - unsafe to call from
+    // teardown as it would disturb every other test in the module. So rather than clean up, we make the
+    // seeded entry inert: this synthetic host cannot collide with any real host a later test queries, so
+    // leaving it validated for the rest of the module is deliberately harmless.
     private static final String AAD_CHALLENGING_HOST = "pkeyauth-origin-aad-test.cloudapp.example";
     // A host deliberately never seeded, so isValidCloudHost is genuinely false for it.
     private static final String NON_AAD_CHALLENGING_HOST = "not-a-cloud.pkeyauth-origin-test.example";
