@@ -313,9 +313,10 @@ public class PKeyAuthChallengeFactory {
 
     /**
      * Holds a verdict together with the parsed {@link URL}s that produced it, so the telemetry site
-     * can derive non-PII cloud-membership booleans without re-parsing. A URL field is {@code null}
-     * when it could not be safely parsed (e.g. the backslash guard fired before the {@code SubmitUrl}
-     * was parsed).
+     * can derive non-PII cloud-membership booleans without re-parsing. {@code originUri} is populated
+     * whenever the challenging origin parses, including on the early-rejection verdicts. {@code submitUri}
+     * is {@code null} when the untrusted {@code SubmitUrl} was not parsed (e.g. the backslash guard
+     * fired before it was parsed).
      */
     private static final class OriginValidation {
         private final OriginValidationResult result;
@@ -344,6 +345,15 @@ public class PKeyAuthChallengeFactory {
                                                      @Nullable final String challengingUrl,
                                                      @NonNull final String methodTag,
                                                      final boolean enforced) {
+        // Parse the challenging origin up front, before any rejection path. The origin is derived from
+        // an independently trusted source (the last committed navigation), not from the wire, so it is
+        // safe to parse even when the untrusted SubmitUrl is rejected below. Retaining it lets the
+        // telemetry site attribute AAD-cloud membership on the early-rejection verdicts too; leaving it
+        // null there would record pkeyauth_challenging_host_is_aad_cloud=false even for a genuine AAD
+        // host and skew the shadow-mode rollout data. parseAbsoluteUri never throws and returns null on
+        // blank/malformed input, so this cannot alter any verdict.
+        final URL originUri = parseAbsoluteUri(challengingUrl);
+
         // Guard against a parser differential before any other check: java.net.URL (used below to
         // validate) and the WHATWG parser used by WebView#loadUrl (where the response is actually
         // sent) disagree on a backslash in the authority. Reject it here, in the authority component
@@ -358,7 +368,7 @@ public class PKeyAuthChallengeFactory {
                     "PKeyAuth challenge rejected: SubmitUrl authority contains a backslash "
                             + "(parser-differential guard). authorityLength=" + submitAuthority.length()
                             + " enforced=" + enforced);
-            return new OriginValidation(OriginValidationResult.REJECTED_BACKSLASH_AUTHORITY, null, null);
+            return new OriginValidation(OriginValidationResult.REJECTED_BACKSLASH_AUTHORITY, null, originUri);
         }
 
         final URL submitUri = parseAbsoluteUri(submitUrl);
@@ -372,10 +382,9 @@ public class PKeyAuthChallengeFactory {
                             + (submitUri == null ? "<unparseable>" : submitUri.getProtocol())
                             + " host="
                             + (submitUri == null || submitUri.getHost() == null ? "<none>" : submitUri.getHost()));
-            return new OriginValidation(OriginValidationResult.REJECTED_SUBMIT_NOT_HTTPS, submitUri, null);
+            return new OriginValidation(OriginValidationResult.REJECTED_SUBMIT_NOT_HTTPS, submitUri, originUri);
         }
 
-        final URL originUri = parseAbsoluteUri(challengingUrl);
         if (originUri == null
                 || !HTTPS_SCHEME.equalsIgnoreCase(originUri.getProtocol())
                 || StringUtil.isNullOrEmpty(originUri.getHost())) {

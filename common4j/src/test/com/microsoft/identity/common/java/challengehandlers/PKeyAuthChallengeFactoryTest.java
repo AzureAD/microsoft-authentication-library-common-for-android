@@ -39,6 +39,12 @@ import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.MockFlightsManager;
 import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+
+import io.opentelemetry.api.trace.Span;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -46,6 +52,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.UnsupportedEncodingException;
 
@@ -353,6 +361,95 @@ public class PKeyAuthChallengeFactoryTest {
                 CHALLENGING_ORIGIN);
         Assert.assertEquals(
                 "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918) telemetry accuracy (round 14, melissaahn): the challenging origin is parsed
+    // up front in computeOriginValidation, before the early SubmitUrl rejection paths, so
+    // pkeyauth_challenging_host_is_aad_cloud reflects the real origin even when the untrusted SubmitUrl
+    // is rejected. Previously the backslash and not-HTTPS branches returned with originUri == null,
+    // hard-coding the attribute to false and making a genuine AAD origin indistinguishable from junk
+    // traffic — skewing exactly the two attacker-shaped verdicts where AAD-vs-junk attribution matters
+    // most for the shadow-mode rollout decision. These pin that the attribute is now derived from the
+    // origin, and that hoisting the parse did not change any verdict.
+
+    // A synthetic, test-only host seeded as a validated AAD cloud. A real production host is avoided on
+    // purpose: putCloud writes into the JVM-global sAadClouds, which would stay validated for the rest
+    // of the module's tests.
+    private static final String AAD_CHALLENGING_HOST = "pkeyauth-origin-aad-test.cloudapp.example";
+    // A host deliberately never seeded, so isValidCloudHost is genuinely false for it.
+    private static final String NON_AAD_CHALLENGING_HOST = "not-a-cloud.pkeyauth-origin-test.example";
+
+    @Test
+    public void testShadowMode_BackslashAuthority_AadChallengingOrigin_RecordsAadCloudTrue()
+            throws ClientException {
+        setFlights(true, false);
+        AzureActiveDirectory.putCloud(AAD_CHALLENGING_HOST, new AzureActiveDirectoryCloud(true));
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    "https://" + AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            // Verdict unchanged: backslash authority is still rejected (returned in shadow mode).
+            Assert.assertEquals(
+                    "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_BACKSLASH_AUTHORITY");
+            // The point of the fix: the AAD challenging origin is attributed even on this early-reject path.
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), true);
+        }
+    }
+
+    @Test
+    public void testShadowMode_SubmitNotHttps_AadChallengingOrigin_RecordsAadCloudTrue()
+            throws ClientException {
+        setFlights(true, false);
+        AzureActiveDirectory.putCloud(AAD_CHALLENGING_HOST, new AzureActiveDirectoryCloud(true));
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    "https://" + AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            // Verdict unchanged: cleartext SubmitUrl is still rejected (returned in shadow mode).
+            Assert.assertEquals(
+                    "http://login.microsoftonline.com/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_SUBMIT_NOT_HTTPS");
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), true);
+        }
+    }
+
+    // Proves the attribute is derived from the origin, not merely flipped to true: a non-AAD challenging
+    // origin on the same early-reject path still records false, and the verdict is still unchanged.
+    @Test
+    public void testShadowMode_BackslashAuthority_NonAadChallengingOrigin_RecordsAadCloudFalse()
+            throws ClientException {
+        setFlights(true, false);
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    "https://" + NON_AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            Assert.assertEquals(
+                    "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_BACKSLASH_AUTHORITY");
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), false);
+        }
     }
 
     @After
