@@ -59,10 +59,42 @@ object OnboardingBlockingErrorParser {
     private val NON_ONBOARDING_AADSTS_CODES = setOf("50058", "50097", "50126")
 
     /**
+     * eSTS's *no error* sentinel. Position 2 of `x-ms-clitelem` carries `"0"` when the request did
+     * not fail, and the same value reaches [isNonBlockingOnboardingErrorCode] from the Auth UX JS
+     * bridge, where it is a well-formed numeric code and so passes any shape check. Recording it
+     * would assert a blocking error the server never reported.
+     */
+    private const val NO_ERROR_SENTINEL = "0"
+
+    /**
      * Returns true if the candidate error code should be excluded from the
      * onboarding blob's `blocking_errors[]`. See [NON_ONBOARDING_AADSTS_CODES].
      */
     private fun isExcluded(candidate: String): Boolean = candidate in NON_ONBOARDING_AADSTS_CODES
+
+    /**
+     * Public policy check for callers that already hold a single, non-header error code and need to
+     * decide whether it belongs in the onboarding blob's `blocking_errors[]` — e.g. the Auth UX JS
+     * bridge `log_telemetry` path (AB#3688632), which receives one server error code directly rather
+     * than an `x-ms-clitelem` header or a [MicrosoftTokenResponse].
+     *
+     * Exposing the check here keeps a single source of truth for the exclusion set (parity with iOS
+     * `nonBlockingOnboardingErrorCodes`) so callers apply the SAME policy as the header/response
+     * parsers above instead of duplicating [NON_ONBOARDING_AADSTS_CODES].
+     *
+     * Excludes the literal `"0"` for the same reason every extraction path above does: eSTS uses it
+     * as the *no error* sentinel, so recording it would assert a blocking error where the server
+     * reported none — and it would win `last_blocking_error`. A direct caller cannot rely on the
+     * header parsers' filtering because it never goes through them, and a shape check alone will not
+     * catch it: `"0"` is a well-formed numeric code.
+     *
+     * @return true when [code] must be kept out of `blocking_errors[]` — either the no-error
+     *         sentinel or a member of the non-blocking exclusion set; false otherwise (including for
+     *         null or blank input).
+     */
+    @JvmStatic
+    fun isNonBlockingOnboardingErrorCode(code: String?): Boolean =
+        !code.isNullOrBlank() && (code == NO_ERROR_SENTINEL || isExcluded(code))
 
     /**
      * Extract a blocking-error attribution string from a [MicrosoftTokenResponse].
@@ -85,12 +117,12 @@ object OnboardingBlockingErrorParser {
         if (tokenResponse == null) return null
 
         val subError = tokenResponse.cliTelemSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
+        if (!subError.isNullOrBlank() && subError != NO_ERROR_SENTINEL && !isExcluded(subError)) {
             return subError
         }
 
         val error = tokenResponse.cliTelemErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
+        if (!error.isNullOrBlank() && error != NO_ERROR_SENTINEL && !isExcluded(error)) {
             return error
         }
 
@@ -115,12 +147,12 @@ object OnboardingBlockingErrorParser {
         val cliTelemInfo = CliTelemInfo.fromXMsCliTelemHeader(xMsCliTelemHeader) ?: return null
 
         val subError = cliTelemInfo.serverSubErrorCode
-        if (!subError.isNullOrBlank() && subError != "0" && !isExcluded(subError)) {
+        if (!subError.isNullOrBlank() && subError != NO_ERROR_SENTINEL && !isExcluded(subError)) {
             return subError
         }
 
         val error = cliTelemInfo.serverErrorCode
-        if (!error.isNullOrBlank() && error != "0" && !isExcluded(error)) {
+        if (!error.isNullOrBlank() && error != NO_ERROR_SENTINEL && !isExcluded(error)) {
             return error
         }
 
@@ -152,7 +184,7 @@ object OnboardingBlockingErrorParser {
         if (errorCodes.isNullOrBlank()) return emptyList()
         return errorCodes.split(",")
             .map { it.trim() }
-            .filter { it.isNotEmpty() && it != "0" && !isExcluded(it) }
+            .filter { it.isNotEmpty() && it != NO_ERROR_SENTINEL && !isExcluded(it) }
             .distinct()
     }
 }

@@ -51,6 +51,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
@@ -82,6 +83,7 @@ import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizatio
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -107,7 +109,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import android.webkit.WebResourceError;
 
@@ -165,7 +170,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     // Whether the host opted in to MAM-CA install-referrer tagging for this request.
@@ -183,7 +187,66 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * launch, etc.) and {@code lastLoadedDomain} are recorded for the onboarding telemetry blob.
      */
     @Nullable
-    private OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+    private volatile OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+
+    /**
+     * Accepted shape for a page-supplied Auth UX server error code.
+     *
+     * Narrower than the bridge's own {@code [A-Za-z0-9_-]{1,32}} shape check on purpose: the bridge
+     * is a generic seam and cannot know a sink's destination, but this sink appends to
+     * {@code blocking_errors}, which broker4j also writes SYMBOLIC constants into for blocks it
+     * detected itself. Server-reported codes are numeric, so restricting to digits keeps
+     * page-supplied values from colliding with our own constants without rejecting anything a page
+     * can legitimately report.
+     */
+    private static final Pattern SERVER_ERROR_CODE_PATTERN = Pattern.compile("^[0-9]{1,32}$");
+
+    /**
+     * Maximum number of distinct Auth UX error codes forwarded per authorization request.
+     *
+     * The bridge's caps are per instance and reset on every navigation, so this is the only bound
+     * that spans the request. Generous: duplicates never count (they are suppressed by
+     * {@link #mForwardedAuthUxErrorCodes}), and a real flow reports one or two distinct blocking
+     * errors, so reaching this needs a page deliberately cycling distinct values.
+     */
+    private static final int MAX_FORWARDED_ERROR_CODES = 10;
+
+    /** One-shot latch so the {@link #MAX_FORWARDED_ERROR_CODES} warning is logged once, not once per code. */
+    private volatile boolean mForwardedErrorCodeCapLogged = false;
+
+    /**
+     * Auth UX server error codes already forwarded to the onboarding recorder by this client.
+     *
+     * Scoped to the lifetime of this WebView client — one per authorization request, and it outlives
+     * every navigation within that request, unlike the JS bridge, which
+     * {@code OAuth2WebViewClient#onPageStarted} rebuilds on each page load and which therefore only
+     * de-duplicates within a single page. Without this, a redirect-heavy flow reports the same
+     * server error once per page load (an on-device run produced {@code ["530003","530003"]}).
+     *
+     * Known limitation: a rebuilt client starts a fresh set. Whether that produces a duplicate
+     * depends on whether the recorder outlives the rebuild — on this PR the host sets it directly
+     * via {@link #setOnboardingTelemetryRecorder}, so a rebuilt client normally gets a fresh
+     * recorder too and there is nothing to duplicate into. It becomes reachable once a host keeps
+     * the recorder across a client rebuild, which is what the brokered wiring in AB#3708195 does.
+     * {@code AuthorizationActivity} declares
+     * {@code configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout|keyboard"},
+     * which covers rotation and the YubiKey keyboard case, but NOT {@code uiMode}, {@code fontScale},
+     * {@code density}, {@code locale} or {@code layoutDirection}. Toggling dark mode mid-flow can
+     * therefore rebuild the client. This is accepted rather than fixed here: it needs a deliberate
+     * mid-authorization system-settings change to hit, costs one duplicate entry in a best-effort
+     * telemetry list, and the alternative is worse — de-duplicating in the recorder would break the
+     * shared append-only contract described below.
+     *
+     * A code is entered before the append and retracted in a {@code finally} if the append does not
+     * complete, so a failed forward is never left behind as already-forwarded.
+     *
+     * Deliberately kept here rather than in {@link OnboardingTelemetryRecorder}: that recorder's
+     * {@code blocking_errors} list is shared with broker4j and the {@code x-ms-clitelem} parsers and
+     * is contractually append-only and chronological, so de-duplicating there would change
+     * {@code last_blocking_error} from "the last block observed" to "the last distinct block first
+     * observed" for every caller.
+     */
+    private final Set<String> mForwardedAuthUxErrorCodes = ConcurrentHashMap.newKeySet();
 
     /**
      * Callback for tracking URL load events.
@@ -240,11 +303,33 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
+            // If broker request, and a valid url, expose JavaScript API.
             Logger.info(TAG, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            view.addJavascriptInterface(
+                    createAuthUxJavaScriptInterface(),
+                    AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Threads the onboarding telemetry recorder into the bridge via a sink so a
+     * {@code log_telemetry} event can append the Auth UX server error code to the onboarding blob
+     * (AB#3688632). The sink ({@link #tryConsumeAuthUxServerErrorCode}) reads
+     * {@code mOnboardingTelemetryRecorder} lazily, so it still works when the recorder is attached
+     * after registration.
+     *
+     * <p>Overriding the factory (rather than passing the sink at a single call site) is what keeps
+     * the sink attached: {@code onPageStarted} re-registers the bridge on every navigation, and a
+     * bare instance registered there would otherwise replace the sink-carrying one and silently turn
+     * the whole {@code log_telemetry} path into a no-op.
+     */
+    @NonNull
+    @Override
+    protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
+        return new AuthUxJavaScriptInterface(this::tryConsumeAuthUxServerErrorCode);
     }
 
     /**
@@ -1946,5 +2031,142 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } catch (final Throwable t) {
             Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
         }
+    }
+
+    /**
+     * Onboarding telemetry hook for Auth UX bridge {@code log_telemetry} events:
+     * appends the Auth UX server error code to the onboarding blob's blocking-errors list on the
+     * attached recorder, unless the code is in the non-blocking exclusion list
+     * ({@link OnboardingBlockingErrorParser#isNonBlockingOnboardingErrorCode(String)}, parity with
+     * iOS {@code nonBlockingOnboardingErrorCodes}).
+     *
+     * <p>Append-only / non-mutating: it only calls
+     * {@link OnboardingTelemetryRecorder#addBlockingError(String)} and never touches device or
+     * credential state. No-op when no recorder is attached (inherits the seed-gate, so hosts without
+     * an onboarding session — e.g. third-party callers — stay inert). Reads
+     * {@link #mOnboardingTelemetryRecorder} lazily so it works whether the recorder was attached
+     * before or after the JS interface was registered, and identically for brokered and
+     * non-brokered flows (the same AndroidCommon recorder backs both).
+     *
+     * <p>Unlike the sibling hooks {@code recordOnboardingStep} and {@code recordLastLoadedDomain},
+     * this one is deliberately <strong>not</strong> best-effort and does <strong>not</strong> swallow
+     * failures: a throwing recorder propagates so the bridge reports the offer as failed instead of
+     * setting {@code authux_js_error_code} for telemetry that was never recorded.
+     *
+     * <p><strong>Consumed is not recorded.</strong> The name says {@code tryConsume} rather than
+     * {@code record} because {@code true} is the answer to "is this code terminal here?", not "was
+     * it stored?" — it covers a code handed to the recorder, one dropped by policy (non-blocking or
+     * the no-error sentinel), one refused as non-numeric, one already forwarded, and one over the
+     * per-request cap. Each of those logs its own reason, so the decision is recoverable from
+     * logcat even though the return value cannot distinguish them.
+     *
+     * <p>Wired as the {@code AuthUxTelemetrySink} in {@link #createAuthUxJavaScriptInterface()}.
+     *
+     * @param event Validated Auth UX telemetry context from the bridge. Only
+     *              {@link AuthUxTelemetryEvent#getErrorCode()} is consumed today (guaranteed
+     *              non-empty and shape-checked by the bridge); the remaining fields — correlation
+     *              id, session / page / tracking ids and contract version — are carried so they can
+     *              be recorded without another change to the sink contract.
+     * @return {@code true} when the code is terminal for this client — handed to a recorder,
+     *         deliberately dropped by policy, refused, capped, or already forwarded; {@code false}
+     *         when there is no recorder yet — which keeps the code eligible for a retry once the
+     *         host attaches one, instead of the bridge suppressing it as already-handled. Never
+     *         returns {@code true} for a code that failed to reach the recorder: a throwing recorder
+     *         propagates rather than being reported as consumed, and the failed code is retracted
+     *         from the de-duplication set so a later offer is not short-circuited either. That
+     *         last guarantee assumes offers are not concurrent, which holds because WebView
+     *         dispatches every {@code @JavascriptInterface} call for a WebView on one private
+     *         JavaBridge thread and the bridge sink is this method's only production caller.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    boolean tryConsumeAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
+        final String errorCode = event.getErrorCode();
+        // Shape check first: this is the only caller of addBlockingError whose input is untrusted,
+        // and it is terminal, so it runs before anything that depends on the recorder.
+        //
+        // The bridge accepts [A-Za-z0-9_-]{1,32} because it is a generic seam that does not know
+        // where a code ends up. This sink does know: blocking_errors is shared with broker4j, which
+        // writes SYMBOLIC constants there for blocks it detected itself (DEVICE_REGISTRATION_NEEDED,
+        // INSUFFICIENT_DEVICE_REGISTRATION, BROKER_INSTALLATION_TRIGGERED, ...). Every one of those
+        // fits the bridge's shape, so without this a page could post one and nothing downstream —
+        // dashboards included — could tell it from a block the broker actually detected. Server
+        // codes are numeric, so restricting to digits closes the collision without losing anything
+        // a page can legitimately report.
+        if (!SERVER_ERROR_CODE_PATTERN.matcher(errorCode).matches()) {
+            // Safe to log verbatim: the bridge already rejected control characters and anything
+            // over 32 characters.
+            Logger.warn(TAG, event.getCorrelationId(),
+                    "Onboarding telemetry: rejecting non-numeric Auth UX error code [" + errorCode
+                            + "] - only server-reported numeric codes may be page-supplied");
+            // Consumed: a deliberate policy drop, not a "try again later".
+            return true;
+        }
+        // Policy check: it has no dependency on the recorder, so a non-blocking code that
+        // arrives before the recorder is attached is terminal rather than retried against a budget
+        // it can never usefully spend.
+        if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
+            Logger.info(TAG, event.getCorrelationId(),
+                    "Onboarding telemetry: skipping non-blocking Auth UX error code");
+            // Consumed: this is a deliberate policy drop, not a "try again later".
+            return true;
+        }
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            // Not consumed: the recorder is attached by the host and may not be available yet, so
+            // report failure and let the bridge offer this code again.
+            return false;
+        }
+        if (!mForwardedAuthUxErrorCodes.add(errorCode)) {
+            // Already forwarded earlier in this request, on an earlier navigation's bridge
+            // instance. Consumed — re-appending would duplicate it in the uploaded blob.
+            return true;
+        }
+        // Bound the per-request total. The bridge's own caps are per INSTANCE, and
+        // OAuth2WebViewClient#onPageStarted rebuilds it on every navigation, so they reset each page
+        // load; this set is the only thing that spans the request. Duplicates are already excluded
+        // above, so reaching this cap needs the page to report MAX_FORWARDED_ERROR_CODES distinct
+        // blocking errors in one authorization request — far beyond any real flow, which reports one
+        // or two. Checked after the atomic add() rather than before it, so the check-and-claim stays
+        // a single operation; the code is removed again when it does not fit.
+        if (mForwardedAuthUxErrorCodes.size() > MAX_FORWARDED_ERROR_CODES) {
+            mForwardedAuthUxErrorCodes.remove(errorCode);
+            if (!mForwardedErrorCodeCapLogged) {
+                // Logged once, on the transition, so hitting the cap is diagnosable without the cap
+                // message becoming the flood it exists to prevent.
+                mForwardedErrorCodeCapLogged = true;
+                Logger.warn(TAG, event.getCorrelationId(),
+                        "Onboarding telemetry: per-request Auth UX error code cap ("
+                                + MAX_FORWARDED_ERROR_CODES + ") reached; ignoring further codes "
+                                + "for this authorization request");
+            }
+            // Consumed: the cap is terminal for this request, so re-offering would only spend the
+            // bridge's retry budget on a code that can never be recorded.
+            return true;
+        }
+        // The claim staked by the add() above is retracted unless the append actually succeeds.
+        // Leaving it in place after a throw would mark the code forwarded when nothing was
+        // recorded, so a later navigation's offer would short-circuit to "already forwarded" and
+        // the bridge would set the span attribute and log "Forwarded" for telemetry that never
+        // existed — the same "span that lies" this method's propagation is meant to prevent, just
+        // displaced by one page load.
+        //
+        // try/finally rather than catch/rethrow: nothing is swallowed, the throw still propagates
+        // into the bridge's THREW handling (which suppresses retry for this page load without
+        // claiming success), and the cleanup covers any abnormal exit, not only RuntimeException.
+        //
+        // Retracting on ANY abnormal exit is only correct because addBlockingError is
+        // all-or-nothing: its best-effort persistence step runs BEFORE the append, so a throw from
+        // it — Exception or Error — means the code was not appended. If that ordering ever changes,
+        // this retraction turns into a duplicate-producer — the mirror of the bug it fixes.
+        boolean recorded = false;
+        try {
+            recorder.addBlockingError(errorCode);
+            recorded = true;
+        } finally {
+            if (!recorded) {
+                mForwardedAuthUxErrorCodes.remove(errorCode);
+            }
+        }
+        return true;
     }
 }

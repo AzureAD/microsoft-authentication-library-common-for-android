@@ -33,6 +33,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -2098,6 +2099,377 @@ public class AzureActiveDirectoryWebViewClientTest {
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         assertFalse("blank URL should not produce a last_loaded_domain entry",
                 blob.has("last_loaded_domain"));
+    }
+
+    /**
+     * AB#3688632: a valid Auth UX {@code log_telemetry} server error code is appended to the
+     * onboarding blob's blocking-errors list (and surfaces as {@code last_blocking_error}).
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_AppendsToOnboardingBlob() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals(1, errors.length());
+        assertEquals("530003", errors.getString(0));
+        assertEquals("530003", blob.getString(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: codes in the non-blocking exclusion list (parity with iOS
+     * {@code nonBlockingOnboardingErrorCodes}) are NOT appended to the blob.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_NotAppended() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")); // UserInformationNotProvided — excluded
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals("excluded code must not be appended", 0, blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS).length());
+        assertFalse("no last_blocking_error when nothing was appended", blob.has(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: eSTS's "no error" sentinel must not become a blocking error.
+     *
+     * <p>The header and response parsers have always filtered {@code "0"}, but the Auth UX sink
+     * reaches the policy check directly and its shape guard accepts {@code "0"} as a well-formed
+     * numeric code — so before this was folded into the shared check, a page reporting
+     * {@code errorCode: 0} produced a {@code blocking_errors} entry, and it won
+     * {@code last_blocking_error}, asserting a failure the server never reported.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_ZeroSentinel_NotAppended() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final boolean consumed = mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("0"));
+
+        assertTrue("a policy drop is terminal, not a retry", consumed);
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals("the no-error sentinel must not be appended", 0, blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS).length());
+        assertFalse("\"0\" must never become last_blocking_error", blob.has(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.LAST_BLOCKING_ERROR));
+    }
+
+    /**
+     * AB#3688632: when no recorder is attached the hook is a no-op, never throws, and reports that
+     * it did NOT consume the event so the bridge keeps the code eligible for a later retry.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_NoRecorder_IsNoOp() {
+        // Default mWebViewClient has no recorder attached. This must not throw.
+        assertFalse("no recorder means not consumed",
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
+    }
+
+    /**
+     * AB#3688632: a non-blocking code is a deliberate policy drop, so it counts as consumed —
+     * re-offering it would be pointless churn.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_IsConsumed() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue("policy drop still counts as consumed",
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")));
+    }
+
+    /**
+     * AB#3688632: the SINK de-duplicates per authorization request. The JS bridge is rebuilt on
+     * every WebView navigation and only de-duplicates within one page load, so without this a
+     * redirect-heavy flow records the same server error repeatedly in the uploaded blob — which is
+     * exactly what an earlier device run produced ({@code ["530003","530003"]}). The de-dup lives on
+     * this client, which outlives every navigation in the request, rather than on the recorder,
+     * whose list is shared with broker4j and must stay chronological.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_DuplicateAcrossRegistrations_RecordedOnce()
+            throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // Simulates the same code arriving from two separate bridge instances (two page loads).
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
+        assertTrue("a suppressed duplicate is still consumed",
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("duplicate must not reach the blob", 1, errors.length());
+        assertEquals("530003", errors.getString(0));
+    }
+
+    /**
+     * AB#3688632: when the recorder throws, the sink must NOT claim the code was forwarded. It
+     * propagates so the bridge's own handling suppresses retry without setting the span attribute
+     * or logging a "Forwarded" line — swallowing it here would produce a span that lies.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_RecorderThrows_Propagates() {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
+                Mockito.mock(
+                        com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
+        Mockito.doThrow(new IllegalStateException("recorder boom"))
+                .when(throwing).addBlockingError(Mockito.anyString());
+        mWebViewClient.setOnboardingTelemetryRecorder(throwing);
+
+        try {
+            mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
+            fail("a throwing recorder must propagate rather than be reported as forwarded");
+        } catch (final IllegalStateException expected) {
+            assertEquals("recorder boom", expected.getMessage());
+        }
+    }
+
+    /**
+     * AB#3688632: a non-blocking code is terminal even before a recorder is attached — the policy
+     * check has no dependency on the recorder, so retrying it would burn the bridge's attempt
+     * budget on a code that can never be recorded.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_NonBlockingCode_ConsumedWithoutRecorder() {
+        // No recorder attached.
+        assertTrue("policy drop must be terminal regardless of recorder availability",
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("50058")));
+    }
+
+    /**
+     * AB#3688632: removing the shadowed {@code mAuthUxJavaScriptInterfaceAdded} field means
+     * {@code onPageFinished} now reads the base class's flag, which {@code onPageStarted} maintains.
+     * Navigating to a non-allow-listed URL removes the interface, so the {@code postMessageToBroker}
+     * shim must not then be injected over an undefined {@code window.broker}. This path is shared
+     * with number-matching, not just telemetry.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testShimNotInjectedAfterInterfaceRemovedOnNonAllowlistedUrl() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Allow-listed page: interface added.
+        mWebViewClient.onPageStarted(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        // Navigate away to a non-allow-listed origin: interface removed.
+        mWebViewClient.onPageStarted(mockWebView, "https://example.com/page", null);
+        mWebViewClient.onPageFinished(mockWebView, "https://example.com/page");
+
+        Mockito.verify(mockWebView).removeJavascriptInterface(Mockito.anyString());
+        Mockito.verify(mockWebView, Mockito.never())
+                .evaluateJavascript(Mockito.contains("postMessageToBroker"), Mockito.any());
+    }
+
+    /**
+     * AB#3688632: the mirror case. Previously the subclass flag was only ever set by
+     * {@code initializeAuthUxJavaScriptApi}, so if the INITIAL url was not allow-listed the shim was
+     * never injected even after a later navigation added the interface — leaving the Auth UX page
+     * unable to post any message, including {@code number_matching}.
+     */
+    @Test
+    @Config(shadows = {ShadowProcessUtil.class})
+    public void testShimInjectedWhenInterfaceAddedByLaterNavigation() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+
+        // Initial url not allow-listed: nothing registered.
+        mWebViewClient.initializeAuthUxJavaScriptApi(mockWebView, "https://example.com/start");
+        // A later navigation reaches an allow-listed origin: interface added by onPageStarted.
+        mWebViewClient.onPageStarted(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL, null);
+        mWebViewClient.onPageFinished(mockWebView, TEST_PUBLIC_CLOUD_REDIRECT_URL);
+
+        Mockito.verify(mockWebView)
+                .evaluateJavascript(Mockito.contains("postMessageToBroker"), Mockito.any());
+    }
+
+    /**
+     * AB#3688632: a failed append must not leave the code marked as forwarded. The bridge's own
+     * suppression is per-instance and {@code onPageStarted} rebuilds it every navigation, so the
+     * page can legitimately offer the same code again on the next page load. If the throwing attempt
+     * had poisoned the de-duplication set, that offer would short-circuit to "already forwarded" and
+     * the bridge would set the span attribute and log "Forwarded" for telemetry that never existed.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_ThrowDoesNotPoisonDedupeSet() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder throwing =
+                Mockito.mock(
+                        com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder.class);
+        Mockito.doThrow(new IllegalStateException("recorder boom"))
+                .when(throwing).addBlockingError(Mockito.anyString());
+        mWebViewClient.setOnboardingTelemetryRecorder(throwing);
+
+        try {
+            mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003"));
+            fail("expected the throwing recorder to propagate");
+        } catch (final IllegalStateException expected) {
+            // expected — the first attempt fails
+        }
+
+        // Next navigation: a healthy recorder is attached and the page re-offers the same code.
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder healthy =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(healthy);
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(healthy.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("the retry must actually record, not short-circuit as already-forwarded",
+                1, errors.length());
+        assertEquals("530003", errors.getString(0));
+    }
+
+    /** Builds a real recorder over a minimal seed; shared by the onboarding-telemetry tests. */
+    /**
+     * AB#3688632: broker4j writes SYMBOLIC constants into the same {@code blocking_errors} list for
+     * blocks it detected itself, and every one of them fits the bridge's {@code [A-Za-z0-9_-]{1,32}}
+     * shape. Without a narrower check at this sink, a page could post
+     * {@code DEVICE_REGISTRATION_NEEDED} and nothing downstream could tell it from a real
+     * device-registration block.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_SymbolicCodeIsRejected() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // The two constants broker4j actually writes on a device-registration block.
+        assertTrue("a policy drop is still consumed",
+                mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("DEVICE_REGISTRATION_NEEDED")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(
+                authUxEvent("INSUFFICIENT_DEVICE_REGISTRATION")));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("MDM_FLOW")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertFalse("no page-supplied symbolic code may reach the blob",
+                blob.has(com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .BLOCKING_ERRORS)
+                        && blob.getJSONArray(com.microsoft.identity.common.java.telemetry
+                        .OnboardingTelemetryConstants.BLOCKING_ERRORS).length() > 0);
+    }
+
+    /** AB#3688632: a real numeric server code is still accepted after the shape check. */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_NumericCodeStillAccepted() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("530003")));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals(1, errors.length());
+        assertEquals("530003", errors.getString(0));
+    }
+
+    /**
+     * AB#3688632: the bridge's caps are per instance and reset on every navigation, so this client's
+     * set is the only bound that spans the request. Without a cap here a page cycling distinct codes
+     * across navigations grows the uploaded blob without limit.
+     */
+    @Test
+    public void testtryConsumeAuthUxServerErrorCode_PerRequestCapBoundsTheBlob() throws Exception {
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                newRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // 40 DISTINCT codes; duplicates would not count toward the cap.
+        for (int i = 0; i < 40; i++) {
+            assertTrue("a capped code is consumed, not retried",
+                    mWebViewClient.tryConsumeAuthUxServerErrorCode(authUxEvent("5300" + i)));
+        }
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("the per-request total must be bounded", 10, errors.length());
+    }
+
+    private com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder newRecorder() {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        return new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                seedJson, "client-id", "scope1", mContext);
+    }
+
+    /** Minimal Auth UX telemetry event carrying just the error code under test. */
+    private static com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent authUxEvent(
+            final String errorCode) {
+        return new com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent(
+                "corr-1", errorCode, null, null, null, null);
+    }
+
+    /**
+     * AB#3688632 regression: the bridge object actually bound into the WebView must carry the
+     * telemetry sink.
+     *
+     * <p>The bridge is registered from two places — {@code initializeAuthUxJavaScriptApi} (initial
+     * load) and {@code OAuth2WebViewClient#onPageStarted} (re-evaluated on every navigation) — and
+     * {@code addJavascriptInterface} replaces any object previously bound to the same name. When
+     * {@code onPageStarted} constructed a bare {@code AuthUxJavaScriptInterface}, it replaced the
+     * sink-carrying instance on the very first page load and the entire {@code log_telemetry} path
+     * became a silent no-op in production. Both sites now build the bridge through
+     * {@code createAuthUxJavaScriptInterface()}, so exercising that factory end-to-end (JSON in →
+     * blob out) pins the behaviour.
+     */
+    @Test
+    public void testCreateAuthUxJavaScriptInterface_CarriesTelemetrySink() throws Exception {
+        final String seedJson = "{\"schema_version\":\"1.0.0\","
+                + "\"session_correlation_id\":\"abc-123\","
+                + "\"onboarding_mode\":\"non-brokered\"}";
+        final com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder recorder =
+                new com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder(
+                        seedJson, "client-id", "scope1", mContext);
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        // Drive the bridge exactly as the injected JS shim does: a log_telemetry payload handed to
+        // receiveAuthUxMessage on the instance the client would bind into the WebView.
+        mWebViewClient.createAuthUxJavaScriptInterface().receiveAuthUxMessage(
+                "{\"correlationID\":\"corr-1\","
+                        + "\"action_name\":\"log_telemetry\","
+                        + "\"action_component\":\"host\","
+                        + "\"params\":{\"v\":1,\"sessionID\":\"sess-1\",\"errorCode\":530003,"
+                        + "\"pageId\":\"ConvergedTFA\",\"trackingId\":\"track-1\"}}");
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        final org.json.JSONArray errors = blob.getJSONArray(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.BLOCKING_ERRORS);
+        assertEquals("sink must be wired into the bridge the WebView actually binds",
+                1, errors.length());
+        assertEquals("530003", errors.getString(0));
     }
 
     // -----------------------------------------------------------------------

@@ -25,6 +25,7 @@ Version 24.6.0
 - [PATCH] Rename WebAppError 'error' field to 'code' in WebApps API error response (#3192)
 - [MINOR] Add BrokerOAuth2TokenCache callerAuthorizedForFoci constructor gate: when false, shared FoCI cache reads are suppressed across both env-scoped and env==null chokepoints (getTokenCachesForClientId, getTokenCacheForClient), all loader/silent-flow fallbacks (load, loadWithAggregatedAccountData, saveAndLoadAggregatedAccountDataOptimized, loadAggregatedAccountData — the last returns a sparse singleton so downstream get(0) still resolves to UI-required), and device-wide enumerations (getAccounts(), getFociCacheRecords). Caller's own UID-partitioned accounts always returned. Exposes isCallerAuthorizedForFoci() and BrokerOAuth2TokenCacheTelemetryWrapper delegates the FoCI-touching APIs to the wrapped instance. The 3-arg convenience constructor (which silently defaulted the gate to true) is removed so every production callsite must supply the gate explicitly and fail-open regressions surface at compile time (#3187)
 - [MINOR] Add a non-mutating log_telemetry action to the Auth UX JavaScript bridge that forwards a validated, page-reported server error code to an onboarding telemetry sink seam, kept strictly separate from the number-matching device-store path (#3197)
+- [MINOR] Record the Auth UX log_telemetry server error code in the onboarding telemetry blob's blocking-errors list, and fix Auth UX bridge availability when the initial authorization URL is not allow-listed (#3201)
 
 Version 24.5.0
 ----------

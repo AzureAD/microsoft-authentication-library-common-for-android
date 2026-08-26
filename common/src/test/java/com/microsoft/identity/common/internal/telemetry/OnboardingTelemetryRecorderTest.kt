@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
@@ -141,6 +143,31 @@ class OnboardingTelemetryRecorderTest {
     }
 
     @Test
+    fun testFinalizeBlob_RepeatedBlockingError_IsChronologicalNotDeduped() {
+        // This list is shared with broker4j (InteractiveRequestAcquireTokenErrorHandler) and the
+        // x-ms-clitelem parsers, so it is contractually append-only and chronological. A -> B -> A
+        // is a real CA-remediation shape: the user ends the flow blocked on A, so last_blocking_error
+        // must be A. De-duplicating here would silently re-attribute the block to B on the field
+        // dashboards key off. A caller that must not report a repeat de-duplicates on its own side —
+        // AzureActiveDirectoryWebViewClient does so for the Auth UX JS bridge.
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("53003")
+        recorder.addBlockingError("530003")
+
+        val blob = JSONObject(recorder.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals("repeats must be preserved for other callers", 3, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
+        Assert.assertEquals("53003", errors.getString(1))
+        Assert.assertEquals("530003", errors.getString(2))
+        Assert.assertEquals(
+            "last_blocking_error must be the last block OBSERVED",
+            "530003",
+            blob.getString("last_blocking_error")
+        )
+    }
+
+    @Test
     fun testFinalizeBlob_ContainsSeedFields() {
         recorder.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
 
@@ -253,6 +280,63 @@ class OnboardingTelemetryRecorderTest {
         Assert.assertTrue(
             "Cached data should contain the session correlation ID",
             cached.contains("test-uuid-123")
+        )
+    }
+
+    @Test
+    fun testAddBlockingError_PersistenceFailure_DoesNotFailTheCall() {
+        // The Auth UX sink (AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode) retracts
+        // its de-duplication claim whenever this call throws, so a throw MUST mean "not recorded".
+        // persistSessionCorrelation is best-effort and must not propagate an Exception to its
+        // caller; getSharedPreferences throws IllegalStateException on credential-encrypted storage
+        // before first unlock (direct boot), which is the real path this guards.
+        // NOTE: getApplicationContext must return this wrapper. The recorder stores
+        // context.applicationContext (to avoid leaking an Activity), and ContextWrapper delegates
+        // that to the base context — which would hand back the real Robolectric application and
+        // silently discard the override below, making this test vacuous.
+        val hostileContext = object : ContextWrapper(ApplicationProvider.getApplicationContext()) {
+            override fun getApplicationContext(): Context = this
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences =
+                throw IllegalStateException("SharedPreferences unavailable until user unlock")
+        }
+        val recorderOnHostileContext =
+            OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, hostileContext)
+
+        recorderOnHostileContext.addBlockingError("530003")
+
+        val blob = JSONObject(recorderOnHostileContext.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals("the append itself must still have happened", 1, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
+    }
+
+    @Test
+    fun testAddBlockingError_ErrorFromPersist_RecordsNothing() {
+        // addBlockingError must be all-or-nothing against Error too, not just Exception.
+        // persistSessionCorrelation deliberately lets Error through (swallowing an OutOfMemoryError
+        // to protect a telemetry write would be the wrong trade), so it has to run BEFORE the
+        // append. If it ran after, the code would already be in blocking_errors while the caller saw
+        // a throw — and the Auth UX sink, which retracts its de-duplication claim on ANY throw,
+        // would let the next offer append the same code a second time.
+        val hostileContext = object : ContextWrapper(ApplicationProvider.getApplicationContext()) {
+            override fun getApplicationContext(): Context = this
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences =
+                throw OutOfMemoryError("simulated allocation failure while persisting")
+        }
+        val recorderOnHostileContext =
+            OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, hostileContext)
+
+        try {
+            recorderOnHostileContext.addBlockingError("530003")
+            Assert.fail("an Error from the persistence step must propagate")
+        } catch (expected: OutOfMemoryError) {
+            // expected: Error is not swallowed
+        }
+
+        val blob = JSONObject(recorderOnHostileContext.finalizeBlob())
+        Assert.assertFalse(
+            "a throw must mean nothing was recorded, or the sink's retraction produces duplicates",
+            blob.has("blocking_errors") && blob.getJSONArray("blocking_errors").length() > 0
         )
     }
 
