@@ -58,6 +58,14 @@ public class FociQueryOutcomeTest {
         );
     }
 
+    private static TokenResult unauthorizedClientResult(final String subError) {
+        return errorResult(
+                HttpURLConnection.HTTP_BAD_REQUEST,
+                OAuth2ErrorCode.UNAUTHORIZED_CLIENT,
+                subError
+        );
+    }
+
     @Test
     public void fromTokenResult_whenSuccessful_isGranted() {
         final TokenResult result = new TokenResult(new TokenResponse());
@@ -89,11 +97,68 @@ public class FociQueryOutcomeTest {
         );
     }
 
+    /**
+     * The service pairs {@code protection_policy_required} with {@code unauthorized_client}, not
+     * {@code invalid_grant} — the same pairing {@code ExceptionAdapter.isIntunePolicyRequiredError}
+     * recognises.
+     */
     @Test
     public void fromTokenResult_whenProtectionPolicyRequired_isProtectionPolicyRequired() {
         Assert.assertEquals(
                 FociQueryOutcome.PROTECTION_POLICY_REQUIRED,
-                FociQueryOutcome.fromTokenResult(invalidGrantResult(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED))
+                FociQueryOutcome.fromTokenResult(
+                        unauthorizedClientResult(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED))
+        );
+    }
+
+    @Test
+    public void fromTokenResult_whenProtectionPolicyRequiredCasingDiffers_stillClassifies() {
+        final TokenResult result = errorResult(
+                HttpURLConnection.HTTP_BAD_REQUEST,
+                "Unauthorized_Client",
+                "Protection_Policy_Required"
+        );
+
+        Assert.assertEquals(
+                FociQueryOutcome.PROTECTION_POLICY_REQUIRED,
+                FociQueryOutcome.fromTokenResult(result)
+        );
+    }
+
+    /**
+     * The {@code unauthorized_client} branch is deliberately narrow: it exists only to reach
+     * {@code protection_policy_required} and must not swallow other suberrors.
+     */
+    @Test
+    public void fromTokenResult_whenUnauthorizedClientWithOtherSubError_isOtherError() {
+        Assert.assertEquals(
+                FociQueryOutcome.OTHER_ERROR,
+                FociQueryOutcome.fromTokenResult(
+                        unauthorizedClientResult(OAuth2SubErrorCode.CLIENT_MISMATCH))
+        );
+    }
+
+    @Test
+    public void fromTokenResult_whenProtectionPolicyRequiredOnUnexpectedStatus_isOtherError() {
+        final TokenResult result = errorResult(
+                HttpURLConnection.HTTP_FORBIDDEN,
+                OAuth2ErrorCode.UNAUTHORIZED_CLIENT,
+                OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED
+        );
+
+        Assert.assertEquals(FociQueryOutcome.OTHER_ERROR, FociQueryOutcome.fromTokenResult(result));
+    }
+
+    /**
+     * Guards the gate in the other direction: the suberror is only honoured on the error code the
+     * service actually pairs it with.
+     */
+    @Test
+    public void fromTokenResult_whenProtectionPolicyRequiredOnInvalidGrant_isOtherInvalidGrant() {
+        Assert.assertEquals(
+                FociQueryOutcome.OTHER_INVALID_GRANT,
+                FociQueryOutcome.fromTokenResult(
+                        invalidGrantResult(OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED))
         );
     }
 

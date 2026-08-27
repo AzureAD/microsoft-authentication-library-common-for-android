@@ -42,6 +42,10 @@ import lombok.NonNull;
  * Both arrive as HTTP 400 {@code invalid_grant} and are distinguishable only by the suberror, so
  * callers that need to tell them apart require this classification rather than a boolean.
  *
+ * <p>{@link OAuth2SubErrorCode#PROTECTION_POLICY_REQUIRED} is the one modelled suberror that
+ * arrives on {@code unauthorized_client} rather than {@code invalid_grant}, matching the pairing
+ * {@code ExceptionAdapter.isIntunePolicyRequiredError} recognises, so it is classified separately.
+ *
  * <p>The value set is deliberately closed. The suberror is a service-controlled string, so it is
  * mapped onto a bounded set rather than surfaced verbatim, keeping it safe to use as a telemetry
  * dimension.
@@ -73,8 +77,9 @@ public enum FociQueryOutcome {
     TOKEN_EXPIRED,
 
     /**
-     * {@link OAuth2SubErrorCode#PROTECTION_POLICY_REQUIRED} — a policy blocked the exchange. Says
-     * nothing about the client id's membership.
+     * {@link OAuth2SubErrorCode#PROTECTION_POLICY_REQUIRED} — an Intune app protection policy
+     * blocked the exchange. Says nothing about the client id's membership. Unlike the other
+     * modelled suberrors this one accompanies an HTTP 400 {@code unauthorized_client}.
      */
     PROTECTION_POLICY_REQUIRED,
 
@@ -90,8 +95,9 @@ public enum FociQueryOutcome {
     OTHER_INVALID_GRANT,
 
     /**
-     * An error response that was not an HTTP 400 {@code invalid_grant} — for example a throttling
-     * or service-side failure.
+     * An error response that was neither an HTTP 400 {@code invalid_grant} nor the HTTP 400
+     * {@code unauthorized_client} carrying {@link OAuth2SubErrorCode#PROTECTION_POLICY_REQUIRED} —
+     * for example a throttling or service-side failure.
      */
     OTHER_ERROR,
 
@@ -103,9 +109,11 @@ public enum FociQueryOutcome {
     /**
      * Classifies a token result produced by a FoCI membership query.
      *
-     * <p>Only an HTTP 400 {@code invalid_grant} is examined for a suberror. A suberror arriving on
-     * any other status or error code is not treated as a membership answer, so such responses
-     * classify as {@link #OTHER_ERROR}.
+     * <p>Only an HTTP 400 {@code invalid_grant} is examined for a membership suberror. A membership
+     * suberror arriving on any other status or error code is not treated as a membership answer, so
+     * such responses classify as {@link #OTHER_ERROR}. The sole exception is
+     * {@link OAuth2SubErrorCode#PROTECTION_POLICY_REQUIRED}, which the service returns on an HTTP
+     * 400 {@code unauthorized_client}; it is matched before the {@code invalid_grant} gate.
      *
      * @param tokenResult the result of the membership query.
      * @return the classified outcome; {@link #GRANTED} if and only if
@@ -122,14 +130,24 @@ public enum FociQueryOutcome {
             return NO_ERROR_RESPONSE;
         }
 
-        final boolean isInvalidGrant =
-                HttpURLConnection.HTTP_BAD_REQUEST == errorResponse.getStatusCode()
-                        && OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorResponse.getError());
+        final boolean isBadRequest =
+                HttpURLConnection.HTTP_BAD_REQUEST == errorResponse.getStatusCode();
+        final String subError = errorResponse.getSubError();
+
+        // protection_policy_required accompanies unauthorized_client rather than invalid_grant, so
+        // it has to be matched ahead of the invalid_grant gate or it would never be reached.
+        if (isBadRequest
+                && OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorResponse.getError())
+                && OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.equalsIgnoreCase(subError)) {
+            return PROTECTION_POLICY_REQUIRED;
+        }
+
+        final boolean isInvalidGrant = isBadRequest
+                && OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorResponse.getError());
         if (!isInvalidGrant) {
             return OTHER_ERROR;
         }
 
-        final String subError = errorResponse.getSubError();
         if (OAuth2SubErrorCode.CLIENT_MISMATCH.equalsIgnoreCase(subError)) {
             return CLIENT_MISMATCH;
         }
@@ -138,9 +156,6 @@ public enum FociQueryOutcome {
         }
         if (OAuth2SubErrorCode.TOKEN_EXPIRED.equalsIgnoreCase(subError)) {
             return TOKEN_EXPIRED;
-        }
-        if (OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.equalsIgnoreCase(subError)) {
-            return PROTECTION_POLICY_REQUIRED;
         }
         if (OAuth2SubErrorCode.CONSENT_REQUIRED.equalsIgnoreCase(subError)) {
             return CONSENT_REQUIRED;
