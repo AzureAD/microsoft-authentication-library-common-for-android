@@ -343,33 +343,42 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenPasswordTooWeak_preservesSubError() {
-        val response = responseFrom(
-            """{"error":{"code":"invalid_request","message":"Password is too weak.","innerError":{"code":"password_too_weak"}}}"""
+    fun parseInteraction_whenPasswordIsInvalid_preservesSubError() {
+        val passwordSubErrors = listOf(
+            "passwordTooWeak",
+            "password_too_weak",
+            "passwordTooShort",
+            "password_too_short",
+            "passwordTooLong",
+            "password_too_long",
+            "passwordIsInvalid",
+            "password_is_invalid",
+            "passwordRecentlyUsed",
+            "password_recently_used",
+            "passwordBanned",
+            "password_banned"
         )
 
-        val result = parser.parseInteraction(
-            response,
-            previousState(),
-            NativeAuthV2Operation.UPDATE_PASSWORD
-        ) as NativeAuthV2InteractionApiResult.InvalidPassword
+        passwordSubErrors.forEach { subError ->
+            val response = responseFrom(
+                """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"$subError"}}}"""
+            )
 
-        assertEquals("password_too_weak", result.subError)
-    }
+            val result = parser.parseInteraction(
+                response,
+                previousState(),
+                NativeAuthV2Operation.UPDATE_PASSWORD
+            )
 
-    @Test
-    fun parseInteraction_whenV2PasswordTooWeak_preservesSubError() {
-        val response = responseFrom(
-            """{"error":{"code":"invalidRequest","message":"Password is too weak.","innerError":{"code":"passwordTooWeak"}}}"""
-        )
-
-        val result = parser.parseInteraction(
-            response,
-            previousState(),
-            NativeAuthV2Operation.UPDATE_PASSWORD
-        ) as NativeAuthV2InteractionApiResult.InvalidPassword
-
-        assertEquals("passwordTooWeak", result.subError)
+            assertTrue(
+                "Expected InvalidPassword for $subError but was ${result::class.java.simpleName}",
+                result is NativeAuthV2InteractionApiResult.InvalidPassword
+            )
+            assertEquals(
+                subError,
+                (result as NativeAuthV2InteractionApiResult.InvalidPassword).subError
+            )
+        }
     }
 
     @Test

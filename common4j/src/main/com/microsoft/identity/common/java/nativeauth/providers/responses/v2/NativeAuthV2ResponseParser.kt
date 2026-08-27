@@ -384,7 +384,7 @@ class NativeAuthV2ResponseParser {
                 unknownInteractionError(correlationId, code, message, errorCodes)
 
             operation == NativeAuthV2Operation.UPDATE_PASSWORD &&
-                    innerErrorCode in INNER_ERROR_PASSWORD_TOO_WEAK ->
+                    innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
                 NativeAuthV2InteractionApiResult.InvalidPassword(
                     correlationId = correlationId,
                     error = code.orEmpty(),
@@ -504,7 +504,20 @@ class NativeAuthV2ResponseParser {
          */
         private val INNER_ERROR_INVALID_ONE_TIME_CODE =
             setOf("invalidOneTimeCode", "invalid_oob_value")
-        private val INNER_ERROR_PASSWORD_TOO_WEAK = setOf("passwordTooWeak", "password_too_weak")
+        private val INNER_ERROR_INVALID_PASSWORD = setOf(
+            "passwordTooWeak",
+            "password_too_weak",
+            "passwordTooShort",
+            "password_too_short",
+            "passwordTooLong",
+            "password_too_long",
+            "passwordIsInvalid",
+            "password_is_invalid",
+            "passwordRecentlyUsed",
+            "password_recently_used",
+            "passwordBanned",
+            "password_banned"
+        )
         private val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD =
             setOf("invalidUserNameOrPassword", "invalid_username_or_password")
         private const val AADSTS_USER_NOT_FOUND = "AADSTS50034"
