@@ -497,12 +497,13 @@ class NativeAuthV2ResponseParser {
 
         /**
          * Sub-error codes that indicate the user supplied an incorrect one-time code.
-         * `invalidOneTimeCode` is the Native Auth V2 wire value (AADSTS50184); `invalid_oob_value`
-         * is the legacy V1 spelling, tolerated so a mixed-version service response is still
-         * classified as a recoverable code error rather than a terminal one.
+         * `invalidOneTimeCode` is the Native Auth V2 wire value (AADSTS50184) and is the only
+         * spelling MSAL iOS/macOS accepts. `invalid_oob_value` is the legacy V1 spelling, retained
+         * here for back-compat so a V1-shaped response is still classified as a recoverable code
+         * error rather than a terminal one.
          */
         private val INNER_ERROR_INVALID_ONE_TIME_CODE =
-            setOf("invalidOneTimeCode", "invalid_one_time_code", "invalid_oob_value")
+            setOf("invalidOneTimeCode", "invalid_oob_value")
         private val INNER_ERROR_PASSWORD_TOO_WEAK = setOf("passwordTooWeak", "password_too_weak")
         private val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD =
             setOf("invalidUserNameOrPassword", "invalid_username_or_password")
