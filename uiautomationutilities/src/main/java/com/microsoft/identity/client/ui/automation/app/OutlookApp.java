@@ -58,6 +58,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
     private final static String ACCOUNT_BUTTON_RESOURCE_ID = OUTLOOK_PACKAGE_NAME + ":id/account_button";
 
     /**
+     * Negative ("No Thanks" / "Cancel") button of a framework AlertDialog.
+     */
+    private final static String ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID = "android:id/button2";
+
+    /**
      * Number of times we open the navigation drawer looking for the signed-in account before giving
      * up. Outlook can raise a transient teaching callout over the drawer which hides the drawer from
      * the accessibility tree; dismissing it and re-opening the drawer clears the condition.
@@ -182,16 +187,15 @@ public class OutlookApp extends App implements IFirstPartyApp {
         handleIntroDialogueAfterSignIn();
 
         for (int attempt = 1; attempt <= CONFIRM_ACCOUNT_MAX_ATTEMPTS; attempt++) {
-            // Click the account drawer. On the first attempt the drawer is closed, so a strict click
-            // surfaces a genuinely missing button. On retries the drawer may still be open: a popup
-            // that is dismissed by an outside tap consumes that tap, leaving the drawer up. In that
-            // case the account button is covered, so click safely and fall through to the lookup,
-            // which is the state we want anyway.
-            if (attempt == 1) {
-                UiAutomatorUtils.handleButtonClick(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
-            } else {
-                UiAutomatorUtils.handleButtonClickSafely(ACCOUNT_BUTTON_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
-            }
+            // Clear anything sitting in front of the inbox before reaching for the drawer. Outlook
+            // raises modal dialogs of its own (for example the notification opt-in prompt), and while
+            // one is up the drawer button is not in the resolved accessibility tree at all.
+            dismissBlockingDialog();
+
+            // Click the account drawer. This is deliberately non-fatal: if a popup is covering the
+            // button we still want to fall through to the lookup and, failing that, to another
+            // attempt, rather than aborting the whole check on the first try.
+            UiAutomatorUtils.handleButtonClickSafely(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
 
             // Make sure our account is listed in the account drawer. Give the first attempt the full
             // timeout; retries only need to outlast the drawer animation as the account is either
@@ -213,6 +217,36 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         Assert.fail("Expected account " + username + " to be listed in the Outlook account drawer, "
                 + "but it was not found after " + CONFIRM_ACCOUNT_MAX_ATTEMPTS + " attempts.");
+    }
+
+    /**
+     * Dismisses a modal dialog sitting in front of the current screen, if one is up.
+     * <p>
+     * Outlook raises its own alert dialogs (for example the "Enable Notifications" opt-in prompt on
+     * Android 13+, which fronts the runtime POST_NOTIFICATIONS permission). A modal dialog takes over
+     * the resolved accessibility tree, so elements behind it — including the account drawer button —
+     * cannot be found at all. The negative button is preferred so the test declines rather than
+     * granting anything it did not intend to.
+     */
+    private void dismissBlockingDialog() {
+        final UiObject negativeButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+
+        if (!negativeButton.exists()) {
+            return;
+        }
+
+        Logger.i(TAG, "Dismissing a modal dialog that is covering the Outlook UI..");
+        try {
+            negativeButton.click();
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                    .waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+        } catch (final UiObjectNotFoundException e) {
+            // The dialog went away on its own between the check and the click, which is the state we
+            // wanted anyway.
+            Logger.i(TAG, "Modal dialog disappeared before it could be dismissed.");
+        }
     }
 
     /**
