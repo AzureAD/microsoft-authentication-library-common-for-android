@@ -1,6 +1,6 @@
 vNext
 ----------
-- [PATCH] Make OutlookApp.confirmAccount resilient to popups that hide the Outlook account drawer from the accessibility tree. Both Outlook's transient teaching callout (e.g. the folder-ordering tip, raised in its own popup window) and its modal alert dialogs (e.g. the Android 13+ "Enable Notifications" opt-in prompt) cause UiAutomator to resolve selectors against the popup rather than the drawer, so the account label lookup failed even though the account was visible on screen. The drawer lookup now dismisses any blocking dialog, re-opens the drawer, and retries up to 3 times, and the assertion message states the actual expectation (AB#3737877) (#3231)
+- [PATCH] Retry the Outlook account drawer lookup in OutlookApp.confirmAccount so a transient popup (teaching callout or modal dialog) can't fail the check (AB#3737877) (#3231)
 - [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 - [MINOR] Reenable the GetCookies WebApps API contract for broker discovery (#3230)
