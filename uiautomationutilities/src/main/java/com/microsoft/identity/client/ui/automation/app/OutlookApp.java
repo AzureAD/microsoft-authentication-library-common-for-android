@@ -182,8 +182,16 @@ public class OutlookApp extends App implements IFirstPartyApp {
         handleIntroDialogueAfterSignIn();
 
         for (int attempt = 1; attempt <= CONFIRM_ACCOUNT_MAX_ATTEMPTS; attempt++) {
-            // Click the account drawer
-            UiAutomatorUtils.handleButtonClick(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
+            // Click the account drawer. On the first attempt the drawer is closed, so a strict click
+            // surfaces a genuinely missing button. On retries the drawer may still be open: a popup
+            // that is dismissed by an outside tap consumes that tap, leaving the drawer up. In that
+            // case the account button is covered, so click safely and fall through to the lookup,
+            // which is the state we want anyway.
+            if (attempt == 1) {
+                UiAutomatorUtils.handleButtonClick(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
+            } else {
+                UiAutomatorUtils.handleButtonClickSafely(ACCOUNT_BUTTON_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            }
 
             // Make sure our account is listed in the account drawer. Give the first attempt the full
             // timeout; retries only need to outlast the drawer animation as the account is either
