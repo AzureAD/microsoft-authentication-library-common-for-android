@@ -506,17 +506,11 @@ class NativeAuthV2ResponseParser {
             setOf("invalidOneTimeCode", "invalid_oob_value")
         private val INNER_ERROR_INVALID_PASSWORD = setOf(
             "passwordTooWeak",
-            "password_too_weak",
             "passwordTooShort",
-            "password_too_short",
             "passwordTooLong",
-            "password_too_long",
             "passwordIsInvalid",
-            "password_is_invalid",
             "passwordRecentlyUsed",
-            "password_recently_used",
-            "passwordBanned",
-            "password_banned"
+            "passwordBanned"
         )
         private val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD =
             setOf("invalidUserNameOrPassword", "invalid_username_or_password")

@@ -346,17 +346,11 @@ class NativeAuthV2ResponseParserTest {
     fun parseInteraction_whenPasswordIsInvalid_preservesSubError() {
         val passwordSubErrors = listOf(
             "passwordTooWeak",
-            "password_too_weak",
             "passwordTooShort",
-            "password_too_short",
             "passwordTooLong",
-            "password_too_long",
             "passwordIsInvalid",
-            "password_is_invalid",
             "passwordRecentlyUsed",
-            "password_recently_used",
-            "passwordBanned",
-            "password_banned"
+            "passwordBanned"
         )
 
         passwordSubErrors.forEach { subError ->
@@ -379,6 +373,21 @@ class NativeAuthV2ResponseParserTest {
                 (result as NativeAuthV2InteractionApiResult.InvalidPassword).subError
             )
         }
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordSubErrorUsesLegacySnakeCase_returnsUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"password_too_weak"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.UPDATE_PASSWORD
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
     }
 
     @Test
