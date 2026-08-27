@@ -28,6 +28,7 @@ import com.microsoft.identity.common.components.MockPlatformComponentsFactory
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.broker.telemetry.EventCollector
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -53,12 +54,37 @@ class BrokerMsalControllerTelemetryTest {
 
         assertTrue(
             requestBundle.containsKey(
-                AuthenticationConstants.BrokerContentProvider.BROKER_TELEMETRY_REQUEST
+                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
             )
         )
         assertNotNull(
             requestBundle.getString(
-                AuthenticationConstants.BrokerContentProvider.BROKER_TELEMETRY_REQUEST
+                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
+            )
+        )
+    }
+
+    /**
+     * A null collector must leave the key absent rather than serializing to the literal
+     * string "null", so the broker can distinguish "telemetry not requested" from an
+     * explicit JSON null.
+     */
+    @Test
+    fun addBrokerTelemetryRequest_nullEventCollector_leavesKeyAbsent() {
+        val controller = BrokerMsalController(
+            InstrumentationRegistry.getInstrumentation().context,
+            MockPlatformComponentsFactory.getNonFunctionalBuilder().build(),
+            "broker.package"
+        )
+        val parameters = CommandParameters.builder()
+            .platformComponents(MockPlatformComponentsFactory.getNonFunctionalBuilder().build())
+            .build()
+
+        val requestBundle = controller.addBrokerTelemetryRequest(Bundle(), parameters)
+
+        assertFalse(
+            requestBundle.containsKey(
+                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
             )
         )
     }

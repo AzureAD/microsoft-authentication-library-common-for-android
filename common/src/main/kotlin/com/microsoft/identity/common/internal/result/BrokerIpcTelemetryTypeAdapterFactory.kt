@@ -34,7 +34,17 @@ import com.microsoft.identity.common.java.broker.telemetry.BrokerIpcTelemetry
 import com.microsoft.identity.common.java.broker.telemetry.PerformanceRecord
 
 /**
- * Rejects broker IPC telemetry objects whose required wire fields are absent or null.
+ * Enforces required-field presence when deserializing [BrokerIpcTelemetry] and
+ * [PerformanceRecord] from the broker IPC response.
+ *
+ * Gson instantiates Kotlin classes reflectively, bypassing constructors and null-checks.
+ * Without this factory a payload missing `correlation_id` still deserializes, leaving a
+ * non-nullable `String` property holding null — the resulting NPE then surfaces far from
+ * the parse site and is hard to trace back to a malformed broker response. Failing at the
+ * parse boundary keeps the blast radius local.
+ *
+ * Note: this relies on [com.google.gson.internal.Streams], which is internal Gson API with
+ * no compatibility guarantee. Re-verify this class when upgrading Gson.
  */
 internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {

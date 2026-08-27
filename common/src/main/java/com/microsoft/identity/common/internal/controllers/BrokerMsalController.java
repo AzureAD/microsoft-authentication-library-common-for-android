@@ -46,7 +46,7 @@ import static com.microsoft.identity.common.internal.controllers.BrokerOperation
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerContentProvider.BROKER_TELEMETRY_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST;
 
 import android.app.Activity;
 import android.content.Context;
@@ -161,6 +161,11 @@ public class BrokerMsalController extends BaseController {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
                                      @NonNull final CommandParameters parameters) {
+        if (parameters.getEventCollector() == null) {
+            // Telemetry is not being collected for this request. Leave the key absent so the
+            // broker treats it as "not requested" rather than parsing an explicit JSON null.
+            return requestBundle;
+        }
         requestBundle.putString(
                 BROKER_TELEMETRY_REQUEST,
                 ObjectMapper.serializeObjectToJsonString(parameters.getEventCollector())

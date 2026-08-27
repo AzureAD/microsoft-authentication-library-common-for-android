@@ -611,6 +611,12 @@ public class CommandDispatcher {
                     getSilentExecutorPoolSize()
             );
 
+            // Recorded before execute() so this event can never be timestamped after
+            // BrokerCommandExecutionStart, which the worker thread may record immediately.
+            TelemetryHelper.addEventSafely(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
@@ -708,10 +714,6 @@ public class CommandDispatcher {
                     codeMarkerManager.markCode(isDeviceCodeFlowRequest ? ACQUIRE_TOKEN_DCF_FUTURE_OBJECT_CREATION_END : ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
             }));
-            TelemetryHelper.addEventSafely(
-                    commandParameters.getEventCollector(),
-                    EventTag.BrokerCommandQueued
-            );
             return finalFuture;
         }
     }
@@ -742,6 +744,12 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
+            // Recorded before execute() so this event can never be timestamped after
+            // BrokerCommandExecutionStart, which the worker thread may record immediately.
+            TelemetryHelper.addEventSafely(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
@@ -770,10 +778,6 @@ public class CommandDispatcher {
 
                 }
             }));
-            TelemetryHelper.addEventSafely(
-                    commandParameters.getEventCollector(),
-                    EventTag.BrokerCommandQueued
-            );
             return finalFuture;
         }
     }
@@ -1045,6 +1049,12 @@ public class CommandDispatcher {
                     }
                 }
 
+                // Recorded before execute() so this event can never be timestamped after
+                // BrokerCommandExecutionStart, which the worker thread may record immediately.
+                TelemetryHelper.addEventSafely(
+                        command.getParameters().getEventCollector(),
+                        EventTag.BrokerCommandQueued
+                );
                 sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                     @Override
                     public void run() {
@@ -1107,10 +1117,6 @@ public class CommandDispatcher {
                         }
                     }
                 }));
-                TelemetryHelper.addEventSafely(
-                        command.getParameters().getEventCollector(),
-                        EventTag.BrokerCommandQueued
-                );
             }
         }
 

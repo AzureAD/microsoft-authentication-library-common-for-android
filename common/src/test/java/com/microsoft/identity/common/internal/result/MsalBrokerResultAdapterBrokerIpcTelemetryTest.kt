@@ -128,7 +128,7 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
         val authResult = LocalAuthenticationResult(cacheRecord, records, SdkType.MSAL, false)
         val bundle = adapter.bundleFromAuthenticationResult(authResult, "16.0").apply {
             putString(
-                AuthenticationConstants.BrokerContentProvider.BROKER_IPC_TELEMETRY,
+                AuthenticationConstants.Broker.BROKER_IPC_TELEMETRY,
                 gson.toJson(telemetry)
             )
         }
@@ -145,7 +145,7 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
             null
         ).apply {
             putString(
-                AuthenticationConstants.BrokerContentProvider.BROKER_IPC_TELEMETRY,
+                AuthenticationConstants.Broker.BROKER_IPC_TELEMETRY,
                 gson.toJson(telemetry)
             )
         }
@@ -163,7 +163,7 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
     }
 
     private fun bundleWith(json: String) = Bundle().apply {
-        putString(AuthenticationConstants.BrokerContentProvider.BROKER_IPC_TELEMETRY, json)
+        putString(AuthenticationConstants.Broker.BROKER_IPC_TELEMETRY, json)
     }
 
     private fun newCacheRecord() = CacheRecord.builder()

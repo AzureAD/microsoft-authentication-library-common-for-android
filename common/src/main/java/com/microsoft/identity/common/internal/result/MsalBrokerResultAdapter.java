@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.result;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_REQUEST_RECEIVED_TIMESTAMP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_RESPONSE_GENERATION_TIMESTAMP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_SILENT_EXECUTOR_POOL_SIZE;
-import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerContentProvider.BROKER_IPC_TELEMETRY;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_IPC_TELEMETRY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
@@ -605,7 +605,10 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (metrics != null) {
             baseException.setBrokerPerformanceMetrics(metrics);
         }
-        baseException.setBrokerIpcTelemetry(brokerIpcTelemetry);
+        // Attach broker IPC telemetry if available
+        if (brokerIpcTelemetry != null) {
+            baseException.setBrokerIpcTelemetry(brokerIpcTelemetry);
+        }
 
         // Restore ClientDataInfo (server telemetry) from the broker result so callers
         // catching the exception can inspect server-side error context.
@@ -1157,9 +1160,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
                 final ILocalAuthenticationResult authResult = authenticationResultFromBundle(resultBundle);
                 acquireTokenResult.setLocalAuthenticationResult(authResult);
-                acquireTokenResult.setBrokerIpcTelemetry(
-                        getBrokerIpcTelemetryFromBundle(resultBundle)
-                );
+
+                final BrokerIpcTelemetry ipcTelemetry = getBrokerIpcTelemetryFromBundle(resultBundle);
+                if (ipcTelemetry != null) {
+                    acquireTokenResult.setBrokerIpcTelemetry(ipcTelemetry);
+                }
 
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
@@ -1197,9 +1202,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             if (metrics != null) {
                 acquireTokenResult.setBrokerPerformanceMetrics(metrics);
             }
-            acquireTokenResult.setBrokerIpcTelemetry(
-                    resultAdapter.getBrokerIpcTelemetryFromBundle(resultBundle)
-            );
+
+            final BrokerIpcTelemetry ipcTelemetry =
+                    resultAdapter.getBrokerIpcTelemetryFromBundle(resultBundle);
+            if (ipcTelemetry != null) {
+                acquireTokenResult.setBrokerIpcTelemetry(ipcTelemetry);
+            }
 
             // Set broker app info if available
             if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
