@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add FociQueryOutcome and FociQueryUtilities.queryFociMembership, a classified result for the FoCI membership query, so callers can tell a definitive non-membership response apart from a transient or refresh-token-specific failure. The existing tryFociTokenWithGivenClientId overloads are unchanged in behaviour and now delegate to it (#TBD)
 - [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 - [MINOR] Reenable the GetCookies WebApps API contract for broker discovery (#3230)
