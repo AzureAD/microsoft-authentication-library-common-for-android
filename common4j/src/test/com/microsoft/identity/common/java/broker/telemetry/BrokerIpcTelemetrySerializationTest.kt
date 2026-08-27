@@ -218,6 +218,23 @@ class BrokerIpcTelemetrySerializationTest {
         assertEquals(EventTag.BrokerResponseSent, restored.performanceRecord.executionFlow.last().tag)
     }
 
+    @Test
+    fun eventCollector_serializedForIpc_retainsCorrelationIdAsAField() {
+        val collector = EventCollector("")
+        collector.adoptCorrelationId("adopted-wire-corr-id")
+        collector.addEvent(EventTag.BrokerRequestReceived)
+
+        // BrokerMsalController.addBrokerTelemetryRequest serializes the collector *itself* onto the
+        // request bundle, so correlationId is a wire field and not merely in-memory state. It is
+        // declared @Volatile to allow late adoption; this pins the fact that doing so keeps it
+        // serializable, since Gson's default excluder skips only static and transient members.
+        val json = gson.toJsonTree(collector).asJsonObject
+
+        val correlationIdJson = json.get("correlationId")
+        assertNotNull(correlationIdJson)
+        assertEquals("adopted-wire-corr-id", correlationIdJson.asString)
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------

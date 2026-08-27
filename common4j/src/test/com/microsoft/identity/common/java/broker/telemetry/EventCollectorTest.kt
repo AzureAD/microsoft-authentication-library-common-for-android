@@ -230,6 +230,49 @@ class EventCollectorTest {
         assertEquals(1, events[0].statusCode)
     }
 
+    @Test
+    fun adoptCorrelationId_whenConstructedBlank_adoptsResolvedValue() {
+        val collector = EventCollector("")
+
+        collector.adoptCorrelationId("resolved-correlation-id")
+
+        assertEquals("resolved-correlation-id", collector.correlationId)
+        assertEquals("resolved-correlation-id", collector.toTestTelemetry().correlationId)
+    }
+
+    @Test
+    fun adoptCorrelationId_whenConstructedWithValue_doesNotOverwrite() {
+        // A caller-supplied ID is what the caller will use to look the request up, so it wins.
+        val collector = EventCollector(testCorrelationId)
+
+        collector.adoptCorrelationId("some-other-correlation-id")
+
+        assertEquals(testCorrelationId, collector.correlationId)
+    }
+
+    @Test
+    fun adoptCorrelationId_withNullOrBlankResolved_leavesCollectorUnchanged() {
+        // A caller with nothing better to offer must not degrade what is already recorded.
+        val collector = EventCollector("")
+
+        collector.adoptCorrelationId(null)
+        assertEquals("", collector.correlationId)
+
+        collector.adoptCorrelationId("   ")
+        assertEquals("", collector.correlationId)
+    }
+
+    @Test
+    fun adoptCorrelationId_calledTwice_isIdempotent() {
+        // Callers invoke this unconditionally, so repeated calls must be harmless.
+        val collector = EventCollector("")
+
+        collector.adoptCorrelationId("first-resolved-id")
+        collector.adoptCorrelationId("second-resolved-id")
+
+        assertEquals("first-resolved-id", collector.correlationId)
+    }
+
     /** Supplies the contract-required broker identity and outcome fields for tests. */
     private fun EventCollector.toTestTelemetry(): BrokerIpcTelemetry =
         toBrokerIpcTelemetry(name = "authenticator", version = "test-broker-1.0", authOutcome = "success")
