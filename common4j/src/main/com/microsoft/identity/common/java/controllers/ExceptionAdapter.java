@@ -96,7 +96,7 @@ public class ExceptionAdapter {
                             ((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo()
                     );
                 }
-                return authException;
+                return copyBrokerResultInfo(result, authException);
             }
         } else {
             Logger.warn(
@@ -105,7 +105,17 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
+        return copyBrokerResultInfo(
+                result,
+                exceptionFromTokenResult(result.getTokenResult(), commandParameters)
+        );
+    }
+
+    private static BaseException copyBrokerResultInfo(@NonNull final AcquireTokenResult result,
+                                                      @NonNull final BaseException exception) {
+        exception.setBrokerAppPackageName(result.getBrokerAppPackageName());
+        exception.setPowerOptimizationSettings(result.getPowerOptimizationSettings());
+        return exception;
     }
 
     public static BaseException exceptionFromAuthorizationResult(@NonNull final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {

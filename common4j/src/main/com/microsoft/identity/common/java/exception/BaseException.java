@@ -107,6 +107,9 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Nullable
     private String mBrokerAppPackageName;
 
+    @Nullable
+    private String mPowerOptimizationSettings;
+
     private final List<Map<String, String>> mTelemetry = new ArrayList<>();
 
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
@@ -332,6 +335,10 @@ public class BaseException extends Exception implements IErrorInformation, ITele
         this.mBrokerAppPackageName = brokerAppPackageName;
     }
 
+    public void setPowerOptimizationSettings(@Nullable final String powerOptimizationSettings) {
+        this.mPowerOptimizationSettings = powerOptimizationSettings;
+    }
+
     public void setBrokerAppVersion(final String brokerAppVersion) {
         this.mBrokerAppVersion = brokerAppVersion;
     }
@@ -344,5 +351,13 @@ public class BaseException extends Exception implements IErrorInformation, ITele
     @Override
     public String getBrokerAppPackageName() {
         return mBrokerAppPackageName;
+    }
+
+    /**
+     * @return The battery optimization status reported by the Broker that executed the request.
+     */
+    @Nullable
+    public String getPowerOptimizationSettings() {
+        return mPowerOptimizationSettings;
     }
 }
