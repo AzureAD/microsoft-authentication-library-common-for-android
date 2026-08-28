@@ -66,8 +66,10 @@ import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecor
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NonceRedirectHandler;
+import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ReAttachPrtHeaderHandler;
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
+import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -89,6 +91,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
@@ -99,8 +102,19 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.StatusCode;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
 /**
  * Tests for {@link AzureActiveDirectoryWebViewClient}.
@@ -176,6 +190,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
     private static final String TEST_PLAYSTORE_FOR_BROKER_APP_URL = "https://play.google.com/store/apps/details?id=com.azure.authenticator";
     private static final String TEST_INVALID_URL = "https://some.invalid.url";
+    // Sentinel returned by the mocked WebView.getUrl() so that origin-tracking tests can distinguish
+    // "the recorded main-frame URL was used" from "we fell back to view.getUrl()" (AB#3706623).
+    private static final String FALLBACK_ORIGIN_URL = "https://fallback.contoso.com/authorize";
     private static final String TEST_MSA_HEADER_FORWARDING_POSITIVE_URL = "https://login.live.com/oauth20_authorize.srf";
     private static final String TEST_MSA_HEADER_FORWARDING_NEGATIVE_URL = "https://login.blah.com/oauth20_authorize.srf";
 
@@ -281,6 +298,10 @@ public class AzureActiveDirectoryWebViewClientTest {
     @After
     public void cleanUp(){
         CommonFlightsManager.INSTANCE.resetFlightsManager();
+        // Round 15 (mohitc1): the reworked PKeyAuth telemetry tests inject a capturing span factory via
+        // OTelUtility.setSpanFactory, which mutates a JVM-global @Volatile with no getter to restore. Reset
+        // it to the production default after every test so a leaked test factory cannot corrupt later tests.
+        OTelUtility.setSpanFactory(new DefaultOTelSpanFactory());
         // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
         // OnboardingTelemetryRecorder.addBlockingError persists to this store.
         if (mContext != null) {
@@ -1036,7 +1057,40 @@ public class AzureActiveDirectoryWebViewClientTest {
         when(mockFlightsProvider.isFlightEnabled(
                 CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION))
                 .thenReturn(credentialHeaderValidationEnabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+    }
 
+    // ===== PKeyAuth SubmitUrl same-origin: challenging-origin tracking (AB#3706623) =====
+    // These tests pin the WebView-side derivation of the "challenging origin" that the factory
+    // validates a PKeyAuth SubmitUrl against. They intercept the factory construction and capture the
+    // second argument (the derived origin) rather than driving the full signing path, so they observe
+    // exactly which navigation became the origin. They cover both the shouldOverrideUrlLoading path
+    // and the onPageStarted path (the sole origin source pre-API-24 and for redirect targets that
+    // never commit), with the origin-validation flight both on and off.
+
+    /**
+     * Turns on the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch so the
+     * WebView-side origin recording/derivation added for AB#3706623 actually runs. {@code @After}
+     * {@link #cleanUp()} resets the flights manager.
+     */
+    private void enablePKeyAuthOriginValidationFlight() {
+        setPKeyAuthOriginValidationFlight(true);
+    }
+
+    /**
+     * Turns the {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch off so we
+     * can assert the WebView-side origin recording/derivation is a complete no-op with the flight off.
+     */
+    private void disablePKeyAuthOriginValidationFlight() {
+        setPKeyAuthOriginValidationFlight(false);
+    }
+
+    private void setPKeyAuthOriginValidationFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION))
+                .thenReturn(enabled);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
@@ -1161,6 +1215,538 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(mockWebView, Mockito.never())
                 .loadUrl(Mockito.anyString(), Mockito.anyMap());
     }
+
+    private WebResourceRequest mockNavigationRequest(final String url, final boolean isForMainFrame) {
+        final WebResourceRequest request = Mockito.mock(WebResourceRequest.class);
+        when(request.getUrl()).thenReturn(Uri.parse(url));
+        when(request.isForMainFrame()).thenReturn(isForMainFrame);
+        return request;
+    }
+
+    /**
+     * The realistic main-frame sequence: an https navigation is deferred to the WebView (returns
+     * {@code false}), the WebView then actually loads it (firing {@code onPageStarted}), and a
+     * subsequent PKeyAuth challenge validates its SubmitUrl against that committed URL — taking
+     * precedence over {@link WebView#getUrl()}. {@code onPageStarted} is the single source of truth
+     * for the challenging origin; the deferral itself records nothing.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_MainFrameHttpsNavigation_BecomesChallengingOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame https navigation deferred to the WebView...
+            assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_INVALID_URL, true)));
+            // ...then the WebView actually loads it, which is what records the challenging origin.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            // Subsequent PKeyAuth challenge derives its challenging origin from the committed URL.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("Committed main-frame https URL must be the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * Coverage for the gap mohitc1 surfaced: URLs that an override branch loads via
+     * {@code view.loadUrl(...)} never pass through {@code handleUrl}'s defer branch, yet
+     * {@code onPageStarted} still fires for them. So even when a main-frame URL is overridden
+     * (handled, {@code shouldOverrideUrlLoading} returns {@code true}), the https target the WebView
+     * subsequently loads is recorded via {@code onPageStarted} and becomes the challenging origin.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OverrideBranchLoadUrlTarget_RecordedViaOnPageStarted() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame URL that is overridden (header-forwarding branch, returns true) -> the defer
+            // branch never runs, so it records nothing on its own.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_MSA_HEADER_FORWARDING_POSITIVE_URL, true)));
+            // The https target that override loads via view.loadUrl(...) is caught by onPageStarted.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("A loadUrl target caught by onPageStarted must become the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A subframe https navigation must NOT become the challenging origin (subframe poisoning guard).
+     * With nothing recorded, the factory receives the {@link WebView#getUrl()} fallback instead.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_SubframeHttpsNavigation_DoesNotBecomeOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Subframe navigation (isForMainFrame == false) must not be recorded.
+            mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_INVALID_URL, false));
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("Subframe navigation must not become the challenging origin; expected view.getUrl() fallback",
+                    FALLBACK_ORIGIN_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A main-frame https URL that we OVERRIDE (handled, returns {@code true}) must NOT be recorded,
+     * because the WebView never actually loads it. Recording it would false-reject the next legitimate
+     * challenge on the real page. Here the derived origin falls back to {@link WebView#getUrl()}.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OverriddenMainFrameUrl_DoesNotBecomeOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Main-frame https URL we override (header-forwarding branch, returns true) -> not recorded.
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_MSA_HEADER_FORWARDING_POSITIVE_URL, true)));
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("An overridden (never-loaded) URL must not become the challenging origin; expected view.getUrl() fallback",
+                    FALLBACK_ORIGIN_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * onPageStarted is the sole origin source on pre-API-24 devices (the deprecated String overload
+     * of shouldOverrideUrlLoading carries no frame info) and for redirect targets that never commit
+     * via shouldOverrideUrlLoading. An https URL delivered through onPageStarted must be recorded as
+     * the challenging origin and take precedence over {@link WebView#getUrl()}.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedHttpsRedirect_BecomesChallengingOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Redirect target delivered via onPageStarted (main-frame-only by Android contract).
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("onPageStarted https URL must be recorded as the challenging origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * A non-https onPageStarted callback must NOT replace an already-recorded https origin (pins the
+     * https-only recording from round 4). A cleartext detour cannot demote the trusted origin.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedNonHttps_DoesNotReplaceOrigin() throws ClientException {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // First an https page is recorded, then a cleartext page must not overwrite it.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+            mWebViewClient.onPageStarted(mockWebView, TEST_SSL_PROTECTION_HTTP_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertEquals("A non-https onPageStarted must not replace the recorded https origin",
+                    TEST_INVALID_URL, originCaptor.getValue());
+        }
+    }
+
+    /**
+     * With the flight off, onPageStarted recording and challenging-origin derivation are a complete
+     * no-op: the factory receives {@code null} regardless of what onPageStarted saw.
+     */
+    @Test
+    public void testPKeyAuthOriginTracking_OnPageStartedFlightOff_NoOp() throws ClientException {
+        disablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            final PKeyAuthChallengeFactory factory = factoryCtor.constructed().get(0);
+            final ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
+            Mockito.verify(factory).getPKeyAuthChallengeFromWebViewRedirect(
+                    eq(TEST_PKEY_AUTH_URL), originCaptor.capture());
+            assertNull("With the flight off, no challenging origin is derived",
+                    originCaptor.getValue());
+        }
+    }
+    // ===== PKeyAuth SubmitUrl same-origin: navigation-context telemetry (AB#3706623, round 8) =====
+    // The WebView client annotates the current span with two non-PII navigation-context attributes it
+    // alone knows: whether the challenge is on the main frame, and where the challenging origin was
+    // derived from (recorded https URL vs a view.getUrl() fallback vs none). These are set only when
+    // the master flight is on.
+    //
+    // Round 15 (mohitc1): these two tests previously stubbed SpanExtension.current() and
+    // makeCurrentSpan() independently via MockedStatic, so current() returned a mock span
+    // unconditionally and verify(makeCurrentSpan(any())) only proved *some* span was made current.
+    // That could not detect production making span A current but writing the attributes to span B -
+    // exactly the wrong-span class of bug melissaahn originally caught in round 12. We now inject a
+    // capturing IOTelSpanFactory through the existing OTelUtility.setSpanFactory seam and let
+    // makeCurrentSpan()/current() round-trip through real OTel context (no MockedStatic<SpanExtension>),
+    // then assert the attributes landed on the *captured* span - the same object the production code
+    // created and made current. The OTel context round-trip works without an SDK (it is the pure
+    // opentelemetry-context ThreadLocal), and the factory/handler stay mocked so no signing occurs.
+
+    /**
+     * A main-frame PKeyAuth challenge with a recorded https origin annotates the current span with
+     * {@code pkeyauth_challenge_is_main_frame=true} and {@code pkeyauth_challenging_origin_source=recorded}.
+     * The attributes are asserted on the span captured from the injected factory, proving they land on
+     * the exact span the production code made current (round 15, mohitc1).
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_MainFrameRecordedOrigin_Emitted() {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            // Record an https main-frame origin, then dispatch a main-frame PKeyAuth challenge.
+            mWebViewClient.onPageStarted(mockWebView, TEST_INVALID_URL, null);
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            // handleUrl creates a ProcessPKeyAuthChallenge span and makes it current before the two
+            // telemetry sites run. Because current()/makeCurrentSpan() round-trip for real, current()
+            // inside the scope resolves to exactly the captured span - so a wrong-span write would
+            // leave this captured span empty and fail the assertions below.
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.TRUE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("recorded",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
+        }
+    }
+
+    /**
+     * A subframe PKeyAuth challenge with nothing recorded annotates the span with
+     * {@code pkeyauth_challenge_is_main_frame=false} and {@code pkeyauth_challenging_origin_source=webview_url}
+     * (the {@link WebView#getUrl()} fallback). Validation is not relaxed for subframes; only the
+     * main-frame flag is recorded so a cross-origin iframe challenge can be measured. Asserted on the
+     * captured span for the same wrong-span reason as the main-frame case (round 15, mohitc1).
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_SubframeFallbackOrigin_Emitted() {
+        enablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessPKeyAuthChallenge.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, false)));
+
+            final RecordingSpan span = spanFactory.captured();
+            assertNotNull("ProcessPKeyAuthChallenge span was created and made current", span);
+            assertEquals(Boolean.FALSE,
+                    span.attribute(AttributeName.pkeyauth_challenge_is_main_frame.name()));
+            assertEquals("webview_url",
+                    span.attribute(AttributeName.pkeyauth_challenging_origin_source.name()));
+        }
+    }
+
+    /**
+     * A capturing {@link IOTelSpanFactory} that intercepts the {@code ProcessPKeyAuthChallenge} span
+     * the production code creates and returns a real {@link RecordingSpan}, delegating every other span
+     * to {@link DefaultOTelSpanFactory}. Injected via {@link OTelUtility#setSpanFactory} and restored to
+     * the production default in {@link #cleanUp()}. Used to assert PKeyAuth navigation-context
+     * attributes land on the exact span made current (round 15, mohitc1).
+     */
+    private static final class CapturingSpanFactory implements IOTelSpanFactory {
+        private final String mTargetName;
+        private final IOTelSpanFactory mDelegate = new DefaultOTelSpanFactory();
+        private RecordingSpan mCaptured;
+
+        CapturingSpanFactory(final String targetName) {
+            mTargetName = targetName;
+        }
+
+        /** The recording span captured for the target name, or {@code null} if it was never created. */
+        RecordingSpan captured() {
+            return mCaptured;
+        }
+
+        @Override
+        public Span createSpan(final String name) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name);
+        }
+
+        @Override
+        public Span createSpan(final String name, final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpan(name, callingPackageName);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext);
+        }
+
+        @Override
+        public Span createSpanFromParent(final String name, final SpanContext parentSpanContext,
+                                         final String callingPackageName) {
+            if (mTargetName.equals(name)) {
+                mCaptured = new RecordingSpan();
+                return mCaptured;
+            }
+            return mDelegate.createSpanFromParent(name, parentSpanContext, callingPackageName);
+        }
+    }
+
+    /**
+     * A minimal real {@link Span} implementation (NOT a Mockito mock) that records the attributes set
+     * on it. It deliberately does not override {@link Span#makeCurrent()}, so the default OTel context
+     * round-trip runs: making this span current stores it under the span key and
+     * {@link SpanExtension#current()} resolves back to this same instance. That is what lets the two
+     * telemetry tests prove the attributes landed on the span that was actually made current, rather
+     * than on an independently-stubbed mock (round 15, mohitc1).
+     */
+    private static final class RecordingSpan implements Span {
+        private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
+
+        /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
+        Object attribute(final String keyName) {
+            for (final Map.Entry<AttributeKey<?>, Object> entry : mAttributes.entrySet()) {
+                if (entry.getKey().getKey().equals(keyName)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public <T> Span setAttribute(final AttributeKey<T> key, final T value) {
+            mAttributes.put(key, value);
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes) {
+            return this;
+        }
+
+        @Override
+        public Span addEvent(final String name, final Attributes attributes, final long timestamp,
+                             final TimeUnit unit) {
+            return this;
+        }
+
+        @Override
+        public Span setStatus(final StatusCode statusCode, final String description) {
+            return this;
+        }
+
+        @Override
+        public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
+            return this;
+        }
+
+        @Override
+        public Span updateName(final String name) {
+            return this;
+        }
+
+        @Override
+        public void end() {
+        }
+
+        @Override
+        public void end(final long timestamp, final TimeUnit unit) {
+        }
+
+        @Override
+        public SpanContext getSpanContext() {
+            return SpanContext.getInvalid();
+        }
+
+        @Override
+        public boolean isRecording() {
+            return true;
+        }
+    }
+
+    /**
+     * With the master flight off, no navigation-context telemetry is emitted — the span is never
+     * touched, matching the end-to-end no-op guarantee.
+     */
+    @Test
+    public void testPKeyAuthContextTelemetry_FlightOff_NotEmitted() {
+        disablePKeyAuthOriginValidationFlight();
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final Span mockSpan = Mockito.mock(Span.class);
+
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class);
+             final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor =
+                     mockConstruction(PKeyAuthChallengeFactory.class);
+             final MockedConstruction<PKeyAuthChallengeHandler> handlerCtor =
+                     mockConstruction(PKeyAuthChallengeHandler.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true)));
+
+            // Flight off: no recording span is established and no attribute is emitted — a true
+            // end-to-end no-op relative to pre-fix behavior (AB#3706623, round 12).
+            spanExtension.verify(() -> SpanExtension.makeCurrentSpan(any()), Mockito.never());
+            Mockito.verifyNoInteractions(mockSpan);
+        }
+    }
+
+    /**
+     * When origin validation rejects a cross-origin {@code SubmitUrl}, the factory throws a
+     * {@link ClientException}. That exception is thrown from inside the round-12 recording-span
+     * scope; it must be rethrown (not swallowed) so handleUrl's outer catch runs the rejection path:
+     * surface the error to the completion callback, stop the WebView, and never reach the
+     * credential-bearing {@code loadUrl}. This pins the Finding-1 hard constraint that wrapping the
+     * dispatch in a span did not alter the rejection semantics (AB#3706623, round 12).
+     */
+    @Test
+    public void testPKeyAuthValidationRejected_SurfacesErrorStopsLoadingAndNeverLoadsUrl() {
+        enablePKeyAuthOriginValidationFlight();
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                mockCallback,
+                url -> {},
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+
+        try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
+                PKeyAuthChallengeFactory.class,
+                (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
+                        .thenThrow(new ClientException(
+                                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                                "SubmitUrl host is not same-origin with the challenging origin.")))) {
+
+            final boolean result = webViewClient.shouldOverrideUrlLoading(
+                    mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
+
+            assertTrue("shouldOverrideUrlLoading must return true (challenge intercepted and rejected)",
+                    result);
+            Mockito.verify(mockWebView).stopLoading();
+            Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+            assertEquals("A rejected SubmitUrl must surface the device-cert-request-invalid error",
+                    ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                    ((ClientException) resultCaptor.getValue().getException()).getErrorCode());
+            // The device-key-signed assertion must never be delivered to any URL.
+            Mockito.verify(mockWebView, Mockito.never())
+                    .loadUrl(Mockito.anyString(), Mockito.anyMap());
+        }
+    }
+
 
     @Test
     @Config(shadows = {
