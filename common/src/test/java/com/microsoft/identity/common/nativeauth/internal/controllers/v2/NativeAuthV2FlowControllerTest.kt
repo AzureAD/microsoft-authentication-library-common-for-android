@@ -155,7 +155,7 @@ class NativeAuthV2FlowControllerTest {
     // -----------------------------------------------------------------------------------------
 
     @Test
-    fun testResetPasswordStartRetainsClaimsForTokenRequest() {
+    fun testResetPasswordStartDoesNotSendTokenScopesOrClaims() {
         val claimsRequestJson = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
 
         every {
@@ -163,8 +163,8 @@ class NativeAuthV2FlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = any(),
                 scenario = any(),
-                scopes = any(),
-                claimsRequestJson = claimsRequestJson
+                scopes = emptyList(),
+                claimsRequestJson = null
             )
         } returns AuthorizeChallengeApiResult.UnknownError(
             correlationId = correlationId,
@@ -181,8 +181,8 @@ class NativeAuthV2FlowControllerTest {
                 correlationId = correlationId,
                 entryRelation = any(),
                 scenario = any(),
-                scopes = any(),
-                claimsRequestJson = claimsRequestJson
+                scopes = emptyList(),
+                claimsRequestJson = null
             )
         }
     }
@@ -605,9 +605,11 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesContinuationStateScopesForTokenRequest() {
+    fun testSignInAfterResetPasswordUsesCallerScopesForTokenRequest() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access", "User.Read")
+        val callerScopes = listOf("Different.Scope")
+        val expectedScopes = callerScopes + "openid" + "offline_access" + "profile"
 
         every { state.scopesForTokenRequest() } returns flowScopes
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
@@ -622,13 +624,13 @@ class NativeAuthV2FlowControllerTest {
         )
 
         controller.signInAfterResetPassword(
-            signInAfterResetPasswordParameters(state, listOf("Different.Scope"))
+            signInAfterResetPasswordParameters(state, callerScopes)
         )
 
         verify(exactly = 1) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = flowScopes,
+                scopes = match { it.toSet() == expectedScopes.toSet() },
                 correlationId = correlationId,
                 claimsRequestJson = null
             )
@@ -639,6 +641,7 @@ class NativeAuthV2FlowControllerTest {
     fun testSignInAfterResetPasswordUsesCallerClaimsForTokenRequest() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access")
+        val expectedScopes = setOf("openid", "offline_access", "profile")
         val claimsRequestJson = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
 
         every { state.scopesForTokenRequest() } returns flowScopes
@@ -663,7 +666,7 @@ class NativeAuthV2FlowControllerTest {
         verify(exactly = 1) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = flowScopes,
+                scopes = match { it.toSet() == expectedScopes },
                 correlationId = correlationId,
                 claimsRequestJson = claimsRequestJson
             )
@@ -671,7 +674,7 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesFlowClaimsWhenCallerClaimsAreAbsent() {
+    fun testSignInAfterResetPasswordTreatsBlankCallerClaimsAsAbsentWithoutFallback() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access")
         val flowClaims = """{"id_token":{"auth_time":{"essential":true}}}"""
@@ -681,7 +684,7 @@ class NativeAuthV2FlowControllerTest {
         every { mockStrategy.performAuthorizeChallengeContinue(state) } returns
             AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
         every {
-            mockStrategy.performTokenRequest(any(), any(), any(), flowClaims)
+            mockStrategy.performTokenRequest(any(), any(), any(), null)
         } returns SignInTokenApiResult.UnknownError(
             correlationId = correlationId,
             error = "invalid_grant",
@@ -689,22 +692,28 @@ class NativeAuthV2FlowControllerTest {
             errorCodes = emptyList()
         )
 
-        controller.signInAfterResetPassword(signInAfterResetPasswordParameters(state))
+        controller.signInAfterResetPassword(
+            signInAfterResetPasswordParameters(state, claimsRequestJson = "   ")
+        )
 
         verify(exactly = 1) {
             mockStrategy.performTokenRequest(
                 code = "auth-code",
-                scopes = flowScopes,
+                scopes = match {
+                    it.toSet() == setOf("openid", "offline_access", "profile")
+                },
                 correlationId = correlationId,
-                claimsRequestJson = flowClaims
+                claimsRequestJson = null
             )
         }
     }
 
     @Test
-    fun testSignInAfterResetPasswordUsesContinuationStateScopesForCachePersistenceRequest() {
+    fun testSignInAfterResetPasswordUsesCallerScopesForTokenRequestAndCachePersistence() {
         val state = mockContinuationState()
         val flowScopes = listOf("openid", "offline_access", "User.Read")
+        val callerScopes = listOf("Different.Scope")
+        val tokenScopesSlot = slot<List<String>>()
         val cacheRequestSlot = slot<MicrosoftStsAuthorizationRequest>()
         val stopAfterCapture = RuntimeException("Stop after cache request capture.")
         val mockTokenCache =
@@ -717,7 +726,7 @@ class NativeAuthV2FlowControllerTest {
         every {
             mockStrategy.performTokenRequest(
                 code = any(),
-                scopes = any(),
+                scopes = capture(tokenScopesSlot),
                 correlationId = any(),
                 claimsRequestJson = null
             )
@@ -730,7 +739,7 @@ class NativeAuthV2FlowControllerTest {
             mockTokenCache.saveAndLoadAggregatedAccountData(any(), capture(cacheRequestSlot), any())
         } throws stopAfterCapture
 
-        val parameters = signInAfterResetPasswordParameters(state, listOf("Different.Scope"))
+        val parameters = signInAfterResetPasswordParameters(state, callerScopes)
             .toBuilder()
             .oAuth2TokenCache(mockTokenCache)
             .clientId("client-id")
@@ -743,7 +752,14 @@ class NativeAuthV2FlowControllerTest {
         }
 
         assertEquals("Stop after cache request capture.", thrown.message)
-        assertEquals(flowScopes.joinToString(" "), cacheRequestSlot.captured.scope)
+        assertEquals(
+            setOf("Different.Scope", "openid", "offline_access", "profile"),
+            tokenScopesSlot.captured.toSet()
+        )
+        assertEquals(
+            tokenScopesSlot.captured.toSet(),
+            cacheRequestSlot.captured.scope.split(" ").toSet()
+        )
     }
 
     @Test
