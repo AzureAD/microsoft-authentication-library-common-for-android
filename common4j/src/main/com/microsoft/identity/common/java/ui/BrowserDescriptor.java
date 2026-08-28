@@ -114,6 +114,26 @@ public class BrowserDescriptor implements Serializable {
         );
     }
 
+    // =========================================================================
+    // TEST BRANCH ONLY -- DO NOT MERGE TO dev.
+    // "Edge Local" (com.microsoft.emmx.local) is a locally-built Edge signed with a
+    // generic development certificate (CN=Unknown), not a Microsoft production key.
+    // Trusting it in a shipping build would let any sideloaded app signed with that
+    // widely-available dev key impersonate a trusted browser. It is listed here
+    // purely so the Switch Browser protocol can be exercised against Edge Local in
+    // an Authenticator test build.
+    // =========================================================================
+    static private BrowserDescriptor getBrowserDescriptorForEdgeLocal() {
+        final HashSet<String> signatureHashes = new HashSet<>();
+        signatureHashes.add("flIU1iFHjL3IKEqiD5L3_74rcaTicT7NigI4wiAa7BE6YyWvUNv50O1_NpBnmdS2unOBHIQ1URMREIkPHJO8nw==");
+        return new BrowserDescriptor(
+                "com.microsoft.emmx.local",
+                signatureHashes,
+                null,
+                null
+        );
+    }
+
     /**
      * Return a list of BrowserDescriptors that are considered safe for the Switch to browser flow.
      */
@@ -122,6 +142,8 @@ public class BrowserDescriptor implements Serializable {
         browserDescriptors.add(getBrowserDescriptorForChrome());
         browserDescriptors.add(getBrowserDescriptorForEdge());
         browserDescriptors.add(getBrowserDescriptorForAea());
+        // TEST BRANCH ONLY -- DO NOT MERGE. See getBrowserDescriptorForEdgeLocal().
+        browserDescriptors.add(getBrowserDescriptorForEdgeLocal());
         return browserDescriptors;
     }
 
