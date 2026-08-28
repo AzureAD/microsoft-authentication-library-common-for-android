@@ -23,10 +23,10 @@
 package com.microsoft.identity.common.internal.result
 
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
-import com.google.gson.internal.Streams
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
@@ -43,8 +43,12 @@ import com.microsoft.identity.common.java.broker.telemetry.PerformanceRecord
  * the parse site and is hard to trace back to a malformed broker response. Failing at the
  * parse boundary keeps the blast radius local.
  *
- * Note: this relies on [com.google.gson.internal.Streams], which is internal Gson API with
- * no compatibility guarantee. Re-verify this class when upgrading Gson.
+ * Buffering the payload into a [com.google.gson.JsonElement] before delegating is what makes the
+ * presence check possible at all: the delegate adapter consumes the reader, so the fields have to
+ * be inspected first. [JsonParser.parseReader] is used rather than the internal
+ * `com.google.gson.internal.Streams`, so this class depends only on public Gson API. It also
+ * converts a `StackOverflowError` from a pathologically nested payload into a
+ * [com.google.gson.JsonParseException], which callers catching [Exception] can absorb.
  */
 internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
@@ -61,7 +65,7 @@ internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
             }
 
             override fun read(input: JsonReader): T? {
-                val element = Streams.parse(input)
+                val element = JsonParser.parseReader(input)
                 if (element.isJsonNull) {
                     return null
                 }

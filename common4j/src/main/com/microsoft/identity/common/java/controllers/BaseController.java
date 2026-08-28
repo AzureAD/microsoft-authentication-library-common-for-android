@@ -915,7 +915,13 @@ public abstract class BaseController {
 
     // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the call to requestToken method
     @SuppressWarnings(WarningType.unchecked_warning)
-    private TokenResult strategyRequestToken(
+    //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    // Package-private rather than private so BaseControllerTelemetryTest can assert the tag
+    // ordering guarantee directly. The guarantee is that BrokerNetworkCallEnd is emitted in a
+    // finally block, so it is recorded even when strategy.requestToken throws; driving that
+    // through the public performSilentTokenRequest would require standing up platform
+    // components and the Authority.getKnownAuthorityResult gate, which is unrelated setup.
+    TokenResult strategyRequestToken(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
             @NonNull final TokenRequest tokenRequest,
             @NonNull final CommandParameters parameters) throws IOException, ClientException {

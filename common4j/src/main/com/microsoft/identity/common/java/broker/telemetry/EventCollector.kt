@@ -117,14 +117,17 @@ class EventCollector(correlationId: String) {
      * Adopts [resolved] as the correlation ID if none was known at construction time.
      *
      * Deliberately never overwrites a value that is already present: an ID supplied by the caller
-     * is the one they will use to look this request up, so it always wins. That makes this call
-     * idempotent and safe to make unconditionally at the point the authoritative ID becomes known.
+     * is the one they will use to look this request up, so it always wins. Repeated calls are
+     * therefore idempotent, and the method is synchronized so the check-and-set cannot interleave
+     * when the collector is shared across threads — the field's `@Volatile` gives visibility, not
+     * atomicity. Safe to call unconditionally at the point the authoritative ID becomes known.
      *
      * A null or blank [resolved] is ignored, so a caller that has nothing better to offer cannot
      * degrade what has already been recorded.
      *
      * @param resolved The authoritative correlation ID, or null if still unavailable.
      */
+    @Synchronized
     fun adoptCorrelationId(resolved: String?) {
         if (correlationId.isBlank() && !resolved.isNullOrBlank()) {
             correlationId = resolved

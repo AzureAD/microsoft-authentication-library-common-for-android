@@ -57,7 +57,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
@@ -679,19 +678,32 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Extracts broker IPC telemetry from the result bundle if available and valid.
+     * <p>
+     * Best-effort by contract: null, empty, malformed, and schema-invalid payloads all
+     * degrade to null. This method never throws — it is called on both the success and the
+     * error result path, where an escaping exception would respectively fail an auth that
+     * already succeeded, or replace the broker's real error with an unrelated parse failure.
      *
      * @param resultBundle The result bundle returned from the broker.
      * @return {@link BrokerIpcTelemetry} if available and valid, null otherwise.
      */
     @Nullable
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public BrokerIpcTelemetry getBrokerIpcTelemetryFromBundle(@NonNull final Bundle resultBundle) {
+    BrokerIpcTelemetry getBrokerIpcTelemetryFromBundle(@NonNull final Bundle resultBundle) {
         final String methodTag = TAG + ":getBrokerIpcTelemetryFromBundle";
         final String telemetryJson = resultBundle.getString(BROKER_IPC_TELEMETRY);
         try {
             return BROKER_IPC_TELEMETRY_GSON.fromJson(telemetryJson, BrokerIpcTelemetry.class);
-        } catch (final JsonSyntaxException e) {
-            Logger.warn(methodTag, "Failed to deserialize broker IPC telemetry.");
+        } catch (final Exception e) {
+            // Deliberately broad: telemetry is diagnostic-only and this method is called on
+            // both the success and error result paths, so an escaping exception would either
+            // fail an auth that already succeeded or mask the broker's real error. The set of
+            // types thrown out of BrokerIpcTelemetryTypeAdapterFactory and the reflective Gson
+            // adapters beneath it is not something this method should have to enumerate, and it
+            // can widen across Gson upgrades without notice.
+            // Errors are not caught — masking OutOfMemoryError does more harm than it prevents.
+            Logger.warn(methodTag, "Failed to deserialize broker IPC telemetry: "
+                    + e.getClass().getSimpleName() + " - " + e.getMessage());
             return null;
         }
     }
@@ -1118,6 +1130,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public AuthorizationResult getDeviceCodeFlowAuthResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException, ClientException {
         final String serializedDCFAuthResult = resultBundle.getString(AuthenticationConstants.Broker.BROKER_DCF_AUTH_RESULT);
         if (serializedDCFAuthResult != null) {
+            // Broker IPC telemetry is deliberately not read here. AuthorizationResult does not
+            // implement IBrokerIpcTelemetryProvider — only AcquireTokenResult and BaseException do —
+            // so there is nowhere on the success result to attach it. Surfacing DCF step-1 telemetry
+            // would require widening a common4j result type, which is tracked separately.
+            // Note this only affects the success path: the failure path below funnels through
+            // getBaseExceptionFromBundle, which does attach telemetry to the thrown BaseException.
             final AuthorizationResult authorizationResult = ObjectMapper.deserializeJsonStringToObject(serializedDCFAuthResult, MicrosoftStsAuthorizationResult.class);
             return authorizationResult;
         }
@@ -1169,6 +1187,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 span.setStatus(StatusCode.OK);
                 return acquireTokenResult;
             } else if (brokerResult.getErrorCode().equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE)) {
+                // Returning null signals BrokerMsalController.acquireDeviceCodeFlowToken to sleep
+                // and poll again. Any broker IPC telemetry on this intermediate poll is discarded
+                // by design: each poll is a separate broker request with its own EventCollector,
+                // and AcquireTokenResult — the only carrier available here — is not constructed on
+                // this branch. The terminal poll (success above, or the throw below) is the one
+                // whose telemetry reaches the caller.
                 span.setStatus(StatusCode.OK, "authorization_pending response");
                 return null;
             }

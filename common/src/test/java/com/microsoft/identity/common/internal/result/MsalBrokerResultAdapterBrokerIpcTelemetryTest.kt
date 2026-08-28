@@ -81,6 +81,43 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
         assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith("{")))
     }
 
+    /**
+     * A JSON array root is well-formed JSON, so it reaches the type adapter factory rather
+     * than failing in the tokenizer. The factory rejects any non-object root.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_arrayRoot_returnsNull() {
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith("[]")))
+    }
+
+    /** As above, for a scalar root. */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_scalarRoot_returnsNull() {
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith("\"not-an-object\"")))
+    }
+
+    /**
+     * An explicit JSON null is a valid document that deserializes to null rather than
+     * throwing, so it must degrade to "no telemetry" like every other unusable payload.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_jsonNull_returnsNull() {
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith("null")))
+    }
+
+    /**
+     * Guards the method's never-throws contract against a payload that fails inside the
+     * delegate adapter rather than in the tokenizer or the required-field check: every
+     * required field is present, but `duration` holds a string where a number is expected.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_wrongFieldType_returnsNull() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        json.getAsJsonObject("perf").addProperty("duration", "not-a-number")
+
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString())))
+    }
+
     @Test
     fun getBrokerIpcTelemetryFromBundle_missingSchemaVersion_returnsNull() {
         assertMissingRootFieldRejected("schema_version")

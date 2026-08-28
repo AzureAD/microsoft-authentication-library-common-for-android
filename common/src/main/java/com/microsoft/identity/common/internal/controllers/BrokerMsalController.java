@@ -83,6 +83,8 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.broker.telemetry.BrokerTelemetryRequest;
+import com.microsoft.identity.common.java.broker.telemetry.EventCollector;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
@@ -157,18 +159,40 @@ public class BrokerMsalController extends BaseController {
 
     private String mMaxMsalBrokerProtocolVersion;
 
+    /**
+     * Adds the client's telemetry request blob to the outbound request Bundle.
+     * <p>
+     * The blob carries only the negotiated wire contract — the correlation ID and the schema
+     * version this client can consume — so the broker can build its response payload in a
+     * format this client understands. The {@link EventCollector} itself is never serialized:
+     * its timing state is process-local and any client-side events it holds have no consumer
+     * in the broker.
+     * <p>
+     * An {@link EventCollector} may be constructed before the correlation ID is known, so its
+     * value is reconciled against the command parameters here — the last point before the
+     * payload crosses the IPC boundary — to keep the broker's payload joinable to client-side
+     * events. The reconciliation is a no-op once the collector already carries an ID.
+     *
+     * @param requestBundle the request Bundle to augment.
+     * @param parameters    the command parameters carrying the optional {@link EventCollector}.
+     * @return the same Bundle, with the telemetry request key added when telemetry is being
+     * collected.
+     */
     @NonNull
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
                                      @NonNull final CommandParameters parameters) {
-        if (parameters.getEventCollector() == null) {
+        final EventCollector eventCollector = parameters.getEventCollector();
+        if (eventCollector == null) {
             // Telemetry is not being collected for this request. Leave the key absent so the
             // broker treats it as "not requested" rather than parsing an explicit JSON null.
             return requestBundle;
         }
+        eventCollector.adoptCorrelationId(parameters.getCorrelationId());
         requestBundle.putString(
                 BROKER_TELEMETRY_REQUEST,
-                ObjectMapper.serializeObjectToJsonString(parameters.getEventCollector())
+                ObjectMapper.serializeObjectToJsonString(
+                        new BrokerTelemetryRequest(eventCollector.getCorrelationId()))
         );
         return requestBundle;
     }

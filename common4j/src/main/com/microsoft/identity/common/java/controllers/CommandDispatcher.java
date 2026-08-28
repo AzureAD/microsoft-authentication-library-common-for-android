@@ -512,6 +512,24 @@ public class CommandDispatcher {
     /**
      * submitSilent - Run a command using the silent thread pool, and return the future governing it.
      *
+     * <p><b>Telemetry note &mdash; coalesced callers.</b> When an equivalent command is already in
+     * flight, this method attaches a listener to the existing future and returns early. That caller
+     * therefore records neither {@link EventTag#BrokerCommandQueued} nor
+     * {@link EventTag#BrokerCommandExecutionStart}, and every downstream tag (cache, network, token)
+     * is recorded on the <em>executing</em> command's collector rather than the joining caller's.
+     * The joining caller's {@code execution_flow} consequently ends at
+     * {@code BrokerRequestDeserialized} and resumes at {@code BrokerResponseSerialized}.
+     *
+     * <p>This gap is expected and does not indicate a stall. A flow carrying
+     * {@code BrokerRequestDeserialized} without {@code BrokerCommandExecutionStart} was coalesced
+     * onto an in-flight identical request; the token returned to that caller is still correct. Note
+     * that {@link CommandParameters} excludes both {@code correlationId} and {@code eventCollector}
+     * from {@code equals}, so genuinely distinct requests do coalesce here.
+     *
+     * <p>Do <em>not</em> close the gap by hoisting {@code BrokerCommandQueued} above the caching
+     * branch: no command is queued on behalf of a joining caller, so the event would be untrue, and
+     * the resulting flow would misread as executor starvation rather than as a dedup.
+     *
      * @param command
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -573,6 +591,7 @@ public class CommandDispatcher {
                         putValue.whenComplete(getCommandResultConsumer(command));
                         // This request is sharing another request's future - it's effectively EXECUTING
                         // Update state to prevent incorrect timeout classification as QUEUED
+                        // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                         }
@@ -582,6 +601,7 @@ public class CommandDispatcher {
                     future.whenComplete(getCommandResultConsumer(command));
                     // This request is sharing another request's future - it's effectively EXECUTING
                     // Update state to prevent incorrect timeout classification as QUEUED
+                    // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                     }

@@ -26,17 +26,24 @@ import android.os.Bundle
 import androidx.test.platform.app.InstrumentationRegistry
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory
 import com.microsoft.identity.common.java.AuthenticationConstants
+import com.microsoft.identity.common.java.broker.telemetry.BrokerIpcTelemetry
+import com.microsoft.identity.common.java.broker.telemetry.BrokerTelemetryRequest
 import com.microsoft.identity.common.java.broker.telemetry.EventCollector
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class BrokerMsalControllerTelemetryTest {
+    /**
+     * The blob on the wire must be the negotiated request contract — the correlation ID plus
+     * the schema version the broker parses — and nothing else. Asserting the exact field set
+     * guards against internal accumulator state leaking across the IPC boundary.
+     */
     @Test
     fun addBrokerTelemetryRequest_eventCollector_putsSerializedRequestOnBundle() {
         val controller = BrokerMsalController(
@@ -52,15 +59,49 @@ class BrokerMsalControllerTelemetryTest {
 
         val requestBundle = controller.addBrokerTelemetryRequest(Bundle(), parameters)
 
-        assertTrue(
-            requestBundle.containsKey(
-                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
-            )
+        val blob = requestBundle.getString(
+            AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
         )
-        assertNotNull(
-            requestBundle.getString(
-                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
-            )
+        val json = JSONObject(requireNotNull(blob))
+        assertEquals(
+            "correlation-id",
+            json.getString(BrokerTelemetryRequest.KEY_CORRELATION_ID)
+        )
+        assertEquals(
+            BrokerIpcTelemetry.CURRENT_VERSION,
+            json.getString(BrokerTelemetryRequest.KEY_SCHEMA_VERSION)
+        )
+        assertEquals(2, json.length())
+    }
+
+    /**
+     * An [EventCollector] may be constructed before the correlation ID is resolved. The blob on
+     * the wire must still carry the real ID — a blank value would leave the broker's payload
+     * unjoinable to client-side events.
+     */
+    @Test
+    fun addBrokerTelemetryRequest_blankCollectorCorrelationId_adoptsFromParameters() {
+        val controller = BrokerMsalController(
+            InstrumentationRegistry.getInstrumentation().context,
+            MockPlatformComponentsFactory.getNonFunctionalBuilder().build(),
+            "broker.package"
+        )
+        val parameters = CommandParameters.builder()
+            .platformComponents(MockPlatformComponentsFactory.getNonFunctionalBuilder().build())
+            .correlationId("resolved-correlation-id")
+            .build().apply {
+                eventCollector = EventCollector("")
+            }
+
+        val requestBundle = controller.addBrokerTelemetryRequest(Bundle(), parameters)
+
+        val blob = requestBundle.getString(
+            AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
+        )
+        val json = JSONObject(requireNotNull(blob))
+        assertEquals(
+            "resolved-correlation-id",
+            json.getString(BrokerTelemetryRequest.KEY_CORRELATION_ID)
         )
     }
 
