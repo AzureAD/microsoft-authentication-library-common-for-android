@@ -65,11 +65,12 @@ public class OutlookApp extends App implements IFirstPartyApp {
     /**
      * Timeout for the blocking-dialog presence probe. A dialog that blocks the drawer is already on
      * screen by the time we look, so this only needs to cover the accessibility tree settling rather
-     * than wait for a dialog to appear. It is kept short deliberately: the probe runs on every
-     * attempt, so a long timeout would be added to the common no-dialog path. A dialog that does
-     * turn up late is still caught by the next attempt.
+     * than wait for a dialog to appear — measured at well under a second on a physical device. It is
+     * kept short deliberately, since the probe runs on every attempt and its full value is added to
+     * the common no-dialog path, but not so short that a slower emulator would miss a dialog that is
+     * genuinely present. A dialog that does turn up late is still caught by the next attempt.
      */
-    private final static long BLOCKING_DIALOG_PROBE_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
+    private final static long BLOCKING_DIALOG_PROBE_TIMEOUT = TimeUnit.SECONDS.toMillis(3);
 
     /**
      * Number of times we open the navigation drawer looking for the signed-in account before giving
