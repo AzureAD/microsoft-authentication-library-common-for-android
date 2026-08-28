@@ -176,7 +176,7 @@ public class BrokerMsalController extends BaseController {
      * @param requestBundle the request Bundle to augment.
      * @param parameters    the command parameters carrying the optional {@link EventCollector}.
      * @return the same Bundle, with the telemetry request key added when telemetry is being
-     * collected.
+     * collected and the request carries a correlation ID.
      */
     @NonNull
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -188,13 +188,21 @@ public class BrokerMsalController extends BaseController {
             // broker treats it as "not requested" rather than parsing an explicit JSON null.
             return requestBundle;
         }
-        // CommandParameters#getCorrelationId is nullable; BrokerTelemetryRequest's field is not.
+        // CommandDispatcher mints a correlation ID and sets it on the parameters before the
+        // command executes, so this is populated on every dispatched request. The guard only
+        // matters if a controller is ever invoked without going through the dispatcher:
+        // BrokerTelemetryRequest#correlationId is contractually a UUID, and an empty string
+        // would satisfy the type while violating the wire contract. Omitting the key keeps a
+        // malformed blob off the wire; the broker gates collection on its own flight, so this
+        // does not suppress broker-side telemetry.
         final String correlationId = parameters.getCorrelationId();
+        if (StringUtil.isNullOrEmpty(correlationId)) {
+            return requestBundle;
+        }
         requestBundle.putString(
                 BROKER_TELEMETRY_REQUEST,
                 ObjectMapper.serializeObjectToJsonString(
-                        new BrokerTelemetryRequest(
-                                correlationId == null ? "" : correlationId))
+                        new BrokerTelemetryRequest(correlationId))
         );
         return requestBundle;
     }

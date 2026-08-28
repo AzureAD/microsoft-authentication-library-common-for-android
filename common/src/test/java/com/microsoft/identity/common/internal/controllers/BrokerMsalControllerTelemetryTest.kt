@@ -131,4 +131,33 @@ class BrokerMsalControllerTelemetryTest {
             )
         )
     }
+
+    /**
+     * [com.microsoft.identity.common.java.controllers.CommandDispatcher] mints a correlation ID
+     * onto the parameters before a command executes, so a dispatched request always carries one.
+     * If a controller is ever driven without the dispatcher, the key must stay absent rather than
+     * putting a blank correlation ID on the wire: the field is contractually a UUID, and the
+     * broker gates collection on its own flight, so omitting it costs no broker-side telemetry.
+     */
+    @Test
+    fun addBrokerTelemetryRequest_blankParametersCorrelationId_leavesKeyAbsent() {
+        val controller = BrokerMsalController(
+            InstrumentationRegistry.getInstrumentation().context,
+            MockPlatformComponentsFactory.getNonFunctionalBuilder().build(),
+            "broker.package"
+        )
+        val parameters = CommandParameters.builder()
+            .platformComponents(MockPlatformComponentsFactory.getNonFunctionalBuilder().build())
+            .build().apply {
+                eventCollector = EventCollector("collector-correlation-id")
+            }
+
+        val requestBundle = controller.addBrokerTelemetryRequest(Bundle(), parameters)
+
+        assertFalse(
+            requestBundle.containsKey(
+                AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST
+            )
+        )
+    }
 }

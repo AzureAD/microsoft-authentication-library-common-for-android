@@ -46,9 +46,9 @@ import com.microsoft.identity.common.java.broker.telemetry.PerformanceRecord
  * Buffering the payload into a [com.google.gson.JsonElement] before delegating is what makes the
  * presence check possible at all: the delegate adapter consumes the reader, so the fields have to
  * be inspected first. [JsonParser.parseReader] is used rather than the internal
- * `com.google.gson.internal.Streams`, so this class depends only on public Gson API. It also
- * converts a `StackOverflowError` from a pathologically nested payload into a
- * [com.google.gson.JsonParseException], which callers catching [Exception] can absorb.
+ * `com.google.gson.internal.Streams`, so this class depends only on public Gson API.
+ * `parseReader` additionally wraps a `StackOverflowError` from a pathologically nested payload
+ * in a [com.google.gson.JsonParseException], which callers catching [Exception] can absorb.
  */
 internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
