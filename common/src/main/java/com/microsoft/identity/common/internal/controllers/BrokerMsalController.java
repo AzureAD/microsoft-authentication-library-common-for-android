@@ -168,10 +168,10 @@ public class BrokerMsalController extends BaseController {
      * its timing state is process-local and any client-side events it holds have no consumer
      * in the broker.
      * <p>
-     * An {@link EventCollector} may be constructed before the correlation ID is known, so its
-     * value is reconciled against the command parameters here — the last point before the
-     * payload crosses the IPC boundary — to keep the broker's payload joinable to client-side
-     * events. The reconciliation is a no-op once the collector already carries an ID.
+     * The correlation ID is read from the command parameters rather than from the
+     * {@link EventCollector} because the parameters carry the ID the request actually runs under,
+     * which is what the broker's payload must be joinable on. The collector is often constructed
+     * before that ID is resolved, so its own value may be stale or blank.
      *
      * @param requestBundle the request Bundle to augment.
      * @param parameters    the command parameters carrying the optional {@link EventCollector}.
@@ -188,11 +188,13 @@ public class BrokerMsalController extends BaseController {
             // broker treats it as "not requested" rather than parsing an explicit JSON null.
             return requestBundle;
         }
-        eventCollector.adoptCorrelationId(parameters.getCorrelationId());
+        // CommandParameters#getCorrelationId is nullable; BrokerTelemetryRequest's field is not.
+        final String correlationId = parameters.getCorrelationId();
         requestBundle.putString(
                 BROKER_TELEMETRY_REQUEST,
                 ObjectMapper.serializeObjectToJsonString(
-                        new BrokerTelemetryRequest(eventCollector.getCorrelationId()))
+                        new BrokerTelemetryRequest(
+                                correlationId == null ? "" : correlationId))
         );
         return requestBundle;
     }

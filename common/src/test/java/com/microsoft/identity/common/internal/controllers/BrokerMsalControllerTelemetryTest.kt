@@ -53,6 +53,7 @@ class BrokerMsalControllerTelemetryTest {
         )
         val parameters = CommandParameters.builder()
             .platformComponents(MockPlatformComponentsFactory.getNonFunctionalBuilder().build())
+            .correlationId("correlation-id")
             .build().apply {
                 eventCollector = EventCollector("correlation-id")
             }
@@ -77,10 +78,11 @@ class BrokerMsalControllerTelemetryTest {
     /**
      * An [EventCollector] may be constructed before the correlation ID is resolved. The blob on
      * the wire must still carry the real ID — a blank value would leave the broker's payload
-     * unjoinable to client-side events.
+     * unjoinable to client-side events — so the ID is taken from the command parameters, which
+     * always hold the value the request actually runs under.
      */
     @Test
-    fun addBrokerTelemetryRequest_blankCollectorCorrelationId_adoptsFromParameters() {
+    fun addBrokerTelemetryRequest_blankCollectorCorrelationId_usesTheOneFromParameters() {
         val controller = BrokerMsalController(
             InstrumentationRegistry.getInstrumentation().context,
             MockPlatformComponentsFactory.getNonFunctionalBuilder().build(),

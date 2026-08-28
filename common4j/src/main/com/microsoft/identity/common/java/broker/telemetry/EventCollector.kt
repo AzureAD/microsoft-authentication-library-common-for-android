@@ -35,26 +35,9 @@ import java.util.concurrent.TimeUnit
  * Create one instance per authentication request and call [addEvent] at each phase boundary.
  * When the flow completes, call [toBrokerIpcTelemetry] to obtain the structured result.
  *
- * @param correlationId The correlation ID of the authentication request being tracked. Pass an
- * empty string when it is not yet known, then call [adoptCorrelationId] once it is resolved.
+ * @param correlationId The correlation ID of the authentication request being tracked.
  */
-class EventCollector(correlationId: String) {
-
-    /**
-     * Correlation ID of the request being tracked, emitted as [BrokerIpcTelemetry.correlationId].
-     *
-     * Mutable because the authoritative value is not always known when collection has to start.
-     * The broker, for example, must begin recording while it still only has the raw value the
-     * client supplied — which may be absent — and only learns the real ID once it has built the
-     * request parameters. [adoptCorrelationId] closes that gap so the payload stays joinable to
-     * the rest of the request's telemetry.
-     *
-     * Volatile because a collector is handed to components that run on other threads.
-     */
-    @Volatile
-    var correlationId: String = correlationId
-        private set
-
+class EventCollector(private val correlationId: String) {
     private val events = CopyOnWriteArrayList<ExecutionEvent>()
 
     /**
@@ -112,27 +95,6 @@ class EventCollector(correlationId: String) {
      */
     private fun elapsedMs(): Long =
         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTimeNanos)
-
-    /**
-     * Adopts [resolved] as the correlation ID if none was known at construction time.
-     *
-     * Deliberately never overwrites a value that is already present: an ID supplied by the caller
-     * is the one they will use to look this request up, so it always wins. Repeated calls are
-     * therefore idempotent, and the method is synchronized so the check-and-set cannot interleave
-     * when the collector is shared across threads — the field's `@Volatile` gives visibility, not
-     * atomicity. Safe to call unconditionally at the point the authoritative ID becomes known.
-     *
-     * A null or blank [resolved] is ignored, so a caller that has nothing better to offer cannot
-     * degrade what has already been recorded.
-     *
-     * @param resolved The authoritative correlation ID, or null if still unavailable.
-     */
-    @Synchronized
-    fun adoptCorrelationId(resolved: String?) {
-        if (correlationId.isBlank() && !resolved.isNullOrBlank()) {
-            correlationId = resolved
-        }
-    }
 
     /**
      * Records a new [ExecutionEvent] with the current elapsed time.
