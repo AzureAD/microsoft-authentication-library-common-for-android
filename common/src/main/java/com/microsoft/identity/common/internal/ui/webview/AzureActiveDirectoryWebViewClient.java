@@ -57,6 +57,8 @@ import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
@@ -388,14 +390,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
                                 ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)currentActivity).getFragment())
                                 : null;
+                final IFidoManager fidoManager =
+                        FidoManagerFactory.getFidoManager(currentActivity, legacyManager);
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
-                        new CredManFidoManager(
-                                view.getContext(),
-                                legacyManager
-                        ),
+                        fidoManager,
                         view,
                         oTelContext,
-                        ViewTreeLifecycleOwner.get(view));
+                        ViewTreeLifecycleOwner.get(view),
+                        DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)

@@ -103,6 +103,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -2039,6 +2040,15 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     public void setTestPasskeyRedirectUrl() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    /**
+     * With no host provider registered the client must still handle the challenge itself.
+     */
+    @Test
+    public void testPasskeyChallengeFallsBackWhenNoProviderRegistered() {
+        FidoManagerFactory.setProvider(null);
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
     }
 

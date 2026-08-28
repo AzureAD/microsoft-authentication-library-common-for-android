@@ -22,27 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.fido
 
-import io.opentelemetry.api.trace.Span
+import android.app.Activity
 
 /**
- * Representation of a manager that handles interactions with a passkey provider (usually through an API).
+ * Supplies a host-specific [IFidoManager] for a WebView passkey challenge.
+ *
+ * Implemented by hosts that can fulfil a ceremony through a mechanism this library has no
+ * knowledge of, and registered with [FidoManagerFactory] during host initialization.
  */
-interface IFidoManager {
+interface IFidoManagerProvider {
+
     /**
-     * Interacts with the FIDO credential provider and returns an assertion.
-     * @param challenge
-     * @param relyingPartyIdentifier
-     * @param allowedCredentials
-     * @param userVerificationPolicy
-     * @param correlationId correlation id of the auth flow, when one is available
-     * @param span
-     * @return assertion
-     * @throws Exception
+     * @param activity live foreground Activity hosting the WebView auth flow.
+     * @return a manager able to fulfil the challenge, or null to use this library's default.
      */
-    suspend fun authenticate(challenge: String,
-                             relyingPartyIdentifier: String,
-                             allowedCredentials: List<String>?,
-                             userVerificationPolicy: String,
-                             correlationId: String?,
-                             span: Span) : String
+    fun getFidoManager(activity: Activity): IFidoManager?
 }
