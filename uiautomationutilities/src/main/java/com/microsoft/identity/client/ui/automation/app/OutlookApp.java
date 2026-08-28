@@ -63,6 +63,15 @@ public class OutlookApp extends App implements IFirstPartyApp {
     private final static String ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID = "android:id/button2";
 
     /**
+     * Timeout for the blocking-dialog presence probe. A dialog that blocks the drawer is already on
+     * screen by the time we look, so this only needs to cover the accessibility tree settling rather
+     * than wait for a dialog to appear. It is kept short deliberately: the probe runs on every
+     * attempt, so a long timeout would be added to the common no-dialog path. A dialog that does
+     * turn up late is still caught by the next attempt.
+     */
+    private final static long BLOCKING_DIALOG_PROBE_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
+
+    /**
      * Number of times we open the navigation drawer looking for the signed-in account before giving
      * up. Outlook can raise a transient teaching callout over the drawer which hides the drawer from
      * the accessibility tree; dismissing it and re-opening the drawer clears the condition.
@@ -230,7 +239,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
      */
     private void dismissBlockingDialog() {
         final UiObject negativeButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+                ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID, BLOCKING_DIALOG_PROBE_TIMEOUT
         );
 
         if (!negativeButton.exists()) {
