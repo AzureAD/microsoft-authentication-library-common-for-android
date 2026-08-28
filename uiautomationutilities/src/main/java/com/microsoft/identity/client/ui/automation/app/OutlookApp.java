@@ -27,6 +27,8 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
@@ -52,6 +54,30 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     public static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
     public static final String OUTLOOK_APK = "Outlook.apk";
+
+    private final static String ACCOUNT_BUTTON_RESOURCE_ID = OUTLOOK_PACKAGE_NAME + ":id/account_button";
+
+    /**
+     * Negative ("No Thanks" / "Cancel") button of a framework AlertDialog.
+     */
+    private final static String ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID = "android:id/button2";
+
+    /**
+     * Timeout for the blocking-dialog presence probe. A dialog that blocks the drawer is already on
+     * screen by the time we look, so this only needs to cover the accessibility tree settling rather
+     * than wait for a dialog to appear — measured at well under a second on a physical device. It is
+     * kept short deliberately, since the probe runs on every attempt and its full value is added to
+     * the common no-dialog path, but not so short that a slower emulator would miss a dialog that is
+     * genuinely present. A dialog that does turn up late is still caught by the next attempt.
+     */
+    private final static long BLOCKING_DIALOG_PROBE_TIMEOUT = TimeUnit.SECONDS.toMillis(3);
+
+    /**
+     * Number of times we open the navigation drawer looking for the signed-in account before giving
+     * up. Outlook can raise a transient teaching callout over the drawer which hides the drawer from
+     * the accessibility tree; dismissing it and re-opening the drawer clears the condition.
+     */
+    private final static int CONFIRM_ACCOUNT_MAX_ATTEMPTS = 3;
     private static final String ADD_ANOTHER_ACCOUNT_TEXT = "Add another account";
     private static final String M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX =
             "com\\.microsoft\\.office\\.outlook:id/btn_add_account_(m365|o365)_rest";
@@ -170,15 +196,91 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         handleIntroDialogueAfterSignIn();
 
-        // Click the account drawer
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button", FIND_UI_ELEMENT_TIMEOUT_LONG);
+        for (int attempt = 1; attempt <= CONFIRM_ACCOUNT_MAX_ATTEMPTS; attempt++) {
+            // Clear anything sitting in front of the inbox before reaching for the drawer. Outlook
+            // raises modal dialogs of its own (for example the notification opt-in prompt), and while
+            // one is up the drawer button is not in the resolved accessibility tree at all.
+            dismissBlockingDialog();
 
-        // Make sure our account is listed in the account drawer
-        final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);
-        Assert.assertTrue(
-                "Provided user account exists in Outlook App.",
-                testAccountLabel.waitForExists(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG)
+            // Click the account drawer. This is deliberately non-fatal: if a popup is covering the
+            // button we still want to fall through to the lookup and, failing that, to another
+            // attempt, rather than aborting the whole check on the first try.
+            UiAutomatorUtils.handleButtonClickSafely(ACCOUNT_BUTTON_RESOURCE_ID, FIND_UI_ELEMENT_TIMEOUT_LONG);
+
+            // Make sure our account is listed in the account drawer. Give the first attempt the full
+            // timeout; retries only need to outlast the drawer animation as the account is either
+            // already there or genuinely absent.
+            final long lookupTimeout = (attempt == 1)
+                    ? FIND_UI_ELEMENT_TIMEOUT_LONG
+                    : CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT;
+
+            if (UiAutomatorUtils.obtainUiObjectWithText(username, lookupTimeout).exists()) {
+                Logger.i(TAG, "Account confirmed in the Outlook account drawer on attempt " + attempt + ".");
+                return;
+            }
+
+            Logger.w(TAG, "Account was not listed in the Outlook account drawer on attempt " + attempt
+                    + " of " + CONFIRM_ACCOUNT_MAX_ATTEMPTS + ". Dismissing any transient popup and retrying..");
+
+            dismissDrawerAndTransientPopups();
+        }
+
+        Assert.fail("Expected account " + username + " to be listed in the Outlook account drawer, "
+                + "but it was not found after " + CONFIRM_ACCOUNT_MAX_ATTEMPTS + " attempts.");
+    }
+
+    /**
+     * Dismisses a modal dialog sitting in front of the current screen, if one is up.
+     * <p>
+     * Outlook raises its own alert dialogs (for example the "Enable Notifications" opt-in prompt on
+     * Android 13+, which fronts the runtime POST_NOTIFICATIONS permission). A modal dialog takes over
+     * the resolved accessibility tree, so elements behind it — including the account drawer button —
+     * cannot be found at all. The negative button is preferred so the test declines rather than
+     * granting anything it did not intend to.
+     */
+    private void dismissBlockingDialog() {
+        final UiObject negativeButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID, BLOCKING_DIALOG_PROBE_TIMEOUT
         );
+
+        if (!negativeButton.exists()) {
+            return;
+        }
+
+        Logger.i(TAG, "Dismissing a modal dialog that is covering the Outlook UI..");
+        try {
+            negativeButton.click();
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                    .waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+        } catch (final UiObjectNotFoundException e) {
+            // The dialog went away on its own between the check and the click, which is the state we
+            // wanted anyway.
+            Logger.i(TAG, "Modal dialog disappeared before it could be dismissed.");
+        }
+    }
+
+    /**
+     * Taps the scrim to the right of the Outlook navigation drawer to dismiss any transient popup
+     * and close the drawer.
+     * <p>
+     * Outlook intermittently raises a teaching callout (for example the "Now your folders on mobile
+     * match the same order you have in other Outlook apps" tip) in its own popup window shortly
+     * after the drawer opens. While that popup is up, UiAutomator resolves selectors against the
+     * popup's window, so the drawer's account label is unreachable even though it is plainly visible
+     * on screen. Tapping outside dismisses the callout and closes the drawer so the next attempt
+     * starts from a clean state; the callout is only shown once, so it does not reappear.
+     */
+    private void dismissDrawerAndTransientPopups() {
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // The drawer and the callout occupy the left portion of the screen, so a tap near the right
+        // edge lands on the scrim rather than on any drawer or callout content.
+        final int x = (int) (device.getDisplayWidth() * 0.95);
+        final int y = device.getDisplayHeight() / 2;
+
+        Logger.i(TAG, "Dismissing the Outlook navigation drawer and any transient popup..");
+        device.click(x, y);
+        device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
     }
 
     private void handleIntroDialogueAfterSignIn() {

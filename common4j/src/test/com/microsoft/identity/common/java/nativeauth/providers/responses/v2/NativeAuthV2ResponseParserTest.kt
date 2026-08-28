@@ -207,14 +207,14 @@ class NativeAuthV2ResponseParserTest {
               "action": "verify",
               "codeLength": 6,
               "hint": "top-level-hint",
-              "type": "top-level-type",
+              "type": "sms",
               "_links": {
                 "verify": {"href": "/api/v0.1/auth/top-level/verify"}
               },
               "_embedded": {
                 "methods": [{
                   "hint": "embedded-hint",
-                  "type": "embedded-type",
+                  "type": "email",
                   "_links": {
                     "verify": {"href": "/api/v0.1/auth/embedded/verify"}
                   }
@@ -231,7 +231,7 @@ class NativeAuthV2ResponseParserTest {
         ) as NativeAuthV2InteractionApiResult.CodeRequired
 
         assertEquals("embedded-hint", result.challengeTargetLabel)
-        assertEquals("embedded-type", result.challengeChannel)
+        assertEquals("email", result.challengeChannel)
         assertEquals(
             "/api/v0.1/auth/embedded/verify",
             result.continuationState.href(NativeAuthV2LinkRelation.VERIFY)
@@ -309,7 +309,7 @@ class NativeAuthV2ResponseParserTest {
     fun parseInteraction_whenV2VerificationCodeIsInvalid_returnsInvalidCode() {
         val previousState = previousState()
         val response = responseFrom(
-            """{"error":{"code":"invalidGrant","message":"Code is invalid.","innerError":{"code":"invalidContinuationToken"}}}"""
+            """{"error":{"code":"invalidGrant","message":"Code is invalid.","innerError":{"code":"invalidOneTimeCode"}}}"""
         )
 
         val result = parser.parseInteraction(
@@ -318,37 +318,76 @@ class NativeAuthV2ResponseParserTest {
             NativeAuthV2Operation.VERIFY
         ) as NativeAuthV2InteractionApiResult.InvalidCode
 
-        assertEquals("invalidContinuationToken", result.subError)
+        assertEquals("invalidOneTimeCode", result.subError)
     }
 
     @Test
-    fun parseInteraction_whenPasswordTooWeak_preservesSubError() {
+    fun parseInteraction_whenContinuationTokenIsInvalid_returnsTerminalUnknownError() {
         val response = responseFrom(
-            """{"error":{"code":"invalid_request","message":"Password is too weak.","innerError":{"code":"password_too_weak"}}}"""
+            """{"error":{"code":"invalidGrant","message":"Continuation token is invalid.","innerError":{"code":"invalidContinuationToken"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.VERIFY
+        )
+
+        // An invalid continuation token is SDK-managed state the user cannot recover from by
+        // retyping a code, so it must not be surfaced as a retryable InvalidCode.
+        assertFalse(result is NativeAuthV2InteractionApiResult.InvalidCode)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("invalidGrant", error.error)
+        assertEquals("Continuation token is invalid.", error.errorDescription)
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordIsInvalid_preservesSubError() {
+        val passwordSubErrors = listOf(
+            "passwordTooWeak",
+            "passwordTooShort",
+            "passwordTooLong",
+            "passwordIsInvalid",
+            "passwordRecentlyUsed",
+            "passwordBanned"
+        )
+
+        passwordSubErrors.forEach { subError ->
+            val response = responseFrom(
+                """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"$subError"}}}"""
+            )
+
+            val result = parser.parseInteraction(
+                response,
+                previousState(),
+                NativeAuthV2Operation.UPDATE_PASSWORD
+            )
+
+            assertTrue(
+                "Expected InvalidPassword for $subError but was ${result::class.java.simpleName}",
+                result is NativeAuthV2InteractionApiResult.InvalidPassword
+            )
+            assertEquals(
+                subError,
+                (result as NativeAuthV2InteractionApiResult.InvalidPassword).subError
+            )
+        }
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordSubErrorUsesLegacySnakeCase_returnsUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"password_too_weak"}}}"""
         )
 
         val result = parser.parseInteraction(
             response,
             previousState(),
             NativeAuthV2Operation.UPDATE_PASSWORD
-        ) as NativeAuthV2InteractionApiResult.InvalidPassword
-
-        assertEquals("password_too_weak", result.subError)
-    }
-
-    @Test
-    fun parseInteraction_whenV2PasswordTooWeak_preservesSubError() {
-        val response = responseFrom(
-            """{"error":{"code":"invalidRequest","message":"Password is too weak.","innerError":{"code":"passwordTooWeak"}}}"""
         )
 
-        val result = parser.parseInteraction(
-            response,
-            previousState(),
-            NativeAuthV2Operation.UPDATE_PASSWORD
-        ) as NativeAuthV2InteractionApiResult.InvalidPassword
-
-        assertEquals("passwordTooWeak", result.subError)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
     }
 
     @Test
@@ -759,6 +798,7 @@ class NativeAuthV2ResponseParserTest {
               "_embedded": {
                 "methods": [{
                   "hint": "embedded-hint",
+                  "type": "email",
                   "_links": {
                     "challenge": {"href": "/api/v0.1/auth/embedded/challenge"}
                   }
@@ -900,6 +940,134 @@ class NativeAuthV2ResponseParserTest {
         val error = result as NativeAuthV2InteractionApiResult.UnknownError
         assertEquals(ApiErrorResult.INVALID_STATE, error.error)
         assertTrue(error.errorDescription.contains("update"))
+    }
+
+    // endregion
+
+    // region parseInteraction - email-only method enforcement
+
+    @Test
+    fun parseInteraction_whenChallengeOffersNonEmailMethodOnly_returnsUnknownError() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "challenge",
+              "_embedded": {
+                "methods": [{
+                  "hint": "+1 (***) ***-1234",
+                  "type": "sms",
+                  "_links": {
+                    "challenge": {"href": "/api/v0.1/auth/sms/challenge"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(response, previousState(), NativeAuthV2Operation.CHALLENGE)
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("email"))
+    }
+
+    @Test
+    fun parseInteraction_whenChallengeOffersEmailAfterNonEmailMethod_selectsEmailMethod() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "challenge",
+              "_embedded": {
+                "methods": [
+                  {
+                    "hint": "+1 (***) ***-1234",
+                    "type": "sms",
+                    "_links": {
+                      "challenge": {"href": "/api/v0.1/auth/sms/challenge"}
+                    }
+                  },
+                  {
+                    "hint": "u***@contoso.com",
+                    "type": "email",
+                    "_links": {
+                      "challenge": {"href": "/api/v0.1/auth/email/challenge"}
+                    }
+                  }
+                ]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.CHALLENGE
+        ) as NativeAuthV2InteractionApiResult.ChallengeRequired
+
+        assertEquals("u***@contoso.com", result.hint)
+        assertEquals(
+            "/api/v0.1/auth/email/challenge",
+            result.continuationState.href(NativeAuthV2LinkRelation.CHALLENGE)
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyOffersNonEmailMethodOnly_returnsUnknownError() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "verify",
+              "codeLength": 6,
+              "_embedded": {
+                "methods": [{
+                  "hint": "+1 (***) ***-1234",
+                  "type": "sms",
+                  "_links": {
+                    "verify": {"href": "/api/v0.1/auth/sms/verify"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(response, previousState(), NativeAuthV2Operation.CHALLENGE)
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyTopLevelChannelIsNotEmail_returnsUnknownError() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"sms","_links":{"verify":{"href":"/x"}}}"""
+        )
+
+        val result = parser.parseInteraction(response, previousState(), NativeAuthV2Operation.CHALLENGE)
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyChannelIsEmailWithDifferentCasing_returnsCodeRequired() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"Email","_links":{"verify":{"href":"/x"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState(),
+            NativeAuthV2Operation.CHALLENGE
+        ) as NativeAuthV2InteractionApiResult.CodeRequired
+
+        assertEquals("Email", result.challengeChannel)
     }
 
     // endregion

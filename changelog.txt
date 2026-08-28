@@ -1,6 +1,8 @@
 vNext
 ----------
 - [MINOR] Carry the executing broker package and battery optimization exemption status across modern MSAL acquire-token-silent success and error results (AB#3731177) (#3236)
+- [MINOR] Add FociQueryOutcome and FociQueryUtilities.queryFociMembership, a classified result for the FoCI membership query, so callers can tell a definitive non-membership response apart from a transient or refresh-token-specific failure. The existing tryFociTokenWithGivenClientId overloads are unchanged in behaviour and now delegate to it (#3234)
+- [PATCH] Retry the Outlook account drawer lookup in OutlookApp.confirmAccount so a transient popup (teaching callout or modal dialog) can't fail the check (#3231)
 - [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
 - [PATCH] Migrate the Native Auth E2E test email provider from 1secmail to authenticated Mail.tm (#3219)
 - [MINOR] Security: validate a PKeyAuth WebView-redirect SubmitUrl (attacker-controllable) as an HTTPS URL same-origin with the challenging endpoint before the device key signs or the WebView submits; flight-gated and ships in shadow mode (CWE-918 / AB#3706623)
