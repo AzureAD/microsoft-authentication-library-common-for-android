@@ -458,9 +458,7 @@ class MsalBrokerResultAdapterTests {
     @SneakyThrows
     fun testGetBaseExceptionFromBundle_PrefersActiveBrokerPackageName() {
         val activeBrokerPackageName = "com.microsoft.activebroker"
-        val clientException = ClientException("test_error", "Test error message").apply {
-            powerOptimizationSettings = "NOT_EXEMPT"
-        }
+        val clientException = ClientException("test_error", "Test error message")
         val resultAdapter = MsalBrokerResultAdapter()
         val resultBundle = resultAdapter.bundleFromBaseException(clientException, null).apply {
             putString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME, "com.microsoft.legacybroker")
@@ -787,9 +785,7 @@ class MsalBrokerResultAdapterTests {
         val resultAdapter = MsalBrokerResultAdapter()
         val resultBundle = resultAdapter.bundleFromAuthenticationResult(
             authResult,
-            null,
-            "16.0",
-            "NOT_EXEMPT"
+            "16.0"
         ).apply {
             putString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME, "com.microsoft.legacybroker")
             putString(ACTIVE_BROKER_PACKAGE_NAME_KEY, activeBrokerPackageName)

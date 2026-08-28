@@ -665,10 +665,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
             );
         }
-        final String brokerPackageName = getBrokerPackageName(
-                resultBundle,
-                brokerResult.getPowerOptimizationSettings()
-        );
+        final String brokerPackageName = getBrokerPackageName(resultBundle);
         if (!StringUtil.isNullOrEmpty(brokerPackageName)) {
             baseException.setBrokerAppPackageName(brokerPackageName);
         }
@@ -1221,10 +1218,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
                 );
             }
-            final String brokerPackageName = getBrokerPackageName(
-                    resultBundle,
-                    brokerResult.getPowerOptimizationSettings()
-            );
+            final String brokerPackageName = getBrokerPackageName(resultBundle);
             if (!StringUtil.isNullOrEmpty(brokerPackageName)) {
                 acquireTokenResult.setBrokerAppPackageName(brokerPackageName);
             }
@@ -1242,14 +1236,11 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Nullable
-    private String getBrokerPackageName(@NonNull final Bundle resultBundle,
-                                        @Nullable final String powerOptimizationSettings) {
-        if (!StringUtil.isNullOrEmpty(powerOptimizationSettings)) {
-            final String activeBrokerPackageName =
-                    resultBundle.getString(ACTIVE_BROKER_PACKAGE_NAME_KEY);
-            if (!StringUtil.isNullOrEmpty(activeBrokerPackageName)) {
-                return activeBrokerPackageName;
-            }
+    private String getBrokerPackageName(@NonNull final Bundle resultBundle) {
+        final String activeBrokerPackageName =
+                resultBundle.getString(ACTIVE_BROKER_PACKAGE_NAME_KEY);
+        if (!StringUtil.isNullOrEmpty(activeBrokerPackageName)) {
+            return activeBrokerPackageName;
         }
 
         return resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME);
