@@ -99,15 +99,14 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         try {
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
-            val mergedScopes = addDefaultScopes(parameters.scopes)
             val correlationId = parameters.getCorrelationId()
 
             val authChallengeResult = oAuth2Strategy.performAuthorizeChallengeStart(
                 correlationId = correlationId,
                 entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD.value,
                 scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
-                scopes = mergedScopes,
-                claimsRequestJson = parameters.claimsRequestJson
+                scopes = emptyList(),
+                claimsRequestJson = null
             )
 
             val initialState = when (authChallengeResult) {
@@ -464,11 +463,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             }
         }
 
-        val scopes = state.scopesForTokenRequest()
+        val scopes = addDefaultScopes(parameters.scopes)
         val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
-            ?: state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
         val parametersWithScopes = parameters.toBuilder()
             .scopes(scopes)
+            .claimsRequestJson(claimsRequestJson)
             .build()
         val tokenResult = oAuth2Strategy.performTokenRequest(
             code = code,
