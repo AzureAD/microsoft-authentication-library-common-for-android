@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.0.02468-rc-RC1
+----------
 - [MINOR] Add FociQueryOutcome and FociQueryUtilities.queryFociMembership, a classified result for the FoCI membership query, so callers can tell a definitive non-membership response apart from a transient or refresh-token-specific failure. The existing tryFociTokenWithGivenClientId overloads are unchanged in behaviour and now delegate to it (#3234)
 - [PATCH] Retry the Outlook account drawer lookup in OutlookApp.confirmAccount so a transient popup (teaching callout or modal dialog) can't fail the check (#3231)
 - [MINOR] Add the broker telemetry schema data model, event collector, provider interfaces, and serialization helpers for flight-gated broker execution telemetry (#3095)
