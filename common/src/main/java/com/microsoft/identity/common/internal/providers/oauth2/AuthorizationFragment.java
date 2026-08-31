@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
@@ -37,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
@@ -47,6 +49,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -73,6 +76,11 @@ public abstract class AuthorizationFragment extends Fragment {
      * Determines if authentication result has been sent.
      */
     protected boolean mAuthResultSent = false;
+
+    /**
+     * Whether the host opted in to MAM-CA install-referrer tagging for this request.
+     */
+    protected boolean mMamCaInstallReferrerEnabled = false;
 
     /**
      * Listens to an operation cancellation event.
@@ -164,6 +172,13 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        mMamCaInstallReferrerEnabled = state.getBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, false);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, mMamCaInstallReferrerEnabled);
     }
 
     /**
@@ -216,6 +231,28 @@ public abstract class AuthorizationFragment extends Fragment {
 
     public void handleBackButtonPressed() {
         cancelAuthorization(true);
+    }
+
+    /**
+     * MAM Conditional Access onboarding: tag the Company Portal install link with this app's package as
+     * the Play install referrer, so Company Portal skips its own sign-in UX and redirects back here after
+     * install.
+     * <p>
+     * Shared by every {@link AuthorizationFragment} subclass that launches the broker install so the
+     * host opt-in and MAM-CA gates are evaluated in exactly one place ({@link MamInstallReferrerBuilder}).
+     * Null-safe: when the host did not opt in, on a non-MAM-CA install, or with no attached context, the
+     * original link is returned unchanged.
+     *
+     * @param appLink            the server-provided Play Store install link.
+     * @param redirectParameters query parameters of the {@code msauth://wpj} broker-install redirect.
+     * @return the decorated link when MAM-CA referrer tagging applies, otherwise the original {@code appLink}.
+     */
+    protected String decorateInstallLinkWithReferrer(final String appLink,
+                                                     final Map<String, String> redirectParameters) {
+        final Context context = getContext();
+        return MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
+                mMamCaInstallReferrerEnabled,
+                appLink, context == null ? null : context.getPackageName(), redirectParameters);
     }
 
     void sendResult(final RawAuthorizationResult.ResultCode resultCode) {

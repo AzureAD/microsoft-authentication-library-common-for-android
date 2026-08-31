@@ -1,0 +1,40 @@
+# Writes the list of source files this PR changed into `<outputDir>/changed-files.txt`.
+#
+# Drop this into the PR-branch coverage job (the one that builds `jacocoTestReport.xml`
+# and publishes the PR report artifact), pointing `outputDir` at the same folder the
+# JaCoCo XML is staged in. compare-code-coverage.yml then auto-detects the file and
+# scopes the coverage gate to only the classes those files map to, so unrelated
+# flaky/async classes can't fail an innocent PR. On non-PR runs the step no-ops.
+parameters:
+# Directory the changed-files list is written to. Point at the folder that is published
+# as the PR JaCoCo report artifact (must contain jacocoTestReport.xml).
+- name: outputDir
+  type: string
+# PR target branch to diff against. Defaults to the ADO-provided PR target branch.
+- name: targetBranch
+  type: string
+  default: $(System.PullRequest.TargetBranch)
+
+steps:
+  - bash: |
+      set -e
+      OUT_DIR="${{ parameters.outputDir }}"
+      mkdir -p "$OUT_DIR"
+      OUT_FILE="$OUT_DIR/changed-files.txt"
+
+      # Strip a leading refs/heads/ from the target branch (ADO passes it either way).
+      TARGET="${{ parameters.targetBranch }}"
+      TARGET="${TARGET#refs/heads/}"
+
+      # Make sure the target branch is available locally, then diff from the merge base
+      # so only the PR's own changes are listed (not commits already on the target).
+      git fetch --no-tags --depth=200 origin "+refs/heads/$TARGET:refs/remotes/origin/$TARGET" || \
+        git fetch --no-tags origin "+refs/heads/$TARGET:refs/remotes/origin/$TARGET"
+      MERGE_BASE="$(git merge-base HEAD "origin/$TARGET")"
+      echo "Diffing changed files: $MERGE_BASE..HEAD (target $TARGET)"
+
+      git diff --name-only "$MERGE_BASE" HEAD > "$OUT_FILE"
+      echo "Wrote $(wc -l < "$OUT_FILE") changed file(s) to $OUT_FILE:"
+      cat "$OUT_FILE"
+    displayName: Collect PR changed files (for diff-scoped coverage)
+    condition: eq(variables['Build.Reason'], 'PullRequest')

@@ -20,17 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
-
-import com.google.gson.annotations.SerializedName
+package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 /**
+ * The `action` a V2 Native Auth HAL response asks the SDK to take next.
  *
+ * Deliberately not an enum: the server can send an action value this SDK version does not yet
+ * know about, and an enum would force that value to `null`, erasing the raw string needed for
+ * diagnosis. [value] always preserves exactly what the server sent.
  */
-data class InboxContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String // TODO make DateTimeObject
-)
+@JvmInline
+value class NativeAuthV2HalAction(val value: String) {
+    companion object {
+        val CHALLENGE = NativeAuthV2HalAction("challenge")
+        val VERIFY = NativeAuthV2HalAction("verify")
+        val UPDATE = NativeAuthV2HalAction("update")
+        val POLL = NativeAuthV2HalAction("poll")
+        val ENROLL = NativeAuthV2HalAction("enroll")
+        val REGISTER = NativeAuthV2HalAction("register")
+        val ACTIVATE = NativeAuthV2HalAction("activate")
+        val COLLECT_ATTRIBUTES = NativeAuthV2HalAction("collectAttributes")
+    }
+}

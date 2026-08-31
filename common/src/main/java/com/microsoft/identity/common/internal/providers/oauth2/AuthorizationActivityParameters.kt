@@ -43,6 +43,7 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent
  * @param webViewEnableSilentAuthorizationFlowTimeOutMs                 If set to a non-null value, this indicates that the flow is silent and specifies the timeout for the silent authorization flow in milliseconds.
  * @param isWebViewWebCpEnabled        This parameter controls whether webcp URLs should be handled within the WebView or redirected to external browser
  * @param enableSwitchBrowser       When true, the factory will check for browser availability and append switch_browser=1 to the request URL to opt-in to the Switch Browser protocol
+ * @param enableMamCaInstallReferrer When true, a MAM-CA Company Portal install link is tagged with the host package as the Play install referrer. Owned by the host (OneAuth/MSAL), which is the only layer that knows whether it is the calling app rather than a broker hosting the flow on its behalf.
  */
 data class AuthorizationActivityParameters @JvmOverloads constructor(
     val context: Context,
@@ -62,4 +63,5 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val webViewEnableSilentAuthorizationFlowTimeOutMs: Long? = null,
     val isWebViewWebCpEnabled: Boolean = false,
     val enableSwitchBrowser: Boolean = false,
+    val enableMamCaInstallReferrer: Boolean = false,
 )

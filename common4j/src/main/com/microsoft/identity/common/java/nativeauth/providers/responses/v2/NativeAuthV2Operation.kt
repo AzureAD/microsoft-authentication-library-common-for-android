@@ -20,20 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
-
-import com.google.gson.annotations.SerializedName
+package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
 /**
+ * SDK-issued Native Auth V2 operations. Unlike [NativeAuthV2HalAction] and
+ * [NativeAuthV2LinkRelation], this set is entirely controlled by the SDK, not the server, so it is
+ * closed and modeled as an enum.
  *
+ * This is parser context used for operation-specific error mapping (for example, distinguishing an
+ * invalid code entered during [VERIFY] from an invalid password submitted during
+ * [UPDATE_PASSWORD]); it is not a telemetry enum and must not be used as one.
  */
-data class EmailContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String, // TODO make DateTimeObject
-    @SerializedName("body") val body: String,
-    @SerializedName("textBody") val textBody: String,
-    @SerializedName("htmlBody") val htmlBody: String,
-)
+internal enum class NativeAuthV2Operation {
+    RESET_PASSWORD_START,
+    CHALLENGE,
+    RESEND,
+    VERIFY,
+    UPDATE_PASSWORD,
+    POLL
+}
