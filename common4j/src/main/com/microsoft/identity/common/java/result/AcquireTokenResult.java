@@ -153,7 +153,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     }
 
     /**
-     * @return The battery optimization status reported by the Broker that executed the request.
+     * @return The battery optimization status reported by the Broker that executed the request:
+     * {@code EXEMPT}, {@code NOT_EXEMPT}, or {@code UNKNOWN}; {@code null} when the Broker does
+     * not provide the status.
      */
     @Nullable
     public String getPowerOptimizationSettings() {

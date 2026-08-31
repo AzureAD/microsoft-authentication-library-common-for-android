@@ -311,7 +311,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         );
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @NonNull
     public BrokerResult buildBrokerResultFromAuthenticationResult
             (@NonNull final ILocalAuthenticationResult authenticationResult,
