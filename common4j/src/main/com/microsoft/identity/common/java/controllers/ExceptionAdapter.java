@@ -96,7 +96,7 @@ public class ExceptionAdapter {
                             ((MicrosoftStsAuthorizationResult) authorizationResult).getClientDataInfo()
                     );
                 }
-                return authException;
+                return copyBrokerExecutionInfoToException(result, authException);
             }
         } else {
             Logger.warn(
@@ -105,7 +105,26 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
+        return copyBrokerExecutionInfoToException(
+                result,
+                exceptionFromTokenResult(result.getTokenResult(), commandParameters)
+        );
+    }
+
+    /**
+     * Copies the executing Broker's package name and power optimization status from an
+     * {@link AcquireTokenResult} to its corresponding exception.
+     *
+     * @param result The result containing Broker execution metadata.
+     * @param exception The exception to enrich with Broker execution metadata.
+     * @return The enriched exception.
+     */
+    private static BaseException copyBrokerExecutionInfoToException(
+            @NonNull final AcquireTokenResult result,
+            @NonNull final BaseException exception) {
+        exception.setBrokerAppPackageName(result.getBrokerAppPackageName());
+        exception.setPowerOptimizationSettings(result.getPowerOptimizationSettings());
+        return exception;
     }
 
     public static BaseException exceptionFromAuthorizationResult(@NonNull final AuthorizationResult authorizationResult, @Nullable final CommandParameters commandParameters) {
