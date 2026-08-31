@@ -23,6 +23,11 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.app.Activity
+import android.content.Context
+import android.os.Process
+import androidx.annotation.VisibleForTesting
+import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.internal.broker.BrokerValidator
 import com.microsoft.identity.common.logging.Logger
 
 /**
@@ -39,13 +44,31 @@ object FidoManagerFactory {
     @Volatile
     private var provider: IFidoManagerProvider? = null
 
+    // Seam for this library's own tests, which do not run inside a signed broker app.
+    @VisibleForTesting
+    internal var isBrokerHosted: (Context) -> Boolean = ::isSignedBrokerApp
+
     /**
+     * Registers the provider consulted for subsequent challenges. Ignored unless the calling app is
+     * a broker, so a library embedded in any other app cannot take over passkey handling.
+     *
+     * @param context context of the app registering the provider.
      * @param provider provider to consult for subsequent challenges, or null to unregister.
+     * @return true when the provider was accepted; callers that expect to be a broker should treat
+     * false as a misconfiguration rather than ignoring it.
      */
     @JvmStatic
-    fun setProvider(provider: IFidoManagerProvider?) {
+    fun setProvider(context: Context, provider: IFidoManagerProvider?): Boolean {
+        val methodTag = "$TAG:setProvider"
+        if (!isBrokerHosted(context)) {
+            Logger.warn(
+                methodTag,
+                "Ignoring a passkey provider from " + context.packageName + "; not a broker app."
+            )
+            return false
+        }
         Logger.info(
-            "$TAG:setProvider",
+            methodTag,
             if (provider == null) {
                 "Host passkey provider cleared."
             } else {
@@ -53,6 +76,21 @@ object FidoManagerFactory {
             }
         )
         this.provider = provider
+        return true
+    }
+
+    // Matches against every known broker, prod and debug alike: this identifies the process we are
+    // already running in, so the debug/prod split that BrokerData.getKnownBrokerApps() applies to
+    // peer discovery would only break debug brokers here.
+    //
+    // The package name is taken from our own uid rather than from the supplied Context, whose
+    // getPackageName() any caller can point at an installed broker via createPackageContext().
+    private fun isSignedBrokerApp(context: Context): Boolean {
+        val ownPackages = context.packageManager.getPackagesForUid(Process.myUid())?.toSet().orEmpty()
+        val validator = BrokerValidator(context)
+        return BrokerData.allBrokers.any {
+            ownPackages.contains(it.packageName) && validator.isSignedByKnownKeys(it)
+        }
     }
 
     /**
@@ -66,10 +104,11 @@ object FidoManagerFactory {
         activity: Activity,
         legacyManager: IFidoManager?
     ): IFidoManager {
+        val methodTag = "$TAG:getFidoManager"
         val manager = provider?.getFidoManager(activity)
             ?: CredManFidoManager(activity, legacyManager)
         Logger.info(
-            "$TAG:getFidoManager",
+            methodTag,
             "Fulfilling passkey challenge with " + manager.javaClass.simpleName
         )
         return manager

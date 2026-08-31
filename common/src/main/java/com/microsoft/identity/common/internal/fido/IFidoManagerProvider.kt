@@ -28,7 +28,9 @@ import android.app.Activity
  * Supplies a host-specific [IFidoManager] for a WebView passkey challenge.
  *
  * Implemented by hosts that can fulfil a ceremony through a mechanism this library has no
- * knowledge of, and registered with [FidoManagerFactory] during host initialization.
+ * knowledge of, and registered with [FidoManagerFactory.setProvider] during host initialization.
+ * Not a general extension point: registration is refused for any app that is not signed as a
+ * broker, so a library embedded in some other app cannot be made to hand over passkey handling.
  */
 interface IFidoManagerProvider {
 

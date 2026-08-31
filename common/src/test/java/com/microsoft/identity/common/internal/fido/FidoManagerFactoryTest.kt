@@ -23,10 +23,14 @@
 package com.microsoft.identity.common.internal.fido
 
 import android.app.Activity
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import io.opentelemetry.api.trace.Span
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -43,6 +47,14 @@ class FidoManagerFactoryTest {
 
     private val activity: Activity =
         Robolectric.buildActivity(Activity::class.java).setup().get()
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    @Before
+    fun setUp() {
+        // This test app is not a signed broker, so registration would otherwise be refused.
+        FidoManagerFactory.isBrokerHosted = { true }
+    }
 
     private val hostManager = object : IFidoManager {
         override suspend fun authenticate(
@@ -61,7 +73,8 @@ class FidoManagerFactoryTest {
 
     @After
     fun tearDown() {
-        FidoManagerFactory.setProvider(null)
+        FidoManagerFactory.setProvider(context, null)
+        FidoManagerFactory.isBrokerHosted = { false }
     }
 
     @Test
@@ -71,20 +84,31 @@ class FidoManagerFactoryTest {
 
     @Test
     fun testUsesHostManagerWhenProviderSuppliesOne() {
-        FidoManagerFactory.setProvider(providerReturning(hostManager))
+        FidoManagerFactory.setProvider(context, providerReturning(hostManager))
         assertSame(hostManager, FidoManagerFactory.getFidoManager(activity, null))
     }
 
     @Test
     fun testFallsBackWhenProviderDeclines() {
-        FidoManagerFactory.setProvider(providerReturning(null))
+        FidoManagerFactory.setProvider(context, providerReturning(null))
+        assertTrue(FidoManagerFactory.getFidoManager(activity, null) is CredManFidoManager)
+    }
+
+    /**
+     * A library embedded in a non-broker app must not be able to take over passkey handling, and
+     * the caller has to be told, since a genuine broker treats refusal as a misconfiguration.
+     */
+    @Test
+    fun testProviderFromANonBrokerAppIsIgnored() {
+        FidoManagerFactory.isBrokerHosted = { false }
+        assertFalse(FidoManagerFactory.setProvider(context, providerReturning(hostManager)))
         assertTrue(FidoManagerFactory.getFidoManager(activity, null) is CredManFidoManager)
     }
 
     @Test
     fun testProviderCanBeUnregistered() {
-        FidoManagerFactory.setProvider(providerReturning(hostManager))
-        FidoManagerFactory.setProvider(null)
+        FidoManagerFactory.setProvider(context, providerReturning(hostManager))
+        FidoManagerFactory.setProvider(context, null)
         assertTrue(FidoManagerFactory.getFidoManager(activity, null) is CredManFidoManager)
     }
 }
