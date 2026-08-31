@@ -27,8 +27,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 
 /**
  * Represents the potential result types returned by [NativeAuthV2ResponseParser.parseInteraction]
- * for a V2 Native Auth mid-flow (post authorize-challenge) response, scoped in this round to the
- * SSPR (reset-password) operations in [NativeAuthV2Operation].
+ * for a V2 Native Auth mid-flow (post authorize-challenge) response, covering the SSPR
+ * (reset-password) and sign-in operations in [NativeAuthV2Operation].
  *
  * No error case includes [NativeAuthV2ContinuationState], a continuation token, an href, or an
  * authorization code. The caller retains the state used for an operation when it needs to retry.
@@ -42,14 +42,49 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
      * method) via [continuationState]. [hint] is the server-supplied, possibly PII-bearing,
      * target label for that challenge (e.g. a partially-masked email or phone number) and is
      * therefore omitted from [toString], though present in [toUnsanitizedString].
+     *
+     * [methods] carries every valid method the server offered, in server order, for flows that
+     * select a method explicitly (V2 sign-in). It is empty for flows whose parser already selected
+     * the single supported method implicitly (V2 SSPR).
      */
     data class ChallengeRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-        val hint: String?
+        val hint: String?,
+        val methods: List<NativeAuthV2AuthMethod> = emptyList()
     ) : NativeAuthV2InteractionApiResult {
-        override fun toUnsanitizedString(): String = "ChallengeRequired(correlationId=$correlationId, hint=$hint)"
-        override fun toString(): String = "ChallengeRequired(correlationId=$correlationId)"
+        override fun toUnsanitizedString(): String = "ChallengeRequired(correlationId=$correlationId, " +
+                "hint=$hint, methods=${methods.map { it.toUnsanitizedString() }})"
+        override fun toString(): String = "ChallengeRequired(correlationId=$correlationId, " +
+                "methods=${methods.map { it.toString() }})"
+    }
+
+    /**
+     * The first factor has been satisfied and the server requires a second factor. [methods] are
+     * the multi-factor methods the server offered, in server order; the caller must select one
+     * explicitly, and no challenge is sent until it does.
+     */
+    data class MFARequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val methods: List<NativeAuthV2AuthMethod>
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "MFARequired(correlationId=$correlationId, " +
+                "methods=${methods.map { it.toUnsanitizedString() }})"
+        override fun toString(): String = "MFARequired(correlationId=$correlationId, " +
+                "methods=${methods.map { it.toString() }})"
+    }
+
+    /**
+     * The server challenged the selected password method and is ready to verify a password
+     * submitted via [continuationState].
+     */
+    data class PasswordRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "PasswordRequired(correlationId=$correlationId)"
+        override fun toString(): String = toUnsanitizedString()
     }
 
     /**
@@ -182,6 +217,56 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         override fun toUnsanitizedString(): String = "InvalidPassword(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
         override fun toString(): String = "InvalidPassword(correlationId=$correlationId, errorCodes=$errorCodes)"
+    }
+
+    /**
+     * The submitted username/password combination was rejected by the service.
+     *
+     * [deferredSubmission] records whether the rejected password was submitted from the deferred
+     * password-required state (`true`) or supplied directly to the sign-in entry point (`false`),
+     * so the public layer can apply the iOS V2 error taxonomy: an entry-supplied failure is
+     * invalid credentials, while a deferred failure is an invalid password.
+     */
+    data class InvalidCredentials(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val subError: String,
+        val deferredSubmission: Boolean,
+        override val errorCodes: List<Int>? = null
+    ) : ApiErrorResult(
+        error = error,
+        subError = subError,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "InvalidCredentials(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
+                "deferredSubmission=$deferredSubmission)"
+        override fun toString(): String = "InvalidCredentials(correlationId=$correlationId, " +
+                "errorCodes=$errorCodes, deferredSubmission=$deferredSubmission)"
+    }
+
+    /**
+     * The requested authentication method is blocked for this user by service policy.
+     */
+    data class AuthMethodBlocked(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val subError: String,
+        override val errorCodes: List<Int>? = null
+    ) : ApiErrorResult(
+        error = error,
+        subError = subError,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "AuthMethodBlocked(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+        override fun toString(): String = "AuthMethodBlocked(correlationId=$correlationId, errorCodes=$errorCodes)"
     }
 
     /**

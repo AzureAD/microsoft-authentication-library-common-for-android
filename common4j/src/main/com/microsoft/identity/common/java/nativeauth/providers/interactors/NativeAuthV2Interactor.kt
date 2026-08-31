@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
@@ -457,6 +458,230 @@ class NativeAuthV2Interactor(
         return result
     }
     //endregion
+
+    //region sign-in entry
+    /**
+     * Posts the username to the server-provided `signIn` href, starting the V2 sign-in flow.
+     */
+    fun performSignInStart(
+        username: String,
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSignInStart"
+        )
+
+        val request = requestProvider.createSignInStartRequest(username = username, state = state)
+
+        Logger.infoWithObject(
+            "$TAG.performSignInStart",
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return postJsonAndParse(
+            request = request,
+            state = state,
+            operation = NativeAuthV2Operation.SIGN_IN_START,
+            methodName = "$TAG.performSignInStart"
+        )
+    }
+    //endregion
+
+    //region method challenge
+    /**
+     * Challenges the server-offered password method identified by [methodId], following the href
+     * the server attached to that method rather than constructing an endpoint path from the ID.
+     */
+    fun performPasswordMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult = performMethodChallenge(
+        state = state,
+        methodId = methodId,
+        operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE,
+        methodName = "$TAG.performPasswordMethodChallenge"
+    )
+
+    /**
+     * Challenges the server-offered multi-factor method identified by [methodId], following the
+     * href the server attached to that method.
+     */
+    fun performMfaMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult = performMethodChallenge(
+        state = state,
+        methodId = methodId,
+        operation = NativeAuthV2Operation.MFA_METHOD_CHALLENGE,
+        methodName = "$TAG.performMfaMethodChallenge"
+    )
+
+    private fun performMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String,
+        operation: NativeAuthV2Operation,
+        methodName: String
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        val selectedState = state.withSelectedMethod(methodId)
+        if (selectedState == null) {
+            // The caller passed a method the current server state never offered; failing here keeps
+            // the SDK from falling back to some other method's href.
+            Logger.warn(TAG, state.correlationId, "Requested authentication method is not available in the current state.")
+            return NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = state.correlationId,
+                error = ApiErrorResult.INVALID_STATE,
+                errorDescription = "The requested authentication method is not available in the " +
+                        "current Native Auth V2 state."
+            )
+        }
+
+        val request = requestProvider.createChallengeRequest(state = selectedState)
+
+        Logger.infoWithObject(
+            methodName,
+            selectedState.correlationId,
+            "request = ",
+            request
+        )
+
+        return postJsonAndParse(
+            request = request,
+            state = selectedState,
+            operation = operation,
+            methodName = methodName
+        )
+    }
+    //endregion
+
+    //region password verify
+    /**
+     * Submits a password to the server-provided password `verify` href.
+     *
+     * [deferredSubmission] distinguishes a password submitted from the deferred password-required
+     * state from one supplied directly to the sign-in entry point, so an invalid-credentials
+     * rejection can be attributed to the right public error type.
+     *
+     * The password buffer is zeroed in a `finally` block that runs even if request construction,
+     * body serialisation, the network call, or a coroutine cancellation unwinds this frame,
+     * matching [performUpdatePassword].
+     */
+    fun performPasswordVerify(
+        state: NativeAuthV2ContinuationState,
+        password: CharArray,
+        deferredSubmission: Boolean
+    ): NativeAuthV2InteractionApiResult {
+        val methodName = "$TAG.performPasswordVerify"
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        try {
+            val request = requestProvider.createPasswordVerifyRequest(state = state, password = password)
+
+            Logger.infoWithObject(
+                methodName,
+                state.correlationId,
+                "request = ",
+                request
+            )
+
+            return postJsonAndParse(
+                request = request,
+                state = state,
+                operation = if (deferredSubmission) {
+                    NativeAuthV2Operation.SUBMIT_PASSWORD
+                } else {
+                    NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+                },
+                methodName = methodName
+            )
+        } finally {
+            StringUtil.overwriteWithNull(password)
+        }
+    }
+    //endregion
+
+    //region MFA verify
+    /**
+     * Submits a multi-factor one-time code to the server-provided `verify` href.
+     */
+    fun performMfaVerify(
+        state: NativeAuthV2ContinuationState,
+        otp: String
+    ): NativeAuthV2InteractionApiResult {
+        val methodName = "$TAG.performMfaVerify"
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        val request = requestProvider.createVerifyRequest(state = state, otp = otp)
+
+        Logger.infoWithObject(
+            methodName,
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return postJsonAndParse(
+            request = request,
+            state = state,
+            operation = NativeAuthV2Operation.MFA_VERIFY,
+            methodName = methodName
+        )
+    }
+    //endregion
+
+    /**
+     * Applies the configured interceptor headers, POSTs [request] as JSON, and parses the response
+     * for [operation]. Shared by the V2 sign-in operations, which differ only in the request they
+     * build and the operation they report to the parser.
+     */
+    private fun postJsonAndParse(
+        request: NativeAuthRequest,
+        state: NativeAuthV2ContinuationState,
+        operation: NativeAuthV2Operation,
+        methodName: String
+    ): NativeAuthV2InteractionApiResult {
+        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
+        val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
+            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
+
+        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
+        val halResponse = responseHandler.getHalApiResponse(
+            requestCorrelationId = state.correlationId,
+            response = httpResponse
+        )
+
+        val result = responseParser.parseInteraction(
+            response = halResponse,
+            previousState = state,
+            operation = operation
+        )
+
+        Logger.infoWithObject(
+            methodName,
+            result.correlationId,
+            "result = ",
+            result
+        )
+
+        return result
+    }
 
     //region token
     fun performTokenRequest(

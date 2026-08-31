@@ -30,13 +30,15 @@ import java.util.Collections
 
 /**
  * Opaque, common4j-owned mid-flow state for V2 Native Auth. Carries the latest continuation
- * token, the server-provided relation-to-href map, the requested scopes, the correlation ID, the
- * flow entry relation, and the internal flow scenario that produced it.
+ * token, the server-provided relation-to-href map, the per-method relation-to-href maps of the
+ * methods the server offered, the requested scopes, the correlation ID, the flow entry relation,
+ * and the internal flow scenario that produced it.
  *
  * Higher layers (Common's non-`common4j` code and MSAL) may only retain and transport this DTO;
- * they cannot inspect [continuationToken], [links], [scopes], [entryRelation], or [scenario],
- * because those members are `internal` to this module. Only common4j Native Auth V2 protocol code
- * (this package and `nativeauth.providers.v2`) can read them, e.g. to build the next request.
+ * they cannot inspect [continuationToken], [links], [methodLinks], [scopes], [entryRelation], or
+ * [scenario], because those members are `internal` to this module. Only common4j Native Auth V2
+ * protocol code (this package and `nativeauth.providers.v2`) can read them, e.g. to build the next
+ * request.
  * [toString] and [toUnsanitizedString] deliberately reveal none of this state, not even to
  * internal callers, since accidentally logging this object anywhere would otherwise be a single
  * point of failure for a continuation-token leak.
@@ -49,6 +51,7 @@ import java.util.Collections
 class NativeAuthV2ContinuationState private constructor(
     internal val continuationToken: String,
     internal val links: Map<String, String>,
+    internal val methodLinks: Map<String, Map<String, String>>,
     internal val scopes: List<String>,
     internal val claimsRequestJson: String?,
     val correlationId: String,
@@ -73,6 +76,29 @@ class NativeAuthV2ContinuationState private constructor(
      * present but not one of the relations this state retains.
      */
     internal fun href(relation: NativeAuthV2LinkRelation): String? = links[relation.value]
+
+    /**
+     * Returns a successor state in which the links of the server method identified by [methodId]
+     * have been promoted into the state's own relation map, so the next request follows exactly
+     * the href the server attached to that method. Returns `null` when [methodId] is not one of
+     * the methods this state retained, so a stale or fabricated method identifier fails
+     * deterministically instead of falling back to another method's href.
+     */
+    internal fun withSelectedMethod(methodId: String): NativeAuthV2ContinuationState? {
+        val selectedLinks = methodLinks[methodId] ?: return null
+        val merged = LinkedHashMap<String, String>(links)
+        merged.putAll(selectedLinks)
+        return NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = retainSupportedRelations(merged),
+            methodLinks = methodLinks,
+            scopes = defensiveCopy(scopes),
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = scenario
+        )
+    }
 
     override fun toUnsanitizedString(): String = REDACTED_STRING
 
@@ -113,6 +139,7 @@ class NativeAuthV2ContinuationState private constructor(
             return NativeAuthV2ContinuationState(
                 continuationToken = continuationToken,
                 links = retainSupportedRelations(response.links),
+                methodLinks = retainMethodLinks(response),
                 scopes = defensiveCopy(scopes),
                 claimsRequestJson = claimsRequestJson,
                 correlationId = response.correlationId,
@@ -124,6 +151,11 @@ class NativeAuthV2ContinuationState private constructor(
         /**
          * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
          * `null` if [response] did not carry a nonblank continuation token.
+         *
+         * [selectedMethod] merges a single method's links into the successor's own relation map, as
+         * the SSPR flow needs when the parser implicitly selects the one supported method. The V2
+         * sign-in flow instead defers selection and relies on [withSelectedMethod], which reads the
+         * per-method links this factory always retains from [response].
          */
         internal fun next(
             previous: NativeAuthV2ContinuationState,
@@ -137,12 +169,33 @@ class NativeAuthV2ContinuationState private constructor(
             return NativeAuthV2ContinuationState(
                 continuationToken = token,
                 links = retainSupportedRelations(merged),
+                methodLinks = retainMethodLinks(response),
                 scopes = defensiveCopy(previous.scopes),
                 claimsRequestJson = previous.claimsRequestJson,
                 correlationId = response.correlationId,
                 entryRelation = previous.entryRelation,
                 scenario = previous.scenario
             )
+        }
+
+        /**
+         * Retains the supported links of every embedded method that carries a nonblank ID, keyed by
+         * that ID, so [withSelectedMethod] can later follow the exact href the server attached to
+         * the method the caller chose. A duplicate ID keeps the first occurrence, matching the
+         * server-order preference the parser applies when it surfaces the methods themselves.
+         */
+        private fun retainMethodLinks(
+            response: NativeAuthV2HalApiResponse
+        ): Map<String, Map<String, String>> {
+            val methodLinks = LinkedHashMap<String, Map<String, String>>()
+            response.methods.forEach { method ->
+                val id = method.id?.takeUnless { it.isBlank() } ?: return@forEach
+                if (methodLinks.containsKey(id)) {
+                    return@forEach
+                }
+                methodLinks[id] = retainSupportedRelations(method.links)
+            }
+            return Collections.unmodifiableMap(methodLinks)
         }
 
         private fun retainSupportedRelations(links: Map<String, String>): Map<String, String> =

@@ -121,6 +121,75 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
+     * Starts the V2 Native Auth sign-in flow by posting the username to the server-provided
+     * `signIn` href.
+     */
+    fun performSignInStart(
+        username: String,
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performSignInStart(
+            username = username,
+            state = state
+        )
+    }
+
+    /**
+     * Challenges the server-offered password method identified by [methodId].
+     */
+    fun performPasswordMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performPasswordMethodChallenge(
+            state = state,
+            methodId = methodId
+        )
+    }
+
+    /**
+     * Challenges the server-offered multi-factor method identified by [methodId].
+     */
+    fun performMfaMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performMfaMethodChallenge(
+            state = state,
+            methodId = methodId
+        )
+    }
+
+    /**
+     * Submits a password to the server-provided password `verify` href. The buffer is cleared by
+     * the interactor on every exit path.
+     */
+    fun performPasswordVerify(
+        state: NativeAuthV2ContinuationState,
+        password: CharArray,
+        deferredSubmission: Boolean
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performPasswordVerify(
+            state = state,
+            password = password,
+            deferredSubmission = deferredSubmission
+        )
+    }
+
+    /**
+     * Submits a multi-factor one-time code to the server-provided `verify` href.
+     */
+    fun performMfaVerify(
+        state: NativeAuthV2ContinuationState,
+        otp: String
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performMfaVerify(
+            state = state,
+            otp = otp
+        )
+    }
+
+    /**
      * Performs a V2 Native Auth challenge request.
      */
     fun performChallenge(

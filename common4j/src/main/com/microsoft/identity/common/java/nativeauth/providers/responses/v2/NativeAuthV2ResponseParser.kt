@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthConstants
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import java.util.Locale
 
 /**
  * Parses [NativeAuthV2HalApiResponse] wire models into the typed [AuthorizeChallengeApiResult] and
@@ -201,12 +202,173 @@ class NativeAuthV2ResponseParser {
 
         return when (val action = response.action) {
             null -> missingActionError(response.correlationId)
-            NativeAuthV2HalAction.CHALLENGE -> parseChallenge(response, previousState)
-            NativeAuthV2HalAction.VERIFY -> parseVerify(response, previousState)
+            NativeAuthV2HalAction.CHALLENGE ->
+                if (operation.isSignIn) {
+                    parseSignInChallenge(response, previousState)
+                } else {
+                    parseChallenge(response, previousState)
+                }
+            NativeAuthV2HalAction.VERIFY -> when (operation) {
+                NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE ->
+                    parsePasswordRequired(response, previousState)
+                // An MFA challenge is an email one-time code, so it shares SSPR's code contract.
+                NativeAuthV2Operation.MFA_METHOD_CHALLENGE -> parseVerify(response, previousState)
+                else ->
+                    if (operation.isSignIn) {
+                        unexpectedVerifyForOperationError(response.correlationId, operation)
+                    } else {
+                        parseVerify(response, previousState)
+                    }
+            }
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
+    }
+
+    /**
+     * Parses a `challenge` action issued during the V2 sign-in flow.
+     *
+     * Unlike SSPR, sign-in never selects a method implicitly: every valid server-offered method is
+     * surfaced so the controller can choose one explicitly, and the per-method hrefs stay inside
+     * the successor [NativeAuthV2ContinuationState]. A challenge the server marked as
+     * `multiFactor` becomes [NativeAuthV2InteractionApiResult.MFARequired]; anything else becomes
+     * [NativeAuthV2InteractionApiResult.ChallengeRequired].
+     */
+    private fun parseSignInChallenge(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        val methods = when (val parsed = parseAuthMethods(response)) {
+            is ParsedMethods.Failure -> return parsed.error
+            is ParsedMethods.Success -> parsed.methods
+        }
+
+        val successor = NativeAuthV2ContinuationState.next(
+            previous = previousState,
+            response = response,
+            selectedMethod = null
+        ) ?: return missingContinuationTokenError(response.correlationId)
+
+        return if (response.isMultiFactorChallenge) {
+            NativeAuthV2InteractionApiResult.MFARequired(
+                correlationId = response.correlationId,
+                continuationState = successor,
+                methods = methods
+            )
+        } else {
+            NativeAuthV2InteractionApiResult.ChallengeRequired(
+                correlationId = response.correlationId,
+                continuationState = successor,
+                hint = response.challengeTargetLabel,
+                methods = methods
+            )
+        }
+    }
+
+    /**
+     * Parses the `verify` action returned by a password-method challenge. A password has no code
+     * length, target label or channel, so only the `verify` link is required here.
+     *
+     * The link is read from the response's own `_links`; when the server instead attaches it to a
+     * single embedded method, that method's link is used. More than one embedded method without a
+     * top-level link is ambiguous and is rejected rather than guessed.
+     */
+    private fun parsePasswordRequired(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        val singleEmbeddedMethod = response.methods.singleOrNull()
+        val verifyHref = response.links[NativeAuthV2LinkRelation.VERIFY.value]
+            ?: singleEmbeddedMethod?.links?.get(NativeAuthV2LinkRelation.VERIFY.value)
+            ?: return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.VERIFY)
+
+        val selectedMethod = singleEmbeddedMethod
+            ?.takeIf { response.links[NativeAuthV2LinkRelation.VERIFY.value] == null }
+            ?.takeIf { it.links[NativeAuthV2LinkRelation.VERIFY.value] == verifyHref }
+
+        val successor = NativeAuthV2ContinuationState.next(previousState, response, selectedMethod)
+            ?: return missingContinuationTokenError(response.correlationId)
+
+        return NativeAuthV2InteractionApiResult.PasswordRequired(
+            correlationId = response.correlationId,
+            continuationState = successor
+        )
+    }
+
+    /**
+     * Validates and normalizes every method embedded in [response], preserving server order.
+     *
+     * A method is valid only when it carries a nonblank ID, a nonblank type, and a `challenge`
+     * link; anything else is a protocol error rather than a silently-skipped entry. A duplicate ID
+     * keeps the first occurrence, matching the per-method link map the continuation state retains.
+     */
+    private fun parseAuthMethods(response: NativeAuthV2HalApiResponse): ParsedMethods {
+        if (response.methods.isEmpty()) {
+            Logger.warn(TAG, response.correlationId, "Native Auth V2 challenge offered no authentication methods.")
+            return ParsedMethods.Failure(
+                NativeAuthV2InteractionApiResult.UnknownError(
+                    correlationId = response.correlationId,
+                    error = ApiErrorResult.INVALID_STATE,
+                    errorDescription = "Native Auth V2 challenge response offered no authentication methods."
+                )
+            )
+        }
+
+        val methods = LinkedHashMap<String, NativeAuthV2AuthMethod>()
+        response.methods.forEach { method ->
+            val id = method.id?.takeUnless { it.isBlank() }
+                ?: return ParsedMethods.Failure(malformedMethodError(response.correlationId, METHOD_ID_FIELD))
+            val type = method.type?.takeUnless { it.isBlank() }
+                ?: return ParsedMethods.Failure(malformedMethodError(response.correlationId, METHOD_TYPE_FIELD))
+            if (method.links[NativeAuthV2LinkRelation.CHALLENGE.value].isNullOrBlank()) {
+                return ParsedMethods.Failure(
+                    missingLinkError(response.correlationId, NativeAuthV2LinkRelation.CHALLENGE)
+                )
+            }
+            if (methods.containsKey(id)) {
+                Logger.warn(TAG, response.correlationId, "Native Auth V2 challenge repeated an authentication method ID; keeping the first.")
+                return@forEach
+            }
+            methods[id] = NativeAuthV2AuthMethod(
+                id = id,
+                type = type.lowercase(Locale.ROOT),
+                hint = method.hint
+            )
+        }
+
+        return ParsedMethods.Success(methods.values.toList())
+    }
+
+    private fun malformedMethodError(
+        correlationId: String,
+        fieldName: String
+    ): NativeAuthV2InteractionApiResult.UnknownError {
+        Logger.warn(TAG, correlationId, "Native Auth V2 challenge offered a malformed authentication method.")
+        return NativeAuthV2InteractionApiResult.UnknownError(
+            correlationId = correlationId,
+            error = ApiErrorResult.INVALID_STATE,
+            errorDescription = "Native Auth V2 challenge response contains an authentication " +
+                    "method missing required field '$fieldName'."
+        )
+    }
+
+    private fun unexpectedVerifyForOperationError(
+        correlationId: String,
+        operation: NativeAuthV2Operation
+    ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
+        correlationId = correlationId,
+        error = ApiErrorResult.INVALID_STATE,
+        errorDescription = "Native Auth V2 response requested a 'verify' action that is not valid " +
+                "for sign-in operation '${operation.name}'."
+    )
+
+    /**
+     * Outcome of validating the authentication methods embedded in a sign-in challenge response.
+     */
+    private sealed interface ParsedMethods {
+        data class Success(val methods: List<NativeAuthV2AuthMethod>) : ParsedMethods
+        data class Failure(val error: NativeAuthV2InteractionApiResult.UnknownError) : ParsedMethods
     }
 
     private fun parseChallenge(
@@ -367,7 +529,7 @@ class NativeAuthV2ResponseParser {
         val errorCodes = extractAadstsCodes(message)
 
         return when {
-            operation == NativeAuthV2Operation.VERIFY &&
+            (operation == NativeAuthV2Operation.VERIFY || operation == NativeAuthV2Operation.MFA_VERIFY) &&
                     code in ERROR_INVALID_GRANT &&
                     innerErrorCode in INNER_ERROR_INVALID_ONE_TIME_CODE ->
                 // The user supplied the wrong one-time code; the app can prompt for a new one.
@@ -393,7 +555,8 @@ class NativeAuthV2ResponseParser {
                     errorCodes = errorCodes
                 )
 
-            operation == NativeAuthV2Operation.RESET_PASSWORD_START &&
+            (operation == NativeAuthV2Operation.RESET_PASSWORD_START ||
+                    operation == NativeAuthV2Operation.SIGN_IN_START) &&
                     message?.contains(AADSTS_USER_NOT_FOUND) == true ->
                 NativeAuthV2InteractionApiResult.UserNotFound(
                     correlationId = correlationId,
@@ -402,9 +565,34 @@ class NativeAuthV2ResponseParser {
                     errorCodes = errorCodes
                 )
 
+            operation.isSignIn &&
+                    code in ERROR_ACCESS_DENIED &&
+                    innerErrorCode in INNER_ERROR_PROVIDER_BLOCKED ->
+                // Service policy blocks the requested authentication method for this user.
+                NativeAuthV2InteractionApiResult.AuthMethodBlocked(
+                    correlationId = correlationId,
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    subError = innerErrorCode.orEmpty(),
+                    errorCodes = errorCodes
+                )
+
+            operation.isPasswordVerification &&
+                    (innerErrorCode in INNER_ERROR_INVALID_USERNAME_OR_PASSWORD ||
+                            message?.contains(AADSTS_INVALID_USERNAME_OR_PASSWORD) == true) ->
+                NativeAuthV2InteractionApiResult.InvalidCredentials(
+                    correlationId = correlationId,
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    subError = innerErrorCode.orEmpty(),
+                    deferredSubmission = operation == NativeAuthV2Operation.SUBMIT_PASSWORD,
+                    errorCodes = errorCodes
+                )
+
             innerErrorCode in INNER_ERROR_INVALID_USERNAME_OR_PASSWORD ||
                     message?.contains(AADSTS_INVALID_USERNAME_OR_PASSWORD) == true ->
-                // Sign-in concern for SSPR; revisit once V2 sign-in lands.
+                // A credential rejection outside a password submission (e.g. during SSPR) is not
+                // actionable by the app at that step.
                 unknownInteractionError(correlationId, code, message, errorCodes)
 
             else -> unknownInteractionError(correlationId, code, message, errorCodes)
@@ -490,6 +678,8 @@ class NativeAuthV2ResponseParser {
         private const val CODE_LENGTH_FIELD = "codeLength"
         private const val CHALLENGE_TARGET_LABEL_FIELD = "challengeTargetLabel"
         private const val CHALLENGE_CHANNEL_FIELD = "challengeChannel"
+        private const val METHOD_ID_FIELD = "id"
+        private const val METHOD_TYPE_FIELD = "type"
 
         private val ERROR_INVALID_GRANT = setOf("invalidGrant", "invalid_grant")
         private val INNER_ERROR_INVALID_CONTINUATION_TOKEN =
@@ -514,6 +704,17 @@ class NativeAuthV2ResponseParser {
         )
         private val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD =
             setOf("invalidUserNameOrPassword", "invalid_username_or_password")
+
+        /**
+         * Outer/inner error pair the service uses to report that an authentication method is
+         * blocked for the user. Both spellings of each value are accepted, matching how this
+         * parser already treats `invalidGrant`: the camelCase form is the Native Auth V2 wire
+         * value and the snake_case form is the verified V1 spelling.
+         */
+        private val ERROR_ACCESS_DENIED = setOf("accessDenied", "access_denied")
+        private val INNER_ERROR_PROVIDER_BLOCKED =
+            setOf("providerBlockedByRep", "provider_blocked_by_rep")
+
         private const val AADSTS_USER_NOT_FOUND = "AADSTS50034"
         private const val AADSTS_INVALID_USERNAME_OR_PASSWORD = "AADSTS50126"
     }

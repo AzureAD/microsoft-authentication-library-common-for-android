@@ -37,5 +37,47 @@ internal enum class NativeAuthV2Operation {
     RESEND,
     VERIFY,
     UPDATE_PASSWORD,
-    POLL
+    POLL,
+
+    /** Sign-in entry: `signIn` href posted with the username. */
+    SIGN_IN_START,
+
+    /** Challenge issued against the server-offered password first-factor method. */
+    SIGN_IN_PASSWORD_CHALLENGE,
+
+    /**
+     * Password verification for a password supplied directly to the sign-in entry point. Kept
+     * distinct from [SUBMIT_PASSWORD] so an invalid-credentials rejection can be attributed to the
+     * entry point rather than to a deferred submission.
+     */
+    SIGN_IN_PASSWORD_VERIFY,
+
+    /**
+     * Password verification for a password submitted from the deferred password-required state.
+     * Kept distinct from [SIGN_IN_PASSWORD_VERIFY]; see that value.
+     */
+    SUBMIT_PASSWORD,
+
+    /** Challenge issued against an explicitly selected multi-factor method. */
+    MFA_METHOD_CHALLENGE,
+
+    /** One-time-code verification for a multi-factor challenge. */
+    MFA_VERIFY;
+
+    /**
+     * `true` when this operation submits a password, in either the entry or the deferred form.
+     */
+    val isPasswordVerification: Boolean
+        get() = this == SIGN_IN_PASSWORD_VERIFY || this == SUBMIT_PASSWORD
+
+    /**
+     * `true` when this operation belongs to the V2 sign-in flow rather than SSPR.
+     */
+    val isSignIn: Boolean
+        get() = this == SIGN_IN_START ||
+                this == SIGN_IN_PASSWORD_CHALLENGE ||
+                this == SIGN_IN_PASSWORD_VERIFY ||
+                this == SUBMIT_PASSWORD ||
+                this == MFA_METHOD_CHALLENGE ||
+                this == MFA_VERIFY
 }
