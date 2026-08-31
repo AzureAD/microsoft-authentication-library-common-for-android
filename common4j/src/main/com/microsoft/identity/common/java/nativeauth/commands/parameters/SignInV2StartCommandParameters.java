@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
 import javax.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -38,6 +39,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
 public class SignInV2StartCommandParameters extends BaseSignInTokenCommandParameters {
     /**
