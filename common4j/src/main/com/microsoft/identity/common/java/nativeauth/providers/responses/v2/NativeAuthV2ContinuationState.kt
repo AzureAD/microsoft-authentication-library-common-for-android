@@ -59,6 +59,28 @@ class NativeAuthV2ContinuationState private constructor(
     internal val scenario: NativeAuthV2FlowScenario
 ) : ILoggable, Serializable {
 
+    // Preserve the previous constructor shape for cross-repository consumers that create this
+    // opaque state reflectively.
+    @Suppress("unused")
+    private constructor(
+        continuationToken: String,
+        links: Map<String, String>,
+        scopes: List<String>,
+        claimsRequestJson: String?,
+        correlationId: String,
+        entryRelation: NativeAuthV2LinkRelation,
+        scenario: NativeAuthV2FlowScenario
+    ) : this(
+        continuationToken = continuationToken,
+        links = links,
+        methodLinks = emptyMap(),
+        scopes = scopes,
+        claimsRequestJson = claimsRequestJson,
+        correlationId = correlationId,
+        entryRelation = entryRelation,
+        scenario = scenario
+    )
+
     /**
      * Returns a defensive copy of the scopes this state was created with, for the later
      * authorization-code token request at flow completion. Controllers outside common4j access

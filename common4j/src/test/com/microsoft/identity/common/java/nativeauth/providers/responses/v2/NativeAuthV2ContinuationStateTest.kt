@@ -67,6 +67,27 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun legacyConstructorShape_createsStateWithoutMethodLinks() {
+        val constructor = NativeAuthV2ContinuationState::class.java.declaredConstructors
+            .single { it.parameterCount == 7 }
+        constructor.isAccessible = true
+
+        val state = constructor.newInstance(
+            CONTINUATION_TOKEN,
+            mapOf(NativeAuthV2LinkRelation.RESET_PASSWORD.value to RESET_PASSWORD_HREF),
+            SCOPES,
+            CLAIMS_REQUEST_JSON,
+            CORRELATION_ID,
+            NativeAuthV2LinkRelation.RESET_PASSWORD.value,
+            NativeAuthV2FlowScenario.RESET_PASSWORD
+        ) as NativeAuthV2ContinuationState
+
+        assertEquals(RESET_PASSWORD_HREF, state.href(NativeAuthV2LinkRelation.RESET_PASSWORD))
+        assertEquals(SCOPES, state.scopesForTokenRequest())
+        assertNull(state.withSelectedMethod("missing"))
+    }
+
+    @Test
     fun next_whenContinuationTokenIsBlank_returnsNull() {
         val previous = createState()
 
