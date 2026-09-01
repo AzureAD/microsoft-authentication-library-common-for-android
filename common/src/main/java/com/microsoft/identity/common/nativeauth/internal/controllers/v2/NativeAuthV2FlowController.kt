@@ -813,12 +813,14 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         parameters: NativeAuthV2SubmitPasswordCommandParameters,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
-        val scopes = addDefaultScopes(parameters.scopes)
+        val scopes = addDefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
             parametersWithScopes = parameters.toBuilder()
                 .scopes(scopes)
-                .claimsRequestJson(parameters.claimsRequestJson?.takeUnless { it.isBlank() })
+                .claimsRequestJson(
+                    state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
+                )
                 .build(),
             state = state
         )
@@ -829,12 +831,14 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         parameters: NativeAuthV2SubmitMFAChallengeCommandParameters,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
-        val scopes = addDefaultScopes(parameters.scopes)
+        val scopes = addDefaultScopes(state.scopesForTokenRequest())
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
             parametersWithScopes = parameters.toBuilder()
                 .scopes(scopes)
-                .claimsRequestJson(parameters.claimsRequestJson?.takeUnless { it.isBlank() })
+                .claimsRequestJson(
+                    state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
+                )
                 .build(),
             state = state
         )
