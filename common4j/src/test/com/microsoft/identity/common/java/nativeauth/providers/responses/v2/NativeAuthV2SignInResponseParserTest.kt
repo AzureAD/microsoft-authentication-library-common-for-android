@@ -112,16 +112,18 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenAuthenticationFactorCasingDiffers_stillTreatedAsMultiFactor() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR")
-            ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+    fun parseInteraction_whenMultiFactorCasingDiffers_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR"),
+            NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
         )
+    }
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
+    @Test
+    fun parseInteraction_whenSingleFactorCasingDiffers_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "SINGLEFACTOR")
+        )
     }
 
     @Test
@@ -571,11 +573,14 @@ class NativeAuthV2SignInResponseParserTest {
         )
     }
 
-    private fun assertInvalidAuthenticationFactor(json: String) {
+    private fun assertInvalidAuthenticationFactor(
+        json: String,
+        operation: NativeAuthV2Operation = NativeAuthV2Operation.SIGN_IN_START
+    ) {
         val result = parser.parseInteraction(
             response = responseFrom(json),
             previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            operation = operation
         )
 
         assertInvalidState(result, "invalid value for field 'authenticationFactor'")

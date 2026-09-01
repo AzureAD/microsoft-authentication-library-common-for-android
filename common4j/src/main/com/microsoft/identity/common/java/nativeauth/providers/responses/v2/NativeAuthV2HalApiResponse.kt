@@ -66,18 +66,17 @@ class NativeAuthV2HalApiResponse private constructor(
 
     /**
      * `true` when the server declared this challenge to be a multi-factor (second-factor) step via
-     * `challengeContext.authenticationFactor`. Matching is case-insensitive so a casing change on
-     * the wire cannot silently downgrade an MFA challenge to a first-factor one.
+     * `challengeContext.authenticationFactor`.
      */
     val isMultiFactorChallenge: Boolean
-        get() = authenticationFactor.equals(MULTI_FACTOR, ignoreCase = true)
+        get() = authenticationFactor == MULTI_FACTOR
 
     /**
      * `true` when the server declared this challenge to be the single (first) factor via
      * `challengeContext.authenticationFactor`.
      */
     val isSingleFactorChallenge: Boolean
-        get() = authenticationFactor.equals(SINGLE_FACTOR, ignoreCase = true)
+        get() = authenticationFactor == SINGLE_FACTOR
 
     /**
      * PII-bearing string. Still never includes [continuationToken], [authorizationCode], any href
