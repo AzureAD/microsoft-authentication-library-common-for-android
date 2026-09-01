@@ -175,6 +175,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_PASSWORD = "266";
     public static final String NATIVE_AUTH_V2_SIGN_IN_SELECT_MFA_METHOD = "267";
     public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_MFA_CHALLENGE = "268";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_RESEND_MFA_CHALLENGE = "269";
     //endregion
 
     // region WebApps APIs
