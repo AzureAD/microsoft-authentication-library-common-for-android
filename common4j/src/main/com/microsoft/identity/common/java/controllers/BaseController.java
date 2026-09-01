@@ -220,7 +220,7 @@ public abstract class BaseController {
                 parametersWithScopes
         );
 
-        final TokenResult tokenResult = strategyRequestToken(
+        final TokenResult tokenResult = executeTokenRequest(
                 oAuth2Strategy,
                 ropcTokenRequest,
                 parametersWithScopes
@@ -431,7 +431,7 @@ public abstract class BaseController {
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
         @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult =
-                strategyRequestToken(strategy, tokenRequest, parameters);
+                executeTokenRequest(strategy, tokenRequest, parameters);
 
         ResultUtil.logResult(TAG, tokenResult);
 
@@ -465,7 +465,7 @@ public abstract class BaseController {
         );
         ResultUtil.logExposedFieldsOfObject(methodTag, tokenRequest);
         // Execute Token Request
-        TokenResult tokenResult = strategyRequestToken(oAuth2Strategy, tokenRequest, parameters);
+        TokenResult tokenResult = executeTokenRequest(oAuth2Strategy, tokenRequest, parameters);
 
         // Validate request success, may throw MsalServiceException
         validateDeviceCodeFlowServiceResult(tokenResult);
@@ -910,26 +910,25 @@ public abstract class BaseController {
             );
         }
 
-        return strategyRequestToken(strategy, refreshTokenRequest, parameters);
+        return executeTokenRequest(strategy, refreshTokenRequest, parameters);
     }
 
     // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the call to requestToken method
     @SuppressWarnings(WarningType.unchecked_warning)
-    //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     // Package-private rather than private so BaseControllerTelemetryTest can assert the tag
     // ordering guarantee directly. The guarantee is that BrokerNetworkCallEnd is emitted in a
     // finally block, so it is recorded even when strategy.requestToken throws; driving that
     // through the public performSilentTokenRequest would require standing up platform
     // components and the Authority.getKnownAuthorityResult gate, which is unrelated setup.
-    TokenResult strategyRequestToken(
+    TokenResult executeTokenRequest(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
             @NonNull final TokenRequest tokenRequest,
             @NonNull final CommandParameters parameters) throws IOException, ClientException {
-        TelemetryHelper.addEventSafely(
+        TelemetryHelper.addEvent(
                 parameters.getEventCollector(),
                 EventTag.BrokerNetworkCallStart
         );
-        TelemetryHelper.addEventSafely(
+        TelemetryHelper.addEvent(
                 parameters.getEventCollector(),
                 EventTag.CommonHttpRequestExecute
         );
@@ -937,17 +936,17 @@ public abstract class BaseController {
             final TokenResult tokenResult;
             try {
                 tokenResult = strategy.requestToken(tokenRequest);
-                TelemetryHelper.addEventSafely(
+                TelemetryHelper.addEvent(
                         parameters.getEventCollector(),
                         EventTag.CommonHttpResponseReceived
                 );
             } finally {
-                TelemetryHelper.addEventSafely(
+                TelemetryHelper.addEvent(
                         parameters.getEventCollector(),
                         EventTag.BrokerNetworkCallEnd
                 );
             }
-            TelemetryHelper.addEventSafely(
+            TelemetryHelper.addEvent(
                     parameters.getEventCollector(),
                     tokenResult.getSuccess()
                             ? EventTag.BrokerTokenAcquired
@@ -955,7 +954,7 @@ public abstract class BaseController {
             );
             return tokenResult;
         } catch (final IOException | ClientException | RuntimeException e) {
-            TelemetryHelper.addEventSafely(
+            TelemetryHelper.addEvent(
                     parameters.getEventCollector(),
                     EventTag.BrokerNetworkCallFailed
             );

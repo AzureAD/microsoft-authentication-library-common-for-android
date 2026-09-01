@@ -159,54 +159,6 @@ public class BrokerMsalController extends BaseController {
 
     private String mMaxMsalBrokerProtocolVersion;
 
-    /**
-     * Adds the client's telemetry request blob to the outbound request Bundle.
-     * <p>
-     * The blob carries only the negotiated wire contract — the correlation ID and the schema
-     * version this client can consume — so the broker can build its response payload in a
-     * format this client understands. The {@link EventCollector} itself is never serialized:
-     * its timing state is process-local and any client-side events it holds have no consumer
-     * in the broker.
-     * <p>
-     * The correlation ID is read from the command parameters rather than from the
-     * {@link EventCollector} because the parameters carry the ID the request actually runs under,
-     * which is what the broker's payload must be joinable on. The collector is often constructed
-     * before that ID is resolved, so its own value may be stale or blank.
-     *
-     * @param requestBundle the request Bundle to augment.
-     * @param parameters    the command parameters carrying the optional {@link EventCollector}.
-     * @return the same Bundle, with the telemetry request key added when telemetry is being
-     * collected and the request carries a correlation ID.
-     */
-    @NonNull
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
-                                     @NonNull final CommandParameters parameters) {
-        final EventCollector eventCollector = parameters.getEventCollector();
-        if (eventCollector == null) {
-            // Telemetry is not being collected for this request. Leave the key absent so the
-            // broker treats it as "not requested" rather than parsing an explicit JSON null.
-            return requestBundle;
-        }
-        // CommandDispatcher mints a correlation ID and sets it on the parameters before the
-        // command executes, so this is populated on every dispatched request. The guard only
-        // matters if a controller is ever invoked without going through the dispatcher:
-        // BrokerTelemetryRequest#correlationId is contractually a UUID, and an empty string
-        // would satisfy the type while violating the wire contract. Omitting the key keeps a
-        // malformed blob off the wire; the broker gates collection on its own flight, so this
-        // does not suppress broker-side telemetry.
-        final String correlationId = parameters.getCorrelationId();
-        if (StringUtil.isNullOrEmpty(correlationId)) {
-            return requestBundle;
-        }
-        requestBundle.putString(
-                BROKER_TELEMETRY_REQUEST,
-                ObjectMapper.serializeObjectToJsonString(
-                        new BrokerTelemetryRequest(correlationId))
-        );
-        return requestBundle;
-    }
-
     public BrokerMsalController(@NonNull final Context applicationContext,
                                 @NonNull final IPlatformComponents components,
                                 @NonNull final String activeBrokerPackageName) {
@@ -253,6 +205,54 @@ public class BrokerMsalController extends BaseController {
         this.ipcStrategies = ipcStrategies;
         mHelloCache = getHelloCache();
         mMaxMsalBrokerProtocolVersion = maxMsalBrokerProtocolVersion;
+    }
+
+    /**
+     * Adds the client's telemetry request blob to the outbound request Bundle.
+     * <p>
+     * The blob carries only the negotiated wire contract — the correlation ID and the schema
+     * version this client can consume — so the broker can build its response payload in a
+     * format this client understands. The {@link EventCollector} itself is never serialized:
+     * its timing state is process-local and any client-side events it holds have no consumer
+     * in the broker.
+     * <p>
+     * The correlation ID is read from the command parameters rather than from the
+     * {@link EventCollector} because the parameters carry the ID the request actually runs under,
+     * which is what the broker's payload must be joinable on. The collector is often constructed
+     * before that ID is resolved, so its own value may be stale or blank.
+     *
+     * @param requestBundle the request Bundle to augment.
+     * @param parameters    the command parameters carrying the optional {@link EventCollector}.
+     * @return the same Bundle, with the telemetry request key added when telemetry is being
+     * collected and the request carries a correlation ID.
+     */
+    @NonNull
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
+                                     @NonNull final CommandParameters parameters) {
+        final EventCollector eventCollector = parameters.getEventCollector();
+        if (eventCollector == null) {
+            // Telemetry is not being collected for this request. Leave the key absent so the
+            // broker treats it as "not requested" rather than parsing an explicit JSON null.
+            return requestBundle;
+        }
+        // CommandDispatcher mints a correlation ID and sets it on the parameters before the
+        // command executes, so this is populated on every dispatched request. The guard only
+        // matters if a controller is ever invoked without going through the dispatcher:
+        // BrokerTelemetryRequest#correlationId is contractually a UUID, and an empty string
+        // would satisfy the type while violating the wire contract. Omitting the key keeps a
+        // malformed blob off the wire; the broker gates collection on its own flight, so this
+        // does not suppress broker-side telemetry.
+        final String correlationId = parameters.getCorrelationId();
+        if (StringUtil.isNullOrEmpty(correlationId)) {
+            return requestBundle;
+        }
+        requestBundle.putString(
+                BROKER_TELEMETRY_REQUEST,
+                ObjectMapper.serializeObjectToJsonString(
+                        new BrokerTelemetryRequest(correlationId))
+        );
+        return requestBundle;
     }
 
     /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */

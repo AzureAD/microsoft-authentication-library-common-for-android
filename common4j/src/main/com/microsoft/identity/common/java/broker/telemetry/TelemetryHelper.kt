@@ -37,7 +37,7 @@ object TelemetryHelper {
      */
     @JvmStatic
     @JvmOverloads
-    fun addEventSafely(
+    fun addEvent(
         collector: EventCollector?,
         tag: EventTag,
         statusCode: Int? = null,

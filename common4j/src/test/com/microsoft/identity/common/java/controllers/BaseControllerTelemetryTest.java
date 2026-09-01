@@ -43,7 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Tests the telemetry instrumentation that {@link BaseController#strategyRequestToken} wraps around
+ * Tests the telemetry instrumentation that {@link BaseController#executeTokenRequest} wraps around
  * the token request.
  * <p>
  * The behaviour under test is ordering, not merely presence. {@code BrokerNetworkCallEnd} is emitted
@@ -51,7 +51,7 @@ import java.util.List;
  * closing event; without it, a failed call is indistinguishable from one that never returned. These
  * tests pin that guarantee, and pin that instrumentation does not swallow the original exception.
  * <p>
- * {@code strategyRequestToken} is exercised directly rather than through
+ * {@code executeTokenRequest} is exercised directly rather than through
  * {@link BaseController#performSilentTokenRequest}, which would first require platform components,
  * a network-availability check and the {@code Authority.getKnownAuthorityResult} gate — none of
  * which have any bearing on tag ordering.
@@ -72,7 +72,7 @@ public class BaseControllerTelemetryTest {
 
     @Before
     public void setUp() {
-        // CALLS_REAL_METHODS lets the real strategyRequestToken body run without having to stub
+        // CALLS_REAL_METHODS lets the real executeTokenRequest body run without having to stub
         // the twelve abstract members BaseController declares, none of which it touches.
         mController = Mockito.mock(BaseController.class, Mockito.CALLS_REAL_METHODS);
         mStrategy = Mockito.mock(OAuth2Strategy.class);
@@ -111,11 +111,11 @@ public class BaseControllerTelemetryTest {
     }
 
     @Test
-    public void strategyRequestToken_whenCallSucceeds_recordsTagsInOrder() throws Exception {
+    public void executeTokenRequest_whenCallSucceeds_recordsTagsInOrder() throws Exception {
         final TokenResult expected = tokenResultWithSuccess(true);
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenReturn(expected);
 
-        final TokenResult actual = mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters);
+        final TokenResult actual = mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters);
 
         Assert.assertSame(expected, actual);
         Assert.assertEquals(
@@ -136,11 +136,11 @@ public class BaseControllerTelemetryTest {
      * expected here but not on the throwing path below.
      */
     @Test
-    public void strategyRequestToken_whenTokenResultUnsuccessful_recordsNetworkCallFailed() throws Exception {
+    public void executeTokenRequest_whenTokenResultUnsuccessful_recordsNetworkCallFailed() throws Exception {
         final TokenResult unsuccessful = tokenResultWithSuccess(false);
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenReturn(unsuccessful);
 
-        mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters);
+        mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters);
 
         Assert.assertEquals(
                 Arrays.asList(
@@ -160,12 +160,12 @@ public class BaseControllerTelemetryTest {
      * start -> end -> failed rather than leaving the call open forever.
      */
     @Test
-    public void strategyRequestToken_whenRequestThrowsIOException_recordsEndBeforeFailedAndPropagates() throws Exception {
+    public void executeTokenRequest_whenRequestThrowsIOException_recordsEndBeforeFailedAndPropagates() throws Exception {
         final IOException expected = new IOException("network down");
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenThrow(expected);
 
         try {
-            mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters);
+            mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters);
             Assert.fail("Expected the original IOException to propagate");
         } catch (final IOException actual) {
             Assert.assertSame("Instrumentation must not replace the original exception", expected, actual);
@@ -187,12 +187,12 @@ public class BaseControllerTelemetryTest {
      * propagate unchanged rather than being wrapped by the instrumentation.
      */
     @Test
-    public void strategyRequestToken_whenRequestThrowsRuntimeException_propagatesUnchanged() throws Exception {
+    public void executeTokenRequest_whenRequestThrowsRuntimeException_propagatesUnchanged() throws Exception {
         final RuntimeException expected = new IllegalStateException("boom");
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenThrow(expected);
 
         try {
-            mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters);
+            mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters);
             Assert.fail("Expected the original RuntimeException to propagate");
         } catch (final RuntimeException actual) {
             Assert.assertSame(expected, actual);
@@ -214,12 +214,12 @@ public class BaseControllerTelemetryTest {
      * must behave exactly as it did before the instrumentation was added.
      */
     @Test
-    public void strategyRequestToken_whenNoEventCollector_stillReturnsResult() throws Exception {
+    public void executeTokenRequest_whenNoEventCollector_stillReturnsResult() throws Exception {
         Mockito.when(mParameters.getEventCollector()).thenReturn(null);
         final TokenResult expected = tokenResultWithSuccess(true);
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenReturn(expected);
 
-        Assert.assertSame(expected, mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters));
+        Assert.assertSame(expected, mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters));
     }
 
     /**
@@ -227,13 +227,13 @@ public class BaseControllerTelemetryTest {
      * original exception still propagates.
      */
     @Test
-    public void strategyRequestToken_whenNoEventCollectorAndRequestThrows_propagatesOriginal() throws Exception {
+    public void executeTokenRequest_whenNoEventCollectorAndRequestThrows_propagatesOriginal() throws Exception {
         Mockito.when(mParameters.getEventCollector()).thenReturn(null);
         final ClientException expected = new ClientException("test_error", "test message");
         Mockito.when(mStrategy.requestToken(Mockito.any(TokenRequest.class))).thenThrow(expected);
 
         try {
-            mController.strategyRequestToken(mStrategy, mTokenRequest, mParameters);
+            mController.executeTokenRequest(mStrategy, mTokenRequest, mParameters);
             Assert.fail("Expected the original ClientException to propagate");
         } catch (final ClientException actual) {
             Assert.assertSame(expected, actual);

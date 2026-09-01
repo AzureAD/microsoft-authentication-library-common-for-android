@@ -212,16 +212,16 @@ class EventCollectorTest {
     }
 
     @Test
-    fun addEventSafely_withNullCollector_doesNotThrow() {
+    fun telemetryHelperAddEvent_withNullCollector_doesNotThrow() {
         // Should be a no-op and not throw NullPointerException
-        TelemetryHelper.addEventSafely(null, EventTag.BrokerRequestReceived)
+        TelemetryHelper.addEvent(null, EventTag.BrokerRequestReceived)
     }
 
     @Test
-    fun addEventSafely_withNonNullCollector_addsEvent() {
+    fun telemetryHelperAddEvent_withNonNullCollector_addsEvent() {
         val collector = EventCollector(testCorrelationId)
 
-        TelemetryHelper.addEventSafely(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
+        TelemetryHelper.addEvent(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
 
         val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)

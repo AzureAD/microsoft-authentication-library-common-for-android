@@ -58,6 +58,7 @@ internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
             else -> return null
         }
         val delegate = gson.getDelegateAdapter(this, type)
+        val typeName = type.rawType.simpleName
 
         return object : TypeAdapter<T>() {
             override fun write(out: JsonWriter, value: T?) {
@@ -70,13 +71,13 @@ internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
                     return null
                 }
                 if (!element.isJsonObject) {
-                    throw JsonSyntaxException("Broker IPC telemetry must be a JSON object.")
+                    throw JsonSyntaxException("$typeName must be a JSON object.")
                 }
 
                 val jsonObject = element.asJsonObject
                 requiredFields.forEach { field ->
                     if (!jsonObject.has(field) || jsonObject.get(field).isJsonNull) {
-                        throw JsonSyntaxException("Broker IPC telemetry is missing required field: $field")
+                        throw JsonSyntaxException("$typeName is missing required field: $field")
                     }
                 }
                 return delegate.fromJsonTree(element)
@@ -85,6 +86,12 @@ internal class BrokerIpcTelemetryTypeAdapterFactory : TypeAdapterFactory {
     }
 
     private companion object {
+        // Note on the two version fields below: BrokerIpcTelemetry.schemaVersion and
+        // PerformanceRecord.version declare Kotlin defaults, which can read as "optional".
+        // Those defaults are dead on this path — Gson instantiates reflectively and bypasses
+        // constructors, so a default can never fill a field the payload omitted. Both are
+        // therefore required here: the wire contract obliges the sender to state its version
+        // explicitly rather than letting an absent field masquerade as the current one.
         val BROKER_IPC_TELEMETRY_REQUIRED_FIELDS = setOf(
             "schema_version",
             "correlation_id",

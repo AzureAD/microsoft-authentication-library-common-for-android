@@ -633,14 +633,14 @@ public class CommandDispatcher {
 
             // Recorded before execute() so this event can never be timestamped after
             // BrokerCommandExecutionStart, which the worker thread may record immediately.
-            TelemetryHelper.addEventSafely(
+            TelemetryHelper.addEvent(
                     commandParameters.getEventCollector(),
                     EventTag.BrokerCommandQueued
             );
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
-                    TelemetryHelper.addEventSafely(
+                    TelemetryHelper.addEvent(
                             commandParameters.getEventCollector(),
                             EventTag.BrokerCommandExecutionStart
                     );
@@ -766,14 +766,14 @@ public class CommandDispatcher {
             finalFuture.whenComplete(getCommandResultConsumer(command));
             // Recorded before execute() so this event can never be timestamped after
             // BrokerCommandExecutionStart, which the worker thread may record immediately.
-            TelemetryHelper.addEventSafely(
+            TelemetryHelper.addEvent(
                     commandParameters.getEventCollector(),
                     EventTag.BrokerCommandQueued
             );
             sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
-                    TelemetryHelper.addEventSafely(
+                    TelemetryHelper.addEvent(
                             commandParameters.getEventCollector(),
                             EventTag.BrokerCommandExecutionStart
                     );
@@ -1071,7 +1071,7 @@ public class CommandDispatcher {
 
                 // Recorded before execute() so this event can never be timestamped after
                 // BrokerCommandExecutionStart, which the worker thread may record immediately.
-                TelemetryHelper.addEventSafely(
+                TelemetryHelper.addEvent(
                         command.getParameters().getEventCollector(),
                         EventTag.BrokerCommandQueued
                 );
@@ -1079,7 +1079,7 @@ public class CommandDispatcher {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
-                        TelemetryHelper.addEventSafely(
+                        TelemetryHelper.addEvent(
                                 commandParameters.getEventCollector(),
                                 EventTag.BrokerCommandExecutionStart
                         );
@@ -1379,3 +1379,4 @@ public class CommandDispatcher {
         resetSilentRequestExecutorWithSize(getSilentRequestThreadPoolSize());
     }
 }
+
