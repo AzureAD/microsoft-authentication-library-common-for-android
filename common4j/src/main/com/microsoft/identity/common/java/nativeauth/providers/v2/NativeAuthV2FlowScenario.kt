@@ -25,11 +25,12 @@ package com.microsoft.identity.common.java.nativeauth.providers.v2
 /**
  * The Native Auth V2 flow that produced a [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState].
  *
- * This stays intentionally small: [RESET_PASSWORD] covers V2 SSPR and [SIGN_IN] covers V2 sign-in,
- * so callers can pass the scenario through the public Native Auth V2 strategy/controller surface
- * without exposing any broader flow matrix yet.
+ * This stays intentionally small: [RESET_PASSWORD] covers V2 SSPR, [SIGN_IN] covers V2 sign-in,
+ * and [SIGN_UP] covers V2 sign-up, so callers can pass the scenario through the public Native Auth
+ * V2 strategy/controller surface without exposing any broader flow matrix yet.
  */
 enum class NativeAuthV2FlowScenario {
     RESET_PASSWORD,
-    SIGN_IN
+    SIGN_IN,
+    SIGN_UP
 }

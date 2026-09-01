@@ -222,6 +222,7 @@ class NativeAuthV2ResponseParser {
             }
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
+            NativeAuthV2HalAction.COLLECT_ATTRIBUTES -> parseCollectAttributes(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
     }
@@ -482,6 +483,56 @@ class NativeAuthV2ResponseParser {
         )
     }
 
+    /**
+     * Parses a sign-up `collectAttributes` action into
+     * [NativeAuthV2InteractionApiResult.AttributesRequired]. The server lists the attributes it
+     * wants in the top-level `attributes` array and attaches a `submitAttributes` link the caller
+     * follows to supply them. An attribute entry with no wire name is a protocol error rather than
+     * a silently-dropped entry.
+     */
+    private fun parseCollectAttributes(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        if (response.links[NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value] == null) {
+            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES)
+        }
+
+        val requiredAttributes = ArrayList<NativeAuthV2RequiredAttribute>(response.requiredAttributes.size)
+        response.requiredAttributes.forEach { attribute ->
+            val name = attribute.attributeId?.takeUnless { it.isBlank() }
+                ?: return malformedAttributeError(response.correlationId)
+            requiredAttributes.add(
+                NativeAuthV2RequiredAttribute(
+                    name = name,
+                    type = attribute.inputType,
+                    required = attribute.required
+                )
+            )
+        }
+
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+
+        return NativeAuthV2InteractionApiResult.AttributesRequired(
+            correlationId = response.correlationId,
+            continuationState = successor,
+            requiredAttributes = requiredAttributes
+        )
+    }
+
+    private fun malformedAttributeError(
+        correlationId: String
+    ): NativeAuthV2InteractionApiResult.UnknownError {
+        Logger.warn(TAG, correlationId, "Native Auth V2 collectAttributes response contained an attribute without a name.")
+        return NativeAuthV2InteractionApiResult.UnknownError(
+            correlationId = correlationId,
+            error = ApiErrorResult.INVALID_STATE,
+            errorDescription = "Native Auth V2 collectAttributes response contains an attribute " +
+                    "missing required field 'attributeId'."
+        )
+    }
+
     private fun parsePoll(
         response: NativeAuthV2HalApiResponse,
         previousState: NativeAuthV2ContinuationState
@@ -544,6 +595,31 @@ class NativeAuthV2ResponseParser {
             innerErrorCode in INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
                 // SDK-managed continuation-token state the app cannot act on.
                 unknownInteractionError(correlationId, code, message, errorCodes)
+
+            operation.isSignUp &&
+                    serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
+                // An account already exists for the identifier supplied to sign-up.
+                NativeAuthV2InteractionApiResult.UserAlreadyExists(
+                    correlationId = correlationId,
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    errorCodes = errorCodes
+                )
+
+            operation.isSignUp &&
+                    innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
+                // One or more submitted attributes failed server-side validation (for example a
+                // password that violated policy). The rejected attribute names let the app prompt
+                // the user for exactly the values that need to change.
+                NativeAuthV2InteractionApiResult.InvalidAttributes(
+                    correlationId = correlationId,
+                    invalidAttributes = serverError.details
+                        .flatMap { it.attributeIds }
+                        .distinct(),
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    errorCodes = errorCodes
+                )
 
             operation == NativeAuthV2Operation.UPDATE_PASSWORD &&
                     innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
@@ -717,5 +793,11 @@ class NativeAuthV2ResponseParser {
 
         private const val AADSTS_USER_NOT_FOUND = "AADSTS50034"
         private const val AADSTS_INVALID_USERNAME_OR_PASSWORD = "AADSTS50126"
+
+        /** `error.innerError.details[].code` value indicating an account already exists. */
+        private const val INNER_ERROR_USER_ALREADY_EXISTS = "userAlreadyExists"
+
+        /** `error.innerError.code` value indicating one or more attributes failed validation. */
+        private const val INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED = "attributeValidationError"
     }
 }

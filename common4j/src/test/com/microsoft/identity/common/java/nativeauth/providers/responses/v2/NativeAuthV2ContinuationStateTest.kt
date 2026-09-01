@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -310,6 +311,42 @@ class NativeAuthV2ContinuationStateTest {
         )
             }
         }
+    }
+
+    @Test
+    fun withAdditionalSubmittedAttributes_lowercasesAndReportsMembership() {
+        val state = createState()
+
+        assertFalse(state.hasSubmittedAttribute("city"))
+
+        val updated = state.withAdditionalSubmittedAttributes(listOf("City", "COUNTRY"))
+
+        assertTrue(updated.hasSubmittedAttribute("city"))
+        assertTrue(updated.hasSubmittedAttribute("CITY"))
+        assertTrue(updated.hasSubmittedAttribute("country"))
+        assertFalse(updated.hasSubmittedAttribute("displayName"))
+        // Original state is left unchanged (copy-on-write).
+        assertFalse(state.hasSubmittedAttribute("city"))
+    }
+
+    @Test
+    fun next_inheritsSubmittedAttributesFromPreviousState() {
+        val previous = createState().withAdditionalSubmittedAttributes(listOf("city"))
+
+        val next = NativeAuthV2ContinuationState.next(
+            previous = previous,
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "next-token",
+                  "sign_in": "$SIGN_IN_HREF"
+                }
+                """.trimIndent()
+            )
+        )
+
+        requireNotNull(next)
+        assertTrue(next.hasSubmittedAttribute("city"))
     }
 
     private fun createState(): NativeAuthV2ContinuationState {

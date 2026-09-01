@@ -22,30 +22,30 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import java.io.Serializable
+
 /**
- * A HAL `_links` relation name used by V2 Native Auth responses.
+ * An account attribute the server requested during a Native Auth V2 sign-up flow, safe to hand to
+ * layers above common4j.
  *
- * Deliberately not an enum: the server can send a link relation this SDK version does not yet
- * know about, and an enum would force that value to `null`, erasing the raw string needed for
- * diagnosis. [value] always preserves exactly what the server sent. An unrecognised relation is
- * simply not followed by the SDK; it does not need to fail parsing.
- *
- * Not [java.io.Serializable]: as a non-null, non-generic property it is always flattened to its
- * underlying `String`, so it is never boxed into the stream when [NativeAuthV2ContinuationState]
- * is serialized.
+ * @property name The wire name of the attribute (for example `email` or `displayName`).
+ * @property type Optional input type the server declared for the attribute (for example `text` or
+ * `password`).
+ * @property required Whether the server marked the attribute as required.
  */
-@JvmInline
-value class NativeAuthV2LinkRelation(val value: String) {
+data class NativeAuthV2RequiredAttribute(
+    val name: String,
+    val type: String?,
+    val required: Boolean?
+) : ILoggable, Serializable {
+
+    override fun toUnsanitizedString(): String =
+        "NativeAuthV2RequiredAttribute(name=$name, type=$type, required=$required)"
+
+    override fun toString(): String = toUnsanitizedString()
+
     companion object {
-        val CHALLENGE = NativeAuthV2LinkRelation("challenge")
-        val VERIFY = NativeAuthV2LinkRelation("verify")
-        val RESEND = NativeAuthV2LinkRelation("resend")
-        val UPDATE = NativeAuthV2LinkRelation("update")
-        val POLL = NativeAuthV2LinkRelation("poll")
-        val CONTINUE = NativeAuthV2LinkRelation("continue")
-        val RESET_PASSWORD = NativeAuthV2LinkRelation("resetPassword")
-        val SIGN_IN = NativeAuthV2LinkRelation("signIn")
-        val SIGN_UP = NativeAuthV2LinkRelation("signUp")
-        val SUBMIT_ATTRIBUTES = NativeAuthV2LinkRelation("submitAttributes")
+        private const val serialVersionUID = 1L
     }
 }
