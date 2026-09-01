@@ -106,9 +106,12 @@ import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
 import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
@@ -2048,6 +2051,57 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testPasskeyChallengeFallsBackWhenNoProviderRegistered() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    /**
+     * The ceremony has to run under this authorization request's correlation id. DiagnosticContext is
+     * thread local and another flow on the UI thread can replace it, so the request scoped baggage
+     * wins when it carries one.
+     */
+    @Test
+    public void testGetFlowCorrelationId_prefersBaggageOverDiagnosticContext() {
+        final String fromBaggage = "11111111-1111-4111-8111-111111111111";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, "22222222-2222-4222-8222-222222222222");
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        final io.opentelemetry.context.Context oTelContext =
+                Baggage.builder()
+                        .put(AttributeName.correlation_id.name(), fromBaggage)
+                        .build()
+                        .storeInContext(io.opentelemetry.context.Context.root());
+
+        assertEquals(fromBaggage,
+                AzureActiveDirectoryWebViewClient.getFlowCorrelationId(oTelContext));
+    }
+
+    /**
+     * A flow whose baggage carries no correlation id must still be joinable, so the thread local
+     * remains the fallback rather than being dropped.
+     */
+    @Test
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenBaggageHasNone() {
+        final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        final io.opentelemetry.context.Context oTelContext =
+                Baggage.empty().storeInContext(io.opentelemetry.context.Context.root());
+
+        assertEquals(fromDiagnosticContext,
+                AzureActiveDirectoryWebViewClient.getFlowCorrelationId(oTelContext));
+    }
+
+    @Test
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenThereIsNoOTelContext() {
+        final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        assertEquals(fromDiagnosticContext,
+                AzureActiveDirectoryWebViewClient.getFlowCorrelationId(null));
     }
 
     @Test

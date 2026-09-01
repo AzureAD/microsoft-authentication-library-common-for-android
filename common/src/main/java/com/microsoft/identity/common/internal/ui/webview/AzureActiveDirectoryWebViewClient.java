@@ -396,7 +396,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         view,
                         oTelContext,
                         ViewTreeLifecycleOwner.get(view),
-                        DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+                        getFlowCorrelationId(oTelContext));
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
@@ -480,6 +480,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
+    }
+
+    /**
+     * Returns the correlation id to run the passkey ceremony under.
+     *
+     * Prefers the OTel baggage because it is scoped to this authorization request, whereas
+     * DiagnosticContext is mutable thread local state that another flow on the UI thread can replace
+     * and that fragment restoration can drop. A wrong or missing value here silently breaks the join
+     * between our telemetry and the passkey provider's.
+     *
+     * @param oTelContext OTel context of this authorization flow, when there is one.
+     * @return the correlation id, or null when neither source has one.
+     */
+    @Nullable
+    @VisibleForTesting
+    static String getFlowCorrelationId(@Nullable final Context oTelContext) {
+        if (oTelContext != null) {
+            final String fromBaggage = BaggageExtension.fromContext(oTelContext)
+                    .getEntryValue(AttributeName.correlation_id.name());
+            if (!StringUtil.isNullOrEmpty(fromBaggage)) {
+                return fromBaggage;
+            }
+        }
+        return DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
