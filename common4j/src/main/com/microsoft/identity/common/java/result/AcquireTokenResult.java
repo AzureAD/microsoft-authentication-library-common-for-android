@@ -53,6 +53,9 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     @Nullable
     private String mBrokerAppPackageName;
 
+    @Nullable
+    private String mPowerOptimizationSettings;
+
     private BrokerPerformanceMetrics mBrokerPerformanceMetrics;
 
     @Nullable
@@ -135,6 +138,10 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
         this.mBrokerAppPackageName = brokerPackageName;
     }
 
+    public void setPowerOptimizationSettings(@Nullable final String powerOptimizationSettings) {
+        this.mPowerOptimizationSettings = powerOptimizationSettings;
+    }
+
     @Override
     public String getBrokerAppVersion() {
         return mBrokerAppVersion;
@@ -143,6 +150,16 @@ public class AcquireTokenResult implements IBrokerPerformanceMetricsProvider, IB
     @Override
     public String getBrokerAppPackageName() {
         return mBrokerAppPackageName;
+    }
+
+    /**
+     * @return The battery optimization status reported by the Broker that executed the request:
+     * {@code EXEMPT}, {@code NOT_EXEMPT}, or {@code UNKNOWN}; {@code null} when the Broker does
+     * not provide the status.
+     */
+    @Nullable
+    public String getPowerOptimizationSettings() {
+        return mPowerOptimizationSettings;
     }
 
     /**

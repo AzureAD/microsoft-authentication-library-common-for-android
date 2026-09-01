@@ -43,6 +43,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.HELLO_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PREFERRED_AUTH_METHOD_CODE;
+import static com.microsoft.identity.common.internal.cache.ActiveBrokerCacheUpdater.ACTIVE_BROKER_PACKAGE_NAME_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
 import static com.microsoft.identity.common.java.util.BrokerProtocolVersionUtil.isFirstVersionOlderOrEqual;
@@ -173,11 +174,35 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
                                                  @Nullable final String onboardingBlob,
                                                  @Nullable final String negotiatedBrokerProtocolVersion) {
+        return bundleFromAuthenticationResult(
+                authenticationResult,
+                onboardingBlob,
+                negotiatedBrokerProtocolVersion,
+                null
+        );
+    }
+
+    /**
+     * Creates a success bundle with optional Broker battery optimization context.
+     *
+     * @param powerOptimizationSettings The freshly measured Broker status, or null when disabled.
+     */
+    @NonNull
+    public Bundle bundleFromAuthenticationResult(
+            @NonNull final ILocalAuthenticationResult authenticationResult,
+            @Nullable final String onboardingBlob,
+            @Nullable final String negotiatedBrokerProtocolVersion,
+            @Nullable final String powerOptimizationSettings) {
         final String methodTag = TAG + ":bundleFromAuthenticationResult";
         Logger.info(methodTag, "Constructing result bundle from ILocalAuthenticationResult");
 
         final Bundle resultBundle = bundleFromBrokerResult(
-                buildBrokerResultFromAuthenticationResult(authenticationResult, onboardingBlob, negotiatedBrokerProtocolVersion),
+                buildBrokerResultFromAuthenticationResult(
+                        authenticationResult,
+                        onboardingBlob,
+                        negotiatedBrokerProtocolVersion,
+                        powerOptimizationSettings
+                ),
                 negotiatedBrokerProtocolVersion);
         resultBundle.putBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS, true);
 
@@ -284,6 +309,20 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             (@NonNull final ILocalAuthenticationResult authenticationResult,
              @Nullable final String onboardingBlob,
              @Nullable final String negotiatedBrokerProtocolVersion){
+        return buildBrokerResultFromAuthenticationResult(
+                authenticationResult,
+                onboardingBlob,
+                negotiatedBrokerProtocolVersion,
+                null
+        );
+    }
+
+    @NonNull
+    public BrokerResult buildBrokerResultFromAuthenticationResult
+            (@NonNull final ILocalAuthenticationResult authenticationResult,
+             @Nullable final String onboardingBlob,
+             @Nullable final String negotiatedBrokerProtocolVersion,
+             @Nullable final String powerOptimizationSettings){
 
         final IAccountRecord accountRecord = authenticationResult.getAccountRecord();
 
@@ -319,6 +358,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .extendedExpiresOn(extendedExpiresOn)
                 .cachedAt(Long.parseLong(accessTokenRecord.getCachedAt()))
                 .speRing(authenticationResult.getSpeRing())
+                .powerOptimizationSettings(powerOptimizationSettings)
                 .success(true)
                 .servicedFromCache(authenticationResult.isServicedFromCache());
 
@@ -465,7 +505,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 .cliTelemErrorCode(exception.getCliTelemErrorCode())
                 .cliTelemSubErrorCode(exception.getCliTelemSubErrorCode())
                 .speRing(exception.getSpeRing())
-                .refreshTokenAge(exception.getRefreshTokenAge());
+                .refreshTokenAge(exception.getRefreshTokenAge())
+                .powerOptimizationSettings(exception.getPowerOptimizationSettings());
 
         // Serialize ClientDataInfo (server telemetry from x-ms-clientdata) so it
         // survives the broker IPC boundary on error paths.
@@ -626,6 +667,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (!StringUtil.isNullOrEmpty(onboardingBlob)) {
             baseException.setOnboardingBlob(onboardingBlob);
         }
+        baseException.setPowerOptimizationSettings(brokerResult.getPowerOptimizationSettings());
 
         // Set broker app info if available
         if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_VERSION)) {
@@ -633,10 +675,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
             );
         }
-        if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
-            baseException.setBrokerAppPackageName(
-                    resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
-            );
+        final String brokerPackageName = getBrokerPackageName(resultBundle);
+        if (!StringUtil.isNullOrEmpty(brokerPackageName)) {
+            baseException.setBrokerAppPackageName(brokerPackageName);
         }
 
         return baseException;
@@ -1221,6 +1262,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             acquireTokenResult.setLocalAuthenticationResult(
                     resultAdapter.authenticationResultFromBrokerResult(brokerResult)
             );
+            acquireTokenResult.setPowerOptimizationSettings(
+                    brokerResult.getPowerOptimizationSettings()
+            );
             // Set broker performance metrics if available
             final BrokerPerformanceMetrics metrics = resultAdapter.getBrokerPerformanceMetricsFromBundle(resultBundle);
             if (metrics != null) {
@@ -1239,10 +1283,9 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                         resultBundle.getString(AuthenticationConstants.Broker.BROKER_VERSION)
                 );
             }
-            if (resultBundle.containsKey(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)) {
-                acquireTokenResult.setBrokerAppPackageName(
-                        resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME)
-                );
+            final String brokerPackageName = getBrokerPackageName(resultBundle);
+            if (!StringUtil.isNullOrEmpty(brokerPackageName)) {
+                acquireTokenResult.setBrokerAppPackageName(brokerPackageName);
             }
 
             // Set onboarding telemetry blob if present (best-effort; never fails the result).
@@ -1255,6 +1298,17 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         throw getBaseExceptionFromBundle(resultBundle);
+    }
+
+    @Nullable
+    private String getBrokerPackageName(@NonNull final Bundle resultBundle) {
+        final String activeBrokerPackageName =
+                resultBundle.getString(ACTIVE_BROKER_PACKAGE_NAME_KEY);
+        if (!StringUtil.isNullOrEmpty(activeBrokerPackageName)) {
+            return activeBrokerPackageName;
+        }
+
+        return resultBundle.getString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME);
     }
 
     @NonNull
