@@ -125,6 +125,40 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
+    fun parseInteraction_whenAuthenticationFactorIsMissing_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace(
+                """"challengeContext": { "authenticationFactor": "singleFactor" },""",
+                ""
+            )
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsBlank_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "  ")
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsMalformed_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace(
+                """"authenticationFactor": "singleFactor"""",
+                """"authenticationFactor": 123"""
+            )
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsUnknown_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "biometricFactor")
+        )
+    }
+
+    @Test
     fun parseInteraction_whenSelectedMethodHrefIsRetained_isFollowableFromContinuationState() {
         val result = parser.parseInteraction(
             response = responseFrom(SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON),
@@ -535,6 +569,16 @@ class NativeAuthV2SignInResponseParserTest {
             "Expected '$expectedDescriptionFragment' in '${error.errorDescription}'",
             error.errorDescription.contains(expectedDescriptionFragment)
         )
+    }
+
+    private fun assertInvalidAuthenticationFactor(json: String) {
+        val result = parser.parseInteraction(
+            response = responseFrom(json),
+            previousState = signInState(),
+            operation = NativeAuthV2Operation.SIGN_IN_START
+        )
+
+        assertInvalidState(result, "invalid value for field 'authenticationFactor'")
     }
 
     private fun responseFrom(json: String): NativeAuthV2HalApiResponse =
