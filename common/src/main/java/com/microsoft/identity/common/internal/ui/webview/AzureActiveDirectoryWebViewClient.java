@@ -191,6 +191,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final boolean mMamCaInstallReferrerEnabled;
     private final SpanContext mSpanContext;
     private final String mUtid;
+    private final String mCorrelationId;
 
     private String mPasskeyRegistrationScript;
 
@@ -217,12 +218,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              final boolean mamCaInstallReferrerEnabled,
-                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String correlationId) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
+        mCorrelationId = correlationId;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
@@ -238,7 +241,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker, null);
     }
 
     @VisibleForTesting
@@ -249,7 +252,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null, null);
     }
 
     /**
@@ -396,7 +399,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                         view,
                         oTelContext,
                         ViewTreeLifecycleOwner.get(view),
-                        getFlowCorrelationId(oTelContext));
+                        getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
@@ -485,23 +488,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     /**
      * Returns the correlation id to run the passkey ceremony under.
      *
-     * Prefers the OTel baggage because it is scoped to this authorization request, whereas
+     * Prefers the id this flow was started with, captured when the fragment was created, because
      * DiagnosticContext is mutable thread local state that another flow on the UI thread can replace
      * and that fragment restoration can drop. A wrong or missing value here silently breaks the join
      * between our telemetry and the passkey provider's.
      *
-     * @param oTelContext OTel context of this authorization flow, when there is one.
      * @return the correlation id, or null when neither source has one.
      */
     @Nullable
     @VisibleForTesting
-    static String getFlowCorrelationId(@Nullable final Context oTelContext) {
-        if (oTelContext != null) {
-            final String fromBaggage = BaggageExtension.fromContext(oTelContext)
-                    .getEntryValue(AttributeName.correlation_id.name());
-            if (!StringUtil.isNullOrEmpty(fromBaggage)) {
-                return fromBaggage;
-            }
+    String getFlowCorrelationId() {
+        if (!StringUtil.isNullOrEmpty(mCorrelationId)) {
+            return mCorrelationId;
         }
         return DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
     }
