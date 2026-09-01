@@ -95,6 +95,29 @@ class NativeAuthV2SignInFlowControllerTest {
     }
 
     @Test
+    fun testSignInStartWithEmptyPasswordReturnsPasswordRequiredWithoutSubmitting() {
+        val passwordState = mockContinuationState()
+        stubStartThroughPasswordChallenge(passwordState)
+        every {
+            mockStrategy.performPasswordVerify(passwordState, any(), false)
+        } returns NativeAuthV2InteractionApiResult.Redirect(
+            correlationId,
+            "unexpected_empty_password_submission"
+        )
+
+        val result = controller.signInStart(signInStartParameters(password = CharArray(0)))
+
+        assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+        assertEquals(
+            passwordState,
+            (result as NativeAuthV2CommandResult.PasswordRequired).continuationState
+        )
+        verify(exactly = 0) {
+            mockStrategy.performPasswordVerify(any(), any(), any())
+        }
+    }
+
+    @Test
     fun testSignInStartWithPasswordVerifiesImmediatelyAndDoesNotSurfacePasswordRequired() {
         val passwordState = mockContinuationState()
         val readyState = mockContinuationState()
@@ -145,6 +168,46 @@ class NativeAuthV2SignInFlowControllerTest {
         assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
         verify(exactly = 1) {
             mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1")
+        }
+    }
+
+    @Test
+    fun testSignInStartWithEmptyPasswordSelectsPasswordWhenEmailIsOfferedFirst() {
+        val challengeState = mockContinuationState()
+        val passwordState = mockContinuationState()
+
+        stubAuthorizeChallengeStart()
+        every { mockStrategy.performSignInStart(any(), any()) } returns
+            NativeAuthV2InteractionApiResult.ChallengeRequired(
+                correlationId = correlationId,
+                continuationState = challengeState,
+                hint = null,
+                methods = listOf(
+                    NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
+                    NativeAuthV2AuthMethod("pwd-1", "password", null)
+                )
+            )
+        every { mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1") } returns
+            NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, passwordState)
+        every {
+            mockStrategy.performPasswordVerify(passwordState, any(), false)
+        } returns NativeAuthV2InteractionApiResult.Redirect(
+            correlationId,
+            "unexpected_empty_password_submission"
+        )
+
+        val result = controller.signInStart(signInStartParameters(password = CharArray(0)))
+
+        assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+        assertEquals(
+            passwordState,
+            (result as NativeAuthV2CommandResult.PasswordRequired).continuationState
+        )
+        verify(exactly = 1) {
+            mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1")
+        }
+        verify(exactly = 0) {
+            mockStrategy.performPasswordVerify(any(), any(), any())
         }
     }
 

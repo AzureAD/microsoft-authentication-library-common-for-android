@@ -447,7 +447,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * password method the flow fails deterministically rather than falling back to an email
      * one-time code, which is out of scope for this increment.
      *
-     * With an entry-supplied password the flow verifies it immediately and returns
+     * With a non-empty entry-supplied password the flow verifies it immediately and returns
      * [NativeAuthV2CommandResult.Complete] or [NativeAuthV2CommandResult.MFARequired]; without one
      * it returns [NativeAuthV2CommandResult.PasswordRequired] and waits for [submitPassword].
      */
@@ -543,10 +543,12 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             }
 
             val entryPassword = parameters.password
-                ?: return NativeAuthV2CommandResult.PasswordRequired(
+            if (entryPassword == null || entryPassword.isEmpty()) {
+                return NativeAuthV2CommandResult.PasswordRequired(
                     correlationId = passwordChallengeResult.correlationId,
                     continuationState = passwordState
                 )
+            }
 
             val verifyResult = oAuth2Strategy.performPasswordVerify(
                 state = passwordState,
