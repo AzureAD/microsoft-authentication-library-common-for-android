@@ -27,6 +27,7 @@ import androidx.lifecycle.testing.TestLifecycleOwner
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanName
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -53,6 +54,9 @@ class AuthFidoChallengeHandlerTest {
 
     //Test Exception
     val testException = ClientException("A message")
+
+    //Correlation id of the auth flow, supplied by the caller that builds this handler.
+    val testCorrelationId = "2f0f2e39-2c1b-4a2a-9a2f-9f0a1b2c3d4e"
 
     //Handler parameters
     val testFidoManager = TestFidoManager()
@@ -86,6 +90,32 @@ class AuthFidoChallengeHandlerTest {
         authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
         assertTrue(webView.urlLoaded)
         assertTrue(webView.isRegularAssertion())
+    }
+
+    /**
+     * The manager passes this on to the ceremony it runs, so a dropped correlation id breaks the
+     * join between our logs and the ceremony's.
+     */
+    @Test
+    fun testProcessChallenge_AuthPassesCorrelationIdToManager() {
+        authFidoChallengeHandler = AuthFidoChallengeHandler(
+            fidoManager = testFidoManager,
+            webView = webView,
+            oTelContext = null,
+            lifecycleOwner = testLifecycleOwner,
+            correlationId = testCorrelationId
+        )
+        val fullUrl = Uri.Builder().authority(authority)
+            .appendQueryParameter(FidoRequestField.CHALLENGE.fieldName, challengeStr)
+            .appendQueryParameter(FidoRequestField.ALLOWED_CREDENTIALS.fieldName, allowCredentialsOneUserString)
+            .appendQueryParameter(FidoRequestField.RELYING_PARTY_IDENTIFIER.fieldName, relyingPartyIdentifier)
+            .appendQueryParameter(FidoRequestField.VERSION.fieldName, version)
+            .appendQueryParameter(FidoRequestField.SUBMIT_URL.fieldName, submitUrl)
+            .appendQueryParameter(FidoRequestField.KEY_TYPES.fieldName, keyTypesString)
+            .appendQueryParameter(FidoRequestField.CONTEXT.fieldName, context)
+            .build().toString()
+        authFidoChallengeHandler.processChallenge(FidoChallenge.createFromRedirectUri(fullUrl))
+        assertEquals(testCorrelationId, testFidoManager.lastCorrelationId)
     }
 
     @Test(expected = ClientException::class)

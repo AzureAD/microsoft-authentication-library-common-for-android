@@ -109,6 +109,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
 import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
@@ -302,6 +304,9 @@ public class AzureActiveDirectoryWebViewClientTest {
         // OTelUtility.setSpanFactory, which mutates a JVM-global @Volatile with no getter to restore. Reset
         // it to the production default after every test so a leaked test factory cannot corrupt later tests.
         OTelUtility.setSpanFactory(new DefaultOTelSpanFactory());
+        // The correlation-id tests seed DiagnosticContext, which is thread local and would otherwise
+        // stay set for every later test running on this thread.
+        DiagnosticContext.INSTANCE.clear();
         // Clear onboarding session-correlation SharedPreferences to keep tests isolated;
         // OnboardingTelemetryRecorder.addBlockingError persists to this store.
         if (mContext != null) {
@@ -2042,6 +2047,69 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
     }
 
+    /**
+     * With no host provider registered the client must still handle the challenge itself.
+     */
+    @Test
+    public void testPasskeyChallengeFallsBackWhenNoProviderRegistered() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_PASSKEY_REDIRECT_URL));
+    }
+
+    /**
+     * The ceremony has to run under the id this flow was started with. DiagnosticContext is thread
+     * local and another flow on the UI thread can replace it, so the captured value wins.
+     */
+    @Test
+    public void testGetFlowCorrelationId_prefersTheFlowsOwnIdOverDiagnosticContext() {
+        final String flowCorrelationId = "11111111-1111-4111-8111-111111111111";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, "22222222-2222-4222-8222-222222222222");
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        assertEquals(flowCorrelationId,
+                newClientWithCorrelationId(flowCorrelationId).getFlowCorrelationId());
+    }
+
+    /**
+     * A flow started without a correlation id must still be joinable, so the thread local remains the
+     * fallback rather than being dropped.
+     */
+    @Test
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
+        final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        assertEquals(fromDiagnosticContext,
+                newClientWithCorrelationId(null).getFlowCorrelationId());
+    }
+
+    @Test
+    public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
+        final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
+        final RequestContext requestContext = new RequestContext();
+        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
+        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+
+        assertEquals(fromDiagnosticContext,
+                newClientWithCorrelationId("").getFlowCorrelationId());
+    }
+
+    private AzureActiveDirectoryWebViewClient newClientWithCorrelationId(final String correlationId) {
+        return new AzureActiveDirectoryWebViewClient(
+                mActivity,
+                Mockito.mock(IAuthorizationCompletionCallback.class),
+                url -> { },
+                TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                "homeTenantId",
+                false,
+                false,
+                null,
+                correlationId);
+    }
+
     @Test
     public void testPasskeyActivityCastingNoException() {
         try {
@@ -2718,6 +2786,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 "homeTenantId",
                 false,
                 mamCaInstallReferrerEnabled,
+                null,
                 null);
         client.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
         return client;
