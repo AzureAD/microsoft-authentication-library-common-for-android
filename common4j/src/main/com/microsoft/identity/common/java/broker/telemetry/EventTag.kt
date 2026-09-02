@@ -56,6 +56,6 @@ enum class EventTag {
     BrokerResponseSent,
     BrokerRequestFailed,
     // CommonStrategy (2)
-    CommonHttpRequestExecute,
-    CommonHttpResponseReceived
+    CommonTokenRequestExecute,
+    CommonTokenResponseReceived
 }

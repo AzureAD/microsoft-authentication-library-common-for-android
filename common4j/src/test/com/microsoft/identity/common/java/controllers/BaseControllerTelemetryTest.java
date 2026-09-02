@@ -121,8 +121,8 @@ public class BaseControllerTelemetryTest {
         Assert.assertEquals(
                 Arrays.asList(
                         EventTag.BrokerNetworkCallStart,
-                        EventTag.CommonHttpRequestExecute,
-                        EventTag.CommonHttpResponseReceived,
+                        EventTag.CommonTokenRequestExecute,
+                        EventTag.CommonTokenResponseReceived,
                         EventTag.BrokerNetworkCallEnd,
                         EventTag.BrokerTokenAcquired
                 ),
@@ -132,7 +132,7 @@ public class BaseControllerTelemetryTest {
 
     /**
      * A transport-level success carrying an unsuccessful token response still closes the network
-     * call, then records the failure. The response was received, so CommonHttpResponseReceived is
+     * call, then records the failure. The response was received, so CommonTokenResponseReceived is
      * expected here but not on the throwing path below.
      */
     @Test
@@ -145,8 +145,8 @@ public class BaseControllerTelemetryTest {
         Assert.assertEquals(
                 Arrays.asList(
                         EventTag.BrokerNetworkCallStart,
-                        EventTag.CommonHttpRequestExecute,
-                        EventTag.CommonHttpResponseReceived,
+                        EventTag.CommonTokenRequestExecute,
+                        EventTag.CommonTokenResponseReceived,
                         EventTag.BrokerNetworkCallEnd,
                         EventTag.BrokerNetworkCallFailed
                 ),
@@ -174,7 +174,7 @@ public class BaseControllerTelemetryTest {
         Assert.assertEquals(
                 Arrays.asList(
                         EventTag.BrokerNetworkCallStart,
-                        EventTag.CommonHttpRequestExecute,
+                        EventTag.CommonTokenRequestExecute,
                         EventTag.BrokerNetworkCallEnd,
                         EventTag.BrokerNetworkCallFailed
                 ),
@@ -201,7 +201,7 @@ public class BaseControllerTelemetryTest {
         Assert.assertEquals(
                 Arrays.asList(
                         EventTag.BrokerNetworkCallStart,
-                        EventTag.CommonHttpRequestExecute,
+                        EventTag.CommonTokenRequestExecute,
                         EventTag.BrokerNetworkCallEnd,
                         EventTag.BrokerNetworkCallFailed
                 ),

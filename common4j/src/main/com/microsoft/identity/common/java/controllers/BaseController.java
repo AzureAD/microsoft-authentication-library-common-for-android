@@ -930,7 +930,7 @@ public abstract class BaseController {
         );
         TelemetryHelper.addEvent(
                 parameters.getEventCollector(),
-                EventTag.CommonHttpRequestExecute
+                EventTag.CommonTokenRequestExecute
         );
         try {
             final TokenResult tokenResult;
@@ -938,7 +938,7 @@ public abstract class BaseController {
                 tokenResult = strategy.requestToken(tokenRequest);
                 TelemetryHelper.addEvent(
                         parameters.getEventCollector(),
-                        EventTag.CommonHttpResponseReceived
+                        EventTag.CommonTokenResponseReceived
                 );
             } finally {
                 TelemetryHelper.addEvent(
