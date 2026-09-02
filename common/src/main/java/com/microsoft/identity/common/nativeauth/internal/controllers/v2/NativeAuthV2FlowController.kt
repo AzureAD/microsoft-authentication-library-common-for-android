@@ -60,7 +60,7 @@ import com.microsoft.identity.common.nativeauth.internal.controllers.BaseNativeA
 import lombok.EqualsAndHashCode
 
 /**
- * V2 Native Auth flow controller for the SSPR and sign-in flows.
+ * V2 Native Auth flow controller
  */
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 class NativeAuthV2FlowController : BaseNativeAuthController() {
