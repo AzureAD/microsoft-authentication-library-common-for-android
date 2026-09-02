@@ -52,11 +52,12 @@ import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
@@ -190,6 +191,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private final boolean mMamCaInstallReferrerEnabled;
     private final SpanContext mSpanContext;
     private final String mUtid;
+    private final String mCorrelationId;
 
     private String mPasskeyRegistrationScript;
 
@@ -216,12 +218,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              final boolean mamCaInstallReferrerEnabled,
-                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String correlationId) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
+        mCorrelationId = correlationId;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
@@ -237,7 +241,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker, null);
     }
 
     @VisibleForTesting
@@ -248,7 +252,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null, null);
     }
 
     /**
@@ -388,14 +392,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
                                 ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)currentActivity).getFragment())
                                 : null;
+                final IFidoManager fidoManager =
+                        FidoManagerFactory.getFidoManager(currentActivity, legacyManager);
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
-                        new CredManFidoManager(
-                                view.getContext(),
-                                legacyManager
-                        ),
+                        fidoManager,
                         view,
                         oTelContext,
-                        ViewTreeLifecycleOwner.get(view));
+                        ViewTreeLifecycleOwner.get(view),
+                        getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
                     && isNonceRedirect(formattedURL)
@@ -479,6 +483,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
+    }
+
+    /**
+     * Returns the correlation id to run the passkey ceremony under.
+     *
+     * Prefers the id this flow was started with, captured when the fragment was created, because
+     * DiagnosticContext is mutable thread local state that another flow on the UI thread can replace
+     * and that fragment restoration can drop. A wrong or missing value here silently breaks the join
+     * between our telemetry and the passkey provider's.
+     *
+     * @return the correlation id, or null when neither source has one.
+     */
+    @Nullable
+    @VisibleForTesting
+    String getFlowCorrelationId() {
+        if (!StringUtil.isNullOrEmpty(mCorrelationId)) {
+            return mCorrelationId;
+        }
+        return DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
