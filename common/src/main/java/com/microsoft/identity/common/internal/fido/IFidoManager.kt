@@ -34,6 +34,7 @@ interface IFidoManager {
      * @param relyingPartyIdentifier
      * @param allowedCredentials
      * @param userVerificationPolicy
+     * @param correlationId correlation id of the auth flow, when one is available
      * @param span
      * @return assertion
      * @throws Exception
@@ -42,5 +43,6 @@ interface IFidoManager {
                              relyingPartyIdentifier: String,
                              allowedCredentials: List<String>?,
                              userVerificationPolicy: String,
+                             correlationId: String?,
                              span: Span) : String
 }

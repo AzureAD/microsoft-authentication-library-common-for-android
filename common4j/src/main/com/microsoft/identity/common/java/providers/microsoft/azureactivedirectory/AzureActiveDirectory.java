@@ -495,12 +495,15 @@ public class AzureActiveDirectory
             if (scheme == null) {
                 throw new ClientException(ClientException.MALFORMED_URL, "Missing scheme in sender url");
             }
+            if (!"https".equalsIgnoreCase(scheme)) {
+                throw new ClientException(ClientException.MALFORMED_URL, "Sender url must use HTTPS");
+            }
             final String host = uri.getHost();
             if (host == null) {
                 throw new ClientException(ClientException.MALFORMED_URL, "Missing host in sender url");
             }
 
-            final URI normalized = new URI(scheme + "://" + host + "/common");
+            final URI normalized = new URI("https://" + host + "/common");
             final URL authorityUrl = normalized.toURL();
 
             ensureCloudDiscoveryForAuthority(authorityUrl);
