@@ -270,6 +270,65 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     }
 
     /**
+     * The sign-up flow requires the caller to submit one or more account attributes via
+     * [continuationState]. [requiredAttributes] are the attributes the server requested, in server
+     * order.
+     */
+    data class AttributesRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val requiredAttributes: List<NativeAuthV2RequiredAttribute>
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "AttributesRequired(correlationId=$correlationId, " +
+                "requiredAttributes=${requiredAttributes.map { it.toUnsanitizedString() }})"
+        override fun toString(): String = "AttributesRequired(correlationId=$correlationId, " +
+                "requiredAttributes=${requiredAttributes.map { it.toString() }})"
+    }
+
+    /**
+     * An account already exists for the identifier supplied to sign-up.
+     */
+    data class UserAlreadyExists(
+        override val correlationId: String,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>? = null
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "UserAlreadyExists(correlationId=$correlationId, " +
+                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
+        override fun toString(): String = "UserAlreadyExists(correlationId=$correlationId, errorCodes=$errorCodes)"
+    }
+
+    /**
+     * One or more submitted attributes failed server-side validation. [invalidAttributes] are the
+     * wire names of the attributes the server rejected (for example `password` when the value
+     * violated password policy), in server order.
+     */
+    data class InvalidAttributes(
+        override val correlationId: String,
+        val invalidAttributes: List<String>,
+        override val error: String,
+        override val errorDescription: String,
+        override val errorCodes: List<Int>? = null
+    ) : ApiErrorResult(
+        error = error,
+        errorDescription = errorDescription,
+        errorCodes = errorCodes,
+        correlationId = correlationId
+    ), NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String = "InvalidAttributes(correlationId=$correlationId, " +
+                "invalidAttributes=$invalidAttributes, error=$error, " +
+                "errorDescription=$errorDescription, errorCodes=$errorCodes)"
+        override fun toString(): String = "InvalidAttributes(correlationId=$correlationId, " +
+                "invalidAttributes=$invalidAttributes, errorCodes=$errorCodes)"
+    }
+
+    /**
      * The server requested an `action` this SDK version does not recognize. [rawAction] preserves
      * exactly what the server sent, for diagnosis, unlike an unrecognised `_links` relation, which
      * is silently ignored rather than surfaced as an error.

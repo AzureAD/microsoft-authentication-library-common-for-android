@@ -646,6 +646,75 @@ class NativeAuthV2Interactor(
     }
     //endregion
 
+    //region sign-up entry
+    /**
+     * Posts to the server-provided `signUp` href, starting the V2 sign-up flow. The body carries
+     * only the continuation token; the username is supplied later via [performSubmitAttributes].
+     */
+    fun performSignUpStart(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSignUpStart"
+        )
+
+        val request = requestProvider.createSignUpStartRequest(state = state)
+
+        Logger.infoWithObject(
+            "$TAG.performSignUpStart",
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return postJsonAndParse(
+            request = request,
+            state = state,
+            operation = NativeAuthV2Operation.SIGN_UP_START,
+            methodName = "$TAG.performSignUpStart"
+        )
+    }
+    //endregion
+
+    //region submit attributes
+    /**
+     * Posts [attributes] to the server-provided `submitAttributes` href during sign-up.
+     *
+     * The attributes' names are recorded as submitted on the state used for parsing *before* the
+     * response is parsed, so the successor state inherits the merged set and the controller can
+     * tell, from the opaque state alone, whether a later server request for an attribute (for
+     * example `password`) has already been satisfied. Mirrors iOS's `addingSubmittedAttributes`.
+     */
+    fun performSubmitAttributes(
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSubmitAttributes"
+        )
+
+        val request = requestProvider.createSubmitAttributesRequest(state = state, attributes = attributes)
+
+        Logger.infoWithObject(
+            "$TAG.performSubmitAttributes",
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return postJsonAndParse(
+            request = request,
+            state = state.withAdditionalSubmittedAttributes(attributes.keys),
+            operation = NativeAuthV2Operation.SUBMIT_ATTRIBUTES,
+            methodName = "$TAG.performSubmitAttributes"
+        )
+    }
+    //endregion
+
     /**
      * Applies the configured interceptor headers, POSTs [request] as JSON, and parses the response
      * for [operation]. Shared by the V2 sign-in operations, which differ only in the request they

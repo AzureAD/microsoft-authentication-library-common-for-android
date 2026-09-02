@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.nativeauth.controllers.results
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2RequiredAttribute
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
@@ -36,6 +37,9 @@ sealed interface NativeAuthV2SignInStartCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitPasswordCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SelectMFAMethodCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitMFAChallengeCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignUpStartCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SubmitAttributesCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignInAfterSignUpCommandResult : INativeAuthCommandResult
 
 /**
  * Results producible by the shared V2 terminal path (authorize-challenge continue →
@@ -47,7 +51,8 @@ sealed interface NativeAuthV2FlowCompletionCommandResult :
     NativeAuthV2SignInAfterResetPasswordCommandResult,
     NativeAuthV2SignInStartCommandResult,
     NativeAuthV2SubmitPasswordCommandResult,
-    NativeAuthV2SubmitMFAChallengeCommandResult
+    NativeAuthV2SubmitMFAChallengeCommandResult,
+    NativeAuthV2SignInAfterSignUpCommandResult
 
 /**
  * Reflects the possible results from the V2 SSPR (self-service password reset) command flow.
@@ -72,7 +77,10 @@ interface NativeAuthV2CommandResult {
         val codeLength: Int,
         val challengeTargetLabel: String,
         val challengeChannel: String,
-    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2ResendCodeCommandResult {
+    ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2ResendCodeCommandResult,
+        NativeAuthV2SignUpStartCommandResult,
+        NativeAuthV2SubmitAttributesCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
 
@@ -165,7 +173,10 @@ interface NativeAuthV2CommandResult {
     data class PasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SignInStartCommandResult {
+    ) : NativeAuthV2SignInStartCommandResult,
+        NativeAuthV2SignUpStartCommandResult,
+        NativeAuthV2SubmitAttributesCommandResult,
+        NativeAuthV2SubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordRequired(correlationId=$correlationId)"
 
@@ -317,6 +328,81 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
+     * The sign-up flow requires the app to collect and submit one or more account attributes via
+     * [continuationState]. [requiredAttributes] are the attributes the server requested, in server
+     * order. Applies to the sign-up start, submit-attributes, and submit-code steps (the last when
+     * the server requests further attributes after code verification).
+     */
+    data class AttributesRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val requiredAttributes: List<NativeAuthV2RequiredAttribute>,
+    ) : NativeAuthV2SignUpStartCommandResult,
+        NativeAuthV2SubmitAttributesCommandResult,
+        NativeAuthV2SubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.AttributesRequired(correlationId=$correlationId, requiredAttributes=${requiredAttributes.map { it.toUnsanitizedString() }})"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.AttributesRequired(correlationId=$correlationId, requiredAttributes=${requiredAttributes.map { it.toString() }})"
+    }
+
+    /**
+     * One or more submitted attributes failed server-side validation. [invalidAttributes] are the
+     * wire names of the rejected attributes, in server order; the app can retry through
+     * [continuationState] with corrected values. Applies to the sign-up start and submit-attributes
+     * steps.
+     */
+    data class AttributesInvalid(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val invalidAttributes: List<String>,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>? = null,
+    ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.AttributesInvalid(correlationId=$correlationId, invalidAttributes=$invalidAttributes)"
+    }
+
+    /**
+     * An account already exists for the identifier supplied to sign-up.
+     * Applies to the sign-up start and submit-attributes steps.
+     */
+    data class UserAlreadyExists(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val errorCodes: List<Int>? = null,
+    ) : NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.UserAlreadyExists(correlationId=$correlationId)"
+    }
+
+    /**
+     * The sign-up has completed server-side. The app must explicitly invoke the
+     * sign-in-after-sign-up command with [continuationState] to exchange it for tokens and persist
+     * them to cache; no token exchange or cache write happens until then. Applies to the
+     * submit-attributes and submit-code steps (the last when a code-only sign-up completes without
+     * a password).
+     */
+    data class SignInAfterSignUpRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+    ) : NativeAuthV2SubmitAttributesCommandResult, NativeAuthV2SubmitCodeCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.SignInAfterSignUpRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
+    /**
      * The operation is not yet implemented server-side or is unsupported for this tenant.
      * May apply to any step.
      */
@@ -331,7 +417,10 @@ interface NativeAuthV2CommandResult {
         NativeAuthV2SignInStartCommandResult,
         NativeAuthV2SubmitPasswordCommandResult,
         NativeAuthV2SelectMFAMethodCommandResult,
-        NativeAuthV2SubmitMFAChallengeCommandResult {
+        NativeAuthV2SubmitMFAChallengeCommandResult,
+        NativeAuthV2SignUpStartCommandResult,
+        NativeAuthV2SubmitAttributesCommandResult,
+        NativeAuthV2SignInAfterSignUpCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NotImplemented(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 

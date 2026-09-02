@@ -62,7 +62,13 @@ internal enum class NativeAuthV2Operation {
     MFA_METHOD_CHALLENGE,
 
     /** One-time-code verification for a multi-factor challenge. */
-    MFA_VERIFY;
+    MFA_VERIFY,
+
+    /** Sign-up entry: `signUp` href posted with just the continuation token. */
+    SIGN_UP_START,
+
+    /** Attribute submission during sign-up: `submitAttributes` href posted with a map of values. */
+    SUBMIT_ATTRIBUTES;
 
     /**
      * `true` when this operation submits a password, in either the entry or the deferred form.
