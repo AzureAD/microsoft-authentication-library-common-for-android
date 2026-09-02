@@ -57,5 +57,22 @@ enum class EventTag {
     BrokerRequestFailed,
     // CommonStrategy (2)
     CommonTokenRequestExecute,
-    CommonTokenResponseReceived
+    CommonTokenResponseReceived,
+
+    /**
+     * Sentinel for a tag emitted by a broker newer than this client. Never emitted by this SDK —
+     * it is produced only when deserializing a forward-version payload. Broker and client ship
+     * independently, so a client can receive a tag added after it was built; mapping that to a
+     * sentinel degrades the single event rather than discarding the whole payload.
+     *
+     * The "never emitted" rule is a convention, not an enforced invariant: nothing stops a caller
+     * passing this to [EventCollector.addEvent], and this enum is shared with the broker repo,
+     * which *is* an emitter — so the convention crosses a repo boundary. It is left unenforced
+     * deliberately. A `require` would trade a merely uninformative tag for a thrown exception on
+     * the telemetry path, and that path is built never to fail an authentication: see the broad
+     * `catch (Exception)` around telemetry deserialization in `MsalBrokerResultAdapter`. If this
+     * ever needs teeth, the safe form is for [EventCollector.addEvent] to drop the event and log,
+     * not to throw.
+     */
+    Unknown
 }

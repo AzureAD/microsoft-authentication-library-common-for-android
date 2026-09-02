@@ -24,6 +24,10 @@ package com.microsoft.identity.common.internal.result
 
 import android.os.Bundle
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.broker.telemetry.BrokerIpcTelemetry
 import com.microsoft.identity.common.java.broker.telemetry.ExecutionEvent
@@ -158,6 +162,128 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
         }
     }
 
+    /**
+     * Broker and client ship independently, so a client can receive a tag added after it was
+     * built. Gson's default enum adapter would yield null for that name and — because Gson
+     * bypasses the Kotlin constructor — leave it in the non-nullable [ExecutionEvent.tag],
+     * surfacing later as an NPE. It must degrade to [EventTag.Unknown] instead, and must not
+     * discard the rest of the payload.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_unrecognizedEventTag_degradesToUnknown() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        firstEvent(json).addProperty("t", "SomeTagFromANewerBroker")
+
+        val restored = adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString()))
+
+        val original = telemetry.performanceRecord.executionFlow.first()
+        val degraded = restored!!.performanceRecord.executionFlow.first()
+        assertEquals(EventTag.Unknown, degraded.tag)
+        // "Keeps the timeline intact" is the actual claim: only the label is lost, so every
+        // other field on the degraded event must survive untouched.
+        assertEquals(original.timestampMs, degraded.timestampMs)
+        assertEquals(original.threadId, degraded.threadId)
+        assertEquals(original.statusCode, degraded.statusCode)
+        assertEquals(original.errorCode, degraded.errorCode)
+        assertEquals("correlation-id", restored.correlationId)
+    }
+
+    /** The surrounding events keep their identity; only the unrecognized one degrades. */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_unrecognizedEventTag_leavesKnownTagsIntact() {
+        val multiEvent = telemetry.copy(
+            performanceRecord = telemetry.performanceRecord.copy(
+                executionFlow = listOf(
+                    ExecutionEvent(EventTag.BrokerNetworkCallStart, 1),
+                    ExecutionEvent(EventTag.BrokerTokenAcquired, 2),
+                    ExecutionEvent(EventTag.BrokerResponseSent, 3)
+                )
+            )
+        )
+        val json = gson.toJsonTree(multiEvent).asJsonObject
+        eventAt(json, 1).addProperty("t", "SomeTagFromANewerBroker")
+
+        val restored = adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString()))
+
+        assertEquals(
+            listOf(EventTag.BrokerNetworkCallStart, EventTag.Unknown, EventTag.BrokerResponseSent),
+            restored!!.performanceRecord.executionFlow.map { it.tag }
+        )
+    }
+
+    /**
+     * An absent or null `t` is malformed rather than merely unrecognized — the sender broke the
+     * contract — so it is rejected instead of degrading, in line with every other required field.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_missingEventTag_returnsNull() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        firstEvent(json).remove("t")
+
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString())))
+    }
+
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_nullEventTag_returnsNull() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        firstEvent(json).add("t", JsonNull.INSTANCE)
+
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString())))
+    }
+
+    /**
+     * Only a JSON string can be *unrecognized*; any other token is malformed and must reject the
+     * payload rather than degrade. A number matters most here: [com.google.gson.stream.JsonReader]
+     * would happily coerce `123` to the string `"123"`, which would otherwise slip through as an
+     * unrecognized name and degrade to [EventTag.Unknown] while an object in the same position
+     * dropped the whole payload.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_nonStringEventTag_returnsNull() {
+        val nonStringTags = listOf(
+            JsonPrimitive(123),
+            JsonPrimitive(true),
+            JsonObject(),
+            JsonArray()
+        )
+
+        nonStringTags.forEach { tagValue ->
+            val json = gson.toJsonTree(telemetry).asJsonObject
+            firstEvent(json).add("t", tagValue)
+
+            assertNull(
+                "Expected payload to be rejected for tag value: $tagValue",
+                adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString()))
+            )
+        }
+    }
+
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_missingEventTimestamp_returnsNull() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        firstEvent(json).remove("ts")
+
+        assertNull(adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString())))
+    }
+
+    /**
+     * [EventTag.Unknown] is a client-side sentinel, never a legitimate wire value, so it is
+     * excluded from the name lookup. Receiving it resolves to the same constant but takes the
+     * unrecognized branch, so a sentinel echoed back is logged rather than accepted silently.
+     */
+    @Test
+    fun getBrokerIpcTelemetryFromBundle_sentinelEventTagOnWire_treatedAsUnrecognized() {
+        val json = gson.toJsonTree(telemetry).asJsonObject
+        firstEvent(json).addProperty("t", EventTag.Unknown.name)
+
+        val restored = adapter.getBrokerIpcTelemetryFromBundle(bundleWith(json.toString()))
+
+        assertEquals(
+            EventTag.Unknown,
+            restored!!.performanceRecord.executionFlow.first().tag
+        )
+    }
+
     @Test
     fun getAcquireTokenResultFromResultBundle_validTelemetry_setsTelemetryOnResult() {
         val cacheRecord = newCacheRecord()
@@ -191,6 +317,11 @@ class MsalBrokerResultAdapterBrokerIpcTelemetryTest {
 
         assertEquals(telemetry, exception.brokerIpcTelemetry)
     }
+
+    private fun eventAt(root: JsonObject, index: Int) =
+        root.getAsJsonObject("perf").getAsJsonArray("execution_flow")[index].asJsonObject
+
+    private fun firstEvent(root: JsonObject) = eventAt(root, 0)
 
     private fun assertMissingRootFieldRejected(field: String) {
         val json = gson.toJsonTree(telemetry).asJsonObject
