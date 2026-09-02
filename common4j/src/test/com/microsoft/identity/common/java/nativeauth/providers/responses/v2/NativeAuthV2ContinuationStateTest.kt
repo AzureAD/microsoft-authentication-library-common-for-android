@@ -378,6 +378,26 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun javaSerializationRoundTrip_preservesSubmittedAttributes() {
+        val original = createState().withAdditionalSubmittedAttributes(listOf("City", "COUNTRY"))
+
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+
+        // A restored sign-up state must remember which attributes were already submitted, so the
+        // flow does not re-prompt for them after process death.
+        assertTrue(restored.hasSubmittedAttribute("city"))
+        assertTrue(restored.hasSubmittedAttribute("CITY"))
+        assertTrue(restored.hasSubmittedAttribute("country"))
+        assertFalse(restored.hasSubmittedAttribute("displayName"))
+    }
+
+    @Test
     fun next_inheritsSubmittedAttributesFromPreviousState() {
         val previous = createState().withAdditionalSubmittedAttributes(listOf("city"))
 
