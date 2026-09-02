@@ -8,6 +8,7 @@ vNext
 - [MINOR] Security: validate a PKeyAuth WebView-redirect SubmitUrl (attacker-controllable) as an HTTPS URL same-origin with the challenging endpoint before the device key signs or the WebView submits; flight-gated and ships in shadow mode (CWE-918 / AB#3706623)
 - [MINOR] Reenable the GetCookies WebApps API contract for broker discovery (#3230)
 - [MINOR] Bump Kotlin to 2.0.21 with languageVersion/apiVersion pinned to 1.9, so published metadata stays readable by consumers on Kotlin 1.8 and -Xskip-metadata-version-check is no longer needed (#3238)
+- [MINOR] Add an IFidoManagerProvider extension point so a host can fulfil WebView passkey challenges, with Credential Manager as the fallback, and pass the auth flow's correlation id to IFidoManager.authenticate (#3237)
 
 Version 24.6.0
 ----------
