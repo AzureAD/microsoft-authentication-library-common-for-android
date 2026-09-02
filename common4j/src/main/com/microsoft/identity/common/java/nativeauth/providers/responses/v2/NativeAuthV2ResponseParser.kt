@@ -183,7 +183,8 @@ class NativeAuthV2ResponseParser {
             return mapInteractionError(
                 correlationId = errorCorrelationId,
                 serverError = serverError,
-                operation = operation
+                operation = operation,
+                scenario = previousState.scenario
             )
         }
 
@@ -575,14 +576,16 @@ class NativeAuthV2ResponseParser {
     }
 
     /**
-     * Maps a HAL server error onto [NativeAuthV2InteractionApiResult], scoped to SSPR operations.
+     * Maps a HAL server error onto [NativeAuthV2InteractionApiResult].
+     *
      * See the T4 design brief's error-mapping table for the exact condition ordering reproduced
      * here; conditions are evaluated top to bottom and the first match wins.
      */
     private fun mapInteractionError(
         correlationId: String,
         serverError: NativeAuthV2HalApiResponse.HalServerError,
-        operation: NativeAuthV2Operation
+        operation: NativeAuthV2Operation,
+        scenario: NativeAuthV2FlowScenario
     ): NativeAuthV2InteractionApiResult {
         val code = serverError.code
         val innerErrorCode = serverError.innerErrorCode
@@ -606,7 +609,7 @@ class NativeAuthV2ResponseParser {
                 // SDK-managed continuation-token state the app cannot act on.
                 unknownInteractionError(correlationId, code, message, errorCodes)
 
-            operation.isSignUp &&
+            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
                 // An account already exists for the identifier supplied to sign-up.
                 NativeAuthV2InteractionApiResult.UserAlreadyExists(
@@ -616,7 +619,7 @@ class NativeAuthV2ResponseParser {
                     errorCodes = errorCodes
                 )
 
-            operation.isSignUp &&
+            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
                 // One or more submitted attributes failed server-side validation (for example a
                 // password that violated policy). The rejected attribute names let the app prompt

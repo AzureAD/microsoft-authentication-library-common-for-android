@@ -86,10 +86,4 @@ internal enum class NativeAuthV2Operation {
                 this == SUBMIT_PASSWORD ||
                 this == MFA_METHOD_CHALLENGE ||
                 this == MFA_VERIFY
-
-    /**
-     * `true` when this operation belongs to the V2 sign-up flow.
-     */
-    val isSignUp: Boolean
-        get() = this == SIGN_UP_START || this == SUBMIT_ATTRIBUTES
 }

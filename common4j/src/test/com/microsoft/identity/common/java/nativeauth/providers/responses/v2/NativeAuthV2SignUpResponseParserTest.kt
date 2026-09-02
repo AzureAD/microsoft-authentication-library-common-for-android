@@ -152,11 +152,12 @@ class NativeAuthV2SignUpResponseParserTest {
 
     @Test
     fun parseInteraction_whenUserAlreadyExistsSurfacesOutsideSignUp_staysUnknownError() {
-        // The userAlreadyExists detail is only actionable during sign-up. Any other operation must
-        // not be reinterpreted as UserAlreadyExists.
+        // The userAlreadyExists detail is only actionable during the sign-up flow. When the same
+        // detail surfaces in another flow (keyed off the continuation state's scenario, not the
+        // operation), it must not be reinterpreted as UserAlreadyExists.
         val result = parser.parseInteraction(
             response = responseFrom(USER_ALREADY_EXISTS_JSON),
-            previousState = signUpState(),
+            previousState = resetPasswordState(),
             operation = NativeAuthV2Operation.RESET_PASSWORD_START
         )
 
@@ -251,6 +252,15 @@ class NativeAuthV2SignUpResponseParserTest {
             entryRelation = NativeAuthV2LinkRelation.SIGN_UP,
             scopes = listOf("openid", "offline_access"),
             scenario = NativeAuthV2FlowScenario.SIGN_UP
+        )
+
+    private fun resetPasswordState(): NativeAuthV2ContinuationState =
+        NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response = responseFrom("""{"continuationToken":"seed","resetPassword":"/tenant/resetpassword/start"}"""),
+            continuationToken = "seed",
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scopes = listOf("openid", "offline_access"),
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
         )
 
     private companion object {
