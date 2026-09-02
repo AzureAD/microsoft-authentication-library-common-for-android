@@ -175,9 +175,10 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_PASSWORD = "266";
     public static final String NATIVE_AUTH_V2_SIGN_IN_SELECT_MFA_METHOD = "267";
     public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_MFA_CHALLENGE = "268";
-    public static final String NATIVE_AUTH_V2_SIGN_UP_START = "269";
-    public static final String NATIVE_AUTH_V2_SIGN_UP_SUBMIT_ATTRIBUTES = "270";
-    public static final String NATIVE_AUTH_V2_SIGN_IN_AFTER_SIGN_UP = "271";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_RESEND_MFA_CHALLENGE = "269";
+    public static final String NATIVE_AUTH_V2_SIGN_UP_START = "270";
+    public static final String NATIVE_AUTH_V2_SIGN_UP_SUBMIT_ATTRIBUTES = "271";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_AFTER_SIGN_UP = "272";
     //endregion
 
     // region WebApps APIs

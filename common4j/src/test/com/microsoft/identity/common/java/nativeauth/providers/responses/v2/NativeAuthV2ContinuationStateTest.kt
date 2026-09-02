@@ -68,6 +68,54 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
+    fun javaSerializationRoundTrip_preservesSelectedMethodHref() {
+        val original = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "$CONTINUATION_TOKEN",
+                  "_embedded": {
+                    "methods": [
+                      {
+                        "id": "email",
+                        "_links": {
+                          "challenge": {
+                            "href": "/tenant/email-challenge"
+                          },
+                          "verify": {
+                            "href": "/tenant/email-verify"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+                """.trimIndent()
+            ),
+            continuationToken = CONTINUATION_TOKEN,
+            scopes = SCOPES,
+            claimsRequestJson = CLAIMS_REQUEST_JSON,
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.SIGN_IN
+        )
+
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        val selected = requireNotNull(restored.withSelectedMethod("email"))
+
+        assertEquals(
+            "/tenant/email-challenge",
+            selected.href(NativeAuthV2LinkRelation.CHALLENGE)
+        )
+        assertEquals("/tenant/email-verify", selected.href(NativeAuthV2LinkRelation.VERIFY))
+    }
+
+    @Test
     fun legacyConstructorShape_createsStateWithoutMethodLinks() {
         val constructor = NativeAuthV2ContinuationState::class.java.declaredConstructors
             .single { it.parameterCount == 7 }

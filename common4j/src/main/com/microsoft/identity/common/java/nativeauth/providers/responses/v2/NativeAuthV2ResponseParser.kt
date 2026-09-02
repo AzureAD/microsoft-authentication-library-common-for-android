@@ -232,9 +232,10 @@ class NativeAuthV2ResponseParser {
      *
      * Unlike SSPR, sign-in never selects a method implicitly: every valid server-offered method is
      * surfaced so the controller can choose one explicitly, and the per-method hrefs stay inside
-     * the successor [NativeAuthV2ContinuationState]. A challenge the server marked as
-     * `multiFactor` becomes [NativeAuthV2InteractionApiResult.MFARequired]; anything else becomes
-     * [NativeAuthV2InteractionApiResult.ChallengeRequired].
+     * the successor [NativeAuthV2ContinuationState]. A challenge explicitly marked `singleFactor`
+     * becomes [NativeAuthV2InteractionApiResult.ChallengeRequired], one explicitly marked
+     * `multiFactor` becomes [NativeAuthV2InteractionApiResult.MFARequired], and any other value is a
+     * protocol error.
      */
     private fun parseSignInChallenge(
         response: NativeAuthV2HalApiResponse,
@@ -251,19 +252,19 @@ class NativeAuthV2ResponseParser {
             selectedMethod = null
         ) ?: return missingContinuationTokenError(response.correlationId)
 
-        return if (response.isMultiFactorChallenge) {
-            NativeAuthV2InteractionApiResult.MFARequired(
-                correlationId = response.correlationId,
-                continuationState = successor,
-                methods = methods
-            )
-        } else {
-            NativeAuthV2InteractionApiResult.ChallengeRequired(
+        return when {
+            response.isSingleFactorChallenge -> NativeAuthV2InteractionApiResult.ChallengeRequired(
                 correlationId = response.correlationId,
                 continuationState = successor,
                 hint = response.challengeTargetLabel,
                 methods = methods
             )
+            response.isMultiFactorChallenge -> NativeAuthV2InteractionApiResult.MFARequired(
+                correlationId = response.correlationId,
+                continuationState = successor,
+                methods = methods
+            )
+            else -> invalidAuthenticationFactorError(response.correlationId)
         }
     }
 
@@ -362,6 +363,15 @@ class NativeAuthV2ResponseParser {
         error = ApiErrorResult.INVALID_STATE,
         errorDescription = "Native Auth V2 response requested a 'verify' action that is not valid " +
                 "for sign-in operation '${operation.name}'."
+    )
+
+    private fun invalidAuthenticationFactorError(
+        correlationId: String
+    ): NativeAuthV2InteractionApiResult.UnknownError = NativeAuthV2InteractionApiResult.UnknownError(
+        correlationId = correlationId,
+        error = ApiErrorResult.INVALID_STATE,
+        errorDescription = "Native Auth V2 challenge response contains an invalid value for field " +
+                "'authenticationFactor'."
     )
 
     /**

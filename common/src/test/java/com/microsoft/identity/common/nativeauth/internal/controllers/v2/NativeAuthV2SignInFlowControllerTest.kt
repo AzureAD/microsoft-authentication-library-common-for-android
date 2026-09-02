@@ -95,6 +95,29 @@ class NativeAuthV2SignInFlowControllerTest {
     }
 
     @Test
+    fun testSignInStartWithEmptyPasswordReturnsPasswordRequiredWithoutSubmitting() {
+        val passwordState = mockContinuationState()
+        stubStartThroughPasswordChallenge(passwordState)
+        every {
+            mockStrategy.performPasswordVerify(passwordState, any(), false)
+        } returns NativeAuthV2InteractionApiResult.Redirect(
+            correlationId,
+            "unexpected_empty_password_submission"
+        )
+
+        val result = controller.signInStart(signInStartParameters(password = CharArray(0)))
+
+        assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+        assertEquals(
+            passwordState,
+            (result as NativeAuthV2CommandResult.PasswordRequired).continuationState
+        )
+        verify(exactly = 0) {
+            mockStrategy.performPasswordVerify(any(), any(), any())
+        }
+    }
+
+    @Test
     fun testSignInStartWithPasswordVerifiesImmediatelyAndDoesNotSurfacePasswordRequired() {
         val passwordState = mockContinuationState()
         val readyState = mockContinuationState()
@@ -145,6 +168,46 @@ class NativeAuthV2SignInFlowControllerTest {
         assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
         verify(exactly = 1) {
             mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1")
+        }
+    }
+
+    @Test
+    fun testSignInStartWithEmptyPasswordSelectsPasswordWhenEmailIsOfferedFirst() {
+        val challengeState = mockContinuationState()
+        val passwordState = mockContinuationState()
+
+        stubAuthorizeChallengeStart()
+        every { mockStrategy.performSignInStart(any(), any()) } returns
+            NativeAuthV2InteractionApiResult.ChallengeRequired(
+                correlationId = correlationId,
+                continuationState = challengeState,
+                hint = null,
+                methods = listOf(
+                    NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
+                    NativeAuthV2AuthMethod("pwd-1", "password", null)
+                )
+            )
+        every { mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1") } returns
+            NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, passwordState)
+        every {
+            mockStrategy.performPasswordVerify(passwordState, any(), false)
+        } returns NativeAuthV2InteractionApiResult.Redirect(
+            correlationId,
+            "unexpected_empty_password_submission"
+        )
+
+        val result = controller.signInStart(signInStartParameters(password = CharArray(0)))
+
+        assertTrue(result is NativeAuthV2CommandResult.PasswordRequired)
+        assertEquals(
+            passwordState,
+            (result as NativeAuthV2CommandResult.PasswordRequired).continuationState
+        )
+        verify(exactly = 1) {
+            mockStrategy.performPasswordMethodChallenge(challengeState, "pwd-1")
+        }
+        verify(exactly = 0) {
+            mockStrategy.performPasswordVerify(any(), any(), any())
         }
     }
 
@@ -408,6 +471,50 @@ class NativeAuthV2SignInFlowControllerTest {
         assertArrayEquals(CharArray(password.size), password)
     }
 
+    @Test
+    fun testSubmitPasswordCompletesWithScopesAndClaimsFromContinuationState() {
+        val state = mockContinuationState()
+        val retainedClaims = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
+        val readyState = mockContinuationState(
+            scopes = listOf("User.Read"),
+            claimsRequestJson = retainedClaims
+        )
+        val tokenScopes = slot<List<String>>()
+
+        every {
+            mockStrategy.performPasswordVerify(state, any(), true)
+        } returns NativeAuthV2InteractionApiResult.ReadyToComplete(correlationId, readyState)
+        every { mockStrategy.performAuthorizeChallengeContinue(readyState) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every {
+            mockStrategy.performTokenRequest(any(), capture(tokenScopes), any(), any())
+        } returns SignInTokenApiResult.UnknownError(
+            correlationId = correlationId,
+            error = "expected_test_stop",
+            errorDescription = "Expected test stop before cache save.",
+            errorCodes = emptyList()
+        )
+
+        controller.submitPassword(
+            submitPasswordParameters(
+                state = state,
+                scopes = listOf("Mail.Read"),
+                claimsRequestJson = """{"id_token":{"email":null}}"""
+            )
+        )
+
+        assertTrue(tokenScopes.captured.containsAll(listOf("User.Read", "openid", "offline_access", "profile")))
+        assertTrue(!tokenScopes.captured.contains("Mail.Read"))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest(
+                code = "auth-code",
+                scopes = any(),
+                correlationId = correlationId,
+                claimsRequestJson = retainedClaims
+            )
+        }
+    }
+
     // -----------------------------------------------------------------------------------------
     // selectMFAMethod / submitMFAChallenge
     // -----------------------------------------------------------------------------------------
@@ -512,6 +619,50 @@ class NativeAuthV2SignInFlowControllerTest {
         verify(exactly = 1) { mockStrategy.performAuthorizeChallengeContinue(readyState) }
     }
 
+    @Test
+    fun testSubmitMFAChallengeCompletesWithScopesAndClaimsFromContinuationState() {
+        val state = mockContinuationState()
+        val retainedClaims = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
+        val readyState = mockContinuationState(
+            scopes = listOf("User.Read"),
+            claimsRequestJson = retainedClaims
+        )
+        val tokenScopes = slot<List<String>>()
+
+        every { mockStrategy.performMfaVerify(state, "123456") } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete(correlationId, readyState)
+        every { mockStrategy.performAuthorizeChallengeContinue(readyState) } returns
+            AuthorizeChallengeApiResult.AuthorizationCode(correlationId, "auth-code")
+        every {
+            mockStrategy.performTokenRequest(any(), capture(tokenScopes), any(), any())
+        } returns SignInTokenApiResult.UnknownError(
+            correlationId = correlationId,
+            error = "expected_test_stop",
+            errorDescription = "Expected test stop before cache save.",
+            errorCodes = emptyList()
+        )
+
+        controller.submitMFAChallenge(
+            submitMFAChallengeParameters(
+                state = state,
+                code = "123456",
+                scopes = listOf("Mail.Read"),
+                claimsRequestJson = """{"id_token":{"email":null}}"""
+            )
+        )
+
+        assertTrue(tokenScopes.captured.containsAll(listOf("User.Read", "openid", "offline_access", "profile")))
+        assertTrue(!tokenScopes.captured.contains("Mail.Read"))
+        verify(exactly = 1) {
+            mockStrategy.performTokenRequest(
+                code = "auth-code",
+                scopes = any(),
+                correlationId = correlationId,
+                claimsRequestJson = retainedClaims
+            )
+        }
+    }
+
     // -----------------------------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------------------------
@@ -548,10 +699,15 @@ class NativeAuthV2SignInFlowControllerTest {
             NativeAuthV2InteractionApiResult.PasswordRequired(correlationId, passwordState)
     }
 
-    private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
+    private fun mockContinuationState(
+        id: String = correlationId,
+        scopes: List<String> = emptyList(),
+        claimsRequestJson: String? = null
+    ): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
         every { state.correlationId } returns id
-        every { state.scopesForTokenRequest() } returns emptyList()
+        every { state.scopesForTokenRequest() } returns scopes
+        every { state.claimsRequestJsonForTokenRequest() } returns claimsRequestJson
         return state
     }
 
@@ -573,13 +729,16 @@ class NativeAuthV2SignInFlowControllerTest {
 
     private fun submitPasswordParameters(
         state: NativeAuthV2ContinuationState,
-        password: CharArray = "Password123!".toCharArray()
+        password: CharArray = "Password123!".toCharArray(),
+        scopes: List<String> = emptyList(),
+        claimsRequestJson: String? = null
     ): NativeAuthV2SubmitPasswordCommandParameters =
         NativeAuthV2SubmitPasswordCommandParameters.builder()
             .authority(mockAuthority)
             .platformComponents(mockPlatformComponents)
             .correlationId(correlationId)
-            .scopes(emptyList())
+            .scopes(scopes)
+            .claimsRequestJson(claimsRequestJson)
             .continuationState(state)
             .password(password)
             .build()
@@ -599,13 +758,16 @@ class NativeAuthV2SignInFlowControllerTest {
 
     private fun submitMFAChallengeParameters(
         state: NativeAuthV2ContinuationState,
-        code: String
+        code: String,
+        scopes: List<String> = emptyList(),
+        claimsRequestJson: String? = null
     ): NativeAuthV2SubmitMFAChallengeCommandParameters =
         NativeAuthV2SubmitMFAChallengeCommandParameters.builder()
             .authority(mockAuthority)
             .platformComponents(mockPlatformComponents)
             .correlationId(correlationId)
-            .scopes(emptyList())
+            .scopes(scopes)
+            .claimsRequestJson(claimsRequestJson)
             .continuationState(state)
             .code(code)
             .build()

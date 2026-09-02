@@ -394,7 +394,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public Map<Integer, UrlStatus> getUrlStatusMap() {
                         return WebViewAuthorizationFragment.this.getUrlLoadTracker();
                     }
-                }
+                },
+                getCorrelationId()
         );
     }
 

@@ -112,16 +112,52 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenAuthenticationFactorCasingDiffers_stillTreatedAsMultiFactor() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR")
-            ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+    fun parseInteraction_whenMultiFactorCasingDiffers_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR"),
+            NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
         )
+    }
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
+    @Test
+    fun parseInteraction_whenSingleFactorCasingDiffers_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "SINGLEFACTOR")
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsMissing_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace(
+                """"challengeContext": { "authenticationFactor": "singleFactor" },""",
+                ""
+            )
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsBlank_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "  ")
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsMalformed_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace(
+                """"authenticationFactor": "singleFactor"""",
+                """"authenticationFactor": 123"""
+            )
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenAuthenticationFactorIsUnknown_returnsProtocolError() {
+        assertInvalidAuthenticationFactor(
+            SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON.replace("singleFactor", "biometricFactor")
+        )
     }
 
     @Test
@@ -535,6 +571,19 @@ class NativeAuthV2SignInResponseParserTest {
             "Expected '$expectedDescriptionFragment' in '${error.errorDescription}'",
             error.errorDescription.contains(expectedDescriptionFragment)
         )
+    }
+
+    private fun assertInvalidAuthenticationFactor(
+        json: String,
+        operation: NativeAuthV2Operation = NativeAuthV2Operation.SIGN_IN_START
+    ) {
+        val result = parser.parseInteraction(
+            response = responseFrom(json),
+            previousState = signInState(),
+            operation = operation
+        )
+
+        assertInvalidState(result, "invalid value for field 'authenticationFactor'")
     }
 
     private fun responseFrom(json: String): NativeAuthV2HalApiResponse =
