@@ -35,7 +35,6 @@ import com.microsoft.identity.common.logging.Logger
  * Provides IPC strategies for device registration communication.
  *
  * Default implementation supplies ContentProvider + BoundService strategies.
- * Broker subclass overrides [getStrategies] to add WpjLegacyAccountAuthenticatorStrategy.
  *
  * @param supportsBoundService whether to include the BoundService IPC strategy.
  */
@@ -49,8 +48,6 @@ open class DeviceRegistrationIpcStrategiesProvider @JvmOverloads constructor(
     /**
      * Returns the list of IPC strategies to use for device registration.
      * Default: ContentProvider + BoundService (if supported).
-     *
-     * Broker overrides this to append legacy strategy after calling super.
      *
      * @param context                  application context.
      * @param components               platform components for the active broker.
