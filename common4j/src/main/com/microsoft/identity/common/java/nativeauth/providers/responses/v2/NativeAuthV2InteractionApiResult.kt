@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiResu
 /**
  * Represents the potential result types returned by [NativeAuthV2ResponseParser.parseInteraction]
  * for a V2 Native Auth mid-flow (post authorize-challenge) response, covering the SSPR
- * (reset-password) and sign-in operations in [NativeAuthV2Operation].
+ * (reset-password) and sign-in operations.
  *
  * No error case includes [NativeAuthV2ContinuationState], a continuation token, an href, or an
  * authorization code. The caller retains the state used for an operation when it needs to retry.
@@ -221,18 +221,12 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
 
     /**
      * The submitted username/password combination was rejected by the service.
-     *
-     * [deferredSubmission] records whether the rejected password was submitted from the deferred
-     * password-required state (`true`) or supplied directly to the sign-in entry point (`false`),
-     * so the public layer can apply the iOS V2 error taxonomy: an entry-supplied failure is
-     * invalid credentials, while a deferred failure is an invalid password.
      */
     data class InvalidCredentials(
         override val correlationId: String,
         override val error: String,
         override val errorDescription: String,
         override val subError: String,
-        val deferredSubmission: Boolean,
         override val errorCodes: List<Int>? = null
     ) : ApiErrorResult(
         error = error,
@@ -242,31 +236,9 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
         correlationId = correlationId
     ), NativeAuthV2InteractionApiResult {
         override fun toUnsanitizedString(): String = "InvalidCredentials(correlationId=$correlationId, " +
-                "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes, " +
-                "deferredSubmission=$deferredSubmission)"
-        override fun toString(): String = "InvalidCredentials(correlationId=$correlationId, " +
-                "errorCodes=$errorCodes, deferredSubmission=$deferredSubmission)"
-    }
-
-    /**
-     * The requested authentication method is blocked for this user by service policy.
-     */
-    data class AuthMethodBlocked(
-        override val correlationId: String,
-        override val error: String,
-        override val errorDescription: String,
-        override val subError: String,
-        override val errorCodes: List<Int>? = null
-    ) : ApiErrorResult(
-        error = error,
-        subError = subError,
-        errorDescription = errorDescription,
-        errorCodes = errorCodes,
-        correlationId = correlationId
-    ), NativeAuthV2InteractionApiResult {
-        override fun toUnsanitizedString(): String = "AuthMethodBlocked(correlationId=$correlationId, " +
                 "error=$error, errorDescription=$errorDescription, errorCodes=$errorCodes)"
-        override fun toString(): String = "AuthMethodBlocked(correlationId=$correlationId, errorCodes=$errorCodes)"
+        override fun toString(): String = "InvalidCredentials(correlationId=$correlationId, " +
+                "errorCodes=$errorCodes)"
     }
 
     /**

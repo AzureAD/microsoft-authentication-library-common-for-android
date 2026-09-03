@@ -59,28 +59,6 @@ class NativeAuthV2ContinuationState private constructor(
     internal val scenario: NativeAuthV2FlowScenario
 ) : ILoggable, Serializable {
 
-    // Preserve the previous constructor shape for cross-repository consumers that create this
-    // opaque state reflectively.
-    @Suppress("unused")
-    private constructor(
-        continuationToken: String,
-        links: Map<String, String>,
-        scopes: List<String>,
-        claimsRequestJson: String?,
-        correlationId: String,
-        entryRelation: NativeAuthV2LinkRelation,
-        scenario: NativeAuthV2FlowScenario
-    ) : this(
-        continuationToken = continuationToken,
-        links = links,
-        methodLinks = emptyMap(),
-        scopes = scopes,
-        claimsRequestJson = claimsRequestJson,
-        correlationId = correlationId,
-        entryRelation = entryRelation,
-        scenario = scenario
-    )
-
     /**
      * Returns a defensive copy of the scopes this state was created with, for the later
      * authorization-code token request at flow completion. Controllers outside common4j access
@@ -174,15 +152,13 @@ class NativeAuthV2ContinuationState private constructor(
          * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
          * `null` if [response] did not carry a nonblank continuation token.
          *
-         * [selectedMethod] merges a single method's links into the successor's own relation map, as
-         * the SSPR flow needs when the parser implicitly selects the one supported method. The V2
-         * sign-in flow instead defers selection and relies on [withSelectedMethod], which reads the
-         * per-method links this factory always retains from [response].
+         * [selectedMethod] merges a single method's links into the successor's own relation map.
+         * Otherwise method selection is deferred to [withSelectedMethod].
          */
         internal fun next(
             previous: NativeAuthV2ContinuationState,
             response: NativeAuthV2HalApiResponse,
-            selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = response.methods.firstOrNull()
+            selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = null
         ): NativeAuthV2ContinuationState? {
             val token = response.continuationToken?.takeUnless { it.isBlank() } ?: return null
             val merged = LinkedHashMap<String, String>()

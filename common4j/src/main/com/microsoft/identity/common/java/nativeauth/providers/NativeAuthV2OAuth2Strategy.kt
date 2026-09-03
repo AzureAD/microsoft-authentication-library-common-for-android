@@ -135,26 +135,13 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
-     * Challenges the server-offered password method identified by [methodId].
+     * Challenges the server-offered authentication method identified by [methodId].
      */
-    fun performPasswordMethodChallenge(
+    fun performMethodChallenge(
         state: NativeAuthV2ContinuationState,
         methodId: String
     ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performPasswordMethodChallenge(
-            state = state,
-            methodId = methodId
-        )
-    }
-
-    /**
-     * Challenges the server-offered multi-factor method identified by [methodId].
-     */
-    fun performMfaMethodChallenge(
-        state: NativeAuthV2ContinuationState,
-        methodId: String
-    ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performMfaMethodChallenge(
+        return nativeAuthV2Interactor.performMethodChallenge(
             state = state,
             methodId = methodId
         )
@@ -166,36 +153,12 @@ class NativeAuthV2OAuth2Strategy(
      */
     fun performPasswordVerify(
         state: NativeAuthV2ContinuationState,
-        password: CharArray,
-        deferredSubmission: Boolean
+        password: CharArray
     ): NativeAuthV2InteractionApiResult {
         return nativeAuthV2Interactor.performPasswordVerify(
             state = state,
-            password = password,
-            deferredSubmission = deferredSubmission
+            password = password
         )
-    }
-
-    /**
-     * Submits a multi-factor one-time code to the server-provided `verify` href.
-     */
-    fun performMfaVerify(
-        state: NativeAuthV2ContinuationState,
-        otp: String
-    ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performMfaVerify(
-            state = state,
-            otp = otp
-        )
-    }
-
-    /**
-     * Performs a V2 Native Auth challenge request.
-     */
-    fun performChallenge(
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performChallenge(state = state)
     }
 
     /**

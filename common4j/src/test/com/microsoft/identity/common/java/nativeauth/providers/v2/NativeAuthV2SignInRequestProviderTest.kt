@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -234,8 +233,7 @@ class NativeAuthV2SignInRequestProviderTest {
                 }
                 """.trimIndent()
             ),
-            previousState = entryState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = entryState()
         )
         return (result as NativeAuthV2InteractionApiResult.ChallengeRequired).continuationState
     }
@@ -248,12 +246,12 @@ class NativeAuthV2SignInRequestProviderTest {
                 {
                   "continuationToken": "ct-2",
                   "action": "verify",
+                  "type": "password",
                   "_links": { "verify": { "href": "/tenant/api/v0.1/password/pwd-1/verify" } }
                 }
                 """.trimIndent()
             ),
-            previousState = signInChallengeState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE
+            previousState = signInChallengeState()
         )
         return (result as NativeAuthV2InteractionApiResult.PasswordRequired).continuationState
     }

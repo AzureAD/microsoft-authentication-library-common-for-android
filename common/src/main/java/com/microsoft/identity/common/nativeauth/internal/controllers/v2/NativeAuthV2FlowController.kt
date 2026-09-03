@@ -89,9 +89,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
          * deliberately not treated as a fallback.
          */
         private const val UNSUPPORTED_FIRST_FACTOR = "unsupported_first_factor"
+        private const val UNSUPPORTED_CHALLENGE_METHOD = "unsupported_challenge_method"
 
         /** Normalized method type identifying the password authentication method. */
         private const val METHOD_TYPE_PASSWORD = "password"
+        private const val METHOD_TYPE_EMAIL = "email"
     }
 
     // -----------------------------------------------------------------------------------------
@@ -160,8 +162,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 state = initialState
             )
 
-            val afterStartState = when (startResult) {
-                is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult.continuationState
+            val challenge = when (startResult) {
+                is NativeAuthV2InteractionApiResult.ChallengeRequired -> startResult
                 is NativeAuthV2InteractionApiResult.UserNotFound -> return NativeAuthV2CommandResult.UserNotFound(
                     correlationId = startResult.correlationId,
                     error = startResult.error,
@@ -175,7 +177,18 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(startResult)
             }
 
-            val challengeResult = oAuth2Strategy.performChallenge(state = afterStartState)
+            val emailMethod = challenge.methods.firstOrNull { it.type == METHOD_TYPE_EMAIL }
+                ?: return INativeAuthCommandResult.APIError(
+                    error = UNSUPPORTED_CHALLENGE_METHOD,
+                    errorDescription = "Native Auth V2 password reset requires an email " +
+                            "authentication method, which the server did not offer.",
+                    correlationId = challenge.correlationId
+                )
+
+            val challengeResult = oAuth2Strategy.performMethodChallenge(
+                state = challenge.continuationState,
+                methodId = emailMethod.id
+            )
 
             return when (challengeResult) {
                 is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.CodeRequired(
@@ -528,7 +541,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     )
                 }
 
-            val passwordChallengeResult = oAuth2Strategy.performPasswordMethodChallenge(
+            val passwordChallengeResult = oAuth2Strategy.performMethodChallenge(
                 state = firstFactorChallenge.continuationState,
                 methodId = passwordMethod.id
             )
@@ -552,14 +565,16 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             val verifyResult = oAuth2Strategy.performPasswordVerify(
                 state = passwordState,
-                password = entryPassword,
-                deferredSubmission = false
+                password = entryPassword
             )
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
+                    tokenCommandParameters = parameters.toBuilder()
+                        .scopes(addDefaultScopes(parameters.scopes))
+                        .claimsRequestJson(parameters.claimsRequestJson?.takeUnless { it.isBlank() })
+                        .build(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
@@ -613,14 +628,19 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
             val verifyResult = oAuth2Strategy.performPasswordVerify(
                 state = parameters.continuationState,
-                password = parameters.password,
-                deferredSubmission = true
+                password = parameters.password
             )
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
+                    tokenCommandParameters = parameters.toBuilder()
+                        .scopes(addDefaultScopes(verifyResult.continuationState.scopesForTokenRequest()))
+                        .claimsRequestJson(
+                            verifyResult.continuationState.claimsRequestJsonForTokenRequest()
+                                ?.takeUnless { it.isBlank() }
+                        )
+                        .build(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
@@ -667,7 +687,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
 
-            val challengeResult = oAuth2Strategy.performMfaMethodChallenge(
+            val challengeResult = oAuth2Strategy.performMethodChallenge(
                 state = parameters.continuationState,
                 methodId = parameters.methodId
             )
@@ -679,13 +699,6 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     codeLength = challengeResult.codeLength,
                     challengeTargetLabel = challengeResult.challengeTargetLabel,
                     challengeChannel = challengeResult.challengeChannel
-                )
-                is NativeAuthV2InteractionApiResult.AuthMethodBlocked -> NativeAuthV2CommandResult.AuthMethodBlocked(
-                    correlationId = challengeResult.correlationId,
-                    error = challengeResult.error,
-                    errorDescription = challengeResult.errorDescription,
-                    subError = challengeResult.subError,
-                    errorCodes = challengeResult.errorCodes
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
                     correlationId = challengeResult.correlationId,
@@ -719,7 +732,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
 
-            val verifyResult = oAuth2Strategy.performMfaVerify(
+            val verifyResult = oAuth2Strategy.performVerify(
                 state = parameters.continuationState,
                 otp = parameters.code
             )
@@ -727,7 +740,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    parameters = parameters,
+                    tokenCommandParameters = parameters.toBuilder()
+                        .scopes(addDefaultScopes(verifyResult.continuationState.scopesForTokenRequest()))
+                        .claimsRequestJson(
+                            verifyResult.continuationState.claimsRequestJsonForTokenRequest()
+                                ?.takeUnless { it.isBlank() }
+                        )
+                        .build(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
@@ -779,7 +798,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = parameters.toBuilder()
+            tokenCommandParameters = parameters.toBuilder()
                 .scopes(scopes)
                 .claimsRequestJson(claimsRequestJson)
                 .build(),
@@ -794,64 +813,24 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      */
     private fun completeSignIn(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        parameters: SignInV2StartCommandParameters,
+        tokenCommandParameters: BaseSignInTokenCommandParameters,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
-        val scopes = addDefaultScopes(parameters.scopes)
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = parameters.toBuilder()
-                .scopes(scopes)
-                .claimsRequestJson(parameters.claimsRequestJson?.takeUnless { it.isBlank() })
-                .build(),
-            state = state
-        )
-    }
-
-    private fun completeSignIn(
-        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        parameters: NativeAuthV2SubmitPasswordCommandParameters,
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2FlowCompletionCommandResult {
-        val scopes = addDefaultScopes(state.scopesForTokenRequest())
-        return exchangeCodeAndSaveTokens(
-            oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = parameters.toBuilder()
-                .scopes(scopes)
-                .claimsRequestJson(
-                    state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
-                )
-                .build(),
-            state = state
-        )
-    }
-
-    private fun completeSignIn(
-        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        parameters: NativeAuthV2SubmitMFAChallengeCommandParameters,
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2FlowCompletionCommandResult {
-        val scopes = addDefaultScopes(state.scopesForTokenRequest())
-        return exchangeCodeAndSaveTokens(
-            oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = parameters.toBuilder()
-                .scopes(scopes)
-                .claimsRequestJson(
-                    state.claimsRequestJsonForTokenRequest()?.takeUnless { it.isBlank() }
-                )
-                .build(),
+            tokenCommandParameters = tokenCommandParameters,
             state = state
         )
     }
 
     /**
      * Shared terminal path: continues the authorize-challenge interaction, exchanges the resulting
-     * authorization code for tokens using [parametersWithScopes]' merged scopes and claims, and
+     * authorization code for tokens using [tokenCommandParameters]' merged scopes and claims, and
      * saves the account and tokens to the cache.
      */
     private fun exchangeCodeAndSaveTokens(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenCommandParameters: BaseSignInTokenCommandParameters,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
         LogSession.logMethodCall(
@@ -884,9 +863,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         val tokenResult = oAuth2Strategy.performTokenRequest(
             code = code,
-            scopes = parametersWithScopes.scopes ?: emptyList(),
+            scopes = tokenCommandParameters.scopes ?: emptyList(),
             correlationId = state.correlationId,
-            claimsRequestJson = parametersWithScopes.claimsRequestJson
+            claimsRequestJson = tokenCommandParameters.claimsRequestJson
         )
 
         val successTokenResult = when (tokenResult) {
@@ -908,7 +887,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         val complete = saveAndReturnTokens(
             oAuth2Strategy = oAuth2Strategy,
-            parametersWithScopes = parametersWithScopes,
+            parametersWithScopes = tokenCommandParameters,
             tokenApiResult = successTokenResult
         )
 

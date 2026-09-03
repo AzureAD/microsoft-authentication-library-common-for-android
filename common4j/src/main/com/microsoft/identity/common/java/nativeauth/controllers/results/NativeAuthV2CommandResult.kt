@@ -247,24 +247,6 @@ interface NativeAuthV2CommandResult {
     }
 
     /**
-     * Service policy blocks the requested authentication method for this user.
-     * Applies to the select-MFA-method step.
-     */
-    data class AuthMethodBlocked(
-        override val correlationId: String,
-        val error: String,
-        val errorDescription: String,
-        val subError: String,
-        val errorCodes: List<Int>? = null,
-    ) : NativeAuthV2SelectMFAMethodCommandResult {
-        override fun toUnsanitizedString(): String =
-            "NativeAuthV2CommandResult.AuthMethodBlocked(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
-
-        override fun toString(): String =
-            "NativeAuthV2CommandResult.AuthMethodBlocked(correlationId=$correlationId)"
-    }
-
-    /**
      * The supplied password did not meet policy requirements.
      * The developer can retry through the state object used for the failed call.
      * Applies to the submit-new-password step.

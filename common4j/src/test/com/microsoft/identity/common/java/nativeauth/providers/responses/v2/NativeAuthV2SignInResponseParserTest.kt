@@ -69,8 +69,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.ChallengeRequired)
@@ -90,8 +89,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenSignInChallengeIsMultiFactor_returnsMFARequired() {
         val result = parser.parseInteraction(
             response = responseFrom(MULTI_FACTOR_EMAIL_CHALLENGE_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
@@ -104,8 +102,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenDeferredPasswordProducesMultiFactorChallenge_returnsMFARequired() {
         val result = parser.parseInteraction(
             response = responseFrom(MULTI_FACTOR_EMAIL_CHALLENGE_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SUBMIT_PASSWORD
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.MFARequired)
@@ -114,8 +111,7 @@ class NativeAuthV2SignInResponseParserTest {
     @Test
     fun parseInteraction_whenMultiFactorCasingDiffers_returnsProtocolError() {
         assertInvalidAuthenticationFactor(
-            MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR"),
-            NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            MULTI_FACTOR_EMAIL_CHALLENGE_JSON.replace("multiFactor", "MULTIFACTOR")
         )
     }
 
@@ -164,8 +160,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenSelectedMethodHrefIsRetained_isFollowableFromContinuationState() {
         val result = parser.parseInteraction(
             response = responseFrom(SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         ) as NativeAuthV2InteractionApiResult.ChallengeRequired
 
         val selected = result.continuationState.withSelectedMethod("pwd-1")
@@ -183,8 +178,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenChallengeRequiredIsLogged_neverExposesHrefsOrContinuationToken() {
         val result = parser.parseInteraction(
             response = responseFrom(SINGLE_FACTOR_PASSWORD_CHALLENGE_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         listOf(result.toString(), result.toUnsanitizedString()).forEach { rendered ->
@@ -197,8 +191,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenChallengeRequiredIsLogged_omitsHintFromSanitizedString() {
         val result = parser.parseInteraction(
             response = responseFrom(MULTI_FACTOR_EMAIL_CHALLENGE_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            previousState = signInState()
         )
 
         assertFalse(result.toString().contains("u***@contoso.com"))
@@ -215,8 +208,7 @@ class NativeAuthV2SignInResponseParserTest {
             response = responseFrom(
                 """{"continuationToken":"ct-1","action":"challenge"}"""
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertInvalidState(result, "offered no authentication methods")
@@ -230,8 +222,7 @@ class NativeAuthV2SignInResponseParserTest {
                     """{"type":"password","_links":{"challenge":{"href":"/tenant/password/challenge"}}}"""
                 )
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertInvalidState(result, "missing required field 'id'")
@@ -245,8 +236,7 @@ class NativeAuthV2SignInResponseParserTest {
                     """{"id":"pwd-1","_links":{"challenge":{"href":"/tenant/password/challenge"}}}"""
                 )
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertInvalidState(result, "missing required field 'type'")
@@ -258,8 +248,7 @@ class NativeAuthV2SignInResponseParserTest {
             response = responseFrom(
                 methodChallengeJson("""{"id":"pwd-1","type":"password"}""")
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertInvalidState(result, "missing required link relation 'challenge'")
@@ -284,8 +273,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertInvalidState(result, "missing a continuation token")
@@ -303,12 +291,12 @@ class NativeAuthV2SignInResponseParserTest {
                 {
                   "continuationToken": "ct-2",
                   "action": "verify",
+                  "type": "password",
                   "_links": { "verify": { "href": "/tenant/password/pwd-1/verify" } }
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.PasswordRequired)
@@ -323,24 +311,10 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenPasswordChallengeHasNoVerifyLink_returnsProtocolError() {
         val result = parser.parseInteraction(
             response = responseFrom("""{"continuationToken":"ct-2","action":"verify"}"""),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE
+            previousState = signInState()
         )
 
         assertInvalidState(result, "missing required link relation 'verify'")
-    }
-
-    @Test
-    fun parseInteraction_whenVerifyActionArrivesForAnUnexpectedSignInOperation_returnsProtocolError() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                """{"continuationToken":"ct-2","action":"verify","_links":{"verify":{"href":"/v"}}}"""
-            ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
-        )
-
-        assertInvalidState(result, "SIGN_IN_START")
     }
 
     @Test
@@ -358,8 +332,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.MFA_METHOD_CHALLENGE
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.CodeRequired)
@@ -375,8 +348,7 @@ class NativeAuthV2SignInResponseParserTest {
             response = responseFrom(
                 """{"continuationToken":"ct-4","state":"continue","_links":{"continue":{"href":"/c"}}}"""
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.ReadyToComplete)
@@ -393,15 +365,14 @@ class NativeAuthV2SignInResponseParserTest {
                 """
                 {
                   "error": {
-                    "code": "invalid_grant",
+                    "code": "invalidRequest",
                     "message": "AADSTS50034: The user account does not exist in the directory.",
                     "correlationId": "server-corr"
                   }
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UserNotFound)
@@ -411,64 +382,56 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenEntrySuppliedPasswordIsRejected_returnsInvalidCredentialsNotDeferred() {
+    fun parseInteraction_whenPasswordIsRejected_returnsInvalidCredentials() {
         val result = parser.parseInteraction(
             response = responseFrom(INVALID_USERNAME_OR_PASSWORD_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.InvalidCredentials)
         val invalid = result as NativeAuthV2InteractionApiResult.InvalidCredentials
-        assertFalse(invalid.deferredSubmission)
         assertEquals("invalidUserNameOrPassword", invalid.subError)
         assertEquals(listOf(50126), invalid.errorCodes)
         assertEquals("server-corr", invalid.correlationId)
     }
 
     @Test
-    fun parseInteraction_whenDeferredPasswordIsRejected_returnsInvalidCredentialsMarkedDeferred() {
+    fun parseInteraction_whenPasswordIsRejected_isIndependentOfCallingOperation() {
         val result = parser.parseInteraction(
             response = responseFrom(INVALID_USERNAME_OR_PASSWORD_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SUBMIT_PASSWORD
-        )
-
-        val invalid = result as NativeAuthV2InteractionApiResult.InvalidCredentials
-        assertTrue(invalid.deferredSubmission)
-    }
-
-    @Test
-    fun parseInteraction_whenOnlyAadstsCodeIdentifiesBadCredentials_stillReturnsInvalidCredentials() {
-        val result = parser.parseInteraction(
-            response = responseFrom(
-                """
-                {
-                  "error": {
-                    "code": "invalid_grant",
-                    "message": "AADSTS50126: Error validating credentials due to invalid username or password."
-                  }
-                }
-                """.trimIndent()
-            ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.InvalidCredentials)
     }
 
     @Test
-    fun parseInteraction_whenCredentialsRejectedOutsidePasswordSubmission_staysUnknownError() {
-        // Preserves the pre-existing SSPR behaviour: a credential rejection at a step where the app
-        // did not submit a password is not actionable and must not become InvalidCredentials.
+    fun parseInteraction_whenOnlyAadstsCodeIdentifiesBadCredentials_returnsUnknownError() {
         val result = parser.parseInteraction(
-            response = responseFrom(INVALID_USERNAME_OR_PASSWORD_JSON),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.RESET_PASSWORD_START
+            response = responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "invalidGrant",
+                    "message": "AADSTS50126: Error validating credentials due to invalid username or password."
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+    }
+
+    @Test
+    fun parseInteraction_whenCredentialsAreRejected_returnsInvalidCredentials() {
+        val result = parser.parseInteraction(
+            response = responseFrom(INVALID_USERNAME_OR_PASSWORD_JSON),
+            previousState = signInState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidCredentials)
     }
 
     @Test
@@ -485,8 +448,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.MFA_VERIFY
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.InvalidCode)
@@ -497,7 +459,7 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenAuthMethodIsBlocked_returnsAuthMethodBlocked() {
+    fun parseInteraction_whenAuthMethodIsBlocked_returnsUnknownError() {
         val result = parser.parseInteraction(
             response = responseFrom(
                 """
@@ -510,11 +472,10 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.MFA_METHOD_CHALLENGE
+            previousState = signInState()
         )
 
-        assertTrue(result is NativeAuthV2InteractionApiResult.AuthMethodBlocked)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
     }
 
     @Test
@@ -529,8 +490,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)
@@ -544,8 +504,7 @@ class NativeAuthV2SignInResponseParserTest {
     fun parseInteraction_whenSignInActionIsUnknown_returnsUnsupportedAction() {
         val result = parser.parseInteraction(
             response = responseFrom("""{"continuationToken":"ct-1","action":"teleport"}"""),
-            previousState = signInState(),
-            operation = NativeAuthV2Operation.SIGN_IN_START
+            previousState = signInState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnsupportedAction)
@@ -573,14 +532,10 @@ class NativeAuthV2SignInResponseParserTest {
         )
     }
 
-    private fun assertInvalidAuthenticationFactor(
-        json: String,
-        operation: NativeAuthV2Operation = NativeAuthV2Operation.SIGN_IN_START
-    ) {
+    private fun assertInvalidAuthenticationFactor(json: String) {
         val result = parser.parseInteraction(
             response = responseFrom(json),
-            previousState = signInState(),
-            operation = operation
+            previousState = signInState()
         )
 
         assertInvalidState(result, "invalid value for field 'authenticationFactor'")
@@ -652,7 +607,7 @@ class NativeAuthV2SignInResponseParserTest {
         private val INVALID_USERNAME_OR_PASSWORD_JSON = """
             {
               "error": {
-                "code": "invalid_grant",
+                "code": "invalidGrant",
                 "message": "AADSTS50126: Error validating credentials due to invalid username or password.",
                 "innerError": { "code": "invalidUserNameOrPassword" },
                 "correlationId": "server-corr"
