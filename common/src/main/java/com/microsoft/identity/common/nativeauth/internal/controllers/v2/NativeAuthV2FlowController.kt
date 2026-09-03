@@ -571,10 +571,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    tokenCommandParameters = parameters.toBuilder()
-                        .scopes(addDefaultScopes(parameters.scopes))
-                        .claimsRequestJson(parameters.claimsRequestJson?.takeUnless { it.isBlank() })
-                        .build(),
+                    parametersBuilder = parameters.toBuilder(),
+                    scopes = parameters.scopes,
+                    claimsRequestJson = parameters.claimsRequestJson,
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
@@ -634,13 +633,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    tokenCommandParameters = parameters.toBuilder()
-                        .scopes(addDefaultScopes(verifyResult.continuationState.scopesForTokenRequest()))
-                        .claimsRequestJson(
-                            verifyResult.continuationState.claimsRequestJsonForTokenRequest()
-                                ?.takeUnless { it.isBlank() }
-                        )
-                        .build(),
+                    parametersBuilder = parameters.toBuilder(),
+                    scopes = verifyResult.continuationState.scopesForTokenRequest(),
+                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
@@ -740,13 +735,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
                     oAuth2Strategy = oAuth2Strategy,
-                    tokenCommandParameters = parameters.toBuilder()
-                        .scopes(addDefaultScopes(verifyResult.continuationState.scopesForTokenRequest()))
-                        .claimsRequestJson(
-                            verifyResult.continuationState.claimsRequestJsonForTokenRequest()
-                                ?.takeUnless { it.isBlank() }
-                        )
-                        .build(),
+                    parametersBuilder = parameters.toBuilder(),
+                    scopes = verifyResult.continuationState.scopesForTokenRequest(),
+                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
                 is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
@@ -813,12 +804,17 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      */
     private fun completeSignIn(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
-        tokenCommandParameters: BaseSignInTokenCommandParameters,
+        parametersBuilder: BaseSignInTokenCommandParameters.BaseSignInTokenCommandParametersBuilder<*, *>,
+        scopes: List<String>?,
+        claimsRequestJson: String?,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2FlowCompletionCommandResult {
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
-            tokenCommandParameters = tokenCommandParameters,
+            tokenCommandParameters = parametersBuilder
+                .scopes(addDefaultScopes(scopes))
+                .claimsRequestJson(claimsRequestJson?.takeUnless { it.isBlank() })
+                .build(),
             state = state
         )
     }
