@@ -76,6 +76,14 @@ public enum SpanName {
     ProcessOpenIdVcRequest,
     PasskeyWebListener,
     InstallCertOnWpj,
+
+    /**
+     * Span name for a launch of the broker's exported {@code InstallCertActivity}, covering caller
+     * validation through to the terminal outcome. Distinct from {@link #InstallCertOnWpj}, which
+     * covers the DRS request that installs the certificate rather than the activity that hosts it.
+     */
+    InstallCertActivity,
+
     /**
      * Span name for fetching initial ECS flight configurations.
      */
