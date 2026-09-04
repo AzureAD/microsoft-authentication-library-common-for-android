@@ -41,6 +41,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -756,7 +757,17 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
+        // Form-encoded calls (authorize-challenge, token) still use the post() convenience method,
+        // while JSON interactions go through method(POST, ...); both fill the same slots.
         every { httpClient.post(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } returns httpResponse
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.POST,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 
@@ -764,7 +775,14 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
-        every { httpClient.put(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } returns httpResponse
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.PUT,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 
@@ -772,7 +790,14 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
-        every { httpClient.put(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } throws throwable
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.PUT,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } throws throwable
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 

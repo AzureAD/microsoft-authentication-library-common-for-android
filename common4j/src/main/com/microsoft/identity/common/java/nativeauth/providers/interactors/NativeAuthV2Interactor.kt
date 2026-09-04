@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -283,7 +284,7 @@ class NativeAuthV2Interactor(
                 request = request,
                 state = state,
                 methodName = "$TAG.performUpdatePassword",
-                usePut = true
+                httpMethod = HttpClient.HttpMethod.PUT
             )
         } finally {
             StringUtil.overwriteWithNull(newPassword)
@@ -435,23 +436,21 @@ class NativeAuthV2Interactor(
     //endregion
 
     /**
-     * Applies the configured interceptor headers, sends [request] as JSON, and parses the response.
+     * Applies the configured interceptor headers, sends [request] as JSON using [httpMethod], and
+     * parses the response. Most V2 interactions are POSTs, so [httpMethod] defaults to
+     * [HttpClient.HttpMethod.POST]; callers whose endpoint uses a different verb pass it explicitly.
      */
     private fun executeJsonInteraction(
         request: NativeAuthRequest,
         state: NativeAuthV2ContinuationState,
         methodName: String,
-        usePut: Boolean = false
+        httpMethod: HttpClient.HttpMethod = HttpClient.HttpMethod.POST
     ): NativeAuthV2InteractionApiResult {
         val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
             .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
 
-        val httpResponse = if (usePut) {
-            httpClient.put(request.requestUrl, headers, encoded)
-        } else {
-            httpClient.post(request.requestUrl, headers, encoded)
-        }
+        val httpResponse = httpClient.method(httpMethod, request.requestUrl, headers, encoded)
         val halResponse = responseHandler.getHalApiResponse(
             requestCorrelationId = state.correlationId,
             response = httpResponse

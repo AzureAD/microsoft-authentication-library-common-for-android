@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -266,7 +267,7 @@ class NativeAuthV2SignInInteractorTest {
         val expectedFailure = RuntimeException("HTTP failure")
 
         every { requestProvider.createPasswordVerifyRequest(state, password) } returns request
-        every { httpClient.post(any(), any(), any()) } throws expectedFailure
+        every { httpClient.method(HttpClient.HttpMethod.POST, any(), any(), any()) } throws expectedFailure
 
         try {
             createInteractor().performPasswordVerify(state, password)
@@ -339,7 +340,12 @@ class NativeAuthV2SignInInteractorTest {
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
         every {
-            httpClient.post(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody))
+            httpClient.method(
+                HttpClient.HttpMethod.POST,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
         } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
