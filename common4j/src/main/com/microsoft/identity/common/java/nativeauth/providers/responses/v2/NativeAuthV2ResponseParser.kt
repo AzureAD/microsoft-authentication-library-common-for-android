@@ -323,6 +323,13 @@ class NativeAuthV2ResponseParser {
             ?: return missingContinuationTokenError(response.correlationId)
 
         if (challengeChannel.isPasswordChannel()) {
+            // A password challenge is only meaningful as the first factor. Reaching one on a
+            // second-factor step means the server and this SDK disagree about where the flow is,
+            // which is unrecoverable: honouring it would re-prompt for a credential the user has
+            // already proven.
+            if (!previousState.isFirstFactor) {
+                return passwordOutsideFirstFactorError(response)
+            }
             return NativeAuthV2InteractionApiResult.PasswordRequired(
                 correlationId = response.correlationId,
                 continuationState = successor
@@ -367,6 +374,28 @@ class NativeAuthV2ResponseParser {
             error = ApiErrorResult.INVALID_STATE,
             errorDescription = "Native Auth V2 response did not offer a supported email " +
                     "authentication method. Only email one-time codes are supported."
+        )
+    }
+
+    /**
+     * Error for a password challenge that arrived on a step the server did not classify as the
+     * first authentication factor. Distinct from [unsupportedChallengeMethodError] so telemetry can
+     * tell "the server offered a channel we do not implement" apart from "the server offered a
+     * password at a point in the flow where a password must never be requested".
+     */
+    private fun passwordOutsideFirstFactorError(
+        response: NativeAuthV2HalApiResponse
+    ): NativeAuthV2InteractionApiResult.UnknownError {
+        Logger.warn(
+            TAG,
+            response.correlationId,
+            "Native Auth V2 returned a password challenge outside the first authentication factor."
+        )
+        return NativeAuthV2InteractionApiResult.UnknownError(
+            correlationId = response.correlationId,
+            error = ApiErrorResult.INVALID_STATE,
+            errorDescription = "Native Auth V2 returned a password challenge outside the first " +
+                    "authentication factor. A password is only accepted as the first factor."
         )
     }
 

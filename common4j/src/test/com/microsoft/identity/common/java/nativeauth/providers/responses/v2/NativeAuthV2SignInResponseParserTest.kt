@@ -296,7 +296,7 @@ class NativeAuthV2SignInResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signInState()
+            previousState = firstFactorState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.PasswordRequired)
@@ -305,6 +305,44 @@ class NativeAuthV2SignInResponseParserTest {
             "/tenant/password/pwd-1/verify",
             passwordRequired.continuationState.href(NativeAuthV2LinkRelation.VERIFY)
         )
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordChallengeArrivesOnSecondFactor_returnsProtocolError() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """
+                {
+                  "continuationToken": "ct-2",
+                  "action": "verify",
+                  "type": "password",
+                  "_links": { "verify": { "href": "/tenant/password/pwd-1/verify" } }
+                }
+                """.trimIndent()
+            ),
+            previousState = secondFactorState()
+        )
+
+        assertInvalidState(result, "password challenge outside the first authentication factor")
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordChallengeArrivesOnUnclassifiedFactor_returnsProtocolError() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """
+                {
+                  "continuationToken": "ct-2",
+                  "action": "verify",
+                  "type": "password",
+                  "_links": { "verify": { "href": "/tenant/password/pwd-1/verify" } }
+                }
+                """.trimIndent()
+            ),
+            previousState = signInState()
+        )
+
+        assertInvalidState(result, "password challenge outside the first authentication factor")
     }
 
     @Test
@@ -555,6 +593,34 @@ class NativeAuthV2SignInResponseParserTest {
             entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
             scopes = listOf("User.Read"),
             scenario = NativeAuthV2FlowScenario.SIGN_IN
+        )
+
+    /**
+     * The state the flow actually holds when it challenges the password method: the successor of a
+     * `challenge` response the server classified as `singleFactor`.
+     */
+    private fun firstFactorState(): NativeAuthV2ContinuationState = stateWithFactor("singleFactor")
+
+    /**
+     * The state the flow holds once the first factor is satisfied and the server has moved on to a
+     * `multiFactor` challenge, i.e. the state carried into `selectMFAMethod` and `submitMFAChallenge`.
+     */
+    private fun secondFactorState(): NativeAuthV2ContinuationState = stateWithFactor("multiFactor")
+
+    private fun stateWithFactor(factor: String): NativeAuthV2ContinuationState =
+        requireNotNull(
+            NativeAuthV2ContinuationState.next(
+                previous = signInState(),
+                response = responseFrom(
+                    """
+                    {
+                      "continuationToken": "ct-1",
+                      "action": "challenge",
+                      "challengeContext": { "authenticationFactor": "$factor" }
+                    }
+                    """.trimIndent()
+                )
+            )
         )
 
     private fun methodChallengeJson(methodJson: String): String =

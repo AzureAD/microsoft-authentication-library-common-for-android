@@ -56,8 +56,21 @@ class NativeAuthV2ContinuationState private constructor(
     internal val claimsRequestJson: String?,
     val correlationId: String,
     internal val entryRelation: NativeAuthV2LinkRelation,
-    internal val scenario: NativeAuthV2FlowScenario
+    internal val scenario: NativeAuthV2FlowScenario,
+    internal val authenticationFactor: String?
 ) : ILoggable, Serializable {
+
+    /**
+     * `true` when the server classified the challenge that produced this state as the first
+     * (single) authentication factor.
+     *
+     * A state whose factor the server never declared reports `false`, so an unclassified step is
+     * treated as "not the first factor" rather than being trusted. The field is deliberately
+     * nullable so that an older serialized stream, which predates it, deserializes to unclassified
+     * and therefore fails closed.
+     */
+    internal val isFirstFactor: Boolean
+        get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
 
     /**
      * Returns a defensive copy of the scopes this state was created with, for the later
@@ -96,7 +109,8 @@ class NativeAuthV2ContinuationState private constructor(
             claimsRequestJson = claimsRequestJson,
             correlationId = correlationId,
             entryRelation = entryRelation,
-            scenario = scenario
+            scenario = scenario,
+            authenticationFactor = authenticationFactor
         )
     }
 
@@ -144,7 +158,8 @@ class NativeAuthV2ContinuationState private constructor(
                 claimsRequestJson = claimsRequestJson,
                 correlationId = response.correlationId,
                 entryRelation = entryRelation,
-                scenario = scenario
+                scenario = scenario,
+                authenticationFactor = response.authenticationFactor
             )
         }
 
@@ -154,6 +169,11 @@ class NativeAuthV2ContinuationState private constructor(
          *
          * [selectedMethod] merges a single method's links into the successor's own relation map.
          * Otherwise method selection is deferred to [withSelectedMethod].
+         *
+         * Only a `challenge` response carries `challengeContext.authenticationFactor`, so the
+         * successor inherits [previous]'s classification whenever this response does not declare
+         * one. That keeps the factor available on the `verify` steps that follow a challenge,
+         * which is what lets the parser confine a password challenge to the first factor.
          */
         internal fun next(
             previous: NativeAuthV2ContinuationState,
@@ -172,7 +192,9 @@ class NativeAuthV2ContinuationState private constructor(
                 claimsRequestJson = previous.claimsRequestJson,
                 correlationId = response.correlationId,
                 entryRelation = previous.entryRelation,
-                scenario = previous.scenario
+                scenario = previous.scenario,
+                authenticationFactor = response.authenticationFactor
+                    ?: previous.authenticationFactor
             )
         }
 
