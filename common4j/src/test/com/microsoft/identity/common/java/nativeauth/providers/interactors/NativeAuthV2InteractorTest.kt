@@ -37,11 +37,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -217,8 +217,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.RESET_PASSWORD_START
+                previousState = state
             )
         } returns expected
 
@@ -239,59 +238,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.RESET_PASSWORD_START
-            )
-        }
-    }
-
-    @Test
-    fun performChallenge_postsJsonBodyAndParsesInteractionResult() {
-        val state = continuationState(
-            NativeAuthV2LinkRelation.CHALLENGE to "/nativeauth/v2/challenge"
-        )
-        val request = NativeAuthV2ChallengeRequest.create(
-            continuationToken = CONTINUATION_TOKEN,
-            requestUrl = challengeUrl.toString(),
-            headers = jsonHeaders()
-        )
-        val httpResponse = HttpResponse(200, """{"action":"verify"}""", emptyMap())
-        val halResponse = mockk<NativeAuthV2HalApiResponse>(relaxed = true)
-        val expected = NativeAuthV2InteractionApiResult.CodeRequired(
-            correlationId = CORRELATION_ID,
-            continuationState = continuationState(NativeAuthV2LinkRelation.VERIFY to "/nativeauth/v2/verify"),
-            challengeTargetLabel = "a***@contoso.com",
-            challengeChannel = "email",
-            codeLength = 6
-        )
-        val captured = capturePost(httpResponse)
-
-        every { requestProvider.createChallengeRequest(state) } returns request
-        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
-        every {
-            responseParser.parseInteraction(
-                response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.CHALLENGE
-            )
-        } returns expected
-
-        val actual = createInteractor().performChallenge(state)
-
-        assertSame(expected, actual)
-        assertEquals(challengeUrl, captured.url.captured)
-        assertMergedHeaders(captured.headers.captured, HttpConstants.MediaType.APPLICATION_JSON)
-        assertJsonBody(
-            captured.body.captured,
-            mapOf("continuationToken" to CONTINUATION_TOKEN)
-        )
-        verify(exactly = 1) { requestProvider.createChallengeRequest(state) }
-        verify(exactly = 1) { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) }
-        verify(exactly = 1) {
-            responseParser.parseInteraction(
-                response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.CHALLENGE
+                previousState = state
             )
         }
     }
@@ -322,8 +269,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.RESEND
+                previousState = state
             )
         } returns expected
 
@@ -341,8 +287,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.RESEND
+                previousState = state
             )
         }
     }
@@ -371,8 +316,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.VERIFY
+                previousState = state
             )
         } returns expected
 
@@ -393,8 +337,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.VERIFY
+                previousState = state
             )
         }
     }
@@ -426,8 +369,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.UPDATE_PASSWORD
+                previousState = state
             )
         } returns expected
 
@@ -450,8 +392,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.UPDATE_PASSWORD
+                previousState = state
             )
         }
     }
@@ -542,8 +483,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.POLL
+                previousState = state
             )
         } returns expected
 
@@ -561,8 +501,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.POLL
+                previousState = state
             )
         }
     }
@@ -632,34 +571,6 @@ class NativeAuthV2InteractorTest {
     }
 
     @Test
-    fun performChallenge_propagatesResponseHandlerExceptionWithoutParsing() {
-        val state = continuationState(
-            NativeAuthV2LinkRelation.CHALLENGE to "/nativeauth/v2/challenge"
-        )
-        val request = NativeAuthV2ChallengeRequest.create(
-            continuationToken = CONTINUATION_TOKEN,
-            requestUrl = challengeUrl.toString(),
-            headers = jsonHeaders()
-        )
-        val httpResponse = HttpResponse(200, """{"action":"verify"}""", emptyMap())
-        val expectedFailure = IllegalStateException("handler failure")
-        capturePost(httpResponse)
-
-        every { requestProvider.createChallengeRequest(state) } returns request
-        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } throws expectedFailure
-
-        try {
-            createInteractor().performChallenge(state)
-            fail("Expected performChallenge to rethrow the response handler failure")
-        } catch (actual: IllegalStateException) {
-            assertSame(expectedFailure, actual)
-        }
-
-        verify(exactly = 1) { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) }
-        verify { responseParser wasNot Called }
-    }
-
-    @Test
     fun performVerify_propagatesResponseParserExceptionWithoutConvertingToSuccess() {
         val state = continuationState(
             NativeAuthV2LinkRelation.VERIFY to "/nativeauth/v2/verify"
@@ -680,8 +591,7 @@ class NativeAuthV2InteractorTest {
         every {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.VERIFY
+                previousState = state
             )
         } throws expectedFailure
 
@@ -695,8 +605,7 @@ class NativeAuthV2InteractorTest {
         verify(exactly = 1) {
             responseParser.parseInteraction(
                 response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.VERIFY
+                previousState = state
             )
         }
     }
@@ -848,7 +757,17 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
+        // Form-encoded calls (authorize-challenge, token) still use the post() convenience method,
+        // while JSON interactions go through method(POST, ...); both fill the same slots.
         every { httpClient.post(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } returns httpResponse
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.POST,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 
@@ -856,7 +775,14 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
-        every { httpClient.put(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } returns httpResponse
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.PUT,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 
@@ -864,7 +790,14 @@ class NativeAuthV2InteractorTest {
         val capturedUrl = slot<URL>()
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
-        every { httpClient.put(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody)) } throws throwable
+        every {
+            httpClient.method(
+                HttpClient.HttpMethod.PUT,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
+        } throws throwable
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
 

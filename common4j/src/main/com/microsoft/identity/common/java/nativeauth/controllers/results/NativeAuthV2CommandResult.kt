@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
@@ -31,6 +32,22 @@ sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignInStartCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SubmitPasswordCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SelectMFAMethodCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SubmitMFAChallengeCommandResult : INativeAuthCommandResult
+
+/**
+ * Results producible by the shared V2 terminal path (authorize-challenge continue →
+ * authorization-code token exchange → cache persistence), which every V2 flow that reaches
+ * completion funnels through. Grouping them lets that path keep a single return type instead of
+ * repeating the same three outcomes per operation.
+ */
+sealed interface NativeAuthV2FlowCompletionCommandResult :
+    NativeAuthV2SignInAfterResetPasswordCommandResult,
+    NativeAuthV2SignInStartCommandResult,
+    NativeAuthV2SubmitPasswordCommandResult,
+    NativeAuthV2SubmitMFAChallengeCommandResult
 
 /**
  * Reflects the possible results from the V2 SSPR (self-service password reset) command flow.
@@ -114,7 +131,7 @@ interface NativeAuthV2CommandResult {
         NativeAuthV2SubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SubmitNewPasswordCommandResult,
-        NativeAuthV2SignInAfterResetPasswordCommandResult {
+        NativeAuthV2FlowCompletionCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.Complete(correlationId=$correlationId, expiresIn=$expiresIn)"
 
@@ -132,12 +149,101 @@ interface NativeAuthV2CommandResult {
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
-    ) : NativeAuthV2SubmitCodeCommandResult {
+    ) : NativeAuthV2SubmitCodeCommandResult, NativeAuthV2SubmitMFAChallengeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
         override fun toString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId)"
+    }
+
+    /**
+     * The server offered the password first factor and no password was supplied at the sign-in
+     * entry point, so the app must collect one and submit it through [continuationState].
+     * Applies to the sign-in start step.
+     */
+    data class PasswordRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+    ) : NativeAuthV2SignInStartCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.PasswordRequired(correlationId=$correlationId)"
+
+        override fun toString(): String = toUnsanitizedString()
+    }
+
+    /**
+     * The first factor succeeded and the server requires a second factor. [authMethods] are the
+     * methods the server offered, in server order; the app must select one explicitly before any
+     * challenge is sent.
+     * Applies to the sign-in start and submit-password steps.
+     */
+    data class MFARequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val authMethods: List<NativeAuthV2AuthMethod>,
+    ) : NativeAuthV2SignInStartCommandResult, NativeAuthV2SubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.MFARequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.MFARequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toString() }})"
+    }
+
+    /**
+     * The server sent a multi-factor challenge to the selected method and awaits the code.
+     * Applies to the select-MFA-method step.
+     */
+    data class MFAVerificationRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val codeLength: Int,
+        val challengeTargetLabel: String,
+        val challengeChannel: String,
+    ) : NativeAuthV2SelectMFAMethodCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.MFAVerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel)"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.MFAVerificationRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
+
+    /**
+     * The server rejected the username/password combination supplied at the sign-in entry point.
+     * The developer must restart the flow with corrected credentials.
+     * Applies to the sign-in start step.
+     */
+    data class InvalidCredentials(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val subError: String,
+        val errorCodes: List<Int>? = null,
+    ) : NativeAuthV2SignInStartCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.InvalidCredentials(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.InvalidCredentials(correlationId=$correlationId)"
+    }
+
+    /**
+     * The server rejected a password submitted from the password-required state. The developer can
+     * retry through the state object used for the failed call.
+     * Applies to the submit-password step.
+     */
+    data class IncorrectPassword(
+        override val correlationId: String,
+        val error: String,
+        val errorDescription: String,
+        val subError: String,
+        val errorCodes: List<Int>? = null,
+    ) : NativeAuthV2SubmitPasswordCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.IncorrectPassword(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.IncorrectPassword(correlationId=$correlationId)"
     }
 
     /**
@@ -184,7 +290,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
         val errorCodes: List<Int>? = null,
-    ) : NativeAuthV2ResetPasswordStartCommandResult {
+    ) : NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SignInStartCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.UserNotFound(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 
@@ -203,7 +309,11 @@ interface NativeAuthV2CommandResult {
     ) : NativeAuthV2ResetPasswordStartCommandResult,
         NativeAuthV2SubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
-        NativeAuthV2SubmitNewPasswordCommandResult {
+        NativeAuthV2SubmitNewPasswordCommandResult,
+        NativeAuthV2SignInStartCommandResult,
+        NativeAuthV2SubmitPasswordCommandResult,
+        NativeAuthV2SelectMFAMethodCommandResult,
+        NativeAuthV2SubmitMFAChallengeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NotImplemented(correlationId=$correlationId, error=$error, errorDescription=$errorDescription)"
 

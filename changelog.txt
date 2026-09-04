@@ -1,5 +1,6 @@
 vNext
 ----------
+- [MINOR] Add Native Auth V2 sign-in support for password first factor and password followed by email OTP MFA, including server-driven method selection, continuation commands, controller orchestration, and token completion (AB#3729067) (#3239)
 - [PATCH] Upgrade Apache HttpCore to 5.4.3 to address CVE-2026-54399 (AB#3746140) (#3242)
 - [PATCH] Enable OAEP with SHA and MGF1 padding by default when ECS configuration is unavailable (#3205)
 - [MINOR] Add the InstallCertActivity span name, distinct from InstallCertOnWpj which names the DRS request rather than the activity hosting it (AB#3733722) (#3241)

@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.exception.ClientException
@@ -210,10 +211,11 @@ class NativeAuthV2FlowControllerTest {
         } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
             correlationId = correlationId,
             continuationState = afterStartState,
-            hint = null
+            hint = null,
+            methods = listOf(NativeAuthV2AuthMethod("email-1", "email", null))
         )
         every {
-            mockStrategy.performChallenge(state = any())
+            mockStrategy.performMethodChallenge(state = any(), methodId = "email-1")
         } returns NativeAuthV2InteractionApiResult.ReadyToComplete(
             correlationId = correlationId,
             continuationState = readyState
