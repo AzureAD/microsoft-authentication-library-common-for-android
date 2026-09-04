@@ -478,14 +478,6 @@ class NativeAuthV2ResponseParser {
                     errorCodes = errorCodes
                 )
 
-            message?.contains(AADSTS_USER_NOT_FOUND) == true ->
-                NativeAuthV2InteractionApiResult.UserNotFound(
-                    correlationId = correlationId,
-                    error = code.orEmpty(),
-                    errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
-                )
-
             code == ERROR_INVALID_GRANT &&
                     innerErrorCode == INNER_ERROR_INVALID_USERNAME_OR_PASSWORD ->
                 NativeAuthV2InteractionApiResult.InvalidCredentials(
@@ -493,6 +485,18 @@ class NativeAuthV2ResponseParser {
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     subError = innerErrorCode.orEmpty(),
+                    errorCodes = errorCodes
+                )
+
+            // The account does not exist in the directory. This response carries no inner error
+            // code, so it is identified by the AADSTS code in the message. Gate on the outer code
+            // as well so that a message which merely mentions AADSTS50034 cannot shadow a
+            // recoverable credentials error, which is reported under a different outer code.
+            code == ERROR_INVALID_REQUEST && message?.contains(AADSTS_USER_NOT_FOUND) == true ->
+                NativeAuthV2InteractionApiResult.UserNotFound(
+                    correlationId = correlationId,
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
                     errorCodes = errorCodes
                 )
 

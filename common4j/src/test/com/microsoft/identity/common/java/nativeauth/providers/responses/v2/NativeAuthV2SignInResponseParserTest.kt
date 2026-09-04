@@ -420,6 +420,33 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
+    fun parseInteraction_whenUnknownUserCodeAppearsWithoutInvalidRequest_doesNotReportUserNotFound() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "invalidGrant",
+                    "message": "AADSTS50126: Invalid username or password. See also AADSTS50034.",
+                    "innerError": { "code": "invalidUserNameOrPassword" },
+                    "correlationId": "server-corr"
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState = signInState()
+        )
+
+        // The AADSTS50034 substring must not shadow the recoverable credentials error, which is
+        // identified by the outer/inner code pair rather than by the message text.
+        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidCredentials)
+        assertEquals(
+            "invalidUserNameOrPassword",
+            (result as NativeAuthV2InteractionApiResult.InvalidCredentials).subError
+        )
+    }
+
+    @Test
     fun parseInteraction_whenPasswordIsRejected_returnsInvalidCredentials() {
         val result = parser.parseInteraction(
             response = responseFrom(INVALID_USERNAME_OR_PASSWORD_JSON),
