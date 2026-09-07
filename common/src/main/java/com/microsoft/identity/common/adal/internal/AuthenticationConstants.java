@@ -1635,6 +1635,41 @@ public final class AuthenticationConstants {
         public static final String SESSION_ID = "session_id";
 
         /**
+         * Correlation ID binding the inline broker prepare and redeem operations.
+         */
+        public static final String INLINE_BROKER_CORRELATION_ID = "correlationId";
+
+        /**
+         * Account name used by the active broker to prepare an inline broker request.
+         */
+        public static final String INLINE_BROKER_ACCOUNT_NAME = "accountName";
+
+        /**
+         * Client ID returned by the inline broker prepare operation.
+         */
+        public static final String INLINE_BROKER_CLIENT_ID = "clientId";
+
+        /**
+         * Redirect URI returned by the inline broker prepare operation.
+         */
+        public static final String INLINE_BROKER_REDIRECT_URI = "redirectUri";
+
+        /**
+         * PKCE code challenge returned by the inline broker prepare operation.
+         */
+        public static final String INLINE_BROKER_CODE_CHALLENGE = "codeChallenge";
+
+        /**
+         * Broker authorization code supplied to the inline broker redeem operation.
+         */
+        public static final String INLINE_BROKER_AUTHORIZATION_CODE = "brokerAuthorizationCode";
+
+        /**
+         * Continuation token returned by the inline broker redeem operation.
+         */
+        public static final String INLINE_BROKER_CONTINUATION_TOKEN = "continuationToken";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -1837,7 +1872,9 @@ public final class AuthenticationConstants {
             WEBAPPS_EXECUTE_WEB_APPS_REQUEST(WEBAPPS_EXECUTE_WEB_APPS_REQUEST_PATH, null, null),
             PROVISION_RESOURCE_ACCOUNT(PROVISION_RESOURCE_ACCOUNT_PATH, null, null),
             GET_AAD_DEVICE_ID(GET_AAD_DEVICE_ID_PATH, null, null),
-            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null);
+            BROKER_GET_NUMBER_MATCH(BROKER_API_GET_NUMBER_MATCH_PATH, BROKER_VERSION_3, null),
+            BROKER_PREPARE_INLINE_REQUEST(BROKER_API_PREPARE_INLINE_REQUEST_PATH, BROKER_VERSION_3, null),
+            BROKER_REDEEM_INLINE_AUTH_CODE(BROKER_API_REDEEM_INLINE_AUTH_CODE_PATH, BROKER_VERSION_3, null);
 
 
             /**
@@ -1962,6 +1999,16 @@ public final class AuthenticationConstants {
          * Broker api path constant for getting number match.
          */
         public static final String BROKER_API_GET_NUMBER_MATCH_PATH = "/brokerApi/getNumberMatch";
+
+        /**
+         * Broker api path constant for preparing an inline authorization request.
+         */
+        public static final String BROKER_API_PREPARE_INLINE_REQUEST_PATH = "/brokerApi/prepareInlineBrokerRequest";
+
+        /**
+         * Broker api path constant for redeeming an inline broker authorization code.
+         */
+        public static final String BROKER_API_REDEEM_INLINE_AUTH_CODE_PATH = "/brokerApi/redeemInlineBrokerAuthCode";
 
         /**
          * ContentProvider path for retrieving Broker Discovery Metadata.

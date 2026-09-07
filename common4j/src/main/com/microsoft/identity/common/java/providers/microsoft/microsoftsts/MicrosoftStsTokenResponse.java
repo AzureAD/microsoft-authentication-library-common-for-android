@@ -34,6 +34,9 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
     @SerializedName("not_before")
     private String mExpiresNotBefore;
 
+    @SerializedName("continuation_token")
+    private String mContinuationToken;
+
     /**
      * Gets expires not before as String ( epoch time in seconds)
      * @return
@@ -48,5 +51,23 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
      */
     public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
+    }
+
+    /**
+     * Gets the continuation token returned with an inline broker PRT response.
+     *
+     * @return continuation token, or null when one was not returned.
+     */
+    public String getContinuationToken() {
+        return mContinuationToken;
+    }
+
+    /**
+     * Sets the continuation token returned with an inline broker PRT response.
+     *
+     * @param continuationToken continuation token.
+     */
+    public void setContinuationToken(final String continuationToken) {
+        mContinuationToken = continuationToken;
     }
 }

@@ -53,6 +53,7 @@ public class MicrosoftStsOAuth2StrategyTest {
             "\t\"access_token\": \"b06d0810-12ff-4a4e-850b-4bda1540d895\",\n" +
             "\t\"refresh_token\": \"6b80f5b5-d53c-4c46-992d-66c5dcd4cfb1\",\n" +
             "\t\"id_token\": \"95608142-3a7a-4643-a543-6db44e403e97\",\n" +
+            "\t\"continuation_token\": \"server-issued-continuation-token\",\n" +
             "\t\"client_info\": \"2245f73e-287a-41c4-ba87-560809ad06b9\"\n" +
             "}";
 
@@ -72,6 +73,10 @@ public class MicrosoftStsOAuth2StrategyTest {
         Assert.assertNotNull(tokenResult);
         Assert.assertNotNull(tokenResult.getSuccessResponse());
         Assert.assertTrue(tokenResult.getSuccess());
+        Assert.assertEquals(
+            "server-issued-continuation-token",
+            ((MicrosoftStsTokenResponse) tokenResult.getSuccessResponse()).getContinuationToken()
+        );
     }
 
     @SneakyThrows
