@@ -25,16 +25,17 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
+import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2RequestInterceptor
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -190,76 +191,11 @@ class NativeAuthV2Interactor(
             request
         )
 
-        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-        val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
-            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(
-            requestCorrelationId = state.correlationId,
-            response = httpResponse
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performResetPasswordStart"
         )
-
-        val result = responseParser.parseInteraction(
-            response = halResponse,
-            previousState = state,
-            operation = NativeAuthV2Operation.RESET_PASSWORD_START
-        )
-
-        Logger.infoWithObject(
-            "$TAG.performResetPasswordStart",
-            result.correlationId,
-            "result = ",
-            result
-        )
-
-        return result
-    }
-    //endregion
-
-    //region challenge
-    fun performChallenge(
-        state: NativeAuthV2ContinuationState
-    ): NativeAuthV2InteractionApiResult {
-        LogSession.logMethodCall(
-            tag = TAG,
-            correlationId = state.correlationId,
-            methodName = "$TAG.performChallenge"
-        )
-
-        val request = requestProvider.createChallengeRequest(state = state)
-
-        Logger.infoWithObject(
-            "$TAG.performChallenge",
-            state.correlationId,
-            "request = ",
-            request
-        )
-
-        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-        val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
-            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(
-            requestCorrelationId = state.correlationId,
-            response = httpResponse
-        )
-
-        val result = responseParser.parseInteraction(
-            response = halResponse,
-            previousState = state,
-            operation = NativeAuthV2Operation.CHALLENGE
-        )
-
-        Logger.infoWithObject(
-            "$TAG.performChallenge",
-            result.correlationId,
-            "result = ",
-            result
-        )
-
-        return result
     }
     //endregion
 
@@ -282,30 +218,11 @@ class NativeAuthV2Interactor(
             request
         )
 
-        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-        val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
-            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(
-            requestCorrelationId = state.correlationId,
-            response = httpResponse
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performResend"
         )
-
-        val result = responseParser.parseInteraction(
-            response = halResponse,
-            previousState = state,
-            operation = NativeAuthV2Operation.RESEND
-        )
-
-        Logger.infoWithObject(
-            "$TAG.performResend",
-            result.correlationId,
-            "result = ",
-            result
-        )
-
-        return result
     }
     //endregion
 
@@ -329,30 +246,11 @@ class NativeAuthV2Interactor(
             request
         )
 
-        val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-        val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
-            .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
-        val halResponse = responseHandler.getHalApiResponse(
-            requestCorrelationId = state.correlationId,
-            response = httpResponse
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performVerify"
         )
-
-        val result = responseParser.parseInteraction(
-            response = halResponse,
-            previousState = state,
-            operation = NativeAuthV2Operation.VERIFY
-        )
-
-        Logger.infoWithObject(
-            "$TAG.performVerify",
-            result.correlationId,
-            "result = ",
-            result
-        )
-
-        return result
     }
     //endregion
 
@@ -382,30 +280,12 @@ class NativeAuthV2Interactor(
                 request
             )
 
-            val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
-            val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
-                .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
-
-            val httpResponse = httpClient.put(request.requestUrl, headers, encoded)
-            val halResponse = responseHandler.getHalApiResponse(
-                requestCorrelationId = state.correlationId,
-                response = httpResponse
+            return executeJsonInteraction(
+                request = request,
+                state = state,
+                methodName = "$TAG.performUpdatePassword",
+                httpMethod = HttpClient.HttpMethod.PUT
             )
-
-            val result = responseParser.parseInteraction(
-                response = halResponse,
-                previousState = state,
-                operation = NativeAuthV2Operation.UPDATE_PASSWORD
-            )
-
-            Logger.infoWithObject(
-                "$TAG.performUpdatePassword",
-                result.correlationId,
-                "result = ",
-                result
-            )
-
-            return result
         } finally {
             StringUtil.overwriteWithNull(newPassword)
         }
@@ -431,11 +311,146 @@ class NativeAuthV2Interactor(
             request
         )
 
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performPoll"
+        )
+    }
+    //endregion
+
+    //region sign-in entry
+    /**
+     * Posts the username to the server-provided `signIn` href, starting the V2 sign-in flow.
+     */
+    fun performSignInStart(
+        username: String,
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSignInStart"
+        )
+
+        val request = requestProvider.createSignInStartRequest(username = username, state = state)
+
+        Logger.infoWithObject(
+            "$TAG.performSignInStart",
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performSignInStart"
+        )
+    }
+    //endregion
+
+    //region method challenge
+    /**
+     * Challenges the server-offered method identified by [methodId].
+     */
+    fun performMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult {
+        val methodName = "$TAG.performMethodChallenge"
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        val selectedState = state.withSelectedMethod(methodId)
+        if (selectedState == null) {
+            // The caller passed a method the current server state never offered; failing here keeps
+            // the SDK from falling back to some other method's href.
+            Logger.warn(TAG, state.correlationId, "Requested authentication method is not available in the current state.")
+            return NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = state.correlationId,
+                error = ApiErrorResult.INVALID_STATE,
+                errorDescription = "The requested authentication method is not available in the " +
+                        "current Native Auth V2 state."
+            )
+        }
+
+        val request = requestProvider.createChallengeRequest(state = selectedState)
+
+        Logger.infoWithObject(
+            methodName,
+            selectedState.correlationId,
+            "request = ",
+            request
+        )
+
+        return executeJsonInteraction(
+            request = request,
+            state = selectedState,
+            methodName = methodName
+        )
+    }
+    //endregion
+
+    //region password verify
+    /**
+     * Submits a password to the server-provided password `verify` href.
+     *
+     * The password buffer is zeroed in a `finally` block that runs even if request construction,
+     * body serialisation, the network call, or a coroutine cancellation unwinds this frame,
+     * matching [performUpdatePassword].
+     */
+    fun performPasswordVerify(
+        state: NativeAuthV2ContinuationState,
+        password: CharArray
+    ): NativeAuthV2InteractionApiResult {
+        val methodName = "$TAG.performPasswordVerify"
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        try {
+            val request = requestProvider.createPasswordVerifyRequest(state = state, password = password)
+
+            Logger.infoWithObject(
+                methodName,
+                state.correlationId,
+                "request = ",
+                request
+            )
+
+            return executeJsonInteraction(
+                request = request,
+                state = state,
+                methodName = methodName
+            )
+        } finally {
+            StringUtil.overwriteWithNull(password)
+        }
+    }
+    //endregion
+
+    /**
+     * Applies the configured interceptor headers, sends [request] as JSON using [httpMethod], and
+     * parses the response. Most V2 interactions are POSTs, so [httpMethod] defaults to
+     * [HttpClient.HttpMethod.POST]; callers whose endpoint uses a different verb pass it explicitly.
+     */
+    private fun executeJsonInteraction(
+        request: NativeAuthRequest,
+        state: NativeAuthV2ContinuationState,
+        methodName: String,
+        httpMethod: HttpClient.HttpMethod = HttpClient.HttpMethod.POST
+    ): NativeAuthV2InteractionApiResult {
         val headers = applyInterceptorHeaders(request.requestUrl, request.headers, requestInterceptor)
         val encoded = ObjectMapper.serializeObjectToJsonString(request.parameters)
             .toByteArray(charset(ObjectMapper.ENCODING_SCHEME))
 
-        val httpResponse = httpClient.post(request.requestUrl, headers, encoded)
+        val httpResponse = httpClient.method(httpMethod, request.requestUrl, headers, encoded)
         val halResponse = responseHandler.getHalApiResponse(
             requestCorrelationId = state.correlationId,
             response = httpResponse
@@ -443,12 +458,11 @@ class NativeAuthV2Interactor(
 
         val result = responseParser.parseInteraction(
             response = halResponse,
-            previousState = state,
-            operation = NativeAuthV2Operation.POLL
+            previousState = state
         )
 
         Logger.infoWithObject(
-            "$TAG.performPoll",
+            methodName,
             result.correlationId,
             "result = ",
             result
@@ -456,7 +470,6 @@ class NativeAuthV2Interactor(
 
         return result
     }
-    //endregion
 
     //region token
     fun performTokenRequest(
