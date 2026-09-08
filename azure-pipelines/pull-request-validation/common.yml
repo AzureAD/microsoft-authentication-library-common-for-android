@@ -1,161 +1,70 @@
-# File: azure-pipelines\pull-request-validation\common.yml
-# Variable: 'MOCK_API_URL' was defined in the Variables tab
-# Variable: 'NATIVE_AUTH_CONFIG_STRING' was defined in the Variables tab
-# Description: Assemble and run unit test
-name: $(date:yyyyMMdd)$(rev:.r)
-trigger: none
-variables:
-  - group: devex-ciam-test
+name: changelog_label_check_$(Date:yyyyMMdd)$(Rev:.r)
 
-resources:
-  repositories:
-  - repository: common-dev
-    type: github
-    name: AzureAD/microsoft-authentication-library-common-for-android
-    ref: dev
-    endpoint: ANDROID_GITHUB
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - '*'
 
 pool:
-  vmImage: 'windows-2022'
+  vmImage: ubuntu-latest
 
-stages:
-  - stage: build_and_test
-    displayName: Build and Test
-    jobs:
-    - job: build_test
-      displayName: PR Branch Testing
-      cancelTimeoutInMinutes: 1
-      variables:
-        Codeql.Enabled: true
-      steps:
-      - checkout: self
-        clean: true
-        submodules: recursive
-        persistCredentials: True
-      - template: ../templates/steps/automation-cert.yml
-      - bash: |
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-        displayName: 'Set VSTS Fields in Environment'
-      - task: CodeQL3000Init@0
-      - task: Gradle@3
-        name: Gradle3
-        displayName: Assemble Local
-        inputs:
-          javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.17"
-          tasks: clean common:assembleLocal
-          publishJUnitResults: false
-          jdkArchitecture: x64
-          sqAnalysisEnabled: false
-      - task: CodeQL3000Finalize@0
-      - task: Gradle@2
-        displayName: Run Unit tests
-        inputs:
-          javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.17"
-          tasks: common:jacocoTestReport -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
-      - task: Gradle@3
-        displayName: Check Dependencies size
-        condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
-        inputs:
-          tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-          jdkVersionOption: "1.17"
-      - script: tree "$(Build.SourcesDirectory)" /F /A
-        displayName: 'Print File Structure Tree'
-      - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
-        artifact: jacocoReport
-        displayName: 'Publish JaCoCo Report Artifact (PR Branch)'
-      - task: PublishCodeCoverageResults@1
-        displayName: Publish Code Coverage Results
-        condition: always()
-        inputs:
-          codeCoverageTool: 'JaCoCo'
-          summaryFileLocation: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
-          reportDirectory: '$(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/html'
-          failIfCoverageEmpty: false
+steps:
+  - checkout: self
+    fetchDepth: 1
+    persistCredentials: true
 
-    - job: build_test_dev
-      displayName: Dev Branch Testing
-      cancelTimeoutInMinutes: 1
-      continueOnError: true
-      variables:
-        Codeql.Enabled: true
-      steps:
-        - checkout: common-dev
-          clean: true
-          submodules: recursive
-          persistCredentials: True
-        - template: ../templates/steps/automation-cert.yml
-        - bash: |
-            echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-            echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-          displayName: 'Set VSTS Fields in Environment'
-        - task: CodeQL3000Init@0
-        - task: Gradle@3
-          name: Gradle3
-          displayName: Assemble Local
-          inputs:
-            javaHomeSelection: JDKVersion
-            jdkVersionOption: "1.17"
-            tasks: clean common:assembleLocal
-            publishJUnitResults: false
-            jdkArchitecture: x64
-            sqAnalysisEnabled: false
-        - task: CodeQL3000Finalize@0
-        - task: Gradle@2
-          displayName: Run Unit tests
-          inputs:
-            javaHomeSelection: JDKVersion
-            jdkVersionOption: "1.17"
-            tasks: common:jacocoTestReport -PlabSecret=$(LabVaultAppCert) -PmockApiUrl=$(MOCK_API_URL) -PnativeAuthConfigString=$(NATIVE_AUTH_CONFIG_STRING)
-        - task: Gradle@3
-          displayName: Check Dependencies size
-          condition: eq(variables['system.pullRequest.targetBranch'], 'dev')
-          inputs:
-            tasks: common:dependenciesSizeCheck -PdependenciesSizeCheckConfig=distReleaseRuntimeClasspath
-            jdkVersionOption: "1.17"
-        - script: tree "$(Build.SourcesDirectory)" /F /A
-          displayName: 'Print File Structure Tree'
-        - publish: $(Build.SourcesDirectory)/common/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
-          artifact: jacocoReportDev
-          displayName: 'Publish JaCoCo Report Artifact (Dev Branch)'
+  - pwsh: |
+      $ErrorActionPreference = 'Stop'
 
-    - job: spotbugs
-      displayName: SpotBugs (PR)
-      cancelTimeoutInMinutes: 1
-      steps:
-      - checkout: self
-        clean: true
-        submodules: recursive
-        persistCredentials: True
-      - template: ../templates/steps/spotbugs.yml
-        parameters:
-          project: common
+      $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+      if (-not $prNumber) {
+        Write-Host "##vso[task.logissue type=error]This validation must run in the context of a pull request."
+        exit 1
+      }
 
-    - job: lint
-      displayName: Lint (PR)
-      cancelTimeoutInMinutes: 1
-      steps:
-      - checkout: self
-        clean: true
-        submodules: recursive
-        persistCredentials: True
-      - bash: |
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_USERNAME]VSTS"
-          echo "##vso[task.setvariable variable=ENV_VSTS_MVN_CRED_ACCESSTOKEN]$(System.AccessToken)"
-        displayName: 'Set VSTS Fields in Environment'
-      - task: Gradle@3
-        displayName: Lint
-        inputs:
-          tasks: clean common:lintLocalDebug
-          publishJUnitResults: false
-          javaHomeSelection: JDKVersion
-          jdkVersionOption: "1.17"
+      $repositoryUri = [Uri]$env:BUILD_REPOSITORY_URI
+      $repository = $repositoryUri.AbsolutePath.Trim('/') -replace '\.git$', ''
+      $apiBase = if ($repositoryUri.Host -eq 'github.com') {
+        'https://api.github.com'
+      } else {
+        "$($repositoryUri.Scheme)://$($repositoryUri.Host)/api/v3"
+      }
+      $headers = @{
+        Accept = 'application/vnd.github+json'
+        'User-Agent' = 'azure-pipelines-changelog-label-validator'
+      }
 
-  - template: ../code-coverage/compare-code-coverage.yml
-    parameters:
-      commonRepoAlias: self
-      dependsOn:
-        - build_and_test
-...
+      $authLine = @(git config --get-regexp '^http\..*\.extraheader$') |
+        Where-Object { $_ -match 'AUTHORIZATION:' } | Select-Object -First 1
+      if ($authLine) {
+        $headers.Authorization = ($authLine -replace '^\S+\s+AUTHORIZATION:\s*', '').Trim()
+      }
+
+      try {
+        $pullRequest = Invoke-RestMethod -Method Get `
+          -Uri "$apiBase/repos/$repository/pulls/$prNumber" -Headers $headers
+      } catch {
+        Write-Host "##vso[task.logissue type=error]Could not read labels for pull request #$prNumber ($($_.Exception.Message))."
+        exit 1
+      }
+
+      $requiredLabels = @(
+        'changelog:major'
+        'changelog:minor'
+        'changelog:patch'
+        'changelog:none'
+      )
+      $labels = @($pullRequest.labels | ForEach-Object { $_.name })
+      $matchingLabels = @($requiredLabels | Where-Object { $labels -contains $_ })
+
+      if ($matchingLabels.Count -eq 0) {
+        $acceptedLabels = $requiredLabels -join ', '
+        Write-Host "##vso[task.logissue type=error]Pull request #$prNumber must have one of these labels: $acceptedLabels."
+        exit 1
+      }
+
+      Write-Host "##[section]Changelog label check passed: $($matchingLabels -join ', ')."
+    displayName: Validate changelog label
