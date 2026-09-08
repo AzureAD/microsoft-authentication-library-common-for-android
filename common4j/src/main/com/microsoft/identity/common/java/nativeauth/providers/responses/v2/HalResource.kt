@@ -37,15 +37,10 @@ internal data class HalLink(
 )
 
 /**
- * Generic HAL+JSON splitter with no Native Auth-specific knowledge. Splits a JSON object into its
- * plain properties, its `_links` (relation -> one or more [HalLink]), and its `_embedded`
+ * Generic HAL+JSON splitter. Splits a JSON object into its plain properties, its `_links`
+ * (relation -> one or more [HalLink]), and its `_embedded`
  * (relation -> one or more nested resources, kept as raw property maps so that [embeddedResources]
  * can re-split them on demand).
- *
- * [properties] can contain server-controlled, potentially secret-bearing values (e.g. an
- * authorization code or a continuation token can legally live alongside ordinary properties in a
- * HAL body). Callers must never pass a [HalResource] to object logging; extract only the specific
- * fields that are safe to log.
  */
 internal class HalResource private constructor(
     val properties: Map<String, Any?>,
@@ -62,7 +57,9 @@ internal class HalResource private constructor(
      */
     fun int(key: String): Int? = when (val value = properties[key]) {
         is Int -> value
-        is Number -> value.toInt()
+        is Number -> runCatching {
+            java.math.BigDecimal(value.toString()).intValueExact()
+        }.getOrNull()
         else -> null
     }
 
@@ -87,9 +84,6 @@ internal class HalResource private constructor(
 
         /**
          * Parses [json] into a [HalResource].
-         *
-         * @throws ClientException if [json] is blank, is not syntactically valid JSON, or its
-         * root element is not a JSON object (for example, a JSON array).
          */
         @Throws(ClientException::class)
         fun from(json: String): HalResource {

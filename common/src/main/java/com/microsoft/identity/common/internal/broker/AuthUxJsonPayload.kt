@@ -45,21 +45,53 @@ data class AuthUxJsonPayload(
 )
 
 /**
- * Data class representing the parameters for the action, including function and data.
+ * Data class representing the parameters (`params`) object of an AuthUX bridge message.
  *
- * @property operation The operation to be executed.
- * @property sessionId
- * @property codeMatch
+ * Every field is optional/nullable so the same model can carry different actions and so that an
+ * absent field never breaks parsing. Unknown JSON fields added by future Auth UX versions are
+ * tolerated and ignored by Gson.
+ *
+ * @property operation The operation to be executed on the number-match / `write_data` path
+ *  (e.g. `number_matching`).
+ * @property sessionId Session identifier (`sessionID`).
+ * @property codeMatch Number-match value (`code_match`).
+ * @property version Payload schema version (`v`) of the telemetry contract. Typed as a string, not
+ *  an integer: `v` is the one field explicitly designed to change over time, and Gson throws on a
+ *  type mismatch — which would drop the ENTIRE message (including `errorCode`) if the page ever
+ *  sent `"1.0"` or `"v2"`. Gson coerces any JSON primitive (number, boolean, string) to a string,
+ *  so every realistic version shape parses. A structured value (`{major: 2}` or `[2]`) still
+ *  throws and drops the message; that shape is not part of the contract and is not defended
+ *  against here.
+ * @property errorCode Opaque Auth UX server error code (e.g. an STS error code such as "530003")
+ *  carried by the `log_telemetry` action. Treated as an opaque telemetry value only; it is never
+ *  used to drive client behavior. Optional/nullable — its absence results in a no-op. Captured as a
+ *  string even when sent as a JSON number.
+ * @property pageId Auth UX page identifier (`pageId`, e.g. "ConvergedTFA"); telemetry context for
+ *  the downstream onboarding sink (AB#3688632).
+ * @property trackingId Auth UX tracking identifier (`trackingId`); telemetry context for the
+ *  downstream onboarding sink (AB#3688632).
  */
 data class AuthUxParams(
     @SerializedName(SerializedNames.OPERATION)
-    val operation: String?,
+    val operation: String? = null,
 
     @SerializedName(SerializedNames.SESSION_ID)
-    val sessionId: String?,
+    val sessionId: String? = null,
 
     @SerializedName(SerializedNames.CODE_MATCH)
-    val codeMatch: String?
+    val codeMatch: String? = null,
+
+    @SerializedName(SerializedNames.VERSION)
+    val version: String? = null,
+
+    @SerializedName(SerializedNames.ERROR_CODE)
+    val errorCode: String? = null,
+
+    @SerializedName(SerializedNames.PAGE_ID)
+    val pageId: String? = null,
+
+    @SerializedName(SerializedNames.TRACKING_ID)
+    val trackingId: String? = null
 )
 
 class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
@@ -75,7 +107,7 @@ class AuthUxJsonPayloadKTDeserializer : JsonDeserializer<AuthUxJsonPayload> {
             ?: throw JsonParseException("action_component is required and cannot be null")
 
         // Deserialize params if present
-        val params = jsonObject.get("params")?.let {
+        val params = jsonObject.get(SerializedNames.PARAMS)?.let {
             context.deserialize<AuthUxParams>(it, AuthUxParams::class.java)
         }
 
@@ -96,4 +128,10 @@ object SerializedNames {
     const val OPERATION = "operation"
     const val SESSION_ID = "sessionID"
     const val CODE_MATCH = "code_match"
+
+    /** Payload schema version. `v` is the wire name defined by the Auth UX telemetry contract. */
+    const val VERSION = "v"
+    const val ERROR_CODE = "errorCode"
+    const val PAGE_ID = "pageId"
+    const val TRACKING_ID = "trackingId"
 }

@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers
 
-import com.microsoft.identity.common.java.AuthenticationConstants
-import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordStartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordSubmitNewPasswordCommandParameters
@@ -51,8 +49,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.S
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.signup.SignUpStartRequest
 import com.microsoft.identity.common.java.net.HttpConstants
-import com.microsoft.identity.common.java.platform.Device
-import java.util.TreeMap
 
 /**
  * NativeAuthRequestProvider creates request objects that encapsulate all information required
@@ -412,14 +408,8 @@ class NativeAuthRequestProvider(private val config: NativeAuthOAuth2Configuratio
 
     //region helpers
     private fun getRequestHeaders(correlationId: String): Map<String, String?> {
-        val headers: MutableMap<String, String?> = TreeMap()
-        if (correlationId != "UNSET") {
-            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
-        }
-        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
-        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
-        headers.putAll(Device.getPlatformIdParameters())
-        headers[HttpConstants.HeaderField.CONTENT_TYPE] = "application/x-www-form-urlencoded"
+        val headers = NativeAuthSdkHeaders.base(correlationId)
+        headers[HttpConstants.HeaderField.CONTENT_TYPE] = NativeAuthContentType.FORM_URL_ENCODED.value
         return headers
     }
     //endregion

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
@@ -125,6 +126,46 @@ public class AuthorizationActivityFactoryTest {
         assertNotNull(idTokenHeaderValue);
         assertEquals("value1", idTokenHeaderValue);
         assertFalse(resultIntent.hasExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testMamCaInstallReferrerIsOffUnlessTheHostAsksForIt() {
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                authorizationActivityParameters
+        );
+        assertFalse(resultIntent.getBooleanExtra(MAM_CA_INSTALL_REFERRER_ENABLED, true));
+    }
+
+    @SneakyThrows
+    @Test
+    public void testMamCaInstallReferrerIsCarriedToTheActivityWhenTheHostAsksForIt() {
+        // Named locals: the three trailing parameters are all booleans, so a positional call alone
+        // would not show which one is being turned on.
+        final boolean webViewWebCpEnabled = false;
+        final boolean switchBrowserEnabled = false;
+        final boolean mamCaInstallReferrerEnabled = true;
+        final AuthorizationActivityParameters params = new AuthorizationActivityParameters(
+                context,
+                authIntent,
+                requestUrl,
+                redirectUri,
+                requestHeaders,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion,
+                null,
+                null,
+                webViewWebCpEnabled,
+                switchBrowserEnabled,
+                mamCaInstallReferrerEnabled
+        );
+
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(params);
+
+        assertTrue(resultIntent.getBooleanExtra(MAM_CA_INSTALL_REFERRER_ENABLED, false));
     }
 
     @SneakyThrows

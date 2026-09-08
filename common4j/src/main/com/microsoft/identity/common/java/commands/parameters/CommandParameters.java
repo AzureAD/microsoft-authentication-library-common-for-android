@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.commands.parameters;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.broker.telemetry.EventCollector;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.SerializableSpanContext;
@@ -60,6 +61,10 @@ public class CommandParameters {
 
     @EqualsAndHashCode.Exclude
     private transient boolean isSharedDevice;
+
+    @Setter
+    @EqualsAndHashCode.Exclude
+    private transient EventCollector eventCollector;
 
     @Expose()
     private String applicationName;

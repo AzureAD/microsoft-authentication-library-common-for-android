@@ -23,23 +23,16 @@
 package com.microsoft.identity.common.java.cache;
 
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightConfig;
-import com.microsoft.identity.common.java.flighting.IFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.IStorageSupplier;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Type;
@@ -61,8 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-
-import lombok.NonNull;
 
 /**
  * Concurrency tests for NameValueStorageFileManagerSimpleCacheImpl to verify that the
@@ -191,7 +182,6 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
         when(mockPlatformUtil.getNanosecondTime()).thenReturn(System.nanoTime());
         when(mockComponents.getStorageSupplier()).thenReturn(mockStorageSupplier);
         when(mockStorageSupplier.<String>getUnencryptedNameValueStore(anyString(), any())).thenReturn(storage);
-        updateFlightForTest(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE, true);
 
         cache = new TestSimpleCache(mockComponents, TEST_CACHE_NAME, TEST_KEY);
     }
@@ -201,9 +191,6 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
         if (mocks != null) {
             mocks.close();
         }
-        updateFlightForTest(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE, false);
-
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     /**
@@ -211,8 +198,6 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
      */
     @Test
     public void testConcurrentInserts() throws InterruptedException {
-        updateFlightForTest(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE, true);
-
         final CountDownLatch startLatch = new CountDownLatch(1);
         final CountDownLatch completionLatch = new CountDownLatch(THREAD_COUNT);
         final Set<TestData> expectedData = Collections.synchronizedSet(new HashSet<>());
@@ -262,8 +247,6 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
      */
     @Test
     public void testConcurrentReadsAndWrites() throws InterruptedException {
-        updateFlightForTest(CommonFlight.USE_LOCKS_IN_NAME_VALUE_STORAGE, true);
-
         final CyclicBarrier barrier = new CyclicBarrier(THREAD_COUNT);
         final CountDownLatch completionLatch = new CountDownLatch(THREAD_COUNT);
         final AtomicInteger readCount = new AtomicInteger(0);
@@ -530,33 +513,4 @@ public class NameValueStorageFileManagerSimpleCacheImplConcurrencyTest {
         Assert.assertTrue("Test timed out", completed);
     }
 
-    private void updateFlightForTest(IFlightConfig flightName, boolean enabled) {
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        Mockito.when(mockFlightsProvider.isFlightEnabled(flightName))
-                .thenReturn(enabled);
-
-        // Create anonymous IFlightsManager
-        IFlightsManager anonymousFlightsManager = new IFlightsManager() {
-            @Override
-            public @NotNull IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
-                return mockFlightsProvider;
-            }
-            @Override
-            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId, long waitForConfigsWithTimeoutInMs) {
-                return mockFlightsProvider;
-            }
-            @Override
-            public @NotNull IFlightsProvider getFlightsProviderForTenant(@NotNull String tenantId) {
-                return mockFlightsProvider;
-            }
-            @NonNull
-            @Override
-            public IFlightsProvider getFlightsProvider() {
-                return mockFlightsProvider;
-            }
-        };
-
-        // Initialize CommonFlightsManager with the anonymous implementation
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(anonymousFlightsManager);
-    }
 }

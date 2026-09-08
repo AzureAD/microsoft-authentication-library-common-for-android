@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
 import com.microsoft.identity.common.java.util.CommonURIBuilder
+import com.microsoft.identity.common.java.util.StringUtil
 import org.apache.hc.core5.http.NameValuePair
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import java.net.MalformedURLException
@@ -121,11 +122,10 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
             )
         }
 
-        val authority = config.getAuthorityUrl()
+        val authority = config.getNativeAuthV2AuthorityUrl(correlationId)
         val isHttps = scheme.equals(HTTPS_SCHEME, ignoreCase = true)
         val isAllowedMockHttp = scheme.equals(HTTP_SCHEME, ignoreCase = true) &&
-            config.useMockApiForNativeAuth &&
-            host.equals(authority.host, ignoreCase = true)
+            authority.protocol.equals(HTTP_SCHEME, ignoreCase = true)
 
         if (!isHttps && !isAllowedMockHttp) {
             throw clientException(
@@ -141,17 +141,20 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
             configuredEndpoint.host,
             ignoreCase = true
         ) && endpoint.port == configuredEndpoint.port
-        val isAllowlistedAuthority = ALLOWED_AUTHORITIES.any {
-            endpoint.host.equals(it.host, ignoreCase = true) && endpoint.port == it.port
-        }
 
-        if (!isConfiguredAuthority && !isAllowlistedAuthority) {
+        if (!isConfiguredAuthority) {
             throw clientException(
                 errorCode = ClientException.UNKNOWN_AUTHORITY,
                 message = "Native Auth V2 href points to an untrusted authority.",
                 correlationId = correlationId
             )
         }
+
+        validateSupportedApiPath(
+            path = uri.path.orEmpty(),
+            configuredAuthorityPath = normalizeConfiguredAuthorityPath(authority.path),
+            correlationId = correlationId
+        )
 
         val dc = BuildValues.getDC()
         if (dc.isEmpty()) {
@@ -161,7 +164,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         // Reuse resolveQuery to preserve the raw query verbatim — same semantic guarantee as
         // resolveRelative — rather than round-tripping through CommonURIBuilder's query parser,
         // which silently drops pairs with an empty name (e.g. ?=novalue&y=2).
-        val finalQuery = resolveQuery(uri, correlationId)
+        val finalQuery = resolveQuery(uri)
         if (finalQuery.isNullOrEmpty()) {
             return uri.toURL()
         }
@@ -184,7 +187,13 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
             )
         }
 
-        val apiPath = extractApiPath(uri.path.orEmpty(), correlationId)
+        val authorityUrl = config.getNativeAuthV2AuthorityUrl(correlationId)
+        val apiPath = validateSupportedApiPath(
+            path = uri.path.orEmpty(),
+            configuredAuthorityPath = normalizeConfiguredAuthorityPath(authorityUrl.path),
+            allowTenantIdPrefix = true,
+            correlationId = correlationId
+        )
 
         // Resolve path segments only here. The href's query is preserved separately, verbatim,
         // by resolveQuery below so that duplicate keys, ordering, and any not-yet-decoded
@@ -192,9 +201,8 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         val pathBuilder = CommonURIBuilder()
         pathBuilder.setPath(apiPath)
         val apiSegments = pathBuilder.pathSegments
-        rejectEmptyInteriorPathSegments(apiSegments, correlationId)
+        rejectInvalidPathSegments(apiSegments, correlationId)
 
-        val authorityUrl = config.getAuthorityUrl()
         val builder = CommonURIBuilder(authorityUrl.toString())
         val baseSegments = ArrayList(builder.pathSegments)
         if (baseSegments.isNotEmpty() && baseSegments.last() == "") {
@@ -204,7 +212,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         builder.setPathSegments(baseSegments)
 
         val resolvedUri = builder.build()
-        val finalQuery = resolveQuery(uri, correlationId)
+        val finalQuery = resolveQuery(uri)
 
         return if (finalQuery.isNullOrEmpty()) {
             resolvedUri.toURL()
@@ -214,21 +222,27 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
     }
 
     /**
-     * Rejects a relative API path whose segments contain an internal empty segment (i.e. a
+     * Rejects a supported API path whose segments contain an internal empty segment (i.e. a
      * double slash occurring anywhere except as a single trailing slash). Silently dropping such
-     * segments — as the merge logic in [resolveRelative] previously did — would change the
-     * semantics of a malformed path instead of surfacing it as an error. A single trailing empty
-     * segment (a plain trailing slash) is permitted, and the single required leading slash never
-     * produces a leading empty entry because [CommonURIBuilder] already skips exactly one leading
-     * separator when parsing path segments.
+     * segments would change the semantics of a malformed path instead of surfacing it as an error.
+     * A single trailing empty segment (a plain trailing slash) is permitted, and the single
+     * required leading slash never produces a leading empty entry because [CommonURIBuilder]
+     * already skips exactly one leading separator when parsing path segments.
      */
-    private fun rejectEmptyInteriorPathSegments(segments: List<String>, correlationId: String) {
+    private fun rejectInvalidPathSegments(segments: List<String>, correlationId: String) {
         val lastIndex = segments.size - 1
         segments.forEachIndexed { index, segment ->
             if (segment.isEmpty() && index != lastIndex) {
                 throw clientException(
                     errorCode = ClientException.MALFORMED_URL,
-                    message = "Native Auth V2 relative href contains an empty path segment.",
+                    message = "Native Auth V2 href contains an empty path segment.",
+                    correlationId = correlationId
+                )
+            }
+            if (segment == CURRENT_DIRECTORY_SEGMENT || segment == PARENT_DIRECTORY_SEGMENT) {
+                throw clientException(
+                    errorCode = ClientException.MALFORMED_URL,
+                    message = "Native Auth V2 href contains a dot path segment.",
                     correlationId = correlationId
                 )
             }
@@ -251,7 +265,7 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
      * Gradle cache): both preserve duplicate keys and ordering identically for this query, so
      * the resolver does not depend on version-specific reconstruction behavior.
      */
-    private fun resolveQuery(uri: URI, correlationId: String): String? {
+    private fun resolveQuery(uri: URI): String? {
         val rawQuery = uri.rawQuery
         val dc = BuildValues.getDC()
         if (dc.isEmpty()) {
@@ -294,26 +308,74 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         }
     }
 
-    private fun extractApiPath(path: String, correlationId: String): String {
+    private fun validateSupportedApiPath(
+        path: String,
+        configuredAuthorityPath: String,
+        allowTenantIdPrefix: Boolean = false,
+        correlationId: String
+    ): String {
         val normalizedPath = if (path.startsWith(PATH_SEPARATOR)) path else "$PATH_SEPARATOR$path"
-        val apiIndex = normalizedPath.indexOf(API_PATH_PREFIX)
-        val oauth2Index = normalizedPath.indexOf(OAUTH2_PATH_PREFIX)
-        val endpointIndex = listOf(apiIndex, oauth2Index)
-            .filter { it >= 0 }
-            .minOrNull()
-
-        if (endpointIndex == null) {
-            throw clientException(
+        val apiPath = extractSupportedApiPath(
+            normalizedPath = normalizedPath,
+            configuredAuthorityPath = configuredAuthorityPath,
+            allowTenantIdPrefix = allowTenantIdPrefix
+        )
+            ?: throw clientException(
                 errorCode = ClientException.UNSUPPORTED_URL,
-                message = "Native Auth V2 relative href does not contain a supported API path.",
+                message = "Native Auth V2 href does not contain a supported API path.",
                 correlationId = correlationId
             )
+
+        val pathBuilder = CommonURIBuilder()
+        pathBuilder.setPath(apiPath)
+        rejectInvalidPathSegments(pathBuilder.pathSegments, correlationId)
+        return apiPath
+    }
+
+    private fun extractSupportedApiPath(
+        normalizedPath: String,
+        configuredAuthorityPath: String,
+        allowTenantIdPrefix: Boolean
+    ): String? {
+        SUPPORTED_API_PATH_PREFIXES.firstOrNull { normalizedPath.startsWith(it) }?.let {
+            return normalizedPath
         }
 
-        return normalizedPath.substring(endpointIndex)
+        if (configuredAuthorityPath.isNotEmpty()) {
+            SUPPORTED_API_PATH_PREFIXES.firstOrNull { prefix ->
+                normalizedPath.startsWith("$configuredAuthorityPath$prefix")
+            }?.let {
+                return normalizedPath.removePrefix(configuredAuthorityPath)
+            }
+        }
+
+        if (allowTenantIdPrefix) {
+            val tenantId = normalizedPath.removePrefix(PATH_SEPARATOR).substringBefore(PATH_SEPARATOR)
+            if (tenantId.length == UUID_STRING_LENGTH && StringUtil.isUuid(tenantId)) {
+                val tenantPath = "$PATH_SEPARATOR$tenantId"
+                SUPPORTED_API_PATH_PREFIXES.firstOrNull { prefix ->
+                    normalizedPath.startsWith("$tenantPath$prefix")
+                }?.let {
+                    return normalizedPath.removePrefix(tenantPath)
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun normalizeConfiguredAuthorityPath(path: String?): String {
+        val normalizedPath = path.orEmpty()
+        if (normalizedPath.isBlank() || normalizedPath == PATH_SEPARATOR) {
+            return ""
+        }
+
+        return normalizedPath.trimEnd(PATH_SEPARATOR.first())
     }
 
     private fun stripLeadingTenantTemplate(href: String): String {
+        // TODO: Remove this workaround when service hrefs can be appended directly to the
+        // Authority without stripping the leading tenant template segment.
         val hrefWithoutLeadingSlash = href.removePrefix(PATH_SEPARATOR)
         return when {
             hrefWithoutLeadingSlash == TENANT_TEMPLATE -> ""
@@ -364,7 +426,9 @@ class NativeAuthV2HrefResolver(private val config: NativeAuthOAuth2Configuration
         private const val API_PATH_PREFIX = "/api/"
         private const val OAUTH2_PATH_PREFIX = "/oauth2/"
         private const val DC_QUERY_PARAMETER = "dc"
-
-        private val ALLOWED_AUTHORITIES: Set<AuthorityEndpoint> = emptySet()
+        private const val CURRENT_DIRECTORY_SEGMENT = "."
+        private const val PARENT_DIRECTORY_SEGMENT = ".."
+        private const val UUID_STRING_LENGTH = 36
+        private val SUPPORTED_API_PATH_PREFIXES = listOf(API_PATH_PREFIX, OAUTH2_PATH_PREFIX)
     }
 }

@@ -22,15 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.v2
 
-import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.exception.ClientException
-import com.microsoft.identity.common.java.logging.LibraryInfoHelper
 import com.microsoft.identity.common.java.logging.LogSession
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthContentType
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Configuration
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthSdkHeaders
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeContinueRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.AuthorizeChallengeStartRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2ChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2EntryRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PasswordVerifyRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PollRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2TokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2UpdatePasswordRequest
@@ -38,27 +39,16 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.Nativ
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
 import com.microsoft.identity.common.java.net.HttpConstants
-import com.microsoft.identity.common.java.platform.Device
 import java.net.URL
-import java.util.TreeMap
 
 /**
  * Creates request objects that encapsulate all information required for making Native Auth V2 REST
  * API calls.
- *
- * The surface is verbs, not endpoints: mid-flow methods take an opaque
- * [NativeAuthV2ContinuationState] and this provider is the only place that selects the required
- * `_links` relation and resolves its href (via [hrefResolver]) immediately before attaching the
- * continuation token to the outgoing request. Callers — including the controller — never receive
- * a raw href or continuation token as a separate argument.
  */
 class NativeAuthV2RequestProvider(
     private val config: NativeAuthOAuth2Configuration,
     private val hrefResolver: NativeAuthV2HrefResolver = NativeAuthV2HrefResolver(config)
 ) {
-
-    private val authorizeChallengeEndpoint = config.getAuthorizeChallengeEndpoint().toString()
-    private val signInTokenEndpoint = config.getSignInTokenEndpoint().toString()
 
     /**
      * Creates the request object for the first call of a Native Auth V2 flow to
@@ -73,15 +63,14 @@ class NativeAuthV2RequestProvider(
 
         return AuthorizeChallengeStartRequest.create(
             clientId = config.clientId,
-            challengeType = config.challengeType,
-            requestUrl = authorizeChallengeEndpoint,
-            headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toString(),
+            headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
     /**
      * Creates the request object for a subsequent call of a Native Auth V2 flow to
-     * `/oauth2/v2.0/authorize-challenge`, continuing with [state]'s continuation token.
+     * `/oauth2/v2.0/authorize-challenge`.
      */
     fun createAuthorizeChallengeContinueRequest(state: NativeAuthV2ContinuationState): AuthorizeChallengeContinueRequest {
         LogSession.logMethodCall(
@@ -91,10 +80,9 @@ class NativeAuthV2RequestProvider(
         )
 
         return AuthorizeChallengeContinueRequest.create(
-            clientId = config.clientId,
             continuationToken = state.continuationToken,
-            requestUrl = authorizeChallengeEndpoint,
-            headers = getV2RequestHeaders(state.correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(state.correlationId).toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
@@ -115,7 +103,7 @@ class NativeAuthV2RequestProvider(
             username = username,
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
@@ -134,9 +122,54 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the request object for a flow's `resend` call, resolved via the
-     * [NativeAuthV2LinkRelation.RESEND] relation on [state]. This reuses [NativeAuthV2ChallengeRequest]
-     * because `resend` shares the same body shape and content type as `challenge`.
+     * Creates the request object for the sign-in flow's entry (`signin/start`) call, resolved via
+     * the [NativeAuthV2LinkRelation.SIGN_IN] relation on [state]. The body carries `username` and
+     * `continuationToken`.
+     */
+    fun createSignInStartRequest(username: String, state: NativeAuthV2ContinuationState): NativeAuthV2EntryRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createSignInStartRequest"
+        )
+
+        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.SIGN_IN)
+        return NativeAuthV2EntryRequest.create(
+            clientId = config.clientId,
+            username = username,
+            continuationToken = state.continuationToken,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for a flow's password `verify` call, resolved via the
+     * [NativeAuthV2LinkRelation.VERIFY] relation the password-method challenge attached to [state].
+     * [password] is passed through as the caller's own array, not copied, so the interactor's
+     * `finally` block can clear the same buffer it passed in.
+     */
+    fun createPasswordVerifyRequest(
+        state: NativeAuthV2ContinuationState,
+        password: CharArray
+    ): NativeAuthV2PasswordVerifyRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createPasswordVerifyRequest"
+        )
+
+        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.VERIFY)
+        return NativeAuthV2PasswordVerifyRequest.create(
+            continuationToken = state.continuationToken,
+            password = password,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for a flow's `resend` call.
      */
     fun createResendRequest(state: NativeAuthV2ContinuationState): NativeAuthV2ChallengeRequest {
         LogSession.logMethodCall(
@@ -149,8 +182,7 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Creates the request object for a flow's `verify` call, resolved via the
-     * [NativeAuthV2LinkRelation.VERIFY] relation on [state].
+     * Creates the request object for a flow's `verify` call.
      */
     fun createVerifyRequest(state: NativeAuthV2ContinuationState, otp: String): NativeAuthV2VerifyRequest {
         LogSession.logMethodCall(
@@ -161,20 +193,18 @@ class NativeAuthV2RequestProvider(
 
         val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.VERIFY)
         return NativeAuthV2VerifyRequest.create(
-            clientId = config.clientId,
             continuationToken = state.continuationToken,
             otp = otp,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
     /**
      * Creates the request object for a flow's `update` call, resolved via the
-     * [NativeAuthV2LinkRelation.UPDATE] relation on [state] and falling back to
-     * [NativeAuthV2LinkRelation.SELF] when `update` is absent. [newPassword] is passed through as
-     * the caller's own array, not copied, so the interactor's `finally` block can clear the same
-     * buffer it passed in.
+     * [NativeAuthV2LinkRelation.UPDATE] relation on [state]. [newPassword] is passed through as the
+     * caller's own array, not copied, so the interactor's `finally` block can clear the same buffer
+     * it passed in.
      */
     fun createUpdatePasswordRequest(state: NativeAuthV2ContinuationState, newPassword: CharArray): NativeAuthV2UpdatePasswordRequest {
         LogSession.logMethodCall(
@@ -185,15 +215,13 @@ class NativeAuthV2RequestProvider(
 
         val requestUrl = state.href(NativeAuthV2LinkRelation.UPDATE)?.let {
             hrefResolver.resolve(it, state.correlationId)
-        } ?: state.href(NativeAuthV2LinkRelation.SELF)?.let {
-            hrefResolver.resolve(it, state.correlationId)
         } ?: throw missingRelationException(NativeAuthV2LinkRelation.UPDATE, state.correlationId)
         return NativeAuthV2UpdatePasswordRequest.create(
             clientId = config.clientId,
             continuationToken = state.continuationToken,
             newPassword = newPassword,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
@@ -210,18 +238,21 @@ class NativeAuthV2RequestProvider(
 
         val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.POLL)
         return NativeAuthV2PollRequest.create(
-            clientId = config.clientId,
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
     /**
-     * Creates the request object exchanging a Native Auth V2 authorization [code] for tokens at
-     * the existing `/oauth2/v2.0/token` endpoint.
+     * Creates the request object for a flow's token exchange.
      */
-    fun createTokenRequest(code: String, scopes: List<String>, correlationId: String): NativeAuthV2TokenRequest {
+    fun createTokenRequest(
+        code: String,
+        scopes: List<String>,
+        correlationId: String,
+        claimsRequestJson: String? = null
+    ): NativeAuthV2TokenRequest {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = correlationId,
@@ -232,15 +263,14 @@ class NativeAuthV2RequestProvider(
             clientId = config.clientId,
             code = code,
             scopes = scopes,
-            requestUrl = signInTokenEndpoint,
-            headers = getV2RequestHeaders(correlationId, FORM_URL_ENCODED_CONTENT_TYPE)
+            claimsRequestJson = claimsRequestJson,
+            requestUrl = config.getNativeAuthV2TokenEndpoint(correlationId).toString(),
+            headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )
     }
 
     /**
-     * Shared implementation for [createChallengeRequest] and [createResendRequest]: both resolve a
-     * relation on [state] and build the same request shape, differing only in which relation is
-     * required.
+     * Shared implementation for [createChallengeRequest] and [createResendRequest].
      */
     private fun createChallengeRequest(
         state: NativeAuthV2ContinuationState,
@@ -248,19 +278,14 @@ class NativeAuthV2RequestProvider(
     ): NativeAuthV2ChallengeRequest {
         val requestUrl = resolveHref(state, relation)
         return NativeAuthV2ChallengeRequest.create(
-            clientId = config.clientId,
             continuationToken = state.continuationToken,
             requestUrl = requestUrl.toString(),
-            headers = getV2RequestHeaders(state.correlationId, JSON_CONTENT_TYPE)
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
     }
 
     /**
-     * Selects [relation] from [state] and resolves it to an absolute URL via [hrefResolver],
-     * immediately before the caller attaches the continuation token to the outgoing request.
-     *
-     * @throws ClientException with [ClientException.MISSING_PARAMETER] if [state] does not carry
-     * an href for [relation].
+     * Selects [relation] from [state] and resolves it to an absolute URL.
      */
     private fun resolveHref(state: NativeAuthV2ContinuationState, relation: NativeAuthV2LinkRelation): URL {
         val href = state.href(relation) ?: throw missingRelationException(relation, state.correlationId)
@@ -277,27 +302,18 @@ class NativeAuthV2RequestProvider(
     }
 
     /**
-     * Builds the standard SDK headers for a Native Auth V2 request, mirroring
-     * [com.microsoft.identity.common.java.nativeauth.providers.NativeAuthRequestProvider]'s header
-     * construction but with a caller-supplied [contentType] rather than a single fixed value,
-     * since V2 requests are a mix of JSON and form-encoded bodies.
+     * Builds the headers for a Native Auth V2 request: the shared SDK identity block plus the
+     * V2-specific `Content-Type`. Future V2-only headers (a HAL `Accept` value, caller-supplied
+     * interceptor headers, V2 telemetry) belong here rather than in [NativeAuthSdkHeaders], so they
+     * cannot affect the shipped V1 flows.
      */
-    private fun getV2RequestHeaders(correlationId: String, contentType: String): Map<String, String?> {
-        val headers: MutableMap<String, String?> = TreeMap()
-        if (correlationId != UNSET_CORRELATION_ID) {
-            headers[AuthenticationConstants.AAD.CLIENT_REQUEST_ID] = correlationId
-        }
-        headers[AuthenticationConstants.SdkPlatformFields.PRODUCT] = LibraryInfoHelper.getLibraryName()
-        headers[AuthenticationConstants.SdkPlatformFields.VERSION] = LibraryInfoHelper.getLibraryVersion()
-        headers.putAll(Device.getPlatformIdParameters())
-        headers[HttpConstants.HeaderField.CONTENT_TYPE] = contentType
+    private fun getV2RequestHeaders(correlationId: String, contentType: NativeAuthContentType): Map<String, String?> {
+        val headers = NativeAuthSdkHeaders.base(correlationId)
+        headers[HttpConstants.HeaderField.CONTENT_TYPE] = contentType.value
         return headers
     }
 
     private companion object {
         private val TAG: String = NativeAuthV2RequestProvider::class.java.simpleName
-        private const val UNSET_CORRELATION_ID = "UNSET"
-        private const val JSON_CONTENT_TYPE = HttpConstants.MediaType.APPLICATION_JSON
-        private const val FORM_URL_ENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded"
     }
 }

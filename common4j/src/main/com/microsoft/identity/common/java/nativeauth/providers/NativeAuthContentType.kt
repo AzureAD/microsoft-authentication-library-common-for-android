@@ -20,22 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
+package com.microsoft.identity.common.java.nativeauth.providers
+
+import com.microsoft.identity.common.java.net.HttpConstants
 
 /**
- * SDK-issued Native Auth V2 operations. Unlike [NativeAuthV2HalAction] and
- * [NativeAuthV2LinkRelation], this set is entirely controlled by the SDK, not the server, so it is
- * closed and modeled as an enum.
+ * The `Content-Type` values used by Native Auth requests.
  *
- * This is parser context used for operation-specific error mapping (for example, distinguishing an
- * invalid code entered during [VERIFY] from an invalid password submitted during
- * [UPDATE_PASSWORD]); it is not a telemetry enum and must not be used as one.
+ * Native Auth V1 sends form-url-encoded bodies exclusively, while Native Auth V2 sends
+ * form-url-encoded bodies to the `authorize-challenge` and `token` endpoints and JSON bodies to the
+ * HAL-driven `challenge`, `resend`, `verify` and `poll` endpoints.
  */
-internal enum class NativeAuthV2Operation {
-    RESET_PASSWORD_START,
-    CHALLENGE,
-    RESEND,
-    VERIFY,
-    UPDATE_PASSWORD,
-    POLL
+internal enum class NativeAuthContentType(val value: String) {
+    FORM_URL_ENCODED("application/x-www-form-urlencoded"),
+    JSON(HttpConstants.MediaType.APPLICATION_JSON)
 }

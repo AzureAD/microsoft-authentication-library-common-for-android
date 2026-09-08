@@ -29,6 +29,10 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
  * know about, and an enum would force that value to `null`, erasing the raw string needed for
  * diagnosis. [value] always preserves exactly what the server sent. An unrecognised relation is
  * simply not followed by the SDK; it does not need to fail parsing.
+ *
+ * Not [java.io.Serializable]: as a non-null, non-generic property it is always flattened to its
+ * underlying `String`, so it is never boxed into the stream when [NativeAuthV2ContinuationState]
+ * is serialized.
  */
 @JvmInline
 value class NativeAuthV2LinkRelation(val value: String) {
@@ -39,7 +43,6 @@ value class NativeAuthV2LinkRelation(val value: String) {
         val UPDATE = NativeAuthV2LinkRelation("update")
         val POLL = NativeAuthV2LinkRelation("poll")
         val CONTINUE = NativeAuthV2LinkRelation("continue")
-        val SELF = NativeAuthV2LinkRelation("self")
         val RESET_PASSWORD = NativeAuthV2LinkRelation("resetPassword")
         val SIGN_IN = NativeAuthV2LinkRelation("signIn")
         val SIGN_UP = NativeAuthV2LinkRelation("signUp")

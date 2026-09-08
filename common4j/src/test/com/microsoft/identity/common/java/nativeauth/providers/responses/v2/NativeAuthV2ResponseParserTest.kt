@@ -22,10 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
+import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -36,7 +40,7 @@ class NativeAuthV2ResponseParserTest {
     fun parseInteraction_whenActionMissing_returnsUnknownErrorForMissingActionField() {
         val response = responseFrom("""{"continuationToken":"token"}""")
 
-        val result = parser.parseInteraction(response, previousState(), NativeAuthV2Operation.VERIFY)
+        val result = parser.parseInteraction(response, previousState())
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
         assertFalse(result is NativeAuthV2InteractionApiResult.UnsupportedAction)
@@ -52,7 +56,7 @@ class NativeAuthV2ResponseParserTest {
             """{"continuationToken":"token","action":"mystery-action"}"""
         )
 
-        val result = parser.parseInteraction(response, previousState(), NativeAuthV2Operation.VERIFY)
+        val result = parser.parseInteraction(response, previousState())
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnsupportedAction)
 
@@ -60,6 +64,7 @@ class NativeAuthV2ResponseParserTest {
         assertEquals("mystery-action", unsupported.rawAction)
         assertEquals(ApiErrorResult.INVALID_STATE, unsupported.error)
         assertTrue(unsupported.errorDescription.contains("mystery-action"))
+        assertFalse(unsupported.toString().contains("mystery-action"))
     }
 
     @Test
@@ -93,6 +98,1039 @@ class NativeAuthV2ResponseParserTest {
         )
     }
 
+    @Test
+    fun parseAuthorizeChallenge_whenInitialUnauthorizedResponseContainsContinuation_returnsContinuationRequired() {
+        val response = responseFrom(
+            """
+            {
+              "error": "InsufficientAuthorization",
+              "error_description": "AADSTS500127: No authenticated credentials found in request.",
+              "error_codes": [500127],
+              "continuation_token": "flow-token",
+              "reset_password": "/tenant/api/v0.1/auth/resetpassword?dc=TEST"
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.ContinuationRequired)
+        val continuation = result as AuthorizeChallengeApiResult.ContinuationRequired
+        assertEquals("flow-token", continuation.continuationState.continuationToken)
+        assertEquals(
+            "/tenant/api/v0.1/auth/resetpassword?dc=TEST",
+            continuation.continuationState.href(NativeAuthV2LinkRelation.RESET_PASSWORD)
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenClaimsAreProvided_retainsClaimsForTokenRequest() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "flow-token",
+                  "sign_in": "/tenant/api/v0.1/signin/start"
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read"),
+            claimsRequestJson = CLAIMS_REQUEST_JSON
+        )
+
+        val continuation = result as AuthorizeChallengeApiResult.ContinuationRequired
+        assertEquals(
+            CLAIMS_REQUEST_JSON,
+            continuation.continuationState.claimsRequestJsonForTokenRequest()
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenWebFallbackRequired_returnsRedirect() {
+        listOf(
+            """{"error":{"code":"redirect_to_web","message":"Browser required."}}""" to "redirect_to_web",
+            """{"state":"webFallbackRequired"}""" to "webFallbackRequired"
+        ).forEach { (json, expectedReason) ->
+            val result = parser.parseAuthorizeChallenge(
+                response = responseFrom(json),
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+
+            assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+            val redirect = result as AuthorizeChallengeApiResult.Redirect
+            assertEquals(CORRELATION_ID, redirect.correlationId)
+            assertEquals(expectedReason, redirect.redirectReason)
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenWebFallbackErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "redirect_to_web",
+                    "message": "Browser required.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+        assertEquals(
+            "server-error-correlation-id",
+            (result as AuthorizeChallengeApiResult.Redirect).correlationId
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyMetadataIsEmbedded_prefersEmbeddedMethodValues() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "verify",
+              "codeLength": 6,
+              "hint": "top-level-hint",
+              "type": "sms",
+              "_links": {
+                "verify": {"href": "/api/v0.1/auth/top-level/verify"}
+              },
+              "_embedded": {
+                "methods": [{
+                  "hint": "embedded-hint",
+                  "type": "email",
+                  "_links": {
+                    "verify": {"href": "/api/v0.1/auth/embedded/verify"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.CodeRequired
+
+        assertEquals("embedded-hint", result.challengeTargetLabel)
+        assertEquals("email", result.challengeChannel)
+        assertEquals(
+            "/api/v0.1/auth/embedded/verify",
+            result.continuationState.href(NativeAuthV2LinkRelation.VERIFY)
+        )
+        assertEquals(6, result.codeLength)
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyMetadataIsTopLevel_usesTopLevelValues() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "verify",
+              "codeLength": 8,
+              "hint": "m***@contoso.com",
+              "type": "email",
+              "_links": {
+                "verify": {"href": "/api/v0.1/auth/top-level/verify"}
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.CodeRequired
+
+        assertEquals("m***@contoso.com", result.challengeTargetLabel)
+        assertEquals("email", result.challengeChannel)
+        assertEquals(
+            "/api/v0.1/auth/top-level/verify",
+            result.continuationState.href(NativeAuthV2LinkRelation.VERIFY)
+        )
+        assertEquals(8, result.codeLength)
+    }
+
+    @Test
+    fun parseInteraction_whenContinuationTokenIsRejected_returnsNonRetryableUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalid_grant","message":"Flow state expired.","innerError":{"code":"invalid_continuation_token"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("invalid_grant", error.error)
+        assertEquals("Flow state expired.", error.errorDescription)
+    }
+
+    @Test
+    fun parseInteraction_whenLegacyVerificationCodeErrorIsReturned_returnsUnknownError() {
+        val previousState = previousState()
+        val response = responseFrom(
+            """{"error":{"code":"invalid_grant","message":"Code is invalid.","innerError":{"code":"invalid_oob_value"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+    }
+
+    @Test
+    fun parseInteraction_whenV2VerificationCodeIsInvalid_returnsInvalidCode() {
+        val previousState = previousState()
+        val response = responseFrom(
+            """{"error":{"code":"invalidGrant","message":"Code is invalid.","innerError":{"code":"invalidOneTimeCode"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState
+        ) as NativeAuthV2InteractionApiResult.InvalidCode
+
+        assertEquals("invalidOneTimeCode", result.subError)
+    }
+
+    @Test
+    fun parseInteraction_whenContinuationTokenIsInvalid_returnsTerminalUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidGrant","message":"Continuation token is invalid.","innerError":{"code":"invalidContinuationToken"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        // An invalid continuation token is SDK-managed state the user cannot recover from by
+        // retyping a code, so it must not be surfaced as a retryable InvalidCode.
+        assertFalse(result is NativeAuthV2InteractionApiResult.InvalidCode)
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("invalidGrant", error.error)
+        assertEquals("Continuation token is invalid.", error.errorDescription)
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordIsInvalid_preservesSubError() {
+        val passwordSubErrors = listOf(
+            "passwordTooWeak",
+            "passwordTooShort",
+            "passwordTooLong",
+            "passwordIsInvalid",
+            "passwordRecentlyUsed",
+            "passwordBanned"
+        )
+
+        passwordSubErrors.forEach { subError ->
+            val response = responseFrom(
+                """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"$subError"}}}"""
+            )
+
+            val result = parser.parseInteraction(
+                response,
+                previousState()
+            )
+
+            assertTrue(
+                "Expected InvalidPassword for $subError but was ${result::class.java.simpleName}",
+                result is NativeAuthV2InteractionApiResult.InvalidPassword
+            )
+            assertEquals(
+                subError,
+                (result as NativeAuthV2InteractionApiResult.InvalidPassword).subError
+            )
+        }
+    }
+
+    @Test
+    fun parseInteraction_whenPasswordSubErrorUsesLegacySnakeCase_returnsUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidRequest","message":"Password is invalid.","innerError":{"code":"password_too_weak"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyInvalidGrantOmitsInnerErrorCode_returnsUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalid_grant","message":"Code is invalid.","innerError":{}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("invalid_grant", error.error)
+        assertEquals("Code is invalid.", error.errorDescription)
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyInvalidGrantHasInvalidUsernameOrPasswordInnerError_returnsUnknownError() {
+        val response = responseFrom(
+            """{"error":{"code":"invalid_grant","message":"Credential validation failed.","innerError":{"code":"invalid_username_or_password"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        assertFalse(result is NativeAuthV2InteractionApiResult.InvalidCode)
+
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("invalid_grant", error.error)
+        assertEquals("Credential validation failed.", error.errorDescription)
+    }
+
+    // region parseAuthorizeChallenge - additional success/error relations
+
+    @Test
+    fun parseAuthorizeChallenge_whenAuthorizationCodePresent_returnsAuthorizationCode() {
+        val response = responseFrom("""{"code":"auth-code-123"}""")
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.AuthorizationCode)
+        val authorizationCode = result as AuthorizeChallengeApiResult.AuthorizationCode
+        assertEquals(CORRELATION_ID, authorizationCode.correlationId)
+        assertEquals("auth-code-123", authorizationCode.code)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenCodeAndContinuationTokenPresent_prefersAuthorizationCode() {
+        val response = responseFrom(
+            """
+            {
+              "code": "auth-code-123",
+              "continuation_token": "flow-token",
+              "reset_password": "/tenant/api/v0.1/auth/resetpassword"
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.AuthorizationCode)
+        assertEquals(
+            "auth-code-123",
+            (result as AuthorizeChallengeApiResult.AuthorizationCode).code
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenServerErrorPresent_returnsUnknownErrorWithExtractedAadstsCodes() {
+        val response = responseFrom(
+            """{"error":{"code":"temporarily_unavailable","message":"Service is busy. AADSTS90001"}}"""
+        )
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals("temporarily_unavailable", error.error)
+        assertEquals("Service is busy. AADSTS90001", error.errorDescription)
+        assertEquals(listOf(90001), error.errorCodes)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenServerErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val response = NativeAuthV2ResponseHandler().getHalApiResponse(
+            requestCorrelationId = "request-correlation-id",
+            response = HttpResponse(
+                400,
+                """
+                {
+                  "error": {
+                    "code": "temporarily_unavailable",
+                    "message": "Service is busy.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent(),
+                mapOf(
+                    AuthenticationConstants.AAD.CLIENT_REQUEST_ID to
+                        listOf("response-header-correlation-id")
+                )
+            )
+        )
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertEquals("response-header-correlation-id", response.correlationId)
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(
+            "server-error-correlation-id",
+            (result as AuthorizeChallengeApiResult.UnknownError).correlationId
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenServerErrorCorrelationIdIsBlank_fallsBackToResponseCorrelationId() {
+        listOf("temporarily_unavailable", "redirect_to_web").forEach { errorCode ->
+            val result = parser.parseAuthorizeChallenge(
+                response = responseFrom(
+                    """
+                    {
+                      "error": {
+                        "code": "$errorCode",
+                        "message": "Service error.",
+                        "correlationId": "   "
+                      }
+                    }
+                    """.trimIndent()
+                ),
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+
+            assertEquals(CORRELATION_ID, result.correlationId)
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenFlatOAuthErrorBodyPresent_returnsUnknownErrorUsingFlatFields() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """{"error":"invalid_grant","error_description":"Try again later. AADSTS70011"}"""
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals("invalid_grant", error.error)
+        assertEquals("Try again later. AADSTS70011", error.errorDescription)
+        assertEquals(listOf(70011), error.errorCodes)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenFlatRedirectToWebErrorPresent_returnsRedirect() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """{"error":"redirect_to_web","error_description":"Browser required."}"""
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.Redirect)
+        val redirect = result as AuthorizeChallengeApiResult.Redirect
+        assertEquals(CORRELATION_ID, redirect.correlationId)
+        assertEquals("redirect_to_web", redirect.redirectReason)
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenContinuationTokenPresentButEntryLinkMissing_returnsUnknownError() {
+        // A response carrying a continuation token (blank or not) with no matching entry-point
+        // link is a malformed "success" payload: the server accepted the request but omitted the
+        // href the caller needs to continue the flow. A blank token is rejected first, so it
+        // reports the blank-token problem rather than the missing relation.
+        mapOf(
+            "flow-token" to "resetPassword",
+            "" to "blank continuation token"
+        ).forEach { (token, expectedDescriptionFragment) ->
+            val response = responseFrom("""{"continuationToken":"$token"}""")
+
+            val result = parser.parseAuthorizeChallenge(
+                response = response,
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+
+            assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+            val error = result as AuthorizeChallengeApiResult.UnknownError
+            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+            assertTrue(error.errorDescription.contains(expectedDescriptionFragment))
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenEntryLinkIsTemplatedOnly_returnsUnknownError() {
+        val result = parser.parseAuthorizeChallenge(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "flow-token",
+                  "_links": {
+                    "resetPassword": {
+                      "href": "/reset-password{?dc}",
+                      "templated": true
+                    }
+                  }
+                }
+                """.trimIndent()
+            ),
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(ApiErrorResult.INVALID_STATE, (result as AuthorizeChallengeApiResult.UnknownError).error)
+        assertTrue(result.errorDescription.contains("resetPassword"))
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenContinuationTokenIsBlankAndEntryLinkPresent_returnsUnknownError() {
+        listOf("", "   ").forEach { token ->
+            assertInvalidState(
+                """
+                {
+                  "continuation_token": "$token",
+                  "reset_password": "/tenant/api/v0.1/auth/resetpassword"
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenEntryLinkIsBlank_returnsUnknownError() {
+        assertInvalidState(
+            """
+            {
+              "continuation_token": "flow-token",
+              "_links": {
+                "resetPassword": {
+                  "href": "   "
+                }
+              }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun parseAuthorizeChallenge_whenNeitherAuthorizationCodeNorContinuationTokenPresent_returnsUnknownError() {
+        val response = responseFrom("""{}""")
+
+        val result = parser.parseAuthorizeChallenge(
+            response = response,
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            scopes = listOf("User.Read")
+        )
+
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        val error = result as AuthorizeChallengeApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("neither an authorization code nor a continuation token"))
+    }
+
+    // endregion
+
+    // region parseInteraction - web fallback, continuation state, and missing-token
+
+    @Test
+    fun parseInteraction_whenWebFallbackRequired_returnsRedirect() {
+        listOf(
+            """{"error":{"code":"redirect_to_web","message":"Browser required."}}""" to "redirect_to_web",
+            """{"state":"webFallbackRequired"}""" to "webFallbackRequired"
+        ).forEach { (json, expectedReason) ->
+            val result = parser.parseInteraction(responseFrom(json), previousState())
+
+            assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)
+            val redirect = result as NativeAuthV2InteractionApiResult.Redirect
+            assertEquals(CORRELATION_ID, redirect.correlationId)
+            assertEquals(expectedReason, redirect.redirectReason)
+        }
+    }
+
+    @Test
+    fun parseInteraction_whenWebFallbackErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val result = parser.parseInteraction(
+            responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "redirect_to_web",
+                    "message": "Browser required.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.Redirect
+
+        assertEquals("server-error-correlation-id", result.correlationId)
+    }
+
+    @Test
+    fun parseInteraction_whenServerErrorHasCorrelationId_prefersServerErrorCorrelationId() {
+        val result = parser.parseInteraction(
+            responseFrom(
+                """
+                {
+                  "error": {
+                    "code": "invalidRequest",
+                    "message": "Request failed.",
+                    "correlationId": "server-error-correlation-id"
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState()
+        )
+
+        assertEquals("server-error-correlation-id", result.correlationId)
+    }
+
+    @Test
+    fun parseInteraction_whenStateIsContinueAndTokenPresent_returnsReadyToComplete() {
+        val response = responseFrom("""{"state":"continue","continuationToken":"next-token"}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.ReadyToComplete)
+        val readyToComplete = result as NativeAuthV2InteractionApiResult.ReadyToComplete
+        assertEquals("next-token", readyToComplete.continuationState.continuationToken)
+    }
+
+    @Test
+    fun parseInteraction_whenStateIsContinueButTokenMissing_returnsUnknownError() {
+        val response = responseFrom("""{"state":"continue"}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("continuation token"))
+    }
+
+    @Test
+    fun parseInteraction_whenContinuationTokenMissingAndActionPresent_returnsUnknownError() {
+        val response = responseFrom("""{"action":"challenge"}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("continuation token"))
+    }
+
+    // endregion
+
+    // region parseInteraction - action = challenge
+
+    @Test
+    fun parseInteraction_whenActionIsChallenge_andLinkEmbedded_returnsChallengeRequiredWithEmbeddedHint() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "challenge",
+              "challengeContext": { "authenticationFactor": "singleFactor" },
+              "hint": "top-level-hint",
+              "_embedded": {
+                "methods": [{
+                  "id": "email-1",
+                  "hint": "embedded-hint",
+                  "type": "email",
+                  "_links": {
+                    "challenge": {"href": "/api/v0.1/auth/embedded/challenge"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.ChallengeRequired
+
+        assertEquals("embedded-hint", result.methods.single().hint)
+        assertEquals(
+            "/api/v0.1/auth/embedded/challenge",
+            result.continuationState.withSelectedMethod("email-1")
+                ?.href(NativeAuthV2LinkRelation.CHALLENGE)
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsChallengeButLinkMissing_returnsUnknownError() {
+        val response = responseFrom("""{"continuationToken":"next-token","action":"challenge"}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("challenge"))
+    }
+
+    // endregion
+
+    // region parseInteraction - action = verify, missing link/field cases
+
+    @Test
+    fun parseInteraction_whenActionIsVerifyButLinkMissing_returnsUnknownError() {
+        val response = responseFrom(
+            """{"continuationToken":"next-token","action":"verify","codeLength":6,"hint":"h","type":"email"}"""
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("verify"))
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyMissingRequiredField_returnsUnknownError() {
+        listOf(
+            // codeLength missing
+            """{"continuationToken":"t","action":"verify","hint":"h","type":"email","_links":{"verify":{"href":"/x"}}}""" to "codeLength",
+            // challengeTargetLabel (hint) missing
+            """{"continuationToken":"t","action":"verify","codeLength":6,"type":"email","_links":{"verify":{"href":"/x"}}}""" to "challengeTargetLabel",
+            // challengeChannel (type) missing
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","_links":{"verify":{"href":"/x"}}}""" to "challengeChannel"
+        ).forEach { (json, missingField) ->
+            val result = parser.parseInteraction(responseFrom(json), previousState())
+
+            assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+            val error = result as NativeAuthV2InteractionApiResult.UnknownError
+            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+            assertTrue(error.errorDescription.contains(missingField))
+        }
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyCodeLengthIsNotPositive_returnsUnknownError() {
+        listOf(
+            """{"continuationToken":"t","action":"verify","codeLength":0,"hint":"h","type":"email","_links":{"verify":{"href":"/x"}}}""",
+            """{"continuationToken":"t","action":"verify","codeLength":-1,"hint":"h","type":"email","_links":{"verify":{"href":"/x"}}}"""
+        ).forEach { json ->
+            val result = parser.parseInteraction(responseFrom(json), previousState())
+
+            assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+            val error = result as NativeAuthV2InteractionApiResult.UnknownError
+            assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+            assertTrue(error.errorDescription.contains("codeLength"))
+        }
+    }
+
+    // endregion
+
+    // region parseInteraction - action = update
+
+    @Test
+    fun parseInteraction_whenActionIsUpdate_returnsUpdateRequired() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"update","_links":{"update":{"href":"/u"}}}"""
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UpdateRequired)
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsUpdateButOnlySelfLinkIsPresent_returnsUnknownError() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"update","_links":{"self":{"href":"/s"}}}"""
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("update"))
+    }
+
+    // endregion
+
+    // region parseInteraction - method parsing
+
+    @Test
+    fun parseInteraction_whenChallengeOffersNonEmailMethod_returnsChallengeRequired() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "challenge",
+              "challengeContext": { "authenticationFactor": "singleFactor" },
+              "_embedded": {
+                "methods": [{
+                  "id": "sms-1",
+                  "hint": "+1 (***) ***-1234",
+                  "type": "sms",
+                  "_links": {
+                    "challenge": {"href": "/api/v0.1/auth/sms/challenge"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.ChallengeRequired)
+        assertEquals(
+            listOf("sms"),
+            (result as NativeAuthV2InteractionApiResult.ChallengeRequired).methods.map { it.type }
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenChallengeOffersMultipleMethods_preservesServerOrder() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "challenge",
+              "challengeContext": { "authenticationFactor": "singleFactor" },
+              "_embedded": {
+                "methods": [
+                  {
+                    "id": "sms-1",
+                    "hint": "+1 (***) ***-1234",
+                    "type": "sms",
+                    "_links": {
+                      "challenge": {"href": "/api/v0.1/auth/sms/challenge"}
+                    }
+                  },
+                  {
+                    "id": "email-1",
+                    "hint": "u***@contoso.com",
+                    "type": "email",
+                    "_links": {
+                      "challenge": {"href": "/api/v0.1/auth/email/challenge"}
+                    }
+                  }
+                ]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.ChallengeRequired
+
+        assertEquals(
+            listOf("sms-1", "email-1"),
+            result.methods.map { it.id }
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyOffersNonEmailMethodOnly_returnsUnknownError() {
+        val response = responseFrom(
+            """
+            {
+              "continuationToken": "next-token",
+              "action": "verify",
+              "codeLength": 6,
+              "_embedded": {
+                "methods": [{
+                  "hint": "+1 (***) ***-1234",
+                  "type": "sms",
+                  "_links": {
+                    "verify": {"href": "/api/v0.1/auth/sms/verify"}
+                  }
+                }]
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyTopLevelChannelIsNotEmail_returnsUnknownError() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"sms","_links":{"verify":{"href":"/x"}}}"""
+        )
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+    }
+
+    @Test
+    fun parseInteraction_whenVerifyChannelIsEmailWithDifferentCasing_returnsCodeRequired() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"Email","_links":{"verify":{"href":"/x"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.CodeRequired
+
+        assertEquals("Email", result.challengeChannel)
+    }
+
+    // endregion
+
+    // region parseInteraction - action = poll
+
+    @Test
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsAbsent_returnsPollInProgressWithNullRetryAfter() {
+        val response = responseFrom("""{"continuationToken":"t","action":"poll","_links":{"poll":{"href":"/p"}}}""")
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.PollInProgress
+
+        assertNull(result.retryAfterMillis)
+        assertEquals("/p", result.continuationState.href(NativeAuthV2LinkRelation.POLL))
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsPresent_returnsPollInProgressWithRetryAfterMillis() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"poll","pollInterval":3000,"_links":{"poll":{"href":"/p"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.PollInProgress
+
+        assertEquals(3000L, result.retryAfterMillis)
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsPollAndPollIntervalIsNotPositive_returnsPollInProgressWithNullRetryAfter() {
+        val response = responseFrom(
+            """{"continuationToken":"t","action":"poll","pollInterval":0,"_links":{"poll":{"href":"/p"}}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        ) as NativeAuthV2InteractionApiResult.PollInProgress
+
+        assertNull(result.retryAfterMillis)
+    }
+
+    @Test
+    fun parseInteraction_whenActionIsPollButLinkMissing_returnsUnknownError() {
+        val response = responseFrom("""{"continuationToken":"t","action":"poll"}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals(ApiErrorResult.INVALID_STATE, error.error)
+        assertTrue(error.errorDescription.contains("poll"))
+    }
+
+    // endregion
+
+    // region mapInteractionError - additional error relations
+
+    @Test
+    fun parseInteraction_whenResetPasswordStartUserNotFound_returnsUserNotFoundWithExtractedAadstsCode() {
+        val response = responseFrom(
+            """{"error":{"code":"invalidRequest","message":"AADSTS50034: User account does not exist."}}"""
+        )
+
+        val result = parser.parseInteraction(
+            response,
+            previousState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UserNotFound)
+        val userNotFound = result as NativeAuthV2InteractionApiResult.UserNotFound
+        assertEquals("invalidRequest", userNotFound.error)
+        assertEquals(listOf(50034), userNotFound.errorCodes)
+    }
+
+    @Test
+    fun parseInteraction_whenUnknownServiceErrorHasNoMessage_returnsUnknownErrorWithNullErrorCodes() {
+        // No inner error, no message: exercises the generic/"unknown service error" (e.g. transient
+        // or rate-limit-like) fallback, and confirms a missing message yields null errorCodes rather
+        // than an empty list.
+        val response = responseFrom("""{"error":{"code":"service_unavailable"}}""")
+
+        val result = parser.parseInteraction(response, previousState())
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
+        val error = result as NativeAuthV2InteractionApiResult.UnknownError
+        assertEquals("service_unavailable", error.error)
+        assertEquals("", error.errorDescription)
+        assertNull(error.errorCodes)
+    }
+
+    // endregion
+
     private fun responseFrom(json: String): NativeAuthV2HalApiResponse =
         NativeAuthV2HalApiResponse.from(
             halResource = HalResource.from(json),
@@ -104,12 +1142,37 @@ class NativeAuthV2ResponseParserTest {
         val seedResponse = responseFrom("""{"continuationToken":"seed"}""")
         return NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
             response = seedResponse,
+            continuationToken = "seed",
+            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
             scopes = listOf("User.Read"),
             scenario = NativeAuthV2FlowScenario.RESET_PASSWORD
-        )!!
+        )
+    }
+
+    private fun assertInvalidState(json: String) {
+        val parsed = runCatching {
+            parser.parseAuthorizeChallenge(
+                response = responseFrom(json),
+                entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+                scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+                scopes = listOf("User.Read")
+            )
+        }
+
+        assertTrue(
+            "Parser should return UnknownError instead of throwing ${parsed.exceptionOrNull()}",
+            parsed.isSuccess
+        )
+        val result = parsed.getOrThrow()
+        assertTrue(result is AuthorizeChallengeApiResult.UnknownError)
+        assertEquals(
+            ApiErrorResult.INVALID_STATE,
+            (result as AuthorizeChallengeApiResult.UnknownError).error
+        )
     }
 
     private companion object {
+        private const val CLAIMS_REQUEST_JSON = """{"access_token":{"xms_cc":{"values":["cp1"]}}}"""
         private const val CORRELATION_ID = "corr-123"
     }
 }

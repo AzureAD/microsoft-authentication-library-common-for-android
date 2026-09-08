@@ -106,23 +106,26 @@ public class BrokerOAuth2TokenCache
     private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
     private final int mUid;
-    private ProcessUidCacheFactory mDelegate = null;
-
     /**
-     * Static map of locks for ensuring atomicity of compound save/update/load operations.
-     * Since each thread creates a new BrokerOAuth2TokenCache instance, we need locks
-     * shared across all instances to prevent race conditions when multiple instances
-     * access the same underlying storage (FOCI cache or UID-specific cache).
-     * <p>
-     * Keys are cache identifiers:
-     * <ul>
-     *   <li>"FOCI" - for Family of Client IDs cache (shared by all FOCI apps)</li>
-     *   <li>"UID_<uid>" - for process UID-specific caches (one per UID)</li>
-     * </ul>
-     * This ensures that operations on the same logical cache are serialized, even
-     * when invoked through different BrokerOAuth2TokenCache instances.
+     * Whether the calling app (identified by {@link #mUid}) is authorized to read the shared,
+     * device-wide FoCI cache. Set once at construction from broker policy (flight +
+     * isAuthorizedToShareTokens). When {@code false}, reads that would otherwise expose
+     * {@link #mFociCache} to an unauthorized caller short-circuit to a downstream-safe
+     * result: {@code null} for single-account getters, {@code Collections.emptyList()} for
+     * enumerators, a sparse {@link com.microsoft.identity.common.java.cache.CacheRecord}
+     * ({@code account} set, tokens null) or a sparse singleton for loaders that downstream
+     * broker code dereferences via {@code .get(0)}. Enforcement lives in two chokepoints
+     * ({@link #getTokenCachesForClientId(String)} and
+     * {@link #getTokenCacheForClient(BrokerApplicationMetadata)}) plus explicit gates at
+     * each loader / device-wide enumeration call site ({@link #load},
+     * {@link #loadWithAggregatedAccountData}, {@link #loadAggregatedAccountData},
+     * {@link #getAccounts()}, {@link #getFociCacheRecords()}).
+     * Must be supplied explicitly by every production constructor — there is deliberately no
+     * convenience overload that omits it, so a missed wiring fails at compile time rather than
+     * silently reverting to pre-fix behavior. See AB#3687466.
      */
-    private static final ConcurrentHashMap<String, Object> CACHE_OPERATION_LOCKS = new ConcurrentHashMap<>();
+    private final boolean mCallerAuthorizedForFoci;
+    private ProcessUidCacheFactory mDelegate = null;
 
     /**
      * Shared, process-wide registry of in-memory augmented account/credential caches keyed by
@@ -140,15 +143,26 @@ public class BrokerOAuth2TokenCache
 
 
     /**
-     * Constructs a new BrokerOAuth2TokenCache.
+     * Constructs a new BrokerOAuth2TokenCache with an explicit FoCI-read authorization gate.
+     * The gate is set by the broker at construction time (typically
+     * {@code !VALIDATE_GET_ACCOUNTS_FOCI_CALLER_flight || isAuthorizedToShareTokens(uid)}).
+     * When {@code callerAuthorizedForFoci} is {@code false}, this instance suppresses shared
+     * FoCI cache access on both the env==null iteration path (chokepoint #1 in
+     * {@link #getTokenCachesForClientId(String)}) and the env!=null resolution path
+     * (chokepoint #2 in {@link #getTokenCacheForClient(BrokerApplicationMetadata)}), plus the
+     * device-wide enumeration ({@link #getFociCacheRecords()}) and the loader-fallback
+     * carve-outs at {@link #load}, {@link #loadWithAggregatedAccountData}, and
+     * {@link #loadAggregatedAccountData}. AB#3687466.
      *
      * @param components               The current platform components.
      * @param uid                      UID of the current unix user.
      * @param applicationMetadataCache The metadata cache to use.
+     * @param callerAuthorizedForFoci  Whether the calling app may read the shared FoCI cache.
      */
     public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
                                   int uid,
-                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  final boolean callerAuthorizedForFoci) {
         super(components);
 
         Logger.verbose(
@@ -159,6 +173,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mFociCache = initializeFociCache(getComponents());
         mApplicationMetadataCache = applicationMetadataCache;
+        mCallerAuthorizedForFoci = callerAuthorizedForFoci;
     }
 
     /**
@@ -192,6 +207,22 @@ public class BrokerOAuth2TokenCache
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
+        this(components, uid, applicationMetadataCache, delegate, fociCache,
+                /* callerAuthorizedForFoci= */ true);
+    }
+
+    /**
+     * Test-only constructor that also lets the caller set the FoCI-read authorization gate.
+     * Used to reproduce broker's secure-by-default gate (AB#3687466) without booting a full
+     * broker platform-components stack.
+     */
+    //@VisibleForTesting
+    public BrokerOAuth2TokenCache(@NonNull IPlatformComponents components,
+                                  final int uid,
+                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
+                                  @NonNull ProcessUidCacheFactory delegate,
+                                  @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache,
+                                  final boolean callerAuthorizedForFoci) {
         // This cannot call the other constructors, since they unconditionally initialize
         // the foci cache, and this one uses the value passed in for testing.
         super(components);
@@ -205,6 +236,7 @@ public class BrokerOAuth2TokenCache
         mUid = uid;
         mDelegate = delegate;
         mFociCache = fociCache;
+        mCallerAuthorizedForFoci = callerAuthorizedForFoci;
     }
 
     /**
@@ -278,21 +310,8 @@ public class BrokerOAuth2TokenCache
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme,
             final boolean shouldSkipAccountAggregation) throws ClientException {
-        final boolean isFlightEnabled = CommonFlightsManager.INSTANCE
-                .getFlightsProvider()
-                .isFlightEnabled(CommonFlight.CALL_REFACTORED_SAVE_AND_LOAD_AGGREGATED_ACCOUNT_METHOD);
         SpanExtension.current().setAttribute(AttributeName.is_account_aggregation_skipped.name(),
                 shouldSkipAccountAggregation);
-
-        if (isFlightEnabled) {
-            return saveAndLoadAggregatedAccountDataOptimized(accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord,
-                    familyId,
-                    authScheme,
-                    shouldSkipAccountAggregation);
-        }
 
         synchronized (this) {
             final ICacheRecord cacheRecord = save(
@@ -333,6 +352,13 @@ public class BrokerOAuth2TokenCache
             Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                     "environment:" + environment +
                     "processUid: " + mUid);
+            // Chokepoint #2 nulls the target for an unauthorized FoCI caller (AB#3687466).
+            // Only caller is saveAndLoadAggregatedAccountData post-save; return the just-saved
+            // record as a singleton so BrokerLocalController.acquireTokenSilent's .get(0)
+            // resolves without NPE while cross-app FoCI aggregation stays blocked.
+            if (!mCallerAuthorizedForFoci) {
+                return Collections.singletonList(cacheRecord);
+            }
             return null;
         }
 
@@ -425,11 +451,28 @@ public class BrokerOAuth2TokenCache
                 targetCache = initializeProcessUidCache(getComponents(), mUid);
             }
 
-            final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
-                    oAuth2Strategy,
-                    request,
-                    response
-            );
+            final List<ICacheRecord> result;
+            if (isFoci && !mCallerAuthorizedForFoci) {
+                // AB#3687466: targetCache is selected off the server-supplied familyId
+                // without going through either FoCI chokepoint, and the delegated call
+                // performs a cross-tenant merge over the shared mFociCache. For an
+                // unauthorized caller that could surface other apps' FoCI records for
+                // the same home account, so save without the merge and return only the
+                // newly-saved record.
+                Logger.info(
+                        TAG + methodName,
+                        "Unauthorized FoCI caller; skipping shared FoCI aggregation."
+                );
+                result = Collections.singletonList(
+                        targetCache.save(oAuth2Strategy, request, response)
+                );
+            } else {
+                result = targetCache.saveAndLoadAggregatedAccountData(
+                        oAuth2Strategy,
+                        request,
+                        response
+                );
+            }
 
             // The 0th element contains the record we *just* saved. Other records are corollary data.
             final ICacheRecord justSavedRecord = result.get(0);
@@ -540,7 +583,10 @@ public class BrokerOAuth2TokenCache
                 mUid
         );
 
-        final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
+        // AB#3687466: a null targetCache from Chokepoint #2 is fail-closed intent, not a
+        // "fall back to shared FoCI" signal. Gate the FoCI fallback on caller authorization.
+        final boolean shouldUseFociCache = mCallerAuthorizedForFoci
+                && (null == targetCache || isKnownFoci);
 
         Logger.info(
                 TAG + methodName,
@@ -558,7 +604,7 @@ public class BrokerOAuth2TokenCache
                     account,
                     authScheme
             );
-        } else {
+        } else if (null != targetCache) {
             resultRecord = targetCache.load(
                     clientId,
                     applicationIdentifier,
@@ -567,6 +613,15 @@ public class BrokerOAuth2TokenCache
                     account,
                     authScheme
             );
+        } else {
+            // Unauthorized FoCI caller with no resolvable per-app cache: return an
+            // account-only sparse record so downstream null-RT handling treats this as
+            // "no token", instead of silently returning the shared FoCI RT.
+            Logger.verbose(
+                    TAG + methodName,
+                    "Unauthorized FoCI caller; skipping shared FoCI fallback, returning sparse record."
+            );
+            resultRecord = CacheRecord.builder().account(account).build();
         }
 
         final boolean resultFound = null != resultRecord.getRefreshToken();
@@ -637,17 +692,33 @@ public class BrokerOAuth2TokenCache
             final OAuth2TokenCache targetCache = getTokenCacheForClient(appMetadata);
 
             final boolean appIsUnknownUseFociAsFallback = null == targetCache;
+            // AB#3687466: a null targetCache for an unauthorized FoCI caller is
+            // Chokepoint #2's fail-closed signal, not a fallback opportunity.
+            final boolean unauthorizedFociFallback =
+                    appIsUnknownUseFociAsFallback && !mCallerAuthorizedForFoci;
 
             final List<ICacheRecord> resultRecords;
 
             Logger.info(
                     TAG + methodName,
                     "Loading from FOCI cache? ["
-                            + (isKnownFoci || appIsUnknownUseFociAsFallback)
+                            + (!unauthorizedFociFallback
+                                    && (isKnownFoci || appIsUnknownUseFociAsFallback))
                             + "]"
             );
 
-            if (appIsUnknownUseFociAsFallback) {
+            if (unauthorizedFociFallback) {
+                // Return a sparse (RT-less) singleton so BrokerLocalController's get(0)
+                // sees the expected primary record shape and downstream refresh handling
+                // fails with UiRequiredException instead of an IndexOutOfBoundsException.
+                Logger.verbose(
+                        TAG + methodName,
+                        "Unauthorized FoCI caller; skipping shared FoCI fallback, returning sparse singleton."
+                );
+                resultRecords = Collections.singletonList(
+                        (ICacheRecord) CacheRecord.builder().account(account).build()
+                );
+            } else if (appIsUnknownUseFociAsFallback) {
                 // We do not have a cache for this app or it is not yet known to be a member of the family
                 // use the foci cache....
 
@@ -746,6 +817,13 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
+                if (!mCallerAuthorizedForFoci) {
+                    Logger.verbose(
+                            TAG + methodName,
+                            "No target cache resolved and caller not FoCI-authorized; returning null."
+                    );
+                    return null;
+                }
                 Logger.verbose(
                         TAG + methodName,
                         "Target cache was null. Using FOCI cache."
@@ -802,6 +880,13 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
+                if (!mCallerAuthorizedForFoci) {
+                    Logger.verbose(
+                            TAG + methodName,
+                            "No target cache resolved and caller not FoCI-authorized; returning empty list."
+                    );
+                    return Collections.emptyList();
+                }
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
@@ -846,6 +931,19 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
+    /**
+     * SECURITY CHOKEPOINT #1 of 2 (AB#3687466): env==null resolution path.
+     * <p>
+     * This helper is one of two paired chokepoints that enforce
+     * {@link #mCallerAuthorizedForFoci}. It gates the env==null branch of every reader
+     * that iterates FoCI + UID caches ({@code getAccount}, {@code getAccountByLocalAccountId},
+     * {@code getAccountByHomeAccountId}, {@code getAccounts(env, clientId)},
+     * {@code getAccountsWithAggregatedAccountData}, and
+     * {@code getAccountWithAggregatedAccountDataByLocalAccountId}). The paired
+     * env!=null chokepoint lives in {@link #getTokenCacheForClient(BrokerApplicationMetadata)}.
+     * Weakening or removing either silently regresses the env-scoped or non-env-scoped
+     * variants respectively.
+     */
     private List<OAuth2TokenCache> getTokenCachesForClientId(@NonNull final String clientId) {
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
@@ -855,9 +953,15 @@ public class BrokerOAuth2TokenCache
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
                 if (null != metadata.getFoci() && !containsFoci) {
-                    // Add the foci cache, but only once...
-                    result.add(mFociCache);
-                    containsFoci = true;
+                    // Add the shared FoCI cache, but only once, and only when the calling app is authorized
+                    // to share FoCI tokens (AB#3687466). An unauthorized caller must not enumerate the
+                    // device-wide shared FoCI accounts. This gate suppresses only the shared FoCI cache;
+                    // the caller's own app-specific / UID-partitioned cache is added independently by the
+                    // non-FoCI metadata branch below and is never affected by this check.
+                    if (mCallerAuthorizedForFoci) {
+                        result.add(mFociCache);
+                        containsFoci = true;
+                    }
                 } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
                     final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
@@ -905,12 +1009,18 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         localAccountId
                 );
-            } else {
+            } else if (mCallerAuthorizedForFoci) {
                 return mFociCache.getAccountByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+            } else {
+                Logger.verbose(
+                        TAG + methodName,
+                        "No target cache resolved and caller not FoCI-authorized; returning null."
+                );
+                return null;
             }
         } else {
             AccountRecord result = null;
@@ -959,12 +1069,18 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         localAccountId
                 );
-            } else {
+            } else if (mCallerAuthorizedForFoci) {
                 return mFociCache.getAccountWithAggregatedAccountDataByLocalAccountId(
                         environment,
                         clientId,
                         localAccountId
                 );
+            } else {
+                Logger.verbose(
+                        TAG + methodName,
+                        "No target cache resolved and caller not FoCI-authorized; returning null."
+                );
+                return null;
             }
         } else {
             ICacheRecord result = null;
@@ -1060,6 +1176,25 @@ public class BrokerOAuth2TokenCache
         return tenantAccountsForAccountByClientId;
     }
 
+    /**
+     * Returns the accounts (with aggregated account data) visible to the calling app for the given
+     * client id.
+     * <p>
+     * Shared-FoCI access is gated by the {@code mCallerAuthorizedForFoci} invariant set at
+     * construction time (see the class-level ctor accepting {@code callerAuthorizedForFoci}).
+     * A caller's own UID-partitioned accounts are always returned; only shared-FoCI accounts are
+     * withheld from unauthorized callers. Both env-scoped and non-env-scoped branches are
+     * protected: the env==null branch relies on {@link #getTokenCachesForClientId(String)}
+     * (chokepoint #1) omitting {@code mFociCache}; the env!=null branch relies on
+     * {@link #getTokenCacheForClient(BrokerApplicationMetadata)} (chokepoint #2) suppressing
+     * {@code mFociCache} resolution, plus a local fail-closed check that prevents the
+     * historical null-target fallback from reintroducing shared-FoCI access. See AB#3687466.
+     *
+     * @param environment environment to scope the lookup to, or {@code null} to return accounts
+     *                    across all environments.
+     * @param clientId    the client id to look up accounts for.
+     * @return the accounts with aggregated account data visible to the caller.
+     */
     @Override
     public List<ICacheRecord> getAccountsWithAggregatedAccountData(@Nullable String environment,
                                                                    @NonNull String clientId) {
@@ -1075,7 +1210,21 @@ public class BrokerOAuth2TokenCache
                     mUid
             );
 
+            // Fail-closed for unauthorized callers when no client-specific cache exists.
+            // getTokenCacheForClient can no longer return mFociCache to an unauthorized caller
+            // (SECURITY CHOKEPOINT #2 in getTokenCacheForClient(BrokerApplicationMetadata) already
+            // suppresses that resolution), so targetCache == null here means either no metadata was
+            // found or the caller would have resolved to mFociCache but was suppressed. In both
+            // cases, an unauthorized caller must not fall back to the shared FoCI cache. See AB#3687466.
             if (null == targetCache) {
+                if (!mCallerAuthorizedForFoci) {
+                    Logger.verbose(
+                            TAG + methodName,
+                            "Caller is not FoCI-authorized; skipping shared FoCI cache read."
+                    );
+                    return Collections.emptyList();
+                }
+
                 Logger.verbose(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
@@ -1177,8 +1326,12 @@ public class BrokerOAuth2TokenCache
             }
         }
 
-        // Hit the FOCI cache
-        allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
+        // Hit the FOCI cache — gated on caller authorization to preserve the
+        // mCallerAuthorizedForFoci invariant (AB#3687466). Callers today are broker-internal
+        // (uid=0 device sweeps), so this is defense-in-depth rather than a live leak.
+        if (mCallerAuthorizedForFoci) {
+            allAccounts.addAll(mFociCache.getAccountCredentialCache().getAccounts());
+        }
 
         final List<AccountRecord> allAccountsResult = new ArrayList<>(allAccounts);
 
@@ -1321,6 +1474,15 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
+     * Returns whether the caller that constructed this cache is authorized to share FoCI
+     * tokens. Used by broker orchestration to short-circuit shared-FoCI fallback paths
+     * (AB#3687466).
+     */
+    public boolean isCallerAuthorizedForFoci() {
+        return mCallerAuthorizedForFoci;
+    }
+
+    /**
      * Returns the List of FoCI users in the cache. This API is provided so that the broker may
      * **internally** query the cache for known users, such that the broker may verify an
      * unknown clientId is a part of the FoCI family.
@@ -1334,6 +1496,14 @@ public class BrokerOAuth2TokenCache
     @SuppressWarnings(UNCHECKED)
     public List<ICacheRecord> getFociCacheRecords() {
         final String methodName = ":getFociCacheRecords";
+
+        // Fail closed for callers not authorized to share FoCI tokens (AB#3687466). Paired
+        // with the chokepoints in getTokenCachesForClientId and getTokenCacheForClient.
+        if (!mCallerAuthorizedForFoci) {
+            Logger.info(TAG + methodName,
+                    "Caller not authorized for FoCI; skipping shared-FoCI enumeration.");
+            return Collections.emptyList();
+        }
 
         final List<ICacheRecord> result = new ArrayList<>();
 
@@ -1536,12 +1706,18 @@ public class BrokerOAuth2TokenCache
                         clientId,
                         homeAccountId
                 );
-            } else {
+            } else if (mCallerAuthorizedForFoci) {
                 return mFociCache.getAccountByHomeAccountId(
                         environment,
                         clientId,
                         homeAccountId
                 );
+            } else {
+                Logger.verbose(
+                        TAG + methodName,
+                        "No target cache resolved and caller not FoCI-authorized; returning null."
+                );
+                return null;
             }
         } else {
             AccountRecord result = null;
@@ -1670,6 +1846,21 @@ public class BrokerOAuth2TokenCache
         }
     }
 
+    /**
+     * SECURITY CHOKEPOINT #2 of 2 (AB#3687466): env!=null resolution path.
+     * Paired with {@link #getTokenCachesForClientId(String)} (env==null iteration).
+     * <p>
+     * Resolves the single cache backing a {@link BrokerApplicationMetadata} row.
+     * Returns {@code null} when the resolved target is the shared FoCI cache and
+     * {@link #mCallerAuthorizedForFoci} is false.
+     * <p>
+     * <b>Caller contract:</b> a {@code null} return means "no cache available for
+     * this caller" — <b>not</b> "fall back to shared FoCI". Readers and writers
+     * on the env!=null path already treat {@code null} as empty / no-op and are
+     * safe. Loaders ({@code load}, {@code loadWithAggregatedAccountData}) previously
+     * interpreted {@code null} as a FoCI fallback trigger and now carry their own
+     * explicit {@link #mCallerAuthorizedForFoci} gates.
+     */
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@Nullable final BrokerApplicationMetadata metadata) {
         final String methodName = ":getTokenCacheForClient(bam)";
@@ -1691,6 +1882,14 @@ public class BrokerOAuth2TokenCache
             } else {
                 targetCache = initializeProcessUidCache(getComponents(), metadata.getUid());
             }
+        }
+
+        if (targetCache == mFociCache && !mCallerAuthorizedForFoci) {
+            Logger.verbose(
+                    TAG + methodName,
+                    "Caller is not FoCI-authorized; returning null to suppress shared FoCI cache access."
+            );
+            return null;
         }
 
         if (null == targetCache) {
@@ -1729,120 +1928,4 @@ public class BrokerOAuth2TokenCache
         return getTokenCacheForClient(metadata);
     }
 
-    /**
-     * Synchronized version of save and load aggregated account data that resolves the target cache
-     * only once, improving performance by avoiding redundant cache lookups.
-     * <p>
-     * This method saves the provided account and credential records to the appropriate cache
-     * (FOCI or process UID cache based on familyId), then loads and returns aggregated account
-     * data including any guest tenant credentials.
-     * <p>
-     * <b>Optimization:</b> Unlike the original implementation which called
-     * {@code getTokenCacheForClient} twice (once during save, once during load), this method
-     * determines the target cache once and reuses it for both operations, reducing overhead.
-     * <p>
-     * This method is synchronized to ensure thread safety for save and load operations.
-     * <p>
-     * The caller should inspect the result carefully. See {@link #loadWithAggregatedAccountData}
-     * for details on interpreting the returned ICacheRecord list.
-     *
-     * @param accountRecord        The AccountRecord to save. Must not be null.
-     * @param idTokenRecord        The IdTokenRecord to save. Must not be null.
-     * @param accessTokenRecord    The AccessTokenRecord to save. Must not be null.
-     * @param refreshTokenRecord   The RefreshTokenRecord to save. May be null.
-     * @param familyId             The family ID for FOCI apps. If non-null and non-empty, saves to
-     *                             FOCI cache; otherwise saves to process UID cache.
-     * @param authScheme           The authentication scheme to use when loading credentials.
-     *                             Must not be null.
-     * @return A List of ICacheRecords containing the saved account and all associated credentials
-     *         across tenants (home + guest). May include multiple records if guest tenant tokens exist.
-     * @throws ClientException If an error occurs during save or load operations.
-     */
-    private List<ICacheRecord> saveAndLoadAggregatedAccountDataOptimized(
-            final @NonNull AccountRecord accountRecord,
-            final @NonNull IdTokenRecord idTokenRecord,
-            final @NonNull AccessTokenRecord accessTokenRecord,
-            final @Nullable RefreshTokenRecord refreshTokenRecord,
-            final @Nullable String familyId,
-            final @NonNull AbstractAuthenticationScheme authScheme,
-            final boolean shouldSkipAccountAggregation
-    ) throws ClientException{
-        final String methodName = ":saveAndLoadAggregatedAccountDataOptimized(accountRecord, idTokenRecord, accessTokenRecord, " +
-                "refreshTokenRecord, familyId, authScheme)";
-
-        final ICacheRecord cacheRecord;
-        final long saveAndLoadStartTime = System.currentTimeMillis();
-
-        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
-        // Determine lock key based on which cache we're operating on
-        final String lockKey = isFoci ? "FOCI" : "UID_" + mUid;
-        final Object lock = CACHE_OPERATION_LOCKS.computeIfAbsent(lockKey, k -> new Object());
-
-        synchronized (lock) {
-            final MsalOAuth2TokenCache targetCache;
-
-            if (isFoci) {
-                // Save to the foci cache....
-                targetCache = mFociCache;
-                Logger.info(TAG + methodName, "Saving data to FOCI cache");
-            } else {
-                // Save to the processUid cache... or create a new one
-                targetCache = initializeProcessUidCache(
-                        getComponents(),
-                        mUid
-                );
-                Logger.info(TAG + methodName, "Saving data to Process Uid cache");
-            }
-
-            cacheRecord = targetCache.save(
-                    accountRecord,
-                    idTokenRecord,
-                    accessTokenRecord,
-                    refreshTokenRecord
-            );
-            Logger.info(TAG + methodName, "Account data saved to cache");
-
-            AccessTokenRecord cachedAccessTokenRecord = cacheRecord.getAccessToken();
-            if (cachedAccessTokenRecord == null) {
-                throw new ClientException("Access token is null in cache record");
-            }
-            final String clientId = cachedAccessTokenRecord.getClientId();
-            final String environment = cachedAccessTokenRecord.getEnvironment();
-            final String target = cachedAccessTokenRecord.getTarget();
-            final String applicationIdentifier = cachedAccessTokenRecord.getApplicationIdentifier();
-            final String mamEnrollmentIdentifier = cachedAccessTokenRecord.getMamEnrollmentIdentifier();
-
-            if (clientId == null) {
-                throw new ClientException("Access token in cache record has null clientId");
-            }
-            if (environment == null) {
-                throw new ClientException("Access token in cache record has null environment");
-            }
-            updateApplicationMetadataCache(
-                    clientId,
-                    environment,
-                    familyId,
-                    mUid
-            );
-
-            if(!shouldSkipAccountAggregation) {
-                Logger.info(TAG + methodName, "Starting to load aggregated account data..");
-                List<ICacheRecord> cacheRecordList = targetCache.loadWithAggregatedAccountData(
-                        clientId,
-                        applicationIdentifier,
-                        mamEnrollmentIdentifier,
-                        target,
-                        cacheRecord.getAccount(),
-                        authScheme
-                );
-                OTelUtility.recordElapsedTime(AttributeName.elapsed_time_cache_save_and_load_aggregated_account_data.name(),
-                        saveAndLoadStartTime);
-                return cacheRecordList;
-            } else {
-                // return a list with only the cacheRecord associated with the request
-                Logger.info(TAG, methodName, "Skipping account aggregation.");
-                return Collections.singletonList(cacheRecord);
-            }
-        }
-    }
 }

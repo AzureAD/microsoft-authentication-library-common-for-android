@@ -51,6 +51,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNat
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
@@ -273,6 +274,29 @@ abstract class BaseNativeAuthController : BaseController() {
         oAuth2Strategy: NativeAuthOAuth2Strategy,
         parametersWithScopes: BaseSignInTokenCommandParameters,
         tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete = saveAndReturnTokens(
+        oAuth2Strategy = oAuth2Strategy,
+        authority = oAuth2Strategy.getAuthority(),
+        parametersWithScopes = parametersWithScopes,
+        tokenApiResult = tokenApiResult
+    )
+
+    protected fun saveAndReturnTokens(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete = saveAndReturnTokens(
+        oAuth2Strategy = oAuth2Strategy,
+        authority = oAuth2Strategy.getAuthority(),
+        parametersWithScopes = parametersWithScopes,
+        tokenApiResult = tokenApiResult
+    )
+
+    private fun saveAndReturnTokens(
+        oAuth2Strategy: MicrosoftStsOAuth2Strategy,
+        authority: String,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
     ): SignInCommandResult.Complete {
         LogSession.logMethodCall(
             tag = javaClass.simpleName,
@@ -280,9 +304,9 @@ abstract class BaseNativeAuthController : BaseController() {
             methodName = "${javaClass.simpleName}.saveAndReturnTokens"
         )
         val records: List<ICacheRecord> = saveTokens(
-            oAuth2Strategy as MicrosoftStsOAuth2Strategy,
+            oAuth2Strategy,
             createAuthorizationRequest(
-                strategy = oAuth2Strategy,
+                authority = authority,
                 scopes = parametersWithScopes.scopes ?: emptyList(),
                 clientId = parametersWithScopes.clientId,
                 applicationIdentifier = parametersWithScopes.applicationIdentifier
@@ -293,7 +317,10 @@ abstract class BaseNativeAuthController : BaseController() {
 
         // The first element in the returned list is the item we *just* saved, the rest of
         // the elements are necessary to construct the full IAccount + TenantProfile
-        val newestRecord = records[0]
+        val newestRecord = records.firstOrNull() ?: throw ClientException(
+            ClientException.TOKEN_CACHE_SAVE_FAILED,
+            "Token cache returned no records after saving tokens."
+        )
 
         return SignInCommandResult.Complete(
             authenticationResult = LocalAuthenticationResult(
@@ -314,6 +341,18 @@ abstract class BaseNativeAuthController : BaseController() {
         scopes: List<String>,
         clientId: String,
         applicationIdentifier: String
+    ): MicrosoftStsAuthorizationRequest = createAuthorizationRequest(
+        authority = strategy.getAuthority(),
+        scopes = scopes,
+        clientId = clientId,
+        applicationIdentifier = applicationIdentifier
+    )
+
+    protected fun createAuthorizationRequest(
+        authority: String,
+        scopes: List<String>,
+        clientId: String,
+        applicationIdentifier: String
     ): MicrosoftStsAuthorizationRequest {
         LogSession.logMethodCall(
             tag = javaClass.simpleName,
@@ -322,7 +361,7 @@ abstract class BaseNativeAuthController : BaseController() {
         )
 
         val builder = MicrosoftStsAuthorizationRequest.Builder()
-        builder.setAuthority(URL(strategy.getAuthority()))
+        builder.setAuthority(URL(authority))
         builder.setClientId(clientId)
         builder.setScope(StringUtil.join(" ", scopes))
         builder.setApplicationIdentifier(applicationIdentifier)
@@ -333,7 +372,7 @@ abstract class BaseNativeAuthController : BaseController() {
         LogSession.logMethodCall(
             tag = javaClass.simpleName,
             correlationId = null,
-            methodName = "${javaClass.simpleName}.createAuthorizationRequest"
+            methodName = "${javaClass.simpleName}.addDefaultScopes"
         )
         val requestScopes = scopes?.toMutableList() ?: mutableListOf()
         requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES)
@@ -359,5 +398,25 @@ abstract class BaseNativeAuthController : BaseController() {
             .requestInterceptor(parameters.requestInterceptor)
             .build()
         return parameters.authority.createOAuth2Strategy(strategyParameters)
+    }
+
+    /**
+     * Builds a [NativeAuthV2OAuth2Strategy] from [parameters], mirroring
+     * [createNativeAuthStrategy] so the V2 controller shares the same strategy-parameter
+     * construction logic.
+     */
+    protected fun createNativeAuthV2Strategy(parameters: BaseNativeAuthCommandParameters): NativeAuthV2OAuth2Strategy {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.createNativeAuthV2Strategy"
+        )
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .challengeTypes(parameters.challengeType)
+            .capabilities(parameters.capabilities)
+            .requestInterceptor(parameters.requestInterceptor)
+            .build()
+        return parameters.authority.createOAuth2StrategyV2(strategyParameters)
     }
 }

@@ -35,16 +35,42 @@ import static com.microsoft.identity.common.java.challengehandlers.MockData.PKEY
 import static com.microsoft.identity.common.java.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsManager;
+import com.microsoft.identity.common.java.flighting.MockFlightsProvider;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 
+import io.opentelemetry.api.trace.Span;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.UnsupportedEncodingException;
 
 @RunWith(JUnit4.class)
 public class PKeyAuthChallengeFactoryTest {
+
+    // A trusted challenging origin whose scheme, host and (normalized) port match the SubmitUrl in the
+    // webview-redirect fixtures (https + login.microsoftonline.com + default port 443). The fixture
+    // intentionally differs from the SubmitUrl only in path and query: the same-origin check compares
+    // scheme, host and normalized port, and must ignore path/query.
+    private static final String CHALLENGING_ORIGIN =
+            "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=00000000-0000-0000-0000-000000000000";
+
+    // Minimal, well-formed webview redirect carrying every required field except SubmitUrl, which
+    // callers append (URL-encoded) so each test can exercise a specific SubmitUrl shape.
+    private static final String MINIMAL_CHALLENGE_PREFIX =
+            "urn:http-auth:PKeyAuth?Version=1.0&Context=abc&nonce=abc&SubmitUrl=";
 
     private final String[] CERT_AUTHORITIES = new String[]{
             "OU=82dbaca4-3e81-46ca-9c73-0950c1eaca97,CN=MS-Organization-Access,DC=windows,DC=net"
@@ -73,7 +99,7 @@ public class PKeyAuthChallengeFactoryTest {
 
     @Test
     public void testParsingChallengeUrl() throws ClientException {
-        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_URL);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_URL, CHALLENGING_ORIGIN);
         Assert.assertArrayEquals(PKEYAUTH_CERT_AUTHORITIES, challenge.getCertAuthorities().toArray());
         Assert.assertEquals(PKEYAUTH_MOCK_VERSION, challenge.getVersion());
         Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_CONTEXT, challenge.getContext());
@@ -87,7 +113,7 @@ public class PKeyAuthChallengeFactoryTest {
     // (or, if the earlier is not provided, x-client-Ver >= 3.1.0)
     @Test
     public void testParsingChallengeUrl_WithTenantId() throws ClientException {
-        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_URL);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_URL, CHALLENGING_ORIGIN);
         Assert.assertArrayEquals(PKEYAUTH_CERT_AUTHORITIES, challenge.getCertAuthorities().toArray());
         Assert.assertEquals(PKEYAUTH_MOCK_VERSION, challenge.getVersion());
         Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_WITH_TENANT_ID_CONTEXT, challenge.getContext());
@@ -101,12 +127,341 @@ public class PKeyAuthChallengeFactoryTest {
     public void testParsingChallengeUrl_Malformed() {
         try{
             new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
-                    "urn:http-auth:PKeyAuth?CertAuthorities=OU%3d82dbaca4"
+                    "urn:http-auth:PKeyAuth?CertAuthorities=OU%3d82dbaca4",
+                    CHALLENGING_ORIGIN
             );
             Assert.fail("Exception is expected");
         } catch (final ClientException e) {
             Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
         }
+    }
+
+    // AB#3706623 (CWE-918): a webview-redirect SubmitUrl that is same-origin (host-equal) with the
+    // challenging endpoint and HTTPS is accepted, even when its path/query differ from the origin
+    // and the origin host is supplied in a different letter case.
+    @Test
+    public void testWebViewRedirect_SameOriginHttps_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                PKEYAUTH_AUTH_ENDPOINT_URL,
+                "https://LOGIN.microsoftonline.com/common/oauth2/authorize?dc=ESTS-PUB");
+        Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_SUBMIT_URL, challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918): an on-prem ADFS host containing an underscore (e.g.
+    // adfs_server.contoso.com) is a valid same-origin target. java.net.URI.getHost() returns null for
+    // such hosts (RFC 1123 server-authority parsing fails on '_'), which would false-reject the whole
+    // authorization request; java.net.URL preserves the host, so this same-origin challenge is
+    // accepted. Pins that parser choice.
+    @Test
+    public void testWebViewRedirect_UnderscoreHostSameOrigin_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                "urn:http-auth:PKeyAuth?Version=1.0&Context=abc&nonce=abc&SubmitUrl="
+                        + "https%3a%2f%2fadfs_server.contoso.com%2fadfs%2fls",
+                "https://adfs_server.contoso.com/adfs/ls?client-request-id=abc");
+        Assert.assertEquals("https://adfs_server.contoso.com/adfs/ls", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918): a SubmitUrl whose host differs from the challenging origin's host is
+    // rejected at construction, so no PKeyAuthChallenge is created and the device key can never sign
+    // for it. This is the core SSRF exfiltration guard.
+    @Test
+    public void testWebViewRedirect_CrossOriginHost_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("Cross-origin SubmitUrl must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): a cleartext http:// SubmitUrl is rejected even when its host matches the
+    // challenging origin, so a device-signed assertion is never sent over an unprotected channel.
+    @Test
+    public void testWebViewRedirect_CleartextHttp_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("Cleartext http SubmitUrl must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): when the challenging origin cannot be determined the challenge is
+    // rejected (fail closed), rather than defaulting to accepting the attacker-supplied SubmitUrl.
+    @Test
+    public void testWebViewRedirect_NullOrigin_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    PKEYAUTH_AUTH_ENDPOINT_URL,
+                    null);
+            Assert.fail("Challenge with an undeterminable origin must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the challenging origin must itself be HTTPS. A cleartext http:// page
+    // must never become a trusted origin that can authorize an https SubmitUrl on the same host —
+    // otherwise a network attacker on the cleartext page could drive device-key signing. This is the
+    // regression test for the challenging-origin scheme check.
+    @Test
+    public void testWebViewRedirect_CleartextChallengingOrigin_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    "http://login.microsoftonline.com/common/oauth2/authorize");
+            Assert.fail("Cleartext (http) challenging origin must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): same-origin is scheme + host + port. A SubmitUrl on the same host but a
+    // different explicit port is a different origin and must be rejected.
+    @Test
+    public void testWebViewRedirect_SameHostDifferentPort_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%3a8443%2fcommon%2fDeviceAuthPKeyAuth",
+                    "https://login.microsoftonline.com/common/oauth2/authorize");
+            Assert.fail("SubmitUrl on a different port must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the implicit HTTPS port must be normalized on both sides. A challenging
+    // origin of https://host (URL.getPort() == -1) and a SubmitUrl of https://host:443 are the same
+    // origin; a naive getPort() comparison would false-reject this legitimate pair and fail the whole
+    // authorization request. This is the most important port test — it pins the normalization.
+    @Test
+    public void testWebViewRedirect_ImplicitVsExplicitDefaultPort_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2flogin.microsoftonline.com%3a443%2fcommon%2fDeviceAuthPKeyAuth",
+                "https://login.microsoftonline.com/common/oauth2/authorize");
+        Assert.assertEquals(
+                "https://login.microsoftonline.com:443/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918): parser-differential guard. java.net.URL (used for validation) treats a
+    // backslash as an ordinary character and '@' as the userinfo delimiter, so it parses
+    // https://evil.example.com\@login.microsoftonline.com/steal with host=login.microsoftonline.com —
+    // which matches the challenging origin and, without this guard, would be ACCEPTED. The WHATWG URL
+    // parser used by WebView#loadUrl (where the response is actually POSTed) treats the backslash as an
+    // authority terminator and resolves host=evil.example.com, so the device-signed assertion would be
+    // exfiltrated. Rejecting a backslash in the authority component closes the bypass. This also
+    // confirms %5C arrives form-decoded to a literal '\' by the time the factory parses the query.
+    @Test
+    public void testWebViewRedirect_BackslashAuthorityParserDifferential_Rejected() {
+        try {
+            new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX
+                            + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    CHALLENGING_ORIGIN);
+            Assert.fail("SubmitUrl with a backslash in the authority component must be rejected");
+        } catch (final ClientException e) {
+            Assert.assertEquals(DEVICE_CERTIFICATE_REQUEST_INVALID, e.getErrorCode());
+        }
+    }
+
+    // AB#3706623 (CWE-918): the backslash guard is intentionally scoped to the authority component
+    // only. A legitimate same-origin SubmitUrl may carry a backslash in a path or query value (e.g. a
+    // form-decoded DOMAIN\\user parameter); rejecting those would turn into a ClientException that fails
+    // the whole authorization request. This pins that a backslash outside the authority is still
+    // accepted (the authority — login.microsoftonline.com — contains no backslash, so both parsers
+    // agree on the host).
+    @Test
+    public void testWebViewRedirect_BackslashInQuery_Accepted() throws ClientException {
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX
+                        + "https%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth%3fdomain%3dCONTOSO%5cuser",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals(
+                "https://login.microsoftonline.com/common/DeviceAuthPKeyAuth?domain=CONTOSO\\user",
+                challenge.getSubmitUrl());
+    }
+
+    // Baseline for the enforcing tests below: master switch on AND enforcement on, so a non-ALLOWED
+    // verdict throws (the pre-round-8 behavior). Shadow-mode and flight-off tests reconfigure this.
+    @Before
+    public void setUp() {
+        setFlights(true, true);
+    }
+
+    // Reconfigures the two PKeyAuth origin-validation flights. enable = master switch
+    // (recording/evaluation/telemetry); enforce = whether a rejected verdict actually blocks.
+    private void setFlights(final boolean enable, final boolean enforce) {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final MockFlightsProvider flightsProvider = new MockFlightsProvider();
+        flightsProvider.addFlight(
+                CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), Boolean.toString(enable));
+        flightsProvider.addFlight(
+                CommonFlight.ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION.getKey(), Boolean.toString(enforce));
+        final MockFlightsManager flightsManager = new MockFlightsManager();
+        flightsManager.setMockBrokerFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
+    }
+
+    // AB#3706623 (CWE-918): the same-origin enforcement is behind a default-on ECS kill-switch. With
+    // the master flight OFF the factory must fall back to the pre-fix behavior and construct the
+    // challenge even for a cross-origin SubmitUrl — proving the disable path actually bypasses
+    // enforcement (and, being a total no-op, emits no telemetry and records nothing).
+    @Test
+    public void testWebViewRedirect_OriginValidationFlightOff_CrossOriginAccepted()
+            throws ClientException {
+        setFlights(false, false);
+
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory()
+                .getPKeyAuthChallengeFromWebViewRedirect(
+                        MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                        CHALLENGING_ORIGIN);
+
+        Assert.assertEquals("https://evil.example.com/steal", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918) shadow mode: master switch ON but enforcement OFF. Every rejection reason
+    // is still evaluated and logged (and telemetry emitted), but the challenge is RETURNED rather than
+    // blocked, so real-world origin pairs can be measured before enforcement is ramped.
+    @Test
+    public void testWebViewRedirect_ShadowMode_CrossOriginHost_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%2fsteal",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals("https://evil.example.com/steal", challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_CleartextHttp_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals("http://login.microsoftonline.com/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_NullOrigin_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                PKEYAUTH_AUTH_ENDPOINT_URL,
+                null);
+        Assert.assertEquals(PKEYAUTH_AUTH_ENDPOINT_SUBMIT_URL, challenge.getSubmitUrl());
+    }
+
+    @Test
+    public void testWebViewRedirect_ShadowMode_BackslashAuthority_Returned() throws ClientException {
+        setFlights(true, false);
+        final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                CHALLENGING_ORIGIN);
+        Assert.assertEquals(
+                "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+    }
+
+    // AB#3706623 (CWE-918) telemetry accuracy (round 14, melissaahn): the challenging origin is parsed
+    // up front in computeOriginValidation, before the early SubmitUrl rejection paths, so
+    // pkeyauth_challenging_host_is_aad_cloud reflects the real origin even when the untrusted SubmitUrl
+    // is rejected. Previously the backslash and not-HTTPS branches returned with originUri == null,
+    // hard-coding the attribute to false and making a genuine AAD origin indistinguishable from junk
+    // traffic — skewing exactly the two attacker-shaped verdicts where AAD-vs-junk attribution matters
+    // most for the shadow-mode rollout decision. These pin that the attribute is now derived from the
+    // origin, and that hoisting the parse did not change any verdict.
+
+    // A synthetic, test-only host seeded as a validated AAD cloud. A real production host is avoided on
+    // purpose: AzureActiveDirectory.putCloud writes into the JVM-global sAadClouds, and there is no
+    // public API to remove a single seeded host again (round 15, mohitc1). setEnvironment(...) is the
+    // only clear path, but it clears only when the environment actually changes (a no-op here) and,
+    // when it does fire, destructively wipes and re-seeds all cloud discovery - unsafe to call from
+    // teardown as it would disturb every other test in the module. So rather than clean up, we make the
+    // seeded entry inert: this synthetic host cannot collide with any real host a later test queries, so
+    // leaving it validated for the rest of the module is deliberately harmless.
+    private static final String AAD_CHALLENGING_HOST = "pkeyauth-origin-aad-test.cloudapp.example";
+    // A host deliberately never seeded, so isValidCloudHost is genuinely false for it.
+    private static final String NON_AAD_CHALLENGING_HOST = "not-a-cloud.pkeyauth-origin-test.example";
+
+    @Test
+    public void testShadowMode_BackslashAuthority_AadChallengingOrigin_RecordsAadCloudTrue()
+            throws ClientException {
+        setFlights(true, false);
+        AzureActiveDirectory.putCloud(AAD_CHALLENGING_HOST, new AzureActiveDirectoryCloud(true));
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    "https://" + AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            // Verdict unchanged: backslash authority is still rejected (returned in shadow mode).
+            Assert.assertEquals(
+                    "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_BACKSLASH_AUTHORITY");
+            // The point of the fix: the AAD challenging origin is attributed even on this early-reject path.
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), true);
+        }
+    }
+
+    @Test
+    public void testShadowMode_SubmitNotHttps_AadChallengingOrigin_RecordsAadCloudTrue()
+            throws ClientException {
+        setFlights(true, false);
+        AzureActiveDirectory.putCloud(AAD_CHALLENGING_HOST, new AzureActiveDirectoryCloud(true));
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "http%3a%2f%2flogin.microsoftonline.com%2fcommon%2fDeviceAuthPKeyAuth",
+                    "https://" + AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            // Verdict unchanged: cleartext SubmitUrl is still rejected (returned in shadow mode).
+            Assert.assertEquals(
+                    "http://login.microsoftonline.com/common/DeviceAuthPKeyAuth", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_SUBMIT_NOT_HTTPS");
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), true);
+        }
+    }
+
+    // Proves the attribute is derived from the origin, not merely flipped to true: a non-AAD challenging
+    // origin on the same early-reject path still records false, and the verdict is still unchanged.
+    @Test
+    public void testShadowMode_BackslashAuthority_NonAadChallengingOrigin_RecordsAadCloudFalse()
+            throws ClientException {
+        setFlights(true, false);
+        final Span mockSpan = Mockito.mock(Span.class);
+        try (final MockedStatic<SpanExtension> spanExtension = Mockito.mockStatic(SpanExtension.class)) {
+            spanExtension.when(SpanExtension::current).thenReturn(mockSpan);
+
+            final PKeyAuthChallenge challenge = new PKeyAuthChallengeFactory().getPKeyAuthChallengeFromWebViewRedirect(
+                    MINIMAL_CHALLENGE_PREFIX + "https%3a%2f%2fevil.example.com%5c%40login.microsoftonline.com%2fsteal",
+                    "https://" + NON_AAD_CHALLENGING_HOST + "/common/oauth2/v2.0/authorize");
+
+            Assert.assertEquals(
+                    "https://evil.example.com\\@login.microsoftonline.com/steal", challenge.getSubmitUrl());
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_submit_url_origin_validation_result.name(),
+                    "REJECTED_BACKSLASH_AUTHORITY");
+            Mockito.verify(mockSpan).setAttribute(
+                    AttributeName.pkeyauth_challenging_host_is_aad_cloud.name(), false);
+        }
+    }
+
+    @After
+    public void tearDown() {
+        // Prevent flight state from a disable-path test leaking into other tests (the @Before baseline
+        // re-establishes enforcement for each test anyway; this is belt-and-suspenders).
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
     @Test

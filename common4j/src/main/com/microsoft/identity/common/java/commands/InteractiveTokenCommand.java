@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.ui.PreferredAuthMethod;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.util.List;
@@ -77,7 +78,17 @@ public class InteractiveTokenCommand extends TokenCommand {
 
                 span.setAttribute(AttributeName.controller_name.name(), mController.getClass().getSimpleName());
 
-                final AcquireTokenResult result = mController.acquireToken((InteractiveTokenCommandParameters) getParameters());
+                final InteractiveTokenCommandParameters interactiveParameters =
+                        (InteractiveTokenCommandParameters) getParameters();
+
+                final PreferredAuthMethod preferredAuthMethod = interactiveParameters.getPreferredAuthMethod();
+                span.setAttribute(
+                        AttributeName.preferred_auth_method.name(),
+                        (preferredAuthMethod == null || preferredAuthMethod.value == null)
+                                ? "none"
+                                : preferredAuthMethod.value);
+
+                final AcquireTokenResult result = mController.acquireToken(interactiveParameters);
 
                 if (result == null) {
                     span.setStatus(StatusCode.ERROR, "empty result");

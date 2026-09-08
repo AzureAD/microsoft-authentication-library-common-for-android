@@ -27,22 +27,9 @@ import com.microsoft.identity.common.java.nativeauth.providers.INativeAuthApiRes
 /**
  * Single wire model for every V2 HAL Native Auth API response body. There are no response
  * subclasses per state/action pair; [state] and [action] are the discriminator that the parser
- * (T4) resolves into a typed SDK outcome.
- *
- * Two shapes are intentionally adapted from the design vocabulary to fit [INativeAuthApiResponse],
- * common4j's existing (non-open) V1 response base class:
- * - [INativeAuthApiResponse.correlationId] is a non-`open` `var` on the base class, so it cannot be
- *   overridden here. It is instead re-declared under a different name, [correlationIdValue] (an
- *   `internal` property, forwarded to the base constructor), and the inherited `correlationId`
- *   member remains the one other common4j code should read.
- * - the HAL server error is exposed as [serverError] rather than overriding the base class's
- *   `error: String?`, because [HalServerError] carries structured detail that is not
- *   assignment-compatible with that member's type.
- *
- * Instances are only ever produced via [from]; the primary constructor is private so that
- * [isWebFallbackRequired] can never be constructed out of sync with [serverError] and [state].
+ * resolves into a typed SDK outcome.
  */
-data class NativeAuthV2HalApiResponse private constructor(
+class NativeAuthV2HalApiResponse private constructor(
     override val statusCode: Int,
     internal val correlationIdValue: String,
     override val continuationToken: String?,
@@ -54,8 +41,9 @@ data class NativeAuthV2HalApiResponse private constructor(
     val challengeTargetLabel: String?,
     val challengeChannel: String?,
     val authorizationCode: String?,
-    val serverError: HalServerError?,
-    val isWebFallbackRequired: Boolean
+    val pollIntervalMillis: Int?,
+    val authenticationFactor: String?,
+    val serverError: HalServerError?
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
     data class EmbeddedAuthMethod(
@@ -72,6 +60,24 @@ data class NativeAuthV2HalApiResponse private constructor(
         val correlationId: String?
     )
 
+    val isWebFallbackRequired: Boolean
+        get() = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
+                state == WEB_FALLBACK_REQUIRED_STATE
+
+    /**
+     * `true` when the server declared this challenge to be a multi-factor (second-factor) step via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isMultiFactorChallenge: Boolean
+        get() = authenticationFactor == MULTI_FACTOR
+
+    /**
+     * `true` when the server declared this challenge to be the single (first) factor via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isSingleFactorChallenge: Boolean
+        get() = authenticationFactor == SINGLE_FACTOR
+
     /**
      * PII-bearing string. Still never includes [continuationToken], [authorizationCode], any href
      * value (from [links] or an embedded method's links), or a raw [HalResource] property.
@@ -80,6 +86,7 @@ data class NativeAuthV2HalApiResponse private constructor(
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
             "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
+            "authenticationFactor=$authenticationFactor, " +
             "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
@@ -92,7 +99,8 @@ data class NativeAuthV2HalApiResponse private constructor(
     override fun toString(): String = "NativeAuthV2HalApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
-            "challengeChannel=$challengeChannel, hasAuthorizationCode=${authorizationCode != null}, " +
+            "challengeChannel=$challengeChannel, authenticationFactor=$authenticationFactor, " +
+            "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
 
@@ -103,6 +111,31 @@ data class NativeAuthV2HalApiResponse private constructor(
         private const val HINT_KEY = "hint"
         private const val TYPE_KEY = "type"
         private const val AUTHORIZATION_CODE_KEY = "authorizationCode"
+
+        /**
+         * Wrapper object carrying challenge metadata the SDK needs to interpret a `challenge`
+         * action, most importantly whether the challenge is the first factor or a second factor.
+         */
+        private const val CHALLENGE_CONTEXT_KEY = "challengeContext"
+        private const val AUTHENTICATION_FACTOR_KEY = "authenticationFactor"
+
+        /** `challengeContext.authenticationFactor` value for a first-factor challenge. */
+        const val SINGLE_FACTOR = "singleFactor"
+
+        /** `challengeContext.authenticationFactor` value for a second-factor (MFA) challenge. */
+        const val MULTI_FACTOR = "multiFactor"
+
+        /**
+         * Server-suggested delay, in milliseconds, before the next poll of an in-progress
+         * operation.
+         */
+        private const val POLL_INTERVAL_KEY = "pollInterval"
+
+        /**
+         * The authorize-challenge response returns the authorization code as a top-level `code`
+         * property.
+         */
+        private const val AUTHORIZATION_CODE_SHORT_KEY = "code"
         private const val CONTINUATION_TOKEN_CAMEL_KEY = "continuationToken"
         private const val CONTINUATION_TOKEN_SNAKE_KEY = "continuation_token"
         private const val METHODS_RELATION = "methods"
@@ -110,16 +143,15 @@ data class NativeAuthV2HalApiResponse private constructor(
         private const val INNER_ERROR_KEY = "innerError"
         private const val ERROR_CODE_KEY = "code"
         private const val ERROR_MESSAGE_KEY = "message"
+        private const val ERROR_DESCRIPTION_KEY = "error_description"
         private const val ERROR_CORRELATION_ID_KEY = "correlationId"
+        private const val ERROR_CORRELATION_ID_SNAKE_KEY = "correlation_id"
         private const val REDIRECT_TO_WEB_ERROR_CODE = "redirect_to_web"
         private const val WEB_FALLBACK_REQUIRED_STATE = "webFallbackRequired"
 
         /**
-         * Builds a [NativeAuthV2HalApiResponse] by mechanically mapping [halResource]'s wire
-         * shape onto this model's fields (including handling both continuation-token spellings
-         * the service may use). This performs no state/action-based interpretation, error mapping,
-         * or operation-specific business logic; that is the parser's job (T4/T6). [halResource]
-         * itself is never retained or logged.
+         * Builds a [NativeAuthV2HalApiResponse] by mapping [halResource]'s wire shape onto this
+         * model's fields.
          */
         internal fun from(
             halResource: HalResource,
@@ -142,12 +174,49 @@ data class NativeAuthV2HalApiResponse private constructor(
                 codeLength = halResource.int(CODE_LENGTH_KEY),
                 challengeTargetLabel = halResource.string(HINT_KEY),
                 challengeChannel = halResource.string(TYPE_KEY),
-                authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY),
-                serverError = serverError,
-                isWebFallbackRequired = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
-                        state == WEB_FALLBACK_REQUIRED_STATE
+                authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
+                    ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
+                pollIntervalMillis = halResource.int(POLL_INTERVAL_KEY),
+                authenticationFactor = extractAuthenticationFactor(halResource),
+                serverError = serverError
             )
         }
+
+        /**
+         * Builds a [NativeAuthV2HalApiResponse] carrying only a client-side [HalServerError], for
+         * responses the SDK rejects before (or instead of) mapping a server body: an empty body, a
+         * body that is not valid JSON, or a status the SDK refuses to body-parse.
+         *
+         * Constructs the model directly rather than round-tripping a synthesised JSON document
+         * through [HalResource], which would re-parse data the caller already holds and would break
+         * on any [errorMessage] containing JSON metacharacters.
+         */
+        internal fun error(
+            statusCode: Int,
+            correlationId: String,
+            errorCode: String,
+            errorMessage: String
+        ): NativeAuthV2HalApiResponse = NativeAuthV2HalApiResponse(
+            statusCode = statusCode,
+            correlationIdValue = correlationId,
+            continuationToken = null,
+            state = null,
+            action = null,
+            links = emptyMap(),
+            methods = emptyList(),
+            codeLength = null,
+            challengeTargetLabel = null,
+            challengeChannel = null,
+            authorizationCode = null,
+            pollIntervalMillis = null,
+            authenticationFactor = null,
+            serverError = HalServerError(
+                code = errorCode,
+                message = errorMessage,
+                innerErrorCode = null,
+                correlationId = correlationId
+            )
+        )
 
         private fun toEmbeddedAuthMethod(resource: HalResource): EmbeddedAuthMethod = EmbeddedAuthMethod(
             id = resource.string("id"),
@@ -156,9 +225,34 @@ data class NativeAuthV2HalApiResponse private constructor(
             links = flattenFirstHref(resource.links)
         )
 
+        /**
+         * Reads `challengeContext.authenticationFactor`, accepting only a nested object shape.
+         * Any other shape leaves the factor unset, so the parser treats the challenge as
+         * unclassified rather than guessing.
+         */
+        private fun extractAuthenticationFactor(halResource: HalResource): String? {
+            val challengeContext = halResource.properties[CHALLENGE_CONTEXT_KEY] as? Map<*, *>
+                ?: return null
+            return (challengeContext[AUTHENTICATION_FACTOR_KEY] as? String)?.takeUnless { it.isBlank() }
+        }
+
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
-            links.mapNotNull { (relation, halLinks) -> halLinks.firstOrNull()?.let { relation to it.href } }
+            links.mapNotNull { (relation, halLinks) ->
+                halLinks.firstOrNull { isFollowable(it) }?.let { relation to it.href }
+            }
                 .toMap()
+
+        private fun isFollowable(link: HalLink): Boolean =
+            !link.templated || isSupportedTenantTemplate(link.href)
+
+        private fun isSupportedTenantTemplate(href: String): Boolean {
+            val withoutLeadingSlash = href.removePrefix("/")
+            if (!withoutLeadingSlash.startsWith("$TENANT_TEMPLATE/")) {
+                return false
+            }
+            val remainder = withoutLeadingSlash.removePrefix(TENANT_TEMPLATE)
+            return !remainder.contains('{') && !remainder.contains('}')
+        }
 
         /**
          * Flat top-level link properties (snake_case) the authorize-challenge *start* response
@@ -170,6 +264,8 @@ data class NativeAuthV2HalApiResponse private constructor(
             "sign_in" to NativeAuthV2LinkRelation.SIGN_IN.value,
             "sign_up" to NativeAuthV2LinkRelation.SIGN_UP.value
         )
+
+        private const val TENANT_TEMPLATE = "{tenant}"
 
         /**
          * Builds the relation-to-href map from both wire shapes the service uses: the flat
@@ -188,14 +284,27 @@ data class NativeAuthV2HalApiResponse private constructor(
         }
 
         private fun extractServerError(halResource: HalResource): HalServerError? {
-            val errorMap = halResource.properties[ERROR_KEY] as? Map<*, *> ?: return null
-            val innerErrorMap = errorMap[INNER_ERROR_KEY] as? Map<*, *>
-            return HalServerError(
-                code = errorMap[ERROR_CODE_KEY] as? String,
-                message = errorMap[ERROR_MESSAGE_KEY] as? String,
-                innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
-                correlationId = errorMap[ERROR_CORRELATION_ID_KEY] as? String
-            )
+            return when (val errorValue = halResource.properties[ERROR_KEY]) {
+                is Map<*, *> -> {
+                    val innerErrorMap = errorValue[INNER_ERROR_KEY] as? Map<*, *>
+                    HalServerError(
+                        code = errorValue[ERROR_CODE_KEY] as? String,
+                        message = errorValue[ERROR_MESSAGE_KEY] as? String,
+                        innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
+                        correlationId = errorValue[ERROR_CORRELATION_ID_KEY] as? String
+                    )
+                }
+
+                is String -> HalServerError(
+                    code = errorValue,
+                    message = halResource.string(ERROR_DESCRIPTION_KEY),
+                    innerErrorCode = null,
+                    correlationId = halResource.string(ERROR_CORRELATION_ID_SNAKE_KEY)
+                        ?: halResource.string(ERROR_CORRELATION_ID_KEY)
+                )
+
+                else -> null
+            }
         }
     }
 }

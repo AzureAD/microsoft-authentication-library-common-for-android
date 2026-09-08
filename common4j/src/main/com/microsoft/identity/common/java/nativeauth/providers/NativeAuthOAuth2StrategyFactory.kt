@@ -45,16 +45,6 @@ class NativeAuthOAuth2StrategyFactory {
         ): NativeAuthOAuth2Strategy {
             val requestInterceptor = config.requestInterceptor
             val httpClient = UrlConnectionHttpClient.getDefaultInstance()
-            val nativeAuthV2RequestProvider = NativeAuthV2RequestProvider(config = config)
-            val nativeAuthV2ResponseHandler = NativeAuthV2ResponseHandler()
-            val nativeAuthV2ResponseParser = NativeAuthV2ResponseParser()
-            val nativeAuthV2Interactor = NativeAuthV2Interactor(
-                httpClient = httpClient,
-                requestProvider = nativeAuthV2RequestProvider,
-                responseHandler = nativeAuthV2ResponseHandler,
-                responseParser = nativeAuthV2ResponseParser,
-                requestInterceptor = requestInterceptor
-            )
             return NativeAuthOAuth2Strategy(
                 strategyParameters = strategyParameters,
                 config = config,
@@ -81,8 +71,27 @@ class NativeAuthOAuth2StrategyFactory {
                     nativeAuthRequestProvider = NativeAuthRequestProvider(config = config),
                     nativeAuthResponseHandler = NativeAuthResponseHandler(),
                     requestInterceptor = requestInterceptor
-                ),
-                nativeAuthV2Interactor = nativeAuthV2Interactor
+                )
+            )
+        }
+
+        /**
+         * Creates a Native Authentication V2 strategy.
+         */
+        fun createV2Strategy(
+            config: NativeAuthOAuth2Configuration,
+            strategyParameters: OAuth2StrategyParameters,
+        ): NativeAuthV2OAuth2Strategy {
+            return NativeAuthV2OAuth2Strategy(
+                strategyParameters = strategyParameters,
+                config = config,
+                nativeAuthV2Interactor = NativeAuthV2Interactor(
+                    httpClient = UrlConnectionHttpClient.getDefaultInstance(),
+                    requestProvider = NativeAuthV2RequestProvider(config = config),
+                    responseHandler = NativeAuthV2ResponseHandler(),
+                    responseParser = NativeAuthV2ResponseParser(),
+                    requestInterceptor = config.requestInterceptor
+                )
             )
         }
     }
