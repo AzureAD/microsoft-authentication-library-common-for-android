@@ -42,6 +42,7 @@ class NativeAuthV2HalApiResponse private constructor(
     val challengeChannel: String?,
     val authorizationCode: String?,
     val pollIntervalMillis: Int?,
+    val authenticationFactor: String?,
     val serverError: HalServerError?
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
@@ -64,6 +65,20 @@ class NativeAuthV2HalApiResponse private constructor(
                 state == WEB_FALLBACK_REQUIRED_STATE
 
     /**
+     * `true` when the server declared this challenge to be a multi-factor (second-factor) step via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isMultiFactorChallenge: Boolean
+        get() = authenticationFactor == MULTI_FACTOR
+
+    /**
+     * `true` when the server declared this challenge to be the single (first) factor via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isSingleFactorChallenge: Boolean
+        get() = authenticationFactor == SINGLE_FACTOR
+
+    /**
      * PII-bearing string. Still never includes [continuationToken], [authorizationCode], any href
      * value (from [links] or an embedded method's links), or a raw [HalResource] property.
      */
@@ -71,6 +86,7 @@ class NativeAuthV2HalApiResponse private constructor(
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
             "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
+            "authenticationFactor=$authenticationFactor, " +
             "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
@@ -83,7 +99,8 @@ class NativeAuthV2HalApiResponse private constructor(
     override fun toString(): String = "NativeAuthV2HalApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
-            "challengeChannel=$challengeChannel, hasAuthorizationCode=${authorizationCode != null}, " +
+            "challengeChannel=$challengeChannel, authenticationFactor=$authenticationFactor, " +
+            "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
 
@@ -94,6 +111,19 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val HINT_KEY = "hint"
         private const val TYPE_KEY = "type"
         private const val AUTHORIZATION_CODE_KEY = "authorizationCode"
+
+        /**
+         * Wrapper object carrying challenge metadata the SDK needs to interpret a `challenge`
+         * action, most importantly whether the challenge is the first factor or a second factor.
+         */
+        private const val CHALLENGE_CONTEXT_KEY = "challengeContext"
+        private const val AUTHENTICATION_FACTOR_KEY = "authenticationFactor"
+
+        /** `challengeContext.authenticationFactor` value for a first-factor challenge. */
+        const val SINGLE_FACTOR = "singleFactor"
+
+        /** `challengeContext.authenticationFactor` value for a second-factor (MFA) challenge. */
+        const val MULTI_FACTOR = "multiFactor"
 
         /**
          * Server-suggested delay, in milliseconds, before the next poll of an in-progress
@@ -147,6 +177,7 @@ class NativeAuthV2HalApiResponse private constructor(
                 authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
                     ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
                 pollIntervalMillis = halResource.int(POLL_INTERVAL_KEY),
+                authenticationFactor = extractAuthenticationFactor(halResource),
                 serverError = serverError
             )
         }
@@ -178,6 +209,7 @@ class NativeAuthV2HalApiResponse private constructor(
             challengeChannel = null,
             authorizationCode = null,
             pollIntervalMillis = null,
+            authenticationFactor = null,
             serverError = HalServerError(
                 code = errorCode,
                 message = errorMessage,
@@ -192,6 +224,17 @@ class NativeAuthV2HalApiResponse private constructor(
             hint = resource.string(HINT_KEY),
             links = flattenFirstHref(resource.links)
         )
+
+        /**
+         * Reads `challengeContext.authenticationFactor`, accepting only a nested object shape.
+         * Any other shape leaves the factor unset, so the parser treats the challenge as
+         * unclassified rather than guessing.
+         */
+        private fun extractAuthenticationFactor(halResource: HalResource): String? {
+            val challengeContext = halResource.properties[CHALLENGE_CONTEXT_KEY] as? Map<*, *>
+                ?: return null
+            return (challengeContext[AUTHENTICATION_FACTOR_KEY] as? String)?.takeUnless { it.isBlank() }
+        }
 
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
             links.mapNotNull { (relation, halLinks) ->
