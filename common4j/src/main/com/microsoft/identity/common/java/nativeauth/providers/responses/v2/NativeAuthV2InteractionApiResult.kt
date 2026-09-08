@@ -61,8 +61,8 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
 
     /**
      * The first factor has been satisfied and the server requires a second factor. [methods] are
-     * the multi-factor methods the server offered, in server order; the caller must select one
-     * explicitly, and no challenge is sent until it does.
+     * the multi-factor methods the server offered, in server order. The flow controller challenges
+     * a sole supported method automatically; multiple methods require the app to select one.
      */
     data class MFARequired(
         override val correlationId: String,

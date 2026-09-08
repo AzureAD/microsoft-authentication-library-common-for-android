@@ -461,7 +461,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * one-time code, which is out of scope for this increment.
      *
      * With a non-empty entry-supplied password the flow verifies it immediately and returns
-     * [NativeAuthV2CommandResult.Complete] or [NativeAuthV2CommandResult.MFARequired]; without one
+     * [NativeAuthV2CommandResult.Complete], [NativeAuthV2CommandResult.MFARequired], or
+     * [NativeAuthV2CommandResult.MFAVerificationRequired]; without one
      * it returns [NativeAuthV2CommandResult.PasswordRequired] and waits for [submitPassword].
      */
     fun signInStart(parameters: SignInV2StartCommandParameters): NativeAuthV2SignInStartCommandResult {
@@ -576,11 +577,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     claimsRequestJson = parameters.claimsRequestJson,
                     state = verifyResult.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
-                    correlationId = verifyResult.correlationId,
-                    continuationState = verifyResult.continuationState,
-                    authMethods = verifyResult.methods
-                )
+                is NativeAuthV2InteractionApiResult.MFARequired ->
+                    challengeSingleMFAMethod(oAuth2Strategy, verifyResult)
+                        ?: NativeAuthV2CommandResult.MFARequired(
+                            correlationId = verifyResult.correlationId,
+                            continuationState = verifyResult.continuationState,
+                            authMethods = verifyResult.methods
+                        )
                 is NativeAuthV2InteractionApiResult.InvalidCredentials -> NativeAuthV2CommandResult.InvalidCredentials(
                     correlationId = verifyResult.correlationId,
                     error = verifyResult.error,
@@ -638,11 +641,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                     claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
                     state = verifyResult.continuationState
                 )
-                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
-                    correlationId = verifyResult.correlationId,
-                    continuationState = verifyResult.continuationState,
-                    authMethods = verifyResult.methods
-                )
+                is NativeAuthV2InteractionApiResult.MFARequired ->
+                    challengeSingleMFAMethod(oAuth2Strategy, verifyResult)
+                        ?: NativeAuthV2CommandResult.MFARequired(
+                            correlationId = verifyResult.correlationId,
+                            continuationState = verifyResult.continuationState,
+                            authMethods = verifyResult.methods
+                        )
                 is NativeAuthV2InteractionApiResult.InvalidCredentials -> NativeAuthV2CommandResult.IncorrectPassword(
                     correlationId = verifyResult.correlationId,
                     error = verifyResult.error,
@@ -670,7 +675,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Challenges the multi-factor method the app selected, following the href the server attached
-     * to that method. No challenge is ever sent without an explicit selection.
+     * to that method.
      */
     fun selectMFAMethod(parameters: NativeAuthV2SelectMFAMethodCommandParameters): NativeAuthV2SelectMFAMethodCommandResult {
         LogSession.logMethodCall(
@@ -682,28 +687,53 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         try {
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
 
-            val challengeResult = oAuth2Strategy.performMethodChallenge(
+            return challengeMFAMethod(
+                oAuth2Strategy = oAuth2Strategy,
                 state = parameters.continuationState,
                 methodId = parameters.methodId
             )
-
-            return when (challengeResult) {
-                is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.MFAVerificationRequired(
-                    correlationId = challengeResult.correlationId,
-                    continuationState = challengeResult.continuationState,
-                    codeLength = challengeResult.codeLength,
-                    challengeTargetLabel = challengeResult.challengeTargetLabel,
-                    challengeChannel = challengeResult.challengeChannel
-                )
-                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
-                    correlationId = challengeResult.correlationId,
-                    redirectReason = challengeResult.redirectReason
-                )
-                else -> mapInteractionError(challengeResult)
-            }
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in selectMFAMethod", e)
             throw e
+        }
+    }
+
+    private fun challengeSingleMFAMethod(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        result: NativeAuthV2InteractionApiResult.MFARequired
+    ): NativeAuthV2SelectMFAMethodCommandResult? {
+        // Count all offered methods, not just those this SDK currently supports.
+        val method = result.methods.singleOrNull() ?: return null
+        if (method.type != METHOD_TYPE_EMAIL) {
+            Logger.warn(TAG, result.correlationId, "The sole MFA method is not supported.")
+            return NativeAuthV2CommandResult.NotImplemented(
+                correlationId = result.correlationId,
+                error = UNSUPPORTED_CHALLENGE_METHOD,
+                errorDescription = "Only email authentication methods are supported for multi-factor authentication."
+            )
+        }
+        return challengeMFAMethod(oAuth2Strategy, result.continuationState, method.id)
+    }
+
+    private fun challengeMFAMethod(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2SelectMFAMethodCommandResult {
+        val challengeResult = oAuth2Strategy.performMethodChallenge(state, methodId)
+        return when (challengeResult) {
+            is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.MFAVerificationRequired(
+                correlationId = challengeResult.correlationId,
+                continuationState = challengeResult.continuationState,
+                codeLength = challengeResult.codeLength,
+                challengeTargetLabel = challengeResult.challengeTargetLabel,
+                challengeChannel = challengeResult.challengeChannel
+            )
+            is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                correlationId = challengeResult.correlationId,
+                redirectReason = challengeResult.redirectReason
+            )
+            else -> mapInteractionError(challengeResult)
         }
     }
 

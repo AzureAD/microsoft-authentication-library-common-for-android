@@ -34,7 +34,9 @@ sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommand
 sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SignInStartCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitPasswordCommandResult : INativeAuthCommandResult
-sealed interface NativeAuthV2SelectMFAMethodCommandResult : INativeAuthCommandResult
+// A sole MFA method is challenged inline during either password submission path.
+sealed interface NativeAuthV2SelectMFAMethodCommandResult :
+    NativeAuthV2SignInStartCommandResult, NativeAuthV2SubmitPasswordCommandResult
 sealed interface NativeAuthV2SubmitMFAChallengeCommandResult : INativeAuthCommandResult
 
 /**
@@ -174,8 +176,8 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The first factor succeeded and the server requires a second factor. [authMethods] are the
-     * methods the server offered, in server order; the app must select one explicitly before any
-     * challenge is sent.
+     * methods the server offered, in server order. Multiple methods require explicit selection;
+     * a sole supported method is challenged automatically instead of returning this result.
      * Applies to the sign-in start and submit-password steps.
      */
     data class MFARequired(
@@ -192,7 +194,7 @@ interface NativeAuthV2CommandResult {
 
     /**
      * The server sent a multi-factor challenge to the selected method and awaits the code.
-     * Applies to the select-MFA-method step.
+     * Applies to explicit method selection and automatic selection during sign-in or password submission.
      */
     data class MFAVerificationRequired(
         override val correlationId: String,

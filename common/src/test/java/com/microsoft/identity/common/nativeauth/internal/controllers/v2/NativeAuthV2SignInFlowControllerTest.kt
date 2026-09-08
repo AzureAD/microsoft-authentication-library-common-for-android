@@ -278,7 +278,10 @@ class NativeAuthV2SignInFlowControllerTest {
     fun testSignInStartReturnsMFARequiredWithServerMethodsAndSendsNoMfaChallenge() {
         val passwordState = mockContinuationState()
         val mfaState = mockContinuationState()
-        val methods = listOf(NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"))
+        val methods = listOf(
+            NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
+            NativeAuthV2AuthMethod("sms-1", "sms", "***1234")
+        )
         stubStartThroughPasswordChallenge(passwordState)
 
         every {
@@ -291,7 +294,98 @@ class NativeAuthV2SignInFlowControllerTest {
         val mfa = result as NativeAuthV2CommandResult.MFARequired
         assertEquals(methods, mfa.authMethods)
         assertEquals(mfaState, mfa.continuationState)
-        verify(exactly = 0) { mockStrategy.performMethodChallenge(mfaState, "email-1") }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(mfaState, any()) }
+    }
+
+    @Test
+    fun testSingleEmailMfaMethodIsChallengedFromBothPasswordPaths() {
+        val passwordState = mockContinuationState()
+        val mfaState = mockContinuationState()
+        val codeState = mockContinuationState()
+        stubStartThroughPasswordChallenge(passwordState)
+        every { mockStrategy.performPasswordVerify(passwordState, any()) } returns
+            NativeAuthV2InteractionApiResult.MFARequired(
+                correlationId, mfaState,
+                listOf(NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"))
+            )
+        every { mockStrategy.performMethodChallenge(mfaState, "email-1") } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(
+                correlationId = correlationId,
+                continuationState = codeState,
+                codeLength = 6,
+                challengeTargetLabel = "u***@contoso.com",
+                challengeChannel = "email"
+            )
+
+        val results = listOf<INativeAuthCommandResult>(
+            controller.signInStart(signInStartParameters()),
+            controller.submitPassword(submitPasswordParameters(passwordState))
+        )
+
+        results.forEach { result ->
+            assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
+            val verification = result as NativeAuthV2CommandResult.MFAVerificationRequired
+            assertEquals(codeState, verification.continuationState)
+            assertEquals(correlationId, verification.correlationId)
+            assertEquals(6, verification.codeLength)
+            assertEquals("u***@contoso.com", verification.challengeTargetLabel)
+            assertEquals("email", verification.challengeChannel)
+        }
+        verify(exactly = 2) { mockStrategy.performMethodChallenge(mfaState, "email-1") }
+    }
+
+    @Test
+    fun testSingleUnsupportedMfaMethodIsNotChallengedFromEitherPasswordPath() {
+        val passwordState = mockContinuationState()
+        val mfaState = mockContinuationState()
+        stubStartThroughPasswordChallenge(passwordState)
+        every { mockStrategy.performPasswordVerify(passwordState, any()) } returns
+            NativeAuthV2InteractionApiResult.MFARequired(
+                correlationId, mfaState,
+                listOf(NativeAuthV2AuthMethod("sms-1", "sms", "***1234"))
+            )
+
+        val results = listOf<INativeAuthCommandResult>(
+            controller.signInStart(signInStartParameters()),
+            controller.submitPassword(submitPasswordParameters(passwordState))
+        )
+
+        results.forEach { assertTrue(it is NativeAuthV2CommandResult.NotImplemented) }
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(mfaState, any()) }
+    }
+
+    @Test
+    fun testAutomaticMfaChallengePropagatesRedirectAndApiError() {
+        val passwordState = mockContinuationState()
+        val mfaState = mockContinuationState()
+        stubStartThroughPasswordChallenge(passwordState)
+        every { mockStrategy.performPasswordVerify(passwordState, any()) } returns
+            NativeAuthV2InteractionApiResult.MFARequired(
+                correlationId, mfaState,
+                listOf(NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"))
+            )
+        every { mockStrategy.performMethodChallenge(mfaState, "email-1") } returns
+            NativeAuthV2InteractionApiResult.Redirect(correlationId, "redirect_to_web")
+
+        val redirect = controller.signInStart(signInStartParameters())
+
+        assertTrue(redirect is INativeAuthCommandResult.Redirect)
+        assertEquals("redirect_to_web", (redirect as INativeAuthCommandResult.Redirect).redirectReason)
+
+        every { mockStrategy.performMethodChallenge(mfaState, "email-1") } returns
+            NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = correlationId,
+                error = "accessDenied",
+                errorDescription = "blocked",
+                errorCodes = listOf(50053)
+            )
+
+        val error = controller.submitPassword(submitPasswordParameters(passwordState))
+
+        assertTrue(error is INativeAuthCommandResult.APIError)
+        assertEquals("accessDenied", (error as INativeAuthCommandResult.APIError).error)
+        assertEquals(listOf(50053), error.errorCodes)
+        assertEquals(correlationId, error.correlationId)
     }
 
     @Test
@@ -427,7 +521,10 @@ class NativeAuthV2SignInFlowControllerTest {
     fun testSubmitPasswordReturnsMFARequiredWhenServerRequiresSecondFactor() {
         val state = mockContinuationState()
         val mfaState = mockContinuationState()
-        val methods = listOf(NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"))
+        val methods = listOf(
+            NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
+            NativeAuthV2AuthMethod("sms-1", "sms", "***1234")
+        )
 
         every {
             mockStrategy.performPasswordVerify(state, any())
@@ -437,6 +534,7 @@ class NativeAuthV2SignInFlowControllerTest {
 
         assertTrue(result is NativeAuthV2CommandResult.MFARequired)
         assertEquals(methods, (result as NativeAuthV2CommandResult.MFARequired).authMethods)
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(mfaState, any()) }
     }
 
     @Test
