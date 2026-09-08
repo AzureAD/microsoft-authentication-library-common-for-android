@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.util.ObjectMapper
@@ -190,8 +189,7 @@ class NativeAuthV2SignUpRequestProviderTest {
                 }
                 """.trimIndent()
             ),
-            previousState = entryState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = entryState()
         )
         return (result as NativeAuthV2InteractionApiResult.AttributesRequired).continuationState
     }

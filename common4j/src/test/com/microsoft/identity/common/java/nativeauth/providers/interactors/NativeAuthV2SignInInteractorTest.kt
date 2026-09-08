@@ -25,17 +25,16 @@ package com.microsoft.identity.common.java.nativeauth.providers.interactors
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2ChallengeRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2EntryRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PasswordVerifyRequest
-import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2VerifyRequest
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.HalResource
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -64,7 +63,6 @@ class NativeAuthV2SignInInteractorTest {
     private val signInUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/signin/start")
     private val challengeUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/password/pwd-1/challenge")
     private val passwordVerifyUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/password/pwd-1/verify")
-    private val mfaVerifyUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/email/email-1/verify")
 
     private val httpClient = mockk<UrlConnectionHttpClient>()
     private val requestProvider = mockk<NativeAuthV2RequestProvider>()
@@ -85,7 +83,7 @@ class NativeAuthV2SignInInteractorTest {
     )
 
     @Test
-    fun performSignInStart_postsUsernameAndContinuationTokenAndParsesAsSignInStart() {
+    fun performSignInStart_postsUsernameAndContinuationTokenAndParsesResponse() {
         val state = continuationState(NativeAuthV2LinkRelation.SIGN_IN to "/signin/start")
         val request = NativeAuthV2EntryRequest.create(
             clientId = CLIENT_ID,
@@ -102,7 +100,7 @@ class NativeAuthV2SignInInteractorTest {
         every { requestProvider.createSignInStartRequest(USERNAME, state) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
-            responseParser.parseInteraction(halResponse, state, NativeAuthV2Operation.SIGN_IN_START)
+            responseParser.parseInteraction(halResponse, state)
         } returns expected
 
         val actual = createInteractor().performSignInStart(USERNAME, state)
@@ -117,7 +115,7 @@ class NativeAuthV2SignInInteractorTest {
     }
 
     @Test
-    fun performPasswordMethodChallenge_followsSelectedMethodHrefAndReportsPasswordChallengeOperation() {
+    fun performMethodChallenge_followsSelectedMethodHref() {
         val state = signInChallengeState()
         val selectedState = state.withSelectedMethod("pwd-1")!!
         val request = NativeAuthV2ChallengeRequest.create(
@@ -136,12 +134,11 @@ class NativeAuthV2SignInInteractorTest {
         every {
             responseParser.parseInteraction(
                 halResponse,
-                any(),
-                NativeAuthV2Operation.SIGN_IN_PASSWORD_CHALLENGE
+                any()
             )
         } returns expected
 
-        val actual = createInteractor().performPasswordMethodChallenge(state, "pwd-1")
+        val actual = createInteractor().performMethodChallenge(state, "pwd-1")
 
         assertSame(expected, actual)
         assertEquals(challengeUrl, captured.url.captured)
@@ -154,7 +151,7 @@ class NativeAuthV2SignInInteractorTest {
     }
 
     @Test
-    fun performMfaMethodChallenge_reportsMfaChallengeOperation() {
+    fun performMethodChallenge_supportsMfaMethods() {
         val state = signInChallengeState()
         val request = NativeAuthV2ChallengeRequest.create(
             continuationToken = CONTINUATION_TOKEN,
@@ -171,17 +168,16 @@ class NativeAuthV2SignInInteractorTest {
         every {
             responseParser.parseInteraction(
                 halResponse,
-                any(),
-                NativeAuthV2Operation.MFA_METHOD_CHALLENGE
+                any()
             )
         } returns expected
 
-        assertSame(expected, createInteractor().performMfaMethodChallenge(state, "email-1"))
+        assertSame(expected, createInteractor().performMethodChallenge(state, "email-1"))
     }
 
     @Test
     fun performMethodChallenge_whenMethodWasNotOffered_failsWithoutIssuingARequest() {
-        val result = createInteractor().performMfaMethodChallenge(signInChallengeState(), "stale-id")
+        val result = createInteractor().performMethodChallenge(signInChallengeState(), "stale-id")
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
         verify { httpClient wasNot Called }
@@ -210,12 +206,11 @@ class NativeAuthV2SignInInteractorTest {
         every {
             responseParser.parseInteraction(
                 halResponse,
-                state,
-                NativeAuthV2Operation.SIGN_IN_PASSWORD_VERIFY
+                state
             )
         } returns expected
 
-        val actual = createInteractor().performPasswordVerify(state, password, deferredSubmission = false)
+        val actual = createInteractor().performPasswordVerify(state, password)
 
         assertSame(expected, actual)
         assertEquals(passwordVerifyUrl, captured.url.captured)
@@ -229,7 +224,7 @@ class NativeAuthV2SignInInteractorTest {
     }
 
     @Test
-    fun performPasswordVerify_whenDeferred_reportsSubmitPasswordOperation() {
+    fun performPasswordVerify_returnsParsedInvalidCredentials() {
         val state = continuationState(NativeAuthV2LinkRelation.VERIFY to "/password/pwd-1/verify")
         val password = PASSWORD.clone()
         val request = NativeAuthV2PasswordVerifyRequest.create(
@@ -246,15 +241,15 @@ class NativeAuthV2SignInInteractorTest {
         every { requestProvider.createPasswordVerifyRequest(state, password) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
-            responseParser.parseInteraction(halResponse, state, NativeAuthV2Operation.SUBMIT_PASSWORD)
+            responseParser.parseInteraction(halResponse, state)
         } returns expected
 
         assertSame(
             expected,
-            createInteractor().performPasswordVerify(state, password, deferredSubmission = true)
+            createInteractor().performPasswordVerify(state, password)
         )
         verify(exactly = 1) {
-            responseParser.parseInteraction(halResponse, state, NativeAuthV2Operation.SUBMIT_PASSWORD)
+            responseParser.parseInteraction(halResponse, state)
         }
         assertPasswordCleared(password)
     }
@@ -272,10 +267,10 @@ class NativeAuthV2SignInInteractorTest {
         val expectedFailure = RuntimeException("HTTP failure")
 
         every { requestProvider.createPasswordVerifyRequest(state, password) } returns request
-        every { httpClient.post(any(), any(), any()) } throws expectedFailure
+        every { httpClient.method(HttpClient.HttpMethod.POST, any(), any(), any()) } throws expectedFailure
 
         try {
-            createInteractor().performPasswordVerify(state, password, deferredSubmission = false)
+            createInteractor().performPasswordVerify(state, password)
             fail("Expected performPasswordVerify to rethrow the HTTP failure")
         } catch (actual: RuntimeException) {
             assertSame(expectedFailure, actual)
@@ -293,7 +288,7 @@ class NativeAuthV2SignInInteractorTest {
         every { requestProvider.createPasswordVerifyRequest(state, password) } throws expectedFailure
 
         try {
-            createInteractor().performPasswordVerify(state, password, deferredSubmission = true)
+            createInteractor().performPasswordVerify(state, password)
             fail("Expected performPasswordVerify to rethrow the request creation failure")
         } catch (actual: RuntimeException) {
             assertSame(expectedFailure, actual)
@@ -302,35 +297,6 @@ class NativeAuthV2SignInInteractorTest {
         assertPasswordCleared(password)
         verify { responseHandler wasNot Called }
         verify { responseParser wasNot Called }
-    }
-
-    @Test
-    fun performMfaVerify_postsOtpAndReportsMfaVerifyOperation() {
-        val state = continuationState(NativeAuthV2LinkRelation.VERIFY to "/email/email-1/verify")
-        val request = NativeAuthV2VerifyRequest.create(
-            continuationToken = CONTINUATION_TOKEN,
-            otp = OTP,
-            requestUrl = mfaVerifyUrl.toString(),
-            headers = jsonHeaders()
-        )
-        val httpResponse = HttpResponse(200, """{"state":"continue"}""", emptyMap())
-        val halResponse = mockk<NativeAuthV2HalApiResponse>(relaxed = true)
-        val expected = mockk<NativeAuthV2InteractionApiResult.ReadyToComplete>(relaxed = true)
-        val captured = capturePost(httpResponse)
-
-        every { requestProvider.createVerifyRequest(state, OTP) } returns request
-        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
-        every {
-            responseParser.parseInteraction(halResponse, state, NativeAuthV2Operation.MFA_VERIFY)
-        } returns expected
-
-        assertSame(expected, createInteractor().performMfaVerify(state, OTP))
-        assertEquals(mfaVerifyUrl, captured.url.captured)
-        assertMergedHeaders(captured.headers.captured)
-        assertJsonBody(
-            captured.body.captured,
-            mapOf("continuationToken" to CONTINUATION_TOKEN, "otp" to OTP)
-        )
     }
 
     // -----------------------------------------------------------------------------------------
@@ -374,7 +340,12 @@ class NativeAuthV2SignInInteractorTest {
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
         every {
-            httpClient.post(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody))
+            httpClient.method(
+                HttpClient.HttpMethod.POST,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
         } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }
@@ -445,7 +416,6 @@ class NativeAuthV2SignInInteractorTest {
         private const val CORRELATION_ID = "correlation-id"
         private const val CONTINUATION_TOKEN = "continuation-token"
         private const val USERNAME = "ada@contoso.com"
-        private const val OTP = "654321"
         private const val INTERCEPTOR_HEADER = "x-akamai-sensor"
         private const val INTERCEPTOR_VALUE = "sensor-data-123"
         private val PASSWORD = "P@ssw0rd!".toCharArray()

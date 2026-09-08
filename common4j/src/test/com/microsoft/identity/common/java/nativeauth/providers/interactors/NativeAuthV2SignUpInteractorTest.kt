@@ -29,11 +29,11 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2HalApiResponse
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2LinkRelation
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2Operation
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ResponseParser
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2RequestProvider
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2ResponseHandler
+import com.microsoft.identity.common.java.net.HttpClient
 import com.microsoft.identity.common.java.net.HttpConstants
 import com.microsoft.identity.common.java.net.HttpResponse
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient
@@ -95,7 +95,7 @@ class NativeAuthV2SignUpInteractorTest {
         every { requestProvider.createSignUpStartRequest(state) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
-            responseParser.parseInteraction(halResponse, state, NativeAuthV2Operation.SIGN_UP_START)
+            responseParser.parseInteraction(halResponse, state)
         } returns expected
 
         val actual = createInteractor().performSignUpStart(state)
@@ -128,7 +128,7 @@ class NativeAuthV2SignUpInteractorTest {
         every { requestProvider.createSubmitAttributesRequest(state, attributes) } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
-            responseParser.parseInteraction(halResponse, capture(parsedState), NativeAuthV2Operation.SUBMIT_ATTRIBUTES)
+            responseParser.parseInteraction(halResponse, capture(parsedState))
         } returns expected
 
         val actual = createInteractor().performSubmitAttributes(state, attributes)
@@ -171,7 +171,12 @@ class NativeAuthV2SignUpInteractorTest {
         val capturedHeaders = slot<Map<String, String?>>()
         val capturedBody = slot<ByteArray>()
         every {
-            httpClient.post(capture(capturedUrl), capture(capturedHeaders), capture(capturedBody))
+            httpClient.method(
+                HttpClient.HttpMethod.POST,
+                capture(capturedUrl),
+                capture(capturedHeaders),
+                capture(capturedBody)
+            )
         } returns httpResponse
         return HttpRequestCapture(capturedUrl, capturedHeaders, capturedBody)
     }

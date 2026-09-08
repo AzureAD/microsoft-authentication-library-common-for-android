@@ -57,8 +57,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.AttributesRequired)
@@ -85,8 +84,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
@@ -109,8 +107,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SUBMIT_ATTRIBUTES
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
@@ -128,8 +125,7 @@ class NativeAuthV2SignUpResponseParserTest {
     fun parseInteraction_whenSignUpStartFindsExistingAccount_returnsUserAlreadyExists() {
         val result = parser.parseInteraction(
             response = responseFrom(USER_ALREADY_EXISTS_JSON),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UserAlreadyExists)
@@ -139,8 +135,7 @@ class NativeAuthV2SignUpResponseParserTest {
     fun parseInteraction_whenAttributeValidationFails_returnsInvalidAttributesWithRejectedNames() {
         val result = parser.parseInteraction(
             response = responseFrom(PASSWORD_POLICY_VIOLATION_JSON),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SUBMIT_ATTRIBUTES
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.InvalidAttributes)
@@ -157,8 +152,7 @@ class NativeAuthV2SignUpResponseParserTest {
         // operation), it must not be reinterpreted as UserAlreadyExists.
         val result = parser.parseInteraction(
             response = responseFrom(USER_ALREADY_EXISTS_JSON),
-            previousState = resetPasswordState(),
-            operation = NativeAuthV2Operation.RESET_PASSWORD_START
+            previousState = resetPasswordState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
@@ -183,8 +177,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.CodeRequired)
@@ -206,8 +199,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SUBMIT_ATTRIBUTES
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.ReadyToComplete)
@@ -225,8 +217,7 @@ class NativeAuthV2SignUpResponseParserTest {
                 }
                 """.trimIndent()
             ),
-            previousState = signUpState(),
-            operation = NativeAuthV2Operation.SIGN_UP_START
+            previousState = signUpState()
         )
 
         assertTrue(result is NativeAuthV2InteractionApiResult.Redirect)

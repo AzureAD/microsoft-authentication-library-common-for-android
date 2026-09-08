@@ -57,34 +57,24 @@ class NativeAuthV2ContinuationState private constructor(
     val correlationId: String,
     internal val entryRelation: NativeAuthV2LinkRelation,
     internal val scenario: NativeAuthV2FlowScenario,
+    internal val authenticationFactor: String?,
     // Lowercased names of attributes already submitted during a sign-up flow. Threaded through so
     // the controller can decide, from the opaque state alone, whether a server request for an
     // attribute (for example `password`) has already been satisfied. Empty for every other flow.
     internal val submittedAttributes: Set<String> = emptySet()
 ) : ILoggable, Serializable {
 
-    // Preserve the previous constructor shape for cross-repository consumers that create this
-    // opaque state reflectively.
-    @Suppress("unused")
-    private constructor(
-        continuationToken: String,
-        links: Map<String, String>,
-        scopes: List<String>,
-        claimsRequestJson: String?,
-        correlationId: String,
-        entryRelation: NativeAuthV2LinkRelation,
-        scenario: NativeAuthV2FlowScenario
-    ) : this(
-        continuationToken = continuationToken,
-        links = links,
-        methodLinks = emptyMap(),
-        scopes = scopes,
-        claimsRequestJson = claimsRequestJson,
-        correlationId = correlationId,
-        entryRelation = entryRelation,
-        scenario = scenario,
-        submittedAttributes = emptySet()
-    )
+    /**
+     * `true` when the server classified the challenge that produced this state as the first
+     * (single) authentication factor.
+     *
+     * A state whose factor the server never declared reports `false`, so an unclassified step is
+     * treated as "not the first factor" rather than being trusted. The field is deliberately
+     * nullable so that an older serialized stream, which predates it, deserializes to unclassified
+     * and therefore fails closed.
+     */
+    internal val isFirstFactor: Boolean
+        get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
 
     /**
      * `true` when an attribute named [name] (case-insensitive) has already been submitted during a
@@ -114,6 +104,7 @@ class NativeAuthV2ContinuationState private constructor(
             correlationId = correlationId,
             entryRelation = entryRelation,
             scenario = scenario,
+            authenticationFactor = authenticationFactor,
             submittedAttributes = Collections.unmodifiableSet(merged)
         )
     }
@@ -156,6 +147,7 @@ class NativeAuthV2ContinuationState private constructor(
             correlationId = correlationId,
             entryRelation = entryRelation,
             scenario = scenario,
+            authenticationFactor = authenticationFactor,
             submittedAttributes = submittedAttributes
         )
     }
@@ -206,6 +198,7 @@ class NativeAuthV2ContinuationState private constructor(
                 correlationId = response.correlationId,
                 entryRelation = entryRelation,
                 scenario = scenario,
+                authenticationFactor = response.authenticationFactor,
                 submittedAttributes = emptySet()
             )
         }
@@ -214,15 +207,18 @@ class NativeAuthV2ContinuationState private constructor(
          * Builds a successor continuation state from [previous] plus a new mid-flow [response], or
          * `null` if [response] did not carry a nonblank continuation token.
          *
-         * [selectedMethod] merges a single method's links into the successor's own relation map, as
-         * the SSPR flow needs when the parser implicitly selects the one supported method. The V2
-         * sign-in flow instead defers selection and relies on [withSelectedMethod], which reads the
-         * per-method links this factory always retains from [response].
+         * [selectedMethod] merges a single method's links into the successor's own relation map.
+         * Otherwise method selection is deferred to [withSelectedMethod].
+         *
+         * Only a `challenge` response carries `challengeContext.authenticationFactor`, so the
+         * successor inherits [previous]'s classification whenever this response does not declare
+         * one. That keeps the factor available on the `verify` steps that follow a challenge,
+         * which is what lets the parser confine a password challenge to the first factor.
          */
         internal fun next(
             previous: NativeAuthV2ContinuationState,
             response: NativeAuthV2HalApiResponse,
-            selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = response.methods.firstOrNull()
+            selectedMethod: NativeAuthV2HalApiResponse.EmbeddedAuthMethod? = null
         ): NativeAuthV2ContinuationState? {
             val token = response.continuationToken?.takeUnless { it.isBlank() } ?: return null
             val merged = LinkedHashMap<String, String>()
@@ -237,6 +233,8 @@ class NativeAuthV2ContinuationState private constructor(
                 correlationId = response.correlationId,
                 entryRelation = previous.entryRelation,
                 scenario = previous.scenario,
+                authenticationFactor = response.authenticationFactor
+                    ?: previous.authenticationFactor,
                 submittedAttributes = previous.submittedAttributes
             )
         }
