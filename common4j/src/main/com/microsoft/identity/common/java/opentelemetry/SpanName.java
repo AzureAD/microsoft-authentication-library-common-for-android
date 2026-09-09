@@ -28,6 +28,7 @@ public enum SpanName {
     AcquireTokenSilent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
+    FociCallerAccessDecision,
     RemoveAccount,
     WorkplaceJoin,
     ATIInteractively,
