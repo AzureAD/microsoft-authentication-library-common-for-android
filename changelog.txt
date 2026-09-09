@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.004136-RC1
+----------
 - [MINOR] Add Native Auth V2 sign-in support for password first factor and password followed by email OTP MFA, including server-driven method selection, continuation commands, controller orchestration, and token completion (AB#3729067) (#3239)
 - [PATCH] Upgrade Apache HttpCore to 5.4.3 to address CVE-2026-54399 (AB#3746140) (#3242)
 - [PATCH] Enable OAEP with SHA and MGF1 padding by default when ECS configuration is unavailable (#3205)
