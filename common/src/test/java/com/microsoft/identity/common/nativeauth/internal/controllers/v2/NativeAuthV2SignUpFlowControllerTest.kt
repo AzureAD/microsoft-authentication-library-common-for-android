@@ -226,6 +226,27 @@ class NativeAuthV2SignUpFlowControllerTest {
         verify(exactly = 0) { mockStrategy.performSignUpStart(any()) }
     }
 
+    @Test
+    fun testSignUpStartRejectsReservedAttributesBeforeNetworkRequest() {
+        val password = "Password123!".toCharArray()
+        val result = controller.signUpStart(
+            signUpStartParameters(
+                password = password,
+                attributes = linkedMapOf(
+                    "EMAIL" to "other@contoso.com",
+                    "Password" to "not-the-password"
+                )
+            )
+        )
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("invalid_attributes", result.error)
+        assertTrue(result.errorDescription!!.contains("EMAIL, Password"))
+        verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
+        assertTrue(password.all { it == '\u0000' })
+    }
+
     // -----------------------------------------------------------------------------------------
     // submitAttributes
     // -----------------------------------------------------------------------------------------
@@ -339,6 +360,28 @@ class NativeAuthV2SignUpFlowControllerTest {
         val result = controller.submitAttributes(submitAttributesParameters(state))
 
         assertTrue(result is INativeAuthCommandResult.APIError)
+    }
+
+    @Test
+    fun testSubmitAttributesRejectsReservedAttributesBeforeNetworkRequest() {
+        val password = "Password123!".toCharArray()
+        val result = controller.submitAttributes(
+            submitAttributesParameters(
+                state = mockContinuationState(),
+                password = password,
+                attributes = linkedMapOf(
+                    "email" to "other@contoso.com",
+                    "PASSWORD" to "not-the-password"
+                )
+            )
+        )
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("invalid_attributes", result.error)
+        assertTrue(result.errorDescription!!.contains("email, PASSWORD"))
+        verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
+        assertTrue(password.all { it == '\u0000' })
     }
 
     // -----------------------------------------------------------------------------------------
@@ -629,7 +672,8 @@ class NativeAuthV2SignUpFlowControllerTest {
 
     private fun submitAttributesParameters(
         state: NativeAuthV2ContinuationState,
-        attributes: Map<String, String> = mapOf("city" to "Redmond")
+        attributes: Map<String, String> = mapOf("city" to "Redmond"),
+        password: CharArray? = null
     ): NativeAuthV2SubmitAttributesCommandParameters =
         NativeAuthV2SubmitAttributesCommandParameters.builder()
             .authority(mockAuthority)
@@ -638,6 +682,7 @@ class NativeAuthV2SignUpFlowControllerTest {
             .scopes(emptyList())
             .continuationState(state)
             .attributes(attributes)
+            .password(password)
             .build()
 
     private fun signInAfterSignUpParameters(

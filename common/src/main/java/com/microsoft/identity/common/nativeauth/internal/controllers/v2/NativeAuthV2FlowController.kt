@@ -106,6 +106,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         /** Reserved sign-up attribute name for the account's password. */
         private const val ATTRIBUTE_NAME_PASSWORD = "password"
 
+        private const val INVALID_ATTRIBUTES_ERROR = "invalid_attributes"
+
         /**
          * Returned when, during sign-up, the server re-requests an attribute that was already
          * submitted (including the always-upfront `email`) and therefore cannot be collected again.
@@ -957,8 +959,15 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         try {
-            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
             val correlationId = parameters.getCorrelationId()
+            val validationError = validateSignUpAttributeKeys(
+                attributes = parameters.attributes,
+                correlationId = correlationId
+            )
+            if (validationError != null) {
+                return validationError
+            }
+            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
 
             val authChallengeResult = oAuth2Strategy.performAuthorizeChallengeStart(
                 correlationId = correlationId,
@@ -1033,6 +1042,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         try {
+            val validationError = validateSignUpAttributeKeys(
+                attributes = parameters.attributes,
+                correlationId = parameters.getCorrelationId()
+            )
+            if (validationError != null) {
+                return validationError
+            }
             val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
             val result = performSignUpSubmitAttributes(
                 oAuth2Strategy = oAuth2Strategy,
@@ -1237,22 +1253,33 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     /**
      * Builds the non-password attribute map submitted upfront: `email` (the username) plus any app
      * attributes supplied to sign-up. The SDK-owned `email` and `password` keys cannot be
-     * overridden by app-supplied attributes; any such attribute (matched case-insensitively) is
-     * ignored.
+     * overridden by app-supplied attributes; [signUpStart] rejects them before this map is built.
      */
-    private fun upfrontAttributeValues(parameters: SignUpV2StartCommandParameters): Map<String, String> {
-        val values = LinkedHashMap<String, String>()
-        values[ATTRIBUTE_NAME_EMAIL] = parameters.username
+    private fun upfrontAttributeValues(
+        parameters: SignUpV2StartCommandParameters
+    ): Map<String, String> = linkedMapOf(
+        ATTRIBUTE_NAME_EMAIL to parameters.username
+    ).apply {
+        parameters.attributes?.let(::putAll)
+    }
 
-        parameters.attributes?.forEach { (name, value) ->
-            if (isSdkOwnedSignUpAttribute(name)) {
-                Logger.warn(TAG, parameters.getCorrelationId(), "Ignoring app-supplied sign-up attribute because it uses a reserved SDK attribute name.")
-            } else {
-                values[name] = value
-            }
+    private fun validateSignUpAttributeKeys(
+        attributes: Map<String, String>?,
+        correlationId: String
+    ): INativeAuthCommandResult.APIError? {
+        val reservedAttributes = attributes?.keys
+            ?.filter(::isSdkOwnedSignUpAttribute)
+            .orEmpty()
+        if (reservedAttributes.isEmpty()) {
+            return null
         }
 
-        return values
+        return INativeAuthCommandResult.APIError(
+            error = INVALID_ATTRIBUTES_ERROR,
+            errorDescription = "The attribute names 'email' and 'password' are reserved by the SDK. " +
+                "Invalid attributes: ${reservedAttributes.joinToString()}.",
+            correlationId = correlationId
+        )
     }
 
     private fun isSdkOwnedSignUpAttribute(name: String): Boolean =
