@@ -264,6 +264,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Before
     public void setup() throws ClientException {
+        DiagnosticContext.INSTANCE.clear();
         mContext = ApplicationProvider.getApplicationContext();
         mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();
@@ -2077,23 +2078,23 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
         final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
         final RequestContext requestContext = new RequestContext();
         requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
-        assertEquals(fromDiagnosticContext,
-                newClientWithCorrelationId(null).getFlowCorrelationId());
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
 
     @Test
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
         final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
         final RequestContext requestContext = new RequestContext();
         requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
-        assertEquals(fromDiagnosticContext,
-                newClientWithCorrelationId("").getFlowCorrelationId());
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
 
     private AzureActiveDirectoryWebViewClient newClientWithCorrelationId(final String correlationId) {
