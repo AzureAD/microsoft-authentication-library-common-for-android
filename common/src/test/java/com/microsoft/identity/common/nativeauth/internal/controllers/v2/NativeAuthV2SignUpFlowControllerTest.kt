@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterSignUpCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpV2StartCommandParameters
@@ -283,6 +284,26 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertTrue(result.errorDescription.contains("EMAIL, Password"))
         verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
         assertTrue(password.all { it == '\u0000' })
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // submitCode
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    fun testSubmitSignUpCodeCompletesWithSignInAfterSignUpRequired() {
+        val state = mockContinuationState()
+        val readyState = mockContinuationState()
+        every { mockStrategy.performVerify(state, any()) } returns
+            NativeAuthV2InteractionApiResult.ReadyToComplete(correlationId, readyState)
+
+        val result = controller.submitSignUpCode(submitCodeParameters(state))
+
+        assertTrue(result is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
+        assertEquals(
+            readyState,
+            (result as NativeAuthV2CommandResult.SignInAfterSignUpRequired).continuationState
+        )
     }
 
     // -----------------------------------------------------------------------------------------
@@ -738,6 +759,19 @@ class NativeAuthV2SignUpFlowControllerTest {
             .continuationState(state)
             .attributes(attributes)
             .password(password)
+            .build()
+
+    private fun submitCodeParameters(
+        state: NativeAuthV2ContinuationState,
+        code: String = "123456"
+    ): NativeAuthV2SubmitCodeCommandParameters =
+        NativeAuthV2SubmitCodeCommandParameters.builder()
+            .authority(mockAuthority)
+            .platformComponents(mockPlatformComponents)
+            .correlationId(correlationId)
+            .scopes(emptyList())
+            .continuationState(state)
+            .code(code)
             .build()
 
     private fun signInAfterSignUpParameters(

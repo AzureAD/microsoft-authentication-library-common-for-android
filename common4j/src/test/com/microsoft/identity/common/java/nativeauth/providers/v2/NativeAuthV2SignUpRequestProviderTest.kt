@@ -93,6 +93,39 @@ class NativeAuthV2SignUpRequestProviderTest {
     }
 
     @Test
+    fun createSubmitAttributesRequest_withOnlyPassword_postsPasswordAttribute() {
+        val password = "Password123!".toCharArray()
+        try {
+            val request = provider().createSubmitAttributesRequest(
+                state = collectAttributesState(),
+                attributes = emptyMap(),
+                password = password
+            )
+
+            val body = JsonParser.parseString(
+                ObjectMapper.serializeObjectToJsonString(request.parameters)
+            ).asJsonObject
+            val attributes = body.getAsJsonObject("attributes")
+            assertEquals("Password123!", attributes.get("password").asString)
+        } finally {
+            password.fill('\u0000')
+        }
+    }
+
+    @Test
+    fun createSubmitAttributesRequest_withNoAttributesOrPassword_rejectsEmptyAttributes() {
+        val exception = assertClientException {
+            provider().createSubmitAttributesRequest(
+                state = collectAttributesState(),
+                attributes = emptyMap()
+            )
+        }
+
+        assertEquals("attributes", exception.errorCode)
+        assertEquals("attributes cannot be null or empty", exception.message)
+    }
+
+    @Test
     fun createSubmitAttributesRequest_whenSubmitAttributesRelationIsMissing_throwsMissingParameter() {
         val exception = assertClientException {
             provider().createSubmitAttributesRequest(

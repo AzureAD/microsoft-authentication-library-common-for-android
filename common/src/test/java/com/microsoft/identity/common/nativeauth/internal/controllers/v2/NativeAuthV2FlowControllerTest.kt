@@ -265,7 +265,7 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
-    fun testSubmitCodeReturnsSignInAfterSignUpWhenVerifyReadyToComplete() {
+    fun testSubmitCodeReturnsAPIErrorWhenVerifyReadyToComplete() {
         val inputState = mockContinuationState()
         val readyState = mockContinuationState()
         val parameters = submitCodeParameters(inputState)
@@ -279,13 +279,10 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.submitCode(parameters)
 
-        // submitCode is shared with sign-up: a code-only sign-up completes right after the email
-        // one-time code is verified, so a ReadyToComplete here signals sign-up completion. SSPR
-        // never returns this shape at verify (it returns NewPasswordRequired first).
-        assertTrue(result is NativeAuthV2CommandResult.SignInAfterSignUpRequired)
-        result as NativeAuthV2CommandResult.SignInAfterSignUpRequired
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)
-        assertEquals(readyState, result.continuationState)
+        assertEquals("unexpected_api_result", result.error)
     }
 
     @Test

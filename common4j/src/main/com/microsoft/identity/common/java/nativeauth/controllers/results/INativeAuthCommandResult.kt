@@ -41,6 +41,7 @@ interface INativeAuthCommandResult : ILoggable {
         MFAChallengeCommandResult, MFASubmitChallengeCommandResult, GetAuthMethodsCommandResult,
         JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult {
@@ -76,6 +77,7 @@ interface INativeAuthCommandResult : ILoggable {
         GetAuthMethodsCommandResult, MFAChallengeCommandResult, MFASubmitChallengeCommandResult,
         JITChallengeAuthMethodCommandResult, JITSubmitChallengeCommandResult,
         NativeAuthV2ResetPasswordStartCommandResult, NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult, NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2SelectMFAMethodCommandResult, NativeAuthV2FlowCompletionCommandResult,
         NativeAuthV2SignUpStartCommandResult, NativeAuthV2SubmitAttributesCommandResult

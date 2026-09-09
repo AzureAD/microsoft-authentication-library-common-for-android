@@ -56,7 +56,9 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
             headers: Map<String, String?>
         ): NativeAuthV2SubmitAttributesRequest {
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
-            ArgUtils.validateNonNullArg(attributes, "attributes")
+            if (password == null || password.isEmpty()) {
+                ArgUtils.validateNonNullArg(attributes, "attributes")
+            }
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 

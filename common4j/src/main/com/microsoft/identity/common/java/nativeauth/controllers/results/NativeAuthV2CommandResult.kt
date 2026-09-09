@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
 sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignUpSubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
@@ -157,7 +158,9 @@ interface NativeAuthV2CommandResult {
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
-    ) : NativeAuthV2SubmitCodeCommandResult, NativeAuthV2SubmitMFAChallengeCommandResult {
+    ) : NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2SignUpSubmitCodeCommandResult,
+        NativeAuthV2SubmitMFAChallengeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
 
@@ -176,7 +179,7 @@ interface NativeAuthV2CommandResult {
     ) : NativeAuthV2SignInStartCommandResult,
         NativeAuthV2SignUpStartCommandResult,
         NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SubmitCodeCommandResult {
+        NativeAuthV2SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.PasswordRequired(correlationId=$correlationId)"
 
@@ -321,7 +324,7 @@ interface NativeAuthV2CommandResult {
         val requiredAttributes: List<NativeAuthV2RequiredAttribute>,
     ) : NativeAuthV2SignUpStartCommandResult,
         NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SubmitCodeCommandResult {
+        NativeAuthV2SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.AttributesRequired(correlationId=$correlationId, requiredAttributes=${requiredAttributes.map { it.toUnsanitizedString() }})"
 
@@ -378,7 +381,7 @@ interface NativeAuthV2CommandResult {
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
     ) : NativeAuthV2SubmitAttributesCommandResult,
-        NativeAuthV2SubmitCodeCommandResult {
+        NativeAuthV2SignUpSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterSignUpRequired(correlationId=$correlationId)"
 
@@ -402,6 +405,7 @@ interface NativeAuthV2CommandResult {
         NativeAuthV2SelectMFAMethodCommandResult,
         NativeAuthV2SubmitMFAChallengeCommandResult,
         NativeAuthV2SignUpStartCommandResult,
+        NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2SubmitAttributesCommandResult,
         NativeAuthV2SignInAfterSignUpCommandResult {
         override fun toUnsanitizedString(): String =

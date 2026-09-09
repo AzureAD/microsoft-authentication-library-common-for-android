@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -51,8 +52,9 @@ public class NativeAuthV2SubmitAttributesCommandParameters extends BaseSignInTok
     public final Map<String, String> attributes;
 
     /**
-     * Optional sign-up password. Kept as an erasable buffer and serialized only at the HTTP
-     * boundary; never place it in {@link #attributes}.
+     * Optional sign-up password. The caller transfers ownership of this erasable buffer to the
+     * command; the controller clears it on every exit path. It is serialized only at the HTTP
+     * boundary and must never be placed in {@link #attributes}.
      */
     @Nullable
     public final char[] password;
@@ -62,6 +64,27 @@ public class NativeAuthV2SubmitAttributesCommandParameters extends BaseSignInTok
      */
     @NonNull
     public final NativeAuthV2ContinuationState continuationState;
+
+    public abstract static class NativeAuthV2SubmitAttributesCommandParametersBuilder<
+            C extends NativeAuthV2SubmitAttributesCommandParameters,
+            B extends NativeAuthV2SubmitAttributesCommandParametersBuilder<C, B>>
+            extends BaseSignInTokenCommandParametersBuilder<C, B> {
+
+        private char[] password;
+
+        /**
+         * Transfers ownership of an erasable password buffer to the command.
+         */
+        @SuppressFBWarnings(
+                value = "EI_EXPOSE_REP2",
+                justification = "The command owns this buffer and the controller clears it on"
+                        + " every exit path."
+        )
+        public B password(@Nullable final char[] password) {
+            this.password = password;
+            return self();
+        }
+    }
 
     @NonNull
     @Override

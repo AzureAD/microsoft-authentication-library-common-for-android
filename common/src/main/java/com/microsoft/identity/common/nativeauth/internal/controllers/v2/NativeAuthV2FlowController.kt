@@ -49,6 +49,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitAttributesCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitMFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitPasswordCommandResult
@@ -242,13 +243,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * [NativeAuthV2CommandResult.NewPasswordRequired]; an [NativeAuthV2InteractionApiResult.InvalidCode]
      * becomes [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state).
      *
-     * For sign-up the same verify endpoint may instead request further attributes
-     * ([NativeAuthV2InteractionApiResult.AttributesRequired] → a password-required or
-     * attributes-required outcome via [handleSignUpAttributesRequired]) or signal server-side
-     * completion of a code-only sign-up ([NativeAuthV2InteractionApiResult.ReadyToComplete] →
-     * [NativeAuthV2CommandResult.SignInAfterSignUpRequired]). The flow scenario is opaque to this
-     * module, so these branches are distinguished by response shape rather than scenario; SSPR
-     * never returns those shapes at this step.
+     * Outcomes that are specific to another flow are rejected instead of expanding this
+     * operation-specific result contract.
      */
     fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult {
         LogSession.logMethodCall(
@@ -258,28 +254,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         )
 
         try {
-            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
-
-            val verifyResult = oAuth2Strategy.performVerify(
-                state = parameters.continuationState,
-                otp = parameters.code
-            )
+            val (_, verifyResult) = performSubmitCodeVerification(parameters)
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.UpdateRequired -> NativeAuthV2CommandResult.NewPasswordRequired(
-                    correlationId = verifyResult.correlationId,
-                    continuationState = verifyResult.continuationState
-                )
-                is NativeAuthV2InteractionApiResult.AttributesRequired -> {
-                    val signUpResult = handleSignUpAttributesRequired(
-                        oAuth2Strategy = oAuth2Strategy,
-                        attributesRequired = verifyResult,
-                        upfront = null
-                    )
-                    signUpResult as? NativeAuthV2SubmitCodeCommandResult
-                        ?: unexpectedSignUpApiError(signUpResult, verifyResult.correlationId)
-                }
-                is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterSignUpRequired(
                     correlationId = verifyResult.correlationId,
                     continuationState = verifyResult.continuationState
                 )
@@ -300,6 +278,67 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitCode", e)
             throw e
         }
+    }
+
+    /**
+     * Submits the one-time code for sign-up while keeping sign-up-only continuation states out of
+     * the reset-password submit-code result contract.
+     */
+    fun submitSignUpCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2SignUpSubmitCodeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.submitSignUpCode"
+        )
+
+        try {
+            val (oAuth2Strategy, verifyResult) = performSubmitCodeVerification(parameters)
+
+            return when (verifyResult) {
+                is NativeAuthV2InteractionApiResult.AttributesRequired -> {
+                    val signUpResult = handleSignUpAttributesRequired(
+                        oAuth2Strategy = oAuth2Strategy,
+                        attributesRequired = verifyResult,
+                        upfront = null
+                    )
+                    signUpResult as? NativeAuthV2SignUpSubmitCodeCommandResult
+                        ?: unexpectedSignUpApiError(signUpResult, verifyResult.correlationId)
+                }
+                is NativeAuthV2InteractionApiResult.ReadyToComplete ->
+                    NativeAuthV2CommandResult.SignInAfterSignUpRequired(
+                        correlationId = verifyResult.correlationId,
+                        continuationState = verifyResult.continuationState
+                    )
+                is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
+                    correlationId = verifyResult.correlationId,
+                    error = verifyResult.error,
+                    errorDescription = verifyResult.errorDescription,
+                    subError = verifyResult.subError,
+                    errorCodes = verifyResult.errorCodes
+                )
+                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                    correlationId = verifyResult.correlationId,
+                    redirectReason = verifyResult.redirectReason
+                )
+                else -> mapInteractionError(verifyResult)
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitSignUpCode", e)
+            throw e
+        }
+    }
+
+    private fun performSubmitCodeVerification(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): Pair<NativeAuthV2OAuth2Strategy, NativeAuthV2InteractionApiResult> {
+        val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
+        val verifyResult = oAuth2Strategy.performVerify(
+            state = parameters.continuationState,
+            otp = parameters.code
+        )
+        return oAuth2Strategy to verifyResult
     }
 
     // -----------------------------------------------------------------------------------------
