@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeA
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpV2StartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
@@ -239,10 +240,11 @@ class NativeAuthV2SignUpFlowControllerTest {
             )
         )
 
-        assertTrue(result is INativeAuthCommandResult.APIError)
-        result as INativeAuthCommandResult.APIError
+        assertTrue(result is SignUpCommandResult.InvalidAttributes)
+        result as SignUpCommandResult.InvalidAttributes
         assertEquals("invalid_attributes", result.error)
-        assertTrue(result.errorDescription!!.contains("EMAIL, Password"))
+        assertEquals(listOf("EMAIL", "Password"), result.invalidAttributes)
+        assertTrue(result.errorDescription.contains("EMAIL, Password"))
         verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
         assertTrue(password.all { it == '\u0000' })
     }
@@ -376,10 +378,11 @@ class NativeAuthV2SignUpFlowControllerTest {
             )
         )
 
-        assertTrue(result is INativeAuthCommandResult.APIError)
-        result as INativeAuthCommandResult.APIError
+        assertTrue(result is SignUpCommandResult.InvalidAttributes)
+        result as SignUpCommandResult.InvalidAttributes
         assertEquals("invalid_attributes", result.error)
-        assertTrue(result.errorDescription!!.contains("email, PASSWORD"))
+        assertEquals(listOf("email", "PASSWORD"), result.invalidAttributes)
+        assertTrue(result.errorDescription.contains("email, PASSWORD"))
         verify(exactly = 0) { mockAuthority.createOAuth2StrategyV2(any()) }
         assertTrue(password.all { it == '\u0000' })
     }

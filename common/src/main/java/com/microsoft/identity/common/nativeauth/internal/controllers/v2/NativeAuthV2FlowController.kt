@@ -52,6 +52,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitMFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitPasswordCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
@@ -1266,7 +1267,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     private fun validateSignUpAttributeKeys(
         attributes: Map<String, String>?,
         correlationId: String
-    ): INativeAuthCommandResult.APIError? {
+    ): SignUpCommandResult.InvalidAttributes? {
         val reservedAttributes = attributes?.keys
             ?.filter(::isSdkOwnedSignUpAttribute)
             .orEmpty()
@@ -1274,10 +1275,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             return null
         }
 
-        return INativeAuthCommandResult.APIError(
+        return SignUpCommandResult.InvalidAttributes(
             error = INVALID_ATTRIBUTES_ERROR,
             errorDescription = "The attribute names 'email' and 'password' are reserved by the SDK. " +
                 "Invalid attributes: ${reservedAttributes.joinToString()}.",
+            invalidAttributes = reservedAttributes,
             correlationId = correlationId
         )
     }
