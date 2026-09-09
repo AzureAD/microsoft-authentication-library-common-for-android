@@ -136,7 +136,8 @@ class NativeAuthV2RequestProvider(
      */
     fun createSubmitAttributesRequest(
         state: NativeAuthV2ContinuationState,
-        attributes: Map<String, String>
+        attributes: Map<String, String>,
+        password: CharArray? = null
     ): NativeAuthV2SubmitAttributesRequest {
         LogSession.logMethodCall(
             tag = TAG,
@@ -144,10 +145,15 @@ class NativeAuthV2RequestProvider(
             methodName = "$TAG.createSubmitAttributesRequest"
         )
 
-        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES)
+        val requestUrl = resolveHref(
+            state = state,
+            primaryRelation = NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES,
+            fallbackRelation = NativeAuthV2LinkRelation.SELF
+        )
         return NativeAuthV2SubmitAttributesRequest.create(
             continuationToken = state.continuationToken,
             attributes = attributes,
+            password = password,
             requestUrl = requestUrl.toString(),
             headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
@@ -335,6 +341,17 @@ class NativeAuthV2RequestProvider(
      */
     private fun resolveHref(state: NativeAuthV2ContinuationState, relation: NativeAuthV2LinkRelation): URL {
         val href = state.href(relation) ?: throw missingRelationException(relation, state.correlationId)
+        return hrefResolver.resolve(href, state.correlationId)
+    }
+
+    private fun resolveHref(
+        state: NativeAuthV2ContinuationState,
+        primaryRelation: NativeAuthV2LinkRelation,
+        fallbackRelation: NativeAuthV2LinkRelation
+    ): URL {
+        val href = state.href(primaryRelation)
+            ?: state.href(fallbackRelation)
+            ?: throw missingRelationException(primaryRelation, state.correlationId)
         return hrefResolver.resolve(href, state.correlationId)
     }
 

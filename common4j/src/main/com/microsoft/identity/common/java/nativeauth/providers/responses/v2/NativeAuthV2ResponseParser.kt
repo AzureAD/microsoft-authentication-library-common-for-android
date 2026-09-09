@@ -429,8 +429,19 @@ class NativeAuthV2ResponseParser {
         response: NativeAuthV2HalApiResponse,
         previousState: NativeAuthV2ContinuationState
     ): NativeAuthV2InteractionApiResult {
-        if (response.links[NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value] == null) {
+        if (response.links[NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value] == null &&
+            response.links[NativeAuthV2LinkRelation.SELF.value] == null
+        ) {
             return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES)
+        }
+
+        if (response.requiredAttributes.isEmpty()) {
+            Logger.warn(TAG, response.correlationId, "Native Auth V2 collectAttributes response contained no attributes.")
+            return NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = response.correlationId,
+                error = ApiErrorResult.INVALID_STATE,
+                errorDescription = "Native Auth V2 collectAttributes response must contain at least one attribute."
+            )
         }
 
         val requiredAttributes = ArrayList<NativeAuthV2RequiredAttribute>(response.requiredAttributes.size)
@@ -441,7 +452,7 @@ class NativeAuthV2ResponseParser {
                 NativeAuthV2RequiredAttribute(
                     name = name,
                     type = attribute.inputType,
-                    required = attribute.required
+                    required = attribute.required ?: false
                 )
             )
         }

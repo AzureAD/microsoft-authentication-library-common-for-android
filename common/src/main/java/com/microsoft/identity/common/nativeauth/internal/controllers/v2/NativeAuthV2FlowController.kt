@@ -1007,8 +1007,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in signUpStart", e)
             throw e
         } finally {
-            // The interactor sends the password as part of the attribute map and does not own the
-            // input buffer; clear it here so it never outlives the request.
+            // Also clear here in case flow setup fails before the interactor takes ownership.
             StringUtil.overwriteWithNull(parameters.password)
         }
     }
@@ -1039,6 +1038,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 state = parameters.continuationState,
                 attributes = parameters.attributes,
+                password = parameters.password,
                 upfront = null
             )
             return result as? NativeAuthV2SubmitAttributesCommandResult
@@ -1046,6 +1046,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitAttributes", e)
             throw e
+        } finally {
+            // Also clear here in case flow setup fails before the interactor takes ownership.
+            StringUtil.overwriteWithNull(parameters.password)
         }
     }
 
@@ -1083,7 +1086,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     }
 
     // -----------------------------------------------------------------------------------------
-    // Sign-up interaction handling (shared by signUpStart, submitAttributes, and submitCode)
+    // Sign-up interaction handling (shared by signUpStart and submitAttributes)
     // -----------------------------------------------------------------------------------------
 
     /**
@@ -1155,10 +1158,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      *
      * On any later step ([upfront] is null) the server is requesting more information. A `password`
      * not yet submitted is surfaced as [NativeAuthV2CommandResult.PasswordRequired] so the app can
-     * collect it; any other attribute not yet submitted is surfaced as
-     * [NativeAuthV2CommandResult.AttributesRequired]. If the server re-requests `email` (always sent
-     * upfront) or any attribute already submitted, that is treated as an
-     * [INativeAuthCommandResult.APIError].
+     * collect it; any ordinary attribute is surfaced as
+     * [NativeAuthV2CommandResult.AttributesRequired], including one previously submitted with an
+     * invalid value. If the server re-requests the already-submitted SDK-owned `email` or
+     * `password` credential, that is treated as an [INativeAuthCommandResult.APIError].
      */
     private fun handleSignUpAttributesRequired(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
@@ -1172,29 +1175,30 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 oAuth2Strategy = oAuth2Strategy,
                 state = nextState,
                 attributes = upfrontAttributeValues(upfront),
+                password = upfront.password,
                 upfront = null
+            )
+        }
+
+        val alreadySubmittedCredential = attributesRequired.requiredAttributes.firstOrNull {
+            isSdkOwnedSignUpAttribute(it.name) && nextState.hasSubmittedAttribute(it.name)
+        }
+        if (alreadySubmittedCredential != null) {
+            Logger.warn(TAG, attributesRequired.correlationId, "Server re-requested an already-submitted sign-up credential.")
+            return INativeAuthCommandResult.APIError(
+                error = ATTRIBUTE_ALREADY_SUBMITTED_ERROR,
+                errorDescription = "The server requested credential '${alreadySubmittedCredential.name}' that was already submitted or cannot be collected.",
+                correlationId = attributesRequired.correlationId
             )
         }
 
         val requestsPassword = attributesRequired.requiredAttributes.any {
             it.name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true)
         }
-        if (requestsPassword && !nextState.hasSubmittedAttribute(ATTRIBUTE_NAME_PASSWORD)) {
+        if (requestsPassword) {
             return NativeAuthV2CommandResult.PasswordRequired(
                 correlationId = attributesRequired.correlationId,
                 continuationState = nextState
-            )
-        }
-
-        val alreadySubmitted = attributesRequired.requiredAttributes.firstOrNull {
-            nextState.hasSubmittedAttribute(it.name)
-        }
-        if (alreadySubmitted != null) {
-            Logger.warn(TAG, attributesRequired.correlationId, "Server re-requested an already-submitted sign-up attribute.")
-            return INativeAuthCommandResult.APIError(
-                error = ATTRIBUTE_ALREADY_SUBMITTED_ERROR,
-                errorDescription = "The server requested attribute '${alreadySubmitted.name}' that was already submitted or cannot be collected.",
-                correlationId = attributesRequired.correlationId
             )
         }
 
@@ -1214,9 +1218,14 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
         state: NativeAuthV2ContinuationState,
         attributes: Map<String, String>,
+        password: CharArray? = null,
         upfront: SignUpV2StartCommandParameters?
     ): INativeAuthCommandResult {
-        val result = oAuth2Strategy.performSubmitAttributes(state = state, attributes = attributes)
+        val result = oAuth2Strategy.performSubmitAttributes(
+            state = state,
+            attributes = attributes,
+            password = password
+        )
         return handleSignUpInteractionResult(
             oAuth2Strategy = oAuth2Strategy,
             result = result,
@@ -1226,7 +1235,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     }
 
     /**
-     * Builds the attribute map submitted upfront: `email` (the username) plus any password and app
+     * Builds the non-password attribute map submitted upfront: `email` (the username) plus any app
      * attributes supplied to sign-up. The SDK-owned `email` and `password` keys cannot be
      * overridden by app-supplied attributes; any such attribute (matched case-insensitively) is
      * ignored.
@@ -1235,13 +1244,8 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         val values = LinkedHashMap<String, String>()
         values[ATTRIBUTE_NAME_EMAIL] = parameters.username
 
-        val password = parameters.password
-        if (password != null && password.isNotEmpty()) {
-            values[ATTRIBUTE_NAME_PASSWORD] = String(password)
-        }
-
         parameters.attributes?.forEach { (name, value) ->
-            if (name.lowercase() == ATTRIBUTE_NAME_EMAIL || name.lowercase() == ATTRIBUTE_NAME_PASSWORD) {
+            if (isSdkOwnedSignUpAttribute(name)) {
                 Logger.warn(TAG, parameters.getCorrelationId(), "Ignoring app-supplied sign-up attribute because it uses a reserved SDK attribute name.")
             } else {
                 values[name] = value
@@ -1250,6 +1254,10 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
         return values
     }
+
+    private fun isSdkOwnedSignUpAttribute(name: String): Boolean =
+        name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true) ||
+            name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true)
 
     /**
      * Completes the V2 sign-up flow. Shares [exchangeCodeAndSaveTokens] with SSPR and sign-in, so
@@ -1267,8 +1275,11 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             methodName = "$TAG.completeFlowSignUp"
         )
 
-        val scopes = addDefaultScopes(parameters.scopes)
+        val requestedScopes = parameters.scopes?.takeUnless { it.isEmpty() }
+            ?: state.scopesForTokenRequest()
+        val scopes = addDefaultScopes(requestedScopes)
         val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
+            ?: state.claimsRequestJsonForTokenRequest()
         return exchangeCodeAndSaveTokens(
             oAuth2Strategy = oAuth2Strategy,
             tokenCommandParameters = parameters.toBuilder()

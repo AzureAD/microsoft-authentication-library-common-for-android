@@ -470,14 +470,14 @@ class NativeAuthV2Interactor(
     /**
      * Posts [attributes] to the server-provided `submitAttributes` href during sign-up.
      *
-     * The attributes' names are recorded as submitted on the state used for parsing *before* the
-     * response is parsed, so the successor state inherits the merged set and the controller can
-     * tell, from the opaque state alone, whether a later server request for an attribute (for
-     * example `password`) has already been satisfied. Mirrors iOS's `addingSubmittedAttributes`.
+     * The request sends every supplied attribute, but the state used for parsing records only the
+     * SDK-owned `email` and `password` names. This lets the controller reject a later credential
+     * re-request while ordinary attributes remain retryable.
      */
     fun performSubmitAttributes(
         state: NativeAuthV2ContinuationState,
-        attributes: Map<String, String>
+        attributes: Map<String, String>,
+        password: CharArray? = null
     ): NativeAuthV2InteractionApiResult {
         LogSession.logMethodCall(
             tag = TAG,
@@ -485,20 +485,30 @@ class NativeAuthV2Interactor(
             methodName = "$TAG.performSubmitAttributes"
         )
 
-        val request = requestProvider.createSubmitAttributesRequest(state = state, attributes = attributes)
+        try {
+            val request = requestProvider.createSubmitAttributesRequest(
+                state = state,
+                attributes = attributes,
+                password = password
+            )
 
-        Logger.infoWithObject(
-            "$TAG.performSubmitAttributes",
-            state.correlationId,
-            "request = ",
-            request
-        )
+            Logger.infoWithObject(
+                "$TAG.performSubmitAttributes",
+                state.correlationId,
+                "request = ",
+                request
+            )
 
-        return executeJsonInteraction(
-            request = request,
-            state = state.withAdditionalSubmittedAttributes(attributes.keys),
-            methodName = "$TAG.performSubmitAttributes"
-        )
+            val submittedAttributeNames =
+                if (password == null || password.isEmpty()) attributes.keys else attributes.keys + "password"
+            return executeJsonInteraction(
+                request = request,
+                state = state.withAdditionalSubmittedAttributes(submittedAttributeNames),
+                methodName = "$TAG.performSubmitAttributes"
+            )
+        } finally {
+            StringUtil.overwriteWithNull(password)
+        }
     }
     //endregion
 

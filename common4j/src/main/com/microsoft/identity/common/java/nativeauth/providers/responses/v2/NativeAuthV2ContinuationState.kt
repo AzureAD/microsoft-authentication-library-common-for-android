@@ -58,9 +58,9 @@ class NativeAuthV2ContinuationState private constructor(
     internal val entryRelation: NativeAuthV2LinkRelation,
     internal val scenario: NativeAuthV2FlowScenario,
     internal val authenticationFactor: String?,
-    // Lowercased names of attributes already submitted during a sign-up flow. Threaded through so
-    // the controller can decide, from the opaque state alone, whether a server request for an
-    // attribute (for example `password`) has already been satisfied. Empty for every other flow.
+    // Canonical names of SDK-owned credentials already submitted during a sign-up flow. Only
+    // `email` and `password` are retained; ordinary attributes remain retryable if the server asks
+    // for them again or rejects their values. Empty for every other flow.
     internal val submittedAttributes: Set<String> = emptySet()
 ) : ILoggable, Serializable {
 
@@ -77,24 +77,31 @@ class NativeAuthV2ContinuationState private constructor(
         get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
 
     /**
-     * `true` when an attribute named [name] (case-insensitive) has already been submitted during a
-     * sign-up flow. Public so the controller, which cannot read the opaque [submittedAttributes]
-     * member, can still reason about whether a server-requested attribute is already satisfied.
+     * `true` when the SDK-owned `email` or `password` attribute named by [name]
+     * (case-insensitive) has already been submitted during a sign-up flow. Ordinary attributes
+     * are never retained. Public so the controller, which cannot read the opaque
+     * [submittedAttributes] member, can detect a malformed re-request for a credential.
      */
     fun hasSubmittedAttribute(name: String): Boolean =
-        submittedAttributes.contains(name.lowercase())
+        submittedAttributes.any { it.equals(name, ignoreCase = true) }
 
     /**
-     * Returns a copy of this state with [names] (lowercased) added to the set of submitted
-     * attributes, so the successor produced by [next] inherits the merged set. Mirrors iOS's
-     * `addingSubmittedAttributes`; applied by the interactor before parsing a submit-attributes
-     * response.
+     * Returns a copy of this state with any SDK-owned credential names in [names] added to the set
+     * of submitted attributes, so the successor produced by [next] inherits them. Other attribute
+     * names are deliberately ignored because their values may be corrected and resubmitted.
      */
     internal fun withAdditionalSubmittedAttributes(
         names: Collection<String>
     ): NativeAuthV2ContinuationState {
         val merged = LinkedHashSet(submittedAttributes)
-        names.forEach { merged.add(it.lowercase()) }
+        names.forEach { name ->
+            when {
+                name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_EMAIL)
+                name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_PASSWORD)
+            }
+        }
         return NativeAuthV2ContinuationState(
             continuationToken = continuationToken,
             links = links,
@@ -159,6 +166,8 @@ class NativeAuthV2ContinuationState private constructor(
     companion object {
         private const val serialVersionUID = 1L
         private const val REDACTED_STRING = "NativeAuthV2ContinuationState(<redacted>)"
+        private const val ATTRIBUTE_NAME_EMAIL = "email"
+        private const val ATTRIBUTE_NAME_PASSWORD = "password"
 
         /**
          * Link relations this SDK version follows. An unsupported/unrecognised relation is
@@ -174,7 +183,8 @@ class NativeAuthV2ContinuationState private constructor(
             NativeAuthV2LinkRelation.RESET_PASSWORD.value,
             NativeAuthV2LinkRelation.SIGN_IN.value,
             NativeAuthV2LinkRelation.SIGN_UP.value,
-            NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value
+            NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value,
+            NativeAuthV2LinkRelation.SELF.value
         )
 
         /**

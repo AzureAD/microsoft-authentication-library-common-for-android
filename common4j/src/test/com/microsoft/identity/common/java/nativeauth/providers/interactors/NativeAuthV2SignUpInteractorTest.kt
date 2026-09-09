@@ -53,8 +53,8 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Covers the V2 sign-up interactor operations: the sign-up entry call and the submit-attributes
- * call. The submit-attributes test also asserts the interactor records the submitted attribute
- * names on the state used for parsing, so the successor state inherits the merged set.
+ * call. The submit-attributes test also asserts that all values are sent while only SDK-owned
+ * credential names are retained on the state used for parsing.
  */
 class NativeAuthV2SignUpInteractorTest {
 
@@ -110,12 +110,14 @@ class NativeAuthV2SignUpInteractorTest {
     }
 
     @Test
-    fun performSubmitAttributes_postsAttributesAndRecordsThemOnTheParsedState() {
+    fun performSubmitAttributes_postsAllAttributesAndRecordsOnlyCredentialNames() {
         val state = continuationState(NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES to "/signup/submitattributes")
-        val attributes = linkedMapOf("city" to "Seattle", "country" to "US")
+        val attributes = linkedMapOf("email" to "user@contoso.com", "city" to "Seattle")
+        val password = "Password123!".toCharArray()
         val request = NativeAuthV2SubmitAttributesRequest.create(
             continuationToken = CONTINUATION_TOKEN,
             attributes = attributes,
+            password = password,
             requestUrl = submitAttributesUrl.toString(),
             headers = jsonHeaders()
         )
@@ -125,27 +127,33 @@ class NativeAuthV2SignUpInteractorTest {
         val captured = capturePost(httpResponse)
         val parsedState = slot<NativeAuthV2ContinuationState>()
 
-        every { requestProvider.createSubmitAttributesRequest(state, attributes) } returns request
+        every {
+            requestProvider.createSubmitAttributesRequest(state, attributes, password)
+        } returns request
         every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
         every {
             responseParser.parseInteraction(halResponse, capture(parsedState))
         } returns expected
 
-        val actual = createInteractor().performSubmitAttributes(state, attributes)
+        val actual = createInteractor().performSubmitAttributes(state, attributes, password)
 
         assertSame(expected, actual)
         assertEquals(submitAttributesUrl, captured.url.captured)
 
-        // The state passed to the parser carries the just-submitted attribute names, so the
-        // successor inherits the merged set (the original state is left unchanged).
-        assertTrue(parsedState.captured.hasSubmittedAttribute("city"))
-        assertTrue(parsedState.captured.hasSubmittedAttribute("country"))
-        assertFalse(state.hasSubmittedAttribute("city"))
+        assertTrue(parsedState.captured.hasSubmittedAttribute("email"))
+        assertTrue(parsedState.captured.hasSubmittedAttribute("password"))
+        assertFalse(parsedState.captured.hasSubmittedAttribute("city"))
+        assertFalse(state.hasSubmittedAttribute("email"))
 
         val body = JSONObject(String(captured.body.captured, StandardCharsets.UTF_8))
         assertEquals(CONTINUATION_TOKEN, body.getString("continuationToken"))
+        assertEquals(
+            "user@contoso.com",
+            body.getJSONObject("attributes").getString("email")
+        )
         assertEquals("Seattle", body.getJSONObject("attributes").getString("city"))
-        assertEquals("US", body.getJSONObject("attributes").getString("country"))
+        assertEquals("Password123!", body.getJSONObject("attributes").getString("password"))
+        assertTrue(password.all { it == '\u0000' })
     }
 
     // -----------------------------------------------------------------------------------------

@@ -26,6 +26,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.Nati
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -47,6 +49,13 @@ public class NativeAuthV2SubmitAttributesCommandParameters extends BaseSignInTok
      */
     @NonNull
     public final Map<String, String> attributes;
+
+    /**
+     * Optional sign-up password. Kept as an erasable buffer and serialized only at the HTTP
+     * boundary; never place it in {@link #attributes}.
+     */
+    @Nullable
+    public final char[] password;
 
     /**
      * The opaque continuation state from the preceding collect-attributes response.

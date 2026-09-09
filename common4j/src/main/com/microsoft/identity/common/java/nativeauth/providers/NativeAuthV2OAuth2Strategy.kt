@@ -149,9 +149,14 @@ class NativeAuthV2OAuth2Strategy(
      */
     fun performSubmitAttributes(
         state: NativeAuthV2ContinuationState,
-        attributes: Map<String, String>
+        attributes: Map<String, String>,
+        password: CharArray? = null
     ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performSubmitAttributes(state = state, attributes = attributes)
+        return nativeAuthV2Interactor.performSubmitAttributes(
+            state = state,
+            attributes = attributes,
+            password = password
+        )
     }
 
     /**

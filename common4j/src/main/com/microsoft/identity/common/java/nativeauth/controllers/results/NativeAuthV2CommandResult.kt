@@ -377,7 +377,8 @@ interface NativeAuthV2CommandResult {
     data class SignInAfterSignUpRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SubmitAttributesCommandResult, NativeAuthV2SubmitCodeCommandResult {
+    ) : NativeAuthV2SubmitAttributesCommandResult,
+        NativeAuthV2SubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.SignInAfterSignUpRequired(correlationId=$correlationId)"
 

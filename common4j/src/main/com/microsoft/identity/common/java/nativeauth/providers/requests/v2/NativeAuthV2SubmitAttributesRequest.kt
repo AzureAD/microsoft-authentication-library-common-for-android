@@ -22,8 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.requests.v2
 
+import com.google.gson.TypeAdapter
+import com.google.gson.annotations.JsonAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
+import com.microsoft.identity.common.java.util.CharArrayJsonAdapter
+import java.io.IOException
 import java.net.URL
 
 /**
@@ -40,9 +46,12 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
 ) : NativeAuthRequest() {
 
     companion object {
+        private const val PASSWORD = "password"
+
         fun create(
             continuationToken: String,
             attributes: Map<String, String>,
+            password: CharArray? = null,
             requestUrl: String,
             headers: Map<String, String?>
         ): NativeAuthV2SubmitAttributesRequest {
@@ -56,7 +65,10 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
                 headers = headers,
                 parameters = NativeAuthV2SubmitAttributesRequestParameters(
                     continuationToken = continuationToken,
-                    attributes = attributes
+                    attributes = NativeAuthV2SubmitAttributes(
+                        values = attributes,
+                        password = password
+                    )
                 )
             )
         }
@@ -75,11 +87,49 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
      */
     data class NativeAuthV2SubmitAttributesRequestParameters(
         val continuationToken: String,
-        val attributes: Map<String, String>
+        val attributes: NativeAuthV2SubmitAttributes
     ) : NativeAuthRequestParameters() {
         override fun toUnsanitizedString(): String =
-            "NativeAuthV2SubmitAttributesRequestParameters(attributeNames=${attributes.keys})"
+            "NativeAuthV2SubmitAttributesRequestParameters(attributeNames=${attributes.names})"
 
         override fun toString(): String = "NativeAuthV2SubmitAttributesRequestParameters()"
+    }
+
+    /**
+     * Keeps the password erasable while preserving the protocol's single nested `attributes`
+     * object. The adapter serializes the character array as a JSON string only at the HTTP boundary.
+     */
+    @JsonAdapter(NativeAuthV2SubmitAttributesJsonAdapter::class)
+    data class NativeAuthV2SubmitAttributes(
+        val values: Map<String, String>,
+        val password: CharArray?
+    ) {
+        val names: Set<String>
+            get() = if (password == null || password.isEmpty()) values.keys else values.keys + PASSWORD
+    }
+
+    class NativeAuthV2SubmitAttributesJsonAdapter : TypeAdapter<NativeAuthV2SubmitAttributes>() {
+        @Throws(IOException::class)
+        override fun write(out: JsonWriter, value: NativeAuthV2SubmitAttributes?) {
+            if (value == null) {
+                out.nullValue()
+                return
+            }
+
+            out.beginObject()
+            value.values.forEach { (name, attributeValue) ->
+                out.name(name).value(attributeValue)
+            }
+            value.password?.takeUnless { it.isEmpty() }?.let { password ->
+                out.name(PASSWORD)
+                CharArrayJsonAdapter().write(out, password)
+            }
+            out.endObject()
+        }
+
+        @Throws(IOException::class)
+        override fun read(input: JsonReader): NativeAuthV2SubmitAttributes {
+            throw UnsupportedOperationException("NativeAuthV2SubmitAttributes is write-only.")
+        }
     }
 }

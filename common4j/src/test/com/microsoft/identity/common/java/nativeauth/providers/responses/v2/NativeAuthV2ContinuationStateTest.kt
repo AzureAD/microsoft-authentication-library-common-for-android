@@ -174,7 +174,7 @@ class NativeAuthV2ContinuationStateTest {
 
         assertEquals(listOf("openid", "User.Read"), state.scopesForTokenRequest())
         assertEquals(RESET_PASSWORD_HREF, state.href(NativeAuthV2LinkRelation.RESET_PASSWORD))
-        assertNull(state.href(NativeAuthV2LinkRelation("self")))
+        assertEquals("/tenant/self", state.href(NativeAuthV2LinkRelation.SELF))
         assertNull(state.href(NativeAuthV2LinkRelation("unsupported")))
     }
 
@@ -341,24 +341,25 @@ class NativeAuthV2ContinuationStateTest {
     }
 
     @Test
-    fun withAdditionalSubmittedAttributes_lowercasesAndReportsMembership() {
+    fun withAdditionalSubmittedAttributes_retainsOnlyCanonicalCredentialNames() {
         val state = createState()
 
-        assertFalse(state.hasSubmittedAttribute("city"))
+        assertFalse(state.hasSubmittedAttribute("email"))
 
-        val updated = state.withAdditionalSubmittedAttributes(listOf("City", "COUNTRY"))
+        val updated = state.withAdditionalSubmittedAttributes(listOf("Email", "PASSWORD", "City"))
 
-        assertTrue(updated.hasSubmittedAttribute("city"))
-        assertTrue(updated.hasSubmittedAttribute("CITY"))
-        assertTrue(updated.hasSubmittedAttribute("country"))
-        assertFalse(updated.hasSubmittedAttribute("displayName"))
+        assertTrue(updated.hasSubmittedAttribute("email"))
+        assertTrue(updated.hasSubmittedAttribute("EMAIL"))
+        assertTrue(updated.hasSubmittedAttribute("password"))
+        assertFalse(updated.hasSubmittedAttribute("city"))
         // Original state is left unchanged (copy-on-write).
-        assertFalse(state.hasSubmittedAttribute("city"))
+        assertFalse(state.hasSubmittedAttribute("email"))
     }
 
     @Test
     fun javaSerializationRoundTrip_preservesSubmittedAttributes() {
-        val original = createState().withAdditionalSubmittedAttributes(listOf("City", "COUNTRY"))
+        val original = createState()
+            .withAdditionalSubmittedAttributes(listOf("Email", "PASSWORD", "City"))
 
         val serialized = ByteArrayOutputStream().use { bytes ->
             ObjectOutputStream(bytes).use { it.writeObject(original) }
@@ -368,17 +369,15 @@ class NativeAuthV2ContinuationStateTest {
             it.readObject() as NativeAuthV2ContinuationState
         }
 
-        // A restored sign-up state must remember which attributes were already submitted, so the
-        // flow does not re-prompt for them after process death.
-        assertTrue(restored.hasSubmittedAttribute("city"))
-        assertTrue(restored.hasSubmittedAttribute("CITY"))
-        assertTrue(restored.hasSubmittedAttribute("country"))
-        assertFalse(restored.hasSubmittedAttribute("displayName"))
+        // A restored sign-up state remembers credentials, but not retryable ordinary attributes.
+        assertTrue(restored.hasSubmittedAttribute("email"))
+        assertTrue(restored.hasSubmittedAttribute("PASSWORD"))
+        assertFalse(restored.hasSubmittedAttribute("city"))
     }
 
     @Test
     fun next_inheritsSubmittedAttributesFromPreviousState() {
-        val previous = createState().withAdditionalSubmittedAttributes(listOf("city"))
+        val previous = createState().withAdditionalSubmittedAttributes(listOf("email"))
 
         val next = NativeAuthV2ContinuationState.next(
             previous = previous,
@@ -393,7 +392,7 @@ class NativeAuthV2ContinuationStateTest {
         )
 
         requireNotNull(next)
-        assertTrue(next.hasSubmittedAttribute("city"))
+        assertTrue(next.hasSubmittedAttribute("email"))
     }
 
     private fun createState(): NativeAuthV2ContinuationState {
