@@ -27,6 +27,6 @@ jobs:
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: mshick/add-pr-comment@v2
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
         with:
           message: "⚠️ **Warning:** Changes detected in the 'versions.gradle' file! ⚠️\n\nPlease refer to [this document](https://dev.azure.com/IdentityDivision/IdentityWiki/_wiki/wikis/IdentityWiki.wiki/82085/Adding-or-Updating-Gradle-Dependencies) for more details."
