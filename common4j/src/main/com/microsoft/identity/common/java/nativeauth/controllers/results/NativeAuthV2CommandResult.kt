@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
 sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2ResetPasswordSubmitCodeCommandResult :
+    NativeAuthV2SubmitCodeCommandResult
 sealed interface NativeAuthV2SignUpSubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
@@ -97,7 +99,7 @@ interface NativeAuthV2CommandResult {
     data class NewPasswordRequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
-    ) : NativeAuthV2SubmitCodeCommandResult {
+    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.NewPasswordRequired(correlationId=$correlationId)"
 
@@ -137,7 +139,7 @@ interface NativeAuthV2CommandResult {
         val continuationToken: String?,
         val expiresIn: Int?,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2FlowCompletionCommandResult {
@@ -158,7 +160,7 @@ interface NativeAuthV2CommandResult {
         val errorDescription: String,
         val subError: String,
         val errorCodes: List<Int>? = null,
-    ) : NativeAuthV2SubmitCodeCommandResult,
+    ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult,
         NativeAuthV2SubmitMFAChallengeCommandResult {
         override fun toUnsanitizedString(): String =
@@ -397,7 +399,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
-        NativeAuthV2SubmitCodeCommandResult,
+        NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SubmitNewPasswordCommandResult,
         NativeAuthV2SignInStartCommandResult,

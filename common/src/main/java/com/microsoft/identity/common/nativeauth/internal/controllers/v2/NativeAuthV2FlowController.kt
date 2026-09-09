@@ -41,6 +41,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.INative
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2FlowCompletionCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectMFAMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
@@ -246,11 +247,23 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
      * Outcomes that are specific to another flow are rejected instead of expanding this
      * operation-specific result contract.
      */
-    fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult {
+    @Deprecated(
+        message = "Use submitResetPasswordCode for explicit flow naming.",
+        replaceWith = ReplaceWith("submitResetPasswordCode(parameters)")
+    )
+    fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult =
+        submitResetPasswordCode(parameters)
+
+    /**
+     * Submits the one-time code for the reset-password flow.
+     */
+    fun submitResetPasswordCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2ResetPasswordSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
-            methodName = "$TAG.submitCode"
+            methodName = "$TAG.submitResetPasswordCode"
         )
 
         try {
@@ -275,7 +288,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> mapInteractionError(verifyResult)
             }
         } catch (e: Exception) {
-            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitCode", e)
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitResetPasswordCode", e)
             throw e
         }
     }
