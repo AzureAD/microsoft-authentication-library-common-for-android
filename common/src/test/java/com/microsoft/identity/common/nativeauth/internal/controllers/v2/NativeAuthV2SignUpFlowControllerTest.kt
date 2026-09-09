@@ -48,6 +48,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -117,6 +118,31 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
+    fun testSignUpStartRejectsNonEmailCodeRequired() {
+        val entryState = mockContinuationState()
+        val codeState = mockContinuationState()
+        stubAuthorizeChallengeStart(entryState)
+        every { mockStrategy.performSignUpStart(entryState) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(
+                correlationId = correlationId,
+                continuationState = codeState,
+                challengeTargetLabel = "***1234",
+                challengeChannel = "sms",
+                codeLength = 6
+            )
+
+        val result = controller.signUpStart(signUpStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unsupported_challenge_method", result.error)
+        assertEquals(
+            "Sign up currently supports email one-time-code verification only.",
+            result.errorDescription
+        )
+    }
+
+    @Test
     fun testSignUpStartSurfacesUserAlreadyExists() {
         val entryState = mockContinuationState()
         stubAuthorizeChallengeStart(entryState)
@@ -140,6 +166,16 @@ class NativeAuthV2SignUpFlowControllerTest {
     @Test
     fun testSignUpStartMapsInvalidAttributesToRetryableAttributesInvalid() {
         val entryState = mockContinuationState()
+        val submittedState = mockContinuationState()
+        every {
+            entryState.withAdditionalSubmittedAttributes(
+                match {
+                    it.size == 2 &&
+                        it.any { name -> name.equals("email", ignoreCase = true) } &&
+                        it.any { name -> name.equals("password", ignoreCase = true) }
+                }
+            )
+        } returns submittedState
         stubAuthorizeChallengeStart(entryState)
         every { mockStrategy.performSignUpStart(entryState) } returns
             NativeAuthV2InteractionApiResult.AttributesRequired(
@@ -161,9 +197,9 @@ class NativeAuthV2SignUpFlowControllerTest {
         assertTrue(result is NativeAuthV2CommandResult.AttributesInvalid)
         result as NativeAuthV2CommandResult.AttributesInvalid
         assertEquals(listOf("city"), result.invalidAttributes)
-        // The validation-error body carries no fresh continuation token, so the just-submitted
-        // state must be reused for the retry.
-        assertEquals(entryState, result.continuationState)
+        // The validation-error body carries no fresh continuation token, so retry with a state
+        // that remembers the email and password submitted by the rejected request.
+        assertSame(submittedState, result.continuationState)
     }
 
     @Test
@@ -270,23 +306,38 @@ class NativeAuthV2SignUpFlowControllerTest {
     }
 
     @Test
-    fun testSubmitAttributesMapsInvalidAttributesToRetryableStateForSameState() {
+    fun testSubmitPasswordMapsInvalidAttributesToStateRecordingSubmittedPassword() {
         val state = mockContinuationState()
-        every { mockStrategy.performSubmitAttributes(state, any()) } returns
+        val submittedState = mockContinuationState()
+        every {
+            state.withAdditionalSubmittedAttributes(
+                match {
+                    it.size == 1 &&
+                        it.first().equals("password", ignoreCase = true)
+                }
+            )
+        } returns submittedState
+        every { mockStrategy.performSubmitAttributes(state, emptyMap(), any()) } returns
             NativeAuthV2InteractionApiResult.InvalidAttributes(
                 correlationId = correlationId,
-                invalidAttributes = listOf("city"),
+                invalidAttributes = listOf("password"),
                 error = "attribute_validation_failed",
                 errorDescription = "AADSTS1002027: attribute validation failed.",
                 errorCodes = listOf(1002027)
             )
 
-        val result = controller.submitAttributes(submitAttributesParameters(state))
+        val result = controller.submitAttributes(
+            submitAttributesParameters(
+                state = state,
+                attributes = emptyMap(),
+                password = "Password123!".toCharArray()
+            )
+        )
 
         assertTrue(result is NativeAuthV2CommandResult.AttributesInvalid)
         result as NativeAuthV2CommandResult.AttributesInvalid
-        assertEquals(listOf("city"), result.invalidAttributes)
-        assertEquals(state, result.continuationState)
+        assertEquals(listOf("password"), result.invalidAttributes)
+        assertSame(submittedState, result.continuationState)
     }
 
     @Test
@@ -655,6 +706,7 @@ class NativeAuthV2SignUpFlowControllerTest {
         every { state.correlationId } returns id
         every { state.scopesForTokenRequest() } returns emptyList()
         every { state.hasSubmittedAttribute(any()) } returns false
+        every { state.withAdditionalSubmittedAttributes(any()) } returns state
         return state
     }
 

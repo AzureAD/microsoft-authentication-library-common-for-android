@@ -540,16 +540,6 @@ class NativeAuthV2ResponseParser {
                 unknownInteractionError(correlationId, code, message, errorCodes)
 
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
-                    serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
-                // An account already exists for the identifier supplied to sign-up.
-                NativeAuthV2InteractionApiResult.UserAlreadyExists(
-                    correlationId = correlationId,
-                    error = code.orEmpty(),
-                    errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
-                )
-
-            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
                 // One or more submitted attributes failed server-side validation (for example a
                 // password that violated policy). The rejected attribute names let the app prompt
@@ -557,8 +547,19 @@ class NativeAuthV2ResponseParser {
                 NativeAuthV2InteractionApiResult.InvalidAttributes(
                     correlationId = correlationId,
                     invalidAttributes = serverError.details
+                        .filterNot { it.code == INNER_ERROR_USER_ALREADY_EXISTS }
                         .flatMap { it.attributeIds }
                         .distinct(),
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    errorCodes = errorCodes
+                )
+
+            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
+                    serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
+                // An account already exists for the identifier supplied to sign-up.
+                NativeAuthV2InteractionApiResult.UserAlreadyExists(
+                    correlationId = correlationId,
                     error = code.orEmpty(),
                     errorDescription = message.orEmpty(),
                     errorCodes = errorCodes

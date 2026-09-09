@@ -1128,13 +1128,22 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 attributesRequired = result,
                 upfront = upfront
             )
-            is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.CodeRequired(
-                correlationId = result.correlationId,
-                continuationState = result.continuationState,
-                codeLength = result.codeLength,
-                challengeTargetLabel = result.challengeTargetLabel,
-                challengeChannel = result.challengeChannel
-            )
+            is NativeAuthV2InteractionApiResult.CodeRequired ->
+                if (result.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
+                    NativeAuthV2CommandResult.CodeRequired(
+                        correlationId = result.correlationId,
+                        continuationState = result.continuationState,
+                        codeLength = result.codeLength,
+                        challengeTargetLabel = result.challengeTargetLabel,
+                        challengeChannel = result.challengeChannel
+                    )
+                } else {
+                    INativeAuthCommandResult.APIError(
+                        error = UNSUPPORTED_CHALLENGE_METHOD,
+                        errorDescription = "Sign up currently supports email one-time-code verification only.",
+                        correlationId = result.correlationId
+                    )
+                }
             is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterSignUpRequired(
                 correlationId = result.correlationId,
                 continuationState = result.continuationState
@@ -1228,8 +1237,9 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
 
     /**
      * Posts [attributes] to the sign-up submit-attributes href carried by [state] and routes the
-     * response through [handleSignUpInteractionResult], attaching [state] as the retry state for a
-     * possible attribute-validation error.
+     * response through [handleSignUpInteractionResult]. The retry state records any SDK-owned
+     * credentials submitted by this request so a later server re-request cannot restart their
+     * collection.
      */
     private fun performSignUpSubmitAttributes(
         oAuth2Strategy: NativeAuthV2OAuth2Strategy,
@@ -1238,6 +1248,13 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         password: CharArray? = null,
         upfront: SignUpV2StartCommandParameters?
     ): INativeAuthCommandResult {
+        val submittedAttributeNames =
+            if (password == null || password.isEmpty()) {
+                attributes.keys
+            } else {
+                attributes.keys + ATTRIBUTE_NAME_PASSWORD
+            }
+        val retryState = state.withAdditionalSubmittedAttributes(submittedAttributeNames)
         val result = oAuth2Strategy.performSubmitAttributes(
             state = state,
             attributes = attributes,
@@ -1246,7 +1263,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         return handleSignUpInteractionResult(
             oAuth2Strategy = oAuth2Strategy,
             result = result,
-            retryState = state,
+            retryState = retryState,
             upfront = upfront
         )
     }

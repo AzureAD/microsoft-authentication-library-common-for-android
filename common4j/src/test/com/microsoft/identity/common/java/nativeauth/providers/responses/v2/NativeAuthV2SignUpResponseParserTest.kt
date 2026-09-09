@@ -146,6 +146,20 @@ class NativeAuthV2SignUpResponseParserTest {
     }
 
     @Test
+    fun parseInteraction_whenAttributeValidationContainsUnrelatedDetails_excludesTheirAttributes() {
+        val result = parser.parseInteraction(
+            response = responseFrom(MIXED_ATTRIBUTE_VALIDATION_JSON),
+            previousState = signUpState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.InvalidAttributes)
+        assertEquals(
+            listOf("password"),
+            (result as NativeAuthV2InteractionApiResult.InvalidAttributes).invalidAttributes
+        )
+    }
+
+    @Test
     fun parseInteraction_whenUserAlreadyExistsSurfacesOutsideSignUp_staysUnknownError() {
         // The userAlreadyExists detail is only actionable during the sign-up flow. When the same
         // detail surfaces in another flow (keyed off the continuation state's scenario, not the
@@ -280,6 +294,22 @@ class NativeAuthV2SignUpResponseParserTest {
                   "code": "attributeValidationError",
                   "details": [
                     { "attributeIds": ["password"], "code": "passwordPolicyViolation", "message": "Password validation failed." }
+                  ]
+                }
+              }
+            }
+        """.trimIndent()
+
+        private val MIXED_ATTRIBUTE_VALIDATION_JSON = """
+            {
+              "error": {
+                "code": "invalidRequest",
+                "message": "AADSTS1002027: Some of the collected attributes were invalid.",
+                "innerError": {
+                  "code": "attributeValidationError",
+                  "details": [
+                    { "attributeIds": ["password"], "code": "passwordPolicyViolation", "message": "Password validation failed." },
+                    { "attributeIds": ["email"], "code": "userAlreadyExists", "message": "Unrelated detail." }
                   ]
                 }
               }

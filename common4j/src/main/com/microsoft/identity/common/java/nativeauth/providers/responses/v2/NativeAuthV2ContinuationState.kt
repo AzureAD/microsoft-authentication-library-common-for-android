@@ -89,8 +89,10 @@ class NativeAuthV2ContinuationState private constructor(
      * Returns a copy of this state with any SDK-owned credential names in [names] added to the set
      * of submitted attributes, so the successor produced by [next] inherits them. Other attribute
      * names are deliberately ignored because their values may be corrected and resubmitted.
+     * Public so the controller can preserve this bookkeeping when the server rejects a submission
+     * without returning a successor continuation state.
      */
-    internal fun withAdditionalSubmittedAttributes(
+    fun withAdditionalSubmittedAttributes(
         names: Collection<String>
     ): NativeAuthV2ContinuationState {
         val merged = LinkedHashSet(submittedAttributes)
