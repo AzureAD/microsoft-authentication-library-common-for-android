@@ -164,7 +164,7 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_JIT_CHALLENGE_AUTH_METHOD = "255";
     public static final String NATIVE_AUTH_JIT_SUBMIT_CHALLENGE = "256";
 
-    // NativeAuth V2 APIs (260-276)
+    // NativeAuth V2 APIs (260-275)
     //==============================================================================================
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_START = "260";
     public static final String NATIVE_AUTH_V2_RESET_PASSWORD_SUBMIT_CODE = "261";
@@ -180,9 +180,8 @@ public final class PublicApiId {
     public static final String NATIVE_AUTH_V2_SIGN_UP_SUBMIT_ATTRIBUTES = "271";
     public static final String NATIVE_AUTH_V2_SIGN_IN_AFTER_SIGN_UP = "272";
     public static final String NATIVE_AUTH_V2_SIGN_UP_SUBMIT_CODE = "273";
-    public static final String NATIVE_AUTH_V2_SIGN_UP_RESEND_CODE = "274";
-    public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_CODE = "275";
-    public static final String NATIVE_AUTH_V2_SIGN_IN_RESEND_CODE = "276";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_SUBMIT_CODE = "274";
+    public static final String NATIVE_AUTH_V2_SIGN_IN_RESEND_CODE = "275";
     //endregion
 
     // region WebApps APIs
