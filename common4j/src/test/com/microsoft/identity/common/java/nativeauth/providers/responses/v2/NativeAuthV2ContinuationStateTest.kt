@@ -48,6 +48,7 @@ class NativeAuthV2ContinuationStateTest {
         assertEquals(CORRELATION_ID, state.correlationId)
         assertEquals(SCOPES, state.scopesForTokenRequest())
         assertEquals(NativeAuthV2LinkRelation.RESET_PASSWORD, state.entryRelation)
+        assertEquals(NativeAuthV2FlowScenario.RESET_PASSWORD, state.scenario)
     }
 
     @Test
