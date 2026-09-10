@@ -47,6 +47,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterSignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitAttributesCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
@@ -289,6 +290,54 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             }
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitResetPasswordCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Submits a first-factor one-time code for sign-in while keeping sign-in-only outcomes out of
+     * the reset-password and sign-up submit-code result contracts.
+     */
+    fun submitSignInCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2SignInSubmitCodeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.submitSignInCode"
+        )
+
+        try {
+            val (oAuth2Strategy, verifyResult) = performSubmitCodeVerification(parameters)
+
+            return when (verifyResult) {
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersBuilder = parameters.toBuilder(),
+                    scopes = verifyResult.continuationState.scopesForTokenRequest(),
+                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
+                    state = verifyResult.continuationState
+                )
+                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                    correlationId = verifyResult.correlationId,
+                    continuationState = verifyResult.continuationState,
+                    authMethods = verifyResult.methods
+                )
+                is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
+                    correlationId = verifyResult.correlationId,
+                    error = verifyResult.error,
+                    errorDescription = verifyResult.errorDescription,
+                    subError = verifyResult.subError,
+                    errorCodes = verifyResult.errorCodes
+                )
+                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                    correlationId = verifyResult.correlationId,
+                    redirectReason = verifyResult.redirectReason
+                )
+                else -> mapInteractionError(verifyResult)
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitSignInCode", e)
             throw e
         }
     }

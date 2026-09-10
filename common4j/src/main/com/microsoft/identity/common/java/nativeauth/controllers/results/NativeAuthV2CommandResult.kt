@@ -33,6 +33,7 @@ sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResetPasswordSubmitCodeCommandResult :
     NativeAuthV2SubmitCodeCommandResult
 sealed interface NativeAuthV2SignUpSubmitCodeCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SignInSubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResendCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitNewPasswordCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SignInAfterResetPasswordCommandResult : INativeAuthCommandResult
@@ -53,6 +54,7 @@ sealed interface NativeAuthV2SignInAfterSignUpCommandResult : INativeAuthCommand
 sealed interface NativeAuthV2FlowCompletionCommandResult :
     NativeAuthV2SignInAfterResetPasswordCommandResult,
     NativeAuthV2SignInStartCommandResult,
+    NativeAuthV2SignInSubmitCodeCommandResult,
     NativeAuthV2SubmitPasswordCommandResult,
     NativeAuthV2SubmitMFAChallengeCommandResult,
     NativeAuthV2SignInAfterSignUpCommandResult
@@ -81,6 +83,7 @@ interface NativeAuthV2CommandResult {
         val challengeTargetLabel: String,
         val challengeChannel: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2SignInStartCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SignUpStartCommandResult,
         NativeAuthV2SubmitAttributesCommandResult {
@@ -162,6 +165,7 @@ interface NativeAuthV2CommandResult {
         val errorCodes: List<Int>? = null,
     ) : NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2SignUpSubmitCodeCommandResult,
+        NativeAuthV2SignInSubmitCodeCommandResult,
         NativeAuthV2SubmitMFAChallengeCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.IncorrectCode(correlationId=$correlationId, error=$error, errorDescription=$errorDescription, subError=$subError)"
@@ -192,13 +196,15 @@ interface NativeAuthV2CommandResult {
      * The first factor succeeded and the server requires a second factor. [authMethods] are the
      * methods the server offered, in server order; the app must select one explicitly before any
      * challenge is sent.
-     * Applies to the sign-in start and submit-password steps.
+     * Applies to the sign-in start, submit-password, and first-factor submit-code steps.
      */
     data class MFARequired(
         override val correlationId: String,
         val continuationState: NativeAuthV2ContinuationState,
         val authMethods: List<NativeAuthV2AuthMethod>,
-    ) : NativeAuthV2SignInStartCommandResult, NativeAuthV2SubmitPasswordCommandResult {
+    ) : NativeAuthV2SignInStartCommandResult,
+        NativeAuthV2SignInSubmitCodeCommandResult,
+        NativeAuthV2SubmitPasswordCommandResult {
         override fun toUnsanitizedString(): String =
             "NativeAuthV2CommandResult.MFARequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
 
