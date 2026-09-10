@@ -667,6 +667,37 @@ class NativeAuthV2SignInFlowControllerTest {
     }
 
     @Test
+    fun testSelectSmsMFAMethodFollowsRiskVerificationAndReturnsServerCodeContract() {
+        val state = mockContinuationState()
+        val riskState = mockContinuationState()
+        val verificationState = mockContinuationState()
+
+        every { mockStrategy.performMethodChallenge(state, "sms-1") } returns
+            NativeAuthV2InteractionApiResult.RiskVerificationRequired(
+                correlationId = correlationId,
+                continuationState = riskState
+            )
+        every { mockStrategy.performRiskVerification(riskState) } returns
+            NativeAuthV2InteractionApiResult.CodeRequired(
+                correlationId = correlationId,
+                continuationState = verificationState,
+                challengeTargetLabel = "+X XXX XXX 34",
+                challengeChannel = "sms",
+                codeLength = 7
+            )
+
+        val result = controller.selectMFAMethod(selectMFAMethodParameters(state, "sms-1"))
+
+        assertTrue(result is NativeAuthV2CommandResult.MFAVerificationRequired)
+        val verification = result as NativeAuthV2CommandResult.MFAVerificationRequired
+        assertEquals(verificationState, verification.continuationState)
+        assertEquals(7, verification.codeLength)
+        assertEquals("sms", verification.challengeChannel)
+        assertEquals("+X XXX XXX 34", verification.challengeTargetLabel)
+        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+    }
+
+    @Test
     fun testSelectMFAMethodMapsBlockedMethodToApiError() {
         val state = mockContinuationState()
 

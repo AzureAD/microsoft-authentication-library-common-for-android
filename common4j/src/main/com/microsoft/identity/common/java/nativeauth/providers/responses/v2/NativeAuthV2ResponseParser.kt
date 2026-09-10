@@ -145,8 +145,11 @@ class NativeAuthV2ResponseParser {
      * from its V2 wire values; a `state == "continue"` response requires a continuation token and
      * becomes [NativeAuthV2InteractionApiResult.ReadyToComplete]; any other response requires a
      * continuation token before its `action` is switched on to produce
-     * [NativeAuthV2InteractionApiResult.ChallengeRequired], [NativeAuthV2InteractionApiResult.CodeRequired],
-     * [NativeAuthV2InteractionApiResult.UpdateRequired], or [NativeAuthV2InteractionApiResult.PollInProgress];
+     * [NativeAuthV2InteractionApiResult.ChallengeRequired],
+     * [NativeAuthV2InteractionApiResult.RiskVerificationRequired],
+     * [NativeAuthV2InteractionApiResult.CodeRequired],
+     * [NativeAuthV2InteractionApiResult.UpdateRequired], or
+     * [NativeAuthV2InteractionApiResult.PollInProgress];
      * an `action` this SDK version does not recognise becomes
      * [NativeAuthV2InteractionApiResult.UnsupportedAction] rather than being folded into a generic
      * error.
@@ -201,6 +204,7 @@ class NativeAuthV2ResponseParser {
             NativeAuthV2HalAction.VERIFY -> parseVerify(response, previousState)
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
+            NativeAuthV2HalAction.RISK_VERIFY -> parseRiskVerify(response, previousState)
             NativeAuthV2HalAction.COLLECT_ATTRIBUTES -> parseCollectAttributes(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
@@ -281,6 +285,21 @@ class NativeAuthV2ResponseParser {
         return ParsedMethods.Success(methods.values.toList())
     }
 
+    private fun parseRiskVerify(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        if (response.links[NativeAuthV2LinkRelation.RISK_VERIFY.value].isNullOrBlank()) {
+            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.RISK_VERIFY)
+        }
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+        return NativeAuthV2InteractionApiResult.RiskVerificationRequired(
+            correlationId = response.correlationId,
+            continuationState = successor
+        )
+    }
+
     private fun malformedMethodError(
         correlationId: String,
         fieldName: String
@@ -345,7 +364,7 @@ class NativeAuthV2ResponseParser {
         }
         val challengeTargetLabel = selectedMethod?.hint ?: response.challengeTargetLabel
             ?: return missingFieldError(response.correlationId, CHALLENGE_TARGET_LABEL_FIELD)
-        if (!challengeChannel.isEmailChannel()) {
+        if (!challengeChannel.isOneTimeCodeChannel()) {
             return unsupportedChallengeMethodError(response)
         }
 
@@ -358,8 +377,9 @@ class NativeAuthV2ResponseParser {
         )
     }
 
-    private fun String?.isEmailChannel(): Boolean =
-        this?.equals(NativeAuthConstants.ChallengeChannel.EMAIL, ignoreCase = true) == true
+    private fun String?.isOneTimeCodeChannel(): Boolean =
+        this?.equals(NativeAuthConstants.ChallengeChannel.EMAIL, ignoreCase = true) == true ||
+                this?.equals(NativeAuthConstants.ChallengeChannel.SMS, ignoreCase = true) == true
 
     private fun String?.isPasswordChannel(): Boolean =
         this?.equals(NativeAuthConstants.ChallengeType.PASSWORD, ignoreCase = true) == true
@@ -369,13 +389,13 @@ class NativeAuthV2ResponseParser {
     ): NativeAuthV2InteractionApiResult.UnknownError {
         Logger.warn(
             TAG,
-            "Native Auth V2 response did not offer a supported email authentication method."
+            "Native Auth V2 response did not offer a supported one-time-code authentication method."
         )
         return NativeAuthV2InteractionApiResult.UnknownError(
             correlationId = response.correlationId,
             error = ApiErrorResult.INVALID_STATE,
-            errorDescription = "Native Auth V2 response did not offer a supported email " +
-                    "authentication method. Only email one-time codes are supported."
+            errorDescription = "Native Auth V2 response did not offer a supported one-time-code " +
+                    "authentication method. Only email and SMS one-time codes are supported."
         )
     }
 
