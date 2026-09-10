@@ -31,7 +31,6 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
-import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
@@ -96,7 +95,6 @@ class NativeAuthV2FlowControllerTest {
     private fun mockContinuationState(id: String = correlationId): NativeAuthV2ContinuationState {
         val state = mockk<NativeAuthV2ContinuationState>(relaxed = true)
         every { state.correlationId } returns id
-        every { state.scenario } returns NativeAuthV2FlowScenario.RESET_PASSWORD
         return state
     }
 

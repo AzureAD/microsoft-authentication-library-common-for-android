@@ -94,9 +94,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         private const val UNEXPECTED_RESULT = "unexpected_api_result"
 
         /**
-         * Returned when the server does not offer the password first factor. This scoped V2 API
-         * only supports password as the first factor; an email one-time code first factor is
-         * deliberately not treated as a fallback.
+         * Returned when sign-in offers neither email nor password as the first factor.
          */
         private const val UNSUPPORTED_FIRST_FACTOR = "unsupported_first_factor"
         private const val UNSUPPORTED_CHALLENGE_METHOD = "unsupported_challenge_method"
@@ -594,16 +592,15 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     // -----------------------------------------------------------------------------------------
 
     /**
-     * Starts the V2 sign-in flow: authorize-challenge start → sign-in entry → password-method
+     * Starts the V2 sign-in flow: authorize-challenge start → sign-in entry → first-factor
      * challenge → optional password verification.
      *
-     * This scoped API always drives the password first factor. When the server does not offer a
-     * password method the flow fails deterministically rather than falling back to an email
-     * one-time code, which is out of scope for this increment.
+     * With an entry-supplied password, password is preferred. Without one, email one-time code is
+     * preferred, with a deferred password state retained as a fallback for password-only accounts.
      *
-     * With a non-empty entry-supplied password the flow verifies it immediately and returns
-     * [NativeAuthV2CommandResult.Complete] or [NativeAuthV2CommandResult.MFARequired]; without one
-     * it returns [NativeAuthV2CommandResult.PasswordRequired] and waits for [submitPassword].
+     * The selected challenge returns [NativeAuthV2CommandResult.CodeRequired] for email or
+     * [NativeAuthV2CommandResult.PasswordRequired] for a deferred password. A non-empty password
+     * is verified immediately and may complete or transition to MFA.
      */
     fun signInStart(parameters: SignInV2StartCommandParameters): NativeAuthV2SignInStartCommandResult {
         LogSession.logMethodCall(
@@ -670,36 +667,53 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(startResult)
             }
 
-            val passwordMethod = firstFactorChallenge.methods
-                .firstOrNull { it.type == METHOD_TYPE_PASSWORD }
+            val entryPassword = parameters.password
+            val preferredMethodType =
+                if (entryPassword == null || entryPassword.isEmpty()) METHOD_TYPE_EMAIL
+                else METHOD_TYPE_PASSWORD
+            val fallbackMethodType =
+                if (preferredMethodType == METHOD_TYPE_EMAIL) METHOD_TYPE_PASSWORD
+                else METHOD_TYPE_EMAIL
+            val firstFactorMethod = firstFactorChallenge.methods
+                .firstOrNull { it.type == preferredMethodType }
+                ?: firstFactorChallenge.methods.firstOrNull { it.type == fallbackMethodType }
                 ?: run {
-                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer the password first factor.")
+                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer a supported sign-in first factor.")
                     return INativeAuthCommandResult.APIError(
                         error = UNSUPPORTED_FIRST_FACTOR,
-                        errorDescription = "Native Auth V2 sign-in requires the password first " +
-                                "factor, which the server did not offer for this account.",
+                        errorDescription = "Native Auth V2 sign-in requires an email or password " +
+                                "authentication method, which the server did not offer.",
                         correlationId = firstFactorChallenge.correlationId
                     )
                 }
 
-            val passwordChallengeResult = oAuth2Strategy.performMethodChallenge(
+            val firstFactorChallengeResult = oAuth2Strategy.performMethodChallenge(
                 state = firstFactorChallenge.continuationState,
-                methodId = passwordMethod.id
+                methodId = firstFactorMethod.id
             )
 
-            val passwordState = when (passwordChallengeResult) {
-                is NativeAuthV2InteractionApiResult.PasswordRequired -> passwordChallengeResult.continuationState
-                is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
-                    correlationId = passwordChallengeResult.correlationId,
-                    redirectReason = passwordChallengeResult.redirectReason
+            if (firstFactorChallengeResult is NativeAuthV2InteractionApiResult.CodeRequired) {
+                return NativeAuthV2CommandResult.CodeRequired(
+                    correlationId = firstFactorChallengeResult.correlationId,
+                    continuationState = firstFactorChallengeResult.continuationState,
+                    codeLength = firstFactorChallengeResult.codeLength,
+                    challengeTargetLabel = firstFactorChallengeResult.challengeTargetLabel,
+                    challengeChannel = firstFactorChallengeResult.challengeChannel
                 )
-                else -> return mapInteractionError(passwordChallengeResult)
             }
 
-            val entryPassword = parameters.password
+            val passwordState = when (firstFactorChallengeResult) {
+                is NativeAuthV2InteractionApiResult.PasswordRequired -> firstFactorChallengeResult.continuationState
+                is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
+                    correlationId = firstFactorChallengeResult.correlationId,
+                    redirectReason = firstFactorChallengeResult.redirectReason
+                )
+                else -> return mapInteractionError(firstFactorChallengeResult)
+            }
+
             if (entryPassword == null || entryPassword.isEmpty()) {
                 return NativeAuthV2CommandResult.PasswordRequired(
-                    correlationId = passwordChallengeResult.correlationId,
+                    correlationId = firstFactorChallengeResult.correlationId,
                     continuationState = passwordState
                 )
             }
@@ -740,7 +754,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             throw e
         } finally {
             // The interactor already clears the buffer it sent; this also covers the paths that
-            // never reached it (unsupported first factor, redirect, protocol error).
+            // never reached it (email first factor, redirect, protocol error).
             StringUtil.overwriteWithNull(parameters.password)
         }
     }
