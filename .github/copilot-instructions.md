@@ -545,12 +545,9 @@ Flag:
 
 Require:
 - PR summary migration note.
-- Changelog classification (MAJOR/MINOR).
 - Deprecation annotation before removal (unless urgent security fix).
 
 Avoid false positives for private/internal refactors.
-
-See [changelog.txt](../changelog.txt) for the changelog format.
 
 --------------------------------------------------------------------------------
 
