@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ResendCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectMFAMethodCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitMFAChallengeCommandParameters
@@ -44,6 +45,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectMFAMethodCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectResetPasswordMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterSignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInStartCommandResult
@@ -116,6 +118,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
          */
         private const val ATTRIBUTE_ALREADY_SUBMITTED_ERROR = "attribute_already_submitted"
         private const val METHOD_TYPE_EMAIL = "email"
+        private const val METHOD_TYPE_SMS = "sms"
     }
 
     // -----------------------------------------------------------------------------------------
@@ -199,36 +202,94 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(startResult)
             }
 
-            val emailMethod = challenge.methods.firstOrNull { it.type == METHOD_TYPE_EMAIL }
-                ?: return INativeAuthCommandResult.APIError(
+            val supportedMethods = challenge.methods.filter {
+                it.type == METHOD_TYPE_EMAIL || it.type == METHOD_TYPE_SMS
+            }
+            if (supportedMethods.isEmpty()) {
+                return INativeAuthCommandResult.APIError(
                     error = UNSUPPORTED_CHALLENGE_METHOD,
-                    errorDescription = "Native Auth V2 password reset requires an email " +
+                    errorDescription = "Native Auth V2 password reset requires an email or SMS " +
                             "authentication method, which the server did not offer.",
                     correlationId = challenge.correlationId
                 )
+            }
 
-            val challengeResult = oAuth2Strategy.performMethodChallenge(
+            if (supportedMethods.size > 1) {
+                return NativeAuthV2CommandResult.ResetPasswordMethodRequired(
+                    correlationId = challenge.correlationId,
+                    continuationState = challenge.continuationState,
+                    authMethods = supportedMethods
+                )
+            }
+
+            return when (val result = challengeResetPasswordMethod(
+                oAuth2Strategy = oAuth2Strategy,
                 state = challenge.continuationState,
-                methodId = emailMethod.id
-            )
-
-            return when (challengeResult) {
-                is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.CodeRequired(
-                    correlationId = challengeResult.correlationId,
-                    continuationState = challengeResult.continuationState,
-                    codeLength = challengeResult.codeLength,
-                    challengeTargetLabel = challengeResult.challengeTargetLabel,
-                    challengeChannel = challengeResult.challengeChannel
-                )
-                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
-                    correlationId = challengeResult.correlationId,
-                    redirectReason = challengeResult.redirectReason
-                )
-                else -> mapInteractionError(challengeResult)
+                methodId = supportedMethods.single().id
+            )) {
+                is NativeAuthV2CommandResult.CodeRequired -> result
+                is NativeAuthV2CommandResult.NotImplemented -> result
+                is INativeAuthCommandResult.Redirect -> result
+                is INativeAuthCommandResult.APIError -> result
             }
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in resetPasswordStart", e)
             throw e
+        }
+    }
+
+    /**
+     * Challenges the reset-password first-factor method the app selected.
+     */
+    fun selectResetPasswordMethod(
+        parameters: NativeAuthV2SelectResetPasswordMethodCommandParameters
+    ): NativeAuthV2SelectResetPasswordMethodCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.selectResetPasswordMethod"
+        )
+
+        try {
+            return challengeResetPasswordMethod(
+                oAuth2Strategy = createNativeAuthV2Strategy(parameters),
+                state = parameters.continuationState,
+                methodId = parameters.methodId
+            )
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in selectResetPasswordMethod", e)
+            throw e
+        }
+    }
+
+    private fun challengeResetPasswordMethod(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2SelectResetPasswordMethodCommandResult {
+        val challengeResult = oAuth2Strategy.performMethodChallenge(
+            state = state,
+            methodId = methodId
+        )
+        val verificationResult = when (challengeResult) {
+            is NativeAuthV2InteractionApiResult.RiskVerificationRequired ->
+                oAuth2Strategy.performRiskVerification(challengeResult.continuationState)
+            else -> challengeResult
+        }
+
+        return when (verificationResult) {
+            is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.CodeRequired(
+                correlationId = verificationResult.correlationId,
+                continuationState = verificationResult.continuationState,
+                codeLength = verificationResult.codeLength,
+                challengeTargetLabel = verificationResult.challengeTargetLabel,
+                challengeChannel = verificationResult.challengeChannel
+            )
+            is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                correlationId = verificationResult.correlationId,
+                redirectReason = verificationResult.redirectReason
+            )
+            else -> mapInteractionError(verificationResult)
         }
     }
 
