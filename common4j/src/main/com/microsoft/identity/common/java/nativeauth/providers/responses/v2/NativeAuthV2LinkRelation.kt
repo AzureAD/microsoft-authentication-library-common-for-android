@@ -42,6 +42,7 @@ value class NativeAuthV2LinkRelation(val value: String) {
         val RESEND = NativeAuthV2LinkRelation("resend")
         val UPDATE = NativeAuthV2LinkRelation("update")
         val POLL = NativeAuthV2LinkRelation("poll")
+        val RISK_VERIFY = NativeAuthV2LinkRelation("riskverify")
         val CONTINUE = NativeAuthV2LinkRelation("continue")
         val RESET_PASSWORD = NativeAuthV2LinkRelation("resetPassword")
         val SIGN_IN = NativeAuthV2LinkRelation("signIn")
