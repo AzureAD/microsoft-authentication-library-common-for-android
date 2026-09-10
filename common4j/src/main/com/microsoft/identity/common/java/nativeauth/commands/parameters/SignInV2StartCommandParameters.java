@@ -33,8 +33,10 @@ import lombok.experimental.SuperBuilder;
 /**
  * Parameters for the V2 sign-in start operation.
  * Carries the username that initiates the flow and, optionally, the password to submit as soon as
- * the server offers the password first factor. The password is never retained in continuation or
- * public state; the controller clears the buffer once the request has been issued.
+ * the server offers the password first factor. Without a password, sign-in prefers an email
+ * one-time-code first factor and falls back to a deferred password state when email is unavailable.
+ * The password is never retained in continuation or public state; the controller clears the buffer
+ * once the request has been issued.
  * Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
@@ -49,8 +51,8 @@ public class SignInV2StartCommandParameters extends BaseSignInTokenCommandParame
     public final String username;
 
     /**
-     * The password to submit for the password first factor, or {@code null} when the app defers
-     * the password to the password-required state.
+     * The password to submit for the password first factor, or {@code null} to start with an email
+     * one-time code when available.
      */
     @Nullable
     public final char[] password;

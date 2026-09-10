@@ -29,7 +29,7 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Parameters for the V2 submit-code step of the SSPR flow.
+ * Parameters for a V2 submit-code step.
  * Carries the OTP code and the opaque continuation state from the preceding challenge step.
  * Extends {@link BaseSignInTokenCommandParameters}.
  */
