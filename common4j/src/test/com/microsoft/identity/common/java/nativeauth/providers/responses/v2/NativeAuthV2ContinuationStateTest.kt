@@ -39,6 +39,19 @@ import java.io.Serializable
 class NativeAuthV2ContinuationStateTest {
 
     @Test
+    fun testFixtureCreatesRepresentativeContinuationState() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            correlationId = CORRELATION_ID,
+            scopes = SCOPES
+        )
+
+        assertEquals(CORRELATION_ID, state.correlationId)
+        assertEquals(SCOPES, state.scopesForTokenRequest())
+        assertEquals(NativeAuthV2LinkRelation.RESET_PASSWORD, state.entryRelation)
+        assertEquals(NativeAuthV2FlowScenario.RESET_PASSWORD, state.scenario)
+    }
+
+    @Test
     fun javaSerializationRoundTrip_preservesStateAndRedactsStringRepresentations() {
         val original = createState()
 
