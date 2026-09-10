@@ -26,6 +26,7 @@ import com.google.gson.TypeAdapter
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.providers.requests.NativeAuthRequest
 import com.microsoft.identity.common.java.util.ArgUtils
 import com.microsoft.identity.common.java.util.CharArrayJsonAdapter
@@ -58,6 +59,12 @@ data class NativeAuthV2SubmitAttributesRequest private constructor(
             ArgUtils.validateNonNullArg(continuationToken, "continuationToken")
             if (password == null || password.isEmpty()) {
                 ArgUtils.validateNonNullArg(attributes, "attributes")
+            }
+            if (attributes.keys.any { it.equals(PASSWORD, ignoreCase = true) }) {
+                throw ClientException(
+                    PASSWORD,
+                    "password must not be included in attributes"
+                )
             }
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")

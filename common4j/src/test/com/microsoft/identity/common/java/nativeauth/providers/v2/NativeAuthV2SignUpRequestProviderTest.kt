@@ -113,6 +113,38 @@ class NativeAuthV2SignUpRequestProviderTest {
     }
 
     @Test
+    fun createSubmitAttributesRequest_withPasswordAttribute_rejectsRequest() {
+        val exception = assertClientException {
+            provider().createSubmitAttributesRequest(
+                state = collectAttributesState(),
+                attributes = mapOf("Password" to "non-erasable-value")
+            )
+        }
+
+        assertEquals("password", exception.errorCode)
+        assertEquals("password must not be included in attributes", exception.message)
+    }
+
+    @Test
+    fun createSubmitAttributesRequest_withPasswordAttributeAndPasswordBuffer_rejectsRequest() {
+        val password = "Password123!".toCharArray()
+        try {
+            val exception = assertClientException {
+                provider().createSubmitAttributesRequest(
+                    state = collectAttributesState(),
+                    attributes = mapOf("Password" to "non-erasable-value"),
+                    password = password
+                )
+            }
+
+            assertEquals("password", exception.errorCode)
+            assertEquals("password must not be included in attributes", exception.message)
+        } finally {
+            password.fill('\u0000')
+        }
+    }
+
+    @Test
     fun createSubmitAttributesRequest_withNoAttributesOrPassword_rejectsEmptyAttributes() {
         val exception = assertClientException {
             provider().createSubmitAttributesRequest(
@@ -141,11 +173,11 @@ class NativeAuthV2SignUpRequestProviderTest {
     fun createSubmitAttributesRequest_neverRendersAttributeValuesInEitherStringForm() {
         val request = provider().createSubmitAttributesRequest(
             state = collectAttributesState(),
-            attributes = mapOf("password" to "Password123!")
+            attributes = mapOf("customAttribute" to "sensitive-value")
         )
 
         listOf(request.toString(), request.toUnsanitizedString()).forEach { rendered ->
-            assertFalse(rendered.contains("Password123!"))
+            assertFalse(rendered.contains("sensitive-value"))
             assertFalse(rendered.contains("ct-1"))
         }
     }
