@@ -541,19 +541,23 @@ class NativeAuthV2ResponseParser {
 
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
-                // One or more submitted attributes failed server-side validation (for example a
-                // password that violated policy). The rejected attribute names let the app prompt
-                // the user for exactly the values that need to change.
-                NativeAuthV2InteractionApiResult.InvalidAttributes(
-                    correlationId = correlationId,
-                    invalidAttributes = serverError.details
+                run {
+                    val invalidAttributes = serverError.details
                         .filterNot { it.code == INNER_ERROR_USER_ALREADY_EXISTS }
                         .flatMap { it.attributeIds }
-                        .distinct(),
-                    error = code.orEmpty(),
-                    errorDescription = message.orEmpty(),
-                    errorCodes = errorCodes
-                )
+                        .distinct()
+                    if (invalidAttributes.isEmpty()) {
+                        unknownInteractionError(correlationId, code, message, errorCodes)
+                    } else {
+                        NativeAuthV2InteractionApiResult.InvalidAttributes(
+                            correlationId = correlationId,
+                            invalidAttributes = invalidAttributes,
+                            error = code.orEmpty(),
+                            errorDescription = message.orEmpty(),
+                            errorCodes = errorCodes
+                        )
+                    }
+                }
 
             scenario == NativeAuthV2FlowScenario.SIGN_UP &&
                     serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
