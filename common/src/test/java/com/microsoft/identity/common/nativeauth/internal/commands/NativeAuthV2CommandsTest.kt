@@ -28,8 +28,10 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeA
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitNewPasswordCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
@@ -37,6 +39,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NativeAuthV2CommandsTest {
@@ -64,6 +68,48 @@ class NativeAuthV2CommandsTest {
 
         assertSame(result, actual)
         verify(exactly = 1) { controller.submitCode(parameters) }
+    }
+
+    @Test
+    fun resetPasswordSubmitCodeCommandUsesDedicatedEntryPoint() {
+        val parameters = parameters<NativeAuthV2SubmitCodeCommandParameters>()
+        val result = mockk<NativeAuthV2ResetPasswordSubmitCodeCommandResult>()
+        every { controller.submitResetPasswordCode(parameters) } returns result
+
+        val actual =
+            NativeAuthV2ResetPasswordSubmitCodeCommand(parameters, controller, API_ID).execute()
+
+        assertSame(result, actual)
+        verify(exactly = 1) { controller.submitResetPasswordCode(parameters) }
+    }
+
+    @Test
+    fun signUpSubmitCodeResultsUseDedicatedContract() {
+        assertFalse(
+            NativeAuthV2SubmitCodeCommandResult::class.java.isAssignableFrom(
+                com.microsoft.identity.common.java.nativeauth.controllers.results
+                    .NativeAuthV2CommandResult.AttributesRequired::class.java
+            )
+        )
+        assertTrue(
+            NativeAuthV2SignUpSubmitCodeCommandResult::class.java.isAssignableFrom(
+                com.microsoft.identity.common.java.nativeauth.controllers.results
+                    .NativeAuthV2CommandResult.AttributesRequired::class.java
+            )
+        )
+    }
+
+    @Test
+    fun signUpSubmitCodeCommandUsesDedicatedEntryPoint() {
+        val parameters = parameters<NativeAuthV2SubmitCodeCommandParameters>()
+        val result = mockk<NativeAuthV2SignUpSubmitCodeCommandResult>()
+        every { controller.submitSignUpCode(parameters) } returns result
+
+        val actual =
+            NativeAuthV2SignUpSubmitCodeCommand(parameters, controller, API_ID).execute()
+
+        assertSame(result, actual)
+        verify(exactly = 1) { controller.submitSignUpCode(parameters) }
     }
 
     @Test
