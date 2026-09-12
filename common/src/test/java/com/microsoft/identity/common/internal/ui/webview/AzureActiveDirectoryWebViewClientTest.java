@@ -1919,7 +1919,30 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testProcessDeviceCaRequest_TargetedLaunchFails_LoadsHttpsUrlInWebView() {
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensOriginalUrl() {
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
+                .launchReWpjManagementApp(anyString(), anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+
+        final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
+        assertEquals(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                launchedIntent.getDataString());
+        Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
+        Mockito.verify(mockWebView).stopLoading();
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_NoBrowser_LoadsHttpsUrlInWebView() {
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
@@ -1929,6 +1952,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
 
         Mockito.verify(mockWebView).loadUrl(eq(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER), any());
+        Mockito.verify(mockWebView, never()).stopLoading();
+        assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
     }
 
     private void testProcessDeviceCaRequest_LaunchesTargetedHandoff(

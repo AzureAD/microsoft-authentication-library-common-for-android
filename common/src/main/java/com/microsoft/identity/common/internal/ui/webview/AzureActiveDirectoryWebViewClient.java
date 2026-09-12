@@ -1204,7 +1204,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void fallbackToBrowserOrWebView(@NonNull final WebView view,
                                             @NonNull final String originalUrl) {
         final String httpsUrl = toHttpsUrl(originalUrl);
-        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
+        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(originalUrl));
         if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) {
             try {
                 getActivity().startActivity(browserIntent);
