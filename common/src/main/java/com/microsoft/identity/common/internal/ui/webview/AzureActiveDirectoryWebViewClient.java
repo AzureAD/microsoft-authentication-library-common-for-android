@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -117,6 +118,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_APP_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
@@ -152,6 +154,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * {@code intent://} request.
      */
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+    private static final String GOOGLE_DPC_PACKAGE_NAME = "com.google.android.apps.work.clouddpc";
+    private static final String DEVICE_CA_QUERY_PARAMETER = "ismdmurl";
+    private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
 
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
@@ -1129,6 +1134,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
+        final String managementAppPackage = getReWpjManagementAppPackage();
+        if (managementAppPackage != null) {
+            try {
+                launchReWpjManagementApp(url, managementAppPackage);
+                view.stopLoading();
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                return;
+            } catch (final ActivityNotFoundException | SecurityException exception) {
+                Logger.error(methodTag,
+                        "Failed to launch the device management app. Falling back to WebCP.",
+                        exception);
+                fallbackToBrowserOrWebView(view, url);
+                return;
+            }
+        }
+
         if (shouldLaunchCompanyPortal()) {
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
@@ -1145,8 +1166,64 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         loadDeviceCaUrl(url, view);
     }
 
-    private boolean isDeviceCaRequest(@NonNull final String url) {
-        return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected boolean isDeviceCaRequest(@NonNull final String url) {
+        return DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
+                Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
+    }
+
+    @Nullable
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected String getReWpjManagementAppPackage() {
+        final DevicePolicyManager devicePolicyManager =
+                (DevicePolicyManager) getActivity().getSystemService(Activity.DEVICE_POLICY_SERVICE);
+        if (devicePolicyManager == null) {
+            return null;
+        }
+
+        if (devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            return COMPANY_PORTAL_APP_PACKAGE_NAME;
+        }
+
+        if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)
+                || devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
+            return INTUNE_APP_PACKAGE_NAME;
+        }
+
+        return null;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected void launchReWpjManagementApp(@NonNull final String url,
+                                            @NonNull final String managementAppPackage) {
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(toHttpsUrl(url)));
+        intent.setPackage(managementAppPackage);
+        getActivity().startActivity(intent);
+    }
+
+    private void fallbackToBrowserOrWebView(@NonNull final WebView view,
+                                            @NonNull final String originalUrl) {
+        final String httpsUrl = toHttpsUrl(originalUrl);
+        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
+        if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            try {
+                getActivity().startActivity(browserIntent);
+                view.stopLoading();
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                return;
+            } catch (final ActivityNotFoundException | SecurityException exception) {
+                Logger.error(TAG + ":fallbackToBrowserOrWebView",
+                        "Failed to launch the browser. Falling back to the WebView.",
+                        exception);
+            }
+        }
+
+        view.loadUrl(httpsUrl, mRequestHeaders);
+    }
+
+    @NonNull
+    private String toHttpsUrl(@NonNull final String url) {
+        return url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
     }
 
     private boolean isHttpsScheme(@NonNull final String url) {

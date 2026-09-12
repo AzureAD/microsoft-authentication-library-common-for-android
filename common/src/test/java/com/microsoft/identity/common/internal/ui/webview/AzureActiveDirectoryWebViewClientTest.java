@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
@@ -182,9 +183,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
             "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
-    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
+    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz?ismdmurl=1";
 
-    private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz&ismdmurl=1";
+    private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz?ismdmurl=1";
+    private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
+            "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
     private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
     private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
@@ -1880,6 +1883,82 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Verify
         Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
         Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    public void testIsDeviceCaRequest_ParsesQueryParameterInAnyPosition() {
+        assertTrue(mWebViewClient.isDeviceCaRequest(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertTrue(mWebViewClient.isDeviceCaRequest(TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER));
+        assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?ismdmurl=0"));
+        assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?notismdmurl=1"));
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_CompanyPortalOwner_LaunchesTargetedHandoff() {
+        testProcessDeviceCaRequest_LaunchesTargetedHandoff(COMPANY_PORTAL_APP_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_GoogleDpcOwner_LaunchesIntuneHandoff() {
+        testProcessDeviceCaRequest_LaunchesTargetedHandoff(INTUNE_APP_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_NoRecognizedOwner_KeepsWebCpFlow() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doReturn(false).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+
+        Mockito.verify(webViewClient).loadDeviceCaUrl(
+                TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
+        Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString(), anyString());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_LoadsHttpsUrlInWebView() {
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
+                .launchReWpjManagementApp(anyString(), anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER), any());
+    }
+
+    private void testProcessDeviceCaRequest_LaunchesTargetedHandoff(
+            @NonNull final String managementAppPackage) {
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                new AzureActiveDirectoryWebViewClient(
+                        mActivity,
+                        mockCallback,
+                        url -> {},
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false));
+        Mockito.doReturn(managementAppPackage).when(webViewClient).getReWpjManagementAppPackage();
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+
+        final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
+        assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
+        assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                launchedIntent.getDataString());
+        assertEquals(managementAppPackage, launchedIntent.getPackage());
+        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
     }
 
     @Test
