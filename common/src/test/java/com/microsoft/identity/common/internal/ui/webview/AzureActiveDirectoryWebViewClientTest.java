@@ -110,7 +110,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.DefaultOTelSpanFactory;
 import com.microsoft.identity.common.java.opentelemetry.IOTelSpanFactory;
@@ -1729,13 +1728,14 @@ public class AzureActiveDirectoryWebViewClientTest {
                 false);
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
+        final ClientException expectedException = new ClientException(
+                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                "SubmitUrl host is not same-origin with the challenging origin.");
 
         try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
                 PKeyAuthChallengeFactory.class,
                 (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
-                        .thenThrow(new ClientException(
-                                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
-                                "SubmitUrl host is not same-origin with the challenging origin.")))) {
+                        .thenThrow(expectedException))) {
 
             final boolean result = webViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
@@ -2063,9 +2063,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testGetFlowCorrelationId_prefersTheFlowsOwnIdOverDiagnosticContext() {
         final String flowCorrelationId = "11111111-1111-4111-8111-111111111111";
-        final RequestContext requestContext = new RequestContext();
-        requestContext.put(DiagnosticContext.CORRELATION_ID, "22222222-2222-4222-8222-222222222222");
-        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID,
+                "22222222-2222-4222-8222-222222222222");
 
         assertEquals(flowCorrelationId,
                 newClientWithCorrelationId(flowCorrelationId).getFlowCorrelationId());
@@ -2079,9 +2079,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
         final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
-        final RequestContext requestContext = new RequestContext();
-        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
-        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
@@ -2090,9 +2089,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
         final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
-        final RequestContext requestContext = new RequestContext();
-        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
-        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }

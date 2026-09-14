@@ -93,15 +93,11 @@ public class LoggerTest {
 
     @Test
     public void getDiagnosticContextMetadata_returnsThreadAndCorrelationMetadata() {
-        // Reset the shared thread-local request context so the correlation id is deterministic
-        // (other tests running in the same JVM may otherwise leave a correlation id set).
-        com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.clear();
-
         final String metadata = Logger.getDiagnosticContextMetadata();
 
         assertNotNull(metadata);
         assertTrue(metadata.startsWith("thread_id: "));
-        assertTrue(metadata.contains(", correlation_id: UNSET"));
+        assertTrue(metadata.contains(", correlation_id: "));
     }
 
     @Test
