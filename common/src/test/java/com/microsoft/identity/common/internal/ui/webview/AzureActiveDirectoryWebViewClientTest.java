@@ -1931,10 +1931,10 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensOriginalUrl() {
+        public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
         registerActivationHandler(
                 mActivity,
-                Uri.parse(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
+                                Uri.parse(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
                 "com.contoso.browser",
                 "com.contoso.browser.BrowserActivity");
         final WebView mockWebView = Mockito.mock(WebView.class);
@@ -1947,7 +1947,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
-        assertEquals(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+        assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
                 launchedIntent.getDataString());
         Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
         Mockito.verify(mockWebView).stopLoading();
