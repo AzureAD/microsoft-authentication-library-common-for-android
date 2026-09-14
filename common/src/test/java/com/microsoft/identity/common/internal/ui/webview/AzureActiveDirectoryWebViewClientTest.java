@@ -1931,10 +1931,10 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-        public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
+    public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
         registerActivationHandler(
                 mActivity,
-                                Uri.parse(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
+                Uri.parse(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
                 "com.contoso.browser",
                 "com.contoso.browser.BrowserActivity");
         final WebView mockWebView = Mockito.mock(WebView.class);
@@ -1950,7 +1950,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
                 launchedIntent.getDataString());
         Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
-        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
     }
 
     @Test
@@ -1964,7 +1964,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
 
         Mockito.verify(mockWebView).loadUrl(eq(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER), any());
-        Mockito.verify(mockWebView, never()).stopLoading();
+        Mockito.verify(mockWebView).stopLoading();
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
     }
 
@@ -1993,7 +1993,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
                 launchedIntent.getDataString());
         assertEquals(managementAppPackage, launchedIntent.getPackage());
-        Mockito.verify(mockWebView).stopLoading();
+        Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
         assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
     }
