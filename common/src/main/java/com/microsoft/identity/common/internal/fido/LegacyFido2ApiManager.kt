@@ -61,6 +61,7 @@ class LegacyFido2ApiManager (val context: Context, val fragment: WebViewAuthoriz
                                       relyingPartyIdentifier: String,
                                       allowedCredentials: List<String>?,
                                       userVerificationPolicy: String,
+                                      correlationId: String?,
                                       span: Span
     ): String = suspendCancellableCoroutine { continuation ->
         val methodTag = "$TAG:authenticate"

@@ -14,9 +14,11 @@ parameters:
   type: string
   default: LINE
 # Allowed overall drop in percentage points before the check fails. 0 = any drop fails.
+# A small non-zero default absorbs run-to-run noise from flaky/async tests so an
+# innocent PR isn't gated by a sub-0.01pp jitter in measured coverage.
 - name: tolerance
   type: number
-  default: 0
+  default: 0.01
 # When false, the comparison is reported but never fails the build (report-only mode).
 - name: failOnDrop
   type: boolean

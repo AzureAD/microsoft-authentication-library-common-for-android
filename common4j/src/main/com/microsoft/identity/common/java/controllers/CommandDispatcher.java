@@ -42,6 +42,8 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.broker.telemetry.EventTag;
+import com.microsoft.identity.common.java.broker.telemetry.TelemetryHelper;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowAuthResultCommand;
 import com.microsoft.identity.common.java.commands.DeviceCodeFlowCommand;
@@ -510,6 +512,24 @@ public class CommandDispatcher {
     /**
      * submitSilent - Run a command using the silent thread pool, and return the future governing it.
      *
+     * <p><b>Telemetry note &mdash; coalesced callers.</b> When an equivalent command is already in
+     * flight, this method attaches a listener to the existing future and returns early. That caller
+     * therefore records neither {@link EventTag#BrokerCommandQueued} nor
+     * {@link EventTag#BrokerCommandExecutionStart}, and every downstream tag (cache, network, token)
+     * is recorded on the <em>executing</em> command's collector rather than the joining caller's.
+     * The joining caller's {@code execution_flow} consequently ends at
+     * {@code BrokerRequestDeserialized} and resumes at {@code BrokerResponseSerialized}.
+     *
+     * <p>This gap is expected and does not indicate a stall. A flow carrying
+     * {@code BrokerRequestDeserialized} without {@code BrokerCommandExecutionStart} was coalesced
+     * onto an in-flight identical request; the token returned to that caller is still correct. Note
+     * that {@link CommandParameters} excludes both {@code correlationId} and {@code eventCollector}
+     * from {@code equals}, so genuinely distinct requests do coalesce here.
+     *
+     * <p>Do <em>not</em> close the gap by hoisting {@code BrokerCommandQueued} above the caching
+     * branch: no command is queued on behalf of a joining caller, so the event would be untrue, and
+     * the resulting flow would misread as executor starvation rather than as a dedup.
+     *
      * @param command
      */
     //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -571,6 +591,7 @@ public class CommandDispatcher {
                         putValue.whenComplete(getCommandResultConsumer(command));
                         // This request is sharing another request's future - it's effectively EXECUTING
                         // Update state to prevent incorrect timeout classification as QUEUED
+                        // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
                         if (!isDeviceCodeFlowRequest) {
                             sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                         }
@@ -580,6 +601,7 @@ public class CommandDispatcher {
                     future.whenComplete(getCommandResultConsumer(command));
                     // This request is sharing another request's future - it's effectively EXECUTING
                     // Update state to prevent incorrect timeout classification as QUEUED
+                    // Returns before BrokerCommandQueued is recorded - see the telemetry note on this method.
                     if (!isDeviceCodeFlowRequest) {
                         sRequestStateMap.put(correlationId, RequestState.EXECUTING);
                     }
@@ -609,9 +631,19 @@ public class CommandDispatcher {
                     getSilentExecutorPoolSize()
             );
 
+            // Recorded before execute() so this event can never be timestamped after
+            // BrokerCommandExecutionStart, which the worker thread may record immediately.
+            TelemetryHelper.addEvent(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             commandExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    TelemetryHelper.addEvent(
+                            commandParameters.getEventCollector(),
+                            EventTag.BrokerCommandExecutionStart
+                    );
                     // Get the cancellation signal owned by this future and set it on
                     // this worker thread so UrlConnectionHttpClient can access it via ThreadLocal.
                     final CancellationSignal cancellationSignal = finalFuture.getCancellationSignal();
@@ -732,9 +764,19 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
             finalFuture.whenComplete(getCommandResultConsumer(command));
+            // Recorded before execute() so this event can never be timestamped after
+            // BrokerCommandExecutionStart, which the worker thread may record immediately.
+            TelemetryHelper.addEvent(
+                    commandParameters.getEventCollector(),
+                    EventTag.BrokerCommandQueued
+            );
             sSilentExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                 @Override
                 public void run() {
+                    TelemetryHelper.addEvent(
+                            commandParameters.getEventCollector(),
+                            EventTag.BrokerCommandExecutionStart
+                    );
 
                     try {
                         //initializing again since the request is transferred to a different thread pool
@@ -1027,10 +1069,20 @@ public class CommandDispatcher {
                     }
                 }
 
+                // Recorded before execute() so this event can never be timestamped after
+                // BrokerCommandExecutionStart, which the worker thread may record immediately.
+                TelemetryHelper.addEvent(
+                        command.getParameters().getEventCollector(),
+                        EventTag.BrokerCommandQueued
+                );
                 sInteractiveExecutor.execute(OtelContextExtension.wrap(new Runnable() {
                     @Override
                     public void run() {
                         final CommandParameters commandParameters = command.getParameters();
+                        TelemetryHelper.addEvent(
+                                commandParameters.getEventCollector(),
+                                EventTag.BrokerCommandExecutionStart
+                        );
                         final String correlationId = initializeDiagnosticContext(
                                 commandParameters.getCorrelationId(),
                                 commandParameters.getSdkType() == null ?

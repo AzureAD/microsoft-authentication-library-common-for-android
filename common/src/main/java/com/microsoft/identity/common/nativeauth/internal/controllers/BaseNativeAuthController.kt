@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.nativeauth.internal.controllers
 
+import com.microsoft.identity.common.java.AuthenticationConstants
 import com.microsoft.identity.common.java.cache.ICacheRecord
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.controllers.BaseController
 import com.microsoft.identity.common.java.dto.AccountRecord
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult
@@ -41,11 +43,23 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult
 import com.microsoft.identity.common.java.request.SdkType
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult
 import com.microsoft.identity.common.java.result.AcquireTokenResult
 import com.microsoft.identity.common.java.result.GenerateShrResult
 import com.microsoft.identity.common.java.ui.PreferredAuthMethod
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseNativeAuthCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.BaseSignInTokenCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignInCommandResult
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthOAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
+import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters
 import com.microsoft.identity.common.java.util.ported.PropertyBag
+import com.microsoft.identity.common.java.util.StringUtil
 import lombok.EqualsAndHashCode
+import java.net.URL
 
 /**
  * The implementation of the basis for MSAL native authentication.
@@ -66,6 +80,15 @@ abstract class BaseNativeAuthController : BaseController() {
     )
     override fun acquireToken(request: InteractiveTokenCommandParameters?): AcquireTokenResult {
         throw ClientException("acquireToken() not supported in NativeAuthController")
+    }
+
+    @Throws(ClientException::class)
+    @Deprecated(
+        level = DeprecationLevel.HIDDEN,
+        message = "acquireTokenSilent() not supported in BaseNativeAuthController"
+    )
+    override fun acquireTokenSilent(parameters: SilentTokenCommandParameters): AcquireTokenResult {
+        throw ClientException("acquireTokenSilent() not supported in BaseNativeAuthController")
     }
 
     @Throws(ClientException::class)
@@ -245,5 +268,155 @@ abstract class BaseNativeAuthController : BaseController() {
     )
     override fun getPreferredAuthMethod(): PreferredAuthMethod {
         throw ClientException("getPreferredAuthMethod() not supported in NativeAuthController")
+    }
+
+    protected fun saveAndReturnTokens(
+        oAuth2Strategy: NativeAuthOAuth2Strategy,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete = saveAndReturnTokens(
+        oAuth2Strategy = oAuth2Strategy,
+        authority = oAuth2Strategy.getAuthority(),
+        parametersWithScopes = parametersWithScopes,
+        tokenApiResult = tokenApiResult
+    )
+
+    protected fun saveAndReturnTokens(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete = saveAndReturnTokens(
+        oAuth2Strategy = oAuth2Strategy,
+        authority = oAuth2Strategy.getAuthority(),
+        parametersWithScopes = parametersWithScopes,
+        tokenApiResult = tokenApiResult
+    )
+
+    private fun saveAndReturnTokens(
+        oAuth2Strategy: MicrosoftStsOAuth2Strategy,
+        authority: String,
+        parametersWithScopes: BaseSignInTokenCommandParameters,
+        tokenApiResult: SignInTokenApiResult.Success
+    ): SignInCommandResult.Complete {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = parametersWithScopes.getCorrelationId(),
+            methodName = "${javaClass.simpleName}.saveAndReturnTokens"
+        )
+        val records: List<ICacheRecord> = saveTokens(
+            oAuth2Strategy,
+            createAuthorizationRequest(
+                authority = authority,
+                scopes = parametersWithScopes.scopes ?: emptyList(),
+                clientId = parametersWithScopes.clientId,
+                applicationIdentifier = parametersWithScopes.applicationIdentifier
+            ),
+            tokenApiResult.tokenResponse,
+            parametersWithScopes.oAuth2TokenCache
+        )
+
+        // The first element in the returned list is the item we *just* saved, the rest of
+        // the elements are necessary to construct the full IAccount + TenantProfile
+        val newestRecord = records.firstOrNull() ?: throw ClientException(
+            ClientException.TOKEN_CACHE_SAVE_FAILED,
+            "Token cache returned no records after saving tokens."
+        )
+
+        return SignInCommandResult.Complete(
+            authenticationResult = LocalAuthenticationResult(
+                finalizeCacheRecordForResult(
+                    newestRecord,
+                    parametersWithScopes.authenticationScheme
+                ),
+                records,
+                SdkType.MSAL,
+                false
+            ),
+            correlationId = tokenApiResult.correlationId
+        )
+    }
+
+    protected fun createAuthorizationRequest(
+        strategy: NativeAuthOAuth2Strategy,
+        scopes: List<String>,
+        clientId: String,
+        applicationIdentifier: String
+    ): MicrosoftStsAuthorizationRequest = createAuthorizationRequest(
+        authority = strategy.getAuthority(),
+        scopes = scopes,
+        clientId = clientId,
+        applicationIdentifier = applicationIdentifier
+    )
+
+    protected fun createAuthorizationRequest(
+        authority: String,
+        scopes: List<String>,
+        clientId: String,
+        applicationIdentifier: String
+    ): MicrosoftStsAuthorizationRequest {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.createAuthorizationRequest"
+        )
+
+        val builder = MicrosoftStsAuthorizationRequest.Builder()
+        builder.setAuthority(URL(authority))
+        builder.setClientId(clientId)
+        builder.setScope(StringUtil.join(" ", scopes))
+        builder.setApplicationIdentifier(applicationIdentifier)
+        return builder.build()
+    }
+
+    protected fun addDefaultScopes(scopes: List<String>?): List<String> {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.addDefaultScopes"
+        )
+        val requestScopes = scopes?.toMutableList() ?: mutableListOf()
+        requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES)
+        // sanitize empty and null scopes
+        requestScopes.removeAll(listOf("", null))
+        return requestScopes.toList()
+    }
+
+    /**
+     * Builds a [NativeAuthOAuth2Strategy] from [parameters]. Shared by V1 and V2 controllers so
+     * neither needs to duplicate the strategy-parameter construction logic.
+     */
+    protected fun createNativeAuthStrategy(parameters: BaseNativeAuthCommandParameters): NativeAuthOAuth2Strategy {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.createNativeAuthStrategy"
+        )
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .challengeTypes(parameters.challengeType)
+            .capabilities(parameters.capabilities)
+            .requestInterceptor(parameters.requestInterceptor)
+            .build()
+        return parameters.authority.createOAuth2Strategy(strategyParameters)
+    }
+
+    /**
+     * Builds a [NativeAuthV2OAuth2Strategy] from [parameters], mirroring
+     * [createNativeAuthStrategy] so the V2 controller shares the same strategy-parameter
+     * construction logic.
+     */
+    protected fun createNativeAuthV2Strategy(parameters: BaseNativeAuthCommandParameters): NativeAuthV2OAuth2Strategy {
+        LogSession.logMethodCall(
+            tag = javaClass.simpleName,
+            correlationId = null,
+            methodName = "${javaClass.simpleName}.createNativeAuthV2Strategy"
+        )
+        val strategyParameters = OAuth2StrategyParameters.builder()
+            .platformComponents(parameters.platformComponents)
+            .challengeTypes(parameters.challengeType)
+            .capabilities(parameters.capabilities)
+            .requestInterceptor(parameters.requestInterceptor)
+            .build()
+        return parameters.authority.createOAuth2StrategyV2(strategyParameters)
     }
 }

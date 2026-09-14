@@ -391,6 +391,26 @@ public enum AttributeName {
     is_new_refresh_token_cred_header_attached,
 
     /**
+     * Indicates whether the sso_nonce redirect target was a trusted host (HTTPS + validated AAD
+     * cloud host) eligible to receive the PRT credential header. Boolean, non-PII (no host emitted).
+     */
+    nonce_redirect_host_trusted,
+
+    /**
+     * Indicates whether the PRT credential header(s) were stripped before loading the sso_nonce
+     * redirect because the target was untrusted while validation enforcement was on. Boolean,
+     * non-PII.
+     */
+    nonce_redirect_credential_header_stripped,
+
+    /**
+     * Indicates whether the nonce-redirect credential-header validation flight
+     * (EnableNonceRedirectCredentialHeaderValidation) was enabled when the redirect was processed.
+     * Boolean, non-PII.
+     */
+    nonce_redirect_validation_flight_enabled,
+
+    /**
      * The time (in milliseconds) spent on generating a keypair.
      */
     elapsed_time_keypair_generation,
@@ -824,6 +844,59 @@ public enum AttributeName {
      * query parameter from eSTS / MSA, indicating the data residency boundary.
      */
     server_caller_data_boundary,
+
+    //endregion
+
+    //region PKeyAuth SubmitUrl same-origin validation (CWE-918 / SSRF, AB#3706623)
+
+    /**
+     * The verdict of PKeyAuth {@code SubmitUrl} same-origin validation for a challenge parsed from an
+     * untrusted WebView redirect. One of {@code ALLOWED}, {@code REJECTED_BACKSLASH_AUTHORITY},
+     * {@code REJECTED_SUBMIT_NOT_HTTPS}, {@code REJECTED_ORIGIN_UNRESOLVABLE}, or
+     * {@code REJECTED_ORIGIN_MISMATCH}. Emitted on every evaluated challenge (including {@code
+     * ALLOWED}) so shadow-mode rejection rates can be measured before enforcement is ramped. Contains
+     * no hostname, URL, nonce, or {@code Context}.
+     */
+    pkeyauth_submit_url_origin_validation_result,
+
+    /**
+     * Whether PKeyAuth {@code SubmitUrl} origin validation was enforcing at evaluation time (i.e. a
+     * non-{@code ALLOWED} verdict blocked the challenge). {@code false} means shadow mode: the verdict
+     * was measured and reported but the challenge still proceeded.
+     */
+    pkeyauth_submit_url_origin_validation_enforced,
+
+    /**
+     * Whether the PKeyAuth {@code SubmitUrl} host is a validated AAD cloud host (per
+     * {@code AzureActiveDirectory.isValidCloudHost}). Answers the cross-origin question without
+     * logging the hostname itself. {@code false} when the {@code SubmitUrl} could not be safely
+     * parsed (e.g. the backslash parser-differential guard fired) or the host is not a known AAD
+     * cloud.
+     */
+    pkeyauth_submit_host_is_aad_cloud,
+
+    /**
+     * Whether the PKeyAuth challenging-origin host is a validated AAD cloud host (per
+     * {@code AzureActiveDirectory.isValidCloudHost}). Answers the cross-origin question without
+     * logging the hostname itself. {@code false} when the challenging origin could not be resolved or
+     * is not a known AAD cloud.
+     */
+    pkeyauth_challenging_host_is_aad_cloud,
+
+    /**
+     * Whether the PKeyAuth challenge that was validated arrived on the WebView main frame. A subframe
+     * challenge is validated against the main-frame origin; this flag lets a false-reject of a
+     * legitimate cross-origin iframe challenge be distinguished in telemetry before deciding whether
+     * to special-case it.
+     */
+    pkeyauth_challenge_is_main_frame,
+
+    /**
+     * Where the PKeyAuth challenging origin came from: {@code recorded} (the last https main-frame
+     * URL), {@code webview_url} (a fallback to {@code WebView#getUrl()}), or {@code none} (neither was
+     * available).
+     */
+    pkeyauth_challenging_origin_source,
 
     //endregion
 }

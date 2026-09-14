@@ -20,17 +20,42 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
-
-import com.google.gson.annotations.SerializedName
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 /**
- *
+ * Parameters for the V2 reset-password start operation.
+ * Carries the username that initiates the SSPR flow.
+ * Extends {@link BaseSignInTokenCommandParameters}.
  */
-data class InboxContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String // TODO make DateTimeObject
-)
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+public class ResetPasswordV2StartCommandParameters extends BaseSignInTokenCommandParameters {
+    /**
+     * The email address of the user initiating password reset.
+     */
+    @NonNull
+    public final String username;
+
+    @NonNull
+    @Override
+    public String toUnsanitizedString() {
+        return "ResetPasswordV2StartCommandParameters(username=" + username + ", authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+
+    @Override
+    public boolean containsPii() {
+        return !toString().equals(toUnsanitizedString());
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ResetPasswordV2StartCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+    }
+}

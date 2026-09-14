@@ -27,9 +27,13 @@ import com.microsoft.identity.common.java.broker.CommonRefreshTokenCredentialPro
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SSO_NONCE_PARAMETER
 import com.microsoft.identity.common.adal.internal.util.StringExtensions
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory
 import com.microsoft.identity.common.logging.Logger
 import io.opentelemetry.api.trace.Span
+import java.net.MalformedURLException
 import java.net.URL
 
 /**
@@ -40,9 +44,39 @@ class NonceRedirectHandler(
     private val headers: HashMap<String, String>,
     private val span : Span
 ) : IChallengeHandler<URL, Void> {
-    private val TAG = NonceRedirectHandler::class.java.simpleName
 
     override fun processChallenge(input: URL) : Void? {
+        val methodTag = "$TAG:processChallenge"
+        // SECURITY (CWE-918): the caller reaches this handler for any URL whose string merely
+        // contains the "sso_nonce" substring, and that branch is evaluated before the SSL gate and
+        // before every host-validated branch in AzureActiveDirectoryWebViewClient.handleUrl. So the
+        // redirect target here is untrusted by default. The request headers carry the PRT credential
+        // header (x-ms-RefreshTokenCredential); forwarding it to an arbitrary/cleartext host leaks a
+        // valid, AAD-audience-bound PRT. Only forward credential headers to an HTTPS, trusted AAD
+        // cloud host. Otherwise strip the credential and still load the page, so an untrusted hop
+        // simply loses SSO instead of dead-ending sign-in.
+        // Gated behind ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION (default on) so the
+        // enforcement can be reverted via ECS: flight-off forwards unconditionally, i.e. exactly the
+        // pre-fix behavior. The flight read and the trust check live in exactly one place
+        // ([shouldForwardCredentialHeaders]); the caller's fallback path in
+        // AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders routes through the same
+        // helper so the security predicate cannot drift between the two sinks.
+        val urlString = input.toString()
+        // Single evaluation of the consolidated gate (Round 7, mohitc1 Finding C). The result is
+        // recorded on the span exactly once, here, before the navigation that is the likely throw
+        // source (loadUrl); the caller's catch(Throwable) fallback shares this same Span instance
+        // and therefore never re-emits (see recordCredentialForwardingTelemetry).
+        val forwardCredentialHeaders = shouldForwardCredentialHeaders(urlString)
+        recordCredentialForwardingTelemetry(forwardCredentialHeaders)
+        if (!forwardCredentialHeaders) {
+            Logger.warn(
+                methodTag,
+                "Nonce redirect target is not a trusted HTTPS AAD host; " +
+                    "loading without the PRT credential header."
+            )
+            webView.loadUrl(urlString, withoutCredentialHeaders(headers))
+            return null
+        }
         val nonce = getNonceFromRedirectUrl(input)
         if (nonce != null) {
             modifyHeadersWithNewRefreshTokenCredential(nonce, input.toString())
@@ -88,5 +122,158 @@ class NonceRedirectHandler(
     private fun getUserNameFromWebViewUrl(url: String): String? {
         val parameters: Map<String, String> = StringExtensions.getUrlParameters(url)
         return parameters["login_hint"]
+    }
+
+    /**
+     * Records non-PII telemetry describing the credential-header forwarding decision on [span].
+     *
+     * All attributes are booleans; no host, URL, header value, PRT, sso_nonce or login_hint is ever
+     * emitted. This is invoked exactly once per redirect, from [processChallenge], before the
+     * navigation ([WebView.loadUrl]) that is the most likely throw source. The caller's
+     * `catch (Throwable)` fallback in
+     * `AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders` operates on this same [Span]
+     * instance (the one passed to this handler's constructor), so it deliberately does not re-emit
+     * these attributes — keeping the trusted/untrusted signal to exactly one record per redirect.
+     *
+     * `nonce_redirect_host_trusted` is emitted **only when the kill-switch is enabled**. With the
+     * flight on, [shouldForwardCredentialHeaders] reduces algebraically to
+     * [isRedirectTrustedForHeaderForwarding] (`!true || x == x`), so [forwardCredentialHeaders] is
+     * already the host-trust result and is reused verbatim — the trust helper is never evaluated a
+     * second time. With the flight **off** the fix is fully disengaged and the trust helper must not
+     * run at all (that evaluation is exactly what [shouldForwardCredentialHeaders] short-circuits
+     * away in the disengaged state); the attribute is therefore intentionally omitted rather than
+     * derived from a redundant call, so pulling the kill-switch remains byte-identical to the pre-fix
+     * behavior. The flight-off population is expected to be ~0% of traffic (default on) and is an
+     * emergency state, not a measurement state, so no analytical signal is lost.
+     *
+     * @param forwardCredentialHeaders the consolidated gate result
+     * ([shouldForwardCredentialHeaders]); credential headers are stripped when this is `false`, and
+     * when the flight is on this value is also the host-trust result.
+     */
+    private fun recordCredentialForwardingTelemetry(forwardCredentialHeaders: Boolean) {
+        val validationFlightEnabled = CommonFlightsManager.getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
+        span.setAttribute(
+            AttributeName.nonce_redirect_validation_flight_enabled.name,
+            validationFlightEnabled
+        )
+        span.setAttribute(
+            AttributeName.nonce_redirect_credential_header_stripped.name,
+            !forwardCredentialHeaders
+        )
+        if (validationFlightEnabled) {
+            span.setAttribute(
+                AttributeName.nonce_redirect_host_trusted.name,
+                forwardCredentialHeaders
+            )
+        }
+    }
+
+    companion object {
+        private val TAG = NonceRedirectHandler::class.java.simpleName
+
+        /**
+         * The set of credential-bearing request-header keys that must never be forwarded to an
+         * untrusted or cleartext redirect target.
+         *
+         * The request-header map handled here is **not** built in this module: it originates from the
+         * caller (broker / MSAL) and reaches the WebView via the `REQUEST_HEADERS` intent extra
+         * (see `WebViewAuthorizationFragment.getRequestHeaders`), so its key set is defined outside
+         * this module and can grow over time. As of this writing the only known credential-bearing
+         * entry is the PRT response header
+         * ([AuthenticationConstants.Broker.PRT_RESPONSE_HEADER]); the other known contributors — the
+         * passkey/FIDO protocol header and the broker ESTS client-extras telemetry header — are not
+         * credentials and are intentionally left in place so a legitimate-but-not-yet-validated AAD
+         * host (e.g. the WW host before instance discovery runs) keeps passkey and telemetry support.
+         *
+         * Any new credential-bearing header added upstream MUST be added to this set, otherwise it
+         * would be re-introduced as a leak on the untrusted branch with no signal here.
+         */
+        @JvmStatic
+        val CREDENTIAL_HEADERS: Set<String> = setOf(
+            AuthenticationConstants.Broker.PRT_RESPONSE_HEADER
+        )
+
+        /**
+         * Determines whether the PRT credential header ([AuthenticationConstants.Broker.PRT_RESPONSE_HEADER])
+         * may be forwarded to the given redirect target.
+         *
+         * The header is only forwarded when the target is both served over HTTPS and hosted by a
+         * validated Azure Active Directory cloud host. This mirrors the trust checks already applied
+         * by the sibling redirect branches in `AzureActiveDirectoryWebViewClient`
+         * (`isCrossCloudRedirect`, `isWebCpAuthorizeUrl`, `isHeaderForwardingRequiredUri`).
+         *
+         * A cleartext (`http://`) target, a malformed URL, or a host that is not a validated AAD
+         * cloud host all return `false`.
+         *
+         * @param url the redirect target URL, including scheme and host.
+         * @return `true` if the target is trusted to receive credential headers, `false` otherwise.
+         */
+        @JvmStatic
+        fun isRedirectTrustedForHeaderForwarding(url: String): Boolean {
+            return try {
+                val parsed = URL(url)
+                parsed.protocol.equals("https", ignoreCase = true) &&
+                    AzureActiveDirectory.isValidCloudHost(parsed)
+            } catch (e: MalformedURLException) {
+                false
+            }
+        }
+
+        /**
+         * Single decision point for whether the PRT credential header(s) may be forwarded to the
+         * given nonce-redirect target. Both the primary sink ([processChallenge]) and the caller's
+         * `catch (Throwable)` fallback in
+         * `AzureActiveDirectoryWebViewClient.processNonceAndReAttachHeaders` route through this
+         * helper, so the kill-switch read and the trust check exist in exactly one place and cannot
+         * drift between the two paths.
+         *
+         * Behaviour:
+         * - Kill-switch [CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION] **off** ->
+         *   always `true` (pre-fix behaviour: forward unconditionally). The flight read is the left
+         *   operand of the `||`, so [isRedirectTrustedForHeaderForwarding] is short-circuited away and
+         *   never evaluated when the kill-switch is off. Do not reorder these operands.
+         * - Kill-switch **on** -> `true` only for an HTTPS, validated AAD cloud host, i.e. the result
+         *   of [isRedirectTrustedForHeaderForwarding].
+         *
+         * @param url the redirect target URL, including scheme and host.
+         * @return `true` if credential headers may be forwarded to [url], `false` if they must be
+         * stripped before the redirect is loaded.
+         */
+        @JvmStatic
+        fun shouldForwardCredentialHeaders(url: String): Boolean {
+            return !CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION) ||
+                isRedirectTrustedForHeaderForwarding(url)
+        }
+
+        /**
+         * Returns a copy of [headers] with every credential-bearing header in [CREDENTIAL_HEADERS]
+         * removed.
+         *
+         * A copy is returned so the caller's shared header map is left untouched; the original map
+         * still carries the credential(s) for subsequent, trusted navigations. Non-credential headers
+         * (e.g. passkey/FIDO protocol, telemetry) are deliberately preserved so an
+         * untrusted-but-legitimate hop keeps that functionality.
+         *
+         * Header names are case-insensitive on the wire (RFC 9110) and this map originates outside
+         * this module (see [CREDENTIAL_HEADERS]), so a producer that uses different casing than the
+         * canonical constant must not be able to slip a credential past the strip. Removal therefore
+         * matches keys case-insensitively rather than relying on exact-case map removal.
+         *
+         * @param headers the request headers to sanitize.
+         * @return a new map without any credential-bearing header.
+         */
+        @JvmStatic
+        fun withoutCredentialHeaders(headers: HashMap<String, String>): HashMap<String, String> {
+            val sanitized = HashMap(headers)
+            val keysToRemove = sanitized.keys.filter { key ->
+                CREDENTIAL_HEADERS.any { credentialHeader -> credentialHeader.equals(key, ignoreCase = true) }
+            }
+            for (key in keysToRemove) {
+                sanitized.remove(key)
+            }
+            return sanitized
+        }
     }
 }

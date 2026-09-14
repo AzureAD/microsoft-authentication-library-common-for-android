@@ -49,6 +49,11 @@ public class ClientException extends BaseException {
     public static final String TOKEN_CACHE_ITEM_NOT_FOUND = "token_cache_item_not_found";
 
     /**
+     * Indicates that saving tokens did not produce the cache record required for the result.
+     */
+    public static final String TOKEN_CACHE_SAVE_FAILED = "token_cache_save_failed";
+
+    /**
      * Deserialization error loading the token shared library item.
      */
     public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";

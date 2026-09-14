@@ -54,10 +54,11 @@ class AuthFidoChallengeHandler (
     private val fidoManager: IFidoManager,
     private val webView: WebView,
     private val oTelContext: Context?,
-    private val lifecycleOwner: LifecycleOwner?
+    private val lifecycleOwner: LifecycleOwner?,
+    private val correlationId: String? = null
 ) : IChallengeHandler<FidoChallenge, Void> {
-    val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
     companion object {
+        val TAG = AuthFidoChallengeHandler::class.simpleName.toString()
         private val parentAttributeNames = arrayListOf(
             AttributeName.correlation_id,
             AttributeName.tenant_id,
@@ -132,6 +133,7 @@ class AuthFidoChallengeHandler (
                     relyingPartyIdentifier = relyingPartyIdentifier,
                     allowedCredentials = allowedCredentials,
                     userVerificationPolicy = userVerificationPolicy,
+                    correlationId = correlationId,
                     span = span
                 )
                 span.setStatus(StatusCode.OK)
@@ -151,14 +153,14 @@ class AuthFidoChallengeHandler (
                     methodTag = methodTag
                 )
             } catch (e : Exception) {
-                    respondToChallengeWithError(
-                        submitUrl = submitUrl,
-                        context = context,
-                        span = span,
-                        errorMessage = e.message.toString(),
-                        exception = e,
-                        methodTag = methodTag
-                    )
+                respondToChallengeWithError(
+                    submitUrl = submitUrl,
+                    context = context,
+                    span = span,
+                    errorMessage = e.message.toString(),
+                    exception = e,
+                    methodTag = methodTag
+                )
             }
         }
         return null

@@ -77,7 +77,36 @@ public class FociQueryUtilities {
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
-        return tryFociTokenWithGivenClientId(
+        return queryFociMembership(
+                brokerOAuth2TokenCache,
+                clientId,
+                redirectUri,
+                cacheRecord
+        ) == FociQueryOutcome.GRANTED;
+    }
+
+    /**
+     * Queries whether the given client ID can use the cached foci to refresh token, returning a
+     * classified outcome rather than a boolean.
+     *
+     * <p>Equivalent to {@link #tryFociTokenWithGivenClientId(BrokerOAuth2TokenCache, String, String, ICacheRecord)}
+     * in behaviour, including the save-on-success side effect; it differs only in preserving why an
+     * unsuccessful query failed. See {@link FociQueryOutcome} for why that distinction matters.
+     *
+     * @param clientId    String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return the classified outcome; {@link FociQueryOutcome#GRANTED} if the given client id can
+     * use the cached foci token.
+     * @throws ClientException
+     * @throws IOException
+     */
+    @NonNull
+    public static FociQueryOutcome queryFociMembership(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+                                                       @NonNull final String clientId,
+                                                       @NonNull final String redirectUri,
+                                                       @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
+        return queryFociMembership(
                 brokerOAuth2TokenCache,
                 clientId, redirectUri,
                 cacheRecord.getRefreshToken(),
@@ -102,7 +131,40 @@ public class FociQueryUtilities {
                                                         @NonNull final RefreshTokenRecord refreshTokenRecord,
                                                         @NonNull final IAccountRecord accountRecord)
             throws ClientException, IOException {
-        final String methodName = ":tryFociTokenWithGivenClientId";
+        return queryFociMembership(
+                brokerOAuth2TokenCache,
+                clientId,
+                redirectUri,
+                refreshTokenRecord,
+                accountRecord
+        ) == FociQueryOutcome.GRANTED;
+    }
+
+    /**
+     * Queries whether the given client ID can use the cached foci to refresh token, returning a
+     * classified outcome rather than a boolean.
+     *
+     * <p>Equivalent to {@link #tryFociTokenWithGivenClientId(OAuth2TokenCache, String, String, RefreshTokenRecord, IAccountRecord)}
+     * in behaviour, including the save-on-success side effect; it differs only in preserving why an
+     * unsuccessful query failed. See {@link FociQueryOutcome} for why that distinction matters.
+     *
+     * @param clientId           String of the given client id.
+     * @param redirectUri        redirect url string of the given client id.
+     * @param accountRecord      account record of request
+     * @param refreshTokenRecord refresh token record of FOCI account
+     * @return the classified outcome; {@link FociQueryOutcome#GRANTED} if the given client id can
+     * use the cached foci token.
+     * @throws ClientException
+     * @throws IOException
+     */
+    @NonNull
+    public static FociQueryOutcome queryFociMembership(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
+                                                       @NonNull final String clientId,
+                                                       @NonNull final String redirectUri,
+                                                       @NonNull final RefreshTokenRecord refreshTokenRecord,
+                                                       @NonNull final IAccountRecord accountRecord)
+            throws ClientException, IOException {
+        final String methodName = ":queryFociMembership";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
         //Get authority url
@@ -191,7 +253,7 @@ public class FociQueryUtilities {
             );
             brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
         }
-        return tokenResult.getSuccess();
+        return FociQueryOutcome.fromTokenResult(tokenResult);
     }
 
     /**

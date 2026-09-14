@@ -29,13 +29,11 @@ import java.io.Serializable
  * Supported contracts for Web Apps Sub Operations
  */
 data class WebAppsSupportedContracts(
-    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT)
+    val contracts: List<String> = listOf(GET_TOKEN, SIGN_OUT, GET_COOKIES)
 ) : Serializable {
     companion object {
         const val GET_TOKEN = "GetToken"
         const val SIGN_OUT = "SignOut"
-        // GET_COOKIES contract is currently not needed by Edge (and thus not included in the contracts list),
-        // but we are keeping the const here for future use if needed.
         const val GET_COOKIES = "GetCookies"
     }
 

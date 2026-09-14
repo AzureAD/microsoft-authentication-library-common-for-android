@@ -72,6 +72,8 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     private Bundle mInstanceState;
 
+    private String mCorrelationId;
+
     /**
      * Determines if authentication result has been sent.
      */
@@ -171,13 +173,28 @@ public abstract class AuthorizationFragment extends Fragment {
      * @param state a bundle containing data provided when the activity was created
      */
     void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        mCorrelationId = state.getString(DiagnosticContext.CORRELATION_ID);
+        setDiagnosticContextForNewThread(mCorrelationId);
         mMamCaInstallReferrerEnabled = state.getBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, false);
+    }
+
+    /**
+     * The correlation id this authorization flow was started with.
+     *
+     * Held here as well as in DiagnosticContext because the latter is thread local and another flow
+     * on the same thread can replace it, whereas this survives for the life of the fragment.
+     *
+     * @return the correlation id, or null when the flow was started without one.
+     */
+    @Nullable
+    public String getCorrelationId() {
+        return mCorrelationId;
     }
 
     @Override
     public void onSaveInstanceState(@NonNull final Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
         outState.putBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, mMamCaInstallReferrerEnabled);
     }
 
