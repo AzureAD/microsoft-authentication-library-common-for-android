@@ -157,6 +157,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String GOOGLE_DPC_PACKAGE_NAME = "com.google.android.apps.work.clouddpc";
     private static final String DEVICE_CA_QUERY_PARAMETER = "ismdmurl";
     private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
+    private static final String HTTPS_URL_PREFIX = "https://";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1273,7 +1274,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @NonNull
     private String toHttpsUrl(@NonNull final String url) {
-        return url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+        return url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX);
     }
 
     private boolean isHttpsScheme(@NonNull final String url) {
@@ -1297,7 +1298,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-                String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX);
                 view.loadUrl(httpsUrl, mRequestHeaders);
             } else {
                 Logger.info(methodTag, "Loading device CA request in browser.");
@@ -1688,7 +1689,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":openLinkInBrowser";
         Logger.info(methodTag, "Try to open url link in browser");
         final String link = url
-                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX);
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             getActivity().startActivity(intent);
@@ -1755,7 +1756,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             installLink = MamInstallReferrerBuilder.decorateAppLinkForMamCaInstall(
                     mMamCaInstallReferrerEnabled,
-                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://"),
+                    appLink.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX),
                     activity.getPackageName(),
                     parameters);
         }
