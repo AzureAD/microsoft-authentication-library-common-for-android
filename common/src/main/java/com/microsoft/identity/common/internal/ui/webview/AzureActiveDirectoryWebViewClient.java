@@ -1146,90 +1146,128 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
+        Logger.info(methodTag, "Checking for a supported management owner in the current Android user.");
         final String managementAppPackage = getReWpjManagementAppPackage();
         if (managementAppPackage != null) {
+            Logger.info(methodTag, "Supported management owner found. Attempting targeted re-WPJ handoff to: "
+                    + managementAppPackage);
             try {
                 launchReWpjManagementApp(url, managementAppPackage);
+                Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 return;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
-                        "Failed to launch the device management app. Falling back to WebCP.",
+                    "Failed to launch the device management app. Starting browser/WebView fallback.",
                         exception);
                 fallbackToBrowserOrWebView(view, url);
                 return;
             }
         }
 
+        Logger.info(methodTag, "No supported management owner is visible in the current Android user. "
+                + "Checking the existing Company Portal compatibility path.");
         if (shouldLaunchCompanyPortal()) {
+            Logger.info(methodTag, "Company Portal compatibility conditions are satisfied. Attempting launch.");
             // If CP is installed, redirect to CP.
             // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
             //       CP is currently working on this.
             //       Until that comes, we'll only handle this in ipphone.
             try {
                 launchCompanyPortal();
+                Logger.info(methodTag, "Company Portal compatibility launch started.");
                 return;
             } catch (final Exception ex) {
-                Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+                Logger.error(methodTag,
+                        "Failed to launch Company Portal through the compatibility path. Continuing to WebCP.",
+                        ex);
             }
+        } else {
+            Logger.info(methodTag, "Company Portal compatibility conditions are not satisfied.");
         }
 
+        Logger.info(methodTag, "No native handoff was started. Continuing with the existing WebCP flow.");
         loadDeviceCaUrl(url, view);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
-        return DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
+        final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
+        Logger.info(TAG + ":isDeviceCaRequest", "Device CA marker present: " + isDeviceCaRequest);
+        return isDeviceCaRequest;
     }
 
     @Nullable
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected String getReWpjManagementAppPackage() {
+        final String methodTag = TAG + ":getReWpjManagementAppPackage";
         final DevicePolicyManager devicePolicyManager =
                 (DevicePolicyManager) getActivity().getSystemService(Activity.DEVICE_POLICY_SERVICE);
         if (devicePolicyManager == null) {
+            Logger.warn(methodTag, "DevicePolicyManager is unavailable. No management owner can be detected.");
             return null;
         }
 
+        Logger.info(methodTag, "Checking Company Portal profile ownership in the current Android user.");
         if (devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
+            Logger.info(methodTag, "Company Portal is the profile owner in the current Android user.");
             return COMPANY_PORTAL_APP_PACKAGE_NAME;
         }
 
-        if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)
-                || devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
+        Logger.info(methodTag, "Company Portal is not the profile owner. Checking Google DPC profile ownership.");
+        if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
+            Logger.info(methodTag, "Google DPC is the profile owner in the current Android user.");
             return INTUNE_APP_PACKAGE_NAME;
         }
 
+        Logger.info(methodTag, "Google DPC is not the profile owner. Checking Google DPC device ownership.");
+        if (devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
+            Logger.info(methodTag, "Google DPC is the device owner.");
+            return INTUNE_APP_PACKAGE_NAME;
+        }
+
+        Logger.info(methodTag, "No supported profile owner or device owner was detected in the current Android user.");
         return null;
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void launchReWpjManagementApp(@NonNull final String url,
                                             @NonNull final String managementAppPackage) {
+        final String methodTag = TAG + ":launchReWpjManagementApp";
+        Logger.info(methodTag, "Creating package-targeted HTTPS re-WPJ intent for: " + managementAppPackage);
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(toHttpsUrl(url)));
         intent.setPackage(managementAppPackage);
+        Logger.info(methodTag, "Starting package-targeted re-WPJ activity.");
         getActivity().startActivity(intent);
+        Logger.info(methodTag, "Package-targeted re-WPJ activity started successfully.");
     }
 
     private void fallbackToBrowserOrWebView(@NonNull final WebView view,
                                             @NonNull final String originalUrl) {
+        final String methodTag = TAG + ":fallbackToBrowserOrWebView";
+        Logger.info(methodTag, "Preparing HTTPS browser fallback after native handoff failure.");
         final String httpsUrl = toHttpsUrl(originalUrl);
         final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
         if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            Logger.info(methodTag, "An external browser is available. Attempting HTTPS fallback launch.");
             try {
                 getActivity().startActivity(browserIntent);
+                Logger.info(methodTag, "External browser fallback started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 return;
             } catch (final ActivityNotFoundException | SecurityException exception) {
-                Logger.error(TAG + ":fallbackToBrowserOrWebView",
+                Logger.error(methodTag,
                         "Failed to launch the browser. Falling back to the WebView.",
                         exception);
             }
+        } else {
+            Logger.warn(methodTag, "No external browser can resolve the HTTPS fallback.");
         }
 
+        Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
         view.loadUrl(httpsUrl, mRequestHeaders);
     }
 
