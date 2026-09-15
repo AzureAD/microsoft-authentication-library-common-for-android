@@ -1615,7 +1615,7 @@ public class MsalOAuth2TokenCacheTest {
     }
 
     // =====================================================================
-    // Flight-gated tests for filter-then-clone optimization in load() and getIdTokensForAccountRecord()
+    // Tests for filter-then-clone optimization in load() and getIdTokensForAccountRecord()
     // =====================================================================
 
     private MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
@@ -1637,11 +1637,9 @@ public class MsalOAuth2TokenCacheTest {
         );
     }
 
-    private void enableFilterThenCloneFlight() {
+    private void enableInMemoryCacheFlight() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
-                .thenReturn(true);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
                 .thenReturn(true);
         final MockCommonFlightsManager mockFlightsManager = new MockCommonFlightsManager();
@@ -1655,7 +1653,7 @@ public class MsalOAuth2TokenCacheTest {
 
     @Test
     public void loadTokens_flightEnabled_returnsCorrectCacheRecord() throws ClientException {
-        enableFilterThenCloneFlight();
+        enableInMemoryCacheFlight();
         try {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
@@ -1689,7 +1687,7 @@ public class MsalOAuth2TokenCacheTest {
 
     @Test
     public void loadTokensV1Compat_flightEnabled_returnsCorrectCacheRecord() throws ClientException {
-        enableFilterThenCloneFlight();
+        enableInMemoryCacheFlight();
         try {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
@@ -1723,7 +1721,7 @@ public class MsalOAuth2TokenCacheTest {
 
     @Test
     public void getIdTokensForAccountRecord_flightEnabled_returnsCorrectIdTokens() throws ClientException {
-        enableFilterThenCloneFlight();
+        enableInMemoryCacheFlight();
         try {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
@@ -1775,7 +1773,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void load_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
             throws ClientException {
-        enableFilterThenCloneFlight();
+        enableInMemoryCacheFlight();
         try {
             // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
             configureMocksForTestBundle(defaultTestBundleV2);
@@ -1813,7 +1811,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void getIdTokensForAccountRecord_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
             throws ClientException {
-        enableFilterThenCloneFlight();
+        enableInMemoryCacheFlight();
         try {
             // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
             configureMocksForTestBundle(defaultTestBundleV2);

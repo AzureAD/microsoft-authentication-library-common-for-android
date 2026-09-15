@@ -585,12 +585,6 @@ public enum AttributeName {
     is_in_web_cp_flow,
 
     /**
-     * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
-     * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
-     */
-    is_filter_then_clone_enabled,
-
-    /**
      * Indicates whether a desync was detected between the in-memory cache and SharedPreferences
      * during removeCredential(). True means the key was found in SharedPreferences
      * (via keySet()) but not in the in-memory map.

@@ -34,7 +34,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
@@ -2511,14 +2510,12 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
     }
 
     // =====================================================================
-    // Flight-gated behavior tests for ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE
+    // Behavior tests for filter-then-clone operations
     // =====================================================================
 
-    private void enableFilterThenCloneFlight() {
+    private void initializeMockFlightsManager() {
         CommonFlightsManager.INSTANCE.resetFlightsManager();
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE))
-                .thenReturn(true);
         final IFlightsManager mockFlightsManager = new IFlightsManager() {
             @Override
             public IFlightsProvider getFlightsProvider() {
@@ -2575,7 +2572,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getAccounts_flightEnabled_stillReturnsMutableListOfClones() {
-        enableFilterThenCloneFlight();
+        initializeMockFlightsManager();
         try {
             final AccountRecord account = buildDefaultAccountRecord();
             mSharedPreferencesAccountCredentialCache.saveAccount(account);
@@ -2629,7 +2626,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getCredentials_flightEnabled_stillReturnsMutableListOfClones() {
-        enableFilterThenCloneFlight();
+        initializeMockFlightsManager();
         try {
             final RefreshTokenRecord rt = buildDefaultRefreshToken();
             mSharedPreferencesAccountCredentialCache.saveCredential(rt);
@@ -2661,7 +2658,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getAccountsFilteredBy_flightEnabled_returnsClonedMatches() {
-        enableFilterThenCloneFlight();
+        initializeMockFlightsManager();
         try {
             final AccountRecord account = buildDefaultAccountRecord();
             mSharedPreferencesAccountCredentialCache.saveAccount(account);
@@ -2694,7 +2691,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getCredentialsFilteredBy_flightEnabled_returnsClonedMatches() {
-        enableFilterThenCloneFlight();
+        initializeMockFlightsManager();
         try {
             final RefreshTokenRecord rt = buildDefaultRefreshToken();
             mSharedPreferencesAccountCredentialCache.saveCredential(rt);
@@ -2903,7 +2900,7 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
 
     @Test
     public void getCredentialsFilteredByWithKid_flightEnabled_returnsClonedMatchesOnly() {
-        enableFilterThenCloneFlight();
+        initializeMockFlightsManager();
         try {
             // Save an access token with kid = "kid1"
             final AccessTokenRecord at = new AccessTokenRecord();
