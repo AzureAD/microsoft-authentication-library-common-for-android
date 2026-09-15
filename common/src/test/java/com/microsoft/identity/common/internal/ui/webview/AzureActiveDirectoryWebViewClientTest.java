@@ -2079,7 +2079,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
         final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
-        DiagnosticContext.INSTANCE.getRequestContext().put(
+        com.microsoft.identity.common.logging.DiagnosticContext.getRequestContext().put(
                 DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
@@ -2089,7 +2089,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
         final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
-        DiagnosticContext.INSTANCE.getRequestContext().put(
+        com.microsoft.identity.common.logging.DiagnosticContext.getRequestContext().put(
                 DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
