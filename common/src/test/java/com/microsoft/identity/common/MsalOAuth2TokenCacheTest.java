@@ -25,6 +25,7 @@ package com.microsoft.identity.common;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -1625,6 +1626,54 @@ public class MsalOAuth2TokenCacheTest {
                 memoryCache,
                 mockCredentialAdapter
         );
+    }
+
+    private AccessTokenRecord createPopAccessToken(final String kid, final String secret) {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+        accessToken.setAccessTokenType(
+                PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY
+        );
+        accessToken.setKid(kid);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(secret);
+        return accessToken;
+    }
+
+    @Test
+    public void load_withPopAuthenticationScheme_returnsAccessTokenMatchingKid() {
+        final String requestedKid = "requested-kid";
+        final String requestedTokenSecret = "requested-token-secret";
+        final AccessTokenRecord requestedToken =
+                createPopAccessToken(requestedKid, requestedTokenSecret);
+        requestedToken.setTarget(TARGET + " requested.extra");
+        final AccessTokenRecord otherToken =
+                createPopAccessToken("other-kid", "other-token-secret");
+        otherToken.setTarget(TARGET + " other.extra");
+        accountCredentialCache.saveCredential(requestedToken);
+        accountCredentialCache.saveCredential(otherToken);
+        assertEquals(2, accountCredentialCache.getCredentials().size());
+
+        final ICacheRecord result = mOauth2TokenCache.load(
+                CLIENT_ID,
+                APPLICATION_IDENTIFIER_SHA512,
+                MAM_ENROLLMENT_IDENTIFIER,
+                TARGET,
+                defaultTestBundleV2.mGeneratedAccount,
+                new PopAuthenticationSchemeWithClientKeyInternal(requestedKid)
+        );
+
+        assertNotNull(result.getAccessToken());
+        assertEquals(requestedKid, result.getAccessToken().getKid());
+        assertEquals(requestedTokenSecret, result.getAccessToken().getSecret());
     }
 
     @Test
