@@ -29,8 +29,6 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -129,7 +127,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
 
     /**
      * Clones each element of {@code items} and returns the cloned list.
-     * Used by filter-then-clone paths to defensively copy only matching items.
      */
     @SuppressWarnings("unchecked")
     @NonNull
@@ -669,7 +666,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
         final String methodTag = TAG + ":getCredentialsFilteredBy";
         Logger.verbose(methodTag, "getCredentialsFilteredBy() -- with kid");
 
-        // This direct-cache overload filters before cloning.
         synchronized (mCacheLock) {
             waitForInitialLoad();
             final List<Credential> unclonedCredentials =

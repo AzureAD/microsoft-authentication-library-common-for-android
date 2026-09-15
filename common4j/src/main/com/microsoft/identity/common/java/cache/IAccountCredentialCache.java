@@ -292,8 +292,6 @@ public interface IAccountCredentialCache {
 
     /**
      * Returns all of the Credentials matching the supplied criteria, including kid filtering.
-     * Unlike the input-list overload, this method reads directly from the cache and
-     * benefits from filtering before cloning in cache implementations that support it.
      *
      * @param homeAccountId   The homeAccountId used to match Credential cache keys.
      * @param environment     The environment used to match Credential cache keys.

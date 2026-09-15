@@ -23,7 +23,6 @@
 package com.microsoft.identity.common;
 
 import com.microsoft.identity.common.components.MockPlatformComponentsFactory;
-import com.microsoft.identity.common.java.flighting.IFlightsManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -42,9 +41,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
-import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -1605,7 +1601,7 @@ public class MsalOAuth2TokenCacheTest {
     }
 
     // =====================================================================
-    // Tests for filter-then-clone optimization in load() and getIdTokensForAccountRecord()
+    // Tests for load() and getIdTokensForAccountRecord() with each cache implementation
     // =====================================================================
 
     private MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
@@ -1627,43 +1623,8 @@ public class MsalOAuth2TokenCacheTest {
         );
     }
 
-    private void enableInMemoryCacheFlight() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.USE_IN_MEMORY_CACHE_FOR_ACCOUNTS_AND_CREDENTIALS))
-                .thenReturn(true);
-        final IFlightsManager mockFlightsManager = new IFlightsManager() {
-            @Override
-            public IFlightsProvider getFlightsProvider() {
-                return mockFlightsProvider;
-            }
-
-            @Override
-            public IFlightsProvider getFlightsProvider(long waitForConfigsWithTimeoutInMs) {
-                return mockFlightsProvider;
-            }
-
-            @Override
-            public IFlightsProvider getFlightsProviderForTenant(String tenantId) {
-                return mockFlightsProvider;
-            }
-
-            @Override
-            public IFlightsProvider getFlightsProviderForTenant(String tenantId, long waitForConfigsWithTimeoutInMs) {
-                return mockFlightsProvider;
-            }
-        };
-        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockFlightsManager);
-    }
-
-    private void resetFlight() {
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
-    }
-
     @Test
-    public void loadTokens_flightEnabled_returnsCorrectCacheRecord() throws ClientException {
-        enableInMemoryCacheFlight();
-        try {
+    public void loadTokens_withMemoryCache_returnsCorrectCacheRecord() throws ClientException {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
                     MicrosoftStsTokenResponse, MicrosoftAccount, MicrosoftRefreshToken>
@@ -1689,15 +1650,10 @@ public class MsalOAuth2TokenCacheTest {
             assertEquals(result.getAccessToken(), secondaryLoad.getAccessToken());
             assertEquals(result.getRefreshToken(), secondaryLoad.getRefreshToken());
             assertEquals(result.getIdToken(), secondaryLoad.getIdToken());
-        } finally {
-            resetFlight();
-        }
     }
 
     @Test
-    public void loadTokensV1Compat_flightEnabled_returnsCorrectCacheRecord() throws ClientException {
-        enableInMemoryCacheFlight();
-        try {
+    public void loadTokensV1Compat_withMemoryCache_returnsCorrectCacheRecord() throws ClientException {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
                     MicrosoftStsTokenResponse, MicrosoftAccount, MicrosoftRefreshToken>
@@ -1723,15 +1679,10 @@ public class MsalOAuth2TokenCacheTest {
             assertEquals(result.getAccessToken(), secondaryLoad.getAccessToken());
             assertEquals(result.getRefreshToken(), secondaryLoad.getRefreshToken());
             assertEquals(result.getV1IdToken(), secondaryLoad.getV1IdToken());
-        } finally {
-            resetFlight();
-        }
     }
 
     @Test
-    public void getIdTokensForAccountRecord_flightEnabled_returnsCorrectIdTokens() throws ClientException {
-        enableInMemoryCacheFlight();
-        try {
+    public void getIdTokensForAccountRecord_withMemoryCache_returnsCorrectIdTokens() throws ClientException {
             final IPlatformComponents components = MockPlatformComponentsFactory.getNonFunctionalBuilder().build();
             final MsalOAuth2TokenCache<MicrosoftStsOAuth2Strategy, MicrosoftStsAuthorizationRequest,
                     MicrosoftStsTokenResponse, MicrosoftAccount, MicrosoftRefreshToken>
@@ -1751,14 +1702,10 @@ public class MsalOAuth2TokenCacheTest {
 
             assertEquals(1, idTokens.size());
             assertEquals(defaultTestBundleV2.mGeneratedIdToken, idTokens.get(0));
-        } finally {
-            resetFlight();
-        }
     }
 
     @Test
-    public void getIdTokensForAccountRecord_flightDisabled_returnsCorrectIdTokens() throws ClientException {
-        // Ensure the existing non-flighted path works unchanged
+    public void getIdTokensForAccountRecord_withDefaultCache_returnsCorrectIdTokens() throws ClientException {
         final ICacheRecord result = mOauth2TokenCache.save(
                 mockStrategy,
                 mockRequest,
@@ -1774,17 +1721,9 @@ public class MsalOAuth2TokenCacheTest {
         assertEquals(defaultTestBundleV2.mGeneratedIdToken, idTokens.get(0));
     }
 
-    /**
-     * Regression test for ClassCastException: both flights enabled but the cache was constructed
-     * with a plain {@link SharedPreferencesAccountCredentialCache} (not the memory-cache subclass).
-     * The instanceof guard must cause load() to fall back to the legacy path without throwing.
-     */
     @Test
-    public void load_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
+    public void load_withDefaultCache_returnsCorrectResult()
             throws ClientException {
-        enableInMemoryCacheFlight();
-        try {
-            // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
             configureMocksForTestBundle(defaultTestBundleV2);
             final ICacheRecord saved = mOauth2TokenCache.save(
                     mockStrategy,
@@ -1806,23 +1745,11 @@ public class MsalOAuth2TokenCacheTest {
             assertEquals(saved.getAccessToken(), loaded.getAccessToken());
             assertEquals(saved.getRefreshToken(), loaded.getRefreshToken());
             assertEquals(saved.getIdToken(), loaded.getIdToken());
-        } finally {
-            resetFlight();
-        }
     }
 
-    /**
-     * Regression test for ClassCastException: both flights enabled but the cache was constructed
-     * with a plain {@link SharedPreferencesAccountCredentialCache} (not the memory-cache subclass).
-     * The instanceof guard must cause getIdTokensForAccountRecord() to fall back to the legacy path
-     * without throwing.
-     */
     @Test
-    public void getIdTokensForAccountRecord_flightEnabled_withNonMemoryCache_doesNotThrowAndReturnsCorrectResult()
+    public void getIdTokensForAccountRecord_withDefaultCache_returnsCorrectResult()
             throws ClientException {
-        enableInMemoryCacheFlight();
-        try {
-            // mOauth2TokenCache uses SharedPreferencesAccountCredentialCache (non-memory) from setUp()
             configureMocksForTestBundle(defaultTestBundleV2);
             mOauth2TokenCache.save(
                     mockStrategy,
@@ -1837,8 +1764,5 @@ public class MsalOAuth2TokenCacheTest {
 
             assertEquals(1, idTokens.size());
             assertEquals(defaultTestBundleV2.mGeneratedIdToken, idTokens.get(0));
-        } finally {
-            resetFlight();
-        }
     }
 }

@@ -42,8 +42,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.flighting.CommonFlight;
-import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -663,8 +661,7 @@ public class MsalOAuth2TokenCache
                 ((PopAuthenticationSchemeWithClientKeyInternal) authScheme).getKid()
                 : null;
 
-        // Legacy path: preload all credentials (clone-all) once,
-        // then filter the pre-cloned list multiple times.
+        // Load one cloned credential snapshot, then filter it for each credential type.
         final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
 
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -880,8 +877,7 @@ public class MsalOAuth2TokenCache
                                                            @NonNull AccountRecord accountRecord) {
         final List<IdTokenRecord> result = new ArrayList<>();
 
-        // Legacy path: preload all credentials (clone-all) once,
-        // then filter the pre-cloned list multiple times.
+        // Load one cloned credential snapshot, then filter it for each ID token type.
         final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
 
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
@@ -1681,7 +1677,6 @@ public class MsalOAuth2TokenCache
 
         final List<Credential> accessTokens;
 
-        // Legacy path: clone all credentials, then filter.
         accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 referenceToken.getHomeAccountId(),
                 referenceToken.getEnvironment(),
