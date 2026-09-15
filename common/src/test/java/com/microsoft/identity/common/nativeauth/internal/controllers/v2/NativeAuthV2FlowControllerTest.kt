@@ -279,7 +279,6 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.submitCode(parameters)
 
-        // The reset cannot have completed before a new password was submitted.
         assertTrue(result is INativeAuthCommandResult.APIError)
         result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)

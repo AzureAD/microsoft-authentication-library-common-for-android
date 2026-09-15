@@ -24,48 +24,42 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
-import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitAttributesCommandParameters
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitAttributesCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Compatibility wrapper for reset-password submit-code consumers using the original generic name.
- *
- * TODO: Remove after MSAL and other consumers migrate to
- * [NativeAuthV2ResetPasswordSubmitCodeCommand].
+ * Command class to call controllers to submit the user's attributes to the server in the V2
+ * sign-up flow.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
-@Deprecated(
-    message = "Use NativeAuthV2ResetPasswordSubmitCodeCommand for explicit flow naming.",
-    replaceWith = ReplaceWith(
-        "NativeAuthV2ResetPasswordSubmitCodeCommand(parameters, controller, publicApiId)"
-    )
-)
-class NativeAuthV2SubmitCodeCommand(
-    private val parameters: NativeAuthV2SubmitCodeCommandParameters,
+class NativeAuthV2SubmitAttributesCommand(
+    private val parameters: NativeAuthV2SubmitAttributesCommandParameters,
     private val controller: NativeAuthV2FlowController,
     publicApiId: String
-) : BaseNativeAuthCommand<NativeAuthV2SubmitCodeCommandResult>(
+) : BaseNativeAuthCommand<NativeAuthV2SubmitAttributesCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = NativeAuthV2SubmitCodeCommand::class.java.simpleName
+        private val TAG = NativeAuthV2SubmitAttributesCommand::class.java.simpleName
     }
 
     /**
      * The execution part of the command, to be run on the background thread.
-     * It calls the submitCode method of the native auth V2 controller with the given parameters.
+     * It calls the submitAttributes method of the native auth V2 controller with the given
+     * parameters.
      */
-    override fun execute(): NativeAuthV2SubmitCodeCommandResult {
+    override fun execute(): NativeAuthV2SubmitAttributesCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
 
-        val result = controller.submitCode(
+        val result = controller.submitAttributes(
             parameters = parameters
         )
 

@@ -33,14 +33,20 @@ object NativeAuthV2ContinuationStateTestFactory {
     @JvmStatic
     fun create(
         correlationId: String,
-        scopes: List<String> = listOf("scope")
+        scopes: List<String> = listOf("scope"),
+        entryRelation: NativeAuthV2LinkRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
+        scenario: NativeAuthV2FlowScenario = NativeAuthV2FlowScenario.RESET_PASSWORD
     ): NativeAuthV2ContinuationState {
         val response = NativeAuthV2HalApiResponse.from(
             halResource = HalResource.from(
                 """
                 {
                   "continuation_token": "opaque-token",
-                  "reset_password": "/tenant/reset-password"
+                  "_links": {
+                    "${entryRelation.value}": {
+                      "href": "/tenant/${entryRelation.value}"
+                    }
+                  }
                 }
                 """.trimIndent()
             ),
@@ -49,8 +55,8 @@ object NativeAuthV2ContinuationStateTestFactory {
         )
         val result = NativeAuthV2ResponseParser().parseAuthorizeChallenge(
             response = response,
-            entryRelation = NativeAuthV2LinkRelation.RESET_PASSWORD,
-            scenario = NativeAuthV2FlowScenario.RESET_PASSWORD,
+            entryRelation = entryRelation,
+            scenario = scenario,
             scopes = scopes
         )
 

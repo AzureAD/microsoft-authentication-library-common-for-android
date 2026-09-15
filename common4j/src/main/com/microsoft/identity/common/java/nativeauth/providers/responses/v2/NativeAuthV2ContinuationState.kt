@@ -57,7 +57,11 @@ class NativeAuthV2ContinuationState private constructor(
     val correlationId: String,
     internal val entryRelation: NativeAuthV2LinkRelation,
     internal val scenario: NativeAuthV2FlowScenario,
-    internal val authenticationFactor: String?
+    internal val authenticationFactor: String?,
+    // Canonical names of SDK-owned credentials already submitted during a sign-up flow. Only
+    // `email` and `password` are retained; ordinary attributes remain retryable if the server asks
+    // for them again or rejects their values. Empty for every other flow.
+    internal val submittedAttributes: Set<String> = emptySet()
 ) : ILoggable, Serializable {
 
     /**
@@ -73,7 +77,49 @@ class NativeAuthV2ContinuationState private constructor(
         get() = authenticationFactor == NativeAuthV2HalApiResponse.SINGLE_FACTOR
 
     /**
-     * Returns a defensive copy of the scopes this state was created with, for the later
+     * `true` when the SDK-owned `email` or `password` attribute named by [name]
+     * (case-insensitive) has already been submitted during a sign-up flow. Ordinary attributes
+     * are never retained. Public so the controller, which cannot read the opaque
+     * [submittedAttributes] member, can detect a malformed re-request for a credential.
+     */
+    fun hasSubmittedAttribute(name: String): Boolean =
+        submittedAttributes.any { it.equals(name, ignoreCase = true) }
+
+    /**
+     * Returns a copy of this state with any SDK-owned credential names in [names] added to the set
+     * of submitted attributes, so the successor produced by [next] inherits them. Other attribute
+     * names are deliberately ignored because their values may be corrected and resubmitted.
+     * Public so the controller can preserve this bookkeeping when the server rejects a submission
+     * without returning a successor continuation state.
+     */
+    fun withAdditionalSubmittedAttributes(
+        names: Collection<String>
+    ): NativeAuthV2ContinuationState {
+        val merged = LinkedHashSet(submittedAttributes)
+        names.forEach { name ->
+            when {
+                name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_EMAIL)
+                name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true) ->
+                    merged.add(ATTRIBUTE_NAME_PASSWORD)
+            }
+        }
+        return NativeAuthV2ContinuationState(
+            continuationToken = continuationToken,
+            links = links,
+            methodLinks = methodLinks,
+            scopes = defensiveCopy(scopes),
+            claimsRequestJson = claimsRequestJson,
+            correlationId = correlationId,
+            entryRelation = entryRelation,
+            scenario = scenario,
+            authenticationFactor = authenticationFactor,
+            submittedAttributes = Collections.unmodifiableSet(merged)
+        )
+    }
+
+    /**
+     * Returns the scopes retained for the
      * authorization-code token request at flow completion. Controllers outside common4j access
      * scopes only via this method, keeping the internal [scopes] field opaque.
      */
@@ -110,7 +156,8 @@ class NativeAuthV2ContinuationState private constructor(
             correlationId = correlationId,
             entryRelation = entryRelation,
             scenario = scenario,
-            authenticationFactor = authenticationFactor
+            authenticationFactor = authenticationFactor,
+            submittedAttributes = submittedAttributes
         )
     }
 
@@ -121,6 +168,8 @@ class NativeAuthV2ContinuationState private constructor(
     companion object {
         private const val serialVersionUID = 1L
         private const val REDACTED_STRING = "NativeAuthV2ContinuationState(<redacted>)"
+        private const val ATTRIBUTE_NAME_EMAIL = "email"
+        private const val ATTRIBUTE_NAME_PASSWORD = "password"
 
         /**
          * Link relations this SDK version follows. An unsupported/unrecognised relation is
@@ -135,7 +184,9 @@ class NativeAuthV2ContinuationState private constructor(
             NativeAuthV2LinkRelation.CONTINUE.value,
             NativeAuthV2LinkRelation.RESET_PASSWORD.value,
             NativeAuthV2LinkRelation.SIGN_IN.value,
-            NativeAuthV2LinkRelation.SIGN_UP.value
+            NativeAuthV2LinkRelation.SIGN_UP.value,
+            NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value,
+            NativeAuthV2LinkRelation.SELF.value
         )
 
         /**
@@ -159,7 +210,8 @@ class NativeAuthV2ContinuationState private constructor(
                 correlationId = response.correlationId,
                 entryRelation = entryRelation,
                 scenario = scenario,
-                authenticationFactor = response.authenticationFactor
+                authenticationFactor = response.authenticationFactor,
+                submittedAttributes = emptySet()
             )
         }
 
@@ -194,7 +246,8 @@ class NativeAuthV2ContinuationState private constructor(
                 entryRelation = previous.entryRelation,
                 scenario = previous.scenario,
                 authenticationFactor = response.authenticationFactor
-                    ?: previous.authenticationFactor
+                    ?: previous.authenticationFactor,
+                submittedAttributes = previous.submittedAttributes
             )
         }
 
