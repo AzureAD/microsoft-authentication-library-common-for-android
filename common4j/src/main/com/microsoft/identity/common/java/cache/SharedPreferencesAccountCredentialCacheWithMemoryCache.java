@@ -650,48 +650,6 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCache extends Abst
     }
 
     @Override
-    @NonNull
-    public List<Credential> getCredentialsFilteredBy(
-            @Nullable final String homeAccountId,
-            @Nullable final String environment,
-            @Nullable final CredentialType credentialType,
-            @Nullable final String clientId,
-            @Nullable final String applicationIdentifier,
-            @Nullable final String mamEnrollmentIdentifier,
-            @Nullable final String realm,
-            @Nullable final String target,
-            @Nullable final String authScheme,
-            @Nullable final String requestedClaims,
-            @Nullable final String kid) {
-        final String methodTag = TAG + ":getCredentialsFilteredBy";
-        Logger.verbose(methodTag, "getCredentialsFilteredBy() -- with kid");
-
-        synchronized (mCacheLock) {
-            waitForInitialLoad();
-            final List<Credential> unclonedCredentials =
-                    new ArrayList<>(mCachedCredentialsWithKeys.values());
-            final List<Credential> matchingUncloned = getCredentialsFilteredByInternal(
-                    unclonedCredentials,
-                    homeAccountId,
-                    environment,
-                    credentialType,
-                    clientId,
-                    applicationIdentifier,
-                    mamEnrollmentIdentifier,
-                    realm,
-                    target,
-                    authScheme,
-                    requestedClaims,
-                    kid,
-                    false
-            );
-            final List<Credential> clonedMatches = cloneItems(matchingUncloned, methodTag);
-            Logger.verbose(methodTag, "Found [" + clonedMatches.size() + "] matching Credentials...");
-            return clonedMatches;
-        }
-    }
-
-    @Override
     public boolean removeAccount(@NonNull final AccountRecord accountToRemove) {
         final String methodTag = TAG + ":removeAccount";
         Logger.info(methodTag, "Removing Account...");
