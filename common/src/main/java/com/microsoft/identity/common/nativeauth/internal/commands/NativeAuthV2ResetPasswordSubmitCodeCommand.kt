@@ -25,49 +25,34 @@ package com.microsoft.identity.common.nativeauth.internal.commands
 import com.microsoft.identity.common.java.logging.LogSession
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
-import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Compatibility wrapper for reset-password submit-code consumers using the original generic name.
- *
- * TODO: Remove after MSAL and other consumers migrate to
- * [NativeAuthV2ResetPasswordSubmitCodeCommand].
+ * Submits an OTP code for the V2 reset-password flow.
  */
-@Deprecated(
-    message = "Use NativeAuthV2ResetPasswordSubmitCodeCommand for explicit flow naming.",
-    replaceWith = ReplaceWith(
-        "NativeAuthV2ResetPasswordSubmitCodeCommand(parameters, controller, publicApiId)"
-    )
-)
-class NativeAuthV2SubmitCodeCommand(
+class NativeAuthV2ResetPasswordSubmitCodeCommand(
     private val parameters: NativeAuthV2SubmitCodeCommandParameters,
     private val controller: NativeAuthV2FlowController,
     publicApiId: String
-) : BaseNativeAuthCommand<NativeAuthV2SubmitCodeCommandResult>(
+) : BaseNativeAuthCommand<NativeAuthV2ResetPasswordSubmitCodeCommandResult>(
     parameters,
     controller,
     publicApiId
 ) {
 
     companion object {
-        private val TAG = NativeAuthV2SubmitCodeCommand::class.java.simpleName
+        private val TAG = NativeAuthV2ResetPasswordSubmitCodeCommand::class.java.simpleName
     }
 
-    /**
-     * The execution part of the command, to be run on the background thread.
-     * It calls the submitCode method of the native auth V2 controller with the given parameters.
-     */
-    override fun execute(): NativeAuthV2SubmitCodeCommandResult {
+    override fun execute(): NativeAuthV2ResetPasswordSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
             methodName = "${TAG}.execute"
         )
 
-        val result = controller.submitCode(
-            parameters = parameters
-        )
+        val result = controller.submitResetPasswordCode(parameters)
 
         Logger.infoWithObject(
             TAG,
