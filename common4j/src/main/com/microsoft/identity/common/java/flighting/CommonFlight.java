@@ -283,14 +283,6 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
     /**
-     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
-     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
-     * references first, then clones only the matching items — avoiding the cost of
-     * cloning the entire cache when only a subset is needed.
-     */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
-
-    /**
      * Kill switch for strict redirect-URI matching in
      * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
      * ECS to revert to the historical String#startsWith prefix match
