@@ -25,6 +25,7 @@ package com.microsoft.identity.common;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
@@ -2614,6 +2616,66 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
                             HOME_ACCOUNT_ID, ENVIRONMENT, CredentialType.RefreshToken,
                             CLIENT_ID, null, null, null, null, null);
             assertNotEquals("mutated", filtered2.get(0).getCachedAt());
+    }
+
+    @Test
+    public void getCredentialsFilteredBy_withInputCredentialsAndKid_returnsMatchingAccessToken() {
+        final String kid = "kid1";
+        final PopAuthenticationSchemeWithClientKeyInternal authScheme =
+                new PopAuthenticationSchemeWithClientKeyInternal(kid);
+
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret("SecretA");
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken.setTarget(TARGET);
+        accessToken.setAccessTokenType(TokenRequest.TokenType.POP);
+        accessToken.setRequestedClaims("{\"access_token\":{\"xms_cc\":{\"values\":[\"cp1\"]}}}");
+        accessToken.setKid(kid);
+
+        final AccessTokenRecord accessTokenWithDifferentKid = new AccessTokenRecord();
+        accessTokenWithDifferentKid.setCachedAt(CACHED_AT);
+        accessTokenWithDifferentKid.setExpiresOn(EXPIRES_ON);
+        accessTokenWithDifferentKid.setSecret("SecretB");
+        accessTokenWithDifferentKid.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessTokenWithDifferentKid.setRealm(REALM);
+        accessTokenWithDifferentKid.setEnvironment(ENVIRONMENT);
+        accessTokenWithDifferentKid.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+        accessTokenWithDifferentKid.setClientId(CLIENT_ID);
+        accessTokenWithDifferentKid.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessTokenWithDifferentKid.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessTokenWithDifferentKid.setTarget(TARGET);
+        accessTokenWithDifferentKid.setAccessTokenType(TokenRequest.TokenType.POP);
+        accessTokenWithDifferentKid.setRequestedClaims("{\"access_token\":{\"xms_cc\":{\"values\":[\"cp2\"]}}}");
+        accessTokenWithDifferentKid.setKid("kid2");
+
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessTokenWithDifferentKid);
+
+        final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        mSharedPreferencesAccountCredentialCache.getCredentials(),
+                        HOME_ACCOUNT_ID,
+                        ENVIRONMENT,
+                        CredentialType.AccessToken_With_AuthScheme,
+                        CLIENT_ID,
+                        APPLICATION_IDENTIFIER_SHA512,
+                        MAM_ENROLLMENT_IDENTIFIER,
+                        REALM,
+                        TARGET,
+                        authScheme.getName(),
+                        null,
+                        authScheme.getKid());
+        assertEquals(1, filtered.size());
+        assertEquals("SecretA", filtered.get(0).getSecret());
+        assertEquals(kid, ((AccessTokenRecord) filtered.get(0)).getKid());
     }
 
     // =====================================================================
