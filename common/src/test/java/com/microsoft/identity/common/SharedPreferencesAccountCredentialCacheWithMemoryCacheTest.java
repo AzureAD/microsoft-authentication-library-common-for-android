@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.components.InMemoryStorageSupplier;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCacheWithMemoryCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -2421,6 +2422,26 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
         return rt;
     }
 
+    AccessTokenRecord buildDefaultPopAccessToken(final String kid, final String secret) {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCredentialType(CredentialType.AccessToken_With_AuthScheme.name());
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setApplicationIdentifier(APPLICATION_IDENTIFIER_SHA512);
+        accessToken.setMamEnrollmentIdentifier(MAM_ENROLLMENT_IDENTIFIER);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+        accessToken.setAccessTokenType(
+                PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY
+        );
+        accessToken.setKid(kid);
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(secret);
+        return accessToken;
+    }
+
     @Test
     public void testSavedAccountIsCloned() {
         AccountRecord account = buildDefaultAccountRecord();
@@ -2597,6 +2618,35 @@ public class SharedPreferencesAccountCredentialCacheWithMemoryCacheTest {
             final List<AccountRecord> filtered2 = mSharedPreferencesAccountCredentialCache
                     .getAccountsFilteredBy(HOME_ACCOUNT_ID, ENVIRONMENT, REALM);
             assertNotEquals("mutated", filtered2.get(0).getLocalAccountId());
+    }
+
+    @Test
+    public void getCredentialsFilteredBy_withInputList_returnsAccessTokenMatchingKid() {
+        final String requestedKid = "requested-kid";
+        final String requestedTokenSecret = "requested-token-secret";
+        final AccessTokenRecord requestedToken =
+                buildDefaultPopAccessToken(requestedKid, requestedTokenSecret);
+        requestedToken.setTarget(TARGET + " requested.extra");
+        final AccessTokenRecord otherToken =
+                buildDefaultPopAccessToken("other-kid", "other-token-secret");
+        otherToken.setTarget(TARGET + " other.extra");
+        mSharedPreferencesAccountCredentialCache.saveCredential(requestedToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(otherToken);
+        assertEquals(2, mSharedPreferencesAccountCredentialCache.getCredentials().size());
+
+        final List<Credential> filtered = mSharedPreferencesAccountCredentialCache
+                .getCredentialsFilteredBy(
+                        mSharedPreferencesAccountCredentialCache.getCredentials(),
+                        HOME_ACCOUNT_ID, ENVIRONMENT,
+                        CredentialType.AccessToken_With_AuthScheme, CLIENT_ID,
+                        APPLICATION_IDENTIFIER_SHA512, MAM_ENROLLMENT_IDENTIFIER,
+                        REALM, TARGET,
+                        PopAuthenticationSchemeWithClientKeyInternal.SCHEME_POP_WITH_CLIENT_KEY,
+                        null, requestedKid);
+
+        assertEquals(1, filtered.size());
+        assertEquals(requestedKid, ((AccessTokenRecord) filtered.get(0)).getKid());
+        assertEquals(requestedTokenSecret, filtered.get(0).getSecret());
     }
 
     @Test
