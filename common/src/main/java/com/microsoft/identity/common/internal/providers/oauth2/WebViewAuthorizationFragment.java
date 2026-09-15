@@ -118,6 +118,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private WebView mWebView;
 
+    private boolean mPasskeyWebListenerHooked;
+
     private AzureActiveDirectoryWebViewClient mAADWebViewClient;
 
     private ProgressBar mProgressBar;
@@ -752,6 +754,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
     }
 
+    @Override
+    public void onDestroyView() {
+        if (mPasskeyWebListenerHooked && mWebView != null) {
+            PasskeyWebListener.unhook(mWebView);
+            mPasskeyWebListenerHooked = false;
+        }
+        super.onDestroyView();
+    }
+
     /**
      * Extracts request headers from the given bundle object.
      */
@@ -891,8 +902,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":setupPasskeyWebListener";
         final String passkeyProtocolHeader = mRequestHeaders.get(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME);
         if (FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_AND_REG.equals(passkeyProtocolHeader)) {
-            final boolean passkeyWebListenerHooked = PasskeyWebListener.hook(webView, requireActivity(), webViewClient);
-            if (!passkeyWebListenerHooked) {
+            mPasskeyWebListenerHooked = PasskeyWebListener.hook(webView, requireActivity(), webViewClient);
+            if (!mPasskeyWebListenerHooked) {
                 Logger.warn(methodTag, "PasskeyWebListener hook failed, Downgrading to auth only.");
                 // Downgrade to auth only
                 mRequestHeaders.put(FidoConstants.PASSKEY_PROTOCOL_HEADER_NAME, FidoConstants.PASSKEY_PROTOCOL_HEADER_AUTH_ONLY);
