@@ -250,7 +250,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         if (shouldExposeJavaScriptInterface(url)) {
             // If broker request, and a valid url, expose JavaScript API
             Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
+            view.addJavascriptInterface(createAuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         } else if (mAuthUxJavaScriptInterfaceAdded) {
             // Remove AuthUx JavaScript Interface
@@ -290,5 +290,24 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
+     * Build the Auth UX bridge object to bind into the WebView.
+     *
+     * <p>The bridge is registered from two places: {@link #onPageStarted} (re-evaluated on every
+     * navigation, so the interface is added/removed as the loaded origin changes) and
+     * {@code AzureActiveDirectoryWebViewClient#initializeAuthUxJavaScriptApi} (the initial load).
+     * {@link WebView#addJavascriptInterface} <em>replaces</em> whatever object was previously bound
+     * to the same name, so the later registration wins. Constructing the bridge here — rather than
+     * inline at each call site — keeps both registrations identically configured; otherwise a
+     * subclass that supplies extra collaborators (e.g. a telemetry sink) would silently have them
+     * dropped the first time a page load re-registered a bare instance.
+     *
+     * @return the bridge instance to bind under {@link AuthUxJavaScriptInterface#getInterfaceName()}.
+     */
+    @NonNull
+    protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
+        return new AuthUxJavaScriptInterface();
     }
 }
