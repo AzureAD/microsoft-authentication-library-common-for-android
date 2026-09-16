@@ -539,6 +539,48 @@ class PasskeyWebListenerTest {
         unmockkStatic(WebViewFeature::class)
     }
 
+    @Test
+    fun `unhook removes listener on supported devices`() {
+        // Given
+        mockkStatic(WebViewFeature::class)
+        every { WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) } returns true
+
+        mockkStatic(WebViewCompat::class)
+        every {
+            WebViewCompat.removeWebMessageListener(webView, any())
+        } just Runs
+
+        // When
+        PasskeyWebListener.unhook(webView)
+
+        // Then
+        verify {
+            WebViewCompat.removeWebMessageListener(webView, "__webauthn_interface__")
+        }
+
+        unmockkStatic(WebViewCompat::class)
+        unmockkStatic(WebViewFeature::class)
+    }
+
+    @Test
+    fun `unhook does not remove listener when WEB_MESSAGE_LISTENER not supported`() {
+        // Given
+        mockkStatic(WebViewFeature::class)
+        every { WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) } returns false
+        mockkStatic(WebViewCompat::class)
+
+        // When
+        PasskeyWebListener.unhook(webView)
+
+        // Then
+        verify(exactly = 0) {
+            WebViewCompat.removeWebMessageListener(any(), any())
+        }
+
+        unmockkStatic(WebViewCompat::class)
+        unmockkStatic(WebViewFeature::class)
+    }
+
     // ========== Helper Methods ==========
 
     /**
@@ -551,4 +593,3 @@ class PasskeyWebListenerTest {
         }.toString()
     }
 }
-
