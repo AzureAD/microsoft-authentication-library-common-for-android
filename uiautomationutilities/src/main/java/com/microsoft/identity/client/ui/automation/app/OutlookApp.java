@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.app;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT_LONG;
 
+import android.graphics.Rect;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
@@ -62,10 +63,13 @@ public class OutlookApp extends App implements IFirstPartyApp {
      */
     private final static String ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID = "android:id/button2";
 
-    private final static String COPILOT_UPSELL_TITLE_REGEX =
-            "^(Discover Copilot, a whole new way to work|Use your own judgment)$";
-    private final static String COPILOT_UPSELL_NEXT_BUTTON_TEXT = "Next";
-    private final static String COPILOT_UPSELL_GOT_IT_BUTTON_TEXT = "Got it";
+    private final static String COPILOT_UPSELL_FIRST_PAGE_TITLE =
+            "Discover Copilot, a whole new way to work";
+    private final static String COPILOT_UPSELL_SECOND_PAGE_TITLE = "Use your own judgment";
+    private final static String COPILOT_UPSELL_TITLE_REGEX = "^("
+            + COPILOT_UPSELL_FIRST_PAGE_TITLE + "|" + COPILOT_UPSELL_SECOND_PAGE_TITLE + ")$";
+    private final static String COPILOT_UPSELL_PRIMARY_BUTTON_RESOURCE_ID =
+            OUTLOOK_PACKAGE_NAME + ":id/btn_primary_button";
 
     /**
      * Timeout for the blocking-dialog presence probe. A dialog that blocks the drawer is already on
@@ -284,29 +288,48 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         Logger.i(TAG, "Dismissing the Outlook Copilot onboarding sheet..");
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        final UiObject nextButton = UiAutomatorUtils.obtainUiObjectWithExactText(
-                COPILOT_UPSELL_NEXT_BUTTON_TEXT, 0
+        final UiObject primaryButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                COPILOT_UPSELL_PRIMARY_BUTTON_RESOURCE_ID, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
         );
 
         try {
-            if (nextButton.exists()) {
-                nextButton.click();
-                device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            final boolean isFirstPage =
+                    COPILOT_UPSELL_FIRST_PAGE_TITLE.equals(copilotUpsell.getText());
+            if (!primaryButton.exists()) {
+                Logger.w(TAG, "Outlook Copilot onboarding sheet was detected, "
+                        + "but its primary button was not found.");
+                return;
             }
 
-            final UiObject gotItButton = UiAutomatorUtils.obtainUiObjectWithExactText(
-                    COPILOT_UPSELL_GOT_IT_BUTTON_TEXT, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
-            );
-            if (gotItButton.exists()) {
-                gotItButton.click();
+            clickCenter(device, primaryButton);
+            device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+
+            if (isFirstPage) {
+                final UiObject secondPage = UiAutomatorUtils.obtainUiObjectWithExactText(
+                        COPILOT_UPSELL_SECOND_PAGE_TITLE,
+                        CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+                );
+                if (!secondPage.exists()) {
+                    Logger.w(TAG, "Outlook Copilot onboarding sheet did not advance to its second page.");
+                    return;
+                }
+
+                final UiObject nextPrimaryButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        COPILOT_UPSELL_PRIMARY_BUTTON_RESOURCE_ID,
+                        CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+                );
+                clickCenter(device, nextPrimaryButton);
                 device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
-            } else {
-                Logger.w(TAG, "Outlook Copilot onboarding sheet was detected, "
-                        + "but its dismissal button was not found.");
             }
         } catch (final UiObjectNotFoundException e) {
             Logger.w(TAG, "Outlook Copilot onboarding sheet disappeared before it could be dismissed.");
         }
+    }
+
+    private void clickCenter(@NonNull final UiDevice device,
+                             @NonNull final UiObject uiObject) throws UiObjectNotFoundException {
+        final Rect bounds = uiObject.getBounds();
+        device.click(bounds.centerX(), bounds.centerY());
     }
 
     /**
