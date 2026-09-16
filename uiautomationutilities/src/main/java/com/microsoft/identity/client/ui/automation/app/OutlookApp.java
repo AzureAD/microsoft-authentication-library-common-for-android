@@ -62,6 +62,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
      */
     private final static String ANDROID_DIALOG_NEGATIVE_BUTTON_RESOURCE_ID = "android:id/button2";
 
+    private final static String COPILOT_UPSELL_TITLE_REGEX =
+            "^(Discover Copilot, a whole new way to work|Use your own judgment)$";
+    private final static String COPILOT_UPSELL_NEXT_BUTTON_TEXT = "Next";
+    private final static String COPILOT_UPSELL_GOT_IT_BUTTON_TEXT = "Got it";
+
     /**
      * Timeout for the blocking-dialog presence probe. A dialog that blocks the drawer is already on
      * screen by the time we look, so this only needs to cover the accessibility tree settling rather
@@ -201,6 +206,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
             // raises modal dialogs of its own (for example the notification opt-in prompt), and while
             // one is up the drawer button is not in the resolved accessibility tree at all.
             dismissBlockingDialog();
+            dismissCopilotUpsell(attempt == 1 ? BLOCKING_DIALOG_PROBE_TIMEOUT : 0);
 
             // Click the account drawer. This is deliberately non-fatal: if a popup is covering the
             // button we still want to fall through to the lookup and, failing that, to another
@@ -256,6 +262,50 @@ public class OutlookApp extends App implements IFirstPartyApp {
             // The dialog went away on its own between the check and the click, which is the state we
             // wanted anyway.
             Logger.i(TAG, "Modal dialog disappeared before it could be dismissed.");
+        }
+    }
+
+    /**
+     * Dismisses Outlook's Copilot onboarding sheet, if present.
+     * <p>
+     * The sheet can remain across app restarts and covers the account drawer. It has two possible
+     * pages: the first advances with "Next", while the second closes with "Got it".
+     *
+     * @param probeTimeout how long to wait for the sheet's accessibility tree
+     */
+    private void dismissCopilotUpsell(final long probeTimeout) {
+        final UiObject copilotUpsell = UiAutomatorUtils.obtainUiObjectWithRegex(
+                COPILOT_UPSELL_TITLE_REGEX, probeTimeout
+        );
+
+        if (!copilotUpsell.exists()) {
+            return;
+        }
+
+        Logger.i(TAG, "Dismissing the Outlook Copilot onboarding sheet..");
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiObject nextButton = UiAutomatorUtils.obtainUiObjectWithExactText(
+                COPILOT_UPSELL_NEXT_BUTTON_TEXT, 0
+        );
+
+        try {
+            if (nextButton.exists()) {
+                nextButton.click();
+                device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            }
+
+            final UiObject gotItButton = UiAutomatorUtils.obtainUiObjectWithExactText(
+                    COPILOT_UPSELL_GOT_IT_BUTTON_TEXT, CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+            );
+            if (gotItButton.exists()) {
+                gotItButton.click();
+                device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            } else {
+                Logger.w(TAG, "Outlook Copilot onboarding sheet was detected, "
+                        + "but its dismissal button was not found.");
+            }
+        } catch (final UiObjectNotFoundException e) {
+            Logger.w(TAG, "Outlook Copilot onboarding sheet disappeared before it could be dismissed.");
         }
     }
 
