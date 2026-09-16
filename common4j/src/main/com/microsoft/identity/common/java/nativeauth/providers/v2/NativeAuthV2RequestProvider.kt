@@ -33,6 +33,8 @@ import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.Nativ
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2EntryRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PasswordVerifyRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2PollRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2SignUpStartRequest
+import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2SubmitAttributesRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2TokenRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2UpdatePasswordRequest
 import com.microsoft.identity.common.java.nativeauth.providers.requests.v2.NativeAuthV2VerifyRequest
@@ -102,6 +104,56 @@ class NativeAuthV2RequestProvider(
             clientId = config.clientId,
             username = username,
             continuationToken = state.continuationToken,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for the sign-up flow's entry (`signup/start`) call, resolved via
+     * the [NativeAuthV2LinkRelation.SIGN_UP] relation on [state]. Unlike sign-in, the body carries
+     * only `continuationToken`; the username is supplied later as an attribute.
+     */
+    fun createSignUpStartRequest(state: NativeAuthV2ContinuationState): NativeAuthV2SignUpStartRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createSignUpStartRequest"
+        )
+
+        val requestUrl = resolveHref(state, NativeAuthV2LinkRelation.SIGN_UP)
+        return NativeAuthV2SignUpStartRequest.create(
+            continuationToken = state.continuationToken,
+            requestUrl = requestUrl.toString(),
+            headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
+        )
+    }
+
+    /**
+     * Creates the request object for the sign-up flow's `submitattributes` call, resolved via the
+     * [NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES] relation on [state]. The body carries
+     * `continuationToken` and the [attributes] map of attribute name to value.
+     */
+    fun createSubmitAttributesRequest(
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>,
+        password: CharArray? = null
+    ): NativeAuthV2SubmitAttributesRequest {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.createSubmitAttributesRequest"
+        )
+
+        val requestUrl = resolveHref(
+            state = state,
+            primaryRelation = NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES,
+            fallbackRelation = NativeAuthV2LinkRelation.SELF
+        )
+        return NativeAuthV2SubmitAttributesRequest.create(
+            continuationToken = state.continuationToken,
+            attributes = attributes,
+            password = password,
             requestUrl = requestUrl.toString(),
             headers = getV2RequestHeaders(state.correlationId, NativeAuthContentType.JSON)
         )
@@ -289,6 +341,17 @@ class NativeAuthV2RequestProvider(
      */
     private fun resolveHref(state: NativeAuthV2ContinuationState, relation: NativeAuthV2LinkRelation): URL {
         val href = state.href(relation) ?: throw missingRelationException(relation, state.correlationId)
+        return hrefResolver.resolve(href, state.correlationId)
+    }
+
+    private fun resolveHref(
+        state: NativeAuthV2ContinuationState,
+        primaryRelation: NativeAuthV2LinkRelation,
+        fallbackRelation: NativeAuthV2LinkRelation
+    ): URL {
+        val href = state.href(primaryRelation)
+            ?: state.href(fallbackRelation)
+            ?: throw missingRelationException(primaryRelation, state.correlationId)
         return hrefResolver.resolve(href, state.correlationId)
     }
 

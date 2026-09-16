@@ -435,6 +435,83 @@ class NativeAuthV2Interactor(
     }
     //endregion
 
+    //region sign-up entry
+    /**
+     * Posts to the server-provided `signUp` href, starting the V2 sign-up flow. The body carries
+     * only the continuation token; the username is supplied later via [performSubmitAttributes].
+     */
+    fun performSignUpStart(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSignUpStart"
+        )
+
+        val request = requestProvider.createSignUpStartRequest(state = state)
+
+        Logger.infoWithObject(
+            "$TAG.performSignUpStart",
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = "$TAG.performSignUpStart"
+        )
+    }
+    //endregion
+
+    //region submit attributes
+    /**
+     * Posts [attributes] to the server-provided `submitAttributes` href during sign-up.
+     *
+     * The request sends every supplied attribute, but the state used for parsing records only the
+     * SDK-owned `email` and `password` names. This lets the controller reject a later credential
+     * re-request while ordinary attributes remain retryable.
+     */
+    fun performSubmitAttributes(
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>,
+        password: CharArray? = null
+    ): NativeAuthV2InteractionApiResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.performSubmitAttributes"
+        )
+
+        try {
+            val request = requestProvider.createSubmitAttributesRequest(
+                state = state,
+                attributes = attributes,
+                password = password
+            )
+
+            Logger.infoWithObject(
+                "$TAG.performSubmitAttributes",
+                state.correlationId,
+                "request = ",
+                request
+            )
+
+            val submittedAttributeNames =
+                if (password == null || password.isEmpty()) attributes.keys else attributes.keys + "password"
+            return executeJsonInteraction(
+                request = request,
+                state = state.withAdditionalSubmittedAttributes(submittedAttributeNames),
+                methodName = "$TAG.performSubmitAttributes"
+            )
+        } finally {
+            StringUtil.overwriteWithNull(password)
+        }
+    }
+    //endregion
+
     /**
      * Applies the configured interceptor headers, sends [request] as JSON using [httpMethod], and
      * parses the response. Most V2 interactions are POSTs, so [httpMethod] defaults to

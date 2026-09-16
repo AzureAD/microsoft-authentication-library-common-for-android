@@ -20,17 +20,32 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.nativeauth.providers.v2
+package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
+
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import java.io.Serializable
 
 /**
- * The Native Auth V2 flow that produced a [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState].
+ * An account attribute the server requested during a Native Auth V2 sign-up flow, safe to hand to
+ * layers above common4j.
  *
- * This stays intentionally small: [RESET_PASSWORD] covers V2 SSPR, [SIGN_IN] covers V2 sign-in,
- * and [SIGN_UP] covers V2 sign-up, so callers can pass the scenario through the public Native Auth
- * V2 strategy/controller surface without exposing any broader flow matrix yet.
+ * @property name The wire name of the attribute (for example `email` or `displayName`).
+ * @property type Optional input type the server declared for the attribute (for example `text` or
+ * `password`).
+ * @property required Whether the server marked the attribute as required.
  */
-enum class NativeAuthV2FlowScenario {
-    RESET_PASSWORD,
-    SIGN_IN,
-    SIGN_UP
+data class NativeAuthV2RequiredAttribute(
+    val name: String,
+    val type: String?,
+    val required: Boolean?
+) : ILoggable, Serializable {
+
+    override fun toUnsanitizedString(): String =
+        "NativeAuthV2RequiredAttribute(name=$name, type=$type, required=$required)"
+
+    override fun toString(): String = toUnsanitizedString()
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
