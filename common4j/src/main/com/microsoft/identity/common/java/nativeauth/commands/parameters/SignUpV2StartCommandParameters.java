@@ -22,38 +22,54 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.commands.parameters;
 
-import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Parameters for a V2 submit-code step.
- * Carries the OTP code and the opaque continuation state from the preceding challenge step.
- * Extends {@link BaseSignInTokenCommandParameters}.
+ * Parameters for the V2 sign-up start operation.
+ * Carries the username that initiates the flow and, optionally, the password and custom user
+ * attributes to submit upfront as soon as the server requests them. The password is never retained
+ * in continuation or public state; the controller clears the buffer once the request has been
+ * issued. Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings("EI_EXPOSE_REP2")   //Suppresses spotbugs warning on the builder class
 @SuperBuilder(toBuilder = true)
-public class NativeAuthV2SubmitCodeCommandParameters extends BaseSignInTokenCommandParameters {
-
+public class SignUpV2StartCommandParameters extends BaseSignInTokenCommandParameters {
     /**
-     * The one-time password entered by the user.
+     * The username of the account being created.
      */
     @NonNull
-    public final String code;
+    public final String username;
 
     /**
-     * The opaque continuation state from the preceding challenge response.
+     * The password to submit upfront when the server requests it, or {@code null} when the app
+     * defers the password to the password-required state.
      */
-    @NonNull
-    public final NativeAuthV2ContinuationState continuationState;
+    @Nullable
+    public final char[] password;
+
+    /**
+     * The custom user attributes to submit upfront, keyed by attribute name, or {@code null} when
+     * the app supplies no additional attributes.
+     */
+    @Nullable
+    public final Map<String, String> attributes;
 
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "NativeAuthV2SubmitCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "SignUpV2StartCommandParameters(username=" + username + ", authority=" + authority
+                + ", challengeTypes=" + challengeType + ", hasPassword=" + (password != null)
+                + ", attributeNames=" + (attributes != null ? attributes.keySet() : "[]") + ")";
     }
 
     @Override
@@ -64,6 +80,8 @@ public class NativeAuthV2SubmitCodeCommandParameters extends BaseSignInTokenComm
     @NonNull
     @Override
     public String toString() {
-        return toUnsanitizedString();
+        return "SignUpV2StartCommandParameters(authority=" + authority + ", challengeTypes="
+                + challengeType + ", hasPassword=" + (password != null)
+                + ", attributeNames=" + (attributes != null ? attributes.keySet() : "[]") + ")";
     }
 }

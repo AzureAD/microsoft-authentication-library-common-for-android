@@ -30,22 +30,32 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeA
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitMFAChallengeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterSignUpCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitAttributesCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignInV2StartCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.SignUpV2StartCommandParameters
 import com.microsoft.identity.common.java.nativeauth.controllers.results.INativeAuthCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2CommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2FlowCompletionCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectMFAMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterSignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInSubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitAttributesCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitCodeCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitMFAChallengeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitNewPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SubmitPasswordCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.SignUpCommandResult
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.ApiErrorResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
@@ -84,15 +94,27 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
         private const val UNEXPECTED_RESULT = "unexpected_api_result"
 
         /**
-         * Returned when the server does not offer the password first factor. This scoped V2 API
-         * only supports password as the first factor; an email one-time code first factor is
-         * deliberately not treated as a fallback.
+         * Returned when sign-in offers neither email nor password as the first factor.
          */
         private const val UNSUPPORTED_FIRST_FACTOR = "unsupported_first_factor"
         private const val UNSUPPORTED_CHALLENGE_METHOD = "unsupported_challenge_method"
 
         /** Normalized method type identifying the password authentication method. */
         private const val METHOD_TYPE_PASSWORD = "password"
+
+        /** Reserved sign-up attribute name for the account's email (the username). */
+        private const val ATTRIBUTE_NAME_EMAIL = "email"
+
+        /** Reserved sign-up attribute name for the account's password. */
+        private const val ATTRIBUTE_NAME_PASSWORD = "password"
+
+        private const val INVALID_ATTRIBUTES_ERROR = "invalid_attributes"
+
+        /**
+         * Returned when, during sign-up, the server re-requests an attribute that was already
+         * submitted (including the always-upfront `email`) and therefore cannot be collected again.
+         */
+        private const val ATTRIBUTE_ALREADY_SUBMITTED_ERROR = "attribute_already_submitted"
         private const val METHOD_TYPE_EMAIL = "email"
     }
 
@@ -215,28 +237,36 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     // -----------------------------------------------------------------------------------------
 
     /**
-     * Submits the one-time code. Returns [NativeAuthV2CommandResult.NewPasswordRequired] on
-     * success or [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state) on a bad
-     * code.
+     * Submits the one-time code.
      *
-     * A [NativeAuthV2InteractionApiResult.ReadyToComplete] here is rejected as an
-     * [INativeAuthCommandResult.APIError]: the reset cannot have completed before a new password
-     * was submitted.
+     * For SSPR the server accepts the code and requests a new password, returning
+     * [NativeAuthV2CommandResult.NewPasswordRequired]; an [NativeAuthV2InteractionApiResult.InvalidCode]
+     * becomes [NativeAuthV2CommandResult.IncorrectCode] (carrying the input state).
+     *
+     * Outcomes that are specific to another flow are rejected instead of expanding this
+     * operation-specific result contract.
      */
-    fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult {
+    @Deprecated(
+        message = "Use submitResetPasswordCode for explicit flow naming.",
+        replaceWith = ReplaceWith("submitResetPasswordCode(parameters)")
+    )
+    fun submitCode(parameters: NativeAuthV2SubmitCodeCommandParameters): NativeAuthV2SubmitCodeCommandResult =
+        submitResetPasswordCode(parameters)
+
+    /**
+     * Submits the one-time code for the reset-password flow.
+     */
+    fun submitResetPasswordCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2ResetPasswordSubmitCodeCommandResult {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = parameters.getCorrelationId(),
-            methodName = "$TAG.submitCode"
+            methodName = "$TAG.submitResetPasswordCode"
         )
 
         try {
-            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
-
-            val verifyResult = oAuth2Strategy.performVerify(
-                state = parameters.continuationState,
-                otp = parameters.code
-            )
+            val (_, verifyResult) = performSubmitCodeVerification(parameters)
 
             return when (verifyResult) {
                 is NativeAuthV2InteractionApiResult.UpdateRequired -> NativeAuthV2CommandResult.NewPasswordRequired(
@@ -257,9 +287,118 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> mapInteractionError(verifyResult)
             }
         } catch (e: Exception) {
-            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitCode", e)
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitResetPasswordCode", e)
             throw e
         }
+    }
+
+    /**
+     * Submits a first-factor one-time code for sign-in while keeping sign-in-only outcomes out of
+     * the reset-password and sign-up submit-code result contracts.
+     */
+    fun submitSignInCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2SignInSubmitCodeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.submitSignInCode"
+        )
+
+        try {
+            val (oAuth2Strategy, verifyResult) = performSubmitCodeVerification(parameters)
+
+            return when (verifyResult) {
+                is NativeAuthV2InteractionApiResult.ReadyToComplete -> completeSignIn(
+                    oAuth2Strategy = oAuth2Strategy,
+                    parametersBuilder = parameters.toBuilder(),
+                    scopes = verifyResult.continuationState.scopesForTokenRequest(),
+                    claimsRequestJson = verifyResult.continuationState.claimsRequestJsonForTokenRequest(),
+                    state = verifyResult.continuationState
+                )
+                is NativeAuthV2InteractionApiResult.MFARequired -> NativeAuthV2CommandResult.MFARequired(
+                    correlationId = verifyResult.correlationId,
+                    continuationState = verifyResult.continuationState,
+                    authMethods = verifyResult.methods
+                )
+                is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
+                    correlationId = verifyResult.correlationId,
+                    error = verifyResult.error,
+                    errorDescription = verifyResult.errorDescription,
+                    subError = verifyResult.subError,
+                    errorCodes = verifyResult.errorCodes
+                )
+                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                    correlationId = verifyResult.correlationId,
+                    redirectReason = verifyResult.redirectReason
+                )
+                else -> mapInteractionError(verifyResult)
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitSignInCode", e)
+            throw e
+        }
+    }
+
+    /**
+     * Submits the one-time code for sign-up while keeping sign-up-only continuation states out of
+     * the reset-password submit-code result contract.
+     */
+    fun submitSignUpCode(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): NativeAuthV2SignUpSubmitCodeCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.submitSignUpCode"
+        )
+
+        try {
+            val (oAuth2Strategy, verifyResult) = performSubmitCodeVerification(parameters)
+
+            return when (verifyResult) {
+                is NativeAuthV2InteractionApiResult.AttributesRequired -> {
+                    val signUpResult = handleSignUpAttributesRequired(
+                        oAuth2Strategy = oAuth2Strategy,
+                        attributesRequired = verifyResult,
+                        upfront = null
+                    )
+                    signUpResult as? NativeAuthV2SignUpSubmitCodeCommandResult
+                        ?: unexpectedSignUpApiError(signUpResult, verifyResult.correlationId)
+                }
+                is NativeAuthV2InteractionApiResult.ReadyToComplete ->
+                    NativeAuthV2CommandResult.SignInAfterSignUpRequired(
+                        correlationId = verifyResult.correlationId,
+                        continuationState = verifyResult.continuationState
+                    )
+                is NativeAuthV2InteractionApiResult.InvalidCode -> NativeAuthV2CommandResult.IncorrectCode(
+                    correlationId = verifyResult.correlationId,
+                    error = verifyResult.error,
+                    errorDescription = verifyResult.errorDescription,
+                    subError = verifyResult.subError,
+                    errorCodes = verifyResult.errorCodes
+                )
+                is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                    correlationId = verifyResult.correlationId,
+                    redirectReason = verifyResult.redirectReason
+                )
+                else -> mapInteractionError(verifyResult)
+            }
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitSignUpCode", e)
+            throw e
+        }
+    }
+
+    private fun performSubmitCodeVerification(
+        parameters: NativeAuthV2SubmitCodeCommandParameters
+    ): Pair<NativeAuthV2OAuth2Strategy, NativeAuthV2InteractionApiResult> {
+        val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
+        val verifyResult = oAuth2Strategy.performVerify(
+            state = parameters.continuationState,
+            otp = parameters.code
+        )
+        return oAuth2Strategy to verifyResult
     }
 
     // -----------------------------------------------------------------------------------------
@@ -453,16 +592,15 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
     // -----------------------------------------------------------------------------------------
 
     /**
-     * Starts the V2 sign-in flow: authorize-challenge start → sign-in entry → password-method
+     * Starts the V2 sign-in flow: authorize-challenge start → sign-in entry → first-factor
      * challenge → optional password verification.
      *
-     * This scoped API always drives the password first factor. When the server does not offer a
-     * password method the flow fails deterministically rather than falling back to an email
-     * one-time code, which is out of scope for this increment.
+     * With an entry-supplied password, password is preferred. Without one, email one-time code is
+     * preferred, with a deferred password state retained as a fallback for password-only accounts.
      *
-     * With a non-empty entry-supplied password the flow verifies it immediately and returns
-     * [NativeAuthV2CommandResult.Complete] or [NativeAuthV2CommandResult.MFARequired]; without one
-     * it returns [NativeAuthV2CommandResult.PasswordRequired] and waits for [submitPassword].
+     * The selected challenge returns [NativeAuthV2CommandResult.CodeRequired] for email or
+     * [NativeAuthV2CommandResult.PasswordRequired] for a deferred password. A non-empty password
+     * is verified immediately and may complete or transition to MFA.
      */
     fun signInStart(parameters: SignInV2StartCommandParameters): NativeAuthV2SignInStartCommandResult {
         LogSession.logMethodCall(
@@ -529,36 +667,53 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 else -> return mapInteractionError(startResult)
             }
 
-            val passwordMethod = firstFactorChallenge.methods
-                .firstOrNull { it.type == METHOD_TYPE_PASSWORD }
+            val entryPassword = parameters.password
+            val preferredMethodType =
+                if (entryPassword == null || entryPassword.isEmpty()) METHOD_TYPE_EMAIL
+                else METHOD_TYPE_PASSWORD
+            val fallbackMethodType =
+                if (preferredMethodType == METHOD_TYPE_EMAIL) METHOD_TYPE_PASSWORD
+                else METHOD_TYPE_EMAIL
+            val firstFactorMethod = firstFactorChallenge.methods
+                .firstOrNull { it.type == preferredMethodType }
+                ?: firstFactorChallenge.methods.firstOrNull { it.type == fallbackMethodType }
                 ?: run {
-                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer the password first factor.")
+                    Logger.warn(TAG, firstFactorChallenge.correlationId, "Server did not offer a supported sign-in first factor.")
                     return INativeAuthCommandResult.APIError(
                         error = UNSUPPORTED_FIRST_FACTOR,
-                        errorDescription = "Native Auth V2 sign-in requires the password first " +
-                                "factor, which the server did not offer for this account.",
+                        errorDescription = "Native Auth V2 sign-in requires an email or password " +
+                                "authentication method, which the server did not offer.",
                         correlationId = firstFactorChallenge.correlationId
                     )
                 }
 
-            val passwordChallengeResult = oAuth2Strategy.performMethodChallenge(
+            val firstFactorChallengeResult = oAuth2Strategy.performMethodChallenge(
                 state = firstFactorChallenge.continuationState,
-                methodId = passwordMethod.id
+                methodId = firstFactorMethod.id
             )
 
-            val passwordState = when (passwordChallengeResult) {
-                is NativeAuthV2InteractionApiResult.PasswordRequired -> passwordChallengeResult.continuationState
-                is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
-                    correlationId = passwordChallengeResult.correlationId,
-                    redirectReason = passwordChallengeResult.redirectReason
+            if (firstFactorChallengeResult is NativeAuthV2InteractionApiResult.CodeRequired) {
+                return NativeAuthV2CommandResult.CodeRequired(
+                    correlationId = firstFactorChallengeResult.correlationId,
+                    continuationState = firstFactorChallengeResult.continuationState,
+                    codeLength = firstFactorChallengeResult.codeLength,
+                    challengeTargetLabel = firstFactorChallengeResult.challengeTargetLabel,
+                    challengeChannel = firstFactorChallengeResult.challengeChannel
                 )
-                else -> return mapInteractionError(passwordChallengeResult)
             }
 
-            val entryPassword = parameters.password
+            val passwordState = when (firstFactorChallengeResult) {
+                is NativeAuthV2InteractionApiResult.PasswordRequired -> firstFactorChallengeResult.continuationState
+                is NativeAuthV2InteractionApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
+                    correlationId = firstFactorChallengeResult.correlationId,
+                    redirectReason = firstFactorChallengeResult.redirectReason
+                )
+                else -> return mapInteractionError(firstFactorChallengeResult)
+            }
+
             if (entryPassword == null || entryPassword.isEmpty()) {
                 return NativeAuthV2CommandResult.PasswordRequired(
-                    correlationId = passwordChallengeResult.correlationId,
+                    correlationId = firstFactorChallengeResult.correlationId,
                     continuationState = passwordState
                 )
             }
@@ -599,7 +754,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             throw e
         } finally {
             // The interactor already clears the buffer it sent; this also covers the paths that
-            // never reached it (unsupported first factor, redirect, protocol error).
+            // never reached it (email first factor, redirect, protocol error).
             StringUtil.overwriteWithNull(parameters.password)
         }
     }
@@ -892,6 +1047,424 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
             authenticationResult = complete.authenticationResult,
             continuationToken = null,
             expiresIn = null
+        )
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Sign-up
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * Starts the V2 sign-up flow: authorize-challenge start (sign-up scenario) → sign-up entry →
+     * first collect-attributes step.
+     *
+     * The sign-up entry posts only the continuation token; the username, an optional password, and
+     * any app-supplied attributes are submitted upfront on the first collect-attributes step via
+     * [handleSignUpInteractionResult] (see [upfrontAttributeValues]). Depending on what the server
+     * requests next this returns [NativeAuthV2CommandResult.CodeRequired] (email one-time code
+     * verification), [NativeAuthV2CommandResult.PasswordRequired],
+     * [NativeAuthV2CommandResult.AttributesRequired], [NativeAuthV2CommandResult.UserAlreadyExists],
+     * or [NativeAuthV2CommandResult.AttributesInvalid], or an
+     * [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
+     */
+    fun signUpStart(parameters: SignUpV2StartCommandParameters): NativeAuthV2SignUpStartCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.signUpStart"
+        )
+
+        try {
+            val correlationId = parameters.getCorrelationId()
+            val validationError = validateSignUpAttributeKeys(
+                attributes = parameters.attributes,
+                correlationId = correlationId
+            )
+            if (validationError != null) {
+                return validationError
+            }
+            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
+
+            val authChallengeResult = oAuth2Strategy.performAuthorizeChallengeStart(
+                correlationId = correlationId,
+                entryRelation = NativeAuthV2LinkRelation.SIGN_UP.value,
+                scenario = NativeAuthV2FlowScenario.SIGN_UP,
+                scopes = parameters.scopes ?: emptyList(),
+                claimsRequestJson = parameters.claimsRequestJson
+            )
+
+            val initialState = when (authChallengeResult) {
+                is AuthorizeChallengeApiResult.ContinuationRequired -> authChallengeResult.continuationState
+                is AuthorizeChallengeApiResult.Redirect -> return INativeAuthCommandResult.Redirect(
+                    correlationId = authChallengeResult.correlationId,
+                    redirectReason = authChallengeResult.redirectReason
+                )
+                is AuthorizeChallengeApiResult.AuthorizationCode -> {
+                    Logger.warn(TAG, authChallengeResult.correlationId, "Unexpected AuthorizationCode at authorize-challenge start.")
+                    return INativeAuthCommandResult.APIError(
+                        error = UNEXPECTED_RESULT,
+                        errorDescription = "AuthorizationCode returned unexpectedly at authorize-challenge start.",
+                        correlationId = authChallengeResult.correlationId
+                    )
+                }
+                is AuthorizeChallengeApiResult.UnknownError -> {
+                    Logger.warnWithObject(TAG, authChallengeResult.correlationId, "Unexpected result at authorize-challenge start: ", authChallengeResult)
+                    return INativeAuthCommandResult.APIError(
+                        error = authChallengeResult.error,
+                        errorDescription = authChallengeResult.errorDescription,
+                        errorCodes = authChallengeResult.errorCodes,
+                        correlationId = authChallengeResult.correlationId
+                    )
+                }
+            }
+
+            val startResult = oAuth2Strategy.performSignUpStart(state = initialState)
+
+            val result = handleSignUpInteractionResult(
+                oAuth2Strategy = oAuth2Strategy,
+                result = startResult,
+                retryState = null,
+                upfront = parameters
+            )
+            return result as? NativeAuthV2SignUpStartCommandResult
+                ?: unexpectedSignUpApiError(result, correlationId)
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in signUpStart", e)
+            throw e
+        } finally {
+            // Also clear here in case flow setup fails before the interactor takes ownership.
+            StringUtil.overwriteWithNull(parameters.password)
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // submitAttributes
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * Submits app-collected attributes from the deferred attributes-required state and routes the
+     * server's response through [handleSignUpInteractionResult]. Returns a further
+     * [NativeAuthV2CommandResult.AttributesRequired] / [NativeAuthV2CommandResult.PasswordRequired]
+     * when more information is needed, [NativeAuthV2CommandResult.SignInAfterSignUpRequired] once
+     * the sign-up completes server-side, [NativeAuthV2CommandResult.AttributesInvalid] when a value
+     * is rejected (retryable through the same state), [NativeAuthV2CommandResult.UserAlreadyExists],
+     * or an [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
+     */
+    fun submitAttributes(parameters: NativeAuthV2SubmitAttributesCommandParameters): NativeAuthV2SubmitAttributesCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.submitAttributes"
+        )
+
+        try {
+            val validationError = validateSignUpAttributeKeys(
+                attributes = parameters.attributes,
+                correlationId = parameters.getCorrelationId()
+            )
+            if (validationError != null) {
+                return validationError
+            }
+            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
+            val result = performSignUpSubmitAttributes(
+                oAuth2Strategy = oAuth2Strategy,
+                state = parameters.continuationState,
+                attributes = parameters.attributes,
+                password = parameters.password,
+                upfront = null
+            )
+            return result as? NativeAuthV2SubmitAttributesCommandResult
+                ?: unexpectedSignUpApiError(result, parameters.getCorrelationId())
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in submitAttributes", e)
+            throw e
+        } finally {
+            // Also clear here in case flow setup fails before the interactor takes ownership.
+            StringUtil.overwriteWithNull(parameters.password)
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // signInAfterSignUp
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * Explicit app-invoked sign-in step following a completed V2 sign-up flow. This is the only
+     * entry point that triggers the token exchange and cache persistence for sign-up; the sign-up
+     * steps above never invoke it automatically — they return
+     * [NativeAuthV2CommandResult.SignInAfterSignUpRequired] and wait for this command.
+     *
+     * Returns [NativeAuthV2CommandResult.Complete] on success, or an
+     * [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] on failure.
+     */
+    fun signInAfterSignUp(parameters: NativeAuthV2SignInAfterSignUpCommandParameters): NativeAuthV2SignInAfterSignUpCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = parameters.getCorrelationId(),
+            methodName = "$TAG.signInAfterSignUp"
+        )
+
+        try {
+            val oAuth2Strategy = createNativeAuthV2Strategy(parameters)
+            return completeFlowSignUp(
+                oAuth2Strategy = oAuth2Strategy,
+                parameters = parameters,
+                state = parameters.continuationState
+            )
+        } catch (e: Exception) {
+            Logger.error(TAG, parameters.getCorrelationId(), "Exception in signInAfterSignUp", e)
+            throw e
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Sign-up interaction handling (shared by signUpStart and submitAttributes)
+    // -----------------------------------------------------------------------------------------
+
+    /**
+     * Maps a sign-up [NativeAuthV2InteractionApiResult] to a command result. [retryState], when
+     * non-null, is the continuation state that was just submitted; it is attached to
+     * [NativeAuthV2CommandResult.AttributesInvalid] so the app can retry submit-attributes against
+     * the same state with corrected values (the server's validation-error body carries no fresh
+     * continuation token). [upfront], when non-null, drives the upfront attribute submission on the
+     * first collect-attributes step (see [handleSignUpAttributesRequired]).
+     *
+     * Returns [INativeAuthCommandResult]; callers narrow it to their specific command-result type.
+     */
+    private fun handleSignUpInteractionResult(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        result: NativeAuthV2InteractionApiResult,
+        retryState: NativeAuthV2ContinuationState?,
+        upfront: SignUpV2StartCommandParameters?
+    ): INativeAuthCommandResult {
+        return when (result) {
+            is NativeAuthV2InteractionApiResult.AttributesRequired -> handleSignUpAttributesRequired(
+                oAuth2Strategy = oAuth2Strategy,
+                attributesRequired = result,
+                upfront = upfront
+            )
+            is NativeAuthV2InteractionApiResult.CodeRequired ->
+                if (result.challengeChannel.equals(METHOD_TYPE_EMAIL, ignoreCase = true)) {
+                    NativeAuthV2CommandResult.CodeRequired(
+                        correlationId = result.correlationId,
+                        continuationState = result.continuationState,
+                        codeLength = result.codeLength,
+                        challengeTargetLabel = result.challengeTargetLabel,
+                        challengeChannel = result.challengeChannel
+                    )
+                } else {
+                    INativeAuthCommandResult.APIError(
+                        error = UNSUPPORTED_CHALLENGE_METHOD,
+                        errorDescription = "Sign up currently supports email one-time-code verification only.",
+                        correlationId = result.correlationId
+                    )
+                }
+            is NativeAuthV2InteractionApiResult.ReadyToComplete -> NativeAuthV2CommandResult.SignInAfterSignUpRequired(
+                correlationId = result.correlationId,
+                continuationState = result.continuationState
+            )
+            is NativeAuthV2InteractionApiResult.UserAlreadyExists -> NativeAuthV2CommandResult.UserAlreadyExists(
+                correlationId = result.correlationId,
+                error = result.error,
+                errorDescription = result.errorDescription,
+                errorCodes = result.errorCodes
+            )
+            is NativeAuthV2InteractionApiResult.InvalidAttributes -> if (retryState != null) {
+                NativeAuthV2CommandResult.AttributesInvalid(
+                    correlationId = result.correlationId,
+                    continuationState = retryState,
+                    invalidAttributes = result.invalidAttributes,
+                    error = result.error,
+                    errorDescription = result.errorDescription,
+                    errorCodes = result.errorCodes
+                )
+            } else {
+                mapInteractionError(result)
+            }
+            is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
+                correlationId = result.correlationId,
+                redirectReason = result.redirectReason
+            )
+            else -> mapInteractionError(result)
+        }
+    }
+
+    /**
+     * Handles a sign-up `collectAttributes` step.
+     *
+     * On the first step ([upfront] is non-null, right after sign-up start) every value supplied
+     * upfront — `email` (the username), `password` if provided, and any app attributes — is
+     * submitted in a single request, regardless of which attributes the server asked for, and the
+     * submitted names are recorded on the continuation state by the interactor.
+     *
+     * On any later step ([upfront] is null) the server is requesting more information. A `password`
+     * not yet submitted is surfaced as [NativeAuthV2CommandResult.PasswordRequired] so the app can
+     * collect it; any ordinary attribute is surfaced as
+     * [NativeAuthV2CommandResult.AttributesRequired], including one previously submitted with an
+     * invalid value. If the server re-requests the already-submitted SDK-owned `email` or
+     * `password` credential, that is treated as an [INativeAuthCommandResult.APIError].
+     */
+    private fun handleSignUpAttributesRequired(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        attributesRequired: NativeAuthV2InteractionApiResult.AttributesRequired,
+        upfront: SignUpV2StartCommandParameters?
+    ): INativeAuthCommandResult {
+        val nextState = attributesRequired.continuationState
+
+        if (upfront != null) {
+            return performSignUpSubmitAttributes(
+                oAuth2Strategy = oAuth2Strategy,
+                state = nextState,
+                attributes = upfrontAttributeValues(upfront),
+                password = upfront.password,
+                upfront = null
+            )
+        }
+
+        val alreadySubmittedCredential = attributesRequired.requiredAttributes.firstOrNull {
+            isSdkOwnedSignUpAttribute(it.name) && nextState.hasSubmittedAttribute(it.name)
+        }
+        if (alreadySubmittedCredential != null) {
+            Logger.warn(TAG, attributesRequired.correlationId, "Server re-requested an already-submitted sign-up credential.")
+            return INativeAuthCommandResult.APIError(
+                error = ATTRIBUTE_ALREADY_SUBMITTED_ERROR,
+                errorDescription = "The server requested credential '${alreadySubmittedCredential.name}' that was already submitted or cannot be collected.",
+                correlationId = attributesRequired.correlationId
+            )
+        }
+
+        val requestsPassword = attributesRequired.requiredAttributes.any {
+            it.name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true)
+        }
+        if (requestsPassword) {
+            return NativeAuthV2CommandResult.PasswordRequired(
+                correlationId = attributesRequired.correlationId,
+                continuationState = nextState
+            )
+        }
+
+        return NativeAuthV2CommandResult.AttributesRequired(
+            correlationId = attributesRequired.correlationId,
+            continuationState = nextState,
+            requiredAttributes = attributesRequired.requiredAttributes
+        )
+    }
+
+    /**
+     * Posts [attributes] to the sign-up submit-attributes href carried by [state] and routes the
+     * response through [handleSignUpInteractionResult]. The retry state records any SDK-owned
+     * credentials submitted by this request so a later server re-request cannot restart their
+     * collection.
+     */
+    private fun performSignUpSubmitAttributes(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>,
+        password: CharArray? = null,
+        upfront: SignUpV2StartCommandParameters?
+    ): INativeAuthCommandResult {
+        val submittedAttributeNames =
+            if (password == null || password.isEmpty()) {
+                attributes.keys
+            } else {
+                attributes.keys + ATTRIBUTE_NAME_PASSWORD
+            }
+        val retryState = state.withAdditionalSubmittedAttributes(submittedAttributeNames)
+        val result = oAuth2Strategy.performSubmitAttributes(
+            state = state,
+            attributes = attributes,
+            password = password
+        )
+        return handleSignUpInteractionResult(
+            oAuth2Strategy = oAuth2Strategy,
+            result = result,
+            retryState = retryState,
+            upfront = upfront
+        )
+    }
+
+    /**
+     * Builds the non-password attribute map submitted upfront: `email` (the username) plus any app
+     * attributes supplied to sign-up. The SDK-owned `email` and `password` keys cannot be
+     * overridden by app-supplied attributes; [signUpStart] rejects them before this map is built.
+     */
+    private fun upfrontAttributeValues(
+        parameters: SignUpV2StartCommandParameters
+    ): Map<String, String> = linkedMapOf(
+        ATTRIBUTE_NAME_EMAIL to parameters.username
+    ).apply {
+        parameters.attributes?.let(::putAll)
+    }
+
+    private fun validateSignUpAttributeKeys(
+        attributes: Map<String, String>?,
+        correlationId: String
+    ): SignUpCommandResult.InvalidAttributes? {
+        val reservedAttributes = attributes?.keys
+            ?.filter(::isSdkOwnedSignUpAttribute)
+            .orEmpty()
+        if (reservedAttributes.isEmpty()) {
+            return null
+        }
+
+        return SignUpCommandResult.InvalidAttributes(
+            error = INVALID_ATTRIBUTES_ERROR,
+            errorDescription = "The attribute names 'email' and 'password' are reserved by the SDK. " +
+                "Invalid attributes: ${reservedAttributes.joinToString()}.",
+            invalidAttributes = reservedAttributes,
+            correlationId = correlationId
+        )
+    }
+
+    private fun isSdkOwnedSignUpAttribute(name: String): Boolean =
+        name.equals(ATTRIBUTE_NAME_EMAIL, ignoreCase = true) ||
+            name.equals(ATTRIBUTE_NAME_PASSWORD, ignoreCase = true)
+
+    /**
+     * Completes the V2 sign-up flow. Shares [exchangeCodeAndSaveTokens] with SSPR and sign-in, so
+     * scopes, claims, correlation ID, token exchange, and cache persistence behave identically
+     * across all flows.
+     */
+    private fun completeFlowSignUp(
+        oAuth2Strategy: NativeAuthV2OAuth2Strategy,
+        parameters: NativeAuthV2SignInAfterSignUpCommandParameters,
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2SignInAfterSignUpCommandResult {
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = "$TAG.completeFlowSignUp"
+        )
+
+        val requestedScopes = parameters.scopes?.takeUnless { it.isEmpty() }
+            ?: state.scopesForTokenRequest()
+        val scopes = addDefaultScopes(requestedScopes)
+        val claimsRequestJson = parameters.claimsRequestJson?.takeUnless { it.isBlank() }
+            ?: state.claimsRequestJsonForTokenRequest()
+        return exchangeCodeAndSaveTokens(
+            oAuth2Strategy = oAuth2Strategy,
+            tokenCommandParameters = parameters.toBuilder()
+                .scopes(scopes)
+                .claimsRequestJson(claimsRequestJson)
+                .build(),
+            state = state
+        )
+    }
+
+    /**
+     * Logs and wraps a sign-up outcome that does not conform to the caller's expected command
+     * result type — a defensive guard for a misbehaving server; the controlled flows above never
+     * produce such an outcome.
+     */
+    private fun unexpectedSignUpApiError(
+        result: INativeAuthCommandResult,
+        correlationId: String
+    ): INativeAuthCommandResult.APIError {
+        Logger.warn(TAG, correlationId, "Unexpected sign-up result: $result")
+        return INativeAuthCommandResult.APIError(
+            error = UNEXPECTED_RESULT,
+            errorDescription = "Unexpected sign-up result.",
+            correlationId = correlationId
         )
     }
 
