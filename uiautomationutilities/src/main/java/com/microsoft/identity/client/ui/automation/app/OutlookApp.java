@@ -79,6 +79,9 @@ public class OutlookApp extends App implements IFirstPartyApp {
      */
     private final static int CONFIRM_ACCOUNT_MAX_ATTEMPTS = 3;
     private static final String ADD_ANOTHER_ACCOUNT_TEXT = "Add another account";
+    private static final String SETUP_NEW_SIGN_IN_TEXT = "Setup new sign-in";
+    private static final String SNACKBAR_ACTION_RESOURCE_ID =
+            OUTLOOK_PACKAGE_NAME + ":id/snackbar_action";
     private static final String M365_ACCOUNT_TYPE_RESOURCE_ID_REGEX =
             "com\\.microsoft\\.office\\.outlook:id/btn_add_account_(m365|o365)_rest";
     private static final long ACCOUNT_TYPE_POLL_INTERVAL_MILLISECONDS =
@@ -131,8 +134,43 @@ public class OutlookApp extends App implements IFirstPartyApp {
                 "Add another account screen doesn't appear in Outlook.", addAnotherAccountScreen.exists()
         );
 
+        dismissSetupNewSignInSnackbarIfPresent();
+
         // click may be later
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
+    }
+
+    /**
+     * Dismisses Outlook's post-registration MFA snackbar, if present.
+     */
+    private void dismissSetupNewSignInSnackbarIfPresent() {
+        final UiObject setupNewSignInSnackbar = UiAutomatorUtils.obtainUiObjectWithExactText(
+                SETUP_NEW_SIGN_IN_TEXT,
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+
+        if (!setupNewSignInSnackbar.exists()) {
+            return;
+        }
+
+        Logger.i(TAG, "Dismissing the Outlook setup new sign-in snackbar.");
+        final UiObject actionButton = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                SNACKBAR_ACTION_RESOURCE_ID,
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT
+        );
+
+        if (!actionButton.exists()) {
+            Logger.i(TAG, "Outlook setup new sign-in snackbar disappeared before it could be dismissed.");
+            return;
+        }
+
+        try {
+            actionButton.click();
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                    .waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+        } catch (final UiObjectNotFoundException exception) {
+            Logger.i(TAG, "Outlook setup new sign-in snackbar disappeared before it could be dismissed.");
+        }
     }
 
     private void handleChooseAccountTypeIfPresent() {
