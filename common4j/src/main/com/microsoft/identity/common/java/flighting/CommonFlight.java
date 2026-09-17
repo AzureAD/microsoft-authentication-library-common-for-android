@@ -127,7 +127,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
@@ -275,16 +275,8 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
-    /**
-     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
-     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
-     * references first, then clones only the matching items — avoiding the cost of
-     * cloning the entire cache when only a subset is needed.
-     */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
-
     /**
      * Kill switch for strict redirect-URI matching in
      * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via

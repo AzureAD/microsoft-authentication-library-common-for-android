@@ -212,22 +212,32 @@ class EventCollectorTest {
     }
 
     @Test
-    fun addEventSafely_withNullCollector_doesNotThrow() {
+    fun telemetryHelperAddEvent_withNullCollector_doesNotThrow() {
         // Should be a no-op and not throw NullPointerException
-        TelemetryHelper.addEventSafely(null, EventTag.BrokerRequestReceived)
+        TelemetryHelper.addEvent(null, EventTag.BrokerRequestReceived)
     }
 
     @Test
-    fun addEventSafely_withNonNullCollector_addsEvent() {
+    fun telemetryHelperAddEvent_withNonNullCollector_addsEvent() {
         val collector = EventCollector(testCorrelationId)
 
-        TelemetryHelper.addEventSafely(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
+        TelemetryHelper.addEvent(collector, EventTag.BrokerTokenAcquired, statusCode = 1)
 
         val events = collector.toTestTelemetry().performanceRecord.executionFlow
         assertNotNull(events)
         assertEquals(1, events.size)
         assertEquals(EventTag.BrokerTokenAcquired, events[0].tag)
         assertEquals(1, events[0].statusCode)
+    }
+
+    @Test
+    fun correlationId_flowsToTelemetryPayload() {
+        // The constructor-supplied ID is what lands on the emitted payload. It is deliberately not
+        // publicly readable: callers that need the request's correlation ID take it from the
+        // command parameters, which hold the value the request actually runs under.
+        val collector = EventCollector(testCorrelationId)
+
+        assertEquals(testCorrelationId, collector.toTestTelemetry().correlationId)
     }
 
     /** Supplies the contract-required broker identity and outcome fields for tests. */

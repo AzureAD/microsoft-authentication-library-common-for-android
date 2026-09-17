@@ -29,10 +29,17 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.nativeauth.internal.controllers.v2.NativeAuthV2FlowController
 
 /**
- * Command class to call controllers to submit the user's otp code to the server in the V2 self
- * service password reset flow.
- * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
+ * Compatibility wrapper for reset-password submit-code consumers using the original generic name.
+ *
+ * TODO: Remove after MSAL and other consumers migrate to
+ * [NativeAuthV2ResetPasswordSubmitCodeCommand].
  */
+@Deprecated(
+    message = "Use NativeAuthV2ResetPasswordSubmitCodeCommand for explicit flow naming.",
+    replaceWith = ReplaceWith(
+        "NativeAuthV2ResetPasswordSubmitCodeCommand(parameters, controller, publicApiId)"
+    )
+)
 class NativeAuthV2SubmitCodeCommand(
     private val parameters: NativeAuthV2SubmitCodeCommandParameters,
     private val controller: NativeAuthV2FlowController,

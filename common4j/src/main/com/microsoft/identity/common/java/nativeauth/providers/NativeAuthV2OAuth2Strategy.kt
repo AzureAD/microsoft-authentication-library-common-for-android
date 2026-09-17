@@ -121,12 +121,69 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
-     * Performs a V2 Native Auth challenge request.
+     * Starts the V2 Native Auth sign-in flow by posting the username to the server-provided
+     * `signIn` href.
      */
-    fun performChallenge(
+    fun performSignInStart(
+        username: String,
         state: NativeAuthV2ContinuationState
     ): NativeAuthV2InteractionApiResult {
-        return nativeAuthV2Interactor.performChallenge(state = state)
+        return nativeAuthV2Interactor.performSignInStart(
+            username = username,
+            state = state
+        )
+    }
+
+    /**
+     * Starts the V2 Native Auth sign-up flow by posting the continuation token to the
+     * server-provided `signUp` href.
+     */
+    fun performSignUpStart(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performSignUpStart(state = state)
+    }
+
+    /**
+     * Submits [attributes] to the server-provided `submitAttributes` href during sign-up.
+     */
+    fun performSubmitAttributes(
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>,
+        password: CharArray? = null
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performSubmitAttributes(
+            state = state,
+            attributes = attributes,
+            password = password
+        )
+    }
+
+    /**
+     * Challenges the server-offered authentication method identified by [methodId].
+     */
+    fun performMethodChallenge(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performMethodChallenge(
+            state = state,
+            methodId = methodId
+        )
+    }
+
+    /**
+     * Submits a password to the server-provided password `verify` href. The buffer is cleared by
+     * the interactor on every exit path.
+     */
+    fun performPasswordVerify(
+        state: NativeAuthV2ContinuationState,
+        password: CharArray
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performPasswordVerify(
+            state = state,
+            password = password
+        )
     }
 
     /**

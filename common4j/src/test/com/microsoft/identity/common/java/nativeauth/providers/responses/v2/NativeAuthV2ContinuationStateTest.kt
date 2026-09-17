@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.providers.v2.NativeAuthV2FlowScenario
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -37,6 +38,31 @@ import java.io.ObjectOutputStream
 import java.io.Serializable
 
 class NativeAuthV2ContinuationStateTest {
+
+    @Test
+    fun testFixtureCreatesRepresentativeContinuationState() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            correlationId = CORRELATION_ID,
+            scopes = SCOPES
+        )
+
+        assertEquals(CORRELATION_ID, state.correlationId)
+        assertEquals(SCOPES, state.scopesForTokenRequest())
+        assertEquals(NativeAuthV2LinkRelation.RESET_PASSWORD, state.entryRelation)
+        assertEquals(NativeAuthV2FlowScenario.RESET_PASSWORD, state.scenario)
+    }
+
+    @Test
+    fun testFixtureCreatesContinuationStateForRequestedFlow() {
+        val state = NativeAuthV2ContinuationStateTestFactory.create(
+            correlationId = CORRELATION_ID,
+            entryRelation = NativeAuthV2LinkRelation.SIGN_UP,
+            scenario = NativeAuthV2FlowScenario.SIGN_UP
+        )
+
+        assertEquals(NativeAuthV2LinkRelation.SIGN_UP, state.entryRelation)
+        assertEquals(NativeAuthV2FlowScenario.SIGN_UP, state.scenario)
+    }
 
     @Test
     fun javaSerializationRoundTrip_preservesStateAndRedactsStringRepresentations() {
@@ -64,6 +90,54 @@ class NativeAuthV2ContinuationStateTest {
         assertEquals(NativeAuthV2LinkRelation.RESET_PASSWORD, restored.entryRelation)
         assertEquals(REDACTED_STRING, restored.toString())
         assertEquals(REDACTED_STRING, restored.toUnsanitizedString())
+    }
+
+    @Test
+    fun javaSerializationRoundTrip_preservesSelectedMethodHref() {
+        val original = NativeAuthV2ContinuationState.fromAuthorizeChallengeResponse(
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "$CONTINUATION_TOKEN",
+                  "_embedded": {
+                    "methods": [
+                      {
+                        "id": "email",
+                        "_links": {
+                          "challenge": {
+                            "href": "/tenant/email-challenge"
+                          },
+                          "verify": {
+                            "href": "/tenant/email-verify"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+                """.trimIndent()
+            ),
+            continuationToken = CONTINUATION_TOKEN,
+            scopes = SCOPES,
+            claimsRequestJson = CLAIMS_REQUEST_JSON,
+            entryRelation = NativeAuthV2LinkRelation.SIGN_IN,
+            scenario = NativeAuthV2FlowScenario.SIGN_IN
+        )
+
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+        val selected = requireNotNull(restored.withSelectedMethod("email"))
+
+        assertEquals(
+            "/tenant/email-challenge",
+            selected.href(NativeAuthV2LinkRelation.CHALLENGE)
+        )
+        assertEquals("/tenant/email-verify", selected.href(NativeAuthV2LinkRelation.VERIFY))
     }
 
     @Test
@@ -125,7 +199,7 @@ class NativeAuthV2ContinuationStateTest {
 
         assertEquals(listOf("openid", "User.Read"), state.scopesForTokenRequest())
         assertEquals(RESET_PASSWORD_HREF, state.href(NativeAuthV2LinkRelation.RESET_PASSWORD))
-        assertNull(state.href(NativeAuthV2LinkRelation("self")))
+        assertEquals("/tenant/self", state.href(NativeAuthV2LinkRelation.SELF))
         assertNull(state.href(NativeAuthV2LinkRelation("unsupported")))
     }
 
@@ -289,6 +363,61 @@ class NativeAuthV2ContinuationStateTest {
         )
             }
         }
+    }
+
+    @Test
+    fun withAdditionalSubmittedAttributes_retainsOnlyCanonicalCredentialNames() {
+        val state = createState()
+
+        assertFalse(state.hasSubmittedAttribute("email"))
+
+        val updated = state.withAdditionalSubmittedAttributes(listOf("Email", "PASSWORD", "City"))
+
+        assertTrue(updated.hasSubmittedAttribute("email"))
+        assertTrue(updated.hasSubmittedAttribute("EMAIL"))
+        assertTrue(updated.hasSubmittedAttribute("password"))
+        assertFalse(updated.hasSubmittedAttribute("city"))
+        // Original state is left unchanged (copy-on-write).
+        assertFalse(state.hasSubmittedAttribute("email"))
+    }
+
+    @Test
+    fun javaSerializationRoundTrip_preservesSubmittedAttributes() {
+        val original = createState()
+            .withAdditionalSubmittedAttributes(listOf("Email", "PASSWORD", "City"))
+
+        val serialized = ByteArrayOutputStream().use { bytes ->
+            ObjectOutputStream(bytes).use { it.writeObject(original) }
+            bytes.toByteArray()
+        }
+        val restored = ObjectInputStream(ByteArrayInputStream(serialized)).use {
+            it.readObject() as NativeAuthV2ContinuationState
+        }
+
+        // A restored sign-up state remembers credentials, but not retryable ordinary attributes.
+        assertTrue(restored.hasSubmittedAttribute("email"))
+        assertTrue(restored.hasSubmittedAttribute("PASSWORD"))
+        assertFalse(restored.hasSubmittedAttribute("city"))
+    }
+
+    @Test
+    fun next_inheritsSubmittedAttributesFromPreviousState() {
+        val previous = createState().withAdditionalSubmittedAttributes(listOf("email"))
+
+        val next = NativeAuthV2ContinuationState.next(
+            previous = previous,
+            response = responseFrom(
+                """
+                {
+                  "continuation_token": "next-token",
+                  "sign_in": "$SIGN_IN_HREF"
+                }
+                """.trimIndent()
+            )
+        )
+
+        requireNotNull(next)
+        assertTrue(next.hasSubmittedAttribute("email"))
     }
 
     private fun createState(): NativeAuthV2ContinuationState {

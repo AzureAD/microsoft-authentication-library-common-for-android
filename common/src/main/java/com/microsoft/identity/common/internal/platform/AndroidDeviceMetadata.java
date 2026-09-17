@@ -110,6 +110,10 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
             final PackageManager packageManager = context.getPackageManager();
             final ApplicationInfo appInfo = packageManager.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             final Bundle metaDataBundle = appInfo.metaData;
+            // An app that declares no metadata at all has a null bundle; treat it as a mobile device.
+            if (metaDataBundle == null) {
+                return MOBILE_DEVICE;
+            }
             // If the deviceType property is not found, default it to mobile device
             final String deviceType = metaDataBundle.getString(DEVICE_TYPE, MOBILE_DEVICE);
             Logger.verbose(methodTag, "Setting the deviceType as " + deviceType);
