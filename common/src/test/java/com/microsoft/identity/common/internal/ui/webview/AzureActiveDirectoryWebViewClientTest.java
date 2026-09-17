@@ -2074,22 +2074,28 @@ public class AzureActiveDirectoryWebViewClientTest {
     /**
      * A flow started without a correlation id must still be joinable, so the thread local remains the
      * fallback rather than being dropped.
+     *
+     * Both fallback tests use a separate Robolectric instrumentation configuration because Native
+     * Auth's MockApiUtils replaces DiagnosticContext.INSTANCE with a mock in the default sandbox.
+     * Clearing the thread local cannot undo that replacement.
      */
     @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
         final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
-        com.microsoft.identity.common.logging.DiagnosticContext.getRequestContext().put(
+        DiagnosticContext.INSTANCE.getRequestContext().put(
                 DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
 
     @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
         final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
         final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
-        com.microsoft.identity.common.logging.DiagnosticContext.getRequestContext().put(
+        DiagnosticContext.INSTANCE.getRequestContext().put(
                 DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
         assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
