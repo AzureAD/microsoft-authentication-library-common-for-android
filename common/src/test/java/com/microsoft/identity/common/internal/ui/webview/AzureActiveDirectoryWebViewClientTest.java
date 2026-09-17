@@ -1952,7 +1952,65 @@ public class AzureActiveDirectoryWebViewClientTest {
                 assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_NON_BROKER_APP_ID);
     }
 
-    /** Only the app-details operation is a store listing; market://search is not. */
+        @Test
+        public void testIntentToInstallBroker_blocksDuplicateAppIds() throws URISyntaxException {
+                final String[] queries = {
+                                "id=com.azure.authenticator&id=com.example.unrelatedapp",
+                                "id=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&id=com.azure.authenticator"
+                };
+                for (final String query : queries) {
+                        for (final String scheme : new String[]{"https", "market"}) {
+                                final String listing = "https".equals(scheme) ? "play.google.com/store/apps/details" : "details";
+                                final String intentUrl = "intent://" + listing + "?" + query
+                                                + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                                                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                                assertIntentUrlIsNotLaunched(intentUrl);
+                        }
+                }
+        }
+
+        @Test
+        public void testIntentToInstallBroker_blocksEncodedDuplicateAppIds() throws URISyntaxException {
+                final String[] queries = {
+                                "id=com.azure.authenticator&%69d=com.example.unrelatedapp",
+                                "%69d=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&i%64=com.example.unrelatedapp",
+                                "i%64=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&%69%64=com.example.unrelatedapp",
+                                "%69%64=com.example.unrelatedapp&id=com.azure.authenticator"
+                };
+                for (final String query : queries) {
+                        for (final String scheme : new String[]{"https", "market"}) {
+                                final String listing = "https".equals(scheme) ? "play.google.com/store/apps/details" : "details";
+                                final String intentUrl = "intent://" + listing + "?" + query
+                                                + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                                                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                                assertIntentUrlIsNotLaunched(intentUrl);
+                        }
+                }
+        }
+
+        @Test
+        public void testIntentToInstallBroker_preservesEncodedAttribution() throws URISyntaxException {
+                final String intentUrl = "intent://play.google.com/store/apps/details?id=com.azure.authenticator"
+                                + "&referrer=utm_source%3Dexample%26id%3Dcampaign&pcampaignid=example"
+                                + "#Intent;scheme=https;package=com.android.vending;end";
+                final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+                final Context mockContext = Mockito.mock(Context.class);
+                final WebView mockWebView = Mockito.mock(WebView.class);
+                when(mockWebView.getContext()).thenReturn(mockContext);
+
+                assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, intentUrl));
+
+                final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+                Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+                assertEquals(parsedIntent.getData(), intentCaptor.getValue().getData());
+        }
+
+        /** Only the app-details operation is a store listing; market://search is not. */
     @Test
     public void testIntentToInstallBroker_blocksNonDetailsMarketOperation() {
         assertIntentUrlIsNotLaunched(TEST_INTENT_MARKET_SEARCH);

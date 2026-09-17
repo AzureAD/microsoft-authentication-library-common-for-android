@@ -1739,6 +1739,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 || intent.getSelector() != null
                 || !GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(intent.getPackage())
                 || !isPlayStoreAppListingUri(intent.getData())
+                || !hasSingleAppIdParameter(intent.getData())
                 || !isKnownBrokerListing(intent.getData())) {
             return null;
         }
@@ -1770,9 +1771,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     && StringUtil.isNullOrEmpty(normalizedPath));
     }
 
+    private boolean hasSingleAppIdParameter(@NonNull final Uri uri) {
+        final String encodedQuery = uri.getEncodedQuery();
+        if (encodedQuery == null) {
+            return false;
+        }
+
+        // Uri.getQueryParameters matches encoded key bytes, so count decoded names separately.
+        int appIdCount = 0;
+        for (final String parameter : encodedQuery.split("&")) {
+            final int separatorIndex = parameter.indexOf('=');
+            final String encodedKey = separatorIndex < 0 ? parameter : parameter.substring(0, separatorIndex);
+            if (PLAY_STORE_APP_ID_QUERY_PARAM.equals(Uri.decode(encodedKey))) {
+                appIdCount++;
+            }
+        }
+        return appIdCount == 1;
+    }
+
     /** Returns whether an app-listing URI names a known broker app. */
     private boolean isKnownBrokerListing(@NonNull final Uri uri) {
         final String appId = uri.getQueryParameter(PLAY_STORE_APP_ID_QUERY_PARAM);
+        if (appId == null) {
+            return false;
+        }
+
         for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
             if (brokerData.getPackageName().equals(appId)) {
                 return true;
