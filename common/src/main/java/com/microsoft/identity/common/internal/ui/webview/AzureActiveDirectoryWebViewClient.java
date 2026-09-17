@@ -152,6 +152,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
+    // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
+    // and market://details, both keyed by an "id" query parameter.
+    private static final String HTTPS_SCHEME = "https";
+    private static final String GOOGLE_PLAY_STORE_HOST = "play.google.com";
+    private static final String GOOGLE_PLAY_STORE_DETAILS_PATH = "/store/apps/details";
+    private static final String MARKET_SCHEME = "market";
+    private static final String MARKET_DETAILS_AUTHORITY = "details";
+    private static final String PLAY_STORE_APP_ID_QUERY_PARAM = "id";
+
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
     private static final String DEVICE_CERT_ISSUER = "CN=MS-Organization-Access";
@@ -864,6 +873,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <p>
      * This method checks if the URL starts with the intent prefix, is targeting the Google Play Store app,
      * and is associated with a broker app. It ensures that only valid intent requests are processed.
+     * <p>
+     * This is a routing check only; what actually gets launched is decided by
+     * {@link #buildBrokerInstallIntent(Intent)} against the parsed intent.
      *
      * @param url The URL to evaluate.
      * @return {@code true} if the URL is a permitted intent request, {@code false} otherwise.
@@ -1650,7 +1662,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * This method is used to process the intent to install the broker app.
-     * It parses the intent URI and starts the activity if the package name is valid.
+     * It parses the intent URI once and launches the validated intent built from it.
      *
      * @param view The WebView that will be used to open the URL.
      * @param intentUrl  The URL to be opened.
@@ -1659,65 +1671,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
         // Onboarding telemetry: alternate broker install path (intent-scheme).
         recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
-            // Flight ON (new behavior): validated launch path, isolated in its own method. When the
-            // flight is off we fall through to the original behavior below, which is unchanged from dev.
-            launchValidatedBrokerInstallIntent(view, intentUrl, methodTag);
-            return;
-        }
         try {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                view.getContext().startActivity(intent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
-            }
-        } catch (final URISyntaxException e) {
-            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
-            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(methodTag, "No activity found to handle the intent.", e);
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
-            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
-        }
-    }
+            final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
 
-    /**
-     * Flight-ON broker-install path: validates the parsed intent target before launching and records
-     * the outcome ({@link AttributeName#is_broker_install_intent_blocked}) on the current
-     * WebView-processing span so the fix's behavior (launched / blocked) can be confirmed from
-     * android_spans.
-     *
-     * @param view      The WebView whose context is used to launch the intent.
-     * @param intentUrl The {@code intent://} URL to be parsed and (if allow-listed) launched.
-     * @param methodTag Logging tag propagated from the caller.
-     */
-    private void launchValidatedBrokerInstallIntent(@NonNull final WebView view,
-                                                    @NonNull final String intentUrl,
-                                                    @NonNull final String methodTag) {
-        try {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                final Intent sanitizedIntent = sanitizeAndValidateBrokerInstallIntent(intent);
-                if (sanitizedIntent == null) {
-                    Logger.warn(methodTag,
-                            "Blocking intent request to non-allow-listed package: " + intent.getPackage());
-                    SpanExtension.current().setAttribute(
-                            AttributeName.is_broker_install_intent_blocked.name(), true);
-                    return;
+            if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+                Logger.warn(methodTag, "Broker install intent validation is disabled by flight; "
+                        + "launching the unvalidated intent.");
+                if (parsedIntent != null && parsedIntent.getPackage() != null) {
+                    view.getContext().startActivity(parsedIntent);
                 }
-
-                view.getContext().startActivity(sanitizedIntent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + sanitizedIntent.getPackage());
-                SpanExtension.current().setAttribute(
-                        AttributeName.is_broker_install_intent_blocked.name(), false);
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
+                return;
             }
+
+            final Intent intent = buildBrokerInstallIntent(parsedIntent);
+            if (intent == null) {
+                Logger.warn(methodTag, "Blocking intent request that is not a broker install request.");
+                SpanExtension.current().setAttribute(
+                        AttributeName.is_broker_install_intent_blocked.name(), true);
+                return;
+            }
+            view.getContext().startActivity(intent);
+            Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            SpanExtension.current().setAttribute(
+                    AttributeName.is_broker_install_intent_blocked.name(), false);
         } catch (final URISyntaxException e) {
             Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
             returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
@@ -1730,54 +1707,55 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    /**
-     * Sanitizes and validates a parsed broker-install intent before it is launched. Any explicit
-     * component or selector is cleared so that activity resolution is driven solely by the target
-     * package; the package is then checked against the allow-list. For an allow-listed target, the
-     * URI-permission grant flags are stripped and {@link Intent#CATEGORY_BROWSABLE} is added,
-     * mirroring the platform's standard WebView intent handling so the launched intent can't carry
-     * an unexpected grant into the store app.
-     * <p>
-     * Package-private so it can be unit-tested directly with a hand-built intent (a selector cannot
-     * be injected through the {@code intent://} URL scheme, so it is not reachable via the public
-     * navigation path).
-     *
-     * @param intent The parsed intent to sanitize; its package must already be non-null.
-     * @return the sanitized intent when its target package is allow-listed, or {@code null} when the
-     *         target is not allow-listed and therefore must not be launched.
-     */
+    /** Returns a fresh broker-listing intent, or {@code null} for an unsupported request. */
     @Nullable
-    Intent sanitizeAndValidateBrokerInstallIntent(@NonNull final Intent intent) {
-        // Clear any explicit component or selector carried by the parsed intent so that activity
-        // resolution is driven solely by the validated package.
-        intent.setComponent(null);
-        intent.setSelector(null);
-
-        if (!isAllowedBrokerInstallIntentTarget(intent.getPackage())) {
+    @VisibleForTesting
+    Intent buildBrokerInstallIntent(@Nullable final Intent intent) {
+        if (intent == null
+                || intent.getComponent() != null
+                || intent.getSelector() != null
+                || !GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(intent.getPackage())
+                || !isPlayStoreAppListingUri(intent.getData())
+                || !isKnownBrokerListing(intent.getData())) {
             return null;
         }
 
-        // Strip any URI-permission grant flags that rode in on the parsed intent and add
-        // CATEGORY_BROWSABLE, matching the platform's standard WebView intent handling.
-        intent.setFlags(intent.getFlags()
-                & ~Intent.FLAG_GRANT_READ_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        return intent;
+        final Intent installIntent = new Intent(Intent.ACTION_VIEW, intent.getData());
+        installIntent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        installIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+        return installIntent;
     }
 
     /**
-     * Checks whether the parsed broker-install intent targets the allow-listed package. The only
-     * supported launch target for this path is the Google Play Store, which opens the broker app's
-     * store listing, so any other package is not launched.
-     *
-     * @param packageName The target package declared by the parsed intent.
-     * @return {@code true} if the package is allow-listed, {@code false} otherwise.
+     * Returns whether {@code uri} is a Play Store app listing. Other {@code market:} operations
+     * (e.g. {@code market://search}) are not listings.
      */
-    private boolean isAllowedBrokerInstallIntentTarget(@Nullable final String packageName) {
-        return GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(packageName);
+    private boolean isPlayStoreAppListingUri(@Nullable final Uri uri) {
+        if (uri == null || uri.isOpaque()) {
+            return false;
+        }
+        final String path = uri.getPath();
+        final String normalizedPath = path != null && path.endsWith("/")
+                ? path.substring(0, path.length() - 1)
+                : path;
+        // In a market: URI the operation is carried by the authority rather than the path.
+        return (HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme())
+                    && GOOGLE_PLAY_STORE_HOST.equalsIgnoreCase(uri.getHost())
+                    && GOOGLE_PLAY_STORE_DETAILS_PATH.equals(normalizedPath))
+                || (MARKET_SCHEME.equalsIgnoreCase(uri.getScheme())
+                    && MARKET_DETAILS_AUTHORITY.equalsIgnoreCase(uri.getHost())
+                    && StringUtil.isNullOrEmpty(normalizedPath));
+    }
+
+    /** Returns whether an app-listing URI names a known broker app. */
+    private boolean isKnownBrokerListing(@NonNull final Uri uri) {
+        final String appId = uri.getQueryParameter(PLAY_STORE_APP_ID_QUERY_PARAM);
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (brokerData.getPackageName().equals(appId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
