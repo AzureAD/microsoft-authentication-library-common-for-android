@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Refine broker-install intent validation in WebView and enable it by default (#3261)
 
 Version 24.7.0
 ----------
