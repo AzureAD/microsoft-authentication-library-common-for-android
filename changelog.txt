@@ -1,6 +1,5 @@
 vNext
 ----------
-- [PATCH] Dismiss Outlook's Copilot onboarding sheet before checking the account drawer
 
 Version 24.7.0
 ----------
