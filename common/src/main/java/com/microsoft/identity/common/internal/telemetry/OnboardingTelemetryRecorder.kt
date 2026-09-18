@@ -31,6 +31,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Collections
 import java.util.Date
 import java.util.Locale
 
@@ -76,12 +77,18 @@ class OnboardingTelemetryRecorder(
     val sessionCorrelationId: String
     private val onboardingMode: String
 
-    // Populated fields
-    private val stepsList: MutableList<StepEntry> = mutableListOf()
-    private val blockingErrors: MutableList<String> = mutableListOf()
+    // Populated fields. All guarded consistently: addBlockingError is reached from the WebView
+    // JavaBridge thread (via the Auth UX bridge sink) while finalizeBlob serializes on the caller's
+    // thread. The others are UI-thread-only today, but they are hardened the same way so the class
+    // has one coherent story — a half-guarded object reads as safe without being safe, and the next
+    // cross-thread caller should not have to rediscover which fields were left behind.
+    private val stepsList: MutableList<StepEntry> = Collections.synchronizedList(mutableListOf())
+    private val blockingErrors: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    private val uxFlowUsed: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    @Volatile
     private var lastLoadedDomain: String? = null
+    @Volatile
     private var profile: String? = null
-    private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
         val parsed = parseSeed(seedJson)
@@ -130,16 +137,41 @@ class OnboardingTelemetryRecorder(
      * Also persists the session correlation entry to SharedPreferences
      * (best-effort, async) for app-kill resilience.
      *
-     * @param errorCode The onboarding blocking-error identifier to record
-     *                  (e.g., [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL]
-     *                  or [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]),
-     *                  not a numeric service auth error code.
+     * Append-only and chronological: repeats are kept, so [OnboardingTelemetryConstants.LAST_BLOCKING_ERROR]
+     * means "the last block observed" rather than "the last distinct block first observed". A caller
+     * that must not report the same code twice de-duplicates on its own side — see
+     * `AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode`, which does so for the Auth UX
+     * JS bridge because that bridge is rebuilt on every WebView navigation.
+     *
+     * All-or-nothing: nothing is recorded unless this call completes, so a caller that catches a
+     * throw from here can safely assume the code was not appended. That is what lets the Auth UX
+     * sink retract its de-duplication claim on failure without risking a duplicate on the next
+     * offer. The guarantee holds against [Error] as well as [Exception], because the only step that
+     * can throw ([persistSessionCorrelation], which deliberately lets [Error] through) runs *before*
+     * the append rather than after it.
+     *
+     * @param errorCode The onboarding blocking-error identifier to record. Either a symbolic
+     *                  blocking-error constant (e.g.,
+     *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_BROKER_INSTALL] or
+     *                  [OnboardingTelemetryConstants.BLOCKING_ERROR_MDM_FLOW]) or a numeric
+     *                  server/STS error code surfaced by OnboardingBlockingErrorParser or the
+     *                  Auth UX JS bridge (e.g., "530003"). Recorded verbatim as an opaque string.
      */
     override fun addBlockingError(errorCode: String) {
-        blockingErrors.add(errorCode)
-
-        // Persist session correlation to SharedPreferences immediately on block
+        // Persist BEFORE the append, so this method is all-or-nothing against Error as well as
+        // Exception. persistSessionCorrelation catches Exception but deliberately lets Error
+        // through (swallowing an OutOfMemoryError to protect a telemetry write would be the wrong
+        // trade). With the append first, an Error escaping the persist would leave the code in
+        // blockingErrors while the caller saw a throw — and the Auth UX sink, which retracts its
+        // de-duplication claim on any throw, would then let the next offer append it a second time.
+        // Ordering it this way costs nothing: the persist does not depend on the append, and a
+        // persist that succeeds for a block that is then never recorded is harmless (it only
+        // refreshes the session-correlation entry, which is idempotent).
         persistSessionCorrelation()
+
+        synchronized(blockingErrors) {
+            blockingErrors.add(errorCode)
+        }
     }
 
     /**
@@ -204,9 +236,16 @@ class OnboardingTelemetryRecorder(
                 put(FIELD_SESSION_CORRELATION_ID, sessionCorrelationId)
                 put(FIELD_ONBOARDING_MODE, onboardingMode)
 
-                // StepsList
+                // StepsList. Snapshot under the list's own monitor: Collections.synchronizedList
+                // guarantees atomic single operations but NOT iteration, and these lists are
+                // written from the WebView JavaBridge thread while the blob is serialized here on
+                // the caller's thread.
+                val stepsSnapshot = synchronized(stepsList) { stepsList.toList() }
+                val errorsSnapshot = synchronized(blockingErrors) { blockingErrors.toList() }
+                val uxFlowSnapshot = synchronized(uxFlowUsed) { uxFlowUsed.toList() }
+
                 val steps = JSONArray()
-                for (entry in stepsList) {
+                for (entry in stepsSnapshot) {
                     steps.put(JSONObject().apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
@@ -216,16 +255,16 @@ class OnboardingTelemetryRecorder(
 
                 // Platform builder fields
                 val errorsArray = JSONArray()
-                for (error in blockingErrors) {
+                for (error in errorsSnapshot) {
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
                 // last_blocking_error is only meaningful when at least one was recorded;
                 // omit the field on smooth-success flows rather than serializing a sentinel.
-                if (blockingErrors.isNotEmpty()) {
+                if (errorsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                        blockingErrors.last()
+                        errorsSnapshot.last()
                     )
                 }
 
@@ -233,10 +272,10 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
 
-                if (stepsList.isNotEmpty()) {
+                if (stepsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
-                        stepsList.last().stepId
+                        stepsSnapshot.last().stepId
                     )
                 }
 
@@ -244,9 +283,9 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowUsed.isNotEmpty()) {
+                if (uxFlowSnapshot.isNotEmpty()) {
                     val flows = JSONArray()
-                    for (flow in uxFlowUsed) {
+                    for (flow in uxFlowSnapshot) {
                         flows.put(flow)
                     }
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)
@@ -268,6 +307,19 @@ class OnboardingTelemetryRecorder(
      * of user remediation, so the flush window is far longer than typical loss.
      * Telemetry tolerates rare loss; we avoid main-thread disk I/O.
      * Called on block detection.
+     *
+     * Swallows [Exception] so a best-effort persistence failure does not fail its caller:
+     * `getSharedPreferences` throws [IllegalStateException] on credential-encrypted storage before
+     * first unlock (direct boot), and losing a correlation entry must not cost the blocking error
+     * itself. [Error] is deliberately allowed to propagate — swallowing an `OutOfMemoryError` to
+     * protect a best-effort telemetry write would be the wrong trade.
+     *
+     * Because [Error] can escape, [addBlockingError] calls this **before** appending, so that a
+     * throw from here means nothing was recorded. That ordering is what makes `addBlockingError`
+     * all-or-nothing, which `AzureActiveDirectoryWebViewClient` relies on when deciding whether to
+     * retract a de-duplication claim after a failed append: if the append ran first, an `Error` out
+     * of here would leave the code in [blockingErrors] while the caller saw a throw, and the
+     * retraction would let the next offer append it a second time.
      */
     private fun persistSessionCorrelation() {
         if (sessionCorrelationId.isEmpty()) {
@@ -293,7 +345,7 @@ class OnboardingTelemetryRecorder(
                 sessionCorrelationId,
                 "Persisted session correlation entry for key=$key"
             )
-        } catch (e: JSONException) {
+        } catch (e: Exception) {
             Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
         }
     }

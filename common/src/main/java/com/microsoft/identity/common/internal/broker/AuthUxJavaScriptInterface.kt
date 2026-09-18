@@ -71,7 +71,8 @@ data class AuthUxTelemetryEvent(
  * not take a dependency on the onboarding recorder plumbing. The concrete wiring — resolving the
  * active [com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder] and
  * appending the code to the onboarding blob's blocking-errors list (subject to the non-blocking
- * exclusion list) — is supplied by the host and handled downstream (see AB#3688632).
+ * exclusion list) — is supplied by the host
+ * (`AzureActiveDirectoryWebViewClient.createAuthUxJavaScriptInterface`); see AB#3688632.
  *
  * **Threading.** `@JavascriptInterface` methods are dispatched on the WebView's private JavaBridge
  * thread, not the UI thread. The bridge serializes its own calls per instance, but the telemetry
@@ -140,8 +141,10 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * `AuthUxJavaScriptInterface`, so this state resets per page load while the consumer it feeds
      * lives for the whole request. This is therefore a per-page flood guard, **not** a
      * request-wide de-duplication guarantee: the same code reported on two page loads is offered
-     * twice, and session-wide de-duplication is the consumer's responsibility (the onboarding
-     * recorder de-duplicates its blocking-errors list for exactly this reason).
+     * twice, and session-wide de-duplication is the consumer's responsibility (see
+     * `AzureActiveDirectoryWebViewClient.tryConsumeAuthUxServerErrorCode`, which de-duplicates for
+     * exactly this reason — the onboarding recorder deliberately does not, because its
+     * blocking-errors list is append-only and chronological for its other callers).
      *
      * Guarded by itself; also guards [telemetryAttempts]. The sink is never invoked while this
      * lock is held.
@@ -179,6 +182,12 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * also accepts (e.g. `"BROKER_INSTALL"`), while excluding whitespace and control characters
          * so a page-supplied value can never inject a newline into a log line or an unbounded string
          * into the uploaded onboarding blob.
+         *
+         * This is a **shape** check only, and deliberately does not encode any one sink's policy:
+         * the bridge does not know where a code ends up. A sink whose destination gives meaning to
+         * particular values must narrow further on its own side — the onboarding sink accepts only
+         * numeric server codes, so a page cannot post one of the symbolic constants the broker
+         * writes for blocks it detected itself.
          */
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
 
@@ -495,10 +504,14 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * code and forward it, with its telemetry context, to the host-supplied sink.
      *
      * Every exit path is logged distinguishably so a DRI can tell from logcat alone whether a code
-     * was forwarded, rejected as malformed, suppressed by the cap/dedupe, declined by the sink, or
-     * dropped because no host sink was wired. The one deliberate exception is the attempt cap,
-     * which logs once on the transition and is then silent — otherwise the message warning about
-     * spam would itself become the spam.
+     * was accepted by the sink, rejected as malformed here, suppressed by the cap/dedupe, declined
+     * by the sink, or dropped because no host sink was wired. The one deliberate exception is the
+     * attempt cap, which logs once on the transition and is then silent — otherwise the message
+     * warning about spam would itself become the spam.
+     *
+     * "Accepted by the sink" is deliberately not reported as "recorded": a sink may drop or refuse a
+     * code by its own policy and still consume it, and only the sink can say which. It logs that
+     * decision itself, so the pair of lines reads coherently rather than contradicting.
      *
      * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across three critical sections
      * (attempt cap, dedupe/distinct-code cap, and the final record) with validation and the sink
@@ -657,26 +670,45 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         }
 
         synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
-        // Set for any code a sink CONSUMED. Note "consumed" means the sink took responsibility for
-        // the code, which includes deliberately dropping it by its own policy — so this attribute
-        // records what the PAGE REPORTED and the sink accepted, not what downstream telemetry
-        // ultimately stored. A sink that excludes some codes (as the onboarding sink does for the
-        // non-onboarding AADSTS list) will legitimately produce a span carrying a code the blob does
-        // not. What it can never do is carry a code no sink took: NOT_CONSUMED and THREW both skip
-        // this. Single-valued by nature of setAttribute: on a flow reporting several codes the LAST
+        // Set for any code a sink CONSUMED. "Consumed" means the sink took responsibility and the
+        // code is terminal here — which covers three different downstream fates: the sink recorded
+        // it, dropped it by policy (the onboarding sink does this for the non-onboarding AADSTS
+        // list), or refused it outright as not something it will ever store. So this attribute
+        // records WHAT THE PAGE REPORTED and a sink took, never what downstream telemetry stored;
+        // do not read it as evidence a value was recorded.
+        //
+        // That is safe against the confusion the onboarding sink's own numeric check exists to
+        // prevent, because this attribute is namespaced to the bridge: only page-supplied values
+        // ever land on `authux_js_error_code`, whereas the blob's `blocking_errors` list is SHARED
+        // with broker4j's own symbolic constants and therefore loses provenance. A symbolic value
+        // here is unambiguously "a page sent this", which is a signal worth keeping.
+        //
+        // What it can never carry is a code no sink took: NOT_CONSUMED and THREW both skip this.
+        // Single-valued by nature of setAttribute: on a flow reporting several codes the LAST
         // consumed code wins.
         SpanExtension.current()
             .setAttribute(AttributeName.authux_js_error_code.name, errorCode)
         Logger.info(
             methodTag,
             correlationId,
-            "Forwarded Auth UX server error code [$errorCode] to onboarding telemetry."
+            // Deliberately does NOT say "recorded"/"forwarded to onboarding telemetry": the sink may
+            // have dropped or refused this code by its own policy, and it logs that decision itself
+            // immediately before this line. Claiming it was forwarded produced a directly
+            // contradictory pair in logcat ("skipping non-blocking ..." / "rejecting ..." followed
+            // by "Forwarded ..."), which defeats the per-exit-path distinguishability this method's
+            // logging is built for.
+            "log_telemetry errorCode [$errorCode] was accepted by the sink "
+                    + "(terminal; see the sink's own log line for what it did with it)."
         )
     }
 
     /** Outcome of handing one telemetry event to the host-supplied sink. */
     private enum class SinkOutcome {
-        /** The sink recorded the event (or deliberately dropped it by policy). */
+        /**
+         * The sink took responsibility for the event: it recorded the code, dropped it by its own
+         * policy, or refused it outright. Terminal either way — the bridge does not retry it and
+         * does not assert which of the three happened.
+         */
         CONSUMED,
 
         /** The sink is not ready to record yet; the code stays eligible for a retry. */
