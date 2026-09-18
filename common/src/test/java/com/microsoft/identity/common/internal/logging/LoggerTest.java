@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -91,7 +92,10 @@ public class LoggerTest {
         assertFalse(Logger.getAllowLogcat());
     }
 
+    // Native Auth replaces DiagnosticContext.INSTANCE with a mock in the default sandbox;
+    // use a separate instrumentation configuration so clear() reaches the real instance.
     @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
     public void getDiagnosticContextMetadata_returnsThreadAndCorrelationMetadata() {
         // Reset the shared thread-local request context so the correlation id is deterministic
         // (other tests running in the same JVM may otherwise leave a correlation id set).
