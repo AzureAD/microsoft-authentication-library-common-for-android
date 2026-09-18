@@ -395,6 +395,37 @@ class NativeAuthV2Interactor(
     }
     //endregion
 
+    //region risk verification
+    /**
+     * Follows the risk-verification relation returned by an SMS method challenge.
+     */
+    fun performRiskVerification(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        val methodName = "$TAG.performRiskVerification"
+        LogSession.logMethodCall(
+            tag = TAG,
+            correlationId = state.correlationId,
+            methodName = methodName
+        )
+
+        val request = requestProvider.createRiskVerificationRequest(state = state)
+
+        Logger.infoWithObject(
+            methodName,
+            state.correlationId,
+            "request = ",
+            request
+        )
+
+        return executeJsonInteraction(
+            request = request,
+            state = state,
+            methodName = methodName
+        )
+    }
+    //endregion
+
     //region password verify
     /**
      * Submits a password to the server-provided password `verify` href.
