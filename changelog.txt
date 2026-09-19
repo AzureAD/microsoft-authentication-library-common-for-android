@@ -1,6 +1,9 @@
 vNext
 ----------
 
+Version 24.8.0-RC1
+----------
+
 Version 24.7.0
 ----------
 - [MINOR] Add Native Auth V2 sign-in support for password first factor and password followed by email OTP MFA, including server-driven method selection, continuation commands, controller orchestration, and token completion (AB#3729067) (#3239)
