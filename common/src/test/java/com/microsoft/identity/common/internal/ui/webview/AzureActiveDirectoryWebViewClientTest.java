@@ -1738,12 +1738,15 @@ public class AzureActiveDirectoryWebViewClientTest {
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
 
+        // Exception telemetry can call a mocked DiagnosticContext; construct it before stubbing.
+        final ClientException validationException = new ClientException(
+                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                "SubmitUrl host is not same-origin with the challenging origin.");
+
         try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
                 PKeyAuthChallengeFactory.class,
                 (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
-                        .thenThrow(new ClientException(
-                                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
-                                "SubmitUrl host is not same-origin with the challenging origin.")))) {
+                        .thenThrow(validationException))) {
 
             final boolean result = webViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
