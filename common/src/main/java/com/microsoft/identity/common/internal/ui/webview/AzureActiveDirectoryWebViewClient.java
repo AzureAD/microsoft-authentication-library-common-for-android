@@ -158,6 +158,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String DEVICE_CA_QUERY_PARAMETER = "ismdmurl";
     private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
     private static final String HTTPS_URL_PREFIX = "https://";
+    private static final String RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1153,7 +1154,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(methodTag, "Supported management owner found. Attempting targeted re-WPJ handoff to: "
                     + managementAppPackage);
             try {
-                launchReWpjManagementApp(url, managementAppPackage);
+                launchReWpjManagementApp(managementAppPackage);
                 Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
@@ -1234,11 +1235,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected void launchReWpjManagementApp(@NonNull final String url,
-                                            @NonNull final String managementAppPackage) {
+    protected void launchReWpjManagementApp(@NonNull final String managementAppPackage) {
         final String methodTag = TAG + ":launchReWpjManagementApp";
-        Logger.info(methodTag, "Creating package-targeted HTTPS re-WPJ intent for: " + managementAppPackage);
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(toHttpsUrl(url)));
+        Logger.info(methodTag, "Creating package-targeted re-WPJ handoff intent for: " + managementAppPackage);
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(RE_WPJ_HANDOFF_URI));
         intent.setPackage(managementAppPackage);
         Logger.info(methodTag, "Starting package-targeted re-WPJ activity.");
         getActivity().startActivity(intent);

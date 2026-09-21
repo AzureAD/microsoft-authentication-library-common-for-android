@@ -187,6 +187,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz?ismdmurl=1";
 
     private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
     private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
             "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
     private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
@@ -1927,7 +1928,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         Mockito.verify(webViewClient).loadDeviceCaUrl(
                 TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
-        Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString(), anyString());
+        Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
     }
 
     @Test
@@ -1941,7 +1942,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
         Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
-                .launchReWpjManagementApp(anyString(), anyString());
+                .launchReWpjManagementApp(anyString());
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
 
@@ -1959,7 +1960,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
         Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
-                .launchReWpjManagementApp(anyString(), anyString());
+                .launchReWpjManagementApp(anyString());
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
 
@@ -1990,8 +1991,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
-        assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
-                launchedIntent.getDataString());
+        assertEquals(TEST_RE_WPJ_HANDOFF_URI, launchedIntent.getDataString());
         assertEquals(managementAppPackage, launchedIntent.getPackage());
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
