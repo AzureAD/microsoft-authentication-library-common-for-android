@@ -841,20 +841,25 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 state = parameters.continuationState,
                 methodId = parameters.methodId
             )
+            val verificationResult = when (challengeResult) {
+                is NativeAuthV2InteractionApiResult.RiskVerificationRequired ->
+                    oAuth2Strategy.performRiskVerification(challengeResult.continuationState)
+                else -> challengeResult
+            }
 
-            return when (challengeResult) {
+            return when (verificationResult) {
                 is NativeAuthV2InteractionApiResult.CodeRequired -> NativeAuthV2CommandResult.MFAVerificationRequired(
-                    correlationId = challengeResult.correlationId,
-                    continuationState = challengeResult.continuationState,
-                    codeLength = challengeResult.codeLength,
-                    challengeTargetLabel = challengeResult.challengeTargetLabel,
-                    challengeChannel = challengeResult.challengeChannel
+                    correlationId = verificationResult.correlationId,
+                    continuationState = verificationResult.continuationState,
+                    codeLength = verificationResult.codeLength,
+                    challengeTargetLabel = verificationResult.challengeTargetLabel,
+                    challengeChannel = verificationResult.challengeChannel
                 )
                 is NativeAuthV2InteractionApiResult.Redirect -> INativeAuthCommandResult.Redirect(
-                    correlationId = challengeResult.correlationId,
-                    redirectReason = challengeResult.redirectReason
+                    correlationId = verificationResult.correlationId,
+                    redirectReason = verificationResult.redirectReason
                 )
-                else -> mapInteractionError(challengeResult)
+                else -> mapInteractionError(verificationResult)
             }
         } catch (e: Exception) {
             Logger.error(TAG, parameters.getCorrelationId(), "Exception in selectMFAMethod", e)

@@ -983,7 +983,7 @@ class NativeAuthV2ResponseParserTest {
     }
 
     @Test
-    fun parseInteraction_whenVerifyOffersNonEmailMethodOnly_returnsUnknownError() {
+    fun parseInteraction_whenVerifyOffersUnsupportedMethodOnly_returnsUnknownError() {
         val response = responseFrom(
             """
             {
@@ -992,10 +992,10 @@ class NativeAuthV2ResponseParserTest {
               "codeLength": 6,
               "_embedded": {
                 "methods": [{
-                  "hint": "+1 (***) ***-1234",
-                  "type": "sms",
+                  "hint": "unsupported method",
+                  "type": "unsupported",
                   "_links": {
-                    "verify": {"href": "/api/v0.1/auth/sms/verify"}
+                    "verify": {"href": "/api/v0.1/auth/unsupported/verify"}
                   }
                 }]
               }
@@ -1006,19 +1006,19 @@ class NativeAuthV2ResponseParserTest {
         val result = parser.parseInteraction(response, previousState())
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
-        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email and SMS"))
     }
 
     @Test
-    fun parseInteraction_whenVerifyTopLevelChannelIsNotEmail_returnsUnknownError() {
+    fun parseInteraction_whenVerifyTopLevelChannelIsUnsupported_returnsUnknownError() {
         val response = responseFrom(
-            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"sms","_links":{"verify":{"href":"/x"}}}"""
+            """{"continuationToken":"t","action":"verify","codeLength":6,"hint":"h","type":"unsupported","_links":{"verify":{"href":"/x"}}}"""
         )
 
         val result = parser.parseInteraction(response, previousState())
 
         assertTrue(result is NativeAuthV2InteractionApiResult.UnknownError)
-        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email"))
+        assertTrue((result as NativeAuthV2InteractionApiResult.UnknownError).errorDescription.contains("email and SMS"))
     }
 
     @Test
