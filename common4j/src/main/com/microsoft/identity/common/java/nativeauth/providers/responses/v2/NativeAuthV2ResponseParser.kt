@@ -389,6 +389,7 @@ class NativeAuthV2ResponseParser {
     ): NativeAuthV2InteractionApiResult.UnknownError {
         Logger.warn(
             TAG,
+            response.correlationId,
             "Native Auth V2 response did not offer a supported one-time-code authentication method."
         )
         return NativeAuthV2InteractionApiResult.UnknownError(
