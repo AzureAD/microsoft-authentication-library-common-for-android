@@ -143,7 +143,7 @@ class NativeAuthV2RequestProviderTest {
     }
 
     @Test
-    fun createChallengeResendVerifyAndPollRequests_useResolvedLinksJsonBodiesAndExpectedContentTypes() {
+    fun createChallengeRiskVerificationResendVerifyAndPollRequests_useResolvedLinksJsonBodiesAndExpectedContentTypes() {
         val state = continuationState()
         val provider = provider(
             authorityUrl = "https://login.contoso.com/tenant",
@@ -151,24 +151,33 @@ class NativeAuthV2RequestProviderTest {
         )
 
         val challengeRequest = provider.createChallengeRequest(state)
+        val riskVerificationRequest = provider.createRiskVerificationRequest(state)
         val resendRequest = provider.createResendRequest(state)
         val verifyRequest = provider.createVerifyRequest(state, otp = "123456")
         val pollRequest = provider.createPollRequest(state)
 
         assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/challenge"), challengeRequest.requestUrl)
+        assertEquals(URL("https://login.contoso.com/tenant/api/v1.0-internal/risk/phone/verify"), riskVerificationRequest.requestUrl)
         assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/resend"), resendRequest.requestUrl)
         assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/verify"), verifyRequest.requestUrl)
         assertEquals(URL("https://login.contoso.com/tenant/api/v0.1/auth/poll"), pollRequest.requestUrl)
 
-        listOf(challengeRequest.headers, resendRequest.headers, verifyRequest.headers, pollRequest.headers)
+        listOf(
+            challengeRequest.headers,
+            riskVerificationRequest.headers,
+            resendRequest.headers,
+            verifyRequest.headers,
+            pollRequest.headers
+        )
             .forEach { assertCommonHeaders(it, JSON_CONTENT_TYPE) }
 
         val challengeBody = ObjectMapper.serializeObjectToJsonString(challengeRequest.parameters)
+        val riskVerificationBody = ObjectMapper.serializeObjectToJsonString(riskVerificationRequest.parameters)
         val resendBody = ObjectMapper.serializeObjectToJsonString(resendRequest.parameters)
         val verifyBody = ObjectMapper.serializeObjectToJsonString(verifyRequest.parameters)
         val pollBody = ObjectMapper.serializeObjectToJsonString(pollRequest.parameters)
 
-        listOf(challengeBody, resendBody, verifyBody, pollBody).forEach { body ->
+        listOf(challengeBody, riskVerificationBody, resendBody, verifyBody, pollBody).forEach { body ->
             assertTrue(body.contains("continuationToken"))
             assertFalse(body.contains("clientId"))
             assertFalse(body.contains("scope"))
@@ -364,6 +373,9 @@ class NativeAuthV2RequestProviderTest {
                         "challenge": {
                           "href": "/api/v0.1/auth/challenge"
                         },
+                        "riskverify": {
+                          "href": "/api/v1.0-internal/risk/phone/verify"
+                        },
                         "resend": {
                           "href": "/api/v0.1/auth/resend"
                         },
@@ -396,6 +408,9 @@ class NativeAuthV2RequestProviderTest {
                       "_links": {
                         "challenge": {
                           "href": "/api/v0.1/auth/challenge"
+                        },
+                        "riskverify": {
+                          "href": "/api/v1.0-internal/risk/phone/verify"
                         },
                         "resend": {
                           "href": "/api/v0.1/auth/resend"

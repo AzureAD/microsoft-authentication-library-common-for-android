@@ -29,23 +29,18 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Parameters for a V2 submit-code step.
- * Carries the OTP code and the opaque continuation state from the preceding challenge step.
- * Extends {@link BaseSignInTokenCommandParameters}.
+ * Parameters for the V2 explicit sign-in-after-sign-up step.
+ * Carries the opaque continuation state produced once the sign-up flow reaches server-side
+ * completion. Invoking this command performs the token exchange and cache persistence that were
+ * deferred until the app explicitly requests sign-in. Extends {@link BaseSignInTokenCommandParameters}.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class NativeAuthV2SubmitCodeCommandParameters extends BaseSignInTokenCommandParameters {
+public class NativeAuthV2SignInAfterSignUpCommandParameters extends BaseSignInTokenCommandParameters {
 
     /**
-     * The one-time password entered by the user.
-     */
-    @NonNull
-    public final String code;
-
-    /**
-     * The opaque continuation state from the preceding challenge response.
+     * The opaque continuation state produced once the sign-up flow reaches server-side completion.
      */
     @NonNull
     public final NativeAuthV2ContinuationState continuationState;
@@ -53,7 +48,7 @@ public class NativeAuthV2SubmitCodeCommandParameters extends BaseSignInTokenComm
     @NonNull
     @Override
     public String toUnsanitizedString() {
-        return "NativeAuthV2SubmitCodeCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
+        return "NativeAuthV2SignInAfterSignUpCommandParameters(authority=" + authority + ", challengeTypes=" + challengeType + ")";
     }
 
     @Override

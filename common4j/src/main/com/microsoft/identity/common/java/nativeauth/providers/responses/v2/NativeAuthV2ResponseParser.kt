@@ -145,8 +145,11 @@ class NativeAuthV2ResponseParser {
      * from its V2 wire values; a `state == "continue"` response requires a continuation token and
      * becomes [NativeAuthV2InteractionApiResult.ReadyToComplete]; any other response requires a
      * continuation token before its `action` is switched on to produce
-     * [NativeAuthV2InteractionApiResult.ChallengeRequired], [NativeAuthV2InteractionApiResult.CodeRequired],
-     * [NativeAuthV2InteractionApiResult.UpdateRequired], or [NativeAuthV2InteractionApiResult.PollInProgress];
+     * [NativeAuthV2InteractionApiResult.ChallengeRequired],
+     * [NativeAuthV2InteractionApiResult.RiskVerificationRequired],
+     * [NativeAuthV2InteractionApiResult.CodeRequired],
+     * [NativeAuthV2InteractionApiResult.UpdateRequired], or
+     * [NativeAuthV2InteractionApiResult.PollInProgress];
      * an `action` this SDK version does not recognise becomes
      * [NativeAuthV2InteractionApiResult.UnsupportedAction] rather than being folded into a generic
      * error.
@@ -177,7 +180,8 @@ class NativeAuthV2ResponseParser {
         response.serverError?.let { serverError ->
             return mapInteractionError(
                 correlationId = errorCorrelationId,
-                serverError = serverError
+                serverError = serverError,
+                scenario = previousState.scenario
             )
         }
 
@@ -200,6 +204,8 @@ class NativeAuthV2ResponseParser {
             NativeAuthV2HalAction.VERIFY -> parseVerify(response, previousState)
             NativeAuthV2HalAction.UPDATE -> parseUpdate(response, previousState)
             NativeAuthV2HalAction.POLL -> parsePoll(response, previousState)
+            NativeAuthV2HalAction.RISK_VERIFY -> parseRiskVerify(response, previousState)
+            NativeAuthV2HalAction.COLLECT_ATTRIBUTES -> parseCollectAttributes(response, previousState)
             else -> unsupportedAction(response.correlationId, action.value)
         }
     }
@@ -279,6 +285,21 @@ class NativeAuthV2ResponseParser {
         return ParsedMethods.Success(methods.values.toList())
     }
 
+    private fun parseRiskVerify(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        if (response.links[NativeAuthV2LinkRelation.RISK_VERIFY.value].isNullOrBlank()) {
+            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.RISK_VERIFY)
+        }
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+        return NativeAuthV2InteractionApiResult.RiskVerificationRequired(
+            correlationId = response.correlationId,
+            continuationState = successor
+        )
+    }
+
     private fun malformedMethodError(
         correlationId: String,
         fieldName: String
@@ -343,7 +364,7 @@ class NativeAuthV2ResponseParser {
         }
         val challengeTargetLabel = selectedMethod?.hint ?: response.challengeTargetLabel
             ?: return missingFieldError(response.correlationId, CHALLENGE_TARGET_LABEL_FIELD)
-        if (!challengeChannel.isEmailChannel()) {
+        if (!challengeChannel.isOneTimeCodeChannel()) {
             return unsupportedChallengeMethodError(response)
         }
 
@@ -356,8 +377,9 @@ class NativeAuthV2ResponseParser {
         )
     }
 
-    private fun String?.isEmailChannel(): Boolean =
-        this?.equals(NativeAuthConstants.ChallengeChannel.EMAIL, ignoreCase = true) == true
+    private fun String?.isOneTimeCodeChannel(): Boolean =
+        this?.equals(NativeAuthConstants.ChallengeChannel.EMAIL, ignoreCase = true) == true ||
+                this?.equals(NativeAuthConstants.ChallengeChannel.SMS, ignoreCase = true) == true
 
     private fun String?.isPasswordChannel(): Boolean =
         this?.equals(NativeAuthConstants.ChallengeType.PASSWORD, ignoreCase = true) == true
@@ -367,13 +389,14 @@ class NativeAuthV2ResponseParser {
     ): NativeAuthV2InteractionApiResult.UnknownError {
         Logger.warn(
             TAG,
-            "Native Auth V2 response did not offer a supported email authentication method."
+            response.correlationId,
+            "Native Auth V2 response did not offer a supported one-time-code authentication method."
         )
         return NativeAuthV2InteractionApiResult.UnknownError(
             correlationId = response.correlationId,
             error = ApiErrorResult.INVALID_STATE,
-            errorDescription = "Native Auth V2 response did not offer a supported email " +
-                    "authentication method. Only email one-time codes are supported."
+            errorDescription = "Native Auth V2 response did not offer a supported one-time-code " +
+                    "authentication method. Only email and SMS one-time codes are supported."
         )
     }
 
@@ -416,6 +439,67 @@ class NativeAuthV2ResponseParser {
         )
     }
 
+    /**
+     * Parses a sign-up `collectAttributes` action into
+     * [NativeAuthV2InteractionApiResult.AttributesRequired]. The server lists the attributes it
+     * wants in the top-level `attributes` array and attaches a `submitAttributes` link the caller
+     * follows to supply them. An attribute entry with no wire name is a protocol error rather than
+     * a silently-dropped entry.
+     */
+    private fun parseCollectAttributes(
+        response: NativeAuthV2HalApiResponse,
+        previousState: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        if (response.links[NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES.value] == null &&
+            response.links[NativeAuthV2LinkRelation.SELF.value] == null
+        ) {
+            return missingLinkError(response.correlationId, NativeAuthV2LinkRelation.SUBMIT_ATTRIBUTES)
+        }
+
+        if (response.requiredAttributes.isEmpty()) {
+            Logger.warn(TAG, response.correlationId, "Native Auth V2 collectAttributes response contained no attributes.")
+            return NativeAuthV2InteractionApiResult.UnknownError(
+                correlationId = response.correlationId,
+                error = ApiErrorResult.INVALID_STATE,
+                errorDescription = "Native Auth V2 collectAttributes response must contain at least one attribute."
+            )
+        }
+
+        val requiredAttributes = ArrayList<NativeAuthV2RequiredAttribute>(response.requiredAttributes.size)
+        response.requiredAttributes.forEach { attribute ->
+            val name = attribute.attributeId?.takeUnless { it.isBlank() }
+                ?: return malformedAttributeError(response.correlationId)
+            requiredAttributes.add(
+                NativeAuthV2RequiredAttribute(
+                    name = name,
+                    type = attribute.inputType,
+                    required = attribute.required ?: false
+                )
+            )
+        }
+
+        val successor = NativeAuthV2ContinuationState.next(previousState, response)
+            ?: return missingContinuationTokenError(response.correlationId)
+
+        return NativeAuthV2InteractionApiResult.AttributesRequired(
+            correlationId = response.correlationId,
+            continuationState = successor,
+            requiredAttributes = requiredAttributes
+        )
+    }
+
+    private fun malformedAttributeError(
+        correlationId: String
+    ): NativeAuthV2InteractionApiResult.UnknownError {
+        Logger.warn(TAG, correlationId, "Native Auth V2 collectAttributes response contained an attribute without a name.")
+        return NativeAuthV2InteractionApiResult.UnknownError(
+            correlationId = correlationId,
+            error = ApiErrorResult.INVALID_STATE,
+            errorDescription = "Native Auth V2 collectAttributes response contains an attribute " +
+                    "missing required field 'attributeId'."
+        )
+    }
+
     private fun parsePoll(
         response: NativeAuthV2HalApiResponse,
         previousState: NativeAuthV2ContinuationState
@@ -447,9 +531,16 @@ class NativeAuthV2ResponseParser {
         )
     }
 
+    /**
+     * Maps a HAL server error onto [NativeAuthV2InteractionApiResult].
+     *
+     * See the T4 design brief's error-mapping table for the exact condition ordering reproduced
+     * here; conditions are evaluated top to bottom and the first match wins.
+     */
     private fun mapInteractionError(
         correlationId: String,
-        serverError: NativeAuthV2HalApiResponse.HalServerError
+        serverError: NativeAuthV2HalApiResponse.HalServerError,
+        scenario: NativeAuthV2FlowScenario
     ): NativeAuthV2InteractionApiResult {
         val code = serverError.code
         val innerErrorCode = serverError.innerErrorCode
@@ -468,6 +559,36 @@ class NativeAuthV2ResponseParser {
 
             innerErrorCode == INNER_ERROR_INVALID_CONTINUATION_TOKEN ->
                 unknownInteractionError(correlationId, code, message, errorCodes)
+
+            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
+                    innerErrorCode == INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED ->
+                run {
+                    val invalidAttributes = serverError.details
+                        .filterNot { it.code == INNER_ERROR_USER_ALREADY_EXISTS }
+                        .flatMap { it.attributeIds }
+                        .distinct()
+                    if (invalidAttributes.isEmpty()) {
+                        unknownInteractionError(correlationId, code, message, errorCodes)
+                    } else {
+                        NativeAuthV2InteractionApiResult.InvalidAttributes(
+                            correlationId = correlationId,
+                            invalidAttributes = invalidAttributes,
+                            error = code.orEmpty(),
+                            errorDescription = message.orEmpty(),
+                            errorCodes = errorCodes
+                        )
+                    }
+                }
+
+            scenario == NativeAuthV2FlowScenario.SIGN_UP &&
+                    serverError.details.any { it.code == INNER_ERROR_USER_ALREADY_EXISTS } ->
+                // An account already exists for the identifier supplied to sign-up.
+                NativeAuthV2InteractionApiResult.UserAlreadyExists(
+                    correlationId = correlationId,
+                    error = code.orEmpty(),
+                    errorDescription = message.orEmpty(),
+                    errorCodes = errorCodes
+                )
 
             code == ERROR_INVALID_REQUEST && innerErrorCode in INNER_ERROR_INVALID_PASSWORD ->
                 NativeAuthV2InteractionApiResult.InvalidPassword(
@@ -602,5 +723,11 @@ class NativeAuthV2ResponseParser {
         private const val INNER_ERROR_INVALID_USERNAME_OR_PASSWORD = "invalidUserNameOrPassword"
 
         private const val AADSTS_USER_NOT_FOUND = "AADSTS50034"
+
+        /** `error.innerError.details[].code` value indicating an account already exists. */
+        private const val INNER_ERROR_USER_ALREADY_EXISTS = "userAlreadyExists"
+
+        /** `error.innerError.code` value indicating one or more attributes failed validation. */
+        private const val INNER_ERROR_ATTRIBUTE_VALIDATION_FAILED = "attributeValidationError"
     }
 }
