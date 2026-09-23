@@ -47,7 +47,7 @@ public enum FlagType {
     /**
      * Persistent tuning or behavior configuration, such as a timeout, protocol version, retry
      * count, or telemetry sampling setting. Configuration flights are exempt from age-based
-     * release cleanup, but still require an owner and pre-mortem.
+     * release cleanup, but still require an owner and pre-mortem when they are not marked legacy.
      */
     CONFIG
 }
