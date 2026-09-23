@@ -61,7 +61,7 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
      */
     val utid: String? = null,
     val webViewEnableSilentAuthorizationFlowTimeOutMs: Long? = null,
-    val isWebViewWebCpEnabled: Boolean = false,
+    val isWebViewWebCpEnabled: Boolean = true,
     val enableSwitchBrowser: Boolean = false,
     val enableMamCaInstallReferrer: Boolean = false,
 )

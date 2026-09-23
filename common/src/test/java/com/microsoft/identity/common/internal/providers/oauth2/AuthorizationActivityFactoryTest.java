@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_WEB_CP_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
@@ -116,6 +117,7 @@ public class AuthorizationActivityFactoryTest {
         assertEquals(authorizationAgent, resultIntent.getSerializableExtra(AUTHORIZATION_AGENT));
         assertEquals(webViewZoomEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_ENABLED, false));
         assertEquals(webViewZoomControlsEnabled, resultIntent.getBooleanExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, false));
+        assertTrue(resultIntent.getBooleanExtra(WEB_VIEW_WEB_CP_ENABLED, false));
         assertEquals(sourceLibraryName, resultIntent.getStringExtra(PRODUCT));
         assertEquals(sourceLibraryVersion, resultIntent.getStringExtra(VERSION));
         assertEquals(requestUrl,  resultIntent.getStringExtra(REQUEST_URL));
@@ -126,6 +128,29 @@ public class AuthorizationActivityFactoryTest {
         assertNotNull(idTokenHeaderValue);
         assertEquals("value1", idTokenHeaderValue);
         assertFalse(resultIntent.hasExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT));
+    }
+
+    @Test
+    public void testWebCpInWebViewCanBeExplicitlyDisabled() {
+        final AuthorizationActivityParameters params = new AuthorizationActivityParameters(
+                context,
+                authIntent,
+                requestUrl,
+                redirectUri,
+                requestHeaders,
+                authorizationAgent,
+                webViewZoomEnabled,
+                webViewZoomControlsEnabled,
+                sourceLibraryName,
+                sourceLibraryVersion,
+                null,
+                null,
+                false
+        );
+
+        final Intent resultIntent = AuthorizationActivityFactory.getAuthorizationActivityIntent(params);
+
+        assertFalse(resultIntent.getBooleanExtra(WEB_VIEW_WEB_CP_ENABLED, true));
     }
 
     @SneakyThrows
