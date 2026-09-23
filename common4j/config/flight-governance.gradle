@@ -19,8 +19,13 @@ tasks.register('verifyFlightGovernance') {
             }
 
             def lineNumber = index + 1
-            def constantMatch = line =~ /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"([^"]+)"/
+            def constructorText = lines[index..Math.min(index + 8, lines.size() - 1)].join(' ')
+            def constantMatch = constructorText =~ /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"([^"]+)"/
             if (!constantMatch.find()) {
+                if (line.trim().startsWith('CommonFlight(')) {
+                    return
+                }
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} has an unparsable flight declaration"
                 return
             }
             def flightKey = constantMatch.group(2)
