@@ -314,6 +314,40 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
+    fun testResetPasswordStartReturnsAPIErrorWhenOnlyUnsupportedMethodIsOffered() {
+        val state = mockContinuationState()
+        every {
+            mockStrategy.performAuthorizeChallengeStart(
+                correlationId = any(),
+                entryRelation = any(),
+                scenario = any(),
+                scopes = any(),
+                claimsRequestJson = null
+            )
+        } returns AuthorizeChallengeApiResult.ContinuationRequired(
+            correlationId = correlationId,
+            continuationState = state
+        )
+        every {
+            mockStrategy.performResetPasswordStart(username = any(), state = state)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
+            correlationId = correlationId,
+            continuationState = state,
+            hint = null,
+            methods = listOf(
+                NativeAuthV2AuthMethod("password-1", "password", null)
+            )
+        )
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unsupported_challenge_method", result.error)
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+    }
+
+    @Test
     fun testResetPasswordStartAutomaticallyChallengesSingleSmsMethod() {
         val challengeState = mockContinuationState()
         val riskState = mockContinuationState()
