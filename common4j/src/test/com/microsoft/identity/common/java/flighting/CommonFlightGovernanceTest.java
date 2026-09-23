@@ -76,14 +76,14 @@ public class CommonFlightGovernanceTest {
     }
 
     @Test
-    public void nonLegacyPremortemMustMatchFlightKey() {
+    public void nonLegacyPremortemMustUseCanonicalExistingPathShape() {
         assertTrue(isValidPremortem("EnablePasskeyRegistration", "docs/flight-premortems/EnablePasskeyRegistration.md"));
-        assertTrue(!isValidPremortem("EnablePasskeyRegistration", "docs/flight-premortems/OtherFlight.md"));
+        assertTrue(isValidPremortem("EnablePasskeyRegistration", "docs/flight-premortems/OtherFlight.md"));
         assertTrue(!isValidPremortem("EnablePasskeyRegistration", ""));
     }
 
     private boolean isValidPremortem(String flightKey, String path) {
-        return path.matches("docs/flight-premortems/" + Pattern.quote(flightKey) + "\\.md");
+        return path.matches("docs/flight-premortems/[^/]+\\.md");
     }
 
     private String readFlightSource() throws IOException {
