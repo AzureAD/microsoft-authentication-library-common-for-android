@@ -94,6 +94,33 @@ public final class JwtRequestBody extends AbstractJwtRequest {
     @SerializedName(ClaimNames.CLIENT_SCENARIO)
     private String mClientScenario;
 
+    @SerializedName(ClaimNames.PREVIOUS_TOKEN)
+    private String mPreviousToken;
+
+    @SerializedName(ClaimNames.KEY_TYPE)
+    private String mKeyType;
+
+    @SerializedName(ClaimNames.HASH_ALG)
+    private String mHashAlg;
+
+    @SerializedName(ClaimNames.RP_ID)
+    private String mRpId;
+
+    @SerializedName(ClaimNames.FIDO_VER)
+    private String mFidoVer;
+
+    @SerializedName(ClaimNames.SIGNATURE)
+    private String mSignature;
+
+    @SerializedName(ClaimNames.AUTH_DATA)
+    private String mAuthData;
+
+    @SerializedName(ClaimNames.KEY_ID)
+    private String mKeyId;
+
+    @SerializedName(ClaimNames.CLIENT_DATA_JSON)
+    private String mClientDataJson;
+
     public void setIat(final long iat) {
         mIat = String.valueOf(iat);
     }

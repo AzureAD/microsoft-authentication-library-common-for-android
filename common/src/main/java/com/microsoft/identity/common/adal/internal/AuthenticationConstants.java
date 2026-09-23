@@ -1615,6 +1615,36 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
+         * Boolean to return when a PRT is successfully refreshed with NGC proof.
+         */
+        public static final String REFRESH_PRT_WITH_NGC_SUCCEEDED = "refresh_prt_with_ngc_succeeded";
+
+        /**
+         * Bundle key for the NGC assertion signature.
+         */
+        public static final String NGC_ASSERTION_SIGNATURE = "ngc_assertion_signature";
+
+        /**
+         * Bundle key for the NGC authenticator data.
+         */
+        public static final String NGC_ASSERTION_AUTHENTICATOR_DATA = "ngc_assertion_authenticator_data";
+
+        /**
+         * Bundle key for the NGC key identifier.
+         */
+        public static final String NGC_ASSERTION_KEY_ID = "ngc_assertion_key_id";
+
+        /**
+         * Bundle key for the NGC assertion client data JSON.
+         */
+        public static final String NGC_ASSERTION_CLIENT_DATA_JSON = "ngc_assertion_client_data_json";
+
+        /**
+         * Bundle key for the server nonce bound into the NGC assertion.
+         */
+        public static final String NGC_ASSERTION_REQUEST_NONCE = "ngc_assertion_request_nonce";
+
+        /**
          * Boolean to return when broker flights is successfully set.
          */
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
@@ -1813,6 +1843,7 @@ public final class AuthenticationConstants {
             BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
             BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
             BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
+            BROKER_REFRESH_PRT_WITH_NGC(BROKER_API_REFRESH_PRT_WITH_NGC_PATH, BROKER_VERSION_5, null),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_3, null),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_3, null),
 
@@ -1947,6 +1978,11 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        /**
+         * URI Path constant for BrokerApi-to-Broker refreshPrtWithNgc request using ContentProvider.
+         */
+        public static final String BROKER_API_REFRESH_PRT_WITH_NGC_PATH = "/brokerApi/refreshPrtWithNgc";
 
         /**
          * Broker api path constant for setting flight information.
