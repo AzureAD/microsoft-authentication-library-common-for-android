@@ -40,11 +40,15 @@ public class CommonFlightGovernanceTest {
             assertTrue(ownerMatcher.find());
             assertTrue(ownerMatcher.group(1).trim().length() > 0);
             assertTrue(metadata.matches(".*type\\s*=\\s*FlagType\\.(RELEASE|KILL_SWITCH|CONFIG).*"));
+            Matcher legacyMatcher = Pattern.compile("legacy\\s*=\\s*(true|false)").matcher(metadata);
+            boolean isLegacy = legacyMatcher.find() && "true".equals(legacyMatcher.group(1));
             Matcher premortemMatcher = Pattern.compile("premortem\\s*=\\s*\\\"([^\\\"]+)\\\"").matcher(metadata);
-            assertTrue(premortemMatcher.find());
-            String premortem = premortemMatcher.group(1);
-            assertTrue(premortem.matches("docs/flight-premortems/[^/]+\\.md"));
-            assertTrue(new File(premortem).isFile());
+            if (!isLegacy) {
+                assertTrue(premortemMatcher.find());
+                String premortem = premortemMatcher.group(1);
+                assertTrue(premortem.matches("docs/flight-premortems/[^/]+\\.md"));
+                assertTrue(new File(premortem).isFile());
+            }
             metadataByFlight.put(flightName, flightKey);
         }
 

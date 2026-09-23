@@ -27,7 +27,15 @@ public @interface FlightMeta {
     FlagType type();
 
     /**
-     * Repository-relative path to the flight pre-mortem document.
+     * Whether this is an existing flight being grandfathered during governance backfill.
+     * Legacy flights must still have an owner and type, but are not required to provide a
+     * feature-specific pre-mortem until they are changed or explicitly migrated.
      */
-    String premortem();
+    boolean legacy() default false;
+
+    /**
+     * Repository-relative path to the flight pre-mortem document. Required unless {@link #legacy()}
+     * is {@code true}.
+     */
+    String premortem() default "";
 }

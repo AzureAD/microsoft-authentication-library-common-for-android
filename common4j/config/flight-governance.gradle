@@ -54,10 +54,15 @@ tasks.register('verifyFlightGovernance') {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} must declare a non-empty owner"
             }
 
+            def legacyMatch = metadata =~ /\blegacy\s*=\s*(true|false)\b/
+            def isLegacy = legacyMatch.find() && legacyMatch.group(1) == 'true'
             def premortemMatch = metadata =~ /\bpremortem\s*=\s*"([^"]+)"/
             def hasPremortem = premortemMatch.find()
             def premortemPath = hasPremortem ? premortemMatch.group(1) : ''
             def premortemFile = premortemPath ? file(premortemPath) : null
+            if (isLegacy) {
+                return
+            }
             if (!hasPremortem) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} is missing the premortem attribute"
             } else if (!(premortemPath ==~ /^docs\/flight-premortems\/[^\/]+\.md$/)) {
