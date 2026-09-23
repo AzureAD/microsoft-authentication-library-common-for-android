@@ -76,6 +76,20 @@ sealed interface NativeAuthV2InteractionApiResult : ApiResult {
     }
 
     /**
+     * The selected authentication method requires an internal risk-verification request before
+     * the service can return the code-verification contract. This is a protocol-layer transition;
+     * higher layers follow it automatically rather than exposing another application state.
+     */
+    data class RiskVerificationRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState
+    ) : NativeAuthV2InteractionApiResult {
+        override fun toUnsanitizedString(): String =
+            "RiskVerificationRequired(correlationId=$correlationId)"
+        override fun toString(): String = toUnsanitizedString()
+    }
+
+    /**
      * The server challenged the selected password method and is ready to verify a password
      * submitted via [continuationState].
      */
