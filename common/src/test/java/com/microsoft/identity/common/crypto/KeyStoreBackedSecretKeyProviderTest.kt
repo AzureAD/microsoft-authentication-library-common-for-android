@@ -35,6 +35,7 @@ import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -42,6 +43,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Tests for the wipe-telemetry root-cause resolution used by
@@ -73,6 +76,7 @@ class KeyStoreBackedSecretKeyProviderTest {
     fun tearDown() {
         keyFile.delete()
         keyProvider.clearKeyFromCache()
+        AndroidWrappedKeyProvider.sSkipKeyInvalidationCheck = false
         unmockkAll()
     }
 
@@ -83,6 +87,13 @@ class KeyStoreBackedSecretKeyProviderTest {
     private class LoopingThrowable(message: String) : Throwable(message) {
         var link: Throwable? = null
         override val cause: Throwable? get() = link
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun cacheSecretKey(secretKey: SecretKey) {
+        val cacheField = KeyStoreBackedSecretKeyProvider::class.java.getDeclaredField("sKeyCacheMap")
+        cacheField.isAccessible = true
+        (cacheField.get(null) as MutableMap<String, SecretKey>)[KEY_FILE_PATH] = secretKey
     }
 
     @Test
@@ -146,10 +157,15 @@ class KeyStoreBackedSecretKeyProviderTest {
     fun readSecretKeyFromStorage_suppressesCleanupFailure_andStillDeletesFile() {
         val readException = ClientException("read_error", "read failure")
         val cleanupException = ClientException("cleanup_error", "cleanup failure")
+        val cachedKey = SecretKeySpec(ByteArray(16), "AES")
+        AndroidWrappedKeyProvider.sSkipKeyInvalidationCheck = true
+        cacheSecretKey(cachedKey)
         every { AndroidKeyStoreUtil.readKey(KEY_ALIAS) } throws readException
         every { AndroidKeyStoreUtil.getKeyStoreErrorTransience(readException) } returns
             AndroidKeyStoreUtil.KeyStoreErrorTransience.NOT_TRANSIENT
         every { AndroidKeyStoreUtil.deleteKey(KEY_ALIAS) } throws cleanupException
+
+        assertSame(cachedKey, keyProvider.keyFromCache)
 
         val thrown = try {
             keyProvider.readSecretKeyFromStorage()
@@ -161,6 +177,7 @@ class KeyStoreBackedSecretKeyProviderTest {
         assertSame(readException, thrown)
         assertEquals(listOf(cleanupException), thrown.suppressed.toList())
         assertFalse("File cleanup must run when KeyStore deletion fails", keyFile.exists())
+        assertNull("Cache cleanup must run when KeyStore deletion fails", keyProvider.keyFromCache)
     }
 
     @Test
