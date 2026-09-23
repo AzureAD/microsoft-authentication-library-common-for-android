@@ -109,6 +109,11 @@ class KeyStoreBackedSecretKeyProvider(
             }
             return current
         }
+
+        @VisibleForTesting
+        fun shouldPreserveKeyData(
+            transience: AndroidKeyStoreUtil.KeyStoreErrorTransience
+        ): Boolean = transience == AndroidKeyStoreUtil.KeyStoreErrorTransience.TRANSIENT
     }
 
     override val keyTypeIdentifier = KEY_TYPE_IDENTIFIER
@@ -143,9 +148,16 @@ class KeyStoreBackedSecretKeyProvider(
     @VisibleForTesting
     @Throws(ClientException::class)
     fun deleteSecretKeyFromStorage() {
-        AndroidKeyStoreUtil.deleteKey(alias)
-        FileUtil.deleteFile(keyFile)
-        sKeyCacheMap.remove(filePath)
+        var keyStoreDeletionException: ClientException? = null
+        try {
+            AndroidKeyStoreUtil.deleteKey(alias)
+        } catch (exception: ClientException) {
+            keyStoreDeletionException = exception
+        } finally {
+            FileUtil.deleteFile(keyFile)
+            sKeyCacheMap.remove(filePath)
+        }
+        keyStoreDeletionException?.let { throw it }
     }
 
     private fun clearCachedKeyIfCantLoadOrFileDoesNotExist() {
@@ -298,22 +310,22 @@ class KeyStoreBackedSecretKeyProvider(
                 val secretKey = deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
                 span.setStatus(StatusCode.OK)
                 return secretKey
-            } catch (e: ClientException) {
-                // Reset KeyPair info so that new request will generate correct KeyPairs.
-                // All tokens with previous SecretKey are not possible to decrypt.
-                Logger.warn(
-                    methodTag, "Error when loading key from Storage, " +
-                            "wipe all existing key data "
-                )
-                recordWipe(span, WIPE_REASON_LOAD_ERROR, e)
-                span.setStatus(StatusCode.ERROR)
-                span.recordException(e)
-                deleteSecretKeyFromStorage()
-                throw e
             } catch (e: Exception) {
-                // Non-ClientException failures are recorded but not wiped (only ClientException wipes).
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(e)
+                if (shouldPreserveKeyData(AndroidKeyStoreUtil.getKeyStoreErrorTransience(e))) {
+                    Logger.warn(methodTag, "Transient KeyStore error while loading key; preserving key data")
+                    throw e
+                }
+
+                Logger.warn(methodTag, "Error when loading key from storage; wiping all existing key data")
+                recordWipe(span, WIPE_REASON_LOAD_ERROR, e)
+                try {
+                    deleteSecretKeyFromStorage()
+                } catch (cleanupException: Exception) {
+                    e.addSuppressed(cleanupException)
+                    Logger.error(methodTag, "Failed to fully clean up key data", cleanupException)
+                }
                 throw e
             } finally {
                 span.end()
@@ -330,7 +342,7 @@ class KeyStoreBackedSecretKeyProvider(
      * @param reason a stable identifier for which check triggered the wipe.
      * @param exception the failure that triggered the wipe, when caused by an exception.
      */
-    private fun recordWipe(span: Span, reason: String, exception: ClientException? = null) {
+    private fun recordWipe(span: Span, reason: String, exception: Throwable? = null) {
         try {
             span.setAttribute(AttributeName.secret_key_wipe_reason.name, reason)
             if (exception != null) {
