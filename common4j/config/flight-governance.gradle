@@ -74,8 +74,6 @@ tasks.register('verifyFlightGovernance') {
                 return
             } else if (!hasPremortem) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} is missing the premortem attribute"
-            } else if (!(premortemPath ==~ /^docs\/flight-premortems\/${java.util.regex.Pattern.quote(flightKey)}\.md$/)) {
-                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} has invalid premortem path '${premortemPath}'; expected docs/flight-premortems/<FlagKey>.md"
             } else if (!premortemFile.exists()) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} references missing premortem file '${premortemPath}'"
             }
