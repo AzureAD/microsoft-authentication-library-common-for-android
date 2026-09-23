@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class CommonFlightGovernanceTest {
     private static final Pattern FLIGHT_PATTERN = Pattern.compile(
-            "@FlightMeta\\s*\\(([^)]*)\\)\\s*([A-Z][A-Z0-9_]*)\\s*\\(\\\"([^\\\"]+)\\\"");
+            "@FlightMeta\\s*\\(([^)]*)\\)\\s*([A-Za-z_$][A-Za-z0-9_$]*)\\s*\\(\\\"([^\\\"]+)\\\"");
 
     @Test
     public void everyCommonFlightHasCompleteGovernanceMetadata() throws IOException {
@@ -56,6 +56,17 @@ public class CommonFlightGovernanceTest {
         for (CommonFlight flight : CommonFlight.values()) {
             assertEquals(flight.getKey(), metadataByFlight.get(flight.name()));
         }
+    }
+
+    @Test
+    public void nonLegacyPremortemMustMatchFlightKey() {
+        assertTrue(isValidPremortem("EnablePasskeyRegistration", "docs/flight-premortems/EnablePasskeyRegistration.md"));
+        assertTrue(!isValidPremortem("EnablePasskeyRegistration", "docs/flight-premortems/OtherFlight.md"));
+        assertTrue(!isValidPremortem("EnablePasskeyRegistration", ""));
+    }
+
+    private boolean isValidPremortem(String flightKey, String path) {
+        return path.matches("docs/flight-premortems/" + Pattern.quote(flightKey) + "\\.md");
     }
 
     private String readFlightSource() throws IOException {

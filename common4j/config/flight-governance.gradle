@@ -10,7 +10,7 @@ tasks.register('verifyFlightGovernance') {
         }
 
         def lines = flightGovernanceSource.readLines()
-        def constantPattern = ~/^\s*[A-Z][A-Z0-9_]*\s*\(.*$/
+        def constantPattern = ~/^\s*[A-Za-z_$][A-Za-z0-9_$]*\s*\(.*$/
         def violations = []
 
         lines.eachWithIndex { line, index ->
@@ -19,6 +19,11 @@ tasks.register('verifyFlightGovernance') {
             }
 
             def lineNumber = index + 1
+            def constantMatch = line =~ /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"([^"]+)"/
+            if (!constantMatch.find()) {
+                return
+            }
+            def flightKey = constantMatch.group(2)
             def annotationLine = null
             for (def previous = index - 1; previous >= Math.max(0, index - 8); previous--) {
                 if (lines[previous].trim().startsWith('@FlightMeta')) {
@@ -60,12 +65,11 @@ tasks.register('verifyFlightGovernance') {
             def hasPremortem = premortemMatch.find()
             def premortemPath = hasPremortem ? premortemMatch.group(1) : ''
             def premortemFile = premortemPath ? file(premortemPath) : null
-            if (isLegacy) {
+            if (!hasPremortem && isLegacy) {
                 return
-            }
-            if (!hasPremortem) {
+            } else if (!hasPremortem) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} is missing the premortem attribute"
-            } else if (!(premortemPath ==~ /^docs\/flight-premortems\/[^\/]+\.md$/)) {
+            } else if (!(premortemPath ==~ /^docs\/flight-premortems\/${java.util.regex.Pattern.quote(flightKey)}\.md$/)) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} has invalid premortem path '${premortemPath}'; expected docs/flight-premortems/<FlagKey>.md"
             } else if (!premortemFile.exists()) {
                 violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} references missing premortem file '${premortemPath}'"
