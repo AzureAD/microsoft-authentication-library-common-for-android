@@ -1,5 +1,8 @@
 vNext
 ----------
+
+Version 0.0.1988-RC1
+----------
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
 
 Version 24.7.0
