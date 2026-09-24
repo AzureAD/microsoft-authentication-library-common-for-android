@@ -2,7 +2,7 @@
 
 Flag changed code that introduces:
 
-- Exposure of secrets, tokens, claims, keys, or PII through logs, telemetry, exceptions, storage, or return values.
+- Exposure of secrets, tokens, claims, keys, or PII through logs, telemetry, or exceptions.
 - Authentication or authorization bypasses, exported Android components without appropriate protection, or weak permission checks.
 - Unsafe input handling at IPC, intent, network, file, or deserialization boundaries.
 - Race or TOCTOU behavior that affects authorization, token issuance, invalidation, or key use.
@@ -15,6 +15,7 @@ Only consolidate security concerns when they affect the same contiguous snippet/
 
 - Reject weak or deprecated primitives such as MD5, SHA-1, ECB, static salts, or RSA PKCS#1 v1.5 unless a verified protocol mandate requires them.
 - Require random, non-reused IVs/nonces for AEAD modes such as AES-GCM.
+- Detect repeated constant patterns that indicate a static or reused IV/nonce.
 - Require `SecureRandom` for cryptographic randomness; do not accept `Random`.
 - Never log keys, secrets, raw token contents, or full claims.
 - Handle nulls and failures explicitly when retrieving or generating keys.
@@ -32,4 +33,4 @@ Only consolidate security concerns when they affect the same contiguous snippet/
 
 ## Feature flags
 
-Verify that security-sensitive flags have safe defaults, are evaluated before protected behavior executes, and do not leave a partially enabled insecure path. Do not infer deployed flight combinations from in-repository defaults; apply the flighting suppression rules before commenting.
+Verify that security-sensitive flags have safe defaults, are recorded securely, are evaluated before protected behavior executes, and do not leave a partially enabled insecure path. Do not infer deployed flight combinations from in-repository defaults; apply the flighting suppression rules before commenting.

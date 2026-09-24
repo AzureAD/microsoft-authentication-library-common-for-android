@@ -45,3 +45,20 @@ Good comments are specific:
 - A loop performs repeated linear membership checks in a hot path. Explain the complexity and recommend a keyed set/map.
 
 Do not submit comments such as "Don't log tokens", "Could be faster", "Maybe volatile?", or "Add proper documentation" without evidence, impact, and remediation.
+
+## Review comment examples
+
+- Concurrency: `Race condition: double-checked lazy init missing volatile; visibility not guaranteed. Add @Volatile or use lazy {}.` Avoid `Maybe volatile?`
+- Performance: `Redundant JSON parser allocation in loop of 5k entries; move parser creation outside loop.` Also flag an actual `O(N^2)` list lookup and recommend a hash lookup keyed by account ID. Avoid `Create fewer objects.` or `Could be faster.`
+- Telemetry: `Inline key 'ipcStrategy' used; replace with AttributeName.ipc_strategy to ensure classification & consistency.` Avoid `Attribute name should be constant.`
+- Testing: `Missing negative test: parse() returns null for malformed token; add test asserting error mapping for invalid header.`
+- Documentation: `Public method fetchKeys() lacks thread-safety contract; specify main-thread or safe multi-thread use + blocking behavior.` Avoid `Add proper documentation.`
+- Modernization: `Enum used only for type-safe wrapper of string; consider value class UserId(val value:String) to reduce accidental mixing of unrelated IDs.`
+- Invalid: never suggest `Change to 'val final statusMessage'`; this mixes Kotlin and Java keywords.
+
+## Terms
+
+- **TOCTOU:** State validated earlier becomes stale before use.
+- **High-impact performance:** Likely to degrade hot-path throughput/latency or worsen complexity.
+- **Platform type (Kotlin):** A Java-origin type with unknown nullability.
+- **Mechanical change:** A bulk rename, refactor, formatting, or code-generation change with minimal semantic change.
