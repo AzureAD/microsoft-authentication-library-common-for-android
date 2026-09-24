@@ -26,8 +26,11 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
@@ -69,7 +72,12 @@ class KeyStoreBackedSecretKeyProviderTest {
         keyProvider = KeyStoreBackedSecretKeyProvider(context, KEY_ALIAS, KEY_FILE_PATH)
         keyFile = File(context.getDir(context.packageName, Context.MODE_PRIVATE), KEY_FILE_PATH)
         keyFile.writeBytes(byteArrayOf(1, 2, 3))
+        mockkObject(CommonFlightsManager)
         mockkStatic(AndroidKeyStoreUtil::class)
+        every {
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_KEYSTORE_READ_ERROR_HANDLING_V2)
+        } returns true
     }
 
     @After
@@ -131,6 +139,54 @@ class KeyStoreBackedSecretKeyProviderTest {
         assertSame(readException, thrown)
         assertTrue("Transient failures must preserve the wrapped-key file", keyFile.exists())
         verify(exactly = 0) { AndroidKeyStoreUtil.deleteKey(any()) }
+    }
+
+    @Test
+    fun readSecretKeyFromStorage_usesLegacyBehavior_whenV2FlightIsDisabled() {
+        val readException = ClientException("read_error", "transient read failure")
+        every {
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_KEYSTORE_READ_ERROR_HANDLING_V2)
+        } returns false
+        every { AndroidKeyStoreUtil.readKey(KEY_ALIAS) } throws readException
+        every { AndroidKeyStoreUtil.deleteKey(KEY_ALIAS) } just runs
+
+        val thrown = try {
+            keyProvider.readSecretKeyFromStorage()
+            throw AssertionError("Expected read failure")
+        } catch (exception: ClientException) {
+            exception
+        }
+
+        assertSame(readException, thrown)
+        assertFalse("Legacy behavior must delete the wrapped-key file", keyFile.exists())
+        verify(exactly = 1) { AndroidKeyStoreUtil.deleteKey(KEY_ALIAS) }
+    }
+
+    @Test
+    fun readSecretKeyFromStorage_preservesLegacyCleanupFailure_whenV2FlightIsDisabled() {
+        val readException = ClientException("read_error", "read failure")
+        val cleanupException = ClientException("cleanup_error", "cleanup failure")
+        val cachedKey = SecretKeySpec(ByteArray(16), "AES")
+        AndroidWrappedKeyProvider.sSkipKeyInvalidationCheck = true
+        cacheSecretKey(cachedKey)
+        every {
+            CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_KEYSTORE_READ_ERROR_HANDLING_V2)
+        } returns false
+        every { AndroidKeyStoreUtil.readKey(KEY_ALIAS) } throws readException
+        every { AndroidKeyStoreUtil.deleteKey(KEY_ALIAS) } throws cleanupException
+
+        val thrown = try {
+            keyProvider.readSecretKeyFromStorage()
+            throw AssertionError("Expected cleanup failure")
+        } catch (exception: ClientException) {
+            exception
+        }
+
+        assertSame(cleanupException, thrown)
+        assertTrue("Legacy behavior must leave the wrapped-key file", keyFile.exists())
+        assertSame(cachedKey, keyProvider.keyFromCache)
     }
 
     @Test

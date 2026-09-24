@@ -135,6 +135,13 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_KEYSTORE_BACKED_SECRET_KEY_PROVIDER("EnableKeyStoreBackedSecretKeyProvider", true),
 
     /**
+     * Kill switch for the V2 KeyStore read-error handling. When enabled (default), transient
+     * KeyStore failures preserve key data and cleanup failures do not replace the original read
+     * exception. Disable via ECS to restore the legacy read and cleanup behavior.
+     */
+    ENABLE_KEYSTORE_READ_ERROR_HANDLING_V2("EnableKeyStoreReadErrorHandlingV2", true),
+
+    /**
      * Flight to control the WrappedSecretKey serializer version
      */
     WRAPPED_SECRET_KEY_SERIALIZER_VERSION("WrappedSecretKeySerializerVersion", 1),

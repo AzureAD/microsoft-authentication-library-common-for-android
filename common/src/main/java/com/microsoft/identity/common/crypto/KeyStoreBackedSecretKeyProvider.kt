@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.crypto.key.AES256SecretKeyGenerator
 import com.microsoft.identity.common.java.crypto.key.ISecretKeyProvider
 import com.microsoft.identity.common.java.crypto.key.KeyUtil
 import com.microsoft.identity.common.java.exception.ClientException
+import com.microsoft.identity.common.java.flighting.CommonFlight
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
@@ -148,6 +150,13 @@ class KeyStoreBackedSecretKeyProvider(
     @VisibleForTesting
     @Throws(ClientException::class)
     fun deleteSecretKeyFromStorage() {
+        AndroidKeyStoreUtil.deleteKey(alias)
+        FileUtil.deleteFile(keyFile)
+        sKeyCacheMap.remove(filePath)
+    }
+
+    @Throws(ClientException::class)
+    private fun deleteSecretKeyFromStorageV2() {
         var keyStoreDeletionException: ClientException? = null
         try {
             AndroidKeyStoreUtil.deleteKey(alias)
@@ -272,6 +281,12 @@ class KeyStoreBackedSecretKeyProvider(
     /* package */@Synchronized
     @Throws(ClientException::class)
     fun readSecretKeyFromStorage(): SecretKey? {
+        if (CommonFlightsManager.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_KEYSTORE_READ_ERROR_HANDLING_V2)
+        ) {
+            return readSecretKeyFromStorageV2()
+        }
+
         val methodTag = "$TAG:readSecretKeyFromStorage"
         val span = OTelUtility.createSpanFromParent(
             SpanName.SecretKeyRetrieval.name,
@@ -310,6 +325,60 @@ class KeyStoreBackedSecretKeyProvider(
                 val secretKey = deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
                 span.setStatus(StatusCode.OK)
                 return secretKey
+            } catch (e: ClientException) {
+                // Reset KeyPair info so that new request will generate correct KeyPairs.
+                // All tokens with previous SecretKey are not possible to decrypt.
+                Logger.warn(
+                    methodTag, "Error when loading key from Storage, " +
+                            "wipe all existing key data "
+                )
+                recordWipe(span, WIPE_REASON_LOAD_ERROR, e)
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(e)
+                deleteSecretKeyFromStorage()
+                throw e
+            } catch (e: Exception) {
+                // Non-ClientException failures are recorded but not wiped (only ClientException wipes).
+                span.setStatus(StatusCode.ERROR)
+                span.recordException(e)
+                throw e
+            } finally {
+                span.end()
+            }
+        }
+    }
+
+    @Throws(ClientException::class)
+    private fun readSecretKeyFromStorageV2(): SecretKey? {
+        val methodTag = "$TAG:readSecretKeyFromStorageV2"
+        val span = OTelUtility.createSpanFromParent(
+            SpanName.SecretKeyRetrieval.name,
+            SpanExtension.current().spanContext
+        )
+        SpanExtension.makeCurrentSpan(span).use { _ ->
+            try {
+                val keyPair = AndroidKeyStoreUtil.readKey(alias) ?: run {
+                    Logger.info(methodTag, "key does not exist in keystore")
+                    if (keyFile.exists()) {
+                        recordWipe(span, WIPE_REASON_KEYSTORE_KEY_ABSENT_ORPHANED_FILE)
+                    }
+                    deleteSecretKeyFromStorageV2()
+                    span.setStatus(StatusCode.OK)
+                    return null
+                }
+                val rawWrappedSecretKey = readRawWrappedSecretKeyFromFile() ?: run {
+                    Logger.warn(methodTag, "Key file is empty")
+                    if (keyFile.exists()) {
+                        recordWipe(span, WIPE_REASON_EMPTY_KEY_FILE_REKEY)
+                    }
+                    FileUtil.deleteFile(keyFile)
+                    clearKeyFromCache()
+                    span.setStatus(StatusCode.OK)
+                    return null
+                }
+                val secretKey = deserializeAndUnwrapSecretKey(rawWrappedSecretKey, keyPair)
+                span.setStatus(StatusCode.OK)
+                return secretKey
             } catch (e: Exception) {
                 span.setStatus(StatusCode.ERROR)
                 span.recordException(e)
@@ -321,7 +390,7 @@ class KeyStoreBackedSecretKeyProvider(
                 Logger.warn(methodTag, "Error when loading key from storage; wiping all existing key data")
                 recordWipe(span, WIPE_REASON_LOAD_ERROR, e)
                 try {
-                    deleteSecretKeyFromStorage()
+                    deleteSecretKeyFromStorageV2()
                 } catch (cleanupException: Exception) {
                     e.addSuppressed(cleanupException)
                     Logger.error(methodTag, "Failed to fully clean up key data", cleanupException)
