@@ -1,0 +1,88 @@
+def flightGovernanceSource = file('src/main/com/microsoft/identity/common/java/flighting/CommonFlight.java')
+
+tasks.register('verifyFlightGovernance') {
+    group = 'verification'
+    description = 'Verifies metadata on all CommonFlight constants.'
+
+    doLast {
+        if (!flightGovernanceSource.exists()) {
+            throw new GradleException("Flight source does not exist: ${flightGovernanceSource}")
+        }
+
+        def lines = flightGovernanceSource.readLines()
+        def constantPattern = ~/^\s*[A-Za-z_$][A-Za-z0-9_$]*\s*\(.*$/
+        def violations = []
+
+        lines.eachWithIndex { line, index ->
+            if (!(line ==~ constantPattern)) {
+                return
+            }
+
+            def lineNumber = index + 1
+            def constructorText = lines[index..Math.min(index + 8, lines.size() - 1)].join(' ')
+            def constantMatch = constructorText =~ /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"([^"]+)"/
+            if (!constantMatch.find()) {
+                if (line.trim().startsWith('CommonFlight(')) {
+                    return
+                }
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} has an unparsable flight declaration"
+                return
+            }
+            def flightKey = constantMatch.group(2)
+            def annotationLine = null
+            for (def previous = index - 1; previous >= Math.max(0, index - 8); previous--) {
+                if (lines[previous].trim().startsWith('@FlightMeta')) {
+                    annotationLine = previous
+                    break
+                }
+                if (lines[previous].trim().endsWith(';') || lines[previous] ==~ constantPattern) {
+                    break
+                }
+            }
+
+            if (annotationLine == null) {
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} is missing @FlightMeta"
+                return
+            }
+
+            def annotationText = lines[annotationLine..(index - 1)].join(' ')
+            def annotationMatch = annotationText =~ /@FlightMeta\s*\((.*)\)/
+            if (!annotationMatch.find()) {
+                violations << "${flightGovernanceSource.name}:${annotationLine + 1} has an invalid @FlightMeta declaration"
+                return
+            }
+
+            def metadata = annotationMatch.group(1)
+            def typeMatch = metadata =~ /\btype\s*=\s*FlagType\.(RELEASE|KILL_SWITCH|CONFIG)\b/
+            if (!typeMatch.find()) {
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} must declare owner and type"
+                return
+            }
+
+            def ownerMatch = metadata =~ /\bowner\s*=\s*"([^"]*)"/
+            if (!ownerMatch.find() || ownerMatch.group(1).trim().isEmpty()) {
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} must declare a non-empty owner"
+            }
+
+            def legacyMatch = metadata =~ /\blegacy\s*=\s*(true|false)\b/
+            def isLegacy = legacyMatch.find() && legacyMatch.group(1) == 'true'
+            def premortemMatch = metadata =~ /\bpremortem\s*=\s*"([^"]+)"/
+            def hasPremortem = premortemMatch.find()
+            def premortemPath = hasPremortem ? premortemMatch.group(1) : ''
+            def premortemFile = premortemPath ? file(premortemPath) : null
+            if (!hasPremortem && isLegacy) {
+                return
+            } else if (!hasPremortem) {
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} is missing the premortem attribute"
+            } else if (!premortemFile.exists()) {
+                violations << "${flightGovernanceSource.name}:${lineNumber} ${line.trim()} references missing premortem file '${premortemPath}'"
+            }
+        }
+
+        if (!violations.isEmpty()) {
+            throw new GradleException('Flight governance violations:\n' + violations.collect { " - ${it}" }.join('\n'))
+        }
+    }
+}
+
+check.dependsOn verifyFlightGovernance
