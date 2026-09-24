@@ -4,6 +4,11 @@ vNext
 Version 0.0.1988-RC1
 ----------
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
+- [MINOR] Enable WebCP in WebView by default for MSAL, Fixes AB#3763874 (#3268)
+- [PATCH] Refine broker-install intent validation, Fixes AB#3674205 (#3261)
+- [MINOR] Fixes AB#3705014 PasskeyWebListener activity leak (#3257)
+- [MINOR] Fixes AB#3755175 Remove filter-then-clone cache flight (#3256)
+- [MINOR] Native Auth V2: Sign-up Fixes AB#3729066 (#3240)
 
 Version 24.7.0
 ----------
