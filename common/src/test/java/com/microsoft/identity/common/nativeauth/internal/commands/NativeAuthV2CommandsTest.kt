@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.nativeauth.internal.commands
 
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2ResendCodeCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPa
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResendCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2ResetPasswordStartCommandResult
+import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SelectResetPasswordMethodCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInAfterResetPasswordCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignInSubmitCodeCommandResult
 import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeAuthV2SignUpSubmitCodeCommandResult
@@ -57,6 +59,19 @@ class NativeAuthV2CommandsTest {
 
         assertSame(result, actual)
         verify(exactly = 1) { controller.resetPasswordStart(parameters) }
+    }
+
+    @Test
+    fun selectResetPasswordMethod_executeDelegatesAndReturnsResult() {
+        val parameters = parameters<NativeAuthV2SelectResetPasswordMethodCommandParameters>()
+        val result = mockk<NativeAuthV2SelectResetPasswordMethodCommandResult>()
+        every { controller.selectResetPasswordMethod(parameters) } returns result
+
+        val actual =
+            NativeAuthV2SelectResetPasswordMethodCommand(parameters, controller, API_ID).execute()
+
+        assertSame(result, actual)
+        verify(exactly = 1) { controller.selectResetPasswordMethod(parameters) }
     }
 
     @Test
