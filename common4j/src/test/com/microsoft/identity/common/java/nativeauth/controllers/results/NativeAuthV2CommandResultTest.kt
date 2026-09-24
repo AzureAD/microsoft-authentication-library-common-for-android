@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.nativeauth.controllers.results
 
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -46,6 +47,11 @@ class NativeAuthV2CommandResultTest {
                 6,
                 TARGET,
                 "email"
+            ),
+            NativeAuthV2CommandResult.ResetPasswordMethodRequired(
+                CORRELATION_ID,
+                state,
+                listOf(NativeAuthV2AuthMethod("sms-1", "sms", TARGET))
             ),
             NativeAuthV2CommandResult.IncorrectCode(
                 CORRELATION_ID,
