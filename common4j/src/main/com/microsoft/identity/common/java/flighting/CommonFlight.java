@@ -127,6 +127,9 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to install the Auth UX forwarding wrapper at document start on supported WebViews.
      * Does not change native bridge exposure or the existing late-injection fallback.
+     * Defaults to true so the shared Common behavior remains available to brokerless OneAuth
+     * first-party hosts, which do not receive live Common ECS configuration. Those hosts must
+     * gate bridge exposure through per-request recorder eligibility.
      */
     ENABLE_AUTHUX_DOCUMENT_START_SCRIPT("EnableAuthUxDocumentStartScript", true),
 
