@@ -472,13 +472,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation contains cross cloud redirect.");
                 processCrossCloudRedirect(view, url);
             } else if (mInWebCpFlow && isWebCpEnrollmentUrl(url)) {
-                Logger.info(methodTag,"Navigation contains web cp enrollment url.");
+                Logger.info(methodTag,"Navigation contains web cp enrollment url." + url);
                 processWebCpEnrollmentUrl(view, url);
             } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
+                Logger.info(methodTag,"Navigation contains web cp authorize url." + url);
                 processWebCpAuthorize(view, url);
             }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
-                Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
+                Logger.info(methodTag, "Navigation contains device CA request with https scheme." + url);
                 processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
@@ -1183,7 +1184,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
                 String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-                view.loadUrl(httpsUrl, mRequestHeaders);
+                view.loadUrl(httpsUrl);
             } else {
                 Logger.info(methodTag, "Loading device CA request in browser.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
