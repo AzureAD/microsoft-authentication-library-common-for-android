@@ -125,6 +125,12 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to install the Auth UX forwarding wrapper at document start on supported WebViews.
+     * Does not change native bridge exposure or the existing late-injection fallback.
+     */
+    ENABLE_AUTHUX_DOCUMENT_START_SCRIPT("EnableAuthUxDocumentStartScript", true),
+
+    /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
     ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),

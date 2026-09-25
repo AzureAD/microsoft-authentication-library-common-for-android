@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
@@ -45,6 +46,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -106,7 +110,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -151,6 +157,45 @@ import io.opentelemetry.context.Scope;
  */
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
+
+    private static final String AUTH_UX_FORWARDING_SCRIPT =
+            "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+    private static final String AUTH_UX_DOCUMENT_START_SCRIPT =
+            "(function() { " +
+                    "if (window !== window.top) { return; } " +
+                    "var bridge = window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + "; " +
+                    "if (!bridge || typeof bridge.receiveAuthUxMessage !== 'function') { return; } " +
+                    AUTH_UX_FORWARDING_SCRIPT +
+                    " })();";
+
+    // Reuse the shared HTTPS prefix so all rules share the same protocol policy and avoid
+    // duplicating a security-sensitive literal.
+    private static final String AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX =
+            AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX + "*";
+
+    // Early injection intentionally supports HTTPS/443 only: HTTP cannot authenticate the page's
+    // origin or protect its contents from network tampering, so an allowed hostname alone is insufficient.
+    // Native bridge and late-injection gates stay unchanged; additional ports require supported-flow
+    // evidence and explicit origin review.
+    private static final Set<String> AUTH_UX_DOCUMENT_START_ORIGINS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList(
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX
+            )));
+
+    @Nullable
+    private ScriptHandler mAuthUxDocumentStartScriptHandler;
+    @Nullable
+    private WebView mAuthUxDocumentStartScriptOwner;
 
     /**
      * Package name of the Google Play Store, the legitimate launch target for a broker-install
@@ -331,6 +376,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
      * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
      * If both conditions are met, it adds the JavaScript interface to the WebView.
+     * Registers the optional origin-restricted early wrapper before the first load; its lifetime
+     * is the owning WebView, not each navigation.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         if (shouldExposeJavaScriptInterface(url)) {
@@ -341,6 +388,43 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
+        initializeAuthUxDocumentStartScript(view);
+    }
+
+    private void initializeAuthUxDocumentStartScript(@NonNull final WebView view) {
+        final String methodTag = TAG + ":initializeAuthUxDocumentStartScript";
+        if (mAuthUxDocumentStartScriptOwner == view) {
+            return;
+        }
+        removeAuthUxDocumentStartScript();
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_DOCUMENT_START_SCRIPT)
+                || !isAuthUxJavaScriptApiEnabled()) {
+            return;
+        }
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            mAuthUxDocumentStartScriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                    view, AUTH_UX_DOCUMENT_START_SCRIPT, AUTH_UX_DOCUMENT_START_ORIGINS);
+            mAuthUxDocumentStartScriptOwner = view;
+            Logger.info(methodTag, "Auth UX document-start script registration succeeded.");
+        } else {
+            Logger.info(methodTag, "Document-start scripts unsupported; retaining late Auth UX injection.");
+        }
+    }
+
+    /**
+     * Removes this client's early script registration and releases its WebView reference.
+     * Idempotent; affects future documents, not JavaScript already installed in the current page.
+     * Call when the owning view is destroyed, separately from activity/certificate cleanup.
+     * A non-null handle can only come from successful, feature-checked registration above.
+     */
+    @SuppressLint("RequiresFeature")
+    public void removeAuthUxDocumentStartScript() {
+        if (mAuthUxDocumentStartScriptHandler != null) {
+            mAuthUxDocumentStartScriptHandler.remove();
+            mAuthUxDocumentStartScriptHandler = null;
+        }
+        mAuthUxDocumentStartScriptOwner = null;
     }
 
     /**
@@ -388,11 +472,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
             // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
+            view.evaluateJavascript(AUTH_UX_FORWARDING_SCRIPT, null);
         }
     }
 
