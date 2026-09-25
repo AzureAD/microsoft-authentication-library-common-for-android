@@ -145,6 +145,14 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_WEB_CP_IN_WEBVIEW("EnableWebCpInWebView", false),
 
     /**
+     * Flight to withhold the original request headers from Device-CA loads so credentials are
+     * forwarded only by the validated WebCP authorize path.
+     */
+    ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING(
+            "EnableDeviceCaAuthorizeOnlyCredentialForwarding",
+            false),
+
+    /**
      * Flight to enable the Playstore URL launch for broker apps.
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
