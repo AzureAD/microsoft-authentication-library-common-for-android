@@ -760,6 +760,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             PasskeyWebListener.unhook(mWebView);
             mPasskeyWebListenerHooked = false;
         }
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.removeAuthUxDocumentStartScript();
+        }
         super.onDestroyView();
     }
 

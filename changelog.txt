@@ -1,6 +1,7 @@
 vNext
 ----------
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
+- [MINOR] Record Auth UX log_telemetry server error codes in the onboarding telemetry blocking-errors list; install the guarded forwarding wrapper at document start on supported WebViews, controlled by ENABLE_AUTHUX_DOCUMENT_START_SCRIPT (default on), while retaining the existing late-injection fallback (#3201)
 
 Version 24.7.0
 ----------
