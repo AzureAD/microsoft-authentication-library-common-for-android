@@ -2342,8 +2342,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * credential state. No-op when no recorder is attached (inherits the seed-gate, so hosts without
      * an onboarding session — e.g. third-party callers — stay inert). Reads
      * {@link #mOnboardingTelemetryRecorder} lazily so it works whether the recorder was attached
-     * before or after the JS interface was registered, and identically for brokered and
-     * non-brokered flows (the same AndroidCommon recorder backs both).
+     * before or after the JS interface was registered. The sink and recorder behavior is reusable
+     * across hosts, but bridge exposure in this change remains limited to the Broker {@code :auth}
+     * process. Brokerless hosts require separate telemetry-only bridge eligibility.
      *
      * <p>Unlike the sibling hooks {@code recordOnboardingStep} and {@code recordLastLoadedDomain},
      * this one is deliberately <strong>not</strong> best-effort and does <strong>not</strong> swallow
