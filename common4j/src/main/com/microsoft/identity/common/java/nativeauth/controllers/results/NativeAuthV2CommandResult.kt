@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.result.ILocalAuthenticationResult
 
 // Per-operation sealed marker interfaces for exhaustive when() dispatch.
 sealed interface NativeAuthV2ResetPasswordStartCommandResult : INativeAuthCommandResult
+sealed interface NativeAuthV2SelectResetPasswordMethodCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2SubmitCodeCommandResult : INativeAuthCommandResult
 sealed interface NativeAuthV2ResetPasswordSubmitCodeCommandResult :
     NativeAuthV2SubmitCodeCommandResult
@@ -83,6 +84,7 @@ interface NativeAuthV2CommandResult {
         val challengeTargetLabel: String,
         val challengeChannel: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2SelectResetPasswordMethodCommandResult,
         NativeAuthV2SignInStartCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SignUpStartCommandResult,
@@ -92,6 +94,22 @@ interface NativeAuthV2CommandResult {
 
         override fun toString(): String =
             "NativeAuthV2CommandResult.CodeRequired(correlationId=$correlationId, codeLength=$codeLength, challengeChannel=$challengeChannel)"
+    }
+
+    /**
+     * The reset-password flow offers more than one supported first-factor method. The app must
+     * select one explicitly before the service sends a verification code.
+     */
+    data class ResetPasswordMethodRequired(
+        override val correlationId: String,
+        val continuationState: NativeAuthV2ContinuationState,
+        val authMethods: List<NativeAuthV2AuthMethod>,
+    ) : NativeAuthV2ResetPasswordStartCommandResult {
+        override fun toUnsanitizedString(): String =
+            "NativeAuthV2CommandResult.ResetPasswordMethodRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toUnsanitizedString() }})"
+
+        override fun toString(): String =
+            "NativeAuthV2CommandResult.ResetPasswordMethodRequired(correlationId=$correlationId, authMethods=${authMethods.map { it.toString() }})"
     }
 
     /**
@@ -405,6 +423,7 @@ interface NativeAuthV2CommandResult {
         val error: String,
         val errorDescription: String,
     ) : NativeAuthV2ResetPasswordStartCommandResult,
+        NativeAuthV2SelectResetPasswordMethodCommandResult,
         NativeAuthV2ResetPasswordSubmitCodeCommandResult,
         NativeAuthV2ResendCodeCommandResult,
         NativeAuthV2SubmitNewPasswordCommandResult,
