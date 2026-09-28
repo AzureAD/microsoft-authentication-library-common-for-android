@@ -62,6 +62,8 @@ class NativeAuthV2SignInInteractorTest {
 
     private val signInUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/signin/start")
     private val challengeUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/password/pwd-1/challenge")
+    private val riskVerificationUrl =
+        URL("https://contoso.ciamlogin.com/nativeauth/v2/risk/phone/verify")
     private val passwordVerifyUrl = URL("https://contoso.ciamlogin.com/nativeauth/v2/password/pwd-1/verify")
 
     private val httpClient = mockk<UrlConnectionHttpClient>()
@@ -184,6 +186,36 @@ class NativeAuthV2SignInInteractorTest {
         verify { requestProvider wasNot Called }
         verify { responseHandler wasNot Called }
         verify { responseParser wasNot Called }
+    }
+
+    @Test
+    fun performRiskVerification_postsContinuationTokenAndParsesResponse() {
+        val state = continuationState(
+            NativeAuthV2LinkRelation.RISK_VERIFY to "/risk/phone/verify"
+        )
+        val request = NativeAuthV2ChallengeRequest.create(
+            continuationToken = CONTINUATION_TOKEN,
+            requestUrl = riskVerificationUrl.toString(),
+            headers = jsonHeaders()
+        )
+        val httpResponse = HttpResponse(200, """{"action":"verify"}""", emptyMap())
+        val halResponse = mockk<NativeAuthV2HalApiResponse>(relaxed = true)
+        val expected = mockk<NativeAuthV2InteractionApiResult.CodeRequired>(relaxed = true)
+        val captured = capturePost(httpResponse)
+
+        every { requestProvider.createRiskVerificationRequest(state) } returns request
+        every { responseHandler.getHalApiResponse(CORRELATION_ID, httpResponse) } returns halResponse
+        every { responseParser.parseInteraction(halResponse, state) } returns expected
+
+        val actual = createInteractor().performRiskVerification(state)
+
+        assertSame(expected, actual)
+        assertEquals(riskVerificationUrl, captured.url.captured)
+        assertMergedHeaders(captured.headers.captured)
+        assertJsonBody(
+            captured.body.captured,
+            mapOf("continuationToken" to CONTINUATION_TOKEN)
+        )
     }
 
     @Test
