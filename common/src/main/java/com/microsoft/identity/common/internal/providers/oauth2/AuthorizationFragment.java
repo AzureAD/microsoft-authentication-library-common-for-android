@@ -191,10 +191,18 @@ public abstract class AuthorizationFragment extends Fragment {
         return mCorrelationId;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Preserves the request correlation id for diagnostic context and recorder lookup after
+     * recreation. An absent id is omitted rather than stored as a null bundle value.
+     */
     @Override
     public void onSaveInstanceState(@NonNull final Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
+        if (mCorrelationId != null) {
+            outState.putString(DiagnosticContext.CORRELATION_ID, mCorrelationId);
+        }
         outState.putBoolean(MAM_CA_INSTALL_REFERRER_ENABLED, mMamCaInstallReferrerEnabled);
     }
 
@@ -464,4 +472,3 @@ public abstract class AuthorizationFragment extends Fragment {
         return new LinkedHashMap<>(mUrlStatusTracker);
     }
 }
-

@@ -31,7 +31,17 @@ public enum DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
     public static final String THREAD_ID = "thread_id";
-    private static final String UNSET = "UNSET";
+
+    /**
+     * Value {@link #CORRELATION_ID} carries on a thread whose request context was never set.
+     *
+     * Public because callers that use the correlation id as a <strong>key</strong> — rather than
+     * just logging it — must reject this value explicitly: every unset thread shares it, so it is
+     * not an identifier. {@link #getThreadCorrelationId()} substitutes a random UUID, but code that
+     * reads {@link #getRequestContext()} directly (e.g. when populating an Intent extra) sees the
+     * raw sentinel.
+     */
+    public static final String UNSET_CORRELATION_ID = "UNSET";
 
     // This is thread-safe.
     @SuppressFBWarnings("SE_BAD_FIELD_STORE")
@@ -41,7 +51,7 @@ public enum DiagnosticContext {
                 protected RequestContext initialValue() {
                     final RequestContext defaultRequestContext = new RequestContext();
                     defaultRequestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-                    defaultRequestContext.put(CORRELATION_ID, UNSET);
+                    defaultRequestContext.put(CORRELATION_ID, UNSET_CORRELATION_ID);
                     return defaultRequestContext;
                 }
             };
@@ -78,7 +88,7 @@ public enum DiagnosticContext {
     public String getThreadCorrelationId() {
         IRequestContext context = getRequestContext();
         String correlationId = context.get(DiagnosticContext.CORRELATION_ID);
-        if (correlationId == null || correlationId.equals("UNSET")) {
+        if (correlationId == null || correlationId.equals(UNSET_CORRELATION_ID)) {
             correlationId = UUID.randomUUID().toString();
         }
         return correlationId;

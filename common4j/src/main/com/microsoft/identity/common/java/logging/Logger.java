@@ -48,6 +48,14 @@ public class Logger {
 
     private static final ExecutorService sLogExecutor = Executors.newSingleThreadExecutor();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    /**
+     * Display placeholder for a value missing from the request context when formatting a log line.
+     *
+     * <p>Deliberately independent of {@link DiagnosticContext#UNSET_CORRELATION_ID}, despite the
+     * identical text: this one also stands in for a missing thread id, and it is never used as a
+     * key or compared against. Callers that use the correlation id as a key must reject the
+     * {@code DiagnosticContext} sentinel instead — see its javadoc.
+     */
     private static final String UNSET = "UNSET";
 
     // Turn on the VERBOSE level logging by default.
