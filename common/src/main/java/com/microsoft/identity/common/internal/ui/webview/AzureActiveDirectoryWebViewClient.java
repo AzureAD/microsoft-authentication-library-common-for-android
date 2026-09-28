@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
@@ -45,6 +46,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -53,11 +57,12 @@ import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
 import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
-import com.microsoft.identity.common.internal.fido.CredManFidoManager;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
 import com.microsoft.identity.common.internal.fido.IFidoManager;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiManager;
+import com.microsoft.identity.common.internal.fido.FidoManagerFactory;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
@@ -105,7 +110,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -151,11 +158,59 @@ import io.opentelemetry.context.Scope;
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
 
+    private static final String AUTH_UX_FORWARDING_SCRIPT =
+            "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
+                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
+                    "};";
+
+    private static final String AUTH_UX_DOCUMENT_START_SCRIPT =
+            "(function() { " +
+                    "if (window !== window.top) { return; } " +
+                    "var bridge = window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + "; " +
+                    "if (!bridge || typeof bridge.receiveAuthUxMessage !== 'function') { return; } " +
+                    AUTH_UX_FORWARDING_SCRIPT +
+                    " })();";
+
+    // Reuse the shared HTTPS prefix so all rules share the same protocol policy and avoid
+    // duplicating a security-sensitive literal.
+    private static final String AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX =
+            AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX + "*";
+
+    // Early injection intentionally supports HTTPS/443 only: HTTP cannot authenticate the page's
+    // origin or protect its contents from network tampering, so an allowed hostname alone is insufficient.
+    // Native bridge and late-injection gates stay unchanged; additional ports require supported-flow
+    // evidence and explicit origin review.
+    private static final Set<String> AUTH_UX_DOCUMENT_START_ORIGINS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList(
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_GLOBAL_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_US_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_CHINA_URL_HOST_SUFFIX,
+                    AUTH_UX_DOCUMENT_START_ORIGIN_PREFIX
+                            + AuthenticationConstants.Broker.AAD_INTUNE_MDM_URL_HOST_SUFFIX
+            )));
+
+    @Nullable
+    private ScriptHandler mAuthUxDocumentStartScriptHandler;
+    @Nullable
+    private WebView mAuthUxDocumentStartScriptOwner;
+
     /**
      * Package name of the Google Play Store, the legitimate launch target for a broker-install
      * {@code intent://} request.
      */
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+
+    // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
+    // and market://details, both keyed by an "id" query parameter.
+    private static final String HTTPS_SCHEME = "https";
+    private static final String GOOGLE_PLAY_STORE_HOST = "play.google.com";
+    private static final String GOOGLE_PLAY_STORE_DETAILS_PATH = "/store/apps/details";
+    private static final String MARKET_SCHEME = "market";
+    private static final String MARKET_DETAILS_AUTHORITY = "details";
+    private static final String PLAY_STORE_APP_ID_QUERY_PARAM = "id";
 
     public static final String ERROR = "error";
     public static final String ERROR_DESCRIPTION = "error_description";
@@ -170,12 +225,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private HashMap<String, String> mRequestHeaders;
     private String mRequestUrl;
     private boolean mInWebCpFlow = false;
+
+    /**
+     * The most recent {@code https} main-frame URL observed by this WebView, used as the trusted
+     * same-origin reference when validating a PKeyAuth challenge's attacker-controlled
+     * {@code SubmitUrl} (CWE-918 / AB#3706623). Only {@code https} URLs are recorded: a cleartext
+     * {@code http} page must never become a trusted challenging origin, and if an https flow briefly
+     * detours through http this field correctly retains the last https origin. {@link #onPageStarted}
+     * is the sole writer, on every API level: it fires for main-frame navigations only (by the Android
+     * contract), so a subframe can never poison the origin. All recording is gated on
+     * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}. Preferred over
+     * {@link WebView#getUrl()} because {@code onPageStarted} fires when a main-frame load <em>starts</em>,
+     * whereas {@code getUrl()} only advances to a page once it has <em>committed</em>; a PKeyAuth
+     * challenge delivered mid-load, before the challenging document commits, is therefore visible here
+     * but not yet reflected by {@code getUrl()}, which is retained only as a defensive fallback. Read
+     * and written only on the UI thread, so no synchronization is required.
+     */
+    @Nullable
+    private String mLastCommittedRequestUrl;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     // Whether the host opted in to MAM-CA install-referrer tagging for this request.
     private final boolean mMamCaInstallReferrerEnabled;
     private final SpanContext mSpanContext;
     private final String mUtid;
+    private final String mCorrelationId;
 
     private String mPasskeyRegistrationScript;
 
@@ -261,12 +335,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              final boolean mamCaInstallReferrerEnabled,
-                                             @Nullable final IUrlLoadTracker urlLoadTracker) {
+                                             @Nullable final IUrlLoadTracker urlLoadTracker,
+                                             @Nullable final String correlationId) {
         super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
         mCertBasedAuthFactory = new CertBasedAuthFactory(activity);
         mSwitchBrowserProtocolCoordinator = switchBrowserProtocolCoordinator;
         mUtid = utid;
+        mCorrelationId = correlationId;
         mSpanContext = activity instanceof AuthorizationActivity ? ((AuthorizationActivity) getActivity()).getSpanContext() : null;
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
@@ -282,7 +358,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase,
                                              @Nullable final IUrlLoadTracker urlLoadTracker) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, urlLoadTracker, null);
     }
 
     @VisibleForTesting
@@ -293,13 +369,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final SwitchBrowserProtocolCoordinator switchBrowserProtocolCoordinator,
                                              @Nullable final String utid,
                                              final boolean isWebViewWebCpEnabledInBrokerlessCase) {
-        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null);
+        this(activity, completionCallback, pageLoadedCallback, redirectUrl, switchBrowserProtocolCoordinator, utid, isWebViewWebCpEnabledInBrokerlessCase, false, null, null);
     }
 
     /**
      * This method is used to initialize the JavaScript API for the AuthUx JavaScript interface.
      * It checks if the current process is running on the AuthService and if the URL is valid for the interface.
      * If both conditions are met, it adds the JavaScript interface to the WebView.
+     * Registers the optional origin-restricted early wrapper before the first load; its lifetime
+     * is the owning WebView, not each navigation.
      */
     public void initializeAuthUxJavaScriptApi(@NonNull final WebView view, final String url) {
         if (shouldExposeJavaScriptInterface(url)) {
@@ -310,6 +388,43 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
+        initializeAuthUxDocumentStartScript(view);
+    }
+
+    private void initializeAuthUxDocumentStartScript(@NonNull final WebView view) {
+        final String methodTag = TAG + ":initializeAuthUxDocumentStartScript";
+        if (mAuthUxDocumentStartScriptOwner == view) {
+            return;
+        }
+        removeAuthUxDocumentStartScript();
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_AUTHUX_DOCUMENT_START_SCRIPT)
+                || !isAuthUxJavaScriptApiEnabled()) {
+            return;
+        }
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            mAuthUxDocumentStartScriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                    view, AUTH_UX_DOCUMENT_START_SCRIPT, AUTH_UX_DOCUMENT_START_ORIGINS);
+            mAuthUxDocumentStartScriptOwner = view;
+            Logger.info(methodTag, "Auth UX document-start script registration succeeded.");
+        } else {
+            Logger.info(methodTag, "Document-start scripts unsupported; retaining late Auth UX injection.");
+        }
+    }
+
+    /**
+     * Removes this client's early script registration and releases its WebView reference.
+     * Idempotent; affects future documents, not JavaScript already installed in the current page.
+     * Call when the owning view is destroyed, separately from activity/certificate cleanup.
+     * A non-null handle can only come from successful, feature-checked registration above.
+     */
+    @SuppressLint("RequiresFeature")
+    public void removeAuthUxDocumentStartScript() {
+        if (mAuthUxDocumentStartScriptHandler != null) {
+            mAuthUxDocumentStartScriptHandler.remove();
+            mAuthUxDocumentStartScriptHandler = null;
+        }
+        mAuthUxDocumentStartScriptOwner = null;
     }
 
     /**
@@ -357,11 +472,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mAuthUxJavaScriptInterfaceAdded) {
             // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
             // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
+            view.evaluateJavascript(AUTH_UX_FORWARDING_SCRIPT, null);
         }
     }
 
@@ -380,7 +491,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
-        return handleUrl(view, url);
+        // This pre-API-24 overload carries no frame information, so it cannot tell a main-frame
+        // navigation from a subframe one. Recording a subframe URL as the challenging origin would
+        // poison the PKeyAuth same-origin check (AB#3706623), so we never record from here and pass
+        // isForMainFrame=false; on these API levels the origin is captured by onPageStarted instead,
+        // which is main-frame-only by the Android contract.
+        return handleUrl(view, url, false);
     }
 
     /**
@@ -396,7 +512,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @RequiresApi(Build.VERSION_CODES.N)
     public boolean shouldOverrideUrlLoading(final WebView view, final WebResourceRequest request) {
         final Uri requestUrl = request.getUrl();
-        return handleUrl(view, requestUrl.toString());
+        return handleUrl(view, requestUrl.toString(), request.isForMainFrame());
     }
 
     public void setRequestHeaders(final HashMap<String, String> requestHeaders) {
@@ -422,17 +538,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The string representation of the url.
      * @return false if we will not take action on the url.
      */
-    private boolean handleUrl(final WebView view, final String url) {
+    private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
 
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
-                final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
-                final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url);
-                final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
-                pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+                if (isPKeyAuthSubmitUrlOriginValidationEnabled()) {
+                    handlePKeyAuthChallengeWithOriginValidation(view, url, isForMainFrame);
+                } else {
+                    // Master switch OFF: a true end-to-end no-op relative to pre-fix behavior. No span,
+                    // no telemetry; the factory receives a null origin and skips origin validation.
+                    dispatchPKeyAuthChallenge(view, url, null);
+                }
             } else if (isPasskeyUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for passkey protocol.");
                 final FidoChallenge challenge = FidoChallenge.createFromRedirectUri(url);
@@ -447,16 +566,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                 && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
                                 ? new LegacyFido2ApiManager(view.getContext(), (WebViewAuthorizationFragment)((AuthorizationActivity)currentActivity).getFragment())
                                 : null;
+                final IFidoManager fidoManager =
+                        FidoManagerFactory.getFidoManager(currentActivity, legacyManager);
                 final AuthFidoChallengeHandler challengeHandler = new AuthFidoChallengeHandler(
-                        new CredManFidoManager(
-                                view.getContext(),
-                                legacyManager
-                        ),
+                        fidoManager,
                         view,
                         oTelContext,
-                        ViewTreeLifecycleOwner.get(view));
+                        ViewTreeLifecycleOwner.get(view),
+                        getFlowCorrelationId());
                 challengeHandler.processChallenge(challenge);
-            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED) && isNonceRedirect(formattedURL)) {
+            } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED)
+                    && isNonceRedirect(formattedURL)
+                    && isNonceRedirectSchemeAllowed(formattedURL)) {
                 Logger.info(methodTag,"Navigation contains new nonce within the redirect uri.");
                 processNonceAndReAttachHeaders(view, url);
             }
@@ -538,6 +659,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
+    /**
+     * Returns the correlation id to run the passkey ceremony under.
+     *
+     * Prefers the id this flow was started with, captured when the fragment was created, because
+     * DiagnosticContext is mutable thread local state that another flow on the UI thread can replace
+     * and that fragment restoration can drop. A wrong or missing value here silently breaks the join
+     * between our telemetry and the passkey provider's.
+     *
+     * @return the correlation id, or null when neither source has one.
+     */
+    @Nullable
+    @VisibleForTesting
+    String getFlowCorrelationId() {
+        if (!StringUtil.isNullOrEmpty(mCorrelationId)) {
+            return mCorrelationId;
+        }
+        return DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+    }
+
     private boolean isUriSSLProtected(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX);
     }
@@ -602,6 +742,167 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.PKEYAUTH_REDIRECT.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Handles a PKeyAuth WebView-redirect challenge on the origin-validation-on path: dispatches the
+     * challenge inside a real recording span so its telemetry actually exports.
+     *
+     * <p>Both telemetry sites for this feature attach to {@link SpanExtension#current()} — the
+     * navigation context recorded here ({@link #recordPKeyAuthChallengeContext}) and the
+     * origin-validation verdict emitted deep in the common4j factory. {@link #handleUrl}'s two callers
+     * (the {@code shouldOverrideUrlLoading} overloads) open no scope, so without this span those
+     * attributes would land on the non-recording default span and never export. The factory call is
+     * synchronous on this thread inside the scope, so its {@link SpanExtension#current()} resolves to
+     * this same span (AB#3706623).
+     *
+     * <p>A validation failure surfaces as a {@link ClientException}: it is recorded on the span and
+     * rethrown so {@link #handleUrl}'s outer {@code ClientException} catch runs {@code returnError(...)}
+     * + {@code view.stopLoading()} exactly as before. It is never swallowed here.
+     *
+     * @param view           the WebView handling the challenge.
+     * @param url            the raw (non-lowercased) challenge redirect URI.
+     * @param isForMainFrame whether the challenge navigation targeted the main frame; recorded as
+     *                       telemetry. {@code handleUrl} also runs for subframe navigations, so a
+     *                       PKeyAuth challenge delivered in an iframe is validated against the
+     *                       MAIN-FRAME origin. We deliberately do NOT relax validation for subframes —
+     *                       a PASS is safe (the assertion can only go to the legitimate main-frame
+     *                       origin) and a FAIL may be a false-reject of a legitimate cross-origin
+     *                       iframe challenge, which is exactly what this flag measures before we decide
+     *                       whether to special-case it.
+     * @throws ClientException if the challenge is malformed or its {@code SubmitUrl} fails origin
+     *                         validation.
+     */
+    private void handlePKeyAuthChallengeWithOriginValidation(@NonNull final WebView view,
+                                                             @NonNull final String url,
+                                                             final boolean isForMainFrame) throws ClientException {
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessPKeyAuthChallenge.name());
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            // getChallengingOrigin() reads the recorded origin / view.getUrl().
+            final String challengingOrigin = getChallengingOrigin(view);
+            recordPKeyAuthChallengeContext(isForMainFrame, challengingOrigin);
+            dispatchPKeyAuthChallenge(view, url, challengingOrigin);
+            span.setStatus(StatusCode.OK);
+        } catch (final ClientException e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+
+    /**
+     * Builds the PKeyAuth challenge from a WebView-redirect {@code urn:http-auth:PKeyAuth} URI and
+     * hands it to {@link PKeyAuthChallengeHandler}. Shared by both the origin-validation-on and -off
+     * branches of {@link #handleUrl} so the two paths cannot drift.
+     *
+     * @param view              the WebView handling the challenge.
+     * @param url               the raw (non-lowercased) challenge redirect URI.
+     * @param challengingOrigin the trusted origin to validate {@code SubmitUrl} against, or
+     *                          {@code null} on the flight-off path (the factory then skips origin
+     *                          validation entirely, preserving pre-fix behavior).
+     * @throws ClientException if the challenge is malformed or (when enforcement is on) its
+     *                         {@code SubmitUrl} fails origin validation.
+     */
+    private void dispatchPKeyAuthChallenge(@NonNull final WebView view,
+                                           @NonNull final String url,
+                                           @Nullable final String challengingOrigin) throws ClientException {
+        final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
+        final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallengeFromWebViewRedirect(url, challengingOrigin);
+        final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
+        pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
+    }
+
+    /**
+     * Records {@code url} as the most recent {@code https} main-frame URL when it uses the
+     * {@code https} scheme. Non-https navigations (cleartext {@code http}, the {@code urn:http-auth:}
+     * PKeyAuth challenge itself, {@code msauth://}, {@code browser://}) are ignored so
+     * {@link #mLastCommittedRequestUrl} keeps pointing at the {@code https} origin that issued such a
+     * challenge. Recording https only means a cleartext page can never become the trusted origin used
+     * to authorize a PKeyAuth {@code SubmitUrl}.
+     *
+     * <p>The whole recording path is gated on the
+     * {@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION} kill-switch so that, with the
+     * flight off, this is a complete no-op and the client behaves exactly as it did before
+     * AB#3706623. The sole caller is {@link #onPageStarted}, which the Android framework invokes only
+     * for main-frame page loads, so the main-frame constraint holds by contract without an explicit
+     * check here; this method only enforces the https-scheme and flight gates.
+     *
+     * @param url the URL from a navigation callback; may be {@code null}.
+     */
+    private void recordLastCommittedHttpsRequestUrl(@Nullable final String url) {
+        if (!isPKeyAuthSubmitUrlOriginValidationEnabled()) {
+            return;
+        }
+        if (url == null) {
+            return;
+        }
+        if (url.toLowerCase(Locale.US).startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME + "://")) {
+            mLastCommittedRequestUrl = url;
+        }
+    }
+
+    /**
+     * @return {@code true} when the PKeyAuth SubmitUrl origin-validation kill-switch
+     * ({@link CommonFlight#ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}) is enabled. All new
+     * origin-tracking code added for AB#3706623 — recording the challenging origin and deriving it at
+     * challenge dispatch — is gated on this so that, with the flight off, the WebView client is a
+     * true end-to-end no-op relative to its pre-fix behavior.
+     */
+    private boolean isPKeyAuthSubmitUrlOriginValidationEnabled() {
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION);
+    }
+
+    /**
+     * Returns the trusted origin to validate a PKeyAuth challenge's {@code SubmitUrl} against.
+     * Prefers {@link #mLastCommittedRequestUrl} (the last https main-frame URL, which tracks
+     * redirect-delivered challenges correctly) and falls back to {@link WebView#getUrl()}.
+     *
+     * @param view the WebView handling the challenge.
+     * @return the challenging origin URL, or {@code null} if none could be determined (the factory
+     *         then rejects the challenge, failing closed).
+     */
+    @Nullable
+    private String getChallengingOrigin(@NonNull final WebView view) {
+        if (!StringUtil.isNullOrEmpty(mLastCommittedRequestUrl)) {
+            return mLastCommittedRequestUrl;
+        }
+        return view.getUrl();
+    }
+
+    /**
+     * Emits navigation-context telemetry for a PKeyAuth challenge onto the current span: whether the
+     * challenge arrived on the main frame, and where its challenging origin was derived from
+     * ({@code recorded} last-committed https URL, a {@code webview_url} fallback to
+     * {@link WebView#getUrl()}, or {@code none}). These are the facts only the WebView client knows;
+     * the common4j factory emits the validation verdict itself. Writes to
+     * {@link SpanExtension#current()}; {@link #handleUrl} establishes a recording
+     * {@link SpanName#ProcessPKeyAuthChallenge} span as current before calling this, so the
+     * attributes land on an exported span. All attributes are
+     * non-PII (a boolean and a small enum-like source label); no hostname or URL is emitted. Callers
+     * must gate this on {@link #isPKeyAuthSubmitUrlOriginValidationEnabled()} so it is a no-op when
+     * the feature flight is off.
+     *
+     * @param isForMainFrame  whether the challenge navigation targeted the main frame. On the
+     *                        pre-API-24 {@code shouldOverrideUrlLoading(WebView, String)} overload
+     *                        this frame information is unavailable and is passed as {@code false}.
+     * @param challengingOrigin the origin resolved by {@link #getChallengingOrigin(WebView)}.
+     */
+    private void recordPKeyAuthChallengeContext(final boolean isForMainFrame,
+                                                @Nullable final String challengingOrigin) {
+        final String source;
+        if (!StringUtil.isNullOrEmpty(mLastCommittedRequestUrl)) {
+            source = "recorded";
+        } else if (!StringUtil.isNullOrEmpty(challengingOrigin)) {
+            source = "webview_url";
+        } else {
+            source = "none";
+        }
+        final Span span = SpanExtension.current();
+        span.setAttribute(AttributeName.pkeyauth_challenge_is_main_frame.name(), isForMainFrame);
+        span.setAttribute(AttributeName.pkeyauth_challenging_origin_source.name(), source);
     }
 
     private boolean isPasskeyUrl(@NonNull final String url) {
@@ -728,10 +1029,41 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
+     * SECURITY (CWE-918): decides whether the {@code sso_nonce} redirect branch in
+     * {@link #handleUrl(WebView, String)} may be taken for the given, already-lowercased URL.
+     * <p>
+     * The nonce branch is evaluated before the {@link #isUriSSLProtected(String)} hard block, and
+     * {@link #isNonceRedirect(String)} is a bare substring match, so without this gate a cleartext
+     * URL merely containing {@code sso_nonce} would take the nonce branch and never reach the SSL
+     * block. When enforcement is on we therefore require the target to be HTTPS; a non-HTTPS nonce
+     * URL falls through to {@link #processSSLProtectionCheck(WebView, String)} and is rejected.
+     * <p>
+     * Gated behind the same kill-switch as the credential-header validation
+     * ({@link CommonFlight#ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION}, default on). The
+     * flight read is the left operand of the {@code ||} and Java short-circuits, so when the
+     * kill-switch is off {@link #isUriSSLProtected(String)} is never evaluated and this returns
+     * {@code true}, reducing the branch condition to exactly the pre-fix
+     * {@code ENABLE_ATTACH_NEW_PRT_HEADER_WHEN_NONCE_EXPIRED && isNonceRedirect(formattedURL)}. Do
+     * not reorder these operands.
+     *
+     * @param formattedUrl the lowercased navigation URL.
+     * @return {@code true} if the nonce branch may be taken; {@code false} to fall through to the
+     * SSL protection check.
+     */
+    private boolean isNonceRedirectSchemeAllowed(@NonNull final String formattedUrl) {
+        return !CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION)
+                || isUriSSLProtected(formattedUrl);
+    }
+
+    /**
      * Determines if the provided URL is a valid request to install a broker app.
      * <p>
      * This method checks if the URL starts with the intent prefix, is targeting the Google Play Store app,
      * and is associated with a broker app. It ensures that only valid intent requests are processed.
+     * <p>
+     * This is a routing check only; what actually gets launched is decided by
+     * {@link #buildBrokerInstallIntent(Intent)} against the parsed intent.
      *
      * @param url The URL to evaluate.
      * @return {@code true} if the URL is a permitted intent request, {@code false} otherwise.
@@ -1518,7 +1850,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     /**
      * This method is used to process the intent to install the broker app.
-     * It parses the intent URI and starts the activity if the package name is valid.
+     * It parses the intent URI once and launches the validated intent built from it.
      *
      * @param view The WebView that will be used to open the URL.
      * @param intentUrl  The URL to be opened.
@@ -1527,65 +1859,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processIntentToInstallBrokerApp";
         // Onboarding telemetry: alternate broker install path (intent-scheme).
         recordOnboardingStep(STEP_BROKER_INSTALL_PROMPTED);
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
-            // Flight ON (new behavior): validated launch path, isolated in its own method. When the
-            // flight is off we fall through to the original behavior below, which is unchanged from dev.
-            launchValidatedBrokerInstallIntent(view, intentUrl, methodTag);
-            return;
-        }
         try {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                view.getContext().startActivity(intent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
-            }
-        } catch (final URISyntaxException e) {
-            Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
-            returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(methodTag, "No activity found to handle the intent.", e);
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, e.getMessage());
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "An unexpected error occurred while processing the intent URI.", throwable);
-            returnError(ErrorStrings.UNEXPECTED_ERROR, throwable.getMessage());
-        }
-    }
+            final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
 
-    /**
-     * Flight-ON broker-install path: validates the parsed intent target before launching and records
-     * the outcome ({@link AttributeName#is_broker_install_intent_blocked}) on the current
-     * WebView-processing span so the fix's behavior (launched / blocked) can be confirmed from
-     * android_spans.
-     *
-     * @param view      The WebView whose context is used to launch the intent.
-     * @param intentUrl The {@code intent://} URL to be parsed and (if allow-listed) launched.
-     * @param methodTag Logging tag propagated from the caller.
-     */
-    private void launchValidatedBrokerInstallIntent(@NonNull final WebView view,
-                                                    @NonNull final String intentUrl,
-                                                    @NonNull final String methodTag) {
-        try {
-            final Intent intent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
-            if (intent != null && intent.getPackage() != null) {
-                final Intent sanitizedIntent = sanitizeAndValidateBrokerInstallIntent(intent);
-                if (sanitizedIntent == null) {
-                    Logger.warn(methodTag,
-                            "Blocking intent request to non-allow-listed package: " + intent.getPackage());
-                    SpanExtension.current().setAttribute(
-                            AttributeName.is_broker_install_intent_blocked.name(), true);
-                    return;
+            if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(ENABLE_BROKER_INSTALL_INTENT_VALIDATION)) {
+                Logger.warn(methodTag, "Broker install intent validation is disabled by flight; "
+                        + "launching the unvalidated intent.");
+                if (parsedIntent != null && parsedIntent.getPackage() != null) {
+                    view.getContext().startActivity(parsedIntent);
                 }
-
-                view.getContext().startActivity(sanitizedIntent);
-                Logger.info(methodTag, "Intent request sent to launch the app: " + sanitizedIntent.getPackage());
-                SpanExtension.current().setAttribute(
-                        AttributeName.is_broker_install_intent_blocked.name(), false);
-            } else {
-                Logger.warn(methodTag, "Unable to parse the intent URI");
+                return;
             }
+
+            final Intent intent = buildBrokerInstallIntent(parsedIntent);
+            if (intent == null) {
+                Logger.warn(methodTag, "Blocking intent request that is not a broker install request.");
+                SpanExtension.current().setAttribute(
+                        AttributeName.is_broker_install_intent_blocked.name(), true);
+                return;
+            }
+            view.getContext().startActivity(intent);
+            Logger.info(methodTag, "Intent request sent to launch the app: " + intent.getPackage());
+            SpanExtension.current().setAttribute(
+                    AttributeName.is_broker_install_intent_blocked.name(), false);
         } catch (final URISyntaxException e) {
             Logger.error(methodTag, "Failed to parse the intent URI due to invalid syntax.", e);
             returnError(ErrorStrings.URI_SYNTAX_ERROR, e.getMessage());
@@ -1598,54 +1895,78 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    /**
-     * Sanitizes and validates a parsed broker-install intent before it is launched. Any explicit
-     * component or selector is cleared so that activity resolution is driven solely by the target
-     * package; the package is then checked against the allow-list. For an allow-listed target, the
-     * URI-permission grant flags are stripped and {@link Intent#CATEGORY_BROWSABLE} is added,
-     * mirroring the platform's standard WebView intent handling so the launched intent can't carry
-     * an unexpected grant into the store app.
-     * <p>
-     * Package-private so it can be unit-tested directly with a hand-built intent (a selector cannot
-     * be injected through the {@code intent://} URL scheme, so it is not reachable via the public
-     * navigation path).
-     *
-     * @param intent The parsed intent to sanitize; its package must already be non-null.
-     * @return the sanitized intent when its target package is allow-listed, or {@code null} when the
-     *         target is not allow-listed and therefore must not be launched.
-     */
+    /** Returns a fresh broker-listing intent, or {@code null} for an unsupported request. */
     @Nullable
-    Intent sanitizeAndValidateBrokerInstallIntent(@NonNull final Intent intent) {
-        // Clear any explicit component or selector carried by the parsed intent so that activity
-        // resolution is driven solely by the validated package.
-        intent.setComponent(null);
-        intent.setSelector(null);
-
-        if (!isAllowedBrokerInstallIntentTarget(intent.getPackage())) {
+    @VisibleForTesting
+    Intent buildBrokerInstallIntent(@Nullable final Intent intent) {
+        if (intent == null
+                || intent.getComponent() != null
+                || intent.getSelector() != null
+                || !GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(intent.getPackage())
+                || !isPlayStoreAppListingUri(intent.getData())
+                || !hasSingleAppIdParameter(intent.getData())
+                || !isKnownBrokerListing(intent.getData())) {
             return null;
         }
 
-        // Strip any URI-permission grant flags that rode in on the parsed intent and add
-        // CATEGORY_BROWSABLE, matching the platform's standard WebView intent handling.
-        intent.setFlags(intent.getFlags()
-                & ~Intent.FLAG_GRANT_READ_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                & ~Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        intent.addCategory(Intent.CATEGORY_BROWSABLE);
-        return intent;
+        final Intent installIntent = new Intent(Intent.ACTION_VIEW, intent.getData());
+        installIntent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
+        installIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+        return installIntent;
     }
 
     /**
-     * Checks whether the parsed broker-install intent targets the allow-listed package. The only
-     * supported launch target for this path is the Google Play Store, which opens the broker app's
-     * store listing, so any other package is not launched.
-     *
-     * @param packageName The target package declared by the parsed intent.
-     * @return {@code true} if the package is allow-listed, {@code false} otherwise.
+     * Returns whether {@code uri} is a Play Store app listing. Other {@code market:} operations
+     * (e.g. {@code market://search}) are not listings.
      */
-    private boolean isAllowedBrokerInstallIntentTarget(@Nullable final String packageName) {
-        return GOOGLE_PLAY_STORE_PACKAGE_NAME.equals(packageName);
+    private boolean isPlayStoreAppListingUri(@Nullable final Uri uri) {
+        if (uri == null || uri.isOpaque()) {
+            return false;
+        }
+        final String path = uri.getPath();
+        final String normalizedPath = path != null && path.endsWith("/")
+                ? path.substring(0, path.length() - 1)
+                : path;
+        // In a market: URI the operation is carried by the authority rather than the path.
+        return (HTTPS_SCHEME.equalsIgnoreCase(uri.getScheme())
+                    && GOOGLE_PLAY_STORE_HOST.equalsIgnoreCase(uri.getHost())
+                    && GOOGLE_PLAY_STORE_DETAILS_PATH.equals(normalizedPath))
+                || (MARKET_SCHEME.equalsIgnoreCase(uri.getScheme())
+                    && MARKET_DETAILS_AUTHORITY.equalsIgnoreCase(uri.getHost())
+                    && StringUtil.isNullOrEmpty(normalizedPath));
+    }
+
+    private boolean hasSingleAppIdParameter(@NonNull final Uri uri) {
+        final String encodedQuery = uri.getEncodedQuery();
+        if (encodedQuery == null) {
+            return false;
+        }
+
+        // Uri.getQueryParameters matches encoded key bytes, so count decoded names separately.
+        int appIdCount = 0;
+        for (final String parameter : encodedQuery.split("&")) {
+            final int separatorIndex = parameter.indexOf('=');
+            final String encodedKey = separatorIndex < 0 ? parameter : parameter.substring(0, separatorIndex);
+            if (PLAY_STORE_APP_ID_QUERY_PARAM.equals(Uri.decode(encodedKey))) {
+                appIdCount++;
+            }
+        }
+        return appIdCount == 1;
+    }
+
+    /** Returns whether an app-listing URI names a known broker app. */
+    private boolean isKnownBrokerListing(@NonNull final Uri uri) {
+        final String appId = uri.getQueryParameter(PLAY_STORE_APP_ID_QUERY_PARAM);
+        if (appId == null) {
+            return false;
+        }
+
+        for (final BrokerData brokerData : BrokerData.getAllBrokers()) {
+            if (brokerData.getPackageName().equals(appId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void processSSLProtectionCheck(@NonNull final WebView view,
@@ -1698,7 +2019,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.error(methodTag, "Error processing nonce and re-attaching headers", throwable);
                 span.setStatus(StatusCode.ERROR, "Error processing nonce and re-attaching headers");
                 span.recordException(throwable);
-                view.loadUrl(url, mRequestHeaders);
+                // SECURITY (CWE-918): mirror the trust gate applied inside NonceRedirectHandler so the
+                // fallback navigation cannot forward the PRT credential header to an untrusted or
+                // cleartext target. Trusted AAD hosts keep the headers; everything else loads without
+                // the credential rather than dead-ending the flow. The kill-switch read and the trust
+                // check are owned by NonceRedirectHandler.shouldForwardCredentialHeaders so this
+                // fallback and the handler's primary path share one predicate that cannot drift.
+                // Flight-off makes that helper return true, reducing this to the pre-fix line
+                // view.loadUrl(url, mRequestHeaders).
+                if (NonceRedirectHandler.shouldForwardCredentialHeaders(url)) {
+                    view.loadUrl(url, mRequestHeaders);
+                } else {
+                    Logger.warn(methodTag, "Nonce redirect target is not a trusted HTTPS AAD host; "
+                            + "loading without the PRT credential header.");
+                    view.loadUrl(url, NonceRedirectHandler.withoutCredentialHeaders(mRequestHeaders));
+                }
             } finally {
                 span.end();
             }
@@ -1805,6 +2140,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @Override
     public void onPageStarted(final WebView view, final String url, final Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+        // Track the origin of the page currently being loaded. onPageStarted fires for every
+        // main-frame load (including server-redirect targets and POST navigations) before the page
+        // commits, so this reliably captures the host that issues a redirect-delivered PKeyAuth
+        // challenge even when WebView#getUrl() still points at the previous committed page
+        // (AB#3706623). Recording is gated on the origin-validation flight inside the callee.
+        recordLastCommittedHttpsRequestUrl(url);
         // Track URL load started
         if (mUrlLoadTracker != null) {
             // Initially track as in-progress (success will be updated in onPageFinished or error methods)
@@ -2001,8 +2342,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * credential state. No-op when no recorder is attached (inherits the seed-gate, so hosts without
      * an onboarding session — e.g. third-party callers — stay inert). Reads
      * {@link #mOnboardingTelemetryRecorder} lazily so it works whether the recorder was attached
-     * before or after the JS interface was registered, and identically for brokered and
-     * non-brokered flows (the same AndroidCommon recorder backs both).
+     * before or after the JS interface was registered. The sink and recorder behavior is reusable
+     * across hosts, but bridge exposure in this change remains limited to the Broker {@code :auth}
+     * process. Brokerless hosts require separate telemetry-only bridge eligibility.
      *
      * <p>Unlike the sibling hooks {@code recordOnboardingStep} and {@code recordLastLoadedDomain},
      * this one is deliberately <strong>not</strong> best-effort and does <strong>not</strong> swallow

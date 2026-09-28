@@ -64,7 +64,7 @@ public class AuthorizationFragmentCorrelationIdTest {
     /** Minimal concrete subclass; the behaviour under test all lives in the base class. */
     private static class TestAuthorizationFragment extends AuthorizationFragment {
         String correlationId() {
-            return mCorrelationId;
+            return getCorrelationId();
         }
     }
 

@@ -125,9 +125,18 @@ public enum CommonFlight implements IFlightConfig {
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
 
     /**
+     * Flight to install the Auth UX forwarding wrapper at document start on supported WebViews.
+     * Does not change native bridge exposure or the existing late-injection fallback.
+     * Defaults to true so the shared Common behavior remains available to brokerless OneAuth
+     * first-party hosts, which do not receive live Common ECS configuration. Those hosts must
+     * gate bridge exposure through per-request recorder eligibility.
+     */
+    ENABLE_AUTHUX_DOCUMENT_START_SCRIPT("EnableAuthUxDocumentStartScript", true),
+
+    /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
      */
-    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", false),
+    ENABLE_OAEP_WITH_SHA_AND_MGF1_PADDING("EnableOAEPWithSHAAndMGF1Padding", true),
 
     /**
      * Flight to enable the new KEK algorithm for encryption/decryption of keys.
@@ -149,13 +158,8 @@ public enum CommonFlight implements IFlightConfig {
      */
     ENABLE_PLAYSTORE_URL_LAUNCH("EnablePlaystoreUrlLaunch", false),
 
-    /**
-     * Flight to enable post-parse validation of the {@code intent://} broker-install request before it
-     * is launched. When enabled, the parsed intent's component and selector are cleared and its target
-     * package must be the Google Play Store before the activity is started. Defaults to off so the
-     * validation can be rolled out progressively via ECS; when off, the legacy launch behavior is used.
-     */
-    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", false),
+    /** Enables broker-install intent validation by default, with legacy behavior when disabled. */
+    ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", true),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.
@@ -214,10 +218,6 @@ public enum CommonFlight implements IFlightConfig {
      */
     RE_ENABLE_VALIDATE_SIGNING_CERT_CHAIN_BROKER_APPS("ReEnableValidateSigningCertChainBrokerApps", false),
 
-    /**
-     * Flight to enable the use of locks in name value storage to prevent concurrent access issues.
-     */
-    USE_LOCKS_IN_NAME_VALUE_STORAGE("UseLocksInNameValueStorage", false),
     /**
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
@@ -284,16 +284,8 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", false),
+    ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
-    /**
-     * Flight to enable filter-then-clone optimization in SharedPreferencesAccountCredentialCacheWithMemoryCache.
-     * When enabled, getCredentialsFilteredBy()/getAccountsFilteredBy() filters on in-memory
-     * references first, then clones only the matching items — avoiding the cost of
-     * cloning the entire cache when only a subset is needed.
-     */
-    ENABLE_FILTER_THEN_CLONE_IN_MEMORY_CACHE("EnableFilterThenCloneInMemoryCache", false),
-
     /**
      * Kill switch for strict redirect-URI matching in
      * AzureActiveDirectoryWebViewClient.isRedirectUrl. Default on; turn off via
@@ -328,7 +320,51 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable request origin display in the HTTP authentication dialog.
      */
-    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false);
+    ENABLE_HTTP_AUTH_ORIGIN_DISPLAY("EnableHttpAuthOriginDisplay", false),
+
+    /**
+     * Kill switch for validating the redirect target before the PRT credential header
+     * ({@code x-ms-RefreshTokenCredential}) is forwarded on an {@code sso_nonce} redirect in
+     * {@code NonceRedirectHandler} (CWE-918). When enabled (default), the credential header is
+     * stripped unless the target is an HTTPS, validated AAD cloud host; the navigation still
+     * proceeds without the credential.
+     * Turn off via ECS to revert to the historical behavior of forwarding the header to the
+     * redirect target unconditionally (e.g. if instance-discovery ordering causes a legitimate AAD
+     * host to be treated as untrusted and silently lose SSO).
+     */
+    ENABLE_NONCE_REDIRECT_CREDENTIAL_HEADER_VALIDATION("EnableNonceRedirectCredentialHeaderValidation", true),
+
+    /**
+     * Master switch for the CWE-918 / SSRF hardening of a PKeyAuth {@code SubmitUrl} parsed from an
+     * untrusted WebView redirect ({@code urn:http-auth:PKeyAuth?...}) (AB#3706623). When enabled
+     * (the default) the challenging origin is recorded and derived, the {@code SubmitUrl} is
+     * evaluated against it (absolute HTTPS, same scheme/host/port), and the verdict is emitted to
+     * telemetry. Whether a rejected verdict actually blocks the challenge is controlled separately by
+     * {@link #ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: with this flight on but enforcement off
+     * the code runs in <em>shadow mode</em> — it measures and reports, but the challenge still
+     * proceeds. Turn this flight off via ECS to make the whole feature a true end-to-end no-op (no
+     * recording, no origin derivation, no evaluation, no telemetry), reverting to the exact pre-fix
+     * behavior.
+     * <p>
+     * Default is true.
+     */
+    ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnablePKeyAuthSubmitUrlOriginValidation", true),
+
+    /**
+     * Enforcement switch for PKeyAuth {@code SubmitUrl} same-origin validation (AB#3706623). Gated
+     * under {@link #ENABLE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION}: it takes effect only while the
+     * master switch is on. When this flight is enabled a non-{@code ALLOWED} verdict throws and the
+     * challenge is abandoned before the device key signs or the response is submitted. When it is
+     * disabled (the default) the same evaluation and telemetry run, but a rejected challenge is
+     * <em>not</em> blocked — shadow mode — so real-world origin pairs can be measured before
+     * enforcement is ramped. This staged rollout exists because a false reject fails the entire
+     * authorization request (the {@code handleUrl} catch turns a {@link
+     * com.microsoft.identity.common.java.exception.ClientException} into
+     * {@code returnError} + {@code stopLoading}), so eSTS/ADFS topologies must be observed first.
+     * <p>
+     * Default is false.
+     */
+    ENFORCE_PKEYAUTH_SUBMIT_URL_ORIGIN_VALIDATION("EnforcePKeyAuthSubmitUrlOriginValidation", false);
 
     private String key;
     private Object defaultValue;

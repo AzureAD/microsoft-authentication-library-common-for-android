@@ -23,6 +23,7 @@
 
 package com.microsoft.identity.common.java.nativeauth.providers
 
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.nativeauth.BuildValues
 import com.microsoft.identity.common.java.logging.Logger
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration
@@ -54,6 +55,8 @@ class NativeAuthOAuth2Configuration(
     private val TAG = NativeAuthOAuth2Configuration::class.java.simpleName
 
     companion object {
+        private const val HTTPS_SCHEME = "https"
+        private const val HTTP_SCHEME = "http"
         private const val SIGNUP_START_ENDPOINT_SUFFIX = "/signup/v1.0/start"
         private const val SIGNUP_CHALLENGE_ENDPOINT_SUFFIX = "/signup/v1.0/challenge"
         private const val SIGNUP_CONTINUE_ENDPOINT_SUFFIX = "/signup/v1.0/continue"
@@ -65,6 +68,7 @@ class NativeAuthOAuth2Configuration(
         private const val SIGN_IN_INITIATE_ENDPOINT_SUFFIX = "/oauth2/v2.0/initiate"
         private const val SIGN_IN_INTROSPECT_ENDPOINT_SUFFIX = "/oauth2/v2.0/introspect"
         private const val SIGN_IN_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/challenge"
+        private const val AUTHORIZE_CHALLENGE_ENDPOINT_SUFFIX = "/oauth2/v2.0/authorize-challenge"
         private const val SIGN_IN_TOKEN_ENDPOINT_SUFFIX = "/oauth2/v2.0/token"
         private const val JIT_INTROSPECT_ENDPOINT_SUFFIX = "/register/v1.0/introspect"
         private const val JIT_CHALLENGE_ENDPOINT_SUFFIX = "/register/v1.0/challenge"
@@ -224,6 +228,41 @@ class NativeAuthOAuth2Configuration(
     }
 
     /**
+     * True when [scheme] may be used for the Native Auth V2 authority: HTTPS always, and plain HTTP
+     * only when the SDK is pointed at the plaintext mock API.
+     */
+    private fun isNativeAuthV2SchemeAllowed(scheme: String?): Boolean =
+        scheme.equals(HTTPS_SCHEME, ignoreCase = true) ||
+            (useMockApiForNativeAuth && scheme.equals(HTTP_SCHEME, ignoreCase = true))
+
+    internal fun getNativeAuthV2AuthorityUrl(correlationId: String): URL {
+        val authorityUrl = getAuthorityUrl()
+        if (!isNativeAuthV2SchemeAllowed(authorityUrl.protocol)) {
+            val exception = ClientException(
+                ClientException.UNSUPPORTED_URL,
+                "Native Auth V2 requires an HTTPS authority unless the configured mock API authority itself uses HTTP."
+            )
+            exception.setCorrelationId(correlationId)
+            throw exception
+        }
+        return authorityUrl
+    }
+
+    internal fun getNativeAuthV2AuthorizeChallengeEndpoint(correlationId: String): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getNativeAuthV2AuthorityUrl(correlationId),
+            endpointSuffix = AUTHORIZE_CHALLENGE_ENDPOINT_SUFFIX
+        )
+    }
+
+    internal fun getNativeAuthV2TokenEndpoint(correlationId: String): URL {
+        return getEndpointUrlFromRootAndTenantAndSuffix(
+            root = getNativeAuthV2AuthorityUrl(correlationId),
+            endpointSuffix = SIGN_IN_TOKEN_ENDPOINT_SUFFIX
+        )
+    }
+
+    /**
      * Get the endpoint to be used for making a register/v1.0/introspect request.
      *
      * @return URL the endpoint
@@ -273,5 +312,6 @@ class NativeAuthOAuth2Configuration(
             Logger.error(TAG, "appendPathToURL failed", e)
             throw e
         }
+
     }
 }

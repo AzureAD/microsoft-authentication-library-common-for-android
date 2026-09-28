@@ -287,8 +287,16 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     protected boolean shouldExposeJavaScriptInterface(final String url) {
+        return isAuthUxJavaScriptApiEnabled()
+                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url);
+    }
+
+    /**
+     * Checks host eligibility independently of the URL. Document-start scripts use origin rules
+     * to restrict execution on later documents without broadening native bridge exposure.
+     */
+    protected boolean isAuthUxJavaScriptApiEnabled() {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
 
