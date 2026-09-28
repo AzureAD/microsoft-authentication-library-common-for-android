@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.ui.webview;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SHA512_RELEASE_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
@@ -43,6 +45,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -62,6 +65,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
@@ -111,6 +115,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
@@ -1628,6 +1633,7 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     private static final class RecordingSpan implements Span {
         private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
+                private int mRecordedExceptionCount;
 
         /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
         Object attribute(final String keyName) {
@@ -1638,6 +1644,10 @@ public class AzureActiveDirectoryWebViewClientTest {
             }
             return null;
         }
+
+                int recordedExceptionCount() {
+                        return mRecordedExceptionCount;
+                }
 
         @Override
         public <T> Span setAttribute(final AttributeKey<T> key, final T value) {
@@ -1663,6 +1673,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
+                        mRecordedExceptionCount++;
             return this;
         }
 
@@ -2040,6 +2051,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testProcessDeviceCaRequest_NoRecognizedOwner_KeepsWebCpFlow() {
         setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
@@ -2051,11 +2065,18 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(webViewClient).loadDeviceCaUrl(
                 TEST_PARSED_BROWSER_DEVICE_CA_URL, mockWebView);
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_native_re_wpj_handoff_enabled.name()));
+        assertEquals("no_owner_webcp", spanFactory.captured().attribute(
+                AttributeName.re_wpj_handoff_outcome.name()));
     }
 
     @Test
     public void testProcessDeviceCaRequest_FlightOff_UsesLegacyFlow() {
         setNativeReWpjHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
@@ -2066,11 +2087,103 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
         Mockito.verify(webViewClient).loadDeviceCaUrl(
                 TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
+        assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
+                AttributeName.is_native_re_wpj_handoff_enabled.name()));
+        assertEquals("not_evaluated", spanFactory.captured().attribute(
+                AttributeName.re_wpj_management_owner.name()));
+        assertEquals("legacy_webcp", spanFactory.captured().attribute(
+                AttributeName.re_wpj_handoff_outcome.name()));
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_FlightOff_CompanyPortalLaunchTelemetry() {
+        setNativeReWpjHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            mWebViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        }
+
+        assertEquals("legacy_company_portal_launch_succeeded",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(0, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_FlightOff_CompanyPortalFailureTelemetry() {
+        setNativeReWpjHandoffFlight(false);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = mockActivityThatThrowsOnLaunch();
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mockActivity));
+        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        }
+
+        assertEquals("legacy_company_portal_launch_failed_webcp",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_CompatibilityCompanyPortalLaunchTelemetry() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        assertEquals("compatibility_company_portal_launch_succeeded",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(0, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_CompatibilityCompanyPortalFailureTelemetry() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final Activity mockActivity = mockActivityThatThrowsOnLaunch();
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mockActivity));
+        Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+
+        try (final MockedConstruction<PackageHelper> ignored =
+                     mockCompanyPortalCompatibilityConditions()) {
+            webViewClient.processWebsiteRequest(
+                    Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        }
+
+        assertEquals("compatibility_company_portal_launch_failed_webcp",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
     }
 
     @Test
     public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
         setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
         registerActivationHandler(
                 mActivity,
                 Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
@@ -2090,11 +2203,17 @@ public class AzureActiveDirectoryWebViewClientTest {
                 launchedIntent.getDataString());
         Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
+        assertEquals("native_handoff_failed_browser_fallback_succeeded",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
     }
 
     @Test
     public void testProcessDeviceCaRequest_TargetedLaunchFails_NoBrowser_LoadsHttpsUrlInWebView() {
                 setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
@@ -2106,11 +2225,56 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
         Mockito.verify(mockWebView).stopLoading();
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
+        assertEquals("native_handoff_failed_webview_fallback_no_browser",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_TargetedLaunchAndBrowserFail_LoadsHttpsUrlInWebView() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        registerActivationHandler(
+                mActivity,
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
+                "com.contoso.browser",
+                "com.contoso.browser.BrowserActivity");
+        final Activity mockActivity = Mockito.mock(Activity.class);
+        when(mockActivity.getApplicationContext()).thenReturn(mContext);
+        when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+        Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                .startActivity(any(Intent.class));
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                new AzureActiveDirectoryWebViewClient(
+                        mockActivity,
+                        Mockito.mock(IAuthorizationCompletionCallback.class),
+                        url -> {},
+                        TEST_REDIRECT_URI,
+                        Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                        "homeTenantId",
+                        false));
+        webViewClient.setRequestHeaders(new HashMap<>());
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
+        assertEquals("native_handoff_failed_webview_fallback_browser_launch_failed",
+                spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(2, spanFactory.captured().recordedExceptionCount());
     }
 
     private void testProcessDeviceCaRequest_LaunchesTargetedHandoff(
             @NonNull final String managementAppPackage) {
                 setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebsiteRequest.name());
+        OTelUtility.setSpanFactory(spanFactory);
         final IAuthorizationCompletionCallback mockCallback =
                 Mockito.mock(IAuthorizationCompletionCallback.class);
         final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
@@ -2136,7 +2300,107 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
         assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_native_re_wpj_handoff_enabled.name()));
+        assertEquals("native_handoff_succeeded", spanFactory.captured().attribute(
+                AttributeName.re_wpj_handoff_outcome.name()));
+        assertEquals(0, spanFactory.captured().recordedExceptionCount());
     }
+
+        @Test
+        public void testGetReWpjManagementAppPackage_CompanyPortalProfileOwnerTelemetry() {
+                assertManagementOwnerTelemetry(true, false, false,
+                                COMPANY_PORTAL_APP_PACKAGE_NAME, "company_portal_profile_owner");
+        }
+
+        @Test
+        public void testGetReWpjManagementAppPackage_GoogleDpcProfileOwnerTelemetry() {
+                assertManagementOwnerTelemetry(false, true, false,
+                                INTUNE_APP_PACKAGE_NAME, "google_dpc_profile_owner");
+        }
+
+        @Test
+        public void testGetReWpjManagementAppPackage_GoogleDpcDeviceOwnerTelemetry() {
+                assertManagementOwnerTelemetry(false, false, true,
+                                INTUNE_APP_PACKAGE_NAME, "google_dpc_device_owner");
+        }
+
+        @Test
+        public void testGetReWpjManagementAppPackage_NoOwnerTelemetry() {
+                assertManagementOwnerTelemetry(false, false, false, null, "none");
+        }
+
+        @Test
+        public void testGetReWpjManagementAppPackage_NoDevicePolicyManagerTelemetry() {
+                final Activity mockActivity = Mockito.mock(Activity.class);
+                when(mockActivity.getApplicationContext()).thenReturn(mContext);
+                final RecordingSpan span = new RecordingSpan();
+                final AzureActiveDirectoryWebViewClient webViewClient = createWebViewClient(mockActivity);
+
+                try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+                        assertNull(webViewClient.getReWpjManagementAppPackage());
+                }
+
+                assertEquals("device_policy_manager_unavailable",
+                                span.attribute(AttributeName.re_wpj_management_owner.name()));
+        }
+
+        private void assertManagementOwnerTelemetry(final boolean isCompanyPortalProfileOwner,
+                                                                                                final boolean isGoogleDpcProfileOwner,
+                                                                                                final boolean isGoogleDpcDeviceOwner,
+                                                                                                final String expectedPackage,
+                                                                                                @NonNull final String expectedOwner) {
+                final DevicePolicyManager devicePolicyManager = Mockito.mock(DevicePolicyManager.class);
+                when(devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME))
+                                .thenReturn(isCompanyPortalProfileOwner);
+                when(devicePolicyManager.isProfileOwnerApp("com.google.android.apps.work.clouddpc"))
+                                .thenReturn(isGoogleDpcProfileOwner);
+                when(devicePolicyManager.isDeviceOwnerApp("com.google.android.apps.work.clouddpc"))
+                                .thenReturn(isGoogleDpcDeviceOwner);
+                final Activity mockActivity = Mockito.mock(Activity.class);
+                when(mockActivity.getApplicationContext()).thenReturn(mContext);
+                when(mockActivity.getSystemService(Activity.DEVICE_POLICY_SERVICE))
+                                .thenReturn(devicePolicyManager);
+                final RecordingSpan span = new RecordingSpan();
+                final AzureActiveDirectoryWebViewClient webViewClient = createWebViewClient(mockActivity);
+
+                try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+                        assertEquals(expectedPackage, webViewClient.getReWpjManagementAppPackage());
+                }
+
+                assertEquals(expectedOwner, span.attribute(AttributeName.re_wpj_management_owner.name()));
+        }
+
+        private MockedConstruction<PackageHelper> mockCompanyPortalCompatibilityConditions() {
+                return mockConstruction(PackageHelper.class, (packageHelper, context) -> {
+                        when(packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME))
+                                        .thenReturn(true);
+                        when(packageHelper.getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
+                                        .thenReturn(IPPHONE_APP_SHA512_RELEASE_SIGNATURE);
+                        when(packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME))
+                                        .thenReturn(true);
+                });
+        }
+
+        private Activity mockActivityThatThrowsOnLaunch() {
+                final Activity mockActivity = Mockito.mock(Activity.class);
+                when(mockActivity.getApplicationContext()).thenReturn(mContext);
+                when(mockActivity.getPackageManager()).thenReturn(mActivity.getPackageManager());
+                Mockito.doThrow(new ActivityNotFoundException()).when(mockActivity)
+                                .startActivity(any(Intent.class));
+                return mockActivity;
+        }
+
+        private AzureActiveDirectoryWebViewClient createWebViewClient(@NonNull final Activity activity) {
+                return new AzureActiveDirectoryWebViewClient(
+                                activity,
+                                Mockito.mock(IAuthorizationCompletionCallback.class),
+                                url -> {},
+                                TEST_REDIRECT_URI,
+                                Mockito.mock(SwitchBrowserProtocolCoordinator.class),
+                                "homeTenantId",
+                                false);
+        }
 
     private void setNativeReWpjHandoffFlight(final boolean enabled) {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);

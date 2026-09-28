@@ -159,6 +159,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
     private static final String HTTPS_URL_PREFIX = "https://";
     private static final String RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
+        private static final String RE_WPJ_OWNER_NOT_EVALUATED = "not_evaluated";
+        private static final String RE_WPJ_OWNER_DEVICE_POLICY_MANAGER_UNAVAILABLE =
+            "device_policy_manager_unavailable";
+        private static final String RE_WPJ_OWNER_COMPANY_PORTAL_PROFILE = "company_portal_profile_owner";
+        private static final String RE_WPJ_OWNER_GOOGLE_DPC_PROFILE = "google_dpc_profile_owner";
+        private static final String RE_WPJ_OWNER_GOOGLE_DPC_DEVICE = "google_dpc_device_owner";
+        private static final String RE_WPJ_OWNER_NONE = "none";
+
+        private static final String RE_WPJ_OUTCOME_LEGACY_COMPANY_PORTAL_SUCCEEDED =
+            "legacy_company_portal_launch_succeeded";
+        private static final String RE_WPJ_OUTCOME_LEGACY_COMPANY_PORTAL_FAILED_WEB_CP =
+            "legacy_company_portal_launch_failed_webcp";
+        private static final String RE_WPJ_OUTCOME_LEGACY_WEB_CP = "legacy_webcp";
+        private static final String RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED = "native_handoff_succeeded";
+        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_BROWSER_SUCCEEDED =
+            "native_handoff_failed_browser_fallback_succeeded";
+        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_NO_BROWSER =
+            "native_handoff_failed_webview_fallback_no_browser";
+        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_BROWSER_FAILED =
+            "native_handoff_failed_webview_fallback_browser_launch_failed";
+        private static final String RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED =
+            "compatibility_company_portal_launch_succeeded";
+        private static final String RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP =
+            "compatibility_company_portal_launch_failed_webcp";
+        private static final String RE_WPJ_OUTCOME_NO_OWNER_WEB_CP = "no_owner_webcp";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1148,8 +1173,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
-        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)) {
+        final boolean isNativeReWpjHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+            .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF);
+        recordReWpjAttribute(AttributeName.is_native_re_wpj_handoff_enabled,
+            isNativeReWpjHandoffEnabled);
+        if (!isNativeReWpjHandoffEnabled) {
+            recordReWpjAttribute(AttributeName.re_wpj_management_owner, RE_WPJ_OWNER_NOT_EVALUATED);
             if (shouldLaunchCompanyPortal()) {
                 // If CP is installed, redirect to CP.
                 // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
@@ -1157,10 +1186,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 //       Until that comes, we'll only handle this in ipphone.
                 try {
                     launchCompanyPortal();
+                    recordReWpjOutcome(RE_WPJ_OUTCOME_LEGACY_COMPANY_PORTAL_SUCCEEDED);
                     return;
                 } catch (final Exception ex) {
                     Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+                    recordReWpjException(ex);
+                    recordReWpjOutcome(RE_WPJ_OUTCOME_LEGACY_COMPANY_PORTAL_FAILED_WEB_CP);
                 }
+            } else {
+                recordReWpjOutcome(RE_WPJ_OUTCOME_LEGACY_WEB_CP);
             }
 
             loadDeviceCaUrl(url, view);
@@ -1177,11 +1211,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED);
                 return;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
                     "Failed to launch the device management app. Starting browser/WebView fallback.",
                         exception);
+                recordReWpjException(exception);
                 fallbackToBrowserOrWebView(view, url);
                 return;
             }
@@ -1198,14 +1234,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             try {
                 launchCompanyPortal();
                 Logger.info(methodTag, "Company Portal compatibility launch started.");
+                recordReWpjOutcome(RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED);
                 return;
             } catch (final Exception ex) {
                 Logger.error(methodTag,
                         "Failed to launch Company Portal through the compatibility path. Continuing to WebCP.",
                         ex);
+                recordReWpjException(ex);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP);
             }
         } else {
             Logger.info(methodTag, "Company Portal compatibility conditions are not satisfied.");
+            recordReWpjOutcome(RE_WPJ_OUTCOME_NO_OWNER_WEB_CP);
         }
 
         Logger.info(methodTag, "No native handoff was started. Continuing with the existing WebCP flow.");
@@ -1233,28 +1273,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 (DevicePolicyManager) getActivity().getSystemService(Activity.DEVICE_POLICY_SERVICE);
         if (devicePolicyManager == null) {
             Logger.warn(methodTag, "DevicePolicyManager is unavailable. No management owner can be detected.");
+            recordReWpjAttribute(AttributeName.re_wpj_management_owner,
+                    RE_WPJ_OWNER_DEVICE_POLICY_MANAGER_UNAVAILABLE);
             return null;
         }
 
         Logger.info(methodTag, "Checking Company Portal profile ownership in the current Android user.");
         if (devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
             Logger.info(methodTag, "Company Portal is the profile owner in the current Android user.");
+            recordReWpjAttribute(AttributeName.re_wpj_management_owner,
+                    RE_WPJ_OWNER_COMPANY_PORTAL_PROFILE);
             return COMPANY_PORTAL_APP_PACKAGE_NAME;
         }
 
         Logger.info(methodTag, "Company Portal is not the profile owner. Checking Google DPC profile ownership.");
         if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
             Logger.info(methodTag, "Google DPC is the profile owner in the current Android user.");
+            recordReWpjAttribute(AttributeName.re_wpj_management_owner,
+                    RE_WPJ_OWNER_GOOGLE_DPC_PROFILE);
             return INTUNE_APP_PACKAGE_NAME;
         }
 
         Logger.info(methodTag, "Google DPC is not the profile owner. Checking Google DPC device ownership.");
         if (devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
             Logger.info(methodTag, "Google DPC is the device owner.");
+            recordReWpjAttribute(AttributeName.re_wpj_management_owner,
+                    RE_WPJ_OWNER_GOOGLE_DPC_DEVICE);
             return INTUNE_APP_PACKAGE_NAME;
         }
 
         Logger.info(methodTag, "No supported profile owner or device owner was detected in the current Android user.");
+        recordReWpjAttribute(AttributeName.re_wpj_management_owner, RE_WPJ_OWNER_NONE);
         return null;
     }
 
@@ -1282,18 +1331,40 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "External browser fallback started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_BROWSER_SUCCEEDED);
                 return;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
                         "Failed to launch the browser. Falling back to the WebView.",
                         exception);
+                recordReWpjException(exception);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_BROWSER_FAILED);
             }
         } else {
             Logger.warn(methodTag, "No external browser can resolve the HTTPS fallback.");
+            recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_NO_BROWSER);
         }
 
         Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
         view.loadUrl(httpsUrl, mRequestHeaders);
+    }
+
+    private void recordReWpjOutcome(@NonNull final String outcome) {
+        recordReWpjAttribute(AttributeName.re_wpj_handoff_outcome, outcome);
+    }
+
+    private void recordReWpjAttribute(@NonNull final AttributeName attributeName,
+                                      @NonNull final String value) {
+        SpanExtension.current().setAttribute(attributeName.name(), value);
+    }
+
+    private void recordReWpjAttribute(@NonNull final AttributeName attributeName,
+                                      final boolean value) {
+        SpanExtension.current().setAttribute(attributeName.name(), value);
+    }
+
+    private void recordReWpjException(@NonNull final Exception exception) {
+        SpanExtension.current().recordException(exception);
     }
 
     @NonNull
