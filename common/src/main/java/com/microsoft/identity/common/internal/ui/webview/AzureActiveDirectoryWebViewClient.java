@@ -1148,6 +1148,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)) {
+            if (shouldLaunchCompanyPortal()) {
+                // If CP is installed, redirect to CP.
+                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+                //       CP is currently working on this.
+                //       Until that comes, we'll only handle this in ipphone.
+                try {
+                    launchCompanyPortal();
+                    return;
+                } catch (final Exception ex) {
+                    Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
+                }
+            }
+
+            loadDeviceCaUrl(url, view);
+            return;
+        }
+
         Logger.info(methodTag, "Checking for a supported management owner in the current Android user.");
         final String managementAppPackage = getReWpjManagementAppPackage();
         if (managementAppPackage != null) {
@@ -1195,6 +1214,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
+        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)) {
+            return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        }
+
         final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
         Logger.info(TAG + ":isDeviceCaRequest", "Device CA marker present: " + isDeviceCaRequest);

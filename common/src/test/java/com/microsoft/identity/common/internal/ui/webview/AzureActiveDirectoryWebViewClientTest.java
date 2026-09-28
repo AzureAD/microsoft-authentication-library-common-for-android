@@ -185,9 +185,10 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
             "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
-    private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz?ismdmurl=1";
-
-    private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
+        private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz&ismdmurl=1";
+        private static final String TEST_PARSED_BROWSER_DEVICE_CA_URL = "browser://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_PARSED_HTTPS_DEVICE_CA_URL = "https://abcxyz/xyz?ismdmurl=1";
         private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
     private static final String TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER =
             "browser://abcxyz/xyz?foo=bar&ismdmurl=1";
@@ -2010,11 +2011,21 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testIsDeviceCaRequest_ParsesQueryParameterInAnyPosition() {
-        assertTrue(mWebViewClient.isDeviceCaRequest(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+                setNativeReWpjHandoffFlight(true);
+
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
         assertTrue(mWebViewClient.isDeviceCaRequest(TEST_DEVICE_CA_URL_WITH_TRAILING_PARAMETER));
         assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?ismdmurl=0"));
         assertFalse(mWebViewClient.isDeviceCaRequest("browser://abcxyz/xyz?notismdmurl=1"));
     }
+
+        @Test
+        public void testIsDeviceCaRequest_FlightOff_UsesLegacySubstringMatching() {
+                setNativeReWpjHandoffFlight(false);
+
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+                assertFalse(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
+        }
 
     @Test
     public void testProcessDeviceCaRequest_CompanyPortalOwner_LaunchesTargetedHandoff() {
@@ -2028,24 +2039,41 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testProcessDeviceCaRequest_NoRecognizedOwner_KeepsWebCpFlow() {
+        setNativeReWpjHandoffFlight(true);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
         Mockito.doReturn(false).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
         Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
         Mockito.verify(webViewClient).loadDeviceCaUrl(
-                TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
+                TEST_PARSED_BROWSER_DEVICE_CA_URL, mockWebView);
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
     }
 
     @Test
+    public void testProcessDeviceCaRequest_FlightOff_UsesLegacyFlow() {
+        setNativeReWpjHandoffFlight(false);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+
+        Mockito.verify(webViewClient, never()).getReWpjManagementAppPackage();
+        Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
+        Mockito.verify(webViewClient).loadDeviceCaUrl(
+                TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
+    }
+
+    @Test
     public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
+        setNativeReWpjHandoffFlight(true);
         registerActivationHandler(
                 mActivity,
-                Uri.parse(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER),
+                Uri.parse(TEST_PARSED_HTTPS_DEVICE_CA_URL),
                 "com.contoso.browser",
                 "com.contoso.browser.BrowserActivity");
         final WebView mockWebView = Mockito.mock(WebView.class);
@@ -2054,11 +2082,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
                 .launchReWpjManagementApp(anyString());
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
         final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
-        assertEquals(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+        assertEquals(TEST_PARSED_HTTPS_DEVICE_CA_URL,
                 launchedIntent.getDataString());
         Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
@@ -2066,21 +2094,23 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testProcessDeviceCaRequest_TargetedLaunchFails_NoBrowser_LoadsHttpsUrlInWebView() {
+                setNativeReWpjHandoffFlight(true);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
         Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
                 .launchReWpjManagementApp(anyString());
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
-        Mockito.verify(mockWebView).loadUrl(eq(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER), any());
+        Mockito.verify(mockWebView).loadUrl(eq(TEST_PARSED_HTTPS_DEVICE_CA_URL), any());
         Mockito.verify(mockWebView).stopLoading();
         assertNull(Shadows.shadowOf(mActivity).getNextStartedActivity());
     }
 
     private void testProcessDeviceCaRequest_LaunchesTargetedHandoff(
             @NonNull final String managementAppPackage) {
+                setNativeReWpjHandoffFlight(true);
         final IAuthorizationCompletionCallback mockCallback =
                 Mockito.mock(IAuthorizationCompletionCallback.class);
         final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
@@ -2097,7 +2127,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         false));
         Mockito.doReturn(managementAppPackage).when(webViewClient).getReWpjManagementAppPackage();
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
         final Intent launchedIntent = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertEquals(Intent.ACTION_VIEW, launchedIntent.getAction());
@@ -2106,6 +2136,21 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
         assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+    }
+
+    private void setNativeReWpjHandoffFlight(final boolean enabled) {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(any(IFlightConfig.class)))
+                .thenAnswer(invocation -> {
+                    final IFlightConfig config = invocation.getArgument(0);
+                    final Object defaultValue = config.getDefaultValue();
+                    return defaultValue instanceof Boolean && (Boolean) defaultValue;
+                });
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF))
+                .thenReturn(enabled);
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
     }
 
     @Test
