@@ -160,8 +160,8 @@ public enum CommonFlight implements IFlightConfig {
     /** Enables broker-install intent validation by default, with legacy behavior when disabled. */
     ENABLE_BROKER_INSTALL_INTENT_VALIDATION("EnableBrokerInstallIntentValidation", true),
 
-    /** Flight to enable native re-WPJ handoff to the device management app. */
-    ENABLE_NATIVE_RE_WPJ_HANDOFF("EnableNativeReWpjHandoff", false),
+    /** Flight to enable native re-WPJ handoff to the device management app. Default is true. */
+    ENABLE_NATIVE_RE_WPJ_HANDOFF("EnableNativeReWpjHandoff", true),
 
     /**
      * Flight to enable the WebView flow to not cancel and preserve WebView flow on SSL errors.

@@ -460,13 +460,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(methodTag,"It is an external website request");
+                Logger.info(methodTag, "Re-WPJ routing: entering processWebsiteRequest.");
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an install request");
                 processInstallRequest(view, url);
             } else if (isWebCpUrl(formattedURL)) {
-                Logger.info(methodTag,"It is a request from WebCP");
+                Logger.info(methodTag, "Re-WPJ routing: entering processWebCpRequest.");
                 processWebCpRequest(view, url);
             } else if (isPlayStoreUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to open PlayStore.");
@@ -508,9 +508,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
-            }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
+            }  else if (shouldProcessHttpsDeviceCaRequest(url)) {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
-                Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
+                Logger.info(methodTag, "Re-WPJ routing: entering processDeviceCaRequest from the HTTPS WebCP path.");
                 processDeviceCaRequest(view, url);
             } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
@@ -1093,23 +1093,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
+        Logger.info(methodTag, "Re-WPJ routing: processWebsiteRequest started. In WebCP flow: "
+            + mInWebCpFlow);
         view.stopLoading();
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
         span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
+                Logger.info(methodTag, "Re-WPJ routing: website request is device CA; entering processDeviceCaRequest.");
                 processDeviceCaRequest(view, url);
                 span.setStatus(StatusCode.OK);
                 return;
             }
 
             if (isRedirectToPlaystoreToInstallCp(url) && mInWebCpFlow) {
+                Logger.info(methodTag, "Re-WPJ routing: website request is a WebCP Play Store redirect.");
                 handlePlaystoreLaunchUrlFromWebCp(url);
                 span.setStatus(StatusCode.OK);
                 return;
             }
 
             // Default case: redirect to browser
+            Logger.info(methodTag, "Re-WPJ routing: website request is neither device CA nor a WebCP Play Store redirect; using browser redirect.");
             handleBrowserRedirect(methodTag, url);
             span.setStatus(StatusCode.OK);
         } catch (final Throwable throwable) {
@@ -1167,6 +1172,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The URL representing the device CA request.
      */
     private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+        Logger.info(TAG + ":processDeviceCaRequest",
+            "Re-WPJ routing: creating ProcessWebCpRedirects span for device CA handling.");
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             processDeviceCaRequestWithinSpan(view, url);
@@ -1190,6 +1197,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         final boolean isNativeReWpjHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
             .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF);
+        Logger.info(methodTag, "Re-WPJ routing: native handoff flight enabled: "
+            + isNativeReWpjHandoffEnabled);
         recordReWpjAttribute(AttributeName.is_native_re_wpj_handoff_enabled,
             isNativeReWpjHandoffEnabled);
         if (!isNativeReWpjHandoffEnabled) {
@@ -1271,12 +1280,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     protected boolean isDeviceCaRequest(@NonNull final String url) {
         if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)) {
-            return url.contains(AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+            final boolean isDeviceCaRequest = url.contains(
+                AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+            Logger.info(TAG + ":isDeviceCaRequest",
+                "Re-WPJ routing: legacy device CA marker check result: " + isDeviceCaRequest);
+            return isDeviceCaRequest;
         }
 
         final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
-        Logger.info(TAG + ":isDeviceCaRequest", "Device CA marker present: " + isDeviceCaRequest);
+        Logger.info(TAG + ":isDeviceCaRequest",
+            "Re-WPJ routing: parsed device CA marker check result: " + isDeviceCaRequest);
         return isDeviceCaRequest;
     }
 
@@ -1365,6 +1379,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void recordReWpjOutcome(@NonNull final String outcome) {
+        Logger.info(TAG + ":recordReWpjOutcome", "Re-WPJ routing outcome: " + outcome);
         recordReWpjAttribute(AttributeName.re_wpj_handoff_outcome, outcome);
     }
 
@@ -1391,6 +1406,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
+    private boolean shouldProcessHttpsDeviceCaRequest(@NonNull final String url) {
+        final String methodTag = TAG + ":shouldProcessHttpsDeviceCaRequest";
+        if (!isDeviceCaRequest(url)) {
+            return false;
+        }
+
+        if (!isHttpsScheme(url)) {
+            Logger.info(methodTag,
+                    "Re-WPJ routing: device CA request is not HTTPS; deferring to its earlier scheme-specific route.");
+            return false;
+        }
+
+        final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
+        Logger.info(methodTag, "Re-WPJ routing: HTTPS device CA detected; WebCP in WebView enabled: "
+                + isWebCpInWebViewEnabled);
+        if (!isWebCpInWebViewEnabled) {
+            Logger.info(methodTag,
+                    "Re-WPJ routing: HTTPS device CA is deferred to normal WebView loading.");
+        }
+        return isWebCpInWebViewEnabled;
+    }
+
     // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
     private boolean shouldLaunchCompanyPortal() {
         final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
@@ -1405,12 +1442,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":loadDeviceCaUrl";
         try {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
-                Logger.info(methodTag, "Loading device CA request in WebView.");
+                Logger.info(methodTag, "Re-WPJ routing: loading device CA request in WebView.");
                 SpanExtension.current().setAttribute(
-                    AttributeName.is_webcp_in_webview_enabled.name(), true);
+                        AttributeName.is_webcp_in_webview_enabled.name(), true);
                 final String httpsUrl = originalUrl.replace(
                         AuthenticationConstants.Broker.BROWSER_EXT_PREFIX,
-                    HTTPS_URL_PREFIX);
+                        HTTPS_URL_PREFIX);
                 final boolean authorizeOnlyForwardingEnabled =
                         CommonFlightsManager.INSTANCE
                                 .getFlightsProvider()
@@ -1428,7 +1465,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     view.loadUrl(httpsUrl, mRequestHeaders);
                 }
             } else {
-                Logger.info(methodTag, "Loading device CA request in browser.");
+                Logger.info(methodTag, "Re-WPJ routing: loading device CA request in browser.");
                 SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
                 openLinkInBrowser(originalUrl);
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
