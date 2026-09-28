@@ -15,6 +15,9 @@ vNext
 - [MINOR] Bump Kotlin to 2.0.21 with languageVersion/apiVersion pinned to 1.9, so published metadata stays readable by consumers on Kotlin 1.8 and -Xskip-metadata-version-check is no longer needed (#3238)
 - [MINOR] Add an IFidoManagerProvider extension point so a host can fulfil WebView passkey challenges, with Credential Manager as the fallback, and pass the auth flow's correlation id to IFidoManager.authenticate (#3237)
 
+Version 24.7.1-RC1
+----------
+
 Version 24.6.0
 ----------
 - [PATCH] Remove the USE_LOCKS_IN_NAME_VALUE_STORAGE flight and always use per-storage read/write locks in NameValueStorageFileManagerSimpleCacheImpl
