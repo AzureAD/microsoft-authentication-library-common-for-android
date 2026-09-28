@@ -135,6 +135,31 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
+     * Starts the V2 Native Auth sign-up flow by posting the continuation token to the
+     * server-provided `signUp` href.
+     */
+    fun performSignUpStart(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performSignUpStart(state = state)
+    }
+
+    /**
+     * Submits [attributes] to the server-provided `submitAttributes` href during sign-up.
+     */
+    fun performSubmitAttributes(
+        state: NativeAuthV2ContinuationState,
+        attributes: Map<String, String>,
+        password: CharArray? = null
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performSubmitAttributes(
+            state = state,
+            attributes = attributes,
+            password = password
+        )
+    }
+
+    /**
      * Challenges the server-offered authentication method identified by [methodId].
      */
     fun performMethodChallenge(
