@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.activebrokerdiscovery
 import android.content.Context
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.internal.cache.ClientActiveBrokerCache
+import com.microsoft.identity.common.internal.broker.BrokerData
+import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.logging.Logger
@@ -97,6 +99,25 @@ class BrokerDiscoveryClientFactory {
                 }
             }
             return brokerSdkInstance!!
+        }
+
+        /**
+         * Queries the active Broker for protected SDM broadcast support.
+         */
+        @JvmStatic
+        @Throws(ClientException::class)
+        fun isSdmBroadcastProtectionEnabled(context: Context,
+                                            platformComponents: IPlatformComponents,
+                                            activeBroker: BrokerData): Boolean {
+            val client = getInstanceForClientSdk(context, platformComponents)
+            if (client !is BrokerDiscoveryClient) {
+                throw ClientException(
+                    ClientException.INVALID_BROKER_BUNDLE,
+                    "Unexpected Broker discovery client implementation."
+                )
+            }
+
+            return client.isSdmBroadcastProtectionEnabled(activeBroker)
         }
     }
 }

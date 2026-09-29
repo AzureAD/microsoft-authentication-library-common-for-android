@@ -54,6 +54,17 @@ class SharedDeviceModeConstants {
         const val BROADCAST_TYPE_GLOBAL_SIGN_OUT = "GLOBAL_SIGN_OUT"
 
         /**
+         * Suffix for the permission held by the active Broker when protected SDM broadcasts are enabled.
+         */
+        const val BROADCAST_PERMISSION_SUFFIX = ".permission.SDM_BROADCAST"
+
+        /**
+         * Broker discovery result key for protected SDM broadcast support.
+         */
+        const val BROADCAST_PROTECTION_ENABLED_BUNDLE_KEY =
+            "SDM_BROADCAST_PROTECTION_ENABLED"
+
+        /**
          * Prefix for the account name used for the Device Account
          * when performing userless shared device registration using preauthorized challenge
          * The full account name is this prefix followed by the tenant-id

@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.crypto.key.PredefinedKeyProvider
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
 import com.microsoft.identity.common.java.exception.ErrorStrings
+import com.microsoft.identity.common.java.constants.SharedDeviceModeConstants
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
@@ -64,6 +65,89 @@ class BrokerDiscoveryClientTests {
          * (which is private). Centralized here to reduce drift if the production name changes.
          */
         private const val BROKER_SDK_CACHE_FILE_NAME = "BROKER_METADATA_CACHE_STORE_ON_BROKER_SDK_SIDE"
+    }
+
+    @Test
+    fun testIsSdmBroadcastProtectionEnabled_capabilityAbsent_returnsFalse() {
+        val client = createClientForCapability(Bundle().apply {
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.packageName
+            )
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.signingCertificateThumbprint
+            )
+        })
+
+        Assert.assertFalse(
+            client.isSdmBroadcastProtectionEnabled(prodMicrosoftAuthenticator)
+        )
+    }
+
+    @Test
+    fun testIsSdmBroadcastProtectionEnabled_enabled_returnsTrue() {
+        val client = createClientForCapability(Bundle().apply {
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.packageName
+            )
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.signingCertificateThumbprint
+            )
+            putBoolean(
+                SharedDeviceModeConstants.BROADCAST_PROTECTION_ENABLED_BUNDLE_KEY,
+                true
+            )
+        })
+
+        Assert.assertTrue(
+            client.isSdmBroadcastProtectionEnabled(prodMicrosoftAuthenticator)
+        )
+    }
+
+    @Test
+    fun testIsSdmBroadcastProtectionEnabled_malformedCapability_throws() {
+        val client = createClientForCapability(Bundle().apply {
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_PACKAGE_NAME_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.packageName
+            )
+            putString(
+                BrokerDiscoveryClient.ACTIVE_BROKER_SIGNING_CERTIFICATE_THUMBPRINT_BUNDLE_KEY,
+                prodMicrosoftAuthenticator.signingCertificateThumbprint
+            )
+            putString(
+                SharedDeviceModeConstants.BROADCAST_PROTECTION_ENABLED_BUNDLE_KEY,
+                "true"
+            )
+        })
+
+        Assert.assertThrows(ClientException::class.java) {
+            client.isSdmBroadcastProtectionEnabled(prodMicrosoftAuthenticator)
+        }
+    }
+
+    private fun createClientForCapability(resultBundle: Bundle): BrokerDiscoveryClient {
+        return BrokerDiscoveryClient(
+            brokerCandidates = setOf(prodMicrosoftAuthenticator),
+            getActiveBrokerFromAccountManager = { null },
+            ipcStrategy = object : IIpcStrategy {
+                override fun communicateToBroker(bundle: BrokerOperationBundle): Bundle {
+                    return resultBundle
+                }
+
+                override fun isSupportedByTargetedBroker(
+                    targetedBrokerPackageName: String
+                ): Boolean = true
+
+                override fun getType(): IIpcStrategy.Type = IIpcStrategy.Type.CONTENT_PROVIDER
+            },
+            cache = InMemoryActiveBrokerCache(),
+            isPackageInstalled = { true },
+            isValidBroker = { it == prodMicrosoftAuthenticator }
+        )
     }
 
     /**

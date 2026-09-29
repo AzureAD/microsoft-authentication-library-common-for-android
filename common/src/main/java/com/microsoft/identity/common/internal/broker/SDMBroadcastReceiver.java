@@ -32,9 +32,11 @@ import android.content.IntentFilter;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
+import com.microsoft.identity.common.internal.activebrokerdiscovery.IBrokerDiscoveryClient;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
@@ -42,6 +44,7 @@ import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredenti
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.constants.SharedDeviceModeConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -53,6 +56,10 @@ import java.util.UUID;
 public class SDMBroadcastReceiver {
     private static final String TAG = SDMBroadcastReceiver.class.getSimpleName();
     private static BroadcastReceiver sSDMBroadcastReceiver;
+    private static Context sRegisteredContext;
+    private static volatile SharedDeviceModeCallback sSharedDeviceModeCallback;
+    private static volatile DeviceModeProvider sDeviceModeProvider;
+    private static RegistrationState sRegistrationState;
 
     /**
      * Initializes the SDM broadcast receiver to start listening for SDM broadcasts from broker
@@ -62,19 +69,238 @@ public class SDMBroadcastReceiver {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     synchronized public static void initialize(@NonNull final Context context,
                                                @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
-        if (sSDMBroadcastReceiver == null) {
-            sSDMBroadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(final Context context, final Intent intent) {
-                    handleSharedDeviceModeBroadCast(context, intent, sharedDeviceModeCallback);
-                }
-            };
+        final Context applicationContextCandidate = context.getApplicationContext();
+        final Context applicationContext = applicationContextCandidate == null
+                ? context
+                : applicationContextCandidate;
+        final IPlatformComponents platformComponents =
+                AndroidPlatformComponentsFactory.createFromContext(applicationContext);
+        final IBrokerDiscoveryClient brokerDiscoveryClient =
+                BrokerDiscoveryClientFactory.getInstanceForClientSdk(
+                        applicationContext,
+                        platformComponents
+                );
+        initialize(
+                applicationContext,
+                sharedDeviceModeCallback,
+                brokerDiscoveryClient,
+                activeBroker -> BrokerDiscoveryClientFactory.isSdmBroadcastProtectionEnabled(
+                        applicationContext,
+                        platformComponents,
+                        activeBroker
+                ),
+                new PackageHelper(applicationContext),
+                SDMBroadcastReceiver::isDeviceInSharedMode
+        );
+    }
 
-            final IntentFilter filter = new IntentFilter(SharedDeviceModeConstants.CURRENT_ACCOUNT_CHANGED_BROADCAST_IDENTIFIER);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.registerReceiver(sSDMBroadcastReceiver, filter, Context.RECEIVER_EXPORTED);
+    @VisibleForTesting
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    synchronized static void initialize(@NonNull final Context context,
+                                        @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback,
+                                        @NonNull final IBrokerDiscoveryClient brokerDiscoveryClient,
+                                        @NonNull final BrokerCapabilityProvider brokerCapabilityProvider,
+                                        @NonNull final PackageHelper packageHelper,
+                                        @NonNull final DeviceModeProvider deviceModeProvider) {
+        final String methodTag = TAG + ":initialize";
+        final RegistrationState registrationState;
+        try {
+            registrationState = resolveRegistrationState(
+                    brokerDiscoveryClient,
+                    brokerCapabilityProvider,
+                    packageHelper
+            );
+        } catch (final ClientException e) {
+            Logger.error(methodTag, "Unable to resolve SDM broadcast registration mode.", e);
+            clearRegistration();
+            return;
+        }
+
+        if (registrationState == null) {
+            Logger.warn(methodTag, "No valid Broker is available for SDM broadcast registration.");
+            clearRegistration();
+            return;
+        }
+
+        if (registrationState.equals(sRegistrationState) && sSDMBroadcastReceiver != null) {
+            sSharedDeviceModeCallback = sharedDeviceModeCallback;
+            sDeviceModeProvider = deviceModeProvider;
+            return;
+        }
+
+        clearRegistration();
+
+        final BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(final Context context, final Intent intent) {
+                final SharedDeviceModeCallback callback = sSharedDeviceModeCallback;
+                final DeviceModeProvider provider = sDeviceModeProvider;
+                if (callback != null && provider != null) {
+                    handleSharedDeviceModeBroadCast(context, intent, callback, provider);
+                }
+            }
+        };
+        final IntentFilter filter = new IntentFilter(
+                SharedDeviceModeConstants.CURRENT_ACCOUNT_CHANGED_BROADCAST_IDENTIFIER
+        );
+
+        try {
+            registerReceiver(
+                    new ContextReceiverRegistrar(context),
+                    receiver,
+                    filter,
+                    registrationState.mPermissionName,
+                    Build.VERSION.SDK_INT
+            );
+
+            sRegisteredContext = context;
+            sSharedDeviceModeCallback = sharedDeviceModeCallback;
+            sDeviceModeProvider = deviceModeProvider;
+            sRegistrationState = registrationState;
+            sSDMBroadcastReceiver = receiver;
+            Logger.info(
+                    methodTag,
+                    registrationState.mPermissionName == null
+                            ? "Registered SDM broadcast receiver in compatibility mode."
+                            : "Registered protected SDM broadcast receiver."
+            );
+        } catch (final SecurityException | IllegalArgumentException e) {
+            Logger.error(methodTag, "Failed to register SDM broadcast receiver.", e);
+            clearRegistration();
+        }
+    }
+
+    @VisibleForTesting
+    static void registerReceiver(@NonNull final ReceiverRegistrar receiverRegistrar,
+                                 @NonNull final BroadcastReceiver receiver,
+                                 @NonNull final IntentFilter filter,
+                                 final String permissionName,
+                                 final int sdkInt) {
+        if (permissionName == null) {
+            receiverRegistrar.registerLegacy(
+                    receiver,
+                    filter,
+                    sdkInt >= Build.VERSION_CODES.TIRAMISU
+            );
+        } else {
+            receiverRegistrar.registerProtected(
+                    receiver,
+                    filter,
+                    permissionName,
+                    sdkInt >= Build.VERSION_CODES.TIRAMISU
+            );
+        }
+    }
+
+    private static RegistrationState resolveRegistrationState(
+            @NonNull final IBrokerDiscoveryClient brokerDiscoveryClient,
+            @NonNull final BrokerCapabilityProvider brokerCapabilityProvider,
+            @NonNull final PackageHelper packageHelper) throws ClientException {
+        final BrokerData activeBroker = brokerDiscoveryClient.getActiveBroker(false);
+        if (activeBroker == null) {
+            return null;
+        }
+
+        if (!brokerCapabilityProvider.isSdmBroadcastProtectionEnabled(activeBroker)) {
+            return new RegistrationState(activeBroker.getPackageName(), null);
+        }
+
+        final String permissionName = activeBroker.getPackageName()
+                + SharedDeviceModeConstants.BROADCAST_PERMISSION_SUFFIX;
+        if (!packageHelper.isSignaturePermissionGrantedToPackage(
+                permissionName,
+                activeBroker.getPackageName()
+        )) {
+            throw new ClientException(
+                    ClientException.INVALID_BROKER_BUNDLE,
+                    "The active Broker permission contract is invalid."
+            );
+        }
+
+        return new RegistrationState(activeBroker.getPackageName(), permissionName);
+    }
+
+    private static void clearRegistration() {
+        if (sRegisteredContext != null && sSDMBroadcastReceiver != null) {
+            try {
+                sRegisteredContext.unregisterReceiver(sSDMBroadcastReceiver);
+            } catch (final IllegalArgumentException e) {
+                Logger.warn(TAG + ":clearRegistration", "SDM broadcast receiver was not registered.");
+            }
+        }
+
+        sSDMBroadcastReceiver = null;
+        sRegisteredContext = null;
+        sSharedDeviceModeCallback = null;
+        sDeviceModeProvider = null;
+        sRegistrationState = null;
+    }
+
+    @VisibleForTesting
+    synchronized static void resetForTest() {
+        clearRegistration();
+    }
+
+    @VisibleForTesting
+    interface BrokerCapabilityProvider {
+        boolean isSdmBroadcastProtectionEnabled(@NonNull BrokerData activeBroker)
+                throws ClientException;
+    }
+
+    @VisibleForTesting
+    interface ReceiverRegistrar {
+        void registerLegacy(@NonNull BroadcastReceiver receiver,
+                            @NonNull IntentFilter filter,
+                            boolean exported);
+
+        void registerProtected(@NonNull BroadcastReceiver receiver,
+                               @NonNull IntentFilter filter,
+                               @NonNull String permissionName,
+                               boolean exported);
+    }
+
+    @VisibleForTesting
+    interface DeviceModeProvider {
+        boolean isDeviceInSharedMode(@NonNull Context context,
+                                     @NonNull IPlatformComponents platformComponents)
+                throws BaseException;
+    }
+
+    private static final class ContextReceiverRegistrar implements ReceiverRegistrar {
+        private final Context mContext;
+
+        private ContextReceiverRegistrar(@NonNull final Context context) {
+            mContext = context;
+        }
+
+        @Override
+        @SuppressLint("UnspecifiedRegisterReceiverFlag")
+        public void registerLegacy(@NonNull final BroadcastReceiver receiver,
+                                   @NonNull final IntentFilter filter,
+                                   final boolean exported) {
+            if (exported) {
+                mContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
             } else {
-                context.registerReceiver(sSDMBroadcastReceiver, filter);
+                mContext.registerReceiver(receiver, filter);
+            }
+        }
+
+        @Override
+        @SuppressLint("UnspecifiedRegisterReceiverFlag")
+        public void registerProtected(@NonNull final BroadcastReceiver receiver,
+                                      @NonNull final IntentFilter filter,
+                                      @NonNull final String permissionName,
+                                      final boolean exported) {
+            if (exported) {
+                mContext.registerReceiver(
+                        receiver,
+                        filter,
+                        permissionName,
+                        null,
+                        Context.RECEIVER_EXPORTED
+                );
+            } else {
+                mContext.registerReceiver(receiver, filter, permissionName, null);
             }
         }
     }
@@ -87,7 +313,8 @@ public class SDMBroadcastReceiver {
      */
     private static void handleSharedDeviceModeBroadCast(@NonNull final Context context,
                                                         @NonNull final Intent intent,
-                                                        @NonNull SharedDeviceModeCallback sharedDeviceModeCallback) {
+                                                        @NonNull SharedDeviceModeCallback sharedDeviceModeCallback,
+                                                        @NonNull DeviceModeProvider deviceModeProvider) {
         final String methodTag = TAG + ":handleSharedDeviceModeBroadCast";
         final String broadcastType = intent.getStringExtra(SharedDeviceModeConstants.BROADCAST_TYPE_KEY);
         Logger.info(methodTag, "Received SDM broadcast with type: " + broadcastType);
@@ -101,7 +328,10 @@ public class SDMBroadcastReceiver {
                         sharedDeviceModeCallback.onSharedDeviceModeRegistrationStarted();
                         break;
                     case SharedDeviceModeConstants.BROADCAST_TYPE_SDM_REGISTERED:
-                        if (isDeviceInSharedMode(context, platformComponents)) {
+                        if (deviceModeProvider.isDeviceInSharedMode(
+                                context,
+                                platformComponents
+                        )) {
                             Logger.info(methodTag, "Device is registered in SDM, clearing default account cache.");
                             final IAccountCredentialCache accountCredentialCache = new SharedPreferencesAccountCredentialCache(
                                     new CacheKeyValueDelegate(),
@@ -141,6 +371,41 @@ public class SDMBroadcastReceiver {
                 .correlationId(UUID.randomUUID().toString())
                 .build();
         return brokerMsalController.getDeviceMode(commandParameters);
+    }
+
+    private static final class RegistrationState {
+        private final String mBrokerPackageName;
+        private final String mPermissionName;
+
+        private RegistrationState(@NonNull final String brokerPackageName,
+                                  final String permissionName) {
+            mBrokerPackageName = brokerPackageName;
+            mPermissionName = permissionName;
+        }
+
+        @Override
+        public boolean equals(final Object object) {
+            if (this == object) {
+                return true;
+            }
+
+            if (!(object instanceof RegistrationState)) {
+                return false;
+            }
+
+            final RegistrationState other = (RegistrationState) object;
+            return mBrokerPackageName.equals(other.mBrokerPackageName)
+                    && (mPermissionName == null
+                    ? other.mPermissionName == null
+                    : mPermissionName.equals(other.mPermissionName));
+        }
+
+        @Override
+        public int hashCode() {
+            int result = mBrokerPackageName.hashCode();
+            result = 31 * result + (mPermissionName == null ? 0 : mPermissionName.hashCode());
+            return result;
+        }
     }
 
     /**

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PermissionInfo;
 
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
@@ -46,6 +47,7 @@ import org.robolectric.RobolectricTestRunner;
 public class PackageHelperTest {
 
     private static final String TEST_PACKAGE = "com.example.test";
+    private static final String TEST_PERMISSION = TEST_PACKAGE + ".permission.TEST";
 
     private PackageManager mockPackageManager;
     private PackageHelper packageHelper;
@@ -134,5 +136,70 @@ public class PackageHelperTest {
                 .thenThrow(new IllegalArgumentException("test"));
 
         assertTrue(packageHelper.isPackageInstalledAndEnabled(TEST_PACKAGE));
+    }
+
+    @Test
+    public void testIsSignaturePermissionGrantedToPackage_validPermission_returnsTrue() throws Exception {
+        final PermissionInfo permissionInfo = new PermissionInfo();
+        permissionInfo.packageName = TEST_PACKAGE;
+        permissionInfo.protectionLevel = PermissionInfo.PROTECTION_SIGNATURE
+                | PermissionInfo.PROTECTION_FLAG_PRIVILEGED;
+        when(mockPackageManager.getPermissionInfo(TEST_PERMISSION, 0))
+                .thenReturn(permissionInfo);
+        when(mockPackageManager.checkPermission(TEST_PERMISSION, TEST_PACKAGE))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+
+        assertTrue(packageHelper.isSignaturePermissionGrantedToPackage(
+                TEST_PERMISSION,
+                TEST_PACKAGE
+        ));
+    }
+
+    @Test
+    public void testIsSignaturePermissionGrantedToPackage_wrongOwner_returnsFalse() throws Exception {
+        final PermissionInfo permissionInfo = new PermissionInfo();
+        permissionInfo.packageName = "com.example.other";
+        permissionInfo.protectionLevel = PermissionInfo.PROTECTION_SIGNATURE;
+        when(mockPackageManager.getPermissionInfo(TEST_PERMISSION, 0))
+                .thenReturn(permissionInfo);
+        when(mockPackageManager.checkPermission(TEST_PERMISSION, TEST_PACKAGE))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+
+        assertFalse(packageHelper.isSignaturePermissionGrantedToPackage(
+                TEST_PERMISSION,
+                TEST_PACKAGE
+        ));
+    }
+
+    @Test
+    public void testIsSignaturePermissionGrantedToPackage_nonSignature_returnsFalse() throws Exception {
+        final PermissionInfo permissionInfo = new PermissionInfo();
+        permissionInfo.packageName = TEST_PACKAGE;
+        permissionInfo.protectionLevel = PermissionInfo.PROTECTION_DANGEROUS;
+        when(mockPackageManager.getPermissionInfo(TEST_PERMISSION, 0))
+                .thenReturn(permissionInfo);
+        when(mockPackageManager.checkPermission(TEST_PERMISSION, TEST_PACKAGE))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+
+        assertFalse(packageHelper.isSignaturePermissionGrantedToPackage(
+                TEST_PERMISSION,
+                TEST_PACKAGE
+        ));
+    }
+
+    @Test
+    public void testIsSignaturePermissionGrantedToPackage_notGranted_returnsFalse() throws Exception {
+        final PermissionInfo permissionInfo = new PermissionInfo();
+        permissionInfo.packageName = TEST_PACKAGE;
+        permissionInfo.protectionLevel = PermissionInfo.PROTECTION_SIGNATURE;
+        when(mockPackageManager.getPermissionInfo(TEST_PERMISSION, 0))
+                .thenReturn(permissionInfo);
+        when(mockPackageManager.checkPermission(TEST_PERMISSION, TEST_PACKAGE))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+
+        assertFalse(packageHelper.isSignaturePermissionGrantedToPackage(
+                TEST_PERMISSION,
+                TEST_PACKAGE
+        ));
     }
 }

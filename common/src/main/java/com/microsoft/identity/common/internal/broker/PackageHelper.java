@@ -32,6 +32,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PermissionInfo;
 import android.content.pm.Signature;
 import android.os.Build;
 import android.util.Base64;
@@ -77,6 +78,32 @@ public class PackageHelper {
      */
     public PackageHelper(final Context context) {
         mPackageManager = context.getPackageManager();
+    }
+
+    /**
+     * Returns whether a package owns and holds the specified signature permission.
+     *
+     * @param permissionName Permission to inspect.
+     * @param packageName Expected permission owner and grantee.
+     */
+    public boolean isSignaturePermissionGrantedToPackage(@NonNull final String permissionName,
+                                                         @NonNull final String packageName) {
+        final String methodTag = TAG + ":isSignaturePermissionGrantedToPackage";
+
+        try {
+            final PermissionInfo permissionInfo =
+                    mPackageManager.getPermissionInfo(permissionName, 0);
+
+            final int baseProtectionLevel =
+                    permissionInfo.protectionLevel & PermissionInfo.PROTECTION_MASK_BASE;
+            return packageName.equals(permissionInfo.packageName)
+                    && baseProtectionLevel == PermissionInfo.PROTECTION_SIGNATURE
+                    && mPackageManager.checkPermission(permissionName, packageName)
+                    == PackageManager.PERMISSION_GRANTED;
+        } catch (final NameNotFoundException e) {
+            Logger.warn(methodTag, "Permission or package was not found.");
+            return false;
+        }
     }
 
     /**

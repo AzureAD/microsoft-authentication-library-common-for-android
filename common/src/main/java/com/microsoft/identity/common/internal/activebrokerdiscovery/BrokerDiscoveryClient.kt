@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy
 import com.microsoft.identity.common.internal.cache.IClientActiveBrokerCache
 import com.microsoft.identity.common.java.exception.ClientException
 import com.microsoft.identity.common.java.exception.ClientException.ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE
+import com.microsoft.identity.common.java.constants.SharedDeviceModeConstants
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.logging.Logger
 import kotlinx.coroutines.*
@@ -286,6 +287,84 @@ class BrokerDiscoveryClient(private val brokerCandidates: Set<BrokerData>,
                     )
                 }
             }
+        }
+    }
+
+    @kotlin.jvm.Throws(ClientException::class)
+    fun isSdmBroadcastProtectionEnabled(activeBroker: BrokerData): Boolean {
+        val methodTag = "$TAG:isSdmBroadcastProtectionEnabled"
+
+        try {
+            if (!isPackageInstalled(activeBroker)) {
+                throw ClientException(
+                    FORCE_TRIGGER_BROKER_DISCOVERY_PACKAGE_NOT_INSTALLED,
+                    "${activeBroker.packageName} is not installed."
+                )
+            }
+
+            if (!isValidBroker(activeBroker)) {
+                throw ClientException(
+                    FORCE_TRIGGER_BROKER_DISCOVERY_NOT_VALID_BROKER,
+                    "${activeBroker.packageName} is not signed with a valid key."
+                )
+            }
+
+            val operationBundle = BrokerOperationBundle(
+                BrokerOperationBundle.Operation.BROKER_DISCOVERY_FROM_SDK,
+                activeBroker.packageName,
+                Bundle()
+            )
+            val resultBundle = ipcStrategy.communicateToBroker(operationBundle) ?: return false
+            val discoveredBroker = extractResult(resultBundle, forceTriggerDiscoveryFlow = false)
+                ?: return false
+
+            if (discoveredBroker != activeBroker || !isValidBroker(discoveredBroker)) {
+                throw ClientException(
+                    FORCE_TRIGGER_BROKER_DISCOVERY_NOT_VALID_BROKER,
+                    "Broker discovery returned an unexpected broker."
+                )
+            }
+
+            val capability = resultBundle.get(
+                SharedDeviceModeConstants.BROADCAST_PROTECTION_ENABLED_BUNDLE_KEY
+            ) ?: return false
+            if (capability !is Boolean) {
+                throw ClientException(
+                    FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR,
+                    "Broker capability has an unexpected type."
+                )
+            }
+
+            return capability
+        } catch (e: BrokerCommunicationException) {
+            if (e.category ==
+                BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE
+            ) {
+                Logger.info(methodTag, "The active Broker does not support this capability.")
+                return false
+            }
+
+            Logger.error(methodTag, "Failed to query the active Broker capability.", e)
+            throw ClientException(
+                FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR,
+                "Failed to query the active Broker capability.",
+                e
+            )
+        } catch (e: ClientException) {
+            if (e.errorCode == ONLY_SUPPORTS_ACCOUNT_MANAGER_ERROR_CODE) {
+                Logger.info(methodTag, "The active Broker only supports AccountManager.")
+                return false
+            }
+
+            Logger.error(methodTag, "Failed to query the active Broker capability.", e)
+            throw e
+        } catch (t: Throwable) {
+            Logger.error(methodTag, "Failed to query the active Broker capability.", t)
+            throw ClientException(
+                FORCE_TRIGGER_BROKER_DISCOVERY_RESULT_UNEXPECTED_ERROR,
+                "Unexpected Broker capability response.",
+                t
+            )
         }
     }
 

@@ -6,6 +6,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <permission
+        android:name="${applicationId}.permission.SDM_BROADCAST"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.SDM_BROADCAST" />
 
     <application
         android:label="Common Test App"
