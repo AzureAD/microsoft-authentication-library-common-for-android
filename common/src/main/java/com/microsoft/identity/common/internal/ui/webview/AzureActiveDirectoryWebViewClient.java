@@ -486,7 +486,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpAuthorize(view, url);
             } else if (isMyAccountsUrl(url)) {
                 Logger.info(methodTag, "Navigation contains myaccounts url.");
-                processMyAccountsUrl(view, url);
+                processMyAccountsUrl(url);
             }
             else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
@@ -506,7 +506,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Browser.MYACCOUNTS_URL_PREFIX);
     }
 
-    private void processMyAccountsUrl(@NonNull final WebView view, @NonNull final String url) {
+    private void processMyAccountsUrl(@NonNull final String url) {
         // Open the MyAccounts URL in the default browser.
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
