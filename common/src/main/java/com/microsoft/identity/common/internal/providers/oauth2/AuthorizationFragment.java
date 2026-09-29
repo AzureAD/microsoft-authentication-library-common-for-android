@@ -80,6 +80,17 @@ public abstract class AuthorizationFragment extends Fragment {
     protected boolean mAuthResultSent = false;
 
     /**
+     * Correlation id of this authorization request, read from the state bundle in
+     * {@link #extractState(Bundle)}.
+     *
+     * <p>Lives here rather than in a subclass because the read is a base-class responsibility: this
+     * class restores the diagnostic context from it, and {@link #onSaveInstanceState(Bundle)} below
+     * round-trips it so a recreated fragment restores that context instead of blanking it. Keeping
+     * the save next to the read means a new subclass cannot forget it.
+     */
+    protected String mCorrelationId;
+
+    /**
      * Whether the host opted in to MAM-CA install-referrer tagging for this request.
      */
     protected boolean mMamCaInstallReferrerEnabled = false;

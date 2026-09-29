@@ -292,12 +292,46 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     /**
-     * Checks host eligibility independently of the URL. Document-start scripts use origin rules
-     * to restrict execution on later documents without broadening native bridge exposure.
+     * Checks whether this host may expose the Auth UX JavaScript API, independently of its URL.
+     *
+     * <p>Outside the broker's isolated {@code :auth} process, eligibility follows the onboarding
+     * recorder rather than Common ECS: that host process does not initialize CommonFlightsManager,
+     * so it cannot receive live flight values. The recorder is present only when the request seeded
+     * onboarding telemetry, and its absence is the brokerless off switch.
+     *
+     * <p>Inside {@code :auth}, the full bridge remains behind the existing broker flight.
      */
     protected boolean isAuthUxJavaScriptApiEnabled() {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+        if (isTelemetryOnlyAuthUxBridge()) {
+            return hasOnboardingTelemetryRecorder();
+        }
+        return CommonFlightsManager.INSTANCE.getFlightsProvider()
+                .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
+    }
+
+    /**
+     * Whether this client has an onboarding telemetry recorder for the current request.
+     *
+     * <p>Subclasses that can carry a recorder override this. The base client never has one, so it
+     * cannot expose the telemetry-only bridge without a destination.
+     *
+     * @return {@code true} when the telemetry-only bridge has somewhere to write.
+     */
+    protected boolean hasOnboardingTelemetryRecorder() {
+        return false;
+    }
+
+    /**
+     * Whether the Auth UX bridge this client registers must be restricted to telemetry.
+     *
+     * <p>Determined by the hosting process, not by the loaded page: outside the broker's isolated
+     * {@code :auth} process the WebView runs in the calling application's own process, where the
+     * number-match device store is not part of the flow.
+     *
+     * @return {@code true} to construct the bridge in telemetry-only mode.
+     */
+    protected boolean isTelemetryOnlyAuthUxBridge() {
+        return !ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
     }
 
     /**
@@ -310,12 +344,13 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * to the same name, so the later registration wins. Constructing the bridge here — rather than
      * inline at each call site — keeps both registrations identically configured; otherwise a
      * subclass that supplies extra collaborators (e.g. a telemetry sink) would silently have them
-     * dropped the first time a page load re-registered a bare instance.
+     * dropped the first time a page load re-registered a bare instance. For the same reason the
+     * telemetry-only capability is resolved here rather than at either call site.
      *
      * @return the bridge instance to bind under {@link AuthUxJavaScriptInterface#getInterfaceName()}.
      */
     @NonNull
     protected AuthUxJavaScriptInterface createAuthUxJavaScriptInterface() {
-        return new AuthUxJavaScriptInterface();
+        return new AuthUxJavaScriptInterface(null, isTelemetryOnlyAuthUxBridge());
     }
 }

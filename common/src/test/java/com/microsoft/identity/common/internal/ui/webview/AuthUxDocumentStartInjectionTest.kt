@@ -10,6 +10,7 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager
@@ -136,6 +137,28 @@ class AuthUxDocumentStartInjectionTest {
                 }
             }
         }
+    }
+
+    /** In brokerless hosts, the onboarding seed gates both bridge and early wrapper without Common ECS. */
+    @Test
+    fun brokerlessRecorderEnablesBridgeAndDocumentStartWithoutCommonFlights() {
+        authProcess = false
+        baseFlight = false
+        earlyFlight = false
+        client.setOnboardingTelemetryRecorder(
+            OnboardingTelemetryRecorder(
+                """{"schema_version":"1.0.0","session_correlation_id":"test","onboarding_mode":"non-brokered"}""",
+                "client-id",
+                "scope",
+                activity
+            )
+        )
+
+        client.initializeAuthUxJavaScriptApi(view, ALLOWED)
+
+        verify(view).addJavascriptInterface(any<AuthUxJavaScriptInterface>(), eq("broker"))
+        assertEquals("a seeded brokerless request must register the wrapper despite absent Common ECS",
+            1, registrations.size)
     }
 
     /** Exact four rules constrain only early injection; provider matching is a device-test concern. */

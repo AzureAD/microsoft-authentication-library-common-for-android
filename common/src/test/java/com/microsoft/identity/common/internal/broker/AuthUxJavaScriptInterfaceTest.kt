@@ -202,6 +202,59 @@ class AuthUxJavaScriptInterfaceTest {
         Assert.assertTrue(sink.received.isEmpty())
     }
 
+    // ---------------------------------------------------------------------------------------
+    // Telemetry-only mode (brokerless hosts)
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    fun `test telemetry-only mode makes number_matching inert`() {
+        val telemetryOnly = AuthUxJavaScriptInterface(null, true)
+
+        telemetryOnly.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(
+            "a telemetry-only bridge must never write to the number-match store",
+            NumberMatchHelper.numberMatchMap.isEmpty()
+        )
+    }
+
+    @Test
+    fun `test telemetry-only mode still forwards log_telemetry`() {
+        val sink = RecordingTelemetrySink()
+        val telemetryOnly = AuthUxJavaScriptInterface(sink, true)
+
+        telemetryOnly.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertEquals(
+            "telemetry-only mode must not restrict the action it exists to serve",
+            listOf(mockErrorCode),
+            sink.received
+        )
+    }
+
+    @Test
+    fun `test telemetry-only mode does not suppress the whole message`() {
+        // A refused number_matching message must not abort processing or throw; the bridge stays
+        // usable for the log_telemetry that follows it on the same page.
+        val sink = RecordingTelemetrySink()
+        val telemetryOnly = AuthUxJavaScriptInterface(sink, true)
+
+        telemetryOnly.receiveAuthUxMessage(numberMatchTestPayload)
+        telemetryOnly.receiveAuthUxMessage(logTelemetryTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+        Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test default mode is not telemetry-only`() {
+        // The restriction is opt-in: the broker's full bridge is constructed with no flag and must
+        // keep the number-match path. Pins the constructor default against an accidental flip.
+        AuthUxJavaScriptInterface().receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertEquals(mockNumberMatchValue, NumberMatchHelper.numberMatchMap[mockSessionId])
+    }
+
     /** Test double that records every telemetry event routed to the sink. */
     private class RecordingTelemetrySink(
         /** When false, simulates a host that is not ready to consume yet (e.g. no recorder). */

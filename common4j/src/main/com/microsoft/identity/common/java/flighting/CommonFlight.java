@@ -123,7 +123,6 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable exposing the JavaScript API for AuthUx requests
      */
     ENABLE_JS_API_FOR_AUTHUX("EnableJsApiForAuthUx", true),
-
     /**
      * Flight to install the Auth UX forwarding wrapper at document start on supported WebViews.
      * Does not change native bridge exposure or the existing late-injection fallback.
