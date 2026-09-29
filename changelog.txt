@@ -17,6 +17,14 @@ vNext
 
 Version 24.7.1-RC1
 ----------
+- [MINOR] [24.7.1 hotfix] Native Auth V2 SMS password reset (backport #3254), AB#3754595, Fixes AB#3754595 (#3275)
+- [MINOR] [24.7.1 hotfix] Native Auth V2 SMS MFA risk verification (backport #3253), AB#3754593, Fixes AB#3754593 (#3274)
+- [MINOR] [24.7.1 hotfix] Native Auth V2 email OTP first-factor sign-in (backport #3252), AB#3754588, Fixes AB#3754588 (#3273)
+- [MINOR] [24.7.1 hotfix] Native Auth V2 sign-up (backport #3240), AB#3729066, Fixes AB#3729066 (#3272)
+- [PATCH] Add Native Auth V2 sign-in: password first factor and email MFA, Fixes AB#3729067 (#3244)
+- [PATCH] Fix CWE-918 SSRF in PKeyAuth WebView-redirect SubmitUrl, Fixes AB#3706623 (#3226)
+- [PATCH] Fixes AB#3733031 Remove name value storage lock flight (#3224)
+- [PATCH] Remove @Deprecated from getDeviceToken (unblocks OneAuth build), Fixes AB#3727966 (#3216)
 
 Version 24.6.0
 ----------
