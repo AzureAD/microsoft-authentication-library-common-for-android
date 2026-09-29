@@ -40,26 +40,26 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control whether or not to use Network capability for performing network check.
      */
-    @FlightMeta(owner = "iamgusain", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "unassigned", type = FlagType.RELEASE, legacy = true)
     USE_NETWORK_CAPABILITY_FOR_NETWORK_CHECK("UseNetworkCapabilityForNetworkCheck", false),
     /**
      * Flight to control whether to expose the CCS (CachedCredService) request ID in TokenResponse.
      * This flight is default-on 
      */
-    @FlightMeta(owner = "logdog16", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "unassigned", type = FlagType.RELEASE, legacy = true)
     EXPOSE_CCS_REQUEST_ID_IN_TOKENRESPONSE("ExposeCcsRequestIdInTokenResponse", true),
     /**
      * Flight to control whether to expose the CCS (CachedCredService) request sequence in TokenResponse.
      * This flight is default-on 
      */
-    @FlightMeta(owner = "chase-hawthorne", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "unassigned", type = FlagType.RELEASE, legacy = true)
     EXPOSE_CCS_REQUEST_SEQUENCE_IN_TOKENRESPONSE("ExposeCcsRequestSequenceInTokenResponse", true),
 
     /**
      * Flight to control the timeout duration for Acquire Token Silent Calls
      * The default value is set to ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS.
      */
-    @FlightMeta(owner = "iamgusain", type = FlagType.CONFIG, legacy = true)
+    @FlightMeta(owner = "unassigned", type = FlagType.CONFIG, legacy = true)
     ACQUIRE_TOKEN_SILENT_TIMEOUT_MILLISECONDS("AcquireTokenSilentTimeoutMilliSeconds", ACQUIRE_TOKEN_SILENT_DEFAULT_TIMEOUT_MILLISECONDS),
 
     /**
@@ -71,13 +71,13 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to control the timeout duration for UrlConnection connect timeout.
      */
-    @FlightMeta(owner = "melissaahn", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "melissaahn", type = FlagType.CONFIG, legacy = true)
     URL_CONNECTION_CONNECT_TIME_OUT("UrlConnectionConnectTimeOut", DEFAULT_CONNECT_TIME_OUT_MS),
 
     /**
      * Flight to control the timeout duration for UrlConnection read timeout.
      */
-    @FlightMeta(owner = "melissaahn", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "melissaahn", type = FlagType.CONFIG, legacy = true)
     URL_CONNECTION_READ_TIME_OUT("UrlConnectionReadTimeOut", DEFAULT_READ_TIME_OUT_MS),
 
     /**
@@ -220,7 +220,7 @@ public enum CommonFlight implements IFlightConfig {
      * secure-by-default, ECS-backed kill-switch for the check in
      * {@code BrokerSilentTokenCommandParameters.validate()}.
      */
-    @FlightMeta(owner = "prvnkmr337", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "prsaminathan", type = FlagType.KILL_SWITCH, legacy = true)
     VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
 
     /**
@@ -246,7 +246,7 @@ public enum CommonFlight implements IFlightConfig {
      * Flight to enable increased thread pool size for silent requests.
      * When true, uses 12 threads. When false, uses legacy 5 threads.
      */
-    @FlightMeta(owner = "prvnkmr337", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "prsaminathan", type = FlagType.RELEASE, legacy = true)
     USE_INCREASED_DEFAULT_SILENT_REQUEST_THREAD_POOL_SIZE("UseIncreasedSilentRequestThreadPoolSize", false),
     
     /**
@@ -303,7 +303,7 @@ public enum CommonFlight implements IFlightConfig {
      *
      * Default: false (disabled for safe rollout).
      */
-    @FlightMeta(owner = "prvnkmr337", type = FlagType.CONFIG, legacy = true)
+    @FlightMeta(owner = "prsaminathan", type = FlagType.CONFIG, legacy = true)
     ENABLE_HTTP_CANCELLATION_ON_TIMEOUT("EnableHttpCancellationOnTimeout", false),
     
     /** 
@@ -317,7 +317,7 @@ public enum CommonFlight implements IFlightConfig {
     /**
      * Flight to enable Auth Tab for the switch browser feature.
      */
-    @FlightMeta(owner = "Copilot", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "pedroro", type = FlagType.RELEASE, legacy = true)
     ENABLE_AUTH_TAB_FOR_SWITCH_BROWSER("EnableAuthTabForSwitchBrowser", true),
     
     /**
@@ -326,7 +326,7 @@ public enum CommonFlight implements IFlightConfig {
      * ECS to revert to the historical String#startsWith prefix match
      * (FireWatch c1bf88bd / IcM 31000000624712).
      */
-    @FlightMeta(owner = "wzhipan", type = FlagType.RELEASE, legacy = true)
+    @FlightMeta(owner = "unassigned", type = FlagType.RELEASE, legacy = true)
     ENABLE_STRICT_REDIRECT_URI_MATCHING("EnableStrictRedirectUriMatching", true),
 
     /**
