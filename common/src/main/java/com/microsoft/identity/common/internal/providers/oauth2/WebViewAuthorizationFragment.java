@@ -372,7 +372,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         // pages the WebView behaves exactly as before.
                         if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                                 .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
-                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
+                            mWebView.getSettings().setSupportMultipleWindows(true);
                         }
                     }
                 },
@@ -540,9 +540,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
-     * Routes the URL based on whether the main WebView is currently on a TLR page:
-     * - TLR page: opens the URL in an external browser.
-     * - Non-TLR page: loads the URL inline in the main WebView.
+     * OpenID VC targets are delegated to the authentication WebView so its WebViewClient can
+     * launch the wallet. User-initiated HTTPS URLs open in the external browser without navigating
+     * the authentication WebView away from its current page.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -570,19 +570,27 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
                 mainWebView.loadUrl(targetUrl);
+            } else if (targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
+                span.setAttribute(
+                        AttributeName.target_blank_navigation_route.name(),
+                        AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
+                Logger.info(methodTag, "onCreateWindow: delegating OpenID VC URL to authentication WebView client.");
+                if (mAADWebViewClient == null) {
+                    throw new IllegalStateException("Authentication WebView client is unavailable.");
+                }
+                mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
             } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
-            } else if (!isTlrUrl(currentPageUrl)) {
-                // Non-TLR page: load inline, same as WebView default behavior.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR);
-                Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
-                mainWebView.loadUrl(targetUrl);
             } else {
-                // TLR page: delegate to system browser so user can view terms externally.
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
-                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
+                final boolean isTlrPage = isTlrUrl(currentPageUrl);
+                span.setAttribute(
+                        AttributeName.target_blank_navigation_route.name(),
+                        isTlrPage
+                                ? AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR
+                                : AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER);
+                Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                 mainWebView.getContext().startActivity(browserIntent);
             }

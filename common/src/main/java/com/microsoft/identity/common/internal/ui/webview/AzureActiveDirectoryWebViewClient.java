@@ -375,6 +375,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
+        Logger.info(methodTag, "WebView redirect URL: " + url.substring(Math.min(2, url.length())));
         final String formattedURL = url.toLowerCase(Locale.US);
 
         try {
@@ -453,7 +454,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processAmazonAppUri(url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_REDIRECT) && isOpenIdVcUrl(formattedURL)) {
                 Logger.info(methodTag, "It is an OpenID Verifiable Credentials request.");
-                processOpenIdVcRequest(view, url);
+                handleOpenIdVcRequest(view, url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
@@ -480,7 +481,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
-            } else {
+            } else if (isAnyAuthorizeUrl(url)) {
+                Logger.info(methodTag, "Navigation contains /authorize url.");
+                processWebCpAuthorize(view, url);
+            } else if (isMyAccountsUrl(url)) {
+                Logger.info(methodTag, "Navigation contains myaccounts url.");
+                processMyAccountsUrl(view, url);
+            }
+            else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
                 return false;
@@ -492,6 +500,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
+    }
+
+    private boolean isMyAccountsUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Browser.MYACCOUNTS_URL_PREFIX);
+    }
+
+    private void processMyAccountsUrl(@NonNull final WebView view, @NonNull final String url) {
+        // Open the MyAccounts URL in the default browser.
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getActivity().startActivity(intent);
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(TAG, "No activity found to handle MyAccounts URL: " + url, e);
+            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No activity found to handle MyAccounts URL: " + url);
+        }
     }
 
     /**
@@ -1022,6 +1046,48 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
+    private boolean isAnyAuthorizeUrl(@NonNull final String url) {
+        // URL should be for authorize request for webcp.
+        final String methodTag = TAG + ":isWebCpAuthorizeUrl";
+        try {
+            final URI uri = new URI(url);
+            final String host = uri.getHost();
+            final String path = uri.getPath();
+
+            if (host == null || path == null) {
+                Logger.verbose(methodTag, "URL missing host or path");
+                return false;
+            }
+
+            if (!AzureActiveDirectory.isValidCloudHost(new URL(url))) {
+                Logger.info(methodTag, "URL host is not a valid Azure cloud host");
+                return false;
+            }
+
+            if (!path.contains("/authorize")) {
+                Logger.info(methodTag, "URL path does not contain /authorize");
+                return false;
+            }
+
+            final Map<String, String> queryParams = StringExtensions.getUrlParameters(url);
+            final String clientId = queryParams.get(AuthenticationConstants.OAuth2.CLIENT_ID);
+
+            if (StringUtil.isNullOrEmpty(clientId)) {
+                Logger.info(methodTag, "Authorize URL does not contain client_id");
+                return false;
+            }
+
+//            final boolean isWebCpClient = AuthenticationConstants.Broker.WEBCP_CLIENT_ID.equalsIgnoreCase(clientId);
+//            Logger.info(methodTag, isWebCpClient
+//                    ? "WebCP authorize URL contains valid WebCP client_id."
+//                    : "Not running WebCP flow as client_id in authorize is not webcp client_id");
+            return true;
+        } catch (final URISyntaxException | MalformedURLException e) {
+            Logger.info(methodTag, "Invalid URL: " + e.getMessage());
+            return false;
+        }
+    }
+
     private boolean isHeaderForwardingRequiredUri(@NonNull final String url) {
         // MSAL makes MSA requests first to login.microsoftonline.com, and then gets redirected to login.live.com.
         // This drops all the headers, which can have credentials useful for SSO and correlationIds useful for
@@ -1414,14 +1480,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Handles an openid-vc:// URL by stopping the WebView and launching an
-     * {@link Intent#ACTION_VIEW} intent so the system can route it to the
-     * registered wallet application.
+     * Handles an OpenID VC request intercepted from either normal WebView navigation or a
+     * target-blank popup. Stops the WebView and launches an {@link Intent#ACTION_VIEW} intent so
+     * the system can route the request to the registered wallet application.
      *
-     * @param view The WebView that intercepted the navigation.
-     * @param url  The original (non-lowercased) openid-vc:// URL.
+     * @param view the authentication WebView associated with the request.
+     * @param url the original OpenID VC URL.
      */
-    private void processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
+    public void handleOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processOpenIdVcRequest";
         view.stopLoading();
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());

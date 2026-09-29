@@ -169,6 +169,8 @@ public final class AuthenticationConstants {
          * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
          */
         public static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
+
+        public static final String MYACCOUNTS_URL_PREFIX = "https://myaccount.microsoft.com";
     }
 
     /**
@@ -1519,6 +1521,16 @@ public final class AuthenticationConstants {
          * WebView routing value when the target URL is loaded inline (non-TLR page).
          */
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR = "non_tlr_flow";
+
+        /**
+         * WebView routing value when a target URL from a non-TLR page is delegated to the system browser.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER = "non_tlr_browser";
+
+        /**
+         * WebView routing value when an OpenID VC target is delegated to the authentication WebView.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC = "openid_vc";
 
         /**
          * WebView routing value when the target URL is delegated to the system browser (TLR page).

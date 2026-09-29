@@ -40,6 +40,7 @@ import android.webkit.WebView;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 
 import org.junit.Before;
@@ -48,6 +49,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.util.ReflectionHelpers;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -75,6 +77,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     // Target URLs for handleInterceptedUrlFromNewWindow
     private static final String HTTPS_TARGET_URL = "https://terms.example.com/privacy";
     private static final String HTTP_TARGET_URL = "http://terms.example.com/privacy";
+    private static final String OPENID_VC_TARGET_URL = "openid-vc://authorize?request_uri=https%3A%2F%2Fexample.com";
 
     @Before
     public void setUp() throws Exception {
@@ -185,21 +188,44 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_nonTlrPage_loadsInline() {
+    public void testHandleInterceptedUrl_openIdVc_loadsInAuthenticationWebView() {
         final WebView mainWebView = spy(new WebView(mContext));
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        final WebResourceRequest request = mockRequest(OPENID_VC_TARGET_URL);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+
+        mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
+
+        verify(webViewClient).handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL);
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span).setAttribute(
+                eq(AttributeName.target_blank_navigation_route.name()),
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC));
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nonTlrPage_delegatesToBrowser() {
+        final Activity activity = Robolectric.buildActivity(Activity.class).get();
+        final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
         final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
 
-        // mainWebView is on a non-TLR page
-        // Robolectric WebView.getUrl() returns null by default (no page loaded), which is non-TLR
+        when(mainWebView.getUrl()).thenReturn(NON_TLR_HTTPS_URL);
+        when(mainWebView.getContext()).thenReturn(activity);
+
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        // Should load URL inline
-        verify(mainWebView).loadUrl(eq(HTTPS_TARGET_URL));
+        // The main authentication WebView must retain its current page.
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR));
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER));
         verify(span).setStatus(StatusCode.OK);
         verify(span).end();
     }
@@ -218,7 +244,6 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        // Should NOT load inline
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
