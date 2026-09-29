@@ -31,6 +31,7 @@ import org.junit.Test
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Tests for [MamInstallReferrerBuilder] - the MAM Conditional Access Phase 1 install-referrer
@@ -436,26 +437,47 @@ class MamInstallReferrerBuilderTest {
     /**
      * Runs [block] with a log sink attached and returns the messages this class emitted while it ran.
      *
-     * [Logger] hands each line to a single-threaded executor, so a callback that is detached as soon
-     * as [block] returns races the delivery. Emitting a marker afterwards and waiting for it to come
-     * back removes the race rather than papering over it with a sleep: the executor is FIFO, so once
-     * the marker has arrived, everything [block] logged has arrived too.
+     * [Logger] hands each line to a single-threaded executor and, at delivery time, fans it out to
+     * whichever sink is registered *then* - not the one that was registered when the line was
+     * emitted. Two races follow from that, and both are closed with FIFO fences rather than sleeps:
+     *
+     *  - *Trailing:* a sink detached as soon as [block] returns races the delivery of [block]'s own
+     *    lines. A closing fence emitted after [block] and waited on fixes it: once the fence has come
+     *    back, everything [block] logged has come back too.
+     *  - *Leading:* the sibling tests that do not capture still call the class under test, which logs
+     *    asynchronously with no drain of its own. Those lines can be delivered into *this* capture
+     *    window and be misattributed - which is exactly what made `gated_notEnabled_logsNothingAtAll`
+     *    flaky. An opening fence emitted before [block] closes it: capture stays off until the fence
+     *    arrives, and because the executor is FIFO every line enqueued before it - including another
+     *    test's - has already been delivered and dropped by then.
      *
      * Only lines tagged by the class under test are returned, so an unrelated subsystem logging on
      * its own schedule cannot decide whether an assertion passes.
      */
     private fun captureLogsWhile(block: () -> Unit): List<String> {
         val captured = CopyOnWriteArrayList<String>()
+        val started = CountDownLatch(1)
         val delivered = CountDownLatch(1)
+        val capturing = AtomicBoolean(false)
         val identifier = "MamInstallReferrerBuilderTest-${System.nanoTime()}"
 
         Logger.setLogger(identifier) { tag, _, message, _ ->
             when {
+                tag == START_FENCE_TAG -> {
+                    capturing.set(true)
+                    started.countDown()
+                }
                 tag == FENCE_TAG -> delivered.countDown()
-                tag != null && tag.startsWith(TAG_UNDER_TEST) -> captured.add(message)
+                capturing.get() && tag != null && tag.startsWith(TAG_UNDER_TEST) -> captured.add(message)
             }
         }
         try {
+            // Flush anything an earlier test left in flight before capturing begins.
+            Logger.info(START_FENCE_TAG, "Draining prior log deliveries before capture.")
+            assertTrue(
+                "The log executor never reached the start fence.",
+                started.await(30, TimeUnit.SECONDS)
+            )
             block()
             Logger.info(FENCE_TAG, "Waiting for the log executor to drain.")
             assertTrue(
@@ -484,5 +506,6 @@ class MamInstallReferrerBuilderTest {
         /** Every line this class logs is tagged with its own name, method suffix aside. */
         private const val TAG_UNDER_TEST = "MamInstallReferrerBuilder"
         private const val FENCE_TAG = "MamInstallReferrerBuilderTest-fence"
+        private const val START_FENCE_TAG = "MamInstallReferrerBuilderTest-start-fence"
     }
 }

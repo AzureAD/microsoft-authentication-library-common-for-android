@@ -72,6 +72,8 @@ public abstract class AuthorizationFragment extends Fragment {
      */
     private Bundle mInstanceState;
 
+    private String mCorrelationId;
+
     /**
      * Determines if authentication result has been sent.
      */
@@ -188,19 +190,18 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     /**
-     * {@inheritDoc}
+     * The correlation id this authorization flow was started with.
      *
-     * <p>Round-trips the correlation id, which {@link #extractState(Bundle)} reads back on the
-     * recreation path. Without this the key is absent from the saved bundle and a recreated fragment
-     * blanks its diagnostic context, so every subsequent log line for the request loses its join
-     * key — and, for the WebView fragment, the onboarding recorder can no longer be resolved.
+     * Held here as well as in DiagnosticContext because the latter is thread local and another flow
+     * on the same thread can replace it, whereas this survives for the life of the fragment.
      *
-     * <p>A null id is not written at all rather than stored as a null value. Storing it is harmless
-     * today — {@code RequestContext extends HashMap}, so the downstream {@code put} accepts null,
-     * and the only reader substitutes a random UUID — but that safety is load-bearing on the map
-     * type. Skipping the write keeps the absent case indistinguishable from "never saved", which is
-     * already handled, instead of relying on a null surviving every layer below.
+     * @return the correlation id, or null when the flow was started without one.
      */
+    @Nullable
+    public String getCorrelationId() {
+        return mCorrelationId;
+    }
+
     @Override
     public void onSaveInstanceState(@NonNull final Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -476,4 +477,3 @@ public abstract class AuthorizationFragment extends Fragment {
         return new LinkedHashMap<>(mUrlStatusTracker);
     }
 }
-

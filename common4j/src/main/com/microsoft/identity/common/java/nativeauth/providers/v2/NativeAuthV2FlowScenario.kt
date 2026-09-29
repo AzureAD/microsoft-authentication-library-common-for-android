@@ -20,17 +20,17 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
-package com.microsoft.identity.internal.testutils.nativeauth.api.models
-
-import com.google.gson.annotations.SerializedName
+package com.microsoft.identity.common.java.nativeauth.providers.v2
 
 /**
+ * The Native Auth V2 flow that produced a [com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState].
  *
+ * This stays intentionally small: [RESET_PASSWORD] covers V2 SSPR, [SIGN_IN] covers V2 sign-in,
+ * and [SIGN_UP] covers V2 sign-up, so callers can pass the scenario through the public Native Auth
+ * V2 strategy/controller surface without exposing any broader flow matrix yet.
  */
-data class InboxContent(
-    @SerializedName("id") val id: String,
-    @SerializedName("from") val from: String,
-    @SerializedName("subject") val subject: String,
-    @SerializedName("date") val date: String // TODO make DateTimeObject
-)
+enum class NativeAuthV2FlowScenario {
+    RESET_PASSWORD,
+    SIGN_IN,
+    SIGN_UP
+}

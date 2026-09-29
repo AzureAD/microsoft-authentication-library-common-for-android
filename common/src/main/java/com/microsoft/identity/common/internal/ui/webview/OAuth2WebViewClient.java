@@ -287,28 +287,24 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     protected boolean shouldExposeJavaScriptInterface(final String url) {
-        if (!AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)) {
-            return false;
-        }
+        return isAuthUxJavaScriptApiEnabled()
+                && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url);
+    }
+
+    /**
+     * Checks whether this host may expose the Auth UX JavaScript API, independently of its URL.
+     *
+     * <p>Outside the broker's isolated {@code :auth} process, eligibility follows the onboarding
+     * recorder rather than Common ECS: that host process does not initialize CommonFlightsManager,
+     * so it cannot receive live flight values. The recorder is present only when the request seeded
+     * onboarding telemetry, and its absence is the brokerless off switch.
+     *
+     * <p>Inside {@code :auth}, the full bridge remains behind the existing broker flight.
+     */
+    protected boolean isAuthUxJavaScriptApiEnabled() {
         if (isTelemetryOnlyAuthUxBridge()) {
-            // Outside the broker's :auth process the gate is NOT a flight, deliberately. Flights
-            // resolve through CommonFlightsManager, which only ever returns real ECS values in a
-            // process that called initializeCommonFlightsManager -- and the broker is the only
-            // caller. In a host application's own process (OneAuth, or any MSAL client) the manager
-            // falls back to DefaultValueFlightsProvider and returns the compiled-in default, so a
-            // flight here could never be turned on in production no matter how it was ramped: it
-            // would be a permanently-false gate wearing the costume of a kill switch.
-            //
-            // Exposure follows the ONBOARDING SEED instead, which is a better gate on its own
-            // merits. This bridge exists only to append to the onboarding blob, so with no recorder
-            // it can have no effect at all; and a recorder exists only when the caller deliberately
-            // seeded onboarding telemetry for this request. Plain MSAL clients never seed one and
-            // are therefore never exposed, and the off switch is "stop seeding" -- a decision the
-            // caller already owns per request, in a process where it actually takes effect.
             return hasOnboardingTelemetryRecorder();
         }
-        // Inside :auth the flight is real, and the full bridge (which includes the number-match
-        // device store) stays behind the flight it has always used.
         return CommonFlightsManager.INSTANCE.getFlightsProvider()
                 .isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);
     }
@@ -316,12 +312,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * Whether this client has an onboarding telemetry recorder for the current request.
      *
-     * <p>The brokerless gate above uses this in place of a flight. Subclasses that can carry a
-     * recorder override it; the base client never has one, so the telemetry-only bridge is not
-     * exposed for a WebView host that has nothing to record into.
+     * <p>Subclasses that can carry a recorder override this. The base client never has one, so it
+     * cannot expose the telemetry-only bridge without a destination.
      *
-     * @return {@code true} when a recorder is attached and the telemetry-only bridge would have
-     *         somewhere to write.
+     * @return {@code true} when the telemetry-only bridge has somewhere to write.
      */
     protected boolean hasOnboardingTelemetryRecorder() {
         return false;
@@ -331,10 +325,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
      * Whether the Auth UX bridge this client registers must be restricted to telemetry.
      *
      * <p>Determined by the hosting process, not by the loaded page: outside the broker's isolated
-     * {@code :auth} process the WebView runs in the calling application's own process (a
-     * non-brokered OneAuth flow in Teams, Outlook, ...), where the number-match device store is
-     * neither reachable by the broker nor part of the flow. Such a host therefore only ever needs
-     * to report onboarding error codes, so it gets a bridge that can do nothing else.
+     * {@code :auth} process the WebView runs in the calling application's own process, where the
+     * number-match device store is not part of the flow.
      *
      * @return {@code true} to construct the bridge in telemetry-only mode.
      */

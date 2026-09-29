@@ -46,6 +46,7 @@ import static com.microsoft.identity.common.internal.controllers.BrokerOperation
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_TELEMETRY_REQUEST;
 
 import android.app.Activity;
 import android.content.Context;
@@ -82,6 +83,8 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeWithClientKeyInternal;
+import com.microsoft.identity.common.java.broker.telemetry.BrokerTelemetryRequest;
+import com.microsoft.identity.common.java.broker.telemetry.EventCollector;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenBatchResult;
@@ -202,6 +205,54 @@ public class BrokerMsalController extends BaseController {
         this.ipcStrategies = ipcStrategies;
         mHelloCache = getHelloCache();
         mMaxMsalBrokerProtocolVersion = maxMsalBrokerProtocolVersion;
+    }
+
+    /**
+     * Adds the client's telemetry request blob to the outbound request Bundle.
+     * <p>
+     * The blob carries only the negotiated wire contract — the correlation ID and the schema
+     * version this client can consume — so the broker can build its response payload in a
+     * format this client understands. The {@link EventCollector} itself is never serialized:
+     * its timing state is process-local and any client-side events it holds have no consumer
+     * in the broker.
+     * <p>
+     * The correlation ID is read from the command parameters rather than from the
+     * {@link EventCollector} because the parameters carry the ID the request actually runs under,
+     * which is what the broker's payload must be joinable on. The collector is often constructed
+     * before that ID is resolved, so its own value may be stale or blank.
+     *
+     * @param requestBundle the request Bundle to augment.
+     * @param parameters    the command parameters carrying the optional {@link EventCollector}.
+     * @return the same Bundle, with the telemetry request key added when telemetry is being
+     * collected and the request carries a correlation ID.
+     */
+    @NonNull
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    Bundle addBrokerTelemetryRequest(@NonNull final Bundle requestBundle,
+                                     @NonNull final CommandParameters parameters) {
+        final EventCollector eventCollector = parameters.getEventCollector();
+        if (eventCollector == null) {
+            // Telemetry is not being collected for this request. Leave the key absent so the
+            // broker treats it as "not requested" rather than parsing an explicit JSON null.
+            return requestBundle;
+        }
+        // CommandDispatcher mints a correlation ID and sets it on the parameters before the
+        // command executes, so this is populated on every dispatched request. The guard only
+        // matters if a controller is ever invoked without going through the dispatcher:
+        // BrokerTelemetryRequest#correlationId is contractually a UUID, and an empty string
+        // would satisfy the type while violating the wire contract. Omitting the key keeps a
+        // malformed blob off the wire; the broker gates collection on its own flight, so this
+        // does not suppress broker-side telemetry.
+        final String correlationId = parameters.getCorrelationId();
+        if (StringUtil.isNullOrEmpty(correlationId)) {
+            return requestBundle;
+        }
+        requestBundle.putString(
+                BROKER_TELEMETRY_REQUEST,
+                ObjectMapper.serializeObjectToJsonString(
+                        new BrokerTelemetryRequest(correlationId))
+        );
+        return requestBundle;
     }
 
     /** Should only be invoked in Background thread, given that getIpcStrategies could be a long running operation. */
@@ -502,7 +553,13 @@ public class BrokerMsalController extends BaseController {
                                 resultBundle,
                                 negotiatedBrokerProtocolVersion);
                         intent.putExtras(
-                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForAcquireTokenInteractive(
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                )
                         );
                         return intent;
                     }
@@ -544,10 +601,14 @@ public class BrokerMsalController extends BaseController {
                     public BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(MSAL_FETCH_DCF_AUTH_RESULT,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
-                                        mApplicationContext,
-                                        parameters,
-                                        negotiatedBrokerProtocolVersion));
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForDeviceCodeFlowAuthRequest(
+                                                mApplicationContext,
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                ));
                     }
 
                     @Override
@@ -600,11 +661,15 @@ public class BrokerMsalController extends BaseController {
                         // Note : Broker API here is to only fetch the authorization result which has the verificationUri, userCode, expiration time and message.
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_DCF,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
-                                        mApplicationContext,
-                                        parameters,
-                                        authorizationResult,
-                                        negotiatedBrokerProtocolVersion));
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForDeviceCodeFlowTokenRequest(
+                                                mApplicationContext,
+                                                parameters,
+                                                authorizationResult,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
+                                ));
                     }
 
                     @Override
@@ -671,10 +736,13 @@ public class BrokerMsalController extends BaseController {
                     BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_SILENT,
                                 mActiveBrokerPackageName,
-                                mRequestAdapter.getRequestBundleForAcquireTokenSilent(
-                                        mApplicationContext,
-                                        parameters,
-                                        negotiatedBrokerProtocolVersion
+                                addBrokerTelemetryRequest(
+                                        mRequestAdapter.getRequestBundleForAcquireTokenSilent(
+                                                mApplicationContext,
+                                                parameters,
+                                                negotiatedBrokerProtocolVersion
+                                        ),
+                                        parameters
                                 ));
                     }
 
