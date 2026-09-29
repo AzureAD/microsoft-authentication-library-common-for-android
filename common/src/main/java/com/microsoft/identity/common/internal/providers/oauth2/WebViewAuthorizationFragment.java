@@ -77,7 +77,6 @@ import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBro
 import com.microsoft.identity.common.internal.ui.webview.switchbrowser.SwitchBrowserProtocolCoordinator;
 import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -337,14 +336,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         // when the request seeded no recorder, or when the correlation id is unusable as a key.
         // Must stay ahead of initializeAuthUxJavaScriptApi and launchWebView below, so the client
         // already holds the recorder before the first page can reach the bridge. AB#3708195.
+        final String correlationId = getCorrelationId();
         final OnboardingTelemetryRecorder onboardingRecorder =
-                OnboardingRecorderRegistry.get(mCorrelationId);
+                OnboardingRecorderRegistry.get(correlationId);
         if (onboardingRecorder != null) {
-            Logger.info(methodTag, mCorrelationId,
+            Logger.info(methodTag, correlationId,
                     "Onboarding telemetry: attaching recorder to WebView client");
             mAADWebViewClient.setOnboardingTelemetryRecorder(onboardingRecorder);
         } else {
-            Logger.verbose(methodTag, mCorrelationId,
+            Logger.verbose(methodTag, correlationId,
                     "Onboarding telemetry: no recorder registered for this request");
         }
 
