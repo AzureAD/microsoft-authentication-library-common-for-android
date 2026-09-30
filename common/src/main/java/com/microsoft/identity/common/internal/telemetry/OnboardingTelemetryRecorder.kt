@@ -31,6 +31,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.Collections
 import java.util.Date
 import java.util.Locale
 
@@ -77,11 +78,13 @@ class OnboardingTelemetryRecorder(
     private val onboardingMode: String
 
     // Populated fields
-    private val stepsList: MutableList<StepEntry> = mutableListOf()
-    private val blockingErrors: MutableList<String> = mutableListOf()
+    private val stepsList: MutableList<StepEntry> = Collections.synchronizedList(mutableListOf())
+    private val blockingErrors: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    private val uxFlowUsed: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    @Volatile
     private var lastLoadedDomain: String? = null
+    @Volatile
     private var profile: String? = null
-    private val uxFlowUsed: MutableList<String> = mutableListOf()
 
     init {
         val parsed = parseSeed(seedJson)
@@ -205,8 +208,12 @@ class OnboardingTelemetryRecorder(
                 put(FIELD_ONBOARDING_MODE, onboardingMode)
 
                 // StepsList
+                val stepsSnapshot = synchronized(stepsList) { stepsList.toList() }
+                val errorsSnapshot = synchronized(blockingErrors) { blockingErrors.toList() }
+                val uxFlowSnapshot = synchronized(uxFlowUsed) { uxFlowUsed.toList() }
+
                 val steps = JSONArray()
-                for (entry in stepsList) {
+                for (entry in stepsSnapshot) {
                     steps.put(JSONObject().apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
@@ -216,16 +223,16 @@ class OnboardingTelemetryRecorder(
 
                 // Platform builder fields
                 val errorsArray = JSONArray()
-                for (error in blockingErrors) {
+                for (error in errorsSnapshot) {
                     errorsArray.put(error)
                 }
                 put(OnboardingTelemetryConstants.BLOCKING_ERRORS, errorsArray)
                 // last_blocking_error is only meaningful when at least one was recorded;
                 // omit the field on smooth-success flows rather than serializing a sentinel.
-                if (blockingErrors.isNotEmpty()) {
+                if (errorsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
-                        blockingErrors.last()
+                        errorsSnapshot.last()
                     )
                 }
 
@@ -233,10 +240,10 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
 
-                if (stepsList.isNotEmpty()) {
+                if (stepsSnapshot.isNotEmpty()) {
                     put(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
-                        stepsList.last().stepId
+                        stepsSnapshot.last().stepId
                     )
                 }
 
@@ -244,9 +251,9 @@ class OnboardingTelemetryRecorder(
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowUsed.isNotEmpty()) {
+                if (uxFlowSnapshot.isNotEmpty()) {
                     val flows = JSONArray()
-                    for (flow in uxFlowUsed) {
+                    for (flow in uxFlowSnapshot) {
                         flows.put(flow)
                     }
                     put(OnboardingTelemetryConstants.UX_FLOW_USED, flows)

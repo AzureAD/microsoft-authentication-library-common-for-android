@@ -67,6 +67,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
+import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.IUrlLoadTracker;
@@ -315,6 +317,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final String methodTag = TAG + ":onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
@@ -324,6 +327,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         }
         mAADWebViewClient = createAADWebViewClient(activity);
         setUpWebView(view, mAADWebViewClient);
+
+        final String correlationId = getCorrelationId();
+        final OnboardingTelemetryRecorder onboardingRecorder =
+                OnboardingRecorderRegistry.get(correlationId);
+        if (onboardingRecorder != null) {
+            Logger.info(methodTag, correlationId,
+                    "Attaching onboarding telemetry recorder to the authorization WebView.");
+            mAADWebViewClient.setOnboardingTelemetryRecorder(onboardingRecorder);
+        }
+
         mAADWebViewClient.initializeAuthUxJavaScriptApi(mWebView, mAuthorizationRequestUrl);
         launchWebView(mAuthorizationRequestUrl, mRequestHeaders);
         return view;
@@ -759,6 +772,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mPasskeyWebListenerHooked && mWebView != null) {
             PasskeyWebListener.unhook(mWebView);
             mPasskeyWebListenerHooked = false;
+        }
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.removeAuthUxTelemetryWebMessageApi();
         }
         super.onDestroyView();
     }
