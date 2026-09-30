@@ -137,6 +137,14 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
                 sourceLibraryVersion,
                 utid
         );
+        if (mAuthorizationRequest instanceof MicrosoftAuthorizationRequest) {
+            final MicrosoftAuthorizationRequest request =
+                    (MicrosoftAuthorizationRequest) mAuthorizationRequest;
+            if (request.getCorrelationId() != null) {
+                authorizationActivityParameters.setRequestCorrelationId(
+                        request.getCorrelationId().toString());
+            }
+        }
         return AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
     }
 

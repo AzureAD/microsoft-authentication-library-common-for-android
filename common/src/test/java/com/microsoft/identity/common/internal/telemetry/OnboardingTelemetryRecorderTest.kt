@@ -23,15 +23,19 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+import com.microsoft.identity.common.logging.Logger
 import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
+import java.util.Collections
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingTelemetryRecorderTest {
@@ -138,6 +142,97 @@ class OnboardingTelemetryRecorderTest {
         val errors = blob.getJSONArray("blocking_errors")
         Assert.assertEquals(2, errors.length())
         Assert.assertEquals("MDM_FLOW", blob.getString("last_blocking_error"))
+    }
+
+    @Test
+    fun testFinalizeBlob_DuplicateBlockingErrorsArePreservedAndLastWins() {
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("53003")
+
+        val blob = JSONObject(recorder.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals(3, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
+        Assert.assertEquals("530003", errors.getString(1))
+        Assert.assertEquals("53003", errors.getString(2))
+        Assert.assertEquals("53003", blob.getString("last_blocking_error"))
+    }
+
+    @Test
+    fun testBlockingErrorLimit_RetainsFirst256OccurrencesAndWarnsOnceOnOverflow() {
+        Mockito.mockStatic(Logger::class.java).use { logger ->
+            repeat(256) { recorder.addBlockingError(if (it % 3 == 0) "53003" else "530003") }
+            logger.verify({
+                Logger.warn(
+                    "OnboardingTelemetryRecorder",
+                    "Blocking error limit reached; further occurrences are dropped"
+                )
+            }, Mockito.never())
+
+            val atLimit = JSONObject(recorder.finalizeBlob())
+            Assert.assertEquals(256, atLimit.getJSONArray("blocking_errors").length())
+            repeat(100) { recorder.addBlockingError("MDM_FLOW") }
+
+            val blob = JSONObject(recorder.finalizeBlob())
+            val errors = blob.getJSONArray("blocking_errors")
+            Assert.assertEquals(256, errors.length())
+            repeat(256) {
+                Assert.assertEquals(if (it % 3 == 0) "53003" else "530003", errors.getString(it))
+            }
+            Assert.assertEquals("53003", blob.getString("last_blocking_error"))
+            Assert.assertEquals(atLimit.toString(), blob.toString())
+            logger.verify({
+                Logger.warn(
+                    "OnboardingTelemetryRecorder",
+                    "Blocking error limit reached; further occurrences are dropped"
+                )
+            }, Mockito.times(1))
+        }
+    }
+
+    @Test
+    fun testConcurrentBlockingErrorAppendAndFinalizationIsSafe() {
+        val failures = Collections.synchronizedList(mutableListOf<Throwable>())
+        val writers = List(4) { index ->
+            Thread {
+                try {
+                    repeat(100) { recorder.addBlockingError(if (index % 2 == 0) "530003" else "53003") }
+                } catch (throwable: Throwable) {
+                    failures.add(throwable)
+                }
+            }
+        }
+        val reader = Thread {
+            try {
+                repeat(100) {
+                    val blob = JSONObject(recorder.finalizeBlob())
+                    val errors = blob.getJSONArray("blocking_errors")
+                    Assert.assertTrue(errors.length() <= 256)
+                    if (errors.length() > 0) {
+                        Assert.assertEquals(
+                            errors.getString(errors.length() - 1),
+                            blob.getString("last_blocking_error")
+                        )
+                    } else {
+                        Assert.assertFalse(blob.has("last_blocking_error"))
+                    }
+                }
+            } catch (throwable: Throwable) {
+                failures.add(throwable)
+            }
+        }
+
+        writers.forEach { it.start() }
+        reader.start()
+        writers.forEach { it.join() }
+        reader.join()
+
+        Assert.assertTrue(failures.toString(), failures.isEmpty())
+        val finalBlob = JSONObject(recorder.finalizeBlob())
+        val errors = finalBlob.getJSONArray("blocking_errors")
+        Assert.assertEquals(256, errors.length())
+        Assert.assertEquals(errors.getString(255), finalBlob.getString("last_blocking_error"))
     }
 
     @Test
@@ -256,7 +351,74 @@ class OnboardingTelemetryRecorderTest {
         )
     }
 
+    @Test
+    fun testAddBlockingError_PersistsOnlyFirstBlockWithoutRefreshingTtl() {
+        val prefs = Mockito.spy(
+            ApplicationProvider.getApplicationContext<Context>()
+                .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        )
+        val context = Mockito.mock(Context::class.java)
+        Mockito.`when`(context.applicationContext).thenReturn(context)
+        Mockito.`when`(context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE))
+            .thenReturn(prefs)
+        val r = OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, context)
+
+        val beforeFirstBlock = System.currentTimeMillis()
+        r.addBlockingError("530003")
+        val afterFirstBlock = System.currentTimeMillis()
+        val firstCached = requireNotNull(prefs.getString(PREFS_FILE, ""))
+        val entry = JSONObject(firstCached).getJSONObject("$CLIENT_ID|$TARGET")
+        Assert.assertEquals("test-uuid-123", entry.getString("id"))
+        Assert.assertTrue(entry.getLong("ts") in beforeFirstBlock..afterFirstBlock)
+
+        repeat(300) { r.addBlockingError("530003") }
+        r.addBlockingError("53003")
+
+        Mockito.verify(context, Mockito.times(1))
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        // One recorder read plus the test's firstCached read.
+        Mockito.verify(prefs, Mockito.times(2)).getString(PREFS_FILE, "")
+        Mockito.verify(prefs, Mockito.times(1)).edit()
+        Assert.assertEquals(firstCached, prefs.getString(PREFS_FILE, ""))
+    }
+
+    @Test
+    fun testAddBlockingError_PreferencesReadFailureDoesNotEscapeOrRetry() {
+        val context = Mockito.mock(Context::class.java)
+        Mockito.`when`(context.applicationContext).thenReturn(context)
+        Mockito.`when`(context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE))
+            .thenThrow(SecurityException("Preferences unavailable"))
+        val r = OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, context)
+
+        repeat(2) { r.addBlockingError("530003") }
+
+        Mockito.verify(context, Mockito.times(1))
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        Assert.assertEquals(2, JSONObject(r.finalizeBlob()).getJSONArray("blocking_errors").length())
+    }
+
+    @Test
+    fun testAddBlockingError_PreferencesApplyFailureDoesNotEscapeOrRetry() {
+        val context = Mockito.mock(Context::class.java)
+        val prefs = Mockito.mock(SharedPreferences::class.java)
+        val editor = Mockito.mock(SharedPreferences.Editor::class.java)
+        Mockito.`when`(context.applicationContext).thenReturn(context)
+        Mockito.`when`(context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE))
+            .thenReturn(prefs)
+        Mockito.`when`(prefs.edit()).thenReturn(editor)
+        Mockito.`when`(editor.putString(Mockito.eq(PREFS_FILE), Mockito.anyString()))
+            .thenReturn(editor)
+        Mockito.doThrow(IllegalStateException("Write failed")).`when`(editor).apply()
+        val r = OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, context)
+
+        repeat(2) { r.addBlockingError("530003") }
+
+        Mockito.verify(editor, Mockito.times(1)).apply()
+        Assert.assertEquals(2, JSONObject(r.finalizeBlob()).getJSONArray("blocking_errors").length())
+    }
+
     companion object {
+        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
         private const val SEED_JSON =
             "{\"schema_version\":\"1.0.0\"," +
                 "\"session_correlation_id\":\"test-uuid-123\"," +

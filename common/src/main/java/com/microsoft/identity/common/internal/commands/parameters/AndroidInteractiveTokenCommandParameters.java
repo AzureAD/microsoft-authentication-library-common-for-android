@@ -26,6 +26,8 @@ import android.app.Activity;
 
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleCredential;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import androidx.annotation.Nullable;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 
 import lombok.EqualsAndHashCode;
@@ -44,4 +46,14 @@ public class AndroidInteractiveTokenCommandParameters extends InteractiveTokenCo
     private transient final Activity activity;
 
     private final SignInWithGoogleCredential signInWithGoogleCredential;
+
+    /**
+     * Optional live recorder handed to LocalMSALController for this interactive request.
+     * Supplying an unregistered recorder transfers terminal finalization to that controller through
+     * token exchange. A recorder already registered by an external owner remains externally owned;
+     * that owner must register the actual authorization request ID before launch. Never serialized.
+     */
+    @Nullable
+    @EqualsAndHashCode.Exclude
+    private transient final OnboardingTelemetryRecorder onboardingTelemetryRecorder;
 }
