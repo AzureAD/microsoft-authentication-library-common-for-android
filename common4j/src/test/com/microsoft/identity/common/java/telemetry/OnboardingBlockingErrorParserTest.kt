@@ -30,6 +30,14 @@ import org.junit.Test
 
 class OnboardingBlockingErrorParserTest {
 
+    @Test
+    fun nonBlockingPolicyIncludesSentinelAndExcludedCodes() {
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("0"))
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("50058"))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("530003"))
+        Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(null))
+    }
+
     // --- MicrosoftTokenResponse overload ---
 
     @Test

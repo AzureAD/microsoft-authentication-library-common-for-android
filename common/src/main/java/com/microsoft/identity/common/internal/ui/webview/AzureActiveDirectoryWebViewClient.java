@@ -45,12 +45,17 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ViewTreeLifecycleOwner;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.BrokerData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.AuthUxJavaScriptInterface;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryWebMessageListener;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.fido.FidoChallenge;
 import com.microsoft.identity.common.internal.fido.AuthFidoChallengeHandler;
@@ -89,6 +94,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.telemetry.OnboardingBlockingErrorParser;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_AUTHENTICATOR_MFA_LINKING_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
@@ -108,6 +114,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.concurrent.TimeUnit;
 
 import android.webkit.WebResourceError;
@@ -146,6 +153,43 @@ import io.opentelemetry.context.Scope;
  */
 public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String TAG = AzureActiveDirectoryWebViewClient.class.getSimpleName();
+
+    private static final String AUTH_UX_ROUTING_SCRIPT =
+            "(function() { " +
+                    "if (window !== window.top) { return; } " +
+                    "var broker = window." + AuthUxJavaScriptInterface.Companion.getInterfaceName()
+                    + " || {}; " +
+                    "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName()
+                    + " = broker; " +
+                    "broker.postMessageToBroker = function(message) { " +
+                    "var parsed = message; " +
+                    "if (typeof parsed === 'string') { " +
+                    "try { parsed = JSON.parse(parsed); } catch (error) { parsed = null; } " +
+                    "} " +
+                    "if (parsed && parsed.action_name === 'log_telemetry') { " +
+                    "try { " +
+                    "var telemetryPayload = typeof message === 'string' ? message : JSON.stringify(message); " +
+                    "var telemetry = window."
+                    + AuthUxTelemetryWebMessageListener.INTERFACE_NAME + "; " +
+                    "if (telemetry && typeof telemetry.postMessage === 'function') { " +
+                    "telemetry.postMessage(telemetryPayload); " +
+                    "} " +
+                    "} catch (error) { } " +
+                    "return; " +
+                    "} " +
+                    "var payload = typeof message === 'string' ? message : JSON.stringify(message); " +
+                    "if (typeof broker.receiveAuthUxMessage === 'function') { " +
+                    "broker.receiveAuthUxMessage(payload); " +
+                    "} " +
+                    "}; " +
+                    "})();";
+
+    private static final Pattern SERVER_ERROR_CODE_PATTERN = Pattern.compile("^[0-9]{1,32}$");
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    static String getAuthUxRoutingScript() {
+        return AUTH_UX_ROUTING_SCRIPT;
+    }
 
     /**
      * Package name of the Google Play Store, the legitimate launch target for a broker-install
@@ -193,7 +237,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     @Nullable
     private String mLastCommittedRequestUrl;
-    private boolean mAuthUxJavaScriptInterfaceAdded = false;
+    @Nullable
+    private WebView mAuthUxTelemetryWebMessageOwner;
+    @Nullable
+    private ScriptHandler mAuthUxTelemetryDocumentStartScript;
     // Determines whether to handle WebCP requests in the WebView in brokerless scenarios.
     private final boolean mIsWebViewWebCpEnabledInBrokerlessCase;
     // Whether the host opted in to MAM-CA install-referrer tagging for this request.
@@ -212,7 +259,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * launch, etc.) and {@code lastLoadedDomain} are recorded for the onboarding telemetry blob.
      */
     @Nullable
-    private OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
+    private volatile OnboardingTelemetryRecorder mOnboardingTelemetryRecorder;
 
     /**
      * Callback for tracking URL load events.
@@ -276,6 +323,61 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
             mAuthUxJavaScriptInterfaceAdded = true;
         }
+        initializeAuthUxTelemetryWebMessageApi(view);
+    }
+
+    private void initializeAuthUxTelemetryWebMessageApi(@NonNull final WebView view) {
+        if (mAuthUxTelemetryWebMessageOwner == view || mOnboardingTelemetryRecorder == null) {
+            return;
+        }
+
+        removeAuthUxTelemetryWebMessageApi();
+        mAuthUxTelemetryWebMessageOwner = view;
+        try {
+            if (!AuthUxTelemetryWebMessageListener.hook(
+                    view, this::tryConsumeAuthUxServerErrorCode)) {
+                removeAuthUxTelemetryWebMessageApi();
+                return;
+            }
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                mAuthUxTelemetryDocumentStartScript = WebViewCompat.addDocumentStartJavaScript(
+                        view,
+                        AUTH_UX_ROUTING_SCRIPT,
+                        AuthUxTelemetryWebMessageListener.getAllowedOriginRules()
+                );
+            }
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG,
+                    "Auth UX telemetry setup failed; continuing without optional telemetry.");
+            removeAuthUxTelemetryWebMessageApi();
+        }
+    }
+
+    /**
+     * Detaches the telemetry listener and document-start router from their owning WebView.
+     */
+    public void removeAuthUxTelemetryWebMessageApi() {
+        final ScriptHandler scriptHandler = mAuthUxTelemetryDocumentStartScript;
+        final WebView webMessageOwner = mAuthUxTelemetryWebMessageOwner;
+        mAuthUxTelemetryDocumentStartScript = null;
+        mAuthUxTelemetryWebMessageOwner = null;
+
+        if (scriptHandler != null) {
+            try {
+                scriptHandler.remove();
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX telemetry script cleanup failed; continuing authentication.");
+            }
+        }
+        if (webMessageOwner != null) {
+            try {
+                AuthUxTelemetryWebMessageListener.unhook(webMessageOwner);
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX telemetry listener cleanup failed; continuing authentication.");
+            }
+        }
     }
 
     /**
@@ -300,14 +402,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: record domain navigation (best-effort, no-op if no recorder).
         recordLastLoadedDomain(url);
 
-        if (mAuthUxJavaScriptInterfaceAdded) {
-            // Add a function to the api. Must do this to first stringify the dict object, as Android @JavaScriptInterface does not support
-            // passing dict objects through Javascript APIs, only Strings and primitive types. Server side will be sending message in a dict
-            String jsScript = "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".postMessageToBroker = function(message) { " +
-                    "    window." + AuthUxJavaScriptInterface.Companion.getInterfaceName() + ".receiveAuthUxMessage(JSON.stringify(message)); " +
-                    "};";
-
-            view.evaluateJavascript(jsScript, null);
+        if (mAuthUxJavaScriptInterfaceAdded
+                || (mAuthUxTelemetryWebMessageOwner == view
+                && AuthUxTelemetryWebMessageListener.isAllowedUrl(url))) {
+            try {
+                view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX routing script injection failed; continuing authentication.");
+            }
         }
     }
 
@@ -2138,8 +2241,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         try {
             recorder.addStep(stepId);
-        } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
+        } catch (final Exception exception) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ".");
         }
     }
 
@@ -2160,8 +2263,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.verbose(TAG, "Onboarding telemetry: no host extracted from URL");
             }
-        } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
+        } catch (final Exception exception) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain.");
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    boolean tryConsumeAuthUxServerErrorCode(@NonNull final AuthUxTelemetryEvent event) {
+        final String errorCode = event.getErrorCode();
+        if (!SERVER_ERROR_CODE_PATTERN.matcher(errorCode).matches()) {
+            Logger.warn(
+                    TAG,
+                    event.getCorrelationId(),
+                    "Rejecting non-numeric Auth UX telemetry error code."
+            );
+            return true;
+        }
+        if (OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(errorCode)) {
+            return true;
+        }
+        final OnboardingTelemetryRecorder recorder = mOnboardingTelemetryRecorder;
+        if (recorder == null) {
+            return false;
+        }
+        recorder.addBlockingError(errorCode);
+        return true;
     }
 }

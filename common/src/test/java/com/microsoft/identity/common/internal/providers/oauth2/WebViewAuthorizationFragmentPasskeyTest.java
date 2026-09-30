@@ -25,13 +25,23 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 
 import android.os.Build;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
+
+import androidx.fragment.app.FragmentActivity;
+
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.util.ReflectionHelpers;
@@ -67,6 +77,50 @@ public class WebViewAuthorizationFragmentPasskeyTest {
             fragment.onDestroyView();
 
             passkeyWebListener.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void onDestroyView_removesAuthUxTelemetryWebMessageApi() {
+        final WebViewAuthorizationFragment fragment = new WebViewAuthorizationFragment();
+        final AzureActiveDirectoryWebViewClient client =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(fragment, "mAADWebViewClient", client);
+
+        fragment.onDestroyView();
+
+        verify(client).removeAuthUxTelemetryWebMessageApi();
+    }
+
+    @Test
+    public void onDestroyView_telemetryCleanupFailureDoesNotEscape() {
+        final TelemetryCleanupFailureFragment fragment = new TelemetryCleanupFailureFragment();
+        final AzureActiveDirectoryWebViewClient client =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(fragment, "mAADWebViewClient", client);
+        Mockito.doThrow(new IllegalStateException("telemetry cleanup failed"))
+                .when(client).removeAuthUxTelemetryWebMessageApi();
+
+        final FragmentActivity activity =
+                Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        activity.getSupportFragmentManager().beginTransaction()
+                .add(android.R.id.content, fragment)
+                .commitNow();
+        activity.getSupportFragmentManager().beginTransaction()
+                .remove(fragment)
+                .commitNow();
+
+        verify(client).removeAuthUxTelemetryWebMessageApi();
+    }
+
+    private static class TelemetryCleanupFailureFragment extends WebViewAuthorizationFragment {
+        @Override
+        public View onCreateView(
+                LayoutInflater inflater,
+                ViewGroup container,
+                Bundle savedInstanceState
+        ) {
+            return new View(requireContext());
         }
     }
 }

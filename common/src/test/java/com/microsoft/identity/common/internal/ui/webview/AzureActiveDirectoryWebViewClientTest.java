@@ -58,8 +58,14 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.webkit.ScriptHandler;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryEvent;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetrySink;
+import com.microsoft.identity.common.internal.broker.AuthUxTelemetryWebMessageListener;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
@@ -102,7 +108,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -2742,6 +2750,278 @@ public class AzureActiveDirectoryWebViewClientTest {
     // Onboarding telemetry hooks
     // -----------------------------------------------------------------------
 
+    @Test
+    public void authUxRoutingScript_routesTelemetryExclusivelyBeforeLegacyBridge() {
+        final String script = AzureActiveDirectoryWebViewClient.getAuthUxRoutingScript();
+        final int telemetryCondition = script.indexOf(
+                "parsed.action_name === 'log_telemetry'");
+        final int telemetryPost = script.indexOf("telemetry.postMessage(telemetryPayload)");
+        final int telemetryTry = script.indexOf("try {", telemetryCondition);
+        final int telemetryCatch = script.indexOf("catch (error) { }", telemetryTry);
+        final int telemetryReturn = script.indexOf("return;", telemetryPost);
+        final int legacyPost = script.indexOf("broker.receiveAuthUxMessage(payload)");
+
+        assertTrue(telemetryCondition >= 0);
+        assertTrue(telemetryTry > telemetryCondition);
+        assertTrue(telemetryPost > telemetryCondition);
+        assertTrue(telemetryCatch > telemetryPost);
+        assertTrue(telemetryReturn > telemetryPost);
+        assertTrue(legacyPost > telemetryReturn);
+    }
+
+    @Test
+    public void authUxServerErrors_preserveDuplicatesAndLastOccurrence() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+        final AuthUxTelemetryEvent event =
+                new AuthUxTelemetryEvent("correlation", "530003", null, null, null, null);
+
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(event));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(event));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(2, blob.getJSONArray("blocking_errors").length());
+        assertEquals("530003", blob.getString("last_blocking_error"));
+    }
+
+    @Test
+    public void authUxServerErrors_rejectNonNumericAndExcludedCodes() throws Exception {
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        mWebViewClient.setOnboardingTelemetryRecorder(recorder);
+
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(
+                new AuthUxTelemetryEvent("correlation", "symbolic", null, null, null, null)));
+        assertTrue(mWebViewClient.tryConsumeAuthUxServerErrorCode(
+                new AuthUxTelemetryEvent("correlation", "50058", null, null, null, null)));
+
+        final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
+        assertEquals(0, blob.getJSONArray("blocking_errors").length());
+        assertFalse(blob.has("last_blocking_error"));
+    }
+
+    @Test
+    public void authUxServerErrors_withoutRecorderReportsNotConsumed() {
+        assertFalse(mWebViewClient.tryConsumeAuthUxServerErrorCode(
+                new AuthUxTelemetryEvent("correlation", "530003", null, null, null, null)));
+    }
+
+    @Test
+    public void authUxTelemetryRegistration_cleanupIsSymmetric() {
+        final ScriptHandler scriptHandler = Mockito.mock(ScriptHandler.class);
+        final Set<String> allowedOrigins =
+                Collections.singleton("https://*.microsoftonline.com");
+        mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<AuthUxTelemetryWebMessageListener> listener =
+                     Mockito.mockStatic(AuthUxTelemetryWebMessageListener.class);
+             MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webViewCompat = Mockito.mockStatic(WebViewCompat.class)) {
+            listener.when(() -> AuthUxTelemetryWebMessageListener.hook(
+                    eq(mMockWebView),
+                    any(AuthUxTelemetrySink.class)
+            )).thenReturn(true);
+            listener.when(AuthUxTelemetryWebMessageListener::getAllowedOriginRules)
+                    .thenReturn(allowedOrigins);
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.DOCUMENT_START_SCRIPT
+            )).thenReturn(true);
+            webViewCompat.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(mMockWebView),
+                    anyString(),
+                    eq(allowedOrigins)
+            )).thenReturn(scriptHandler);
+
+            mWebViewClient.initializeAuthUxJavaScriptApi(
+                    mMockWebView,
+                    "https://login.microsoftonline.com"
+            );
+            mWebViewClient.removeAuthUxTelemetryWebMessageApi();
+
+            Mockito.verify(scriptHandler).remove();
+            listener.verify(() -> AuthUxTelemetryWebMessageListener.unhook(mMockWebView));
+        }
+    }
+
+    @Test
+    public void authUxTelemetryRegistration_featureDetectionFailureDoesNotChangeAuthRedirect()
+            throws ClientException {
+        final IAuthorizationCompletionCallback callback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final AzureActiveDirectoryWebViewClient client =
+                buildClientWithRedirectUri(callback, TEST_REDIRECT_URI);
+        client.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class)) {
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.WEB_MESSAGE_LISTENER
+            )).thenThrow(new IllegalStateException("feature detection failed"));
+
+            client.initializeAuthUxJavaScriptApi(
+                    mMockWebView,
+                    "https://login.microsoftonline.com"
+            );
+
+            client.removeAuthUxTelemetryWebMessageApi();
+        }
+
+        assertTrue(client.shouldOverrideUrlLoading(mMockWebView, TEST_REDIRECT_URL));
+        Mockito.verify(callback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.COMPLETED,
+                resultCaptor.getValue().getResultCode());
+    }
+
+    @Test
+    public void authUxTelemetryRegistration_listenerRegistrationFailureIsRolledBack() {
+        mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webViewCompat = Mockito.mockStatic(WebViewCompat.class)) {
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.WEB_MESSAGE_LISTENER
+            )).thenReturn(true);
+            webViewCompat.when(() -> WebViewCompat.addWebMessageListener(
+                    eq(mMockWebView),
+                    eq(AuthUxTelemetryWebMessageListener.INTERFACE_NAME),
+                    any(),
+                    any()
+            )).thenThrow(new IllegalStateException("listener registration failed"));
+            webViewCompat.when(() -> WebViewCompat.removeWebMessageListener(
+                    eq(mMockWebView),
+                    eq(AuthUxTelemetryWebMessageListener.INTERFACE_NAME)
+            )).thenThrow(new IllegalStateException("listener rollback failed"));
+
+            mWebViewClient.initializeAuthUxJavaScriptApi(
+                    mMockWebView,
+                    "https://login.microsoftonline.com"
+            );
+
+            webViewCompat.verify(() -> WebViewCompat.removeWebMessageListener(
+                    mMockWebView,
+                    AuthUxTelemetryWebMessageListener.INTERFACE_NAME
+            ));
+            mWebViewClient.removeAuthUxTelemetryWebMessageApi();
+        }
+    }
+
+    @Test
+    public void authUxTelemetryRegistration_documentScriptFailureAndRollbackFailureDoNotEscape() {
+        final Set<String> allowedOrigins =
+                Collections.singleton("https://*.microsoftonline.com");
+        mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<AuthUxTelemetryWebMessageListener> listener =
+                     Mockito.mockStatic(AuthUxTelemetryWebMessageListener.class);
+             MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webViewCompat = Mockito.mockStatic(WebViewCompat.class)) {
+            listener.when(() -> AuthUxTelemetryWebMessageListener.hook(
+                    eq(mMockWebView),
+                    any(AuthUxTelemetrySink.class)
+            )).thenReturn(true);
+            listener.when(AuthUxTelemetryWebMessageListener::getAllowedOriginRules)
+                    .thenReturn(allowedOrigins);
+            listener.when(() -> AuthUxTelemetryWebMessageListener.unhook(mMockWebView))
+                    .thenThrow(new IllegalStateException("listener rollback failed"));
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.DOCUMENT_START_SCRIPT
+            )).thenReturn(true);
+            webViewCompat.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(mMockWebView),
+                    anyString(),
+                    eq(allowedOrigins)
+            )).thenThrow(new IllegalStateException("script registration failed"));
+
+            mWebViewClient.initializeAuthUxJavaScriptApi(
+                    mMockWebView,
+                    "https://login.microsoftonline.com"
+            );
+            mWebViewClient.removeAuthUxTelemetryWebMessageApi();
+            listener.verify(() -> AuthUxTelemetryWebMessageListener.unhook(mMockWebView));
+        }
+    }
+
+    @Test
+    public void authUxTelemetryCleanup_attemptsBothRemovalsAndIsIdempotent() {
+        final ScriptHandler scriptHandler = Mockito.mock(ScriptHandler.class);
+        final Set<String> allowedOrigins =
+                Collections.singleton("https://*.microsoftonline.com");
+        mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<AuthUxTelemetryWebMessageListener> listener =
+                     Mockito.mockStatic(AuthUxTelemetryWebMessageListener.class);
+             MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class);
+             MockedStatic<WebViewCompat> webViewCompat = Mockito.mockStatic(WebViewCompat.class)) {
+            listener.when(() -> AuthUxTelemetryWebMessageListener.hook(
+                    eq(mMockWebView),
+                    any(AuthUxTelemetrySink.class)
+            )).thenReturn(true);
+            listener.when(AuthUxTelemetryWebMessageListener::getAllowedOriginRules)
+                    .thenReturn(allowedOrigins);
+            listener.when(() -> AuthUxTelemetryWebMessageListener.unhook(mMockWebView))
+                    .thenThrow(new IllegalStateException("listener removal failed"));
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.DOCUMENT_START_SCRIPT
+            )).thenReturn(true);
+            webViewCompat.when(() -> WebViewCompat.addDocumentStartJavaScript(
+                    eq(mMockWebView),
+                    anyString(),
+                    eq(allowedOrigins)
+            )).thenReturn(scriptHandler);
+            Mockito.doThrow(new IllegalStateException("script removal failed"))
+                    .when(scriptHandler).remove();
+
+            mWebViewClient.initializeAuthUxJavaScriptApi(
+                    mMockWebView,
+                    "https://login.microsoftonline.com"
+            );
+            mWebViewClient.removeAuthUxTelemetryWebMessageApi();
+            mWebViewClient.removeAuthUxTelemetryWebMessageApi();
+
+            Mockito.verify(scriptHandler).remove();
+            listener.verify(() -> AuthUxTelemetryWebMessageListener.unhook(mMockWebView));
+        }
+    }
+
+    @Test
+    public void authUxTelemetryRoutingInjectionFailureDoesNotEscape() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final Set<String> allowedOrigins =
+                Collections.singleton("https://*.microsoftonline.com");
+        mWebViewClient.setOnboardingTelemetryRecorder(newOnboardingRecorder());
+
+        try (MockedStatic<AuthUxTelemetryWebMessageListener> listener =
+                     Mockito.mockStatic(AuthUxTelemetryWebMessageListener.class);
+             MockedStatic<WebViewFeature> feature = Mockito.mockStatic(WebViewFeature.class)) {
+            listener.when(() -> AuthUxTelemetryWebMessageListener.hook(
+                    eq(webView),
+                    any(AuthUxTelemetrySink.class)
+            )).thenReturn(true);
+            listener.when(AuthUxTelemetryWebMessageListener::getAllowedOriginRules)
+                    .thenReturn(allowedOrigins);
+            listener.when(() -> AuthUxTelemetryWebMessageListener.isAllowedUrl(
+                    "https://login.microsoftonline.com/common/oauth2/authorize"
+            )).thenReturn(true);
+            feature.when(() -> WebViewFeature.isFeatureSupported(
+                    WebViewFeature.DOCUMENT_START_SCRIPT
+            )).thenReturn(false);
+            Mockito.doThrow(new IllegalStateException("script evaluation failed"))
+                    .when(webView).evaluateJavascript(anyString(), Mockito.isNull());
+
+            mWebViewClient.initializeAuthUxJavaScriptApi(
+                    webView,
+                    "https://login.microsoftonline.com"
+            );
+            mWebViewClient.onPageFinished(
+                    webView,
+                    "https://login.microsoftonline.com/common/oauth2/authorize"
+            );
+
+            Mockito.verify(webView).evaluateJavascript(anyString(), Mockito.isNull());
+            Mockito.verify(webView, never()).stopLoading();
+        }
+    }
+
     /**
      * Verifies that when an OnboardingTelemetryRecorder is attached to the WebView client,
      * a broker install request URL produces a populated blob containing the
@@ -2979,4 +3259,3 @@ public class AzureActiveDirectoryWebViewClientTest {
                 launched);
     }
 }
-

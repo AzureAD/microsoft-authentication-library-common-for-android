@@ -73,41 +73,24 @@ data class AuthUxTelemetryEvent(
  * appending the code to the onboarding blob's blocking-errors list (subject to the non-blocking
  * exclusion list) — is supplied by the host and handled downstream (see AB#3688632).
  *
- * **Threading.** `@JavascriptInterface` methods are dispatched on the WebView's private JavaBridge
- * thread, not the UI thread. The bridge serializes its own calls per instance, but the telemetry
- * state a sink writes to is typically also touched from the UI thread (for example
- * `AzureActiveDirectoryWebViewClient.onPageFinished` recording the last loaded domain, or the host
- * serializing the blob at the end of the flow). The bridge cannot enforce safety on state it does
- * not own, so that state must be thread-safe; the shipped implementation satisfies this by making
- * the onboarding recorder's collections thread-safe rather than by relying on this note.
+ * **Threading.** The callback thread depends on the transport: `@JavascriptInterface` uses
+ * WebView's JavaBridge thread, while `WebMessageListener` uses the UI thread. The telemetry state
+ * may also be finalized from another thread, so sink implementations must use thread-safe state.
  */
 fun interface AuthUxTelemetrySink {
     /**
      * Route an opaque Auth UX telemetry event to onboarding telemetry.
      *
-     * **Threading.** Invoked on the WebView JavaBridge thread. WebView dispatches
-     * `@JavascriptInterface` calls for a given WebView on a single private background thread, so
-     * calls into one bridge instance do not overlap — note this is a *platform* property, not
-     * something this class implements: [receiveAuthUxMessage] takes no lock. The bridge does
-     * guarantee it never invokes a sink while holding an internal lock. It cannot serialize a sink
-     * against other threads, so a host that also mutates the same telemetry state from the UI
-     * thread (for example while serializing the onboarding blob) must make that state thread-safe
-     * itself. Implementations must not block.
+     * **Threading.** Invoked on the transport callback thread. Implementations must be thread-safe
+     * and must not block.
      *
      * @param event The validated telemetry context. [AuthUxTelemetryEvent.errorCode] is guaranteed
      *  non-empty and shape-checked; the remaining fields are best-effort page-supplied context,
      *  control-character-stripped and length-bounded but not shape-validated.
      * @return `true` if the sink took responsibility for the event — whether it recorded the code or
-     *  deliberately dropped it by its own policy — and `false` if it is not ready to take it yet (for
-     *  example the host has no active telemetry recorder). Returning `false` leaves the code eligible
-     *  for a later retry instead of suppressing it as already-forwarded, so a code that arrives
-     *  before the host is ready is not lost.
-     *
-     *  **Signal "not ready" by returning `false`, never by throwing.** A throw is treated as a host
-     *  defect: retry is suppressed for the rest of the page load, because re-offering an event to a
-     *  sink that is failing would let a looping page re-invoke it indefinitely. An implementation
-     *  that throws during its own not-ready window would therefore lose the very early-arrival
-     *  events the `false` contract exists to preserve.
+     *  deliberately dropped it by its own policy — and `false` if it is not ready to take it yet.
+     *  Each page message is treated as an independent occurrence, so neither result suppresses a
+     *  later occurrence.
      */
     fun tryConsumeAuthUxTelemetry(event: AuthUxTelemetryEvent): Boolean
 }
@@ -121,48 +104,14 @@ fun interface AuthUxTelemetrySink {
  *  onboarding telemetry. When null (the default), `log_telemetry` messages are still parsed and
  *  validated but produce no telemetry side effect. Supplying a default keeps existing no-arg
  *  construction (e.g. from the WebView host) source-compatible.
+ * @property telemetryOnly When true, rejects every action except [ActionNames.LOG_TELEMETRY].
+ *  Used by the origin-scoped WebMessage listener so a message posted to that listener can never
+ *  reach the number-matching store.
  */
 class AuthUxJavaScriptInterface @JvmOverloads constructor(
-    private val telemetrySink: AuthUxTelemetrySink? = null
+    private val telemetrySink: AuthUxTelemetrySink? = null,
+    private val telemetryOnly: Boolean = false
 ) {
-
-    /**
-     * Error codes this instance will not offer to a sink again — either because a sink reported
-     * consuming them, or because a sink threw while handling them (a host defect that retrying
-     * cannot fix).
-     *
-     * A code is *not* recorded here when a sink reports it did **not** consume the event, so a code
-     * that arrives before the host has a recorder stays eligible for a later retry rather than being
-     * suppressed as already-handled.
-     *
-     * **Scope is this bridge instance only.** The WebView host re-registers the bridge on every
-     * navigation (`OAuth2WebViewClient.onPageStarted`), and each registration constructs a new
-     * `AuthUxJavaScriptInterface`, so this state resets per page load while the consumer it feeds
-     * lives for the whole request. This is therefore a per-page flood guard, **not** a
-     * request-wide de-duplication guarantee: the same code reported on two page loads is offered
-     * twice, and session-wide de-duplication is the consumer's responsibility (the onboarding
-     * recorder de-duplicates its blocking-errors list for exactly this reason).
-     *
-     * Guarded by itself; also guards [telemetryAttempts]. The sink is never invoked while this
-     * lock is held.
-     */
-    private val handledErrorCodes = LinkedHashSet<String>()
-
-    /**
-     * Number of `log_telemetry` messages this instance has dispatched to [handleLogTelemetry],
-     * counted on entry so that a malformed error code consumes the budget too. Saturates one past
-     * [MAX_TELEMETRY_ATTEMPTS] rather than counting indefinitely: the extra increment marks that
-     * the cap message has been logged, so it is emitted once on the transition instead of on every
-     * subsequent message.
-     *
-     * [handledErrorCodes] alone cannot bound the work a page can cause: a code that is never
-     * consumed is deliberately never recorded there, and a malformed code never gets that far at
-     * all, so neither the duplicate check nor the distinct-code cap would ever fire for them.
-     * Without this counter a page posting in a loop — malformed codes, or the same code while no
-     * sink is wired — would re-log (and re-validate, and re-invoke the sink) without limit.
-     * Guarded by [handledErrorCodes].
-     */
-    private var telemetryAttempts = 0
 
     // Store number matches in a static hash map
     // No need to persist this storage beyond the current broker process, but we need to keep them
@@ -181,25 +130,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
          * into the uploaded onboarding blob.
          */
         private val ERROR_CODE_REGEX = Regex("^[A-Za-z0-9_-]{1,32}$")
-
-        /**
-         * Maximum number of distinct error codes a single bridge instance will hand to a sink.
-         * Bounds the damage a page that posts `log_telemetry` in a loop can do **within one page
-         * load** — see [handledErrorCodes] for why the scope is per instance rather than per
-         * request. Duplicates are suppressed and do not count toward the cap.
-         */
-        private const val MAX_FORWARDED_ERROR_CODES = 10
-
-        /**
-         * Maximum number of `log_telemetry` messages a single bridge instance will handle, counted
-         * on entry to the handler — before the error code is validated, and whether or not a sink
-         * consumes it. Bounds the paths [MAX_FORWARDED_ERROR_CODES] cannot: a malformed code, or
-         * one that is never consumed, is never recorded as handled, so only this counter stops a
-         * page looping against validation warnings, an unwired sink, or a perpetually declining
-         * one. Set above [MAX_FORWARDED_ERROR_CODES] so that legitimate retries — a code reported
-         * before the host attached its recorder — still get through.
-         */
-        private const val MAX_TELEMETRY_ATTEMPTS = 25
 
         /** Maximum length of a page-supplied string echoed into a log line. */
         private const val MAX_LOGGED_VALUE_LENGTH = 64
@@ -432,6 +362,15 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                 "Action name: [${sanitizeForLog(actionName)}], operation: [${sanitizeForLog(operation)}]"
             )
 
+            if (telemetryOnly && actionName != ActionNames.LOG_TELEMETRY) {
+                Logger.warn(
+                    methodTag,
+                    correlationId,
+                    "Telemetry-only Auth UX message handler rejected a non-telemetry action."
+                )
+                return
+            }
+
             when {
                 // Telemetry-only action, matched FIRST and dispatched purely on action_name so a
                 // params.operation smuggled into a log_telemetry message can never reach the
@@ -494,19 +433,9 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
      * Handle the non-mutating [ActionNames.LOG_TELEMETRY] action: validate the page-supplied error
      * code and forward it, with its telemetry context, to the host-supplied sink.
      *
-     * Every exit path is logged distinguishably so a DRI can tell from logcat alone whether a code
-     * was forwarded, rejected as malformed, suppressed by the cap/dedupe, declined by the sink, or
-     * dropped because no host sink was wired. The one deliberate exception is the attempt cap,
-     * which logs once on the transition and is then silent — otherwise the message warning about
-     * spam would itself become the spam.
-     *
-     * **Concurrency.** The dedupe/cap bookkeeping is check-then-act across three critical sections
-     * (attempt cap, dedupe/distinct-code cap, and the final record) with validation and the sink
-     * invocation between them — the sink is deliberately never called under the lock. Those gaps
-     * cannot interleave in practice because WebView dispatches `@JavascriptInterface` calls for one
-     * WebView on a single thread, so a bridge instance is only ever driven serially. The state is
-     * still guarded so that even if a caller invoked this from another thread the worst case is a
-     * bounded duplicate forward, never a corrupted set.
+     * Every valid occurrence is offered to the sink, including repeated codes. The onboarding
+     * telemetry contract is chronological and append-only; preserving duplicates allows repeated
+     * page/server loops to remain visible in `blocking_errors`.
      *
      * @param correlationId Correlation ID from the payload, used as the telemetry join key.
      * @param parameters Parsed `params` object of the message.
@@ -517,32 +446,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
         parameters: AuthUxParams,
         methodTag: String
     ) {
-        // Counted FIRST, before validation, so that a malformed errorCode consumes the budget too:
-        // validation failures emit a warning and do regex work, so counting only after validation
-        // would let a page spam those without ever reaching the cap.
-        //
-        // Scope note: this bounds the log_telemetry HANDLING path only. The per-message logging in
-        // receiveAuthUxMessage runs before this method and is shared with the number-match path, so
-        // it is deliberately left alone; a payload rejected earlier (no params, unknown action,
-        // unparseable JSON) never reaches this counter at all.
-        synchronized(handledErrorCodes) {
-            if (telemetryAttempts >= MAX_TELEMETRY_ATTEMPTS) {
-                if (telemetryAttempts == MAX_TELEMETRY_ATTEMPTS) {
-                    // Logged once, on the transition, so hitting the cap is diagnosable without the
-                    // cap message itself becoming the spam it exists to prevent.
-                    telemetryAttempts++
-                    Logger.warn(
-                        methodTag,
-                        correlationId,
-                        "log_telemetry attempt cap ($MAX_TELEMETRY_ATTEMPTS) reached; "
-                                + "ignoring further log_telemetry messages from this page."
-                    )
-                }
-                return
-            }
-            telemetryAttempts++
-        }
-
         val errorCode = parameters.errorCode
         if (errorCode.isNullOrEmpty()) {
             Logger.warn(
@@ -563,26 +466,6 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
                         + "Sanitized value: [${sanitizeForLog(errorCode)}]"
             )
             return
-        }
-
-        synchronized(handledErrorCodes) {
-            if (handledErrorCodes.contains(errorCode)) {
-                Logger.info(
-                    methodTag,
-                    correlationId,
-                    "log_telemetry errorCode [$errorCode] already handled; suppressing duplicate."
-                )
-                return
-            }
-            if (handledErrorCodes.size >= MAX_FORWARDED_ERROR_CODES) {
-                Logger.warn(
-                    methodTag,
-                    correlationId,
-                    "log_telemetry forwarding cap ($MAX_FORWARDED_ERROR_CODES) reached; "
-                            + "dropping errorCode [$errorCode]."
-                )
-                return
-            }
         }
 
         val sink = telemetrySink
@@ -645,18 +528,14 @@ class AuthUxJavaScriptInterface @JvmOverloads constructor(
             }
 
             SinkOutcome.THREW -> {
-                // Suppress retry only. A throwing sink is a host defect that retrying cannot fix,
-                // and re-offering it would let a looping page re-invoke a broken sink. But nothing
-                // was recorded downstream, so this deliberately does NOT set the span attribute or
-                // claim the code was forwarded — the error log above is the whole story.
-                synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
+                // Nothing was recorded downstream, so do not set the span attribute or claim the
+                // code was forwarded. A later page message remains an independent occurrence.
                 return
             }
 
             SinkOutcome.CONSUMED -> Unit
         }
 
-        synchronized(handledErrorCodes) { handledErrorCodes.add(errorCode) }
         // Set for any code a sink CONSUMED. Note "consumed" means the sink took responsibility for
         // the code, which includes deliberately dropping it by its own policy — so this attribute
         // records what the PAGE REPORTED and the sink accepted, not what downstream telemetry
