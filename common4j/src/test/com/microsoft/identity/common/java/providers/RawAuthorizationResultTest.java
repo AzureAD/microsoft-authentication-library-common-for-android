@@ -53,6 +53,32 @@ import static com.microsoft.identity.common.java.providers.RawAuthorizationResul
 public class RawAuthorizationResultTest {
 
     @Test
+    public void onboardingSnapshotSurvivesEveryResultKindAndPropertyBag() {
+        final RawAuthorizationResult[] originals = {
+                RawAuthorizationResult.fromRedirectUri(SUCCEED_REDIRECT_URI),
+                RawAuthorizationResult.fromRedirectUri(ERROR_RESPONSE_REDIRECT_URI),
+                RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI),
+                RawAuthorizationResult.fromException(new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)),
+                RawAuthorizationResult.fromResultCode(CANCELLED),
+                RawAuthorizationResult.fromResultCode(SDK_CANCELLED),
+                RawAuthorizationResult.fromResultCode(MDM_FLOW),
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.TIMED_OUT)
+        };
+        for (final RawAuthorizationResult original : originals) {
+            Assert.assertNull(original.getOnboardingTelemetryJson());
+            final RawAuthorizationResult enriched = original.withOnboardingTelemetryJson("{\"steps_list\":[]}");
+            final RawAuthorizationResult restored = RawAuthorizationResult.fromPropertyBag(
+                    RawAuthorizationResult.toPropertyBag(enriched));
+            Assert.assertEquals(original.getResultCode(), restored.getResultCode());
+            Assert.assertEquals(original.getAuthorizationFinalUri(), restored.getAuthorizationFinalUri());
+            Assert.assertEquals(original.getException(), restored.getException());
+            Assert.assertEquals("{\"steps_list\":[]}", restored.getOnboardingTelemetryJson());
+            Assert.assertNull(RawAuthorizationResult.fromPropertyBag(
+                    RawAuthorizationResult.toPropertyBag(original)).getOnboardingTelemetryJson());
+        }
+    }
+
+    @Test
     public void testWithUnknownResultCode() {
         testFromResultCode(UNKNOWN);
     }

@@ -44,6 +44,9 @@ import com.microsoft.identity.common.java.ui.AuthorizationAgent
  * @param isWebViewWebCpEnabled        This parameter controls whether webcp URLs should be handled within the WebView or redirected to external browser
  * @param enableSwitchBrowser       When true, the factory will check for browser availability and append switch_browser=1 to the request URL to opt-in to the Switch Browser protocol
  * @param enableMamCaInstallReferrer When true, a MAM-CA Company Portal install link is tagged with the host package as the Play install referrer. Owned by the host (OneAuth/MSAL), which is the only layer that knows whether it is the calling app rather than a broker hosting the flow on its behalf.
+ * @param onboardingSeedJson Optional accumulated onboarding JSON; never sent to the authorization endpoint.
+ * @param onboardingClientId Client ID for recorder correlation persistence.
+ * @param onboardingTarget Sorted, space-joined scopes for recorder correlation persistence.
  */
 data class AuthorizationActivityParameters @JvmOverloads constructor(
     val context: Context,
@@ -64,4 +67,7 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val isWebViewWebCpEnabled: Boolean = true,
     val enableSwitchBrowser: Boolean = false,
     val enableMamCaInstallReferrer: Boolean = false,
+    val onboardingSeedJson: String? = null,
+    val onboardingClientId: String? = null,
+    val onboardingTarget: String? = null,
 )

@@ -94,6 +94,21 @@ public class MicrosoftStsAuthorizationResultFactoryTest {
     }
 
     @Test
+    public void onboardingSnapshotSurvivesAuthorizationResultConversion() {
+        for (final RawAuthorizationResult input : new RawAuthorizationResult[]{
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED),
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.SDK_CANCELLED),
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.TIMED_OUT),
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.MDM_FLOW),
+                RawAuthorizationResult.fromException(new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE))
+        }) {
+            final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
+                    input.withOnboardingTelemetryJson("{\"blocking_errors\":[]}"), getMstsAuthorizationRequest());
+            assertEquals("{\"blocking_errors\":[]}", result.getOnboardingTelemetryJson());
+        }
+    }
+
+    @Test
     public void testClientError() {
         final AuthorizationResult result = mAuthorizationResultFactory.createAuthorizationResult(
                 RawAuthorizationResult.fromException(new ClientException(MOCK_ERROR_CODE, MOCK_ERROR_MESSAGE)), getMstsAuthorizationRequest());

@@ -64,6 +64,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class RawAuthorizationResult {
     private static final String TAG = RawAuthorizationResult.class.getSimpleName();
+    private static final String ONBOARDING_TELEMETRY_JSON = "com.microsoft.identity.onboarding.telemetry.json";
 
     public enum ResultCode {
         UNKNOWN(-1),
@@ -152,6 +153,21 @@ public class RawAuthorizationResult {
     @Nullable
     private final BaseException mException;
 
+    /** Full authorization-session snapshot, not an indication that a token was issued. */
+    @Nullable
+    private final String mOnboardingTelemetryJson;
+
+    /** Returns a copy with optional telemetry; authentication fields remain unchanged. */
+    @NonNull
+    public RawAuthorizationResult withOnboardingTelemetryJson(@Nullable final String telemetryJson) {
+        return RawAuthorizationResult.builder()
+                .resultCode(mResultCode)
+                .authorizationFinalUri(mAuthorizationFinalUri)
+                .exception(mException)
+                .onboardingTelemetryJson(telemetryJson)
+                .build();
+    }
+
     @NonNull
     public static RawAuthorizationResult fromResultCode(final ResultCode resultCode) {
         if (resultCode == ResultCode.NON_OAUTH_ERROR ||
@@ -207,6 +223,9 @@ public class RawAuthorizationResult {
         propertyBag.put(RESULT_CODE, data.mResultCode.mCode);
         propertyBag.put(RESPONSE_FINAL_URL, data.mAuthorizationFinalUri);
         propertyBag.put(RESPONSE_EXCEPTION, data.mException);
+        if (data.mOnboardingTelemetryJson != null) {
+            propertyBag.put(ONBOARDING_TELEMETRY_JSON, data.mOnboardingTelemetryJson);
+        }
         return propertyBag;
     }
 
@@ -216,6 +235,7 @@ public class RawAuthorizationResult {
                 .resultCode(ResultCode.fromInteger(propertyBag.<Integer>get(RESULT_CODE)))
                 .authorizationFinalUri(propertyBag.<URI>get(RESPONSE_FINAL_URL))
                 .exception((BaseException) propertyBag.<Serializable>get(RESPONSE_EXCEPTION))
+                .onboardingTelemetryJson(propertyBag.<String>get(ONBOARDING_TELEMETRY_JSON))
                 .build();
     }
 

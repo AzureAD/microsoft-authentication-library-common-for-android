@@ -171,6 +171,9 @@ public class LocalMSALController extends BaseController {
                 parametersWithScopes
         );
         acquireTokenResult.setAuthorizationResult(result);
+        if (result != null && result.getOnboardingTelemetryJson() != null) {
+            acquireTokenResult.setOnboardingBlob(result.getOnboardingTelemetryJson());
+        }
 
         ResultUtil.logResult(TAG, result);
 

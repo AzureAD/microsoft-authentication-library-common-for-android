@@ -143,6 +143,9 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     private final transient List<Map.Entry<String, String>> mExtraQueryParams;
 
+    /** Optional local onboarding snapshot; never serialized into the authorization URL. */
+    private final transient String mOnboardingSeedJson;
+
     /**
      * Constructor of AuthorizationRequest.
      */
@@ -167,6 +170,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mClaims = builder.mClaims;
         mWebViewZoomEnabled = builder.mWebViewZoomEnabled;
         mWebViewZoomControlsEnabled = builder.mWebViewZoomControlsEnabled;
+        mOnboardingSeedJson = builder.mOnboardingSeedJson;
     }
 
     public static final class ResponseType {
@@ -187,6 +191,12 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private HashMap<String, String> mRequestHeaders;
         private boolean mWebViewZoomControlsEnabled = false;
         private boolean mWebViewZoomEnabled = false;
+        private String mOnboardingSeedJson;
+
+        public B setOnboardingSeedJson(final String onboardingSeedJson) {
+            mOnboardingSeedJson = onboardingSeedJson;
+            return self();
+        }
 
         /**
          * Extra query parameters.

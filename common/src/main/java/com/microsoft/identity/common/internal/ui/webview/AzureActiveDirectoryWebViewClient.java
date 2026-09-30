@@ -334,17 +334,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         mAuthUxTelemetryWebMessageOwner = view;
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-            try {
+        try {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
                 mAuthUxTelemetryDocumentStartScript = WebViewCompat.addDocumentStartJavaScript(
                         view,
                         AUTH_UX_ROUTING_SCRIPT,
                         AuthUxTelemetryWebMessageListener.getAllowedOriginRules()
                 );
-            } catch (final RuntimeException exception) {
-                removeAuthUxTelemetryWebMessageApi();
-                throw exception;
             }
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG, "Unable to initialize optional Auth UX telemetry document-start routing.");
+            removeAuthUxTelemetryWebMessageApi();
         }
     }
 
@@ -352,13 +352,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Detaches the telemetry listener and document-start router from their owning WebView.
      */
     public void removeAuthUxTelemetryWebMessageApi() {
-        if (mAuthUxTelemetryDocumentStartScript != null) {
-            mAuthUxTelemetryDocumentStartScript.remove();
-            mAuthUxTelemetryDocumentStartScript = null;
+        final ScriptHandler script = mAuthUxTelemetryDocumentStartScript;
+        mAuthUxTelemetryDocumentStartScript = null;
+        if (script != null) {
+            try {
+                script.remove();
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG, "Unable to remove optional Auth UX telemetry document-start routing.");
+            }
         }
-        if (mAuthUxTelemetryWebMessageOwner != null) {
-            AuthUxTelemetryWebMessageListener.unhook(mAuthUxTelemetryWebMessageOwner);
-            mAuthUxTelemetryWebMessageOwner = null;
+        final WebView owner = mAuthUxTelemetryWebMessageOwner;
+        mAuthUxTelemetryWebMessageOwner = null;
+        if (owner != null) {
+            try {
+                AuthUxTelemetryWebMessageListener.unhook(owner);
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG, "Unable to remove optional Auth UX telemetry listener.");
+            }
         }
     }
 
@@ -387,7 +397,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mAuthUxJavaScriptInterfaceAdded
                 || (mAuthUxTelemetryWebMessageOwner == view
                 && AuthUxTelemetryWebMessageListener.isAllowedUrl(url))) {
-            view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+            if (mAuthUxJavaScriptInterfaceAdded) {
+                view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+            } else {
+                try {
+                    view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+                } catch (final RuntimeException exception) {
+                    Logger.warn(TAG, "Unable to inject optional Auth UX telemetry routing script.");
+                }
+            }
         }
     }
 

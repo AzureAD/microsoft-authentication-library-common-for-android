@@ -27,6 +27,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
+import android.os.Bundle;
+import androidx.fragment.app.FragmentActivity;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import org.robolectric.Robolectric;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment.UrlStatus;
 
 import org.junit.Before;
@@ -48,6 +55,17 @@ public class AuthorizationFragmentUrlTrackingTest {
      * tracking helpers without needing a full Fragment lifecycle.
      */
     private static class TestAuthorizationFragment extends AuthorizationFragment {
+        RawAuthorizationResult delivered;
+
+        @Override
+        protected PropertyBag propertyBagFromAuthorizationResult(final RawAuthorizationResult result) {
+            delivered = result;
+            return super.propertyBagFromAuthorizationResult(result);
+        }
+
+        OnboardingTelemetryRecorder recorder() {
+            return getOnboardingTelemetryRecorder();
+        }
 
         // Expose protected methods for testing
 
@@ -69,6 +87,31 @@ public class AuthorizationFragmentUrlTrackingTest {
     @Before
     public void setUp() {
         mFragment = new TestAuthorizationFragment();
+    }
+
+    @Test
+    public void onboardingRecorderIsSessionScopedAndEnrichesCancellation() {
+        final FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        final String seed = "{\"session_correlation_id\":\"same-id\",\"schema_version\":\"1.0.0\"}";
+        final Bundle first = new Bundle();
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_SEED_JSON, seed);
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_CLIENT_ID, "client");
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_TARGET, "scope");
+        mFragment.setInstanceState(first);
+        activity.getSupportFragmentManager().beginTransaction().add(mFragment, "first").commitNow();
+        final OnboardingTelemetryRecorder recorder = mFragment.recorder();
+        assertNotNull(recorder);
+        recorder.addBlockingError("530003");
+        mFragment.sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
+        assertEquals(RawAuthorizationResult.ResultCode.CANCELLED, mFragment.delivered.getResultCode());
+        assertNotNull(mFragment.delivered.getOnboardingTelemetryJson());
+
+        final TestAuthorizationFragment second = new TestAuthorizationFragment();
+        second.setInstanceState(first);
+        activity.getSupportFragmentManager().beginTransaction().add(second, "second").commitNow();
+        assertNotSame(recorder, second.recorder());
+        assertEquals(0, new org.json.JSONObject(second.recorder().finalizeBlob())
+                .getJSONArray("blocking_errors").length());
     }
 
     // -----------------------------------------------------------------------

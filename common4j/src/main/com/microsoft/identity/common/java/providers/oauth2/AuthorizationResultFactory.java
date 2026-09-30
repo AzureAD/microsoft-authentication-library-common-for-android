@@ -57,7 +57,15 @@ public abstract class AuthorizationResultFactory
      */
     public GenericAuthorizationResult createAuthorizationResult(@NonNull final RawAuthorizationResult data,
                                                                 @NonNull final GenericAuthorizationRequest request) {
+        final GenericAuthorizationResult result = createAuthorizationResultInternal(data, request);
+        if (result != null) {
+            result.setOnboardingTelemetryJson(data.getOnboardingTelemetryJson());
+        }
+        return result;
+    }
 
+    private GenericAuthorizationResult createAuthorizationResultInternal(@NonNull final RawAuthorizationResult data,
+                                                                        @NonNull final GenericAuthorizationRequest request) {
         final String methodTag = TAG + ":createAuthorizationResult";
         final URI url = data.getAuthorizationFinalUri();
         switch (data.getResultCode()) {

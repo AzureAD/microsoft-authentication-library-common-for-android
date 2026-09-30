@@ -131,6 +131,15 @@ object AuthorizationActivityFactory {
                 AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED,
                 parameters.enableMamCaInstallReferrer
             )
+            parameters.onboardingSeedJson?.let {
+                putExtra(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_SEED_JSON, it)
+            }
+            parameters.onboardingClientId?.let {
+                putExtra(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_CLIENT_ID, it)
+            }
+            parameters.onboardingTarget?.let {
+                putExtra(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_TARGET, it)
+            }
             putExtra(
                 DiagnosticContext.CORRELATION_ID,
                 DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]

@@ -309,6 +309,7 @@ public abstract class BaseController {
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
             final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
+            builder.setOnboardingSeedJson(interactiveTokenCommandParameters.getOnboardingSeedJson());
             // Set the multipleCloudAware and slice fields.
             if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
                 ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(StringUtil.join(" ", parameters.getScopes()));

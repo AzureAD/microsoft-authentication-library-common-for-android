@@ -57,20 +57,24 @@ class AuthUxTelemetryWebMessageListener(
         replyProxy: JavaScriptReplyProxy
     ) {
         val methodTag = "$TAG:onPostMessage"
-        if (!isMainFrame) {
-            Logger.warn(methodTag, "Ignoring Auth UX telemetry from a subframe.")
-            return
+        try {
+            if (!isMainFrame) {
+                Logger.warn(methodTag, "Ignoring Auth UX telemetry from a subframe.")
+                return
+            }
+            if (!isAllowedOrigin(sourceOrigin)) {
+                Logger.warn(methodTag, "Ignoring Auth UX telemetry from a disallowed origin.")
+                return
+            }
+            val data = message.data
+            if (data.isNullOrEmpty()) {
+                Logger.warn(methodTag, "Ignoring an empty Auth UX telemetry message.")
+                return
+            }
+            telemetryMessageHandler.receiveAuthUxMessage(data)
+        } catch (exception: RuntimeException) {
+            Logger.warn(methodTag, "Unable to process optional Auth UX telemetry message.")
         }
-        if (!isAllowedOrigin(sourceOrigin)) {
-            Logger.warn(methodTag, "Ignoring Auth UX telemetry from a disallowed origin.")
-            return
-        }
-        val data = message.data
-        if (data.isNullOrEmpty()) {
-            Logger.warn(methodTag, "Ignoring an empty Auth UX telemetry message.")
-            return
-        }
-        telemetryMessageHandler.receiveAuthUxMessage(data)
     }
 
     companion object {
@@ -101,28 +105,36 @@ class AuthUxTelemetryWebMessageListener(
         @UiThread
         fun hook(webView: WebView, telemetrySink: AuthUxTelemetrySink): Boolean {
             val methodTag = "$TAG:hook"
-            if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-                Logger.info(methodTag, "WEB_MESSAGE_LISTENER is unsupported; Auth UX telemetry is disabled.")
+            try {
+                if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+                    Logger.info(methodTag, "WEB_MESSAGE_LISTENER is unsupported; Auth UX telemetry is disabled.")
+                    return false
+                }
+                WebViewCompat.addWebMessageListener(
+                    webView,
+                    INTERFACE_NAME,
+                    ALLOWED_ORIGIN_RULES,
+                    AuthUxTelemetryWebMessageListener(telemetrySink)
+                )
+                Logger.info(methodTag, "Auth UX telemetry WebMessage listener registered.")
+                return true
+            } catch (exception: RuntimeException) {
+                Logger.warn(methodTag, "Unable to register optional Auth UX telemetry listener.")
                 return false
             }
-            WebViewCompat.addWebMessageListener(
-                webView,
-                INTERFACE_NAME,
-                ALLOWED_ORIGIN_RULES,
-                AuthUxTelemetryWebMessageListener(telemetrySink)
-            )
-            Logger.info(methodTag, "Auth UX telemetry WebMessage listener registered.")
-            return true
         }
 
         /** Removes the listener from its owning WebView. */
         @JvmStatic
         @UiThread
         fun unhook(webView: WebView) {
-            if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-                return
+            try {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+                    WebViewCompat.removeWebMessageListener(webView, INTERFACE_NAME)
+                }
+            } catch (exception: RuntimeException) {
+                Logger.warn(TAG, "Unable to remove optional Auth UX telemetry listener.")
             }
-            WebViewCompat.removeWebMessageListener(webView, INTERFACE_NAME)
         }
 
         @JvmStatic
