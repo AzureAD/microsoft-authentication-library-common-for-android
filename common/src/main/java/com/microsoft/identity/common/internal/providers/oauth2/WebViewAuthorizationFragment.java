@@ -329,8 +329,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         setUpWebView(view, mAADWebViewClient);
 
         final String correlationId = getCorrelationId();
-        final OnboardingTelemetryRecorder onboardingRecorder =
-                OnboardingRecorderRegistry.get(correlationId);
+        OnboardingTelemetryRecorder onboardingRecorder = null;
+        try {
+            onboardingRecorder = OnboardingRecorderRegistry.get(correlationId);
+        } catch (final RuntimeException exception) {
+            Logger.warn(methodTag,
+                    "Unable to attach optional onboarding telemetry; continuing authentication.");
+        }
         if (onboardingRecorder != null) {
             Logger.info(methodTag, correlationId,
                     "Attaching onboarding telemetry recorder to the authorization WebView.");
@@ -774,7 +779,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mPasskeyWebListenerHooked = false;
         }
         if (mAADWebViewClient != null) {
-            mAADWebViewClient.removeAuthUxTelemetryWebMessageApi();
+            try {
+                mAADWebViewClient.removeAuthUxTelemetryWebMessageApi();
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Unable to clean up optional Auth UX telemetry; continuing view teardown.");
+            }
         }
         super.onDestroyView();
     }

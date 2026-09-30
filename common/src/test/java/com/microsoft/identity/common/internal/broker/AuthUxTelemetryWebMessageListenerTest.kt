@@ -97,7 +97,57 @@ class AuthUxTelemetryWebMessageListenerTest {
     }
 
     @Test
+    fun `non-string messages are ignored without reading string data`() {
+        every { message.type } returns WebMessageCompat.TYPE_ARRAY_BUFFER
+
+        listener.onPostMessage(
+            webView,
+            message,
+            Uri.parse("https://login.microsoftonline.com"),
+            true,
+            replyProxy
+        )
+
+        verify(exactly = 0) { message.data }
+        assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `message data access failure is ignored`() {
+        every { message.type } returns WebMessageCompat.TYPE_STRING
+        every { message.data } throws IllegalStateException("message data unavailable")
+
+        listener.onPostMessage(
+            webView,
+            message,
+            Uri.parse("https://login.microsoftonline.com"),
+            true,
+            replyProxy
+        )
+
+        assertTrue(received.isEmpty())
+    }
+
+    @Test
+    fun `sink failure does not escape message callback`() {
+        val throwingListener = AuthUxTelemetryWebMessageListener {
+            throw IllegalStateException("recorder unavailable")
+        }
+        every { message.type } returns WebMessageCompat.TYPE_STRING
+        every { message.data } returns TELEMETRY_PAYLOAD
+
+        throwingListener.onPostMessage(
+            webView,
+            message,
+            Uri.parse("https://login.microsoftonline.com"),
+            true,
+            replyProxy
+        )
+    }
+
+    @Test
     fun `number matching cannot execute through telemetry listener`() {
+        every { message.type } returns WebMessageCompat.TYPE_STRING
         every { message.data } returns NUMBER_MATCH_PAYLOAD
 
         listener.onPostMessage(

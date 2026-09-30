@@ -57,20 +57,28 @@ class AuthUxTelemetryWebMessageListener(
         replyProxy: JavaScriptReplyProxy
     ) {
         val methodTag = "$TAG:onPostMessage"
-        if (!isMainFrame) {
-            Logger.warn(methodTag, "Ignoring Auth UX telemetry from a subframe.")
-            return
+        try {
+            if (!isMainFrame) {
+                Logger.warn(methodTag, "Ignoring Auth UX telemetry from a subframe.")
+                return
+            }
+            if (!isAllowedOrigin(sourceOrigin)) {
+                Logger.warn(methodTag, "Ignoring Auth UX telemetry from a disallowed origin.")
+                return
+            }
+            if (message.type != WebMessageCompat.TYPE_STRING) {
+                Logger.warn(methodTag, "Ignoring a non-string Auth UX telemetry message.")
+                return
+            }
+            val data = message.data
+            if (data.isNullOrEmpty()) {
+                Logger.warn(methodTag, "Ignoring an empty Auth UX telemetry message.")
+                return
+            }
+            telemetryMessageHandler.receiveAuthUxMessage(data)
+        } catch (_: Exception) {
+            Logger.warn(methodTag, "Auth UX telemetry message handling failed; ignoring the event.")
         }
-        if (!isAllowedOrigin(sourceOrigin)) {
-            Logger.warn(methodTag, "Ignoring Auth UX telemetry from a disallowed origin.")
-            return
-        }
-        val data = message.data
-        if (data.isNullOrEmpty()) {
-            Logger.warn(methodTag, "Ignoring an empty Auth UX telemetry message.")
-            return
-        }
-        telemetryMessageHandler.receiveAuthUxMessage(data)
     }
 
     companion object {
@@ -147,8 +155,8 @@ class AuthUxTelemetryWebMessageListener(
             }
             return try {
                 isAllowedOrigin(Uri.parse(url))
-            } catch (exception: RuntimeException) {
-                Logger.warn(TAG, "Unable to parse Auth UX telemetry URL: ${exception.message}")
+            } catch (_: Exception) {
+                Logger.warn(TAG, "Unable to parse Auth UX telemetry URL; ignoring it.")
                 false
             }
         }

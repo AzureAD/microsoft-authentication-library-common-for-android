@@ -162,19 +162,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     "window." + AuthUxJavaScriptInterface.Companion.getInterfaceName()
                     + " = broker; " +
                     "broker.postMessageToBroker = function(message) { " +
-                    "var payload = typeof message === 'string' ? message : JSON.stringify(message); " +
                     "var parsed = message; " +
                     "if (typeof parsed === 'string') { " +
                     "try { parsed = JSON.parse(parsed); } catch (error) { parsed = null; } " +
                     "} " +
                     "if (parsed && parsed.action_name === 'log_telemetry') { " +
+                    "try { " +
+                    "var telemetryPayload = typeof message === 'string' ? message : JSON.stringify(message); " +
                     "var telemetry = window."
                     + AuthUxTelemetryWebMessageListener.INTERFACE_NAME + "; " +
                     "if (telemetry && typeof telemetry.postMessage === 'function') { " +
-                    "telemetry.postMessage(payload); " +
+                    "telemetry.postMessage(telemetryPayload); " +
                     "} " +
+                    "} catch (error) { } " +
                     "return; " +
                     "} " +
+                    "var payload = typeof message === 'string' ? message : JSON.stringify(message); " +
                     "if (typeof broker.receiveAuthUxMessage === 'function') { " +
                     "broker.receiveAuthUxMessage(payload); " +
                     "} " +
@@ -329,22 +332,24 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         removeAuthUxTelemetryWebMessageApi();
-        if (!AuthUxTelemetryWebMessageListener.hook(view, this::tryConsumeAuthUxServerErrorCode)) {
-            return;
-        }
-
         mAuthUxTelemetryWebMessageOwner = view;
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-            try {
+        try {
+            if (!AuthUxTelemetryWebMessageListener.hook(
+                    view, this::tryConsumeAuthUxServerErrorCode)) {
+                removeAuthUxTelemetryWebMessageApi();
+                return;
+            }
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
                 mAuthUxTelemetryDocumentStartScript = WebViewCompat.addDocumentStartJavaScript(
                         view,
                         AUTH_UX_ROUTING_SCRIPT,
                         AuthUxTelemetryWebMessageListener.getAllowedOriginRules()
                 );
-            } catch (final RuntimeException exception) {
-                removeAuthUxTelemetryWebMessageApi();
-                throw exception;
             }
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG,
+                    "Auth UX telemetry setup failed; continuing without optional telemetry.");
+            removeAuthUxTelemetryWebMessageApi();
         }
     }
 
@@ -352,13 +357,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * Detaches the telemetry listener and document-start router from their owning WebView.
      */
     public void removeAuthUxTelemetryWebMessageApi() {
-        if (mAuthUxTelemetryDocumentStartScript != null) {
-            mAuthUxTelemetryDocumentStartScript.remove();
-            mAuthUxTelemetryDocumentStartScript = null;
+        final ScriptHandler scriptHandler = mAuthUxTelemetryDocumentStartScript;
+        final WebView webMessageOwner = mAuthUxTelemetryWebMessageOwner;
+        mAuthUxTelemetryDocumentStartScript = null;
+        mAuthUxTelemetryWebMessageOwner = null;
+
+        if (scriptHandler != null) {
+            try {
+                scriptHandler.remove();
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX telemetry script cleanup failed; continuing authentication.");
+            }
         }
-        if (mAuthUxTelemetryWebMessageOwner != null) {
-            AuthUxTelemetryWebMessageListener.unhook(mAuthUxTelemetryWebMessageOwner);
-            mAuthUxTelemetryWebMessageOwner = null;
+        if (webMessageOwner != null) {
+            try {
+                AuthUxTelemetryWebMessageListener.unhook(webMessageOwner);
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX telemetry listener cleanup failed; continuing authentication.");
+            }
         }
     }
 
@@ -387,7 +405,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (mAuthUxJavaScriptInterfaceAdded
                 || (mAuthUxTelemetryWebMessageOwner == view
                 && AuthUxTelemetryWebMessageListener.isAllowedUrl(url))) {
-            view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+            try {
+                view.evaluateJavascript(AUTH_UX_ROUTING_SCRIPT, null);
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG,
+                        "Auth UX routing script injection failed; continuing authentication.");
+            }
         }
     }
 
@@ -2218,8 +2241,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
         try {
             recorder.addStep(stepId);
-        } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ": " + t.getMessage());
+        } catch (final Exception exception) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record step " + stepId + ".");
         }
     }
 
@@ -2240,8 +2263,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             } else {
                 Logger.verbose(TAG, "Onboarding telemetry: no host extracted from URL");
             }
-        } catch (final Throwable t) {
-            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain: " + t.getMessage());
+        } catch (final Exception exception) {
+            Logger.warn(TAG, "Onboarding telemetry: failed to record last loaded domain.");
         }
     }
 
