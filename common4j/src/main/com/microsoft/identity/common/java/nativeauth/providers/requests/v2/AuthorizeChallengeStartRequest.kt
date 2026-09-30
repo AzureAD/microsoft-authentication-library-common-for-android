@@ -43,8 +43,24 @@ data class AuthorizeChallengeStartRequest private constructor(
             clientId: String,
             requestUrl: String,
             headers: Map<String, String?>
+        ): AuthorizeChallengeStartRequest = create(
+            clientId = clientId,
+            scopes = emptyList(),
+            requestUrl = requestUrl,
+            headers = headers
+        )
+
+        fun create(
+            clientId: String,
+            scopes: List<String>,
+            requestUrl: String,
+            headers: Map<String, String?>
         ): AuthorizeChallengeStartRequest {
             ArgUtils.validateNonNullArg(clientId, "clientId")
+            ArgUtils.validateNonNullArg(scopes, "scopes")
+            scopes.forEachIndexed { index, scope ->
+                ArgUtils.validateNonNullArg(scope, "scopes[$index]")
+            }
             ArgUtils.validateNonNullArg(requestUrl, "requestUrl")
             ArgUtils.validateNonNullArg(headers, "headers")
 
@@ -52,7 +68,8 @@ data class AuthorizeChallengeStartRequest private constructor(
                 requestUrl = URL(requestUrl),
                 headers = headers,
                 parameters = NativeAuthAuthorizeChallengeStartRequestParameters(
-                    clientId = clientId
+                    clientId = clientId,
+                    scope = scopes.takeUnless { it.isEmpty() }?.joinToString(" ")
                 )
             )
         }
@@ -67,9 +84,13 @@ data class AuthorizeChallengeStartRequest private constructor(
      * part of the `/oauth2/v2.0/authorize-challenge` API call that starts a Native Auth V2 flow.
      */
     data class NativeAuthAuthorizeChallengeStartRequestParameters(
-        @SerializedName("client_id") override val clientId: String
+        @SerializedName("client_id") override val clientId: String,
+        @SerializedName("scope") val scope: String? = null
     ) : NativeAuthRequestParameters() {
-        override fun toUnsanitizedString(): String = "NativeAuthAuthorizeChallengeStartRequestParameters(clientId=$clientId)"
+        constructor(clientId: String) : this(clientId, null)
+
+        override fun toUnsanitizedString(): String =
+            "NativeAuthAuthorizeChallengeStartRequestParameters(clientId=$clientId, scope=$scope)"
 
         override fun toString(): String = toUnsanitizedString()
     }
