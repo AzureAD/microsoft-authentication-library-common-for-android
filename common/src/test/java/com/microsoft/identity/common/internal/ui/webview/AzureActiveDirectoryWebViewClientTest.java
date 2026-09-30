@@ -1805,7 +1805,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testDeviceCaAuthorizeOnlyFlightConfiguration() {
         assertEquals("EnableDeviceCaAuthorizeOnlyCredentialForwarding",
                 CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getKey());
-        assertEquals(Boolean.FALSE,
+        assertEquals(Boolean.TRUE,
                 CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getDefaultValue());
     }
 
