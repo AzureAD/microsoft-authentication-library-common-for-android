@@ -376,7 +376,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
         final String formattedURL = url.toLowerCase(Locale.US);
-
+        Logger.info(TAG, "url: " + formattedURL);
         try {
             if (isPkeyAuthUrl(formattedURL)) {
                 Logger.info(methodTag,"WebView detected request for pkeyauth challenge.");
@@ -1178,12 +1178,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting
     protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
+        Logger.info(methodTag, "Inside loadDeviceCaUrl");
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
                 String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
+                Logger.info(methodTag, "Inside httpsUrl : " + httpsUrl);
                 view.loadUrl(httpsUrl);
             } else {
                 Logger.info(methodTag, "Loading device CA request in browser.");
