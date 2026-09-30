@@ -56,7 +56,17 @@ class NativeAuthV2RequestProvider(
      * Creates the request object for the first call of a Native Auth V2 flow to
      * `/oauth2/v2.0/authorize-challenge`.
      */
-    fun createAuthorizeChallengeStartRequest(correlationId: String): AuthorizeChallengeStartRequest {
+    fun createAuthorizeChallengeStartRequest(
+        correlationId: String
+    ): AuthorizeChallengeStartRequest = createAuthorizeChallengeStartRequest(
+        correlationId = correlationId,
+        scopes = emptyList()
+    )
+
+    fun createAuthorizeChallengeStartRequest(
+        correlationId: String,
+        scopes: List<String>
+    ): AuthorizeChallengeStartRequest {
         LogSession.logMethodCall(
             tag = TAG,
             correlationId = correlationId,
@@ -65,6 +75,7 @@ class NativeAuthV2RequestProvider(
 
         return AuthorizeChallengeStartRequest.create(
             clientId = config.clientId,
+            scopes = scopes,
             requestUrl = config.getNativeAuthV2AuthorizeChallengeEndpoint(correlationId).toString(),
             headers = getV2RequestHeaders(correlationId, NativeAuthContentType.FORM_URL_ENCODED)
         )

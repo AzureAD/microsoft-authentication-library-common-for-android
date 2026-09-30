@@ -79,8 +79,8 @@ class NativeAuthV2OAuth2Strategy(
      *
      * [entryRelation] is accepted as a raw relation string at this public boundary for Java
      * interoperability, then wrapped immediately into [NativeAuthV2LinkRelation] for internal
-     * type safety. [scopes] are retained only for the later authorization-code token exchange;
-     * they are not sent on the authorize-challenge request itself.
+     * type safety. [scopes] are sent on the initial authorize-challenge request and retained for
+     * the later authorization-code token exchange.
      */
     fun performAuthorizeChallengeStart(
         correlationId: String,

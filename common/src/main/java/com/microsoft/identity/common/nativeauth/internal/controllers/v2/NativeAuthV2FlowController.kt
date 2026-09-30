@@ -678,7 +678,7 @@ class NativeAuthV2FlowController : BaseNativeAuthController() {
                 correlationId = correlationId,
                 entryRelation = NativeAuthV2LinkRelation.SIGN_IN.value,
                 scenario = NativeAuthV2FlowScenario.SIGN_IN,
-                scopes = parameters.scopes ?: emptyList(),
+                scopes = addDefaultScopes(parameters.scopes),
                 claimsRequestJson = parameters.claimsRequestJson
             )
 
