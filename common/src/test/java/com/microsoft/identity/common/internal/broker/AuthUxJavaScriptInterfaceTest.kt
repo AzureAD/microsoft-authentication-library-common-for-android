@@ -52,9 +52,6 @@ class AuthUxJavaScriptInterfaceTest {
 
     private val mockErrorCode = "530003"
 
-    /** Mirrors AuthUxJavaScriptInterface.MAX_TELEMETRY_ATTEMPTS, which is private. */
-    private val MAX_ATTEMPTS_FOR_TEST = 25
-
     // Matches the Auth UX design-doc wire format: dispatched by action_name = "log_telemetry"
     // (no params.operation), errorCode sent as a JSON number, plus additional params context
     // fields. Written as strict JSON — quoted keys — so the fixture is exactly what a real JS
@@ -310,69 +307,23 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test an unconsumed code stays eligible but attempts are still bounded`() {
-        // Two properties at once. A declined code must not consume the distinct-code cap (so it can
-        // still get through later), but the work a page can cause must remain bounded — otherwise a
-        // page looping against an unwired or perpetually-declining sink re-invokes it forever,
-        // because a code that is never consumed is never recorded as handled.
-        val sink = RecordingTelemetrySink(consume = false)
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        for (i in 1..40) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"5300$i\""))
-        }
-        Assert.assertTrue("nothing consumed", sink.received.isEmpty())
-        Assert.assertEquals(
-            "sink invocations must be bounded by the attempt cap",
-            25,
-            sink.calls
-        )
-    }
-
-    @Test
-    fun `test an unconsumed code does not consume the distinct-code cap`() {
-        val sink = RecordingTelemetrySink(consume = false)
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        // Five declined codes: they must not count against the cap of 10 distinct consumed codes.
-        for (i in 1..5) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
-        }
-        Assert.assertTrue(sink.received.isEmpty())
-
-        sink.consume = true
-        for (i in 1..10) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
-        }
-
-        Assert.assertEquals("cap must not have been consumed by declined codes", 10, sink.received.size)
-    }
-
-    @Test
-    fun `test a throwing sink is treated as handled and is not retried`() {
-        // A throwing sink is a host defect; retrying cannot fix it, and treating it as retryable
-        // would let a looping page re-invoke a broken sink without bound. Both posts go through the
-        // SAME instance — the dedupe/cap bookkeeping is per instance, so asserting across two
-        // instances would prove nothing.
+    fun `test a throwing sink does not suppress a later occurrence`() {
         val sink = ThrowingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
         interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
         interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
 
-        Assert.assertEquals("second post must be suppressed as a duplicate", 1, sink.calls)
+        Assert.assertEquals(2, sink.calls)
     }
 
     @Test
-    fun `test dedupe does not survive bridge re-registration`() {
-        // Documents the per-instance scope called out in handledErrorCodes' KDoc: the WebView host
-        // rebuilds the bridge on every navigation, so the same code reported across two page loads
-        // reaches the sink twice. Request-wide de-duplication is the consumer's job — the onboarding
-        // recorder de-duplicates its blocking-errors list for exactly this reason.
+    fun `test duplicate telemetry occurrences are preserved`() {
         val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
-        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
-        AuthUxJavaScriptInterface(sink).receiveAuthUxMessage(logTelemetryTestPayload)
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
 
         Assert.assertEquals(listOf(mockErrorCode, mockErrorCode), sink.received)
     }
@@ -473,33 +424,11 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test malformed codes count toward the attempt cap`() {
-        // Validation failures log a warning and do regex work, so the cap has to be applied on
-        // entry to the handler rather than after validation — otherwise a page could spam malformed
-        // codes forever without ever reaching it. Observable here because once the cap is exhausted
-        // by malformed messages, a subsequent VALID code is refused.
+    fun `test malformed codes do not suppress a later valid occurrence`() {
         val sink = RecordingTelemetrySink()
         val interfaceWithSink = AuthUxJavaScriptInterface(sink)
 
-        repeat(MAX_ATTEMPTS_FOR_TEST) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
-        }
-        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
-
-        Assert.assertTrue(
-            "malformed messages must consume the attempt cap, so the later valid code is refused",
-            sink.received.isEmpty()
-        )
-    }
-
-    @Test
-    fun `test a valid code still gets through below the attempt cap`() {
-        // Guards the opposite direction of the test above: counting malformed messages must not be
-        // so aggressive that ordinary noise blocks a legitimate code.
-        val sink = RecordingTelemetrySink()
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        repeat(5) {
+        repeat(25) {
             interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"\""))
         }
         interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
@@ -530,26 +459,6 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
-    fun `test repeated duplicate codes do not spam past the attempt cap`() {
-        // The duplicate and distinct-code checks log and return, so if the attempt counter were
-        // checked after them a page looping ONE already-handled code would keep logging forever.
-        // The counter is checked first, so processing stops once the cap is hit — observable here
-        // because a code offered after the cap never reaches the sink even though it is new.
-        val sink = RecordingTelemetrySink()
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        // One consumed code, then the same code 40 more times (all duplicates).
-        for (i in 1..41) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
-        }
-        Assert.assertEquals("only the first is forwarded", 1, sink.calls)
-
-        // The attempt cap is now exhausted, so even a brand-new code is refused.
-        interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"999999\""))
-        Assert.assertEquals("attempt cap must stop further processing", 1, sink.calls)
-    }
-
-    @Test
     fun `test log_telemetry carrying a smuggled number_matching operation never reaches the store`() {
         // H3 invariant: dispatch is decided by action_name FIRST, so a log_telemetry message that
         // smuggles params.operation = number_matching must NOT mutate the number-match device store.
@@ -577,6 +486,17 @@ class AuthUxJavaScriptInterfaceTest {
             NumberMatchHelper.numberMatchMap.isEmpty()
         )
         Assert.assertEquals(listOf(mockErrorCode), sink.received)
+    }
+
+    @Test
+    fun `test receiver rejects number matching when capability is disabled`() {
+        val sink = RecordingTelemetrySink()
+        val telemetryOnlyHandler = AuthUxJavaScriptInterface(sink, allowNumberMatching = false)
+
+        telemetryOnlyHandler.receiveAuthUxMessage(numberMatchTestPayload)
+
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+        Assert.assertTrue(sink.received.isEmpty())
     }
 
     @Test
@@ -680,31 +600,6 @@ class AuthUxJavaScriptInterfaceTest {
         interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("true"))
 
         Assert.assertEquals(listOf("true"), sink.received)
-    }
-
-    @Test
-    fun `test duplicate errorCodes are forwarded only once`() {
-        val sink = RecordingTelemetrySink()
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
-        interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
-
-        // Deduped, so a page reloading (or looping) cannot bloat the onboarding blob.
-        Assert.assertEquals(listOf(mockErrorCode), sink.received)
-    }
-
-    @Test
-    fun `test forwarding is capped per bridge instance`() {
-        val sink = RecordingTelemetrySink()
-        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
-
-        // 15 distinct codes, cap is 10.
-        for (i in 1..15) {
-            interfaceWithSink.receiveAuthUxMessage(logTelemetryPayloadWithErrorCode("\"53000$i\""))
-        }
-
-        Assert.assertEquals(10, sink.received.size)
     }
 
     @Test
