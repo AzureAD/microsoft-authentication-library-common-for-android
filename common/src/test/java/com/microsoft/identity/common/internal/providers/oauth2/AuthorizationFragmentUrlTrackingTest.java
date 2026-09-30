@@ -28,7 +28,11 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import androidx.fragment.app.FragmentActivity;
+import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
@@ -56,6 +60,12 @@ public class AuthorizationFragmentUrlTrackingTest {
      */
     private static class TestAuthorizationFragment extends AuthorizationFragment {
         RawAuthorizationResult delivered;
+
+        @Override
+        public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container,
+                                 @Nullable final Bundle savedInstanceState) {
+            return new View(inflater.getContext());
+        }
 
         @Override
         protected PropertyBag propertyBagFromAuthorizationResult(final RawAuthorizationResult result) {
@@ -102,6 +112,9 @@ public class AuthorizationFragmentUrlTrackingTest {
         final OnboardingTelemetryRecorder recorder = mFragment.recorder();
         assertNotNull(recorder);
         recorder.addBlockingError("530003");
+        activity.getSupportFragmentManager().beginTransaction().detach(mFragment).commitNow();
+        activity.getSupportFragmentManager().beginTransaction().attach(mFragment).commitNow();
+        org.junit.Assert.assertSame(recorder, mFragment.recorder());
         mFragment.sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         assertEquals(RawAuthorizationResult.ResultCode.CANCELLED, mFragment.delivered.getResultCode());
         assertNotNull(mFragment.delivered.getOnboardingTelemetryJson());

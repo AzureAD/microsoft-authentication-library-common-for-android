@@ -75,6 +75,12 @@ public class RawAuthorizationResultTest {
             Assert.assertEquals("{\"steps_list\":[]}", restored.getOnboardingTelemetryJson());
             Assert.assertNull(RawAuthorizationResult.fromPropertyBag(
                     RawAuthorizationResult.toPropertyBag(original)).getOnboardingTelemetryJson());
+            final com.microsoft.identity.common.java.util.ported.PropertyBag malformed =
+                    RawAuthorizationResult.toPropertyBag(original);
+            malformed.put("com.microsoft.identity.onboarding.telemetry.json", 42);
+            Assert.assertEquals(original.getResultCode(),
+                    RawAuthorizationResult.fromPropertyBag(malformed).getResultCode());
+            Assert.assertNull(RawAuthorizationResult.fromPropertyBag(malformed).getOnboardingTelemetryJson());
         }
     }
 

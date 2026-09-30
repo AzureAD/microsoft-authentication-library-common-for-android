@@ -231,11 +231,12 @@ public class RawAuthorizationResult {
 
     @NonNull
     public static RawAuthorizationResult fromPropertyBag(@NonNull final PropertyBag propertyBag) {
+        final Serializable telemetry = propertyBag.get(ONBOARDING_TELEMETRY_JSON);
         return RawAuthorizationResult.builder()
                 .resultCode(ResultCode.fromInteger(propertyBag.<Integer>get(RESULT_CODE)))
                 .authorizationFinalUri(propertyBag.<URI>get(RESPONSE_FINAL_URL))
                 .exception((BaseException) propertyBag.<Serializable>get(RESPONSE_EXCEPTION))
-                .onboardingTelemetryJson(propertyBag.<String>get(ONBOARDING_TELEMETRY_JSON))
+                .onboardingTelemetryJson(telemetry instanceof String ? (String) telemetry : null)
                 .build();
     }
 

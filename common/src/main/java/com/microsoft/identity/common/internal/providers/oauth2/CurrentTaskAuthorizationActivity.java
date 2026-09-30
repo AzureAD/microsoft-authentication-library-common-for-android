@@ -64,11 +64,16 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
 
         final String methodTag = TAG + ":onCreate";
 
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
+        final Fragment restored = savedInstanceState == null ? null :
+                getSupportFragmentManager().findFragmentById(com.microsoft.identity.common.R.id.dual_screen_content);
+        final Fragment fragment = restored != null ? restored :
+                AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
 
         if(fragment instanceof CurrentTaskBrowserAuthorizationFragment){
             mFragment = (CurrentTaskBrowserAuthorizationFragment) fragment;
-            mFragment.setInstanceState(getIntent().getExtras());
+            if (restored == null) {
+                mFragment.setInstanceState(getIntent().getExtras());
+            }
         }else{
             IllegalStateException ex = new IllegalStateException("Unexpected fragment type");
             Logger.error(methodTag, "Fragment provided was not of type CurrentTaskBrowserAuthorizationFragment", ex);
@@ -94,7 +99,11 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             return;
         }
 
-        setFragment(mFragment);
+        if (restored == null) {
+            setFragment(mFragment);
+        } else {
+            restoreFragmentContainer();
+        }
 
         if (savedInstanceState == null) {
 
