@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.broker;
 
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 
@@ -44,6 +47,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.robolectric.RobolectricTestRunner;
 
 @RunWith(RobolectricTestRunner.class)
@@ -52,6 +57,11 @@ public class SDMBroadcastReceiverTest {
             new BrokerData("com.example.broker", "signature");
     private static final String BROADCAST_PERMISSION =
             ACTIVE_BROKER.getPackageName() + SharedDeviceModeConstants.BROADCAST_PERMISSION_SUFFIX;
+    private static final BrokerData SECOND_BROKER =
+            new BrokerData("com.example.secondbroker", "signature");
+    private static final String SECOND_BROADCAST_PERMISSION =
+            SECOND_BROKER.getPackageName()
+                    + SharedDeviceModeConstants.BROADCAST_PERMISSION_SUFFIX;
 
     private Context mContext;
     private IBrokerDiscoveryClient mBrokerDiscoveryClient;
@@ -176,6 +186,219 @@ public class SDMBroadcastReceiverTest {
                 any(BroadcastReceiver.class),
                 any(IntentFilter.class)
         );
+    }
+
+    @Test
+    public void initialize_resolvesStateWithoutHoldingClassMonitor() throws Exception {
+        when(mBrokerDiscoveryClient.getActiveBroker(false)).thenAnswer(invocation -> {
+            assertFalse(Thread.holdsLock(SDMBroadcastReceiver.class));
+            return ACTIVE_BROKER;
+        });
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(ACTIVE_BROKER))
+                .thenAnswer(invocation -> {
+                    assertFalse(Thread.holdsLock(SDMBroadcastReceiver.class));
+                    return false;
+                });
+
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+    }
+
+    @Test
+    public void initialize_protectedReceiverWithCapabilityFailure_preservesRegistrationAndCallback()
+            throws Exception {
+        final SDMBroadcastReceiver.SharedDeviceModeCallback updatedCallback =
+                mock(SDMBroadcastReceiver.SharedDeviceModeCallback.class);
+        final ArgumentCaptor<BroadcastReceiver> receiverCaptor =
+                ArgumentCaptor.forClass(BroadcastReceiver.class);
+        when(mBrokerDiscoveryClient.getActiveBroker(false)).thenReturn(ACTIVE_BROKER);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(ACTIVE_BROKER))
+                .thenReturn(true)
+                .thenThrow(new ClientException("test_error", "test"));
+        when(mPackageHelper.isSignaturePermissionGrantedToPackage(
+                BROADCAST_PERMISSION,
+                ACTIVE_BROKER.getPackageName()
+        )).thenReturn(true);
+
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                updatedCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+
+        verify(mContext, never()).unregisterReceiver(any(BroadcastReceiver.class));
+        verify(mContext).registerReceiver(
+                receiverCaptor.capture(),
+                any(IntentFilter.class),
+                eq(BROADCAST_PERMISSION),
+                isNull()
+        );
+
+        final Intent intent = new Intent(
+                SharedDeviceModeConstants.CURRENT_ACCOUNT_CHANGED_BROADCAST_IDENTIFIER
+        );
+        intent.putExtra(
+                SharedDeviceModeConstants.BROADCAST_TYPE_KEY,
+                SharedDeviceModeConstants.BROADCAST_TYPE_GLOBAL_SIGN_OUT
+        );
+        receiverCaptor.getValue().onReceive(mContext, intent);
+
+        verify(updatedCallback).onGlobalSignOut();
+        verify(mCallback, never()).onGlobalSignOut();
+    }
+
+    @Test
+    public void initialize_compatibilityReceiverWithCapabilityFailure_clearsRegistration()
+            throws Exception {
+        when(mBrokerDiscoveryClient.getActiveBroker(false)).thenReturn(ACTIVE_BROKER);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(ACTIVE_BROKER))
+                .thenReturn(false)
+                .thenThrow(new ClientException("test_error", "test"));
+
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+
+        verify(mContext).unregisterReceiver(any(BroadcastReceiver.class));
+    }
+
+    @Test
+    public void initialize_protectedReplacementFails_preservesPreviousRegistration()
+            throws Exception {
+        when(mBrokerDiscoveryClient.getActiveBroker(false))
+                .thenReturn(ACTIVE_BROKER, SECOND_BROKER, ACTIVE_BROKER);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(ACTIVE_BROKER))
+                .thenReturn(true);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(SECOND_BROKER))
+                .thenReturn(true);
+        when(mPackageHelper.isSignaturePermissionGrantedToPackage(
+                BROADCAST_PERMISSION,
+                ACTIVE_BROKER.getPackageName()
+        )).thenReturn(true);
+        when(mPackageHelper.isSignaturePermissionGrantedToPackage(
+                SECOND_BROADCAST_PERMISSION,
+                SECOND_BROKER.getPackageName()
+        )).thenReturn(true);
+        when(mContext.registerReceiver(
+                any(BroadcastReceiver.class),
+                any(IntentFilter.class),
+                any(String.class),
+                isNull()
+        )).thenReturn(null).thenThrow(new SecurityException("test"));
+
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+
+        verify(mContext, times(2)).registerReceiver(
+                any(BroadcastReceiver.class),
+                any(IntentFilter.class),
+                any(String.class),
+                isNull()
+        );
+        verify(mContext, never()).unregisterReceiver(any(BroadcastReceiver.class));
+    }
+
+    @Test
+    public void initialize_protectedReplacementSucceeds_registersBeforeUnregisteringPrevious()
+            throws Exception {
+        when(mBrokerDiscoveryClient.getActiveBroker(false))
+                .thenReturn(ACTIVE_BROKER, SECOND_BROKER);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(ACTIVE_BROKER))
+                .thenReturn(true);
+        when(mBrokerCapabilityProvider.isSdmBroadcastProtectionEnabled(SECOND_BROKER))
+                .thenReturn(true);
+        when(mPackageHelper.isSignaturePermissionGrantedToPackage(
+                BROADCAST_PERMISSION,
+                ACTIVE_BROKER.getPackageName()
+        )).thenReturn(true);
+        when(mPackageHelper.isSignaturePermissionGrantedToPackage(
+                SECOND_BROADCAST_PERMISSION,
+                SECOND_BROKER.getPackageName()
+        )).thenReturn(true);
+
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+        SDMBroadcastReceiver.initialize(
+                mContext,
+                mCallback,
+                mBrokerDiscoveryClient,
+                mBrokerCapabilityProvider,
+                mPackageHelper,
+                mDeviceModeProvider
+        );
+
+        final InOrder inOrder = inOrder(mContext);
+        inOrder.verify(mContext).registerReceiver(
+                any(BroadcastReceiver.class),
+                any(IntentFilter.class),
+                eq(BROADCAST_PERMISSION),
+                isNull()
+        );
+        inOrder.verify(mContext).registerReceiver(
+                any(BroadcastReceiver.class),
+                any(IntentFilter.class),
+                eq(SECOND_BROADCAST_PERMISSION),
+                isNull()
+        );
+        inOrder.verify(mContext).unregisterReceiver(any(BroadcastReceiver.class));
     }
 
     @Test

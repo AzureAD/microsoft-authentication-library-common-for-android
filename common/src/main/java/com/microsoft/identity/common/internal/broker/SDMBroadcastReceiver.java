@@ -33,6 +33,7 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 import com.microsoft.identity.common.components.AndroidPlatformComponentsFactory;
 import com.microsoft.identity.common.internal.activebrokerdiscovery.BrokerDiscoveryClientFactory;
@@ -60,15 +61,20 @@ public class SDMBroadcastReceiver {
     private static volatile SharedDeviceModeCallback sSharedDeviceModeCallback;
     private static volatile DeviceModeProvider sDeviceModeProvider;
     private static RegistrationState sRegistrationState;
+    private static long sInitializationGeneration;
 
     /**
-     * Initializes the SDM broadcast receiver to start listening for SDM broadcasts from broker
+     * Initializes the SDM broadcast receiver to start listening for SDM broadcasts from broker.
+     * Broker discovery and capability checks run synchronously, so this method must be called from
+     * a worker thread. If initialization fails, callers may invoke this method again.
+     *
      * @param context application context.
      * @param sharedDeviceModeCallback a callback to be called when SDM broadcast is received.
      */
+    @WorkerThread
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    synchronized public static void initialize(@NonNull final Context context,
-                                               @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
+    public static void initialize(@NonNull final Context context,
+                                  @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback) {
         final Context applicationContextCandidate = context.getApplicationContext();
         final Context applicationContext = applicationContextCandidate == null
                 ? context
@@ -95,14 +101,16 @@ public class SDMBroadcastReceiver {
     }
 
     @VisibleForTesting
+    @WorkerThread
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    synchronized static void initialize(@NonNull final Context context,
-                                        @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback,
-                                        @NonNull final IBrokerDiscoveryClient brokerDiscoveryClient,
-                                        @NonNull final BrokerCapabilityProvider brokerCapabilityProvider,
-                                        @NonNull final PackageHelper packageHelper,
-                                        @NonNull final DeviceModeProvider deviceModeProvider) {
+    static void initialize(@NonNull final Context context,
+                           @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback,
+                           @NonNull final IBrokerDiscoveryClient brokerDiscoveryClient,
+                           @NonNull final BrokerCapabilityProvider brokerCapabilityProvider,
+                           @NonNull final PackageHelper packageHelper,
+                           @NonNull final DeviceModeProvider deviceModeProvider) {
         final String methodTag = TAG + ":initialize";
+        final long initializationGeneration = beginInitialization();
         final RegistrationState registrationState;
         try {
             registrationState = resolveRegistrationState(
@@ -112,23 +120,85 @@ public class SDMBroadcastReceiver {
             );
         } catch (final ClientException e) {
             Logger.error(methodTag, "Unable to resolve SDM broadcast registration mode.", e);
-            clearRegistration();
+            handleResolutionFailure(
+                    initializationGeneration,
+                    sharedDeviceModeCallback,
+                    deviceModeProvider
+            );
             return;
         }
 
         if (registrationState == null) {
             Logger.warn(methodTag, "No valid Broker is available for SDM broadcast registration.");
-            clearRegistration();
+            handleResolutionFailure(
+                    initializationGeneration,
+                    sharedDeviceModeCallback,
+                    deviceModeProvider
+            );
             return;
         }
 
+        synchronized (SDMBroadcastReceiver.class) {
+            if (initializationGeneration != sInitializationGeneration) {
+                return;
+            }
+
+            applyRegistrationState(
+                    context,
+                    sharedDeviceModeCallback,
+                    deviceModeProvider,
+                    registrationState
+            );
+        }
+    }
+
+    private static synchronized long beginInitialization() {
+        return ++sInitializationGeneration;
+    }
+
+    private static synchronized void handleResolutionFailure(
+            final long initializationGeneration,
+            @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback,
+            @NonNull final DeviceModeProvider deviceModeProvider) {
+        if (initializationGeneration != sInitializationGeneration) {
+            return;
+        }
+
+        if (isCurrentRegistrationProtected()) {
+            sSharedDeviceModeCallback = sharedDeviceModeCallback;
+            sDeviceModeProvider = deviceModeProvider;
+            Logger.warn(
+                    TAG + ":initialize",
+                    "Keeping the existing protected SDM broadcast receiver."
+            );
+            return;
+        }
+
+        clearRegistration();
+    }
+
+    private static void applyRegistrationState(
+            @NonNull final Context context,
+            @NonNull final SharedDeviceModeCallback sharedDeviceModeCallback,
+            @NonNull final DeviceModeProvider deviceModeProvider,
+            @NonNull final RegistrationState registrationState) {
+        final String methodTag = TAG + ":initialize";
         if (registrationState.equals(sRegistrationState) && sSDMBroadcastReceiver != null) {
             sSharedDeviceModeCallback = sharedDeviceModeCallback;
             sDeviceModeProvider = deviceModeProvider;
             return;
         }
 
-        clearRegistration();
+        final boolean preserveCurrentRegistration = isCurrentRegistrationProtected();
+        final Context previousContext = preserveCurrentRegistration ? sRegisteredContext : null;
+        final BroadcastReceiver previousReceiver =
+                preserveCurrentRegistration ? sSDMBroadcastReceiver : null;
+        if (preserveCurrentRegistration) {
+            sSharedDeviceModeCallback = sharedDeviceModeCallback;
+            sDeviceModeProvider = deviceModeProvider;
+        } else {
+            clearRegistration();
+        }
 
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
@@ -158,6 +228,7 @@ public class SDMBroadcastReceiver {
             sDeviceModeProvider = deviceModeProvider;
             sRegistrationState = registrationState;
             sSDMBroadcastReceiver = receiver;
+            unregisterReceiver(previousContext, previousReceiver);
             Logger.info(
                     methodTag,
                     registrationState.mPermissionName == null
@@ -166,7 +237,9 @@ public class SDMBroadcastReceiver {
             );
         } catch (final SecurityException | IllegalArgumentException e) {
             Logger.error(methodTag, "Failed to register SDM broadcast receiver.", e);
-            clearRegistration();
+            if (!preserveCurrentRegistration) {
+                clearRegistration();
+            }
         }
     }
 
@@ -221,13 +294,7 @@ public class SDMBroadcastReceiver {
     }
 
     private static void clearRegistration() {
-        if (sRegisteredContext != null && sSDMBroadcastReceiver != null) {
-            try {
-                sRegisteredContext.unregisterReceiver(sSDMBroadcastReceiver);
-            } catch (final IllegalArgumentException e) {
-                Logger.warn(TAG + ":clearRegistration", "SDM broadcast receiver was not registered.");
-            }
-        }
+        unregisterReceiver(sRegisteredContext, sSDMBroadcastReceiver);
 
         sSDMBroadcastReceiver = null;
         sRegisteredContext = null;
@@ -236,8 +303,26 @@ public class SDMBroadcastReceiver {
         sRegistrationState = null;
     }
 
+    private static void unregisterReceiver(final Context context,
+                                           final BroadcastReceiver receiver) {
+        if (context != null && receiver != null) {
+            try {
+                context.unregisterReceiver(receiver);
+            } catch (final IllegalArgumentException e) {
+                Logger.warn(TAG + ":clearRegistration", "SDM broadcast receiver was not registered.");
+            }
+        }
+    }
+
+    private static boolean isCurrentRegistrationProtected() {
+        return sSDMBroadcastReceiver != null
+                && sRegistrationState != null
+                && sRegistrationState.mPermissionName != null;
+    }
+
     @VisibleForTesting
     synchronized static void resetForTest() {
+        sInitializationGeneration++;
         clearRegistration();
     }
 
