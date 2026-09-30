@@ -124,6 +124,7 @@ public class ExceptionAdapter {
             @NonNull final BaseException exception) {
         exception.setBrokerAppPackageName(result.getBrokerAppPackageName());
         exception.setPowerOptimizationSettings(result.getPowerOptimizationSettings());
+        exception.setOnboardingBlob(result.getOnboardingBlob());
         return exception;
     }
 

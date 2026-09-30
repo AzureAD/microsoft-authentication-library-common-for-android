@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoo
 import com.microsoft.identity.common.internal.msafederation.google.SignInWithGoogleParameters;
 import com.microsoft.identity.common.internal.ui.browser.AndroidBrowserSelector;
 import com.microsoft.identity.common.java.browser.Browser;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 import org.junit.Test;
@@ -128,6 +129,22 @@ public class AuthorizationActivityFactoryTest {
         assertNotNull(idTokenHeaderValue);
         assertEquals("value1", idTokenHeaderValue);
         assertFalse(resultIntent.hasExtra(WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT));
+    }
+
+    @Test
+    public void testExplicitRequestCorrelationOverridesDiagnosticContext() {
+        authorizationActivityParameters.setRequestCorrelationId("authorization-request");
+        final Intent result = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                authorizationActivityParameters);
+        assertEquals("authorization-request", result.getStringExtra(DiagnosticContext.CORRELATION_ID));
+    }
+
+    @Test
+    public void testExistingCallersRetainDiagnosticCorrelation() {
+        final Intent result = AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                authorizationActivityParameters);
+        assertEquals(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID),
+                result.getStringExtra(DiagnosticContext.CORRELATION_ID));
     }
 
     @Test

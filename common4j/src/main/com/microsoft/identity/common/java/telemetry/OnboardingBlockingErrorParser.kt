@@ -57,12 +57,20 @@ object OnboardingBlockingErrorParser {
      *  - 50126 InvalidUserNameOrPassword    (wrong credentials — user error)
      */
     private val NON_ONBOARDING_AADSTS_CODES = setOf("50058", "50097", "50126")
+    private const val NO_ERROR_SENTINEL = "0"
 
     /**
      * Returns true if the candidate error code should be excluded from the
      * onboarding blob's `blocking_errors[]`. See [NON_ONBOARDING_AADSTS_CODES].
      */
     private fun isExcluded(candidate: String): Boolean = candidate in NON_ONBOARDING_AADSTS_CODES
+
+    /**
+     * Returns true when a server error code must not be added to onboarding blocking errors.
+     */
+    @JvmStatic
+    fun isNonBlockingOnboardingErrorCode(code: String?): Boolean =
+        !code.isNullOrBlank() && (code == NO_ERROR_SENTINEL || isExcluded(code))
 
     /**
      * Extract a blocking-error attribution string from a [MicrosoftTokenResponse].

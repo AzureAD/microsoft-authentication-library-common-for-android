@@ -64,4 +64,11 @@ data class AuthorizationActivityParameters @JvmOverloads constructor(
     val isWebViewWebCpEnabled: Boolean = true,
     val enableSwitchBrowser: Boolean = false,
     val enableMamCaInstallReferrer: Boolean = false,
-)
+) {
+    /**
+     * Exact authorization request correlation ID, independent of the onboarding session ID.
+     * Set before creating the launch intent. Null retains the diagnostic-context fallback for
+     * existing callers. This is not a live recorder and can safely cross the activity boundary.
+     */
+    var requestCorrelationId: String? = null
+}
