@@ -103,57 +103,50 @@ class OnboardingBlockingErrorParserTest {
         assertNull(OnboardingBlockingErrorParser.extractBlockingError(header))
     }
 
-    // --- Non-onboarding AADSTS code exclusion list ---
-
     @Test
-    fun excludedAadstsCode_50058_FilteredFromResponse() {
-        val response = MicrosoftTokenResponse().apply {
-            setCliTelemErrorCode("50058") // UserInformationNotProvided
-        }
-        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+    fun malformedHeaderReturnsNull() {
+        assertNull(OnboardingBlockingErrorParser.extractBlockingError("1,50058"))
     }
 
     @Test
-    fun excludedAadstsCode_50097_FilteredFromResponse() {
-        val response = MicrosoftTokenResponse().apply {
-            setCliTelemErrorCode("50097") // DeviceAuthenticationRequired
-        }
-        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+    fun headerWithZeroSubErrorFallsBackToServerError() {
+        assertEquals(
+            "50097",
+            OnboardingBlockingErrorParser.extractBlockingError("1,50097,0,1234,routinghint")
+        )
     }
 
     @Test
-    fun excludedAadstsCode_50126_FilteredFromResponse() {
+    fun blankSubErrorFallsBackToServerError() {
         val response = MicrosoftTokenResponse().apply {
-            setCliTelemErrorCode("50126") // InvalidUserNameOrPassword
+            setCliTelemErrorCode("50126")
+            setCliTelemSubErrorCode(" ")
         }
-        assertNull(OnboardingBlockingErrorParser.extractBlockingError(response))
+        assertEquals("50126", OnboardingBlockingErrorParser.extractBlockingError(response))
+    }
+
+    // --- AADSTS codes and shared JS sentinel policy ---
+
+    @Test
+    fun aadstsCodesReturnedFromResponseAndHeaderInEitherPosition() {
+        for (code in listOf("50058", "50097", "50126")) {
+            val response = MicrosoftTokenResponse().apply { setCliTelemErrorCode(code) }
+            assertEquals(code, OnboardingBlockingErrorParser.extractBlockingError(response))
+            response.setCliTelemErrorCode("65001")
+            response.setCliTelemSubErrorCode(code)
+            assertEquals(code, OnboardingBlockingErrorParser.extractBlockingError(response))
+
+            assertEquals(code, OnboardingBlockingErrorParser.extractBlockingError("1,$code,0,1234,routinghint"))
+            assertEquals(code, OnboardingBlockingErrorParser.extractBlockingError("1,65001,$code,1234,routinghint"))
+        }
     }
 
     @Test
-    fun excludedAadstsCode_AsSubError_AlsoFiltered() {
-        // Even when the excluded code is in the sub-error position, it is filtered.
-        // This also means the parser falls through to the (non-excluded) top-level error.
-        val response = MicrosoftTokenResponse().apply {
-            setCliTelemErrorCode("65001")
-            setCliTelemSubErrorCode("50126")
+    fun sharedSentinelPolicyOnlyRejectsLiteralZero() {
+        Assert.assertTrue(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode("0"))
+        for (code in listOf(null, "", " ", "50058", "50097", "50126", "65001")) {
+            Assert.assertFalse(OnboardingBlockingErrorParser.isNonBlockingOnboardingErrorCode(code))
         }
-        assertEquals("65001", OnboardingBlockingErrorParser.extractBlockingError(response))
-    }
-
-    @Test
-    fun excludedAadstsCode_FilteredFromHeader() {
-        val header = "1,50058,0,1234,routinghint"
-        assertNull(OnboardingBlockingErrorParser.extractBlockingError(header))
-    }
-
-    @Test
-    fun nonExcludedAadstsCode_StillReturned() {
-        // Sanity check: 65001 is a real onboarding-related blocker (interaction_required-ish).
-        // It must still pass through the filter.
-        val response = MicrosoftTokenResponse().apply {
-            setCliTelemErrorCode("65001")
-        }
-        assertEquals("65001", OnboardingBlockingErrorParser.extractBlockingError(response))
     }
 
     // --- extractBlockingErrorsFromAuthorizationErrorCodes (Path B / OAuth error_codes) ---
@@ -193,18 +186,20 @@ class OnboardingBlockingErrorParserTest {
     }
 
     @Test
-    fun authzErrorCodes_ExcludedCodesFilteredOut() {
-        // 50058 is in the non-onboarding exclusion list; 53003 is a real CA block.
+    fun authzErrorCodes_AadstsCodesReturnedWithOtherCodes() {
         Assert.assertEquals(
-            listOf("53003"),
-            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,53003")
+            listOf("50058", "53003", "50097", "50126"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes(
+                "50058,53003,50097,50126,50058"
+            )
         )
     }
 
     @Test
-    fun authzErrorCodes_AllExcludedReturnsEmpty() {
-        Assert.assertTrue(
-            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,50097,50126").isEmpty()
+    fun authzErrorCodes_AadstsCodesReturnedWithoutOtherCodes() {
+        Assert.assertEquals(
+            listOf("50058", "50097", "50126"),
+            OnboardingBlockingErrorParser.extractBlockingErrorsFromAuthorizationErrorCodes("50058,50097,50126")
         )
     }
 
