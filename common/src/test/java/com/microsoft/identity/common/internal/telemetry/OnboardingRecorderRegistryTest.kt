@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.microsoft.identity.common.java.logging.DiagnosticContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -70,6 +71,18 @@ class OnboardingRecorderRegistryTest {
         )
 
         assertEquals(0, OnboardingRecorderRegistry.size())
+    }
+
+    @Test
+    fun actualDefaultDiagnosticContextSentinelIsRejected() {
+        DiagnosticContext.INSTANCE.clear()
+        try {
+            val unset = DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+            assertEquals("UNSET", unset)
+            assertFalse(OnboardingRecorderRegistry.tryRegister(unset, newRecorder()))
+        } finally {
+            DiagnosticContext.INSTANCE.clear()
+        }
     }
 
     @Test

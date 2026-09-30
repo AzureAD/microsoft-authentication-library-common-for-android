@@ -94,15 +94,15 @@ object OnboardingRecorderRegistry {
         synchronized(recorders) {
             recorders.remove(key)
         }
+    }
 
-        /** Removes only the expected instance; stale owners cannot remove a newer request. */
-        @JvmStatic
-        fun unregister(correlationId: String?, recorder: OnboardingTelemetryRecorder) {
-            val key = usableKey(correlationId) ?: return
-            synchronized(recorders) {
-                if (recorders[key] === recorder) {
-                    recorders.remove(key)
-                }
+    /** Removes only the expected instance; stale owners cannot remove a newer request. */
+    @JvmStatic
+    fun unregister(correlationId: String?, recorder: OnboardingTelemetryRecorder) {
+        val key = usableKey(correlationId) ?: return
+        synchronized(recorders) {
+            if (recorders[key] === recorder) {
+                recorders.remove(key)
             }
         }
     }
