@@ -79,8 +79,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 
-    protected boolean mAuthUxJavaScriptInterfaceAdded = false;
-
     /**
      * @return context
      */
@@ -246,19 +244,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         final String methodTag = TAG + ":onPageStarted";
         checkStartUrl(url);
 
-        // Re-evaluate adding AuthUx JavaScript Interface
-        if (shouldExposeJavaScriptInterface(url)) {
-            // If broker request, and a valid url, expose JavaScript API
-            Logger.info(methodTag, "Adding AuthUx JavaScript Interface");
-            view.addJavascriptInterface(new AuthUxJavaScriptInterface(), AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = true;
-        } else if (mAuthUxJavaScriptInterfaceAdded) {
-            // Remove AuthUx JavaScript Interface
-            Logger.info(methodTag, "Removing AuthUx JavaScript Interface");
-            view.removeJavascriptInterface(AuthUxJavaScriptInterface.Companion.getInterfaceName());
-            mAuthUxJavaScriptInterfaceAdded = false;
-        }
-
         Logger.info(methodTag,"WebView starts loading.");
         super.onPageStarted(view, url, favicon);
     }
@@ -286,7 +271,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         }
     }
 
-    protected boolean shouldExposeJavaScriptInterface(final String url) {
+    protected boolean shouldEnableAuthUxNumberMatching(final String url) {
         return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
                 && AuthUxJavaScriptInterface.Companion.isValidUriForInterface(url)
                 && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_JS_API_FOR_AUTHUX);

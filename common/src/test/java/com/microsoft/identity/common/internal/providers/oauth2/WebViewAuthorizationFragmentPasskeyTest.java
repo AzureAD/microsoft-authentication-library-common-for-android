@@ -25,9 +25,12 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 
 import android.os.Build;
 import android.webkit.WebView;
+
+import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,5 +71,17 @@ public class WebViewAuthorizationFragmentPasskeyTest {
 
             passkeyWebListener.verifyNoInteractions();
         }
+    }
+
+    @Test
+    public void onDestroyView_removesAuthUxWebMessageApi() {
+        final WebViewAuthorizationFragment fragment = new WebViewAuthorizationFragment();
+        final AzureActiveDirectoryWebViewClient client =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(fragment, "mAADWebViewClient", client);
+
+        fragment.onDestroyView();
+
+        verify(client).removeAuthUxWebMessageApi();
     }
 }
