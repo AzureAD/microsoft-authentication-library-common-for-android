@@ -25,6 +25,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_CLIENT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_SEED_JSON;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_TARGET;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
@@ -104,6 +107,23 @@ public class AuthorizationActivityFactoryTest {
             sourceLibraryName,
             sourceLibraryVersion
     );
+
+    @Test
+    public void onboardingLaunchFieldsAreOptionalAndPassedThroughIntent() {
+        final Intent absent = AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
+        assertFalse(absent.hasExtra(ONBOARDING_SEED_JSON));
+        assertFalse(absent.hasExtra(ONBOARDING_CLIENT_ID));
+        assertFalse(absent.hasExtra(ONBOARDING_TARGET));
+
+        final AuthorizationActivityParameters seeded = new AuthorizationActivityParameters(
+                context, authIntent, requestUrl, redirectUri, requestHeaders, authorizationAgent,
+                true, true, null, null, null, null, true, false, false,
+                "{\"session_correlation_id\":\"id\"}", "client-id", "scope1 scope2");
+        final Intent launched = AuthorizationActivityFactory.getAuthorizationActivityIntent(seeded);
+        assertEquals(seeded.getOnboardingSeedJson(), launched.getStringExtra(ONBOARDING_SEED_JSON));
+        assertEquals("client-id", launched.getStringExtra(ONBOARDING_CLIENT_ID));
+        assertEquals("scope1 scope2", launched.getStringExtra(ONBOARDING_TARGET));
+    }
 
     @SneakyThrows
     @Test

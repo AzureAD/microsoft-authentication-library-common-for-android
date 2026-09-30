@@ -76,7 +76,7 @@ public class DualScreenActivity extends FragmentActivity {
         LayoutInflater.from(this).inflate(layoutResID, contentLayout);
     }
 
-    private void initializeContentView(){
+    protected void initializeContentView(){
         super.setContentView(R.layout.dual_screen_layout);
         try {
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, insets) -> {
@@ -101,6 +101,11 @@ public class DualScreenActivity extends FragmentActivity {
                 .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .replace(R.id.dual_screen_content, fragment)
                 .commit();
+    }
+
+    /** Recreates the view container without replacing an already restored fragment. */
+    protected void restoreFragmentContainer() {
+        initializeContentView();
     }
 
     @Override

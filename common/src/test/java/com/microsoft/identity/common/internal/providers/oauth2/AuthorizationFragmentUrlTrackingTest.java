@@ -27,6 +27,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.fragment.app.FragmentActivity;
+import androidx.annotation.Nullable;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import org.robolectric.Robolectric;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment.UrlStatus;
 
 import org.junit.Before;
@@ -48,6 +59,23 @@ public class AuthorizationFragmentUrlTrackingTest {
      * tracking helpers without needing a full Fragment lifecycle.
      */
     private static class TestAuthorizationFragment extends AuthorizationFragment {
+        RawAuthorizationResult delivered;
+
+        @Override
+        public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container,
+                                 @Nullable final Bundle savedInstanceState) {
+            return new View(inflater.getContext());
+        }
+
+        @Override
+        protected PropertyBag propertyBagFromAuthorizationResult(final RawAuthorizationResult result) {
+            delivered = result;
+            return super.propertyBagFromAuthorizationResult(result);
+        }
+
+        OnboardingTelemetryRecorder recorder() {
+            return getOnboardingTelemetryRecorder();
+        }
 
         // Expose protected methods for testing
 
@@ -69,6 +97,34 @@ public class AuthorizationFragmentUrlTrackingTest {
     @Before
     public void setUp() {
         mFragment = new TestAuthorizationFragment();
+    }
+
+    @Test
+    public void onboardingRecorderIsSessionScopedAndEnrichesCancellation() {
+        final FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        final String seed = "{\"session_correlation_id\":\"same-id\",\"schema_version\":\"1.0.0\"}";
+        final Bundle first = new Bundle();
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_SEED_JSON, seed);
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_CLIENT_ID, "client");
+        first.putString(AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_TARGET, "scope");
+        mFragment.setInstanceState(first);
+        activity.getSupportFragmentManager().beginTransaction().add(mFragment, "first").commitNow();
+        final OnboardingTelemetryRecorder recorder = mFragment.recorder();
+        assertNotNull(recorder);
+        recorder.addBlockingError("530003");
+        activity.getSupportFragmentManager().beginTransaction().detach(mFragment).commitNow();
+        activity.getSupportFragmentManager().beginTransaction().attach(mFragment).commitNow();
+        org.junit.Assert.assertSame(recorder, mFragment.recorder());
+        mFragment.sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
+        assertEquals(RawAuthorizationResult.ResultCode.CANCELLED, mFragment.delivered.getResultCode());
+        assertNotNull(mFragment.delivered.getOnboardingTelemetryJson());
+
+        final TestAuthorizationFragment second = new TestAuthorizationFragment();
+        second.setInstanceState(first);
+        activity.getSupportFragmentManager().beginTransaction().add(second, "second").commitNow();
+        assertNotSame(recorder, second.recorder());
+        assertEquals(0, new org.json.JSONObject(second.recorder().finalizeBlob())
+                .getJSONArray("blocking_errors").length());
     }
 
     // -----------------------------------------------------------------------

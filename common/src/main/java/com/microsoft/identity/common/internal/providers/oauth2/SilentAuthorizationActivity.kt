@@ -46,9 +46,21 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
     }
 
     override fun setFragment(fragment: Fragment) {
+        createSilentContainer()
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.dual_screen_content, fragment)
+            .commitNow()
+    }
+
+    override fun restoreFragmentContainer() {
+        createSilentContainer()
+    }
+
+    private fun createSilentContainer() {
         // Create a container for the fragment, but do not display it.
         val container = FrameLayout(this).apply {
-            id = View.generateViewId()
+            id = R.id.dual_screen_content
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -57,11 +69,6 @@ class SilentAuthorizationActivity : AuthorizationActivity() {
             visibility = View.GONE
         }
         setContentView(container)
-
-        supportFragmentManager
-            .beginTransaction()
-            .replace(container.id, fragment)
-            .commitNow()
     }
 
     override fun getThemeResId(): Int {

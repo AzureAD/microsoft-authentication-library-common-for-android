@@ -141,7 +141,19 @@ public abstract class BrowserAuthorizationStrategy<
                 requestUrl.toString(),
                 redirectUri,
                 mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER
+                AuthorizationAgent.BROWSER,
+                true,
+                true,
+                null,
+                null,
+                null,
+                null,
+                true,
+                false,
+                false,
+                mAuthorizationRequest.getOnboardingSeedJson(),
+                mAuthorizationRequest.getClientId(),
+                mAuthorizationRequest.getScope()
         );
         final Intent intent = AuthorizationActivityFactory.getAuthorizationActivityIntent(authorizationActivityParameters);
         setIntentFlag(intent);

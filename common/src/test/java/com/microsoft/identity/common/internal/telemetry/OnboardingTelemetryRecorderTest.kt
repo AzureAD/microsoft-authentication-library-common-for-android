@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.telemetry
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.microsoft.identity.common.java.telemetry.IOnboardingTelemetryRecorder
 import com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
@@ -70,6 +72,88 @@ class OnboardingTelemetryRecorderTest {
             ApplicationProvider.getApplicationContext()
         )
         Assert.assertEquals("", r.sessionCorrelationId)
+    }
+
+    @Test
+    fun testExistingBlob_ImportsHistoryAndAppendsWithoutReplacingTimestampsOrDuplicates() {
+        val existing = JSONObject(SEED_JSON).apply {
+            put("steps_list", org.json.JSONArray().apply {
+                put(JSONObject().put("step_id", "AuthenticationStarted")
+                    .put("ts", "2025-01-01T00:00:00.000Z").put("source", "core"))
+                put(JSONObject().put("step_id", "BrokerInstallPrompted")
+                    .put("ts", "2025-01-01T00:01:00.000Z"))
+            })
+            put("blocking_errors", org.json.JSONArray().put("MDM_FLOW").put("MDM_FLOW"))
+            put("last_blocking_error", "stale")
+            put("last_completed_step", "stale")
+            put("ux_flow_used", org.json.JSONArray().put("phase1").put("phase1"))
+            put("last_loaded_domain", "initial.example")
+            put("profile", "workProfile")
+            put("future_field", JSONObject().put("enabled", true))
+        }
+        val r = OnboardingTelemetryRecorder(
+            existing.toString(), CLIENT_ID, TARGET, ApplicationProvider.getApplicationContext()
+        )
+        val initial = JSONObject(r.finalizeBlob())
+        Assert.assertEquals("BrokerInstallPrompted", initial.getString("last_completed_step"))
+        Assert.assertEquals("MDM_FLOW", initial.getString("last_blocking_error"))
+        Assert.assertEquals("initial.example", initial.getString("last_loaded_domain"))
+        Assert.assertEquals("workProfile", initial.getString("profile"))
+
+        r.addStep("TokenIssued")
+        r.addBlockingError("BROKER_INSTALLATION_TRIGGERED")
+        r.addUxFlowUsed("phase2")
+        r.setLastLoadedDomain("final.example")
+        r.setProfile("userProfile")
+
+        val blob = JSONObject(r.finalizeBlob())
+        val steps = blob.getJSONArray("steps_list")
+        Assert.assertEquals(3, steps.length())
+        Assert.assertEquals("2025-01-01T00:00:00.000Z", steps.getJSONObject(0).getString("ts"))
+        Assert.assertEquals("core", steps.getJSONObject(0).getString("source"))
+        Assert.assertEquals("2025-01-01T00:01:00.000Z", steps.getJSONObject(1).getString("ts"))
+        Assert.assertTrue(steps.getJSONObject(2).getString("ts").isNotEmpty())
+        Assert.assertEquals("TokenIssued", blob.getString("last_completed_step"))
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals(3, errors.length())
+        Assert.assertEquals("MDM_FLOW", errors.getString(0))
+        Assert.assertEquals("MDM_FLOW", errors.getString(1))
+        Assert.assertEquals("BROKER_INSTALLATION_TRIGGERED", errors.getString(2))
+        Assert.assertEquals("BROKER_INSTALLATION_TRIGGERED", blob.getString("last_blocking_error"))
+        val flows = blob.getJSONArray("ux_flow_used")
+        Assert.assertEquals(3, flows.length())
+        Assert.assertEquals("phase1", flows.getString(0))
+        Assert.assertEquals("phase1", flows.getString(1))
+        Assert.assertEquals("phase2", flows.getString(2))
+        Assert.assertEquals("final.example", blob.getString("last_loaded_domain"))
+        Assert.assertEquals("userProfile", blob.getString("profile"))
+        Assert.assertTrue(blob.getJSONObject("future_field").getBoolean("enabled"))
+        Assert.assertEquals(3, JSONObject(r.finalizeBlob()).getJSONArray("steps_list").length())
+    }
+
+    @Test
+    fun testExistingBlob_InvalidEntriesAreSkippedAndStaleDerivedFieldsAreRemoved() {
+        val existing = JSONObject(SEED_JSON).apply {
+            put("steps_list", org.json.JSONArray().put(JSONObject().put("step_id", "missingTs"))
+                .put("invalid").put(JSONObject().put("step_id", 42).put("ts", "timestamp")))
+            put("blocking_errors", org.json.JSONArray().put(42).put(JSONObject.NULL))
+            put("ux_flow_used", org.json.JSONArray().put(true))
+            put("last_completed_step", "stale")
+            put("last_blocking_error", "stale")
+            put("last_loaded_domain", JSONObject.NULL)
+            put("profile", 12)
+        }
+        val r = OnboardingTelemetryRecorder(
+            existing.toString(), CLIENT_ID, TARGET, ApplicationProvider.getApplicationContext()
+        )
+        val blob = JSONObject(r.finalizeBlob())
+        Assert.assertEquals(0, blob.getJSONArray("steps_list").length())
+        Assert.assertEquals(0, blob.getJSONArray("blocking_errors").length())
+        Assert.assertEquals(0, blob.getJSONArray("ux_flow_used").length())
+        Assert.assertFalse(blob.has("last_completed_step"))
+        Assert.assertFalse(blob.has("last_blocking_error"))
+        Assert.assertFalse(blob.has("last_loaded_domain"))
+        Assert.assertFalse(blob.has("profile"))
     }
 
     // --- finalizeBlob ---
@@ -301,7 +385,39 @@ class OnboardingTelemetryRecorderTest {
         )
     }
 
+    @Test
+    fun testAddBlockingError_CorruptCacheStillPersistsNewEntry() {
+        val prefs = ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        prefs.edit().putString(PREFS_FILE, "not valid json").commit()
+
+        recorder.addBlockingError("MDM_FLOW")
+
+        val cache = JSONObject(prefs.getString(PREFS_FILE, "")!!)
+        Assert.assertEquals("test-uuid-123", cache.getJSONObject("$CLIENT_ID|$TARGET").getString("id"))
+    }
+
+    @Test
+    fun testAddBlockingError_PersistenceFailureDoesNotLoseTelemetry() {
+        val application = ApplicationProvider.getApplicationContext<Context>()
+        val deniedContext = object : ContextWrapper(application) {
+            override fun getApplicationContext(): Context = this
+
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {
+                throw SecurityException("Storage unavailable")
+            }
+        }
+        val r = OnboardingTelemetryRecorder(SEED_JSON, CLIENT_ID, TARGET, deniedContext)
+
+        r.addBlockingError("MDM_FLOW")
+
+        val blob = JSONObject(r.finalizeBlob())
+        Assert.assertEquals("MDM_FLOW", blob.getJSONArray("blocking_errors").getString(0))
+        Assert.assertEquals("MDM_FLOW", blob.getString("last_blocking_error"))
+    }
+
     companion object {
+        private const val PREFS_FILE = "com.microsoft.oneauth.session_correlation_cache"
         private const val SEED_JSON =
             "{\"schema_version\":\"1.0.0\"," +
                 "\"session_correlation_id\":\"test-uuid-123\"," +
