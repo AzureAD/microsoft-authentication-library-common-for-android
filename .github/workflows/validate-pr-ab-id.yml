@@ -15,13 +15,23 @@ jobs:
     name: Check if PR has a valid ADO ID
     permissions:
       contents: read
-      issues: write
-      pull-requests: write
     runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'skip AB ID validation')"
     steps:
-      - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
-        
+      - name: Check PR description for a linked Azure Boards work item
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! grep -Eq 'AB#[0-9]+' <<< "$PR_BODY"; then
+            echo "::error::Description does not contain AB#{ID}"
+            exit 1
+          fi
+
+          if [[ "$PR_BODY" != *"[AB#"* || "$PR_BODY" != *"/_workitems/edit/"* ]]; then
+            echo "::error::Description contains an AB# ID but is not linked to an Azure Boards work item"
+            exit 1
+          fi
+
   # Get AB#ID
   get_ab_id:
     name: Get AB ID
