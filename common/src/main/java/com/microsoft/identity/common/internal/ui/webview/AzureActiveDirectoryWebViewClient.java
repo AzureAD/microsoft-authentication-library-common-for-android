@@ -1209,13 +1209,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
+        final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
+        Logger.info(methodTag, "Re-WPJ routing: effective WebCP enabled: "
+            + isWebCpInWebViewEnabled);
         final boolean isNativeReWpjHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
             .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF);
         Logger.info(methodTag, "Re-WPJ routing: native handoff flight enabled: "
             + isNativeReWpjHandoffEnabled);
         recordReWpjAttribute(AttributeName.is_native_re_wpj_handoff_enabled,
             isNativeReWpjHandoffEnabled);
-        if (!isNativeReWpjHandoffEnabled) {
+        if (!isWebCpInWebViewEnabled || !isNativeReWpjHandoffEnabled) {
             recordReWpjAttribute(AttributeName.re_wpj_management_owner, RE_WPJ_OWNER_NOT_EVALUATED);
             if (shouldLaunchCompanyPortal()) {
                 // If CP is installed, redirect to CP.
