@@ -1862,19 +1862,18 @@ public class AzureActiveDirectoryWebViewClientTest {
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
 
         final Map<String, String> headersBeforeLoad = new HashMap<>(mRequestHeaders);
-        final CapturingSpanFactory spanFactory =
-                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
-        OTelUtility.setSpanFactory(spanFactory);
+        final RecordingSpan span = new RecordingSpan();
 
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            mockWebViewClient.loadDeviceCaUrl(
+                    TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        }
 
         Mockito.verify(mockWebview).loadUrl(
-                eq("https://abcxyz/xyz&ismdmurl=1"),
+                eq(TEST_PARSED_HTTPS_DEVICE_CA_URL),
                 Mockito.same(mRequestHeaders));
         Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString());
         assertEquals(headersBeforeLoad, mRequestHeaders);
-        final RecordingSpan span = spanFactory.captured();
-        assertNotNull(span);
         assertEquals(Boolean.FALSE,
                 span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
         assertNull(span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
@@ -1895,12 +1894,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
 
         final String[][] urls = {
-                {TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
-                        TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER},
+                {TEST_PARSED_HTTPS_DEVICE_CA_URL,
+                        TEST_PARSED_HTTPS_DEVICE_CA_URL},
                 {"https://login.microsoftonline.com/common/authorize?ismdmurl=1",
                         "https://login.microsoftonline.com/common/authorize?ismdmurl=1"},
                 {TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
-                        "https://abcxyz/xyz&ismdmurl=1"},
+                        TEST_PARSED_HTTPS_DEVICE_CA_URL},
                 {"https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1",
                         "https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1"},
                 {"not a parsed URL&ismdmurl=1",
@@ -1933,14 +1932,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        final CapturingSpanFactory spanFactory =
-                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
-        OTelUtility.setSpanFactory(spanFactory);
+        final RecordingSpan span = new RecordingSpan();
 
-        mWebViewClient.loadDeviceCaUrl(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            mWebViewClient.loadDeviceCaUrl(TEST_PARSED_HTTPS_DEVICE_CA_URL, mockWebview);
+        }
 
-        final RecordingSpan span = spanFactory.captured();
-        assertNotNull(span);
         assertEquals(Boolean.TRUE,
                 span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
         assertEquals(Boolean.TRUE,
@@ -1960,19 +1957,18 @@ public class AzureActiveDirectoryWebViewClientTest {
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        final CapturingSpanFactory spanFactory =
-                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
-        OTelUtility.setSpanFactory(spanFactory);
+        final RecordingSpan span = new RecordingSpan();
 
-        mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        try (final Scope ignored = SpanExtension.makeCurrentSpan(span)) {
+            mockWebViewClient.loadDeviceCaUrl(
+                    TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+        }
 
         Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(
                 CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
         Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString());
         Mockito.verify(mockWebview, Mockito.never())
                 .loadUrl(Mockito.anyString(), Mockito.anyMap());
-        final RecordingSpan span = spanFactory.captured();
-        assertNotNull(span);
         assertNull(span.attribute(
                 AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
         assertNull(span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
@@ -2561,6 +2557,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                 });
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF))
                 .thenReturn(enabled);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(false);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
