@@ -68,6 +68,7 @@ object OnboardingTelemetryConstants {
     // MDM Enrollment (PP → WP transition)
     const val STEP_MDM_ENROLLMENT_STARTED = "MDMEnrollmentStarted"
     const val STEP_COMPANY_PORTAL_LAUNCHED = "CompanyPortalLaunched"
+    const val STEP_INTUNE_REMEDIATION_LAUNCHED = "IntuneRemediationLaunched"
     const val STEP_WEB_CP_ENROLLMENT_STARTED = "WebCpEnrollmentStarted"
     const val STEP_GOOGLE_ENROLLMENT_STARTED = "GoogleEnrollmentStarted"
 

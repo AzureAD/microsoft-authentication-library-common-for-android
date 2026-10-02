@@ -996,11 +996,18 @@ public class AzureActiveDirectoryWebViewClientTest {
      */
     private static boolean onboardingHasBrokerInstallStep(final OnboardingTelemetryRecorder recorder)
             throws org.json.JSONException {
+        return onboardingHasStep(recorder,
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_BROKER_INSTALL_PROMPTED);
+    }
+
+    private static boolean onboardingHasStep(final OnboardingTelemetryRecorder recorder,
+                                             final String expectedStep)
+            throws org.json.JSONException {
         final org.json.JSONObject blob = new org.json.JSONObject(recorder.finalizeBlob());
         final org.json.JSONArray steps = blob.getJSONArray("steps_list");
         for (int i = 0; i < steps.length(); i++) {
-            if (com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                    .STEP_BROKER_INSTALL_PROMPTED.equals(steps.getJSONObject(i).getString("step_id"))) {
+            if (expectedStep.equals(steps.getJSONObject(i).getString("step_id"))) {
                 return true;
             }
         }
@@ -2045,12 +2052,14 @@ public class AzureActiveDirectoryWebViewClientTest {
         }
 
     @Test
-    public void testProcessDeviceCaRequest_CompanyPortalOwner_LaunchesTargetedHandoff() {
+        public void testProcessDeviceCaRequest_CompanyPortalOwner_LaunchesTargetedHandoff()
+                        throws Exception {
         testProcessDeviceCaRequest_LaunchesTargetedHandoff(COMPANY_PORTAL_APP_PACKAGE_NAME);
     }
 
     @Test
-    public void testProcessDeviceCaRequest_GoogleDpcOwner_LaunchesIntuneHandoff() {
+        public void testProcessDeviceCaRequest_GoogleDpcOwner_LaunchesIntuneHandoff()
+                        throws Exception {
         testProcessDeviceCaRequest_LaunchesTargetedHandoff(INTUNE_APP_PACKAGE_NAME);
     }
 
@@ -2072,6 +2081,33 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AttributeName.is_native_re_wpj_handoff_enabled.name()));
         assertEquals("native_handoff_succeeded", spanFactory.captured().attribute(
                 AttributeName.re_wpj_handoff_outcome.name()));
+    }
+
+    @Test
+    public void testHttpsDeviceCaRequest_RuntimeFailure_ReturnsStandardErrorOnce() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
+        Mockito.doThrow(new IllegalStateException("Owner lookup failed"))
+                .when(webViewClient).getReWpjManagementAppPackage();
+
+        webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL);
+
+        Mockito.verify(mockCallback, Mockito.times(1))
+                .onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
+                resultCaptor.getValue().getResultCode());
+        Mockito.verify(mockWebView, Mockito.atLeastOnce()).stopLoading();
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
     }
 
     @Test
@@ -2352,8 +2388,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     private void testProcessDeviceCaRequest_LaunchesTargetedHandoff(
-            @NonNull final String managementAppPackage) {
-                setNativeReWpjHandoffFlight(true);
+            @NonNull final String managementAppPackage) throws Exception {
+        setNativeReWpjHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
                 new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
         OTelUtility.setSpanFactory(spanFactory);
@@ -2361,6 +2397,20 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(IAuthorizationCompletionCallback.class);
         final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
                 ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final OnboardingTelemetryRecorder recorder = newOnboardingRecorder();
+        recorder.addBlockingError(
+                com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .BLOCKING_ERROR_BROKER_INSTALL);
+        final String expectedHandoffStep = COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
+                ? com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_COMPANY_PORTAL_LAUNCHED
+                : com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                        .STEP_INTUNE_REMEDIATION_LAUNCHED;
+        Mockito.doAnswer(invocation -> {
+            assertTrue("Expected onboarding handoff step before MDM completion",
+                    onboardingHasStep(recorder, expectedHandoffStep));
+            return null;
+        }).when(mockCallback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
                 new AzureActiveDirectoryWebViewClient(
@@ -2371,6 +2421,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                         Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                         "homeTenantId",
                         false));
+        webViewClient.setOnboardingTelemetryRecorder(recorder);
         Mockito.doReturn(managementAppPackage).when(webViewClient).getReWpjManagementAppPackage();
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);

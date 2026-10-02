@@ -94,6 +94,7 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_INTUNE_REMEDIATION_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -1180,11 +1181,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final boolean succeeded = processDeviceCaRequestWithinSpan(view, url);
             span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
+            if (!succeeded) {
+                completeDeviceCaRequestWithError(view, "Failed to load device CA URL.");
+            }
             return succeeded;
-        } catch (final RuntimeException | Error throwable) {
+        } catch (final RuntimeException throwable) {
             span.recordException(throwable);
             span.setStatus(StatusCode.ERROR);
-            throw throwable;
+            completeDeviceCaRequestWithError(view, throwable.getMessage());
+            return false;
         } finally {
             span.end();
         }
@@ -1236,6 +1241,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 launchReWpjManagementApp(managementAppPackage);
                 Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
+                recordOnboardingStep(COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
+                    ? STEP_COMPANY_PORTAL_LAUNCHED
+                    : STEP_INTUNE_REMEDIATION_LAUNCHED);
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED);
                 return true;
@@ -1490,8 +1498,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
         SpanExtension.current().recordException(throwable);
         recordReWpjOutcome(RE_WPJ_OUTCOME_WEB_CP_LOAD_FAILED);
-        returnError(UNKNOWN_ERROR, throwable.getMessage());
         return false;
+    }
+
+    private void completeDeviceCaRequestWithError(@NonNull final WebView view,
+                                                  @Nullable final String message) {
+        view.stopLoading();
+        returnError(UNKNOWN_ERROR, message);
     }
 
     // Method to decide if the WebView should load the WebCP URL based on the flights.
