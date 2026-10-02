@@ -190,8 +190,9 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String OOB_REDIRECT_SPOOFED_HIERARCHICAL =
             "urn://evil/oob?code=STOLEN&state=xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
-        private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
-        private static final String TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "https://abcxyz/xyz&ismdmurl=1";
+        private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz?ismdmurl=1";
+        private static final String TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING = "browser://abcxyz/xyz&ismdmurl=1";
+        private static final String TEST_LEGACY_HTTPS_DEVICE_CA_URL_SUBSTRING = "https://abcxyz/xyz&ismdmurl=1";
         private static final String TEST_PARSED_BROWSER_DEVICE_CA_URL = "browser://abcxyz/xyz?ismdmurl=1";
         private static final String TEST_PARSED_HTTPS_DEVICE_CA_URL = "https://abcxyz/xyz?ismdmurl=1";
         private static final String TEST_RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
@@ -605,11 +606,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlOverrideHandlesHttpsDeviceCARequestUrl() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)).thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_LEGACY_HTTPS_DEVICE_CA_URL_SUBSTRING));
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
@@ -619,11 +623,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     public void testUrlHandlesHttpsDeviceCARequestUrlFlightOff() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(false);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF)).thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        assertFalse(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+        assertFalse(mWebViewClient.shouldOverrideUrlLoading(
+                mMockWebView, TEST_LEGACY_HTTPS_DEVICE_CA_URL_SUBSTRING));
         CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
 
@@ -2047,7 +2054,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         public void testIsDeviceCaRequest_FlightOff_UsesLegacySubstringMatching() {
                 setNativeReWpjHandoffFlight(false);
 
-                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER));
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING));
                 assertFalse(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
         }
 
@@ -2143,12 +2150,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
 
         Mockito.verify(webViewClient, never()).getReWpjManagementAppPackage();
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
         Mockito.verify(webViewClient).loadDeviceCaUrl(
-                TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebView);
+                TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING, mockWebView);
         assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
                 AttributeName.is_native_re_wpj_handoff_enabled.name()));
         assertEquals("not_evaluated", spanFactory.captured().attribute(
@@ -2167,7 +2174,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         try (final MockedConstruction<PackageHelper> ignored =
                      mockCompanyPortalCompatibilityConditions()) {
             mWebViewClient.processWebsiteRequest(
-                    Mockito.mock(WebView.class), TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+                    Mockito.mock(WebView.class), TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
         }
 
         assertEquals("legacy_company_portal_launch_succeeded",
@@ -2189,7 +2196,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         try (final MockedConstruction<PackageHelper> ignored =
                      mockCompanyPortalCompatibilityConditions()) {
             webViewClient.processWebsiteRequest(
-                    Mockito.mock(WebView.class), TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+                    Mockito.mock(WebView.class), TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
         }
 
         assertEquals("legacy_company_portal_launch_failed_webcp",
@@ -3018,11 +3025,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.doNothing().when(webViewClient).openLinkInBrowser(any());
 
         // Act
-        webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
 
         // Assert
         Mockito.verify(mockWebView).stopLoading();
-        Mockito.verify(webViewClient).openLinkInBrowser(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        Mockito.verify(webViewClient).openLinkInBrowser(TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
 
         // Capture and verify the specific result received in the callback
         Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
