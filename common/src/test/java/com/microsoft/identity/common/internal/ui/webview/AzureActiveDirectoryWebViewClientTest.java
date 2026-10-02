@@ -1634,6 +1634,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final class RecordingSpan implements Span {
         private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
                 private int mRecordedExceptionCount;
+                private StatusCode mStatusCode = StatusCode.UNSET;
 
         /** Returns the value recorded for the attribute with the given key name, or {@code null}. */
         Object attribute(final String keyName) {
@@ -1647,6 +1648,10 @@ public class AzureActiveDirectoryWebViewClientTest {
 
                 int recordedExceptionCount() {
                         return mRecordedExceptionCount;
+                }
+
+                StatusCode statusCode() {
+                        return mStatusCode;
                 }
 
         @Override
@@ -1668,6 +1673,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public Span setStatus(final StatusCode statusCode, final String description) {
+                        mStatusCode = statusCode;
             return this;
         }
 
@@ -2078,7 +2084,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
         Mockito.doReturn(false).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
-        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+        Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
 
@@ -2099,7 +2105,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         OTelUtility.setSpanFactory(spanFactory);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
-        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+        Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
 
@@ -2142,7 +2148,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final Activity mockActivity = mockActivityThatThrowsOnLaunch();
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
                 createWebViewClient(mockActivity));
-        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+        Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
         try (final MockedConstruction<PackageHelper> ignored =
                      mockCompanyPortalCompatibilityConditions()) {
@@ -2185,7 +2191,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
                 createWebViewClient(mockActivity));
         Mockito.doReturn(null).when(webViewClient).getReWpjManagementAppPackage();
-        Mockito.doNothing().when(webViewClient).loadDeviceCaUrl(anyString(), any());
+        Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
         try (final MockedConstruction<PackageHelper> ignored =
                      mockCompanyPortalCompatibilityConditions()) {
@@ -2248,6 +2254,62 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("native_handoff_failed_webview_fallback_no_browser",
                 spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
         assertEquals(1, spanFactory.captured().recordedExceptionCount());
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_WebViewFallback_InitializesWebCpFlow() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
+                .launchReWpjManagementApp(anyString());
+        Mockito.doNothing().when(webViewClient).openLinkInBrowser(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        webViewClient.processWebsiteRequest(mockWebView, TEST_WEBSITE_REQUEST_URL);
+
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(MDM_FLOW, resultCaptor.getValue().getResultCode());
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
+    }
+
+    @Test
+    public void testProcessDeviceCaRequest_WebViewLoadFails_RecordsTerminalFailure() {
+        setNativeReWpjHandoffFlight(true);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+        final IAuthorizationCompletionCallback mockCallback =
+                Mockito.mock(IAuthorizationCompletionCallback.class);
+        final ArgumentCaptor<RawAuthorizationResult> resultCaptor =
+                ArgumentCaptor.forClass(RawAuthorizationResult.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        Mockito.doThrow(new RuntimeException("WebView load failed"))
+                .when(mockWebView).loadUrl(anyString(), any());
+        final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(
+                createWebViewClient(mActivity, mockCallback));
+        Mockito.doReturn(INTUNE_APP_PACKAGE_NAME).when(webViewClient).getReWpjManagementAppPackage();
+        Mockito.doThrow(new ActivityNotFoundException()).when(webViewClient)
+                .launchReWpjManagementApp(anyString());
+
+        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+
+        Mockito.verify(mockCallback).onChallengeResponseReceived(resultCaptor.capture());
+        assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
+                resultCaptor.getValue().getResultCode());
+        assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+        assertEquals("webcp_load_failed", spanFactory.captured().attribute(
+                AttributeName.re_wpj_handoff_outcome.name()));
     }
 
     @Test
@@ -2412,9 +2474,16 @@ public class AzureActiveDirectoryWebViewClientTest {
         }
 
         private AzureActiveDirectoryWebViewClient createWebViewClient(@NonNull final Activity activity) {
+                return createWebViewClient(
+                                activity, Mockito.mock(IAuthorizationCompletionCallback.class));
+        }
+
+        private AzureActiveDirectoryWebViewClient createWebViewClient(
+                @NonNull final Activity activity,
+                @NonNull final IAuthorizationCompletionCallback callback) {
                 return new AzureActiveDirectoryWebViewClient(
                                 activity,
-                                Mockito.mock(IAuthorizationCompletionCallback.class),
+                                callback,
                                 url -> {},
                                 TEST_REDIRECT_URI,
                                 Mockito.mock(SwitchBrowserProtocolCoordinator.class),
@@ -2879,6 +2948,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     private void testProcessWebsiteRequest_DeviceCaRequest() {
         // Arrange
+                setNativeReWpjHandoffFlight(false);
         final IAuthorizationCompletionCallback mockCallback = Mockito.mock(IAuthorizationCompletionCallback.class);
         final ArgumentCaptor<RawAuthorizationResult> resultCaptor = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(new AzureActiveDirectoryWebViewClient(

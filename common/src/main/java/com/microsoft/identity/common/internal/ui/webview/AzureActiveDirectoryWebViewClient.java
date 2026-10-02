@@ -184,6 +184,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         private static final String RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP =
             "compatibility_company_portal_launch_failed_webcp";
         private static final String RE_WPJ_OUTCOME_NO_OWNER_WEB_CP = "no_owner_webcp";
+        private static final String RE_WPJ_OUTCOME_WEB_CP_LOAD_FAILED = "webcp_load_failed";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1101,8 +1102,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
                 Logger.info(methodTag, "Re-WPJ routing: website request is device CA; entering processDeviceCaRequest.");
-                processDeviceCaRequest(view, url);
-                span.setStatus(StatusCode.OK);
+                span.setStatus(processDeviceCaRequest(view, url)
+                        ? StatusCode.OK
+                        : StatusCode.ERROR);
                 return;
             }
 
@@ -1171,13 +1173,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param view The {@link WebView} instance in which the request originated.
      * @param url  The URL representing the device CA request.
      */
-    private void processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
+    private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
         Logger.info(TAG + ":processDeviceCaRequest",
             "Re-WPJ routing: creating ProcessWebCpRedirects span for device CA handling.");
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            processDeviceCaRequestWithinSpan(view, url);
-            span.setStatus(StatusCode.OK);
+            final boolean succeeded = processDeviceCaRequestWithinSpan(view, url);
+            span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
+            return succeeded;
         } catch (final RuntimeException | Error throwable) {
             span.recordException(throwable);
             span.setStatus(StatusCode.ERROR);
@@ -1187,8 +1190,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private void processDeviceCaRequestWithinSpan(@NonNull final WebView view,
-                                                  @NonNull final String url) {
+    private boolean processDeviceCaRequestWithinSpan(@NonNull final WebView view,
+                                                     @NonNull final String url) {
         final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
 
@@ -1211,7 +1214,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 try {
                     launchCompanyPortal();
                     recordReWpjOutcome(RE_WPJ_OUTCOME_LEGACY_COMPANY_PORTAL_SUCCEEDED);
-                    return;
+                    return true;
                 } catch (final Exception ex) {
                     Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
                     recordReWpjException(ex);
@@ -1221,8 +1224,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 recordReWpjOutcome(RE_WPJ_OUTCOME_LEGACY_WEB_CP);
             }
 
-            loadDeviceCaUrl(url, view);
-            return;
+            return loadDeviceCaUrl(url, view);
         }
 
         Logger.info(methodTag, "Checking for a supported management owner in the current Android user.");
@@ -1236,14 +1238,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED);
-                return;
+                return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
                     "Failed to launch the device management app. Starting browser/WebView fallback.",
                         exception);
                 recordReWpjException(exception);
-                fallbackToBrowserOrWebView(view, url);
-                return;
+                return fallbackToBrowserOrWebView(view, url);
             }
         }
 
@@ -1259,7 +1260,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 launchCompanyPortal();
                 Logger.info(methodTag, "Company Portal compatibility launch started.");
                 recordReWpjOutcome(RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED);
-                return;
+                return true;
             } catch (final Exception ex) {
                 Logger.error(methodTag,
                         "Failed to launch Company Portal through the compatibility path. Continuing to WebCP.",
@@ -1273,7 +1274,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         Logger.info(methodTag, "No native handoff was started. Continuing with the existing WebCP flow.");
-        loadDeviceCaUrl(url, view);
+        return loadDeviceCaUrl(url, view);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -1347,8 +1348,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Package-targeted re-WPJ activity started successfully.");
     }
 
-    private void fallbackToBrowserOrWebView(@NonNull final WebView view,
-                                            @NonNull final String originalUrl) {
+    private boolean fallbackToBrowserOrWebView(@NonNull final WebView view,
+                                               @NonNull final String originalUrl) {
         final String methodTag = TAG + ":fallbackToBrowserOrWebView";
         Logger.info(methodTag, "Preparing HTTPS browser fallback after native handoff failure.");
         final String httpsUrl = toHttpsUrl(originalUrl);
@@ -1361,7 +1362,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_BROWSER_SUCCEEDED);
-                return;
+                return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
                         "Failed to launch the browser. Falling back to the WebView.",
@@ -1375,7 +1376,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
-        view.loadUrl(httpsUrl, mRequestHeaders);
+        return loadDeviceCaUrlInWebView(httpsUrl, view);
     }
 
     private void recordReWpjOutcome(@NonNull final String outcome) {
@@ -1438,44 +1439,59 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
     @VisibleForTesting
-    protected void loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
+    protected boolean loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrl";
         try {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
-                Logger.info(methodTag, "Re-WPJ routing: loading device CA request in WebView.");
-                SpanExtension.current().setAttribute(
-                        AttributeName.is_webcp_in_webview_enabled.name(), true);
-                final String httpsUrl = originalUrl.replace(
-                        AuthenticationConstants.Broker.BROWSER_EXT_PREFIX,
-                        HTTPS_URL_PREFIX);
-                final boolean authorizeOnlyForwardingEnabled =
-                        CommonFlightsManager.INSTANCE
-                                .getFlightsProvider()
-                                .isFlightEnabled(
-                                        CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
-                SpanExtension.current().setAttribute(
-                        AttributeName.device_ca_authorize_only_forwarding_enabled.name(),
-                        authorizeOnlyForwardingEnabled);
-                if (authorizeOnlyForwardingEnabled) {
-                    SpanExtension.current().setAttribute(
-                            AttributeName.device_ca_request_headers_skipped.name(),
-                            true);
-                    view.loadUrl(httpsUrl);
-                } else {
-                    view.loadUrl(httpsUrl, mRequestHeaders);
-                }
+                return loadDeviceCaUrlInWebView(originalUrl, view);
             } else {
                 Logger.info(methodTag, "Re-WPJ routing: loading device CA request in browser.");
                 SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
                 openLinkInBrowser(originalUrl);
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                return true;
             }
         } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
-            SpanExtension.current().recordException(throwable);
-            SpanExtension.current().setStatus(StatusCode.ERROR);
-            returnError(UNKNOWN_ERROR, throwable.getMessage());
+            return handleDeviceCaLoadFailure(methodTag, throwable);
         }
+    }
+
+    private boolean loadDeviceCaUrlInWebView(@NonNull final String originalUrl,
+                                             @NonNull final WebView view) {
+        final String methodTag = TAG + ":loadDeviceCaUrlInWebView";
+        try {
+            Logger.info(methodTag, "Re-WPJ routing: loading device CA request in WebView.");
+            mInWebCpFlow = true;
+            SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
+                final String httpsUrl = toHttpsUrl(originalUrl);
+                final boolean authorizeOnlyForwardingEnabled =
+                    CommonFlightsManager.INSTANCE
+                        .getFlightsProvider()
+                        .isFlightEnabled(
+                            CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
+                SpanExtension.current().setAttribute(
+                    AttributeName.device_ca_authorize_only_forwarding_enabled.name(),
+                    authorizeOnlyForwardingEnabled);
+                if (authorizeOnlyForwardingEnabled) {
+                SpanExtension.current().setAttribute(
+                    AttributeName.device_ca_request_headers_skipped.name(), true);
+                view.loadUrl(httpsUrl);
+                } else {
+                view.loadUrl(httpsUrl, mRequestHeaders);
+                }
+            return true;
+        } catch (final Throwable throwable) {
+            return handleDeviceCaLoadFailure(methodTag, throwable);
+        }
+    }
+
+    private boolean handleDeviceCaLoadFailure(@NonNull final String methodTag,
+                                              @NonNull final Throwable throwable) {
+        Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
+        SpanExtension.current().recordException(throwable);
+        recordReWpjOutcome(RE_WPJ_OUTCOME_WEB_CP_LOAD_FAILED);
+        returnError(UNKNOWN_ERROR, throwable.getMessage());
+        return false;
     }
 
     // Method to decide if the WebView should load the WebCP URL based on the flights.
