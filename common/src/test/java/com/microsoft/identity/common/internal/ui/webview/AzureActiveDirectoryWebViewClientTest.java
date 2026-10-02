@@ -2115,6 +2115,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 resultCaptor.getValue().getResultCode());
         Mockito.verify(mockWebView, Mockito.atLeastOnce()).stopLoading();
         assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
+        assertEquals("unexpected_routing_failure", spanFactory.captured().attribute(
+                AttributeName.re_wpj_handoff_outcome.name()));
     }
 
     @Test

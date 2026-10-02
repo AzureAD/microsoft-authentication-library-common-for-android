@@ -186,6 +186,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             "compatibility_company_portal_launch_failed_webcp";
         private static final String RE_WPJ_OUTCOME_NO_OWNER_WEB_CP = "no_owner_webcp";
         private static final String RE_WPJ_OUTCOME_WEB_CP_LOAD_FAILED = "webcp_load_failed";
+        private static final String RE_WPJ_OUTCOME_UNEXPECTED_ROUTING_FAILURE =
+            "unexpected_routing_failure";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1186,7 +1188,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
             return succeeded;
         } catch (final RuntimeException throwable) {
+            Logger.error(TAG + ":processDeviceCaRequest",
+                "Unexpected failure while routing device CA request.", throwable);
             span.recordException(throwable);
+            span.setAttribute(AttributeName.re_wpj_handoff_outcome.name(),
+                RE_WPJ_OUTCOME_UNEXPECTED_ROUTING_FAILURE);
             span.setStatus(StatusCode.ERROR);
             completeDeviceCaRequestWithError(view, throwable.getMessage());
             return false;
