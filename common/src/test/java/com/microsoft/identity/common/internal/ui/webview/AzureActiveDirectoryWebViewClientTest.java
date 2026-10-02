@@ -2081,6 +2081,8 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         Mockito.verify(webViewClient).launchReWpjManagementApp(INTUNE_APP_PACKAGE_NAME);
         assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
                 AttributeName.is_native_re_wpj_handoff_enabled.name()));
         assertEquals("native_handoff_succeeded", spanFactory.captured().attribute(
                 AttributeName.re_wpj_handoff_outcome.name()));
@@ -2131,6 +2133,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
         Mockito.verify(webViewClient).loadDeviceCaUrl(
                 TEST_PARSED_BROWSER_DEVICE_CA_URL, mockWebView);
+        assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
         assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
                 AttributeName.is_native_re_wpj_handoff_enabled.name()));
         assertEquals("not_evaluated", spanFactory.captured().attribute(
@@ -2304,6 +2308,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 launchedIntent.getDataString());
         Mockito.verify(mockWebView, never()).loadUrl(anyString(), any());
         Mockito.verify(mockWebView, Mockito.times(2)).stopLoading();
+        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+                AttributeName.is_webcp_in_webview_enabled.name()));
         assertEquals("native_handoff_failed_browser_fallback_succeeded",
                 spanFactory.captured().attribute(AttributeName.re_wpj_handoff_outcome.name()));
         assertEquals(1, spanFactory.captured().recordedExceptionCount());

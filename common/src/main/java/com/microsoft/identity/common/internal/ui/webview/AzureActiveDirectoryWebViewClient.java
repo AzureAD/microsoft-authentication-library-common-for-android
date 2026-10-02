@@ -1212,6 +1212,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
         Logger.info(methodTag, "Re-WPJ routing: effective WebCP enabled: "
             + isWebCpInWebViewEnabled);
+        recordReWpjAttribute(AttributeName.is_webcp_in_webview_enabled,
+            isWebCpInWebViewEnabled);
         final boolean isNativeReWpjHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
             .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF);
         Logger.info(methodTag, "Re-WPJ routing: native handoff flight enabled: "
