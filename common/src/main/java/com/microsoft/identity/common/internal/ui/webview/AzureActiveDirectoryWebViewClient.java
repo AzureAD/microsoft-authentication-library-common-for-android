@@ -174,12 +174,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             "legacy_company_portal_launch_failed_webcp";
         private static final String RE_WPJ_OUTCOME_LEGACY_WEB_CP = "legacy_webcp";
         private static final String RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED = "native_handoff_succeeded";
-        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_BROWSER_SUCCEEDED =
-            "native_handoff_failed_browser_fallback_succeeded";
-        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_NO_BROWSER =
-            "native_handoff_failed_webview_fallback_no_browser";
-        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_BROWSER_FAILED =
-            "native_handoff_failed_webview_fallback_browser_launch_failed";
+        private static final String RE_WPJ_OUTCOME_NATIVE_FAILED_APP_LINK_SUCCEEDED =
+            "native_handoff_failed_app_link_fallback_succeeded";
+        private static final String RE_WPJ_OUTCOME_NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED =
+            "native_handoff_app_link_failed_generic_https_fallback_succeeded";
+        private static final String RE_WPJ_OUTCOME_NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER =
+            "native_handoff_app_link_failed_webview_fallback_no_external_handler";
+        private static final String RE_WPJ_OUTCOME_NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW =
+            "native_handoff_app_link_generic_https_failed_webview_fallback";
+        private static final String RE_WPJ_APP_LINK_HANDLER_NOT_FOUND = "handler_not_found";
+        private static final String RE_WPJ_APP_LINK_LAUNCH_SUCCEEDED = "launch_succeeded";
+        private static final String RE_WPJ_APP_LINK_LAUNCH_FAILED = "launch_failed";
         private static final String RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED =
             "compatibility_company_portal_launch_succeeded";
         private static final String RE_WPJ_OUTCOME_COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP =
@@ -1260,10 +1265,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
-                    "Failed to launch the device management app. Starting browser/WebView fallback.",
+                    "Failed to launch the device management app. Starting App Link fallback.",
                         exception);
                 recordReWpjException(exception);
-                return fallbackToBrowserOrWebView(view, url);
+                return fallbackToAppLinkGenericHttpsOrWebView(view, url, managementAppPackage);
             }
         }
 
@@ -1367,31 +1372,65 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(methodTag, "Package-targeted re-WPJ activity started successfully.");
     }
 
-    private boolean fallbackToBrowserOrWebView(@NonNull final WebView view,
-                                               @NonNull final String originalUrl) {
-        final String methodTag = TAG + ":fallbackToBrowserOrWebView";
-        Logger.info(methodTag, "Preparing HTTPS browser fallback after native handoff failure.");
+    private boolean fallbackToAppLinkGenericHttpsOrWebView(@NonNull final WebView view,
+                                                           @NonNull final String originalUrl,
+                                                           @NonNull final String managementAppPackage) {
+        final String methodTag = TAG + ":fallbackToAppLinkGenericHttpsOrWebView";
+        Logger.info(methodTag, "Preparing package-targeted HTTPS App Link fallback for: "
+                + managementAppPackage);
         final String httpsUrl = toHttpsUrl(originalUrl);
-        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
-        if (browserIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            Logger.info(methodTag, "An external browser is available. Attempting HTTPS fallback launch.");
+        final Intent appLinkIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
+        appLinkIntent.setPackage(managementAppPackage);
+        if (appLinkIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            Logger.info(methodTag, "Management app can resolve the HTTPS App Link. Attempting launch.");
             try {
-                getActivity().startActivity(browserIntent);
-                Logger.info(methodTag, "External browser fallback started. Stopping WebView and returning MDM_FLOW.");
+                getActivity().startActivity(appLinkIntent);
+                Logger.info(methodTag, "Package-targeted App Link fallback started. "
+                        + "Stopping WebView and returning MDM_FLOW.");
+                recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
+                        RE_WPJ_APP_LINK_LAUNCH_SUCCEEDED);
+                view.stopLoading();
+                recordOnboardingStep(COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
+                    ? STEP_COMPANY_PORTAL_LAUNCHED
+                    : STEP_INTUNE_REMEDIATION_LAUNCHED);
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_APP_LINK_SUCCEEDED);
+                return true;
+            } catch (final ActivityNotFoundException | SecurityException exception) {
+                Logger.error(methodTag, "Package-targeted App Link launch failed. "
+                        + "Continuing to generic HTTPS fallback.", exception);
+                recordReWpjException(exception);
+                recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
+                        RE_WPJ_APP_LINK_LAUNCH_FAILED);
+            }
+        } else {
+            Logger.warn(methodTag, "Management app cannot resolve the HTTPS App Link. "
+                    + "Continuing to generic HTTPS fallback.");
+            recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
+                    RE_WPJ_APP_LINK_HANDLER_NOT_FOUND);
+        }
+
+        Logger.info(methodTag, "Preparing generic HTTPS fallback after App Link fallback did not start.");
+        final Intent genericHttpsIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
+        if (genericHttpsIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            Logger.info(methodTag, "An external HTTPS handler is available. Attempting fallback launch.");
+            try {
+                getActivity().startActivity(genericHttpsIntent);
+                Logger.info(methodTag, "Generic HTTPS fallback started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_BROWSER_SUCCEEDED);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED);
                 return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
-                        "Failed to launch the browser. Falling back to the WebView.",
+                        "Failed to launch the generic HTTPS handler. Falling back to the WebView.",
                         exception);
                 recordReWpjException(exception);
-                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_BROWSER_FAILED);
+                recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW);
             }
         } else {
-            Logger.warn(methodTag, "No external browser can resolve the HTTPS fallback.");
-            recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_WEBVIEW_NO_BROWSER);
+            Logger.warn(methodTag, "No external handler can resolve the generic HTTPS fallback.");
+            recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER);
         }
 
         Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
@@ -2431,6 +2470,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     span.setAttribute(attributeName.name(), value);
                 }
             }
+        }
+        final String flowCorrelationId = getFlowCorrelationId();
+        if (!StringUtil.isNullOrEmpty(flowCorrelationId)) {
+            span.setAttribute(AttributeName.correlation_id.name(), flowCorrelationId);
         }
         return span;
     }

@@ -539,6 +539,11 @@ public enum AttributeName {
     re_wpj_handoff_outcome,
 
     /**
+     * Records whether the package-targeted re-WPJ HTTPS App Link had no handler, launched, or failed.
+     */
+    re_wpj_app_link_outcome,
+
+    /**
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */
