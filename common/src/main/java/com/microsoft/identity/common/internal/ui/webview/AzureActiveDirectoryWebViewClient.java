@@ -62,6 +62,9 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.AppLinkLaunchOutcome;
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.ManagementOwner;
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.RoutingOutcome;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.CertBasedAuthFactory;
@@ -159,74 +162,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
     private static final String HTTPS_URL_PREFIX = "https://";
     private static final String RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
-
-    private enum ReWpjManagementOwner {
-        NOT_EVALUATED("not_evaluated"),
-        DEVICE_POLICY_MANAGER_UNAVAILABLE("device_policy_manager_unavailable"),
-        COMPANY_PORTAL_PROFILE("company_portal_profile_owner"),
-        GOOGLE_DPC_PROFILE("google_dpc_profile_owner"),
-        GOOGLE_DPC_DEVICE("google_dpc_device_owner"),
-        NONE("none");
-
-        private final String mTelemetryValue;
-
-        ReWpjManagementOwner(@NonNull final String telemetryValue) {
-            mTelemetryValue = telemetryValue;
-        }
-
-        @NonNull
-        private String getTelemetryValue() {
-            return mTelemetryValue;
-        }
-    }
-
-    private enum ReWpjAppLinkOutcome {
-        HANDLER_NOT_FOUND("handler_not_found"),
-        LAUNCH_SUCCEEDED("launch_succeeded"),
-        LAUNCH_FAILED("launch_failed");
-
-        private final String mTelemetryValue;
-
-        ReWpjAppLinkOutcome(@NonNull final String telemetryValue) {
-            mTelemetryValue = telemetryValue;
-        }
-
-        @NonNull
-        private String getTelemetryValue() {
-            return mTelemetryValue;
-        }
-    }
-
-    private enum ReWpjHandoffOutcome {
-        LEGACY_COMPANY_PORTAL_SUCCEEDED("legacy_company_portal_launch_succeeded"),
-        LEGACY_COMPANY_PORTAL_FAILED_WEB_CP("legacy_company_portal_launch_failed_webcp"),
-        LEGACY_WEB_CP("legacy_webcp"),
-        NATIVE_HANDOFF_SUCCEEDED("native_handoff_succeeded"),
-        NATIVE_FAILED_APP_LINK_SUCCEEDED("native_handoff_failed_app_link_fallback_succeeded"),
-        NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED(
-                "native_handoff_app_link_failed_generic_https_fallback_succeeded"),
-        NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER(
-                "native_handoff_app_link_failed_webview_fallback_no_external_handler"),
-        NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW(
-                "native_handoff_app_link_generic_https_failed_webview_fallback"),
-        COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED("compatibility_company_portal_launch_succeeded"),
-        COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP(
-                "compatibility_company_portal_launch_failed_webcp"),
-        NO_OWNER_WEB_CP("no_owner_webcp"),
-        WEB_CP_LOAD_FAILED("webcp_load_failed"),
-        UNEXPECTED_ROUTING_FAILURE("unexpected_routing_failure");
-
-        private final String mTelemetryValue;
-
-        ReWpjHandoffOutcome(@NonNull final String telemetryValue) {
-            mTelemetryValue = telemetryValue;
-        }
-
-        @NonNull
-        private String getTelemetryValue() {
-            return mTelemetryValue;
-        }
-    }
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -1231,7 +1166,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "Unexpected failure while routing device CA request.", throwable);
             span.recordException(throwable);
             span.setAttribute(AttributeName.re_wpj_handoff_outcome.name(),
-                ReWpjHandoffOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
+                RoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
             span.setStatus(StatusCode.ERROR);
             completeDeviceCaRequestWithError(view, throwable.getMessage());
             return false;
@@ -1261,7 +1196,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             isNativeReWpjHandoffEnabled);
         if (!isWebCpInWebViewEnabled || !isNativeReWpjHandoffEnabled) {
             recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-                    ReWpjManagementOwner.NOT_EVALUATED.getTelemetryValue());
+                    ManagementOwner.NOT_EVALUATED.getTelemetryValue());
             if (shouldLaunchCompanyPortal()) {
                 // If CP is installed, redirect to CP.
                 // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
@@ -1269,15 +1204,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 //       Until that comes, we'll only handle this in ipphone.
                 try {
                     launchCompanyPortal();
-                    recordReWpjOutcome(ReWpjHandoffOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED);
+                    recordDeviceCaRoutingOutcome(
+                            RoutingOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED);
                     return true;
                 } catch (final Exception ex) {
                     Logger.warn(methodTag, "Failed to launch Company Portal, falling back to browser.");
                     recordReWpjException(ex);
-                    recordReWpjOutcome(ReWpjHandoffOutcome.LEGACY_COMPANY_PORTAL_FAILED_WEB_CP);
+                    recordDeviceCaRoutingOutcome(
+                            RoutingOutcome.LEGACY_COMPANY_PORTAL_FAILED_WEB_CP);
                 }
             } else {
-                recordReWpjOutcome(ReWpjHandoffOutcome.LEGACY_WEB_CP);
+                recordDeviceCaRoutingOutcome(RoutingOutcome.LEGACY_WEB_CP);
             }
 
             return loadDeviceCaUrl(url, view);
@@ -1296,7 +1233,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
                 }
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordReWpjOutcome(ReWpjHandoffOutcome.NATIVE_HANDOFF_SUCCEEDED);
+                recordDeviceCaRoutingOutcome(
+                    RoutingOutcome.NATIVE_HANDOFF_SUCCEEDED);
                 return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
@@ -1318,19 +1256,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             try {
                 launchCompanyPortal();
                 Logger.info(methodTag, "Company Portal compatibility launch started.");
-                recordReWpjOutcome(ReWpjHandoffOutcome.COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED);
+                recordDeviceCaRoutingOutcome(
+                    RoutingOutcome.COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED);
                 return true;
             } catch (final Exception ex) {
                 Logger.error(methodTag,
                         "Failed to launch Company Portal through the compatibility path. Continuing to WebCP.",
                         ex);
                 recordReWpjException(ex);
-                recordReWpjOutcome(
-                        ReWpjHandoffOutcome.COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP);
+                recordDeviceCaRoutingOutcome(
+                        RoutingOutcome.COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP);
             }
         } else {
             Logger.info(methodTag, "Company Portal compatibility conditions are not satisfied.");
-            recordReWpjOutcome(ReWpjHandoffOutcome.NO_OWNER_WEB_CP);
+            recordDeviceCaRoutingOutcome(RoutingOutcome.NO_OWNER_WEB_CP);
         }
 
         Logger.info(methodTag, "No native handoff was started. Continuing with the existing WebCP flow.");
@@ -1364,7 +1303,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (devicePolicyManager == null) {
             Logger.warn(methodTag, "DevicePolicyManager is unavailable. No management owner can be detected.");
             recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-                    ReWpjManagementOwner.DEVICE_POLICY_MANAGER_UNAVAILABLE.getTelemetryValue());
+                ManagementOwner.DEVICE_POLICY_MANAGER_UNAVAILABLE.getTelemetryValue());
             return null;
         }
 
@@ -1372,7 +1311,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
             Logger.info(methodTag, "Company Portal is the profile owner in the current Android user.");
             recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-                    ReWpjManagementOwner.COMPANY_PORTAL_PROFILE.getTelemetryValue());
+                    ManagementOwner.COMPANY_PORTAL_PROFILE.getTelemetryValue());
             return COMPANY_PORTAL_APP_PACKAGE_NAME;
         }
 
@@ -1380,7 +1319,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
             Logger.info(methodTag, "Google DPC is the profile owner in the current Android user.");
             recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-                    ReWpjManagementOwner.GOOGLE_DPC_PROFILE.getTelemetryValue());
+                    ManagementOwner.GOOGLE_DPC_PROFILE.getTelemetryValue());
             return INTUNE_APP_PACKAGE_NAME;
         }
 
@@ -1388,13 +1327,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
             Logger.info(methodTag, "Google DPC is the device owner.");
             recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-                    ReWpjManagementOwner.GOOGLE_DPC_DEVICE.getTelemetryValue());
+                    ManagementOwner.GOOGLE_DPC_DEVICE.getTelemetryValue());
             return INTUNE_APP_PACKAGE_NAME;
         }
 
         Logger.info(methodTag, "No supported profile owner or device owner was detected in the current Android user.");
         recordReWpjAttribute(AttributeName.re_wpj_management_owner,
-            ReWpjManagementOwner.NONE.getTelemetryValue());
+            ManagementOwner.NONE.getTelemetryValue());
         return null;
     }
 
@@ -1425,26 +1364,27 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Package-targeted App Link fallback started. "
                         + "Stopping WebView and returning MDM_FLOW.");
                 recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
-                    ReWpjAppLinkOutcome.LAUNCH_SUCCEEDED.getTelemetryValue());
+                    AppLinkLaunchOutcome.LAUNCH_SUCCEEDED.getTelemetryValue());
                 view.stopLoading();
                 if (COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)) {
                     recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
                 }
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordReWpjOutcome(ReWpjHandoffOutcome.NATIVE_FAILED_APP_LINK_SUCCEEDED);
+                recordDeviceCaRoutingOutcome(
+                    RoutingOutcome.NATIVE_FAILED_APP_LINK_SUCCEEDED);
                 return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag, "Package-targeted App Link launch failed. "
                         + "Continuing to generic HTTPS fallback.", exception);
                 recordReWpjException(exception);
                 recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
-                    ReWpjAppLinkOutcome.LAUNCH_FAILED.getTelemetryValue());
+                    AppLinkLaunchOutcome.LAUNCH_FAILED.getTelemetryValue());
             }
         } else {
             Logger.warn(methodTag, "Management app cannot resolve the HTTPS App Link. "
                     + "Continuing to generic HTTPS fallback.");
             recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
-                    ReWpjAppLinkOutcome.HANDLER_NOT_FOUND.getTelemetryValue());
+                    AppLinkLaunchOutcome.HANDLER_NOT_FOUND.getTelemetryValue());
         }
 
         Logger.info(methodTag, "Preparing generic HTTPS fallback after App Link fallback did not start.");
@@ -1456,29 +1396,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag, "Generic HTTPS fallback started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordReWpjOutcome(
-                    ReWpjHandoffOutcome.NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED);
+                recordDeviceCaRoutingOutcome(
+                    RoutingOutcome.NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED);
                 return true;
             } catch (final ActivityNotFoundException | SecurityException exception) {
                 Logger.error(methodTag,
                         "Failed to launch the generic HTTPS handler. Falling back to the WebView.",
                         exception);
                 recordReWpjException(exception);
-                recordReWpjOutcome(
-                        ReWpjHandoffOutcome.NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW);
+                recordDeviceCaRoutingOutcome(
+                        RoutingOutcome.NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW);
             }
         } else {
             Logger.warn(methodTag, "No external handler can resolve the generic HTTPS fallback.");
-            recordReWpjOutcome(
-                    ReWpjHandoffOutcome.NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER);
+                recordDeviceCaRoutingOutcome(
+                    RoutingOutcome.NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER);
         }
 
         Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
         return loadDeviceCaUrlInWebView(httpsUrl, view);
     }
 
-    private void recordReWpjOutcome(@NonNull final ReWpjHandoffOutcome outcome) {
-        Logger.info(TAG + ":recordReWpjOutcome",
+    private void recordDeviceCaRoutingOutcome(
+            @NonNull final RoutingOutcome outcome) {
+        Logger.info(TAG + ":recordDeviceCaRoutingOutcome",
                 "Device CA routing outcome: " + outcome.getTelemetryValue());
         recordReWpjAttribute(AttributeName.re_wpj_handoff_outcome,
                 outcome.getTelemetryValue());
@@ -1589,7 +1530,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                               @NonNull final Throwable throwable) {
         Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
         SpanExtension.current().recordException(throwable);
-        recordReWpjOutcome(ReWpjHandoffOutcome.WEB_CP_LOAD_FAILED);
+        recordDeviceCaRoutingOutcome(RoutingOutcome.WEB_CP_LOAD_FAILED);
         return false;
     }
 
