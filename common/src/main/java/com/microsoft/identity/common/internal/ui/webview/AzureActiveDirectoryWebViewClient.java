@@ -438,13 +438,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(methodTag, "Entering processWebsiteRequest.");
+                Logger.info(methodTag, "It is an external website request");
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an install request");
                 processInstallRequest(view, url);
             } else if (isWebCpUrl(formattedURL)) {
-                Logger.info(methodTag, "Entering processWebCpRequest.");
+                Logger.info(methodTag,"It is a request from WebCP");
                 processWebCpRequest(view, url);
             } else if (isPlayStoreUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to open PlayStore.");
@@ -486,7 +486,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
-            }  else if (shouldProcessHttpsDeviceCaRequest(url)) {
+            }  else if (isDeviceCaRequest(url) &&
+                    isHttpsScheme(url) &&
+                    isWebCpInWebviewFeatureEnabled(url)) {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
@@ -1446,28 +1448,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isHttpsScheme(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
-    }
-
-    private boolean shouldProcessHttpsDeviceCaRequest(@NonNull final String url) {
-        final String methodTag = TAG + ":shouldProcessHttpsDeviceCaRequest";
-        if (!isDeviceCaRequest(url)) {
-            return false;
-        }
-
-        if (!isHttpsScheme(url)) {
-            Logger.info(methodTag,
-                "Device CA request is not HTTPS; deferring to its earlier scheme-specific route.");
-            return false;
-        }
-
-        final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
-        Logger.info(methodTag, "HTTPS device CA detected; WebCP in WebView enabled: "
-                + isWebCpInWebViewEnabled);
-        if (!isWebCpInWebViewEnabled) {
-            Logger.info(methodTag,
-                "HTTPS device CA is deferred to normal WebView loading.");
-        }
-        return isWebCpInWebViewEnabled;
     }
 
     // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
