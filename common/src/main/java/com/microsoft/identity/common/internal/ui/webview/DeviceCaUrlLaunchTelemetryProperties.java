@@ -70,21 +70,15 @@ final class DeviceCaUrlLaunchTelemetryProperties {
 
     enum DeviceCaUrlRoutingOutcome {
         LEGACY_COMPANY_PORTAL_SUCCEEDED("legacy_company_portal_launch_succeeded"),
-        LEGACY_COMPANY_PORTAL_FAILED_WEB_CP("legacy_company_portal_launch_failed_webcp"),
-        LEGACY_WEB_CP("legacy_webcp"),
         NATIVE_HANDOFF_SUCCEEDED("native_handoff_succeeded"),
         NATIVE_FAILED_APP_LINK_SUCCEEDED("native_handoff_failed_app_link_fallback_succeeded"),
         NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED(
                 "native_handoff_app_link_failed_generic_https_fallback_succeeded"),
-        NATIVE_APP_LINK_FAILED_WEBVIEW_NO_EXTERNAL_HANDLER(
-                "native_handoff_app_link_failed_webview_fallback_no_external_handler"),
-        NATIVE_APP_LINK_GENERIC_HTTPS_FAILED_WEBVIEW(
-                "native_handoff_app_link_generic_https_failed_webview_fallback"),
         COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED("compatibility_company_portal_launch_succeeded"),
-        COMPATIBILITY_COMPANY_PORTAL_FAILED_WEB_CP(
-                "compatibility_company_portal_launch_failed_webcp"),
-        NO_OWNER_WEB_CP("no_owner_webcp"),
-        WEB_CP_LOAD_FAILED("webcp_load_failed"),
+        BROWSER_LAUNCH_SUCCEEDED("browser_launch_succeeded"),
+        BROWSER_LAUNCH_FAILED("browser_launch_failed"),
+        WEBVIEW_LOAD_SUCCEEDED("webview_load_succeeded"),
+        WEBVIEW_LOAD_FAILED("webview_load_failed"),
         UNEXPECTED_ROUTING_FAILURE("unexpected_routing_failure");
 
         private final String mTelemetryValue;

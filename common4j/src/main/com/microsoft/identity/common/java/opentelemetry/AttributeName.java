@@ -524,24 +524,24 @@ public enum AttributeName {
     device_ca_request_headers_skipped,
 
     /**
-     * Indicates whether native re-WPJ handoff routing is enabled.
+     * Indicates whether native Device-CA management-app handoff routing is enabled.
      */
-    is_native_re_wpj_handoff_enabled,
+    is_native_device_ca_management_app_handoff_enabled,
 
     /**
-     * Records the management owner detected for native re-WPJ handoff.
+     * Records the management owner detected for Device-CA routing.
      */
-    re_wpj_management_owner,
+    device_ca_management_owner,
 
     /**
-     * Records the terminal native re-WPJ handoff or fallback outcome.
+     * Records the terminal Device-CA routing outcome.
      */
-    re_wpj_handoff_outcome,
+    device_ca_routing_outcome,
 
     /**
-     * Records whether the package-targeted re-WPJ HTTPS App Link had no handler, launched, or failed.
+     * Records whether the package-targeted management-app HTTPS App Link had no handler, launched, or failed.
      */
-    re_wpj_app_link_outcome,
+    device_ca_management_app_link_outcome,
 
     /**
      * Records the if webview received an SSL error and
