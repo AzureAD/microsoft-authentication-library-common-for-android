@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -62,8 +61,6 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.PasskeyOriginRulesManager;
 import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
-import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.AppLinkLaunchOutcome;
-import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.DeviceManagementOwner;
 import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.DeviceCaUrlRoutingOutcome;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractSmartcardCertBasedAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.certbasedauth.AbstractCertBasedAuthChallengeHandler;
@@ -97,7 +94,6 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
-import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -157,11 +153,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * {@code intent://} request.
      */
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
-    private static final String GOOGLE_DPC_PACKAGE_NAME = "com.google.android.apps.work.clouddpc";
     private static final String DEVICE_CA_QUERY_PARAMETER = "ismdmurl";
     private static final String DEVICE_CA_QUERY_PARAMETER_VALUE = "1";
     private static final String HTTPS_URL_PREFIX = "https://";
-    private static final String RE_WPJ_HANDOFF_URI = "intune-remediation://re-wpj";
 
     // The two canonical shapes of a Play Store app listing: https://play.google.com/store/apps/details
     // and market://details, both keyed by an "id" query parameter.
@@ -249,6 +243,81 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         mIsWebViewWebCpEnabledInBrokerlessCase = isWebViewWebCpEnabledInBrokerlessCase;
         mMamCaInstallReferrerEnabled = mamCaInstallReferrerEnabled;
         mUrlLoadTracker = urlLoadTracker;
+    }
+
+    @NonNull
+    private DeviceCaRequestRouter createDeviceCaRequestRouter() {
+        return new DeviceCaRequestRouter(new DeviceCaRequestRouter.Host() {
+            @NonNull
+            @Override
+            public Activity activity() {
+                return getActivity();
+            }
+
+            @Override
+            public boolean isRunningOnAuthService() {
+                return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext());
+            }
+
+            @Override
+            public boolean isFlightEnabled(@NonNull final CommonFlight flight) {
+                return CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(flight);
+            }
+
+            @Override
+            public void launchCompanyPortal() {
+                AzureActiveDirectoryWebViewClient.this.launchCompanyPortal();
+            }
+
+            @Override
+            public boolean isWebCpInWebViewEnabled(@NonNull final String url) {
+                return isWebCpInWebviewFeatureEnabled(url);
+            }
+
+            @Nullable
+            @Override
+            public String getDeviceManagementAppPackage() {
+                return AzureActiveDirectoryWebViewClient.this.getDeviceManagementAppPackage();
+            }
+
+            @Override
+            public void launchReWpjManagementApp(@NonNull final String managementAppPackage) {
+                AzureActiveDirectoryWebViewClient.this.launchReWpjManagementApp(managementAppPackage);
+            }
+
+            @Override
+            public boolean loadDeviceCaUrlInWebViewOrBrowser(@NonNull final String url,
+                                                              @NonNull final WebView view) {
+                return AzureActiveDirectoryWebViewClient.this
+                        .loadDeviceCaUrlInWebViewOrBrowser(url, view);
+            }
+
+            @Override
+            public void openLinkInBrowser(@NonNull final String url) {
+                AzureActiveDirectoryWebViewClient.this.openLinkInBrowser(url);
+            }
+
+            @Override
+            public void returnMdmFlow() {
+                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
+            }
+
+            @Override
+            public void recordOnboardingStep(@NonNull final String stepId) {
+                AzureActiveDirectoryWebViewClient.this.recordOnboardingStep(stepId);
+            }
+
+            @Override
+            public void markWebCpFlowStarted() {
+                mInWebCpFlow = true;
+            }
+
+            @Override
+            public void loadUrlWithRequestHeaders(@NonNull final WebView view,
+                                                   @NonNull final String url) {
+                view.loadUrl(url, mRequestHeaders);
+            }
+        });
     }
 
     @VisibleForTesting
@@ -1151,7 +1220,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessDeviceCaRequest.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            final boolean succeeded = processDeviceCaRequestWithinSpan(view, url);
+            final boolean succeeded = createDeviceCaRequestRouter().route(view, url);
             span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
             if (!succeeded) {
                 completeDeviceCaRequestWithError(view, "Failed to load device CA URL.");
@@ -1171,90 +1240,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private boolean processDeviceCaRequestWithinSpan(@NonNull final WebView view,
-                                                     @NonNull final String url) {
-        final String methodTag = TAG + ":processDeviceCaRequest";
-        Logger.info(methodTag, "This is a device CA request.");
-
-        // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
-        recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
-
-        if (shouldLaunchCompanyPortal()) {
-            // If CP is installed, redirect to CP.
-            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-            //       CP is currently working on this.
-            //       Until that comes, we'll only handle this in ipphone.
-            try {
-                launchCompanyPortal();
-                recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                        DeviceManagementOwner.NOT_EVALUATED.getTelemetryValue());
-                recordDeviceCaRoutingOutcome(
-                        DeviceCaUrlRoutingOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED);
-                return true;
-            } catch (final Exception exception) {
-                Logger.warn(methodTag, "Failed to launch Company Portal; continuing Device CA routing.");
-                recordDeviceCaException(exception);
-            }
-        }
-
-        return routeDeviceCaRequest(view, url);
-    }
-
-    private boolean routeDeviceCaRequest(@NonNull final WebView view,
-                                         @NonNull final String url) {
-        final String methodTag = TAG + ":routeDeviceCaRequest";
-        final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
-        final boolean isNativeManagementAppHandoffEnabled =
-            isNativeDeviceCaManagementAppHandoffEnabled();
-        Logger.info(methodTag, "Device CA routing eligibility: WebCP in WebView="
-            + isWebCpInWebViewEnabled + ", native management-app handoff="
-            + isNativeManagementAppHandoffEnabled);
-        recordDeviceCaAttribute(AttributeName.is_webcp_in_webview_enabled,
-            isWebCpInWebViewEnabled);
-        recordDeviceCaAttribute(AttributeName.is_native_device_ca_management_app_handoff_enabled,
-            isNativeManagementAppHandoffEnabled);
-        if (!isWebCpInWebViewEnabled || !isNativeManagementAppHandoffEnabled) {
-            recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                    DeviceManagementOwner.NOT_EVALUATED.getTelemetryValue());
-            return loadDeviceCaUrlInWebViewOrBrowser(url, view);
-        }
-
-        return routeDeviceCaRequestWithNativeHandoff(view, url);
-    }
-
-    private boolean routeDeviceCaRequestWithNativeHandoff(@NonNull final WebView view,
-                                                           @NonNull final String url) {
-        final String methodTag = TAG + ":routeDeviceCaRequestWithNativeHandoff";
-        Logger.info(methodTag, "Checking for a supported management owner in the current Android user.");
-        final String managementAppPackage = getDeviceManagementAppPackage();
-        if (managementAppPackage != null) {
-            Logger.info(methodTag, "Supported management owner found. Attempting targeted re-WPJ handoff to: "
-                    + managementAppPackage);
-            try {
-                launchReWpjManagementApp(managementAppPackage);
-                Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
-                view.stopLoading();
-                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)) {
-                    recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
-                }
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordDeviceCaRoutingOutcome(
-                    DeviceCaUrlRoutingOutcome.NATIVE_HANDOFF_SUCCEEDED);
-                return true;
-            } catch (final ActivityNotFoundException | SecurityException exception) {
-                Logger.error(methodTag,
-                    "Failed to launch the device management app. Starting App Link fallback.",
-                        exception);
-                recordDeviceCaException(exception);
-                return fallbackToAppLinkGenericHttpsOrWebView(view, url, managementAppPackage);
-            }
-        }
-
-        Logger.info(methodTag, "No supported management owner is visible in the current Android user. "
-                + "Continuing Device CA routing.");
-        return loadDeviceCaUrlInWebViewOrBrowser(url, view);
-    }
-
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
         final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
@@ -1264,151 +1249,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return isDeviceCaRequest;
     }
 
-    private boolean isNativeDeviceCaManagementAppHandoffEnabled() {
-        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
-                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
-                    CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF);
-    }
-
     @Nullable
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected String getDeviceManagementAppPackage() {
-        final String methodTag = TAG + ":getDeviceManagementAppPackage";
-        final DevicePolicyManager devicePolicyManager =
-                (DevicePolicyManager) getActivity().getSystemService(Activity.DEVICE_POLICY_SERVICE);
-        if (devicePolicyManager == null) {
-            Logger.warn(methodTag, "DevicePolicyManager is unavailable. No management owner can be detected.");
-            recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                DeviceManagementOwner.DEVICE_POLICY_MANAGER_UNAVAILABLE.getTelemetryValue());
-            return null;
-        }
-
-        Logger.info(methodTag, "Checking Company Portal profile ownership in the current Android user.");
-        if (devicePolicyManager.isProfileOwnerApp(COMPANY_PORTAL_APP_PACKAGE_NAME)) {
-            Logger.info(methodTag, "Company Portal is the profile owner in the current Android user.");
-            recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                    DeviceManagementOwner.COMPANY_PORTAL_PROFILE.getTelemetryValue());
-            return COMPANY_PORTAL_APP_PACKAGE_NAME;
-        }
-
-        Logger.info(methodTag, "Company Portal is not the profile owner. Checking Google DPC profile ownership.");
-        if (devicePolicyManager.isProfileOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
-            Logger.info(methodTag, "Google DPC is the profile owner in the current Android user.");
-            recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                    DeviceManagementOwner.GOOGLE_DPC_PROFILE.getTelemetryValue());
-            return INTUNE_APP_PACKAGE_NAME;
-        }
-
-        Logger.info(methodTag, "Google DPC is not the profile owner. Checking Google DPC device ownership.");
-        if (devicePolicyManager.isDeviceOwnerApp(GOOGLE_DPC_PACKAGE_NAME)) {
-            Logger.info(methodTag, "Google DPC is the device owner.");
-            recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-                    DeviceManagementOwner.GOOGLE_DPC_DEVICE.getTelemetryValue());
-            return INTUNE_APP_PACKAGE_NAME;
-        }
-
-        Logger.info(methodTag, "No supported profile owner or device owner was detected in the current Android user.");
-        recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
-            DeviceManagementOwner.NONE.getTelemetryValue());
-        return null;
+        return createDeviceCaRequestRouter().resolveDeviceManagementAppPackage();
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void launchReWpjManagementApp(@NonNull final String managementAppPackage) {
-        final String methodTag = TAG + ":launchReWpjManagementApp";
-        Logger.info(methodTag, "Creating package-targeted re-WPJ handoff intent for: " + managementAppPackage);
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(RE_WPJ_HANDOFF_URI));
-        intent.setPackage(managementAppPackage);
-        Logger.info(methodTag, "Starting package-targeted re-WPJ activity.");
-        getActivity().startActivity(intent);
-        Logger.info(methodTag, "Package-targeted re-WPJ activity started successfully.");
-    }
-
-    private boolean fallbackToAppLinkGenericHttpsOrWebView(@NonNull final WebView view,
-                                                           @NonNull final String originalUrl,
-                                                           @NonNull final String managementAppPackage) {
-        final String methodTag = TAG + ":fallbackToAppLinkGenericHttpsOrWebView";
-        Logger.info(methodTag, "Preparing package-targeted HTTPS App Link fallback for: "
-                + managementAppPackage);
-        final String httpsUrl = toHttpsUrl(originalUrl);
-        final Intent appLinkIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
-        appLinkIntent.setPackage(managementAppPackage);
-        if (appLinkIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            Logger.info(methodTag, "Management app can resolve the HTTPS App Link. Attempting launch.");
-            try {
-                getActivity().startActivity(appLinkIntent);
-                Logger.info(methodTag, "Package-targeted App Link fallback started. "
-                        + "Stopping WebView and returning MDM_FLOW.");
-                recordDeviceCaAttribute(AttributeName.device_ca_management_app_link_outcome,
-                    AppLinkLaunchOutcome.LAUNCH_SUCCEEDED.getTelemetryValue());
-                view.stopLoading();
-                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)) {
-                    recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
-                }
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordDeviceCaRoutingOutcome(
-                    DeviceCaUrlRoutingOutcome.NATIVE_FAILED_APP_LINK_SUCCEEDED);
-                return true;
-            } catch (final ActivityNotFoundException | SecurityException exception) {
-                Logger.error(methodTag, "Package-targeted App Link launch failed. "
-                        + "Continuing to generic HTTPS fallback.", exception);
-                recordDeviceCaException(exception);
-                recordDeviceCaAttribute(AttributeName.device_ca_management_app_link_outcome,
-                    AppLinkLaunchOutcome.LAUNCH_FAILED.getTelemetryValue());
-            }
-        } else {
-            Logger.warn(methodTag, "Management app cannot resolve the HTTPS App Link. "
-                    + "Continuing to generic HTTPS fallback.");
-            recordDeviceCaAttribute(AttributeName.device_ca_management_app_link_outcome,
-                    AppLinkLaunchOutcome.HANDLER_NOT_FOUND.getTelemetryValue());
-        }
-
-        Logger.info(methodTag, "Preparing generic HTTPS fallback after App Link fallback did not start.");
-        final Intent genericHttpsIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl));
-        if (genericHttpsIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            Logger.info(methodTag, "An external HTTPS handler is available. Attempting fallback launch.");
-            try {
-                getActivity().startActivity(genericHttpsIntent);
-                Logger.info(methodTag, "Generic HTTPS fallback started. Stopping WebView and returning MDM_FLOW.");
-                view.stopLoading();
-                returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-                recordDeviceCaRoutingOutcome(
-                    DeviceCaUrlRoutingOutcome.NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED);
-                return true;
-            } catch (final ActivityNotFoundException | SecurityException exception) {
-                Logger.error(methodTag,
-                        "Failed to launch the generic HTTPS handler. Falling back to the WebView.",
-                        exception);
-                recordDeviceCaException(exception);
-            }
-        } else {
-            Logger.warn(methodTag, "No external handler can resolve the generic HTTPS fallback.");
-        }
-
-        Logger.info(methodTag, "Loading the HTTPS fallback in the MSAL WebView.");
-        return loadDeviceCaUrlInWebView(httpsUrl, view);
-    }
-
-    private void recordDeviceCaRoutingOutcome(
-            @NonNull final DeviceCaUrlRoutingOutcome outcome) {
-        Logger.info(TAG + ":recordDeviceCaRoutingOutcome",
-                "Device CA routing outcome: " + outcome.getTelemetryValue());
-        recordDeviceCaAttribute(AttributeName.device_ca_routing_outcome,
-                outcome.getTelemetryValue());
-    }
-
-    private void recordDeviceCaAttribute(@NonNull final AttributeName attributeName,
-                                         @NonNull final String value) {
-        SpanExtension.current().setAttribute(attributeName.name(), value);
-    }
-
-    private void recordDeviceCaAttribute(@NonNull final AttributeName attributeName,
-                                         final boolean value) {
-        SpanExtension.current().setAttribute(attributeName.name(), value);
-    }
-
-    private void recordDeviceCaException(@NonNull final Exception exception) {
-        SpanExtension.current().recordException(exception);
+        createDeviceCaRequestRouter().launchReWpjManagementApp(managementAppPackage);
     }
 
     @NonNull
@@ -1420,69 +1269,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
     }
 
-    // Decides whether to launch the Company Portal app based on the presence of the IPPhone app and its signature.
-    private boolean shouldLaunchCompanyPortal() {
-        final PackageHelper packageHelper = new PackageHelper(getActivity().getPackageManager());
-        return packageHelper.isPackageInstalledAndEnabled(IPPHONE_APP_PACKAGE_NAME)
-                && IPPHONE_APP_SHA512_RELEASE_SIGNATURE.equals(packageHelper.getSha512SignatureForPackage(IPPHONE_APP_PACKAGE_NAME))
-                && packageHelper.isPackageInstalledAndEnabled(COMPANY_PORTAL_APP_PACKAGE_NAME);
-    }
-
     // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
     @VisibleForTesting
     protected boolean loadDeviceCaUrlInWebViewOrBrowser(@NonNull final String originalUrl,
                                                         @NonNull final WebView view) {
-        final String methodTag = TAG + ":loadDeviceCaUrlInWebViewOrBrowser";
-        if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
-            return loadDeviceCaUrlInWebView(originalUrl, view);
-        }
-
-        try {
-            Logger.info(methodTag, "Loading device CA request in browser.");
-            SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
-            openLinkInBrowser(originalUrl);
-            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
-            recordDeviceCaRoutingOutcome(DeviceCaUrlRoutingOutcome.BROWSER_LAUNCH_SUCCEEDED);
-            return true;
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to launch device CA URL in browser.", throwable);
-            SpanExtension.current().recordException(throwable);
-            recordDeviceCaRoutingOutcome(DeviceCaUrlRoutingOutcome.BROWSER_LAUNCH_FAILED);
-            return false;
-        }
-    }
-
-    private boolean loadDeviceCaUrlInWebView(@NonNull final String originalUrl,
-                                             @NonNull final WebView view) {
-        final String methodTag = TAG + ":loadDeviceCaUrlInWebView";
-        try {
-            Logger.info(methodTag, "Loading device CA request in WebView.");
-            mInWebCpFlow = true;
-            SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-            final String httpsUrl = toHttpsUrl(originalUrl);
-            final boolean authorizeOnlyForwardingEnabled =
-                CommonFlightsManager.INSTANCE
-                    .getFlightsProvider()
-                    .isFlightEnabled(
-                        CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
-            SpanExtension.current().setAttribute(
-                AttributeName.device_ca_authorize_only_forwarding_enabled.name(),
-                authorizeOnlyForwardingEnabled);
-            if (authorizeOnlyForwardingEnabled) {
-                SpanExtension.current().setAttribute(
-                        AttributeName.device_ca_request_headers_skipped.name(), true);
-                view.loadUrl(httpsUrl);
-            } else {
-                view.loadUrl(httpsUrl, mRequestHeaders);
-            }
-            recordDeviceCaRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_SUCCEEDED);
-            return true;
-        } catch (final Throwable throwable) {
-            Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable);
-            SpanExtension.current().recordException(throwable);
-            recordDeviceCaRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_FAILED);
-            return false;
-        }
+        return createDeviceCaRequestRouter().loadInWebViewOrBrowser(originalUrl, view);
     }
 
     private void completeDeviceCaRequestWithError(@NonNull final WebView view,
