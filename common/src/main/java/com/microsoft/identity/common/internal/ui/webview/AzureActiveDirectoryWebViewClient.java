@@ -469,13 +469,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(methodTag, "Re-WPJ routing: entering processWebsiteRequest.");
+                Logger.info(methodTag, "Entering processWebsiteRequest.");
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an install request");
                 processInstallRequest(view, url);
             } else if (isWebCpUrl(formattedURL)) {
-                Logger.info(methodTag, "Re-WPJ routing: entering processWebCpRequest.");
+                Logger.info(methodTag, "Entering processWebCpRequest.");
                 processWebCpRequest(view, url);
             } else if (isPlayStoreUrl(formattedURL)) {
                 Logger.info(methodTag,"Request to open PlayStore.");
@@ -1102,14 +1102,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
-        Logger.info(methodTag, "Re-WPJ routing: processWebsiteRequest started. In WebCP flow: "
+        Logger.info(methodTag, "processWebsiteRequest started. In WebCP flow: "
             + mInWebCpFlow);
         view.stopLoading();
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
         span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             if (isDeviceCaRequest(url)) {
-                Logger.info(methodTag, "Re-WPJ routing: website request is device CA; entering processDeviceCaRequest.");
+                Logger.info(methodTag, "Website request is device CA; entering processDeviceCaRequest.");
                 span.setStatus(processDeviceCaRequest(view, url)
                         ? StatusCode.OK
                         : StatusCode.ERROR);
@@ -1117,14 +1117,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             if (isRedirectToPlaystoreToInstallCp(url) && mInWebCpFlow) {
-                Logger.info(methodTag, "Re-WPJ routing: website request is a WebCP Play Store redirect.");
+                Logger.info(methodTag, "Website request is a WebCP Play Store redirect.");
                 handlePlaystoreLaunchUrlFromWebCp(url);
                 span.setStatus(StatusCode.OK);
                 return;
             }
 
             // Default case: redirect to browser
-            Logger.info(methodTag, "Re-WPJ routing: website request is neither device CA nor a WebCP Play Store redirect; using browser redirect.");
+            Logger.info(methodTag, "Website request is neither device CA nor a WebCP Play Store redirect; using browser redirect.");
             handleBrowserRedirect(methodTag, url);
             span.setStatus(StatusCode.OK);
         } catch (final Throwable throwable) {
@@ -1183,7 +1183,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
         Logger.info(TAG + ":processDeviceCaRequest",
-            "Re-WPJ routing: creating ProcessWebCpRedirects span for device CA handling.");
+            "Creating ProcessWebCpRedirects span for device CA handling.");
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final boolean succeeded = processDeviceCaRequestWithinSpan(view, url);
@@ -1215,13 +1215,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
         final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
-        Logger.info(methodTag, "Re-WPJ routing: effective WebCP enabled: "
+        Logger.info(methodTag, "Effective WebCP enabled for device CA request: "
             + isWebCpInWebViewEnabled);
         recordReWpjAttribute(AttributeName.is_webcp_in_webview_enabled,
             isWebCpInWebViewEnabled);
         final boolean isNativeReWpjHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
             .isFlightEnabled(CommonFlight.ENABLE_NATIVE_RE_WPJ_HANDOFF);
-        Logger.info(methodTag, "Re-WPJ routing: native handoff flight enabled: "
+        Logger.info(methodTag, "Native management-app handoff flight enabled: "
             + isNativeReWpjHandoffEnabled);
         recordReWpjAttribute(AttributeName.is_native_re_wpj_handoff_enabled,
             isNativeReWpjHandoffEnabled);
@@ -1308,14 +1308,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final boolean isDeviceCaRequest = url.contains(
                 AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
             Logger.info(TAG + ":isDeviceCaRequest",
-                "Re-WPJ routing: legacy device CA marker check result: " + isDeviceCaRequest);
+                "Legacy device CA marker check result: " + isDeviceCaRequest);
             return isDeviceCaRequest;
         }
 
         final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
         Logger.info(TAG + ":isDeviceCaRequest",
-            "Re-WPJ routing: parsed device CA marker check result: " + isDeviceCaRequest);
+            "Parsed device CA marker check result: " + isDeviceCaRequest);
         return isDeviceCaRequest;
     }
 
@@ -1438,7 +1438,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void recordReWpjOutcome(@NonNull final String outcome) {
-        Logger.info(TAG + ":recordReWpjOutcome", "Re-WPJ routing outcome: " + outcome);
+        Logger.info(TAG + ":recordReWpjOutcome", "Device CA routing outcome: " + outcome);
         recordReWpjAttribute(AttributeName.re_wpj_handoff_outcome, outcome);
     }
 
@@ -1473,16 +1473,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         if (!isHttpsScheme(url)) {
             Logger.info(methodTag,
-                    "Re-WPJ routing: device CA request is not HTTPS; deferring to its earlier scheme-specific route.");
+                "Device CA request is not HTTPS; deferring to its earlier scheme-specific route.");
             return false;
         }
 
         final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
-        Logger.info(methodTag, "Re-WPJ routing: HTTPS device CA detected; WebCP in WebView enabled: "
+        Logger.info(methodTag, "HTTPS device CA detected; WebCP in WebView enabled: "
                 + isWebCpInWebViewEnabled);
         if (!isWebCpInWebViewEnabled) {
             Logger.info(methodTag,
-                    "Re-WPJ routing: HTTPS device CA is deferred to normal WebView loading.");
+                "HTTPS device CA is deferred to normal WebView loading.");
         }
         return isWebCpInWebViewEnabled;
     }
@@ -1503,7 +1503,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 return loadDeviceCaUrlInWebView(originalUrl, view);
             } else {
-                Logger.info(methodTag, "Re-WPJ routing: loading device CA request in browser.");
+                Logger.info(methodTag, "Loading device CA request in browser.");
                 SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
                 openLinkInBrowser(originalUrl);
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
@@ -1518,7 +1518,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final WebView view) {
         final String methodTag = TAG + ":loadDeviceCaUrlInWebView";
         try {
-            Logger.info(methodTag, "Re-WPJ routing: loading device CA request in WebView.");
+            Logger.info(methodTag, "Loading device CA request in WebView.");
             mInWebCpFlow = true;
             SpanExtension.current().setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
                 final String httpsUrl = toHttpsUrl(originalUrl);
