@@ -1216,9 +1216,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         if (!isWebCpInWebViewEnabled || !isNativeManagementAppHandoffEnabled) {
             recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
                     DeviceManagementOwner.NOT_EVALUATED.getTelemetryValue());
-            return loadDeviceCaUrl(url, view);
+            return loadDeviceCaUrlInWebViewOrBrowser(url, view);
         }
 
+        return routeDeviceCaRequestWithNativeHandoff(view, url);
+    }
+
+    private boolean routeDeviceCaRequestWithNativeHandoff(@NonNull final WebView view,
+                                                           @NonNull final String url) {
+        final String methodTag = TAG + ":routeDeviceCaRequestWithNativeHandoff";
         Logger.info(methodTag, "Checking for a supported management owner in the current Android user.");
         final String managementAppPackage = getDeviceManagementAppPackage();
         if (managementAppPackage != null) {
@@ -1246,7 +1252,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         Logger.info(methodTag, "No supported management owner is visible in the current Android user. "
                 + "Continuing Device CA routing.");
-        return loadDeviceCaUrl(url, view);
+        return loadDeviceCaUrlInWebViewOrBrowser(url, view);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -1432,8 +1438,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
     @VisibleForTesting
-    protected boolean loadDeviceCaUrl(@NonNull final String originalUrl, @NonNull final WebView view) {
-        final String methodTag = TAG + ":loadDeviceCaUrl";
+    protected boolean loadDeviceCaUrlInWebViewOrBrowser(@NonNull final String originalUrl,
+                                                        @NonNull final WebView view) {
+        final String methodTag = TAG + ":loadDeviceCaUrlInWebViewOrBrowser";
         if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
             return loadDeviceCaUrlInWebView(originalUrl, view);
         }
