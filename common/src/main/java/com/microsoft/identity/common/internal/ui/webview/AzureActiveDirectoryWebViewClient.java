@@ -1257,14 +1257,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
-        if (!isNativeDeviceCaManagementAppHandoffEnabled()) {
-            final boolean isDeviceCaRequest = url.contains(
-                AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
-            Logger.info(TAG + ":isDeviceCaRequest",
-                "Legacy device CA marker check result: " + isDeviceCaRequest);
-            return isDeviceCaRequest;
-        }
-
         final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
         Logger.info(TAG + ":isDeviceCaRequest",
