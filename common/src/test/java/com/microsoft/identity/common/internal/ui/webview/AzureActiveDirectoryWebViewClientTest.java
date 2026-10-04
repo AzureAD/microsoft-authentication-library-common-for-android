@@ -30,6 +30,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.CANCELLED;
 import static com.microsoft.identity.common.java.providers.RawAuthorizationResult.ResultCode.MDM_FLOW;
+import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
@@ -2202,11 +2203,15 @@ public class AzureActiveDirectoryWebViewClientTest {
         OTelUtility.setSpanFactory(spanFactory);
         final WebView mockWebView = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
+        final OnboardingTelemetryRecorder onboardingTelemetryRecorder =
+                Mockito.mock(OnboardingTelemetryRecorder.class);
+        webViewClient.setOnboardingTelemetryRecorder(onboardingTelemetryRecorder);
         Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
         Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
         webViewClient.processWebsiteRequest(mockWebView, TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
 
+        Mockito.verify(onboardingTelemetryRecorder).addStep(STEP_MDM_ENROLLMENT_STARTED);
         Mockito.verify(webViewClient, never()).getDeviceManagementAppPackage();
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
         Mockito.verify(webViewClient).loadDeviceCaUrl(
