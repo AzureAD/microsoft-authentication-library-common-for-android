@@ -94,7 +94,6 @@ import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryCo
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_BROKER_INSTALL_PROMPTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_COMPANY_PORTAL_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_GOOGLE_ENROLLMENT_STARTED;
-import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_INTUNE_REMEDIATION_LAUNCHED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_MDM_ENROLLMENT_STARTED;
 import static com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants.STEP_WEB_CP_ENROLLMENT_STARTED;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -1257,9 +1256,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 launchReWpjManagementApp(managementAppPackage);
                 Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.");
                 view.stopLoading();
-                recordOnboardingStep(COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
-                    ? STEP_COMPANY_PORTAL_LAUNCHED
-                    : STEP_INTUNE_REMEDIATION_LAUNCHED);
+                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)) {
+                    recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
+                }
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_HANDOFF_SUCCEEDED);
                 return true;
@@ -1390,9 +1389,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 recordReWpjAttribute(AttributeName.re_wpj_app_link_outcome,
                         RE_WPJ_APP_LINK_LAUNCH_SUCCEEDED);
                 view.stopLoading();
-                recordOnboardingStep(COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
-                    ? STEP_COMPANY_PORTAL_LAUNCHED
-                    : STEP_INTUNE_REMEDIATION_LAUNCHED);
+                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)) {
+                    recordOnboardingStep(STEP_COMPANY_PORTAL_LAUNCHED);
+                }
                 returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
                 recordReWpjOutcome(RE_WPJ_OUTCOME_NATIVE_FAILED_APP_LINK_SUCCEEDED);
                 return true;
