@@ -1149,9 +1149,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The URL representing the device CA request.
      */
     private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
-        Logger.info(TAG + ":processDeviceCaRequest",
-            "Creating ProcessWebCpRedirects span for device CA handling.");
-        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebCpRedirects.name());
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessDeviceCaRequest.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final boolean succeeded = processDeviceCaRequestWithinSpan(view, url);
             span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
