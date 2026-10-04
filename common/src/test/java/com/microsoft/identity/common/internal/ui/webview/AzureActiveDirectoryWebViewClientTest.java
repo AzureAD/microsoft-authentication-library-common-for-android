@@ -2648,14 +2648,19 @@ public class AzureActiveDirectoryWebViewClientTest {
         recorder.addBlockingError(
                 com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
                         .BLOCKING_ERROR_BROKER_INSTALL);
-        final String expectedHandoffStep = COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage)
-                ? com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                        .STEP_COMPANY_PORTAL_LAUNCHED
-                : com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
-                        .STEP_INTUNE_REMEDIATION_LAUNCHED;
+        final boolean isCompanyPortal = COMPANY_PORTAL_APP_PACKAGE_NAME.equals(managementAppPackage);
         Mockito.doAnswer(invocation -> {
-            assertTrue("Expected onboarding handoff step before MDM completion",
-                    onboardingHasStep(recorder, expectedHandoffStep));
+            final boolean hasCompanyPortalLaunchStep = onboardingHasStep(
+                    recorder,
+                    com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants
+                            .STEP_COMPANY_PORTAL_LAUNCHED);
+            if (isCompanyPortal) {
+                assertTrue("Expected Company Portal launch step before MDM completion",
+                        hasCompanyPortalLaunchStep);
+            } else {
+                assertFalse("Unexpected Company Portal launch step for Intune handoff",
+                        hasCompanyPortalLaunchStep);
+            }
             return null;
         }).when(mockCallback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
         final WebView mockWebView = Mockito.mock(WebView.class);
