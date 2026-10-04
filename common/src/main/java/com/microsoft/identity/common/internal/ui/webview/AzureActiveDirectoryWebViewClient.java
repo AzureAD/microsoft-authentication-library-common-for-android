@@ -1197,6 +1197,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         }
 
+        return routeDeviceCaRequest(view, url);
+    }
+
+    private boolean routeDeviceCaRequest(@NonNull final WebView view,
+                                         @NonNull final String url) {
+        final String methodTag = TAG + ":routeDeviceCaRequest";
         final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
         final boolean isNativeManagementAppHandoffEnabled =
             isNativeDeviceCaManagementAppHandoffEnabled();
