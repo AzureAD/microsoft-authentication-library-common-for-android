@@ -1175,6 +1175,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                                      @NonNull final String url) {
         final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
+
+        // Onboarding telemetry: device CA blocking redirect → MDM enrollment phase.
         recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED);
 
         if (shouldLaunchCompanyPortal()) {
