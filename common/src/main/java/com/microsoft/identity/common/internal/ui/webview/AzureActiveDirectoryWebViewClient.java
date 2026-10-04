@@ -1071,8 +1071,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodTag = TAG + ":processWebsiteRequest";
-        Logger.info(methodTag, "processWebsiteRequest started. In WebCP flow: "
-            + mInWebCpFlow);
         view.stopLoading();
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessWebsiteRequest.name());
         span.setAttribute(AttributeName.is_in_web_cp_flow.name(), mInWebCpFlow);
