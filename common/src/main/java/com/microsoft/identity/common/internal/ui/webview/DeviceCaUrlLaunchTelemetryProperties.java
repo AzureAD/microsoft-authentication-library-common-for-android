@@ -31,7 +31,7 @@ final class DeviceCaUrlLaunchTelemetryProperties {
     private DeviceCaUrlLaunchTelemetryProperties() {
     }
 
-    enum ManagementOwner {
+    enum DeviceManagementOwner {
         NOT_EVALUATED("not_evaluated"),
         DEVICE_POLICY_MANAGER_UNAVAILABLE("device_policy_manager_unavailable"),
         COMPANY_PORTAL_PROFILE("company_portal_profile_owner"),
@@ -41,7 +41,7 @@ final class DeviceCaUrlLaunchTelemetryProperties {
 
         private final String mTelemetryValue;
 
-        ManagementOwner(@NonNull final String telemetryValue) {
+        DeviceManagementOwner(@NonNull final String telemetryValue) {
             mTelemetryValue = telemetryValue;
         }
 
@@ -68,7 +68,7 @@ final class DeviceCaUrlLaunchTelemetryProperties {
         }
     }
 
-    enum RoutingOutcome {
+    enum DeviceCaUrlRoutingOutcome {
         LEGACY_COMPANY_PORTAL_SUCCEEDED("legacy_company_portal_launch_succeeded"),
         LEGACY_COMPANY_PORTAL_FAILED_WEB_CP("legacy_company_portal_launch_failed_webcp"),
         LEGACY_WEB_CP("legacy_webcp"),
@@ -89,7 +89,7 @@ final class DeviceCaUrlLaunchTelemetryProperties {
 
         private final String mTelemetryValue;
 
-        RoutingOutcome(@NonNull final String telemetryValue) {
+        DeviceCaUrlRoutingOutcome(@NonNull final String telemetryValue) {
             mTelemetryValue = telemetryValue;
         }
 
