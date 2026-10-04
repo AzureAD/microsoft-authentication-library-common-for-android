@@ -1180,9 +1180,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             + isWebCpInWebViewEnabled);
         recordDeviceCaAttribute(AttributeName.is_webcp_in_webview_enabled,
             isWebCpInWebViewEnabled);
-        final boolean isNativeManagementAppHandoffEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
-            .isFlightEnabled(CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF);
-        Logger.info(methodTag, "Native management-app handoff flight enabled: "
+        final boolean isNativeManagementAppHandoffEnabled =
+            isNativeDeviceCaManagementAppHandoffEnabled();
+        Logger.info(methodTag, "Native management-app handoff enabled for current process: "
             + isNativeManagementAppHandoffEnabled);
         recordDeviceCaAttribute(AttributeName.is_native_device_ca_management_app_handoff_enabled,
             isNativeManagementAppHandoffEnabled);
@@ -1263,8 +1263,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
-        if (!CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF)) {
+        if (!isNativeDeviceCaManagementAppHandoffEnabled()) {
             final boolean isDeviceCaRequest = url.contains(
                 AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
             Logger.info(TAG + ":isDeviceCaRequest",
@@ -1277,6 +1276,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.info(TAG + ":isDeviceCaRequest",
             "Parsed device CA marker check result: " + isDeviceCaRequest);
         return isDeviceCaRequest;
+    }
+
+    private boolean isNativeDeviceCaManagementAppHandoffEnabled() {
+        return ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())
+                && CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(
+                    CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF);
     }
 
     @Nullable

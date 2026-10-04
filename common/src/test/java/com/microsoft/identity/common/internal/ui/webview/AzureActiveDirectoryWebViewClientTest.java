@@ -2037,6 +2037,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testIsDeviceCaRequest_ParsesQueryParameterInAnyPosition() {
                 setNativeDeviceCaManagementAppHandoffFlight(true);
 
@@ -2047,6 +2048,14 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
         @Test
+        public void testIsDeviceCaRequest_BrokerlessFlightOn_UsesLegacySubstringMatching() {
+                setNativeDeviceCaManagementAppHandoffFlight(true);
+
+                assertTrue(mWebViewClient.isDeviceCaRequest(TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING));
+                assertFalse(mWebViewClient.isDeviceCaRequest(TEST_PARSED_BROWSER_DEVICE_CA_URL));
+        }
+
+        @Test
         public void testIsDeviceCaRequest_FlightOff_UsesLegacySubstringMatching() {
                 setNativeDeviceCaManagementAppHandoffFlight(false);
 
@@ -2055,18 +2064,21 @@ public class AzureActiveDirectoryWebViewClientTest {
         }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
         public void testProcessDeviceCaRequest_CompanyPortalOwner_LaunchesTargetedHandoff()
                         throws Exception {
         testProcessDeviceCaRequest_LaunchesTargetedHandoff(COMPANY_PORTAL_APP_PACKAGE_NAME);
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
         public void testProcessDeviceCaRequest_GoogleDpcOwner_LaunchesIntuneHandoff()
                         throws Exception {
         testProcessDeviceCaRequest_LaunchesTargetedHandoff(INTUNE_APP_PACKAGE_NAME);
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
         public void testHttpsDeviceCaRequest_RecordsNativeHandoffOnProcessDeviceCaRequest() {
                 setNativeDeviceCaManagementAppHandoffFlight(true);
         final String flowCorrelationId = "11111111-1111-4111-8111-111111111111";
@@ -2093,6 +2105,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testHttpsDeviceCaRequest_RuntimeFailure_ReturnsStandardErrorOnce() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2122,7 +2135,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testProcessDeviceCaRequest_BrokerlessWebCpOff_UsesLegacyFlow() {
+        public void testProcessDeviceCaRequest_BrokerlessFlightOn_UsesLegacyFlow() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
                 new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
@@ -2131,15 +2144,16 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = Mockito.spy(mWebViewClient);
         Mockito.doReturn(true).when(webViewClient).loadDeviceCaUrl(anyString(), any());
 
-        webViewClient.processWebsiteRequest(mockWebView, TEST_PARSED_BROWSER_DEVICE_CA_URL);
+        webViewClient.processWebsiteRequest(
+                mockWebView, TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING);
 
         Mockito.verify(webViewClient, never()).getDeviceManagementAppPackage();
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
         Mockito.verify(webViewClient).loadDeviceCaUrl(
-                TEST_PARSED_BROWSER_DEVICE_CA_URL, mockWebView);
+                TEST_LEGACY_BROWSER_DEVICE_CA_URL_SUBSTRING, mockWebView);
         assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
                 AttributeName.is_webcp_in_webview_enabled.name()));
-        assertEquals(Boolean.TRUE, spanFactory.captured().attribute(
+        assertEquals(Boolean.FALSE, spanFactory.captured().attribute(
                 AttributeName.is_native_device_ca_management_app_handoff_enabled.name()));
         assertEquals("not_evaluated", spanFactory.captured().attribute(
                 AttributeName.device_ca_management_owner.name()));
@@ -2243,6 +2257,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_CompatibilityCompanyPortalLaunchTelemetry() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2264,6 +2279,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_CompatibilityCompanyPortalFailureTelemetry() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2288,6 +2304,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_TargetedLaunchFails_BrowserAvailable_OpensHttpsUrl() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2324,6 +2341,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_NativeLaunchFails_AppLinkLaunchesTargetPackage() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2364,6 +2382,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_AppLinkLaunchFails_GenericHttpsFallbackSucceeds() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2416,6 +2435,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_TargetedLaunchPolicyDenied_BrowserFallbackCompletesOnce() {
                 setNativeDeviceCaManagementAppHandoffFlight(true);
         registerActivationHandler(
@@ -2447,6 +2467,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_TargetedLaunchFails_NoBrowser_LoadsHttpsUrlInWebView() {
                 setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2473,6 +2494,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_WebViewFallback_InitializesWebCpFlow() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2501,6 +2523,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_WebViewLoadFails_RecordsTerminalFailure() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2531,6 +2554,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testHttpsDeviceCaRequest_NativeLaunchAndWebViewLoadFail_ReturnsStandardErrorOnce() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2564,6 +2588,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_TargetedLaunchAndBrowserFail_LoadsHttpsUrlInWebView() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
@@ -2607,6 +2632,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
+        @Config(shadows = {ShadowProcessUtil.class})
     public void testProcessDeviceCaRequest_BrowserLaunchPolicyDenied_WebViewFallbackDoesNotComplete() {
                 setNativeDeviceCaManagementAppHandoffFlight(true);
         registerActivationHandler(
