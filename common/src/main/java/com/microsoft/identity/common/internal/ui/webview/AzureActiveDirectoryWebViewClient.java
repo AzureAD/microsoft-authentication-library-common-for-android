@@ -438,7 +438,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.info(methodTag,"Navigation starts with the redirect uri. It is a redirect request.");
                 processRedirectUrl(view, url);
             } else if (isWebsiteRequestUrl(formattedURL)) {
-                Logger.info(methodTag, "It is an external website request");
+                Logger.info(methodTag,"It is an external website request");
                 processWebsiteRequest(view, url);
             } else if (isInstallRequestUrl(formattedURL)) {
                 Logger.info(methodTag,"It is an install request");
@@ -486,9 +486,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processWebCpEnrollmentUrl(view, url);
             } else if (mInWebCpFlow && isWebCpAuthorizeUrl(url)) {
                 processWebCpAuthorize(view, url);
-            }  else if (isDeviceCaRequest(url) &&
-                    isHttpsScheme(url) &&
-                    isWebCpInWebviewFeatureEnabled(url)) {
+            }  else if (isDeviceCaRequest(url) && isHttpsScheme(url) && isWebCpInWebviewFeatureEnabled(url)) {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
