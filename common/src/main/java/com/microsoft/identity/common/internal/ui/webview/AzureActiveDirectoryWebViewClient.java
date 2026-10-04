@@ -1156,7 +1156,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 completeDeviceCaRequestWithError(view, "Failed to load device CA URL.");
             }
             return succeeded;
-        } catch (final RuntimeException throwable) {
+        } catch (final Throwable throwable) {
             Logger.error(TAG + ":processDeviceCaRequest",
                 "Unexpected failure while routing device CA request.", throwable);
             span.recordException(throwable);
@@ -1175,36 +1175,37 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":processDeviceCaRequest";
         Logger.info(methodTag, "This is a device CA request.");
 
+        if (shouldLaunchCompanyPortal()) {
+            // If CP is installed, redirect to CP.
+            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
+            //       CP is currently working on this.
+            //       Until that comes, we'll only handle this in ipphone.
+            try {
+                launchCompanyPortal();
+                recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
+                        DeviceManagementOwner.NOT_EVALUATED.getTelemetryValue());
+                recordDeviceCaRoutingOutcome(
+                        DeviceCaUrlRoutingOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED);
+                return true;
+            } catch (final Exception exception) {
+                Logger.warn(methodTag, "Failed to launch Company Portal; continuing Device CA routing.");
+                recordDeviceCaException(exception);
+            }
+        }
+
         final boolean isWebCpInWebViewEnabled = isWebCpInWebviewFeatureEnabled(url);
-        Logger.info(methodTag, "Device CA WebView routing eligible: "
-            + isWebCpInWebViewEnabled);
-        recordDeviceCaAttribute(AttributeName.is_webcp_in_webview_enabled,
-            isWebCpInWebViewEnabled);
         final boolean isNativeManagementAppHandoffEnabled =
             isNativeDeviceCaManagementAppHandoffEnabled();
-        Logger.info(methodTag, "Native management-app handoff enabled for current process: "
+        Logger.info(methodTag, "Device CA routing eligibility: WebCP in WebView="
+            + isWebCpInWebViewEnabled + ", native management-app handoff="
             + isNativeManagementAppHandoffEnabled);
+        recordDeviceCaAttribute(AttributeName.is_webcp_in_webview_enabled,
+            isWebCpInWebViewEnabled);
         recordDeviceCaAttribute(AttributeName.is_native_device_ca_management_app_handoff_enabled,
             isNativeManagementAppHandoffEnabled);
         if (!isWebCpInWebViewEnabled || !isNativeManagementAppHandoffEnabled) {
             recordDeviceCaAttribute(AttributeName.device_ca_management_owner,
                     DeviceManagementOwner.NOT_EVALUATED.getTelemetryValue());
-            if (shouldLaunchCompanyPortal()) {
-                // If CP is installed, redirect to CP.
-                // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-                //       CP is currently working on this.
-                //       Until that comes, we'll only handle this in ipphone.
-                try {
-                    launchCompanyPortal();
-                    recordDeviceCaRoutingOutcome(
-                            DeviceCaUrlRoutingOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED);
-                    return true;
-                } catch (final Exception ex) {
-                    Logger.warn(methodTag, "Failed to launch Company Portal; continuing Device CA routing.");
-                    recordDeviceCaException(ex);
-                }
-            }
-
             return loadDeviceCaUrl(url, view);
         }
 
@@ -1234,30 +1235,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
 
         Logger.info(methodTag, "No supported management owner is visible in the current Android user. "
-                + "Checking the existing Company Portal compatibility path.");
-        if (shouldLaunchCompanyPortal()) {
-            Logger.info(methodTag, "Company Portal compatibility conditions are satisfied. Attempting launch.");
-            // If CP is installed, redirect to CP.
-            // TODO: Until we get a signal from eSTS that CP is the MDM app, we cannot assume that.
-            //       CP is currently working on this.
-            //       Until that comes, we'll only handle this in ipphone.
-            try {
-                launchCompanyPortal();
-                Logger.info(methodTag, "Company Portal compatibility launch started.");
-                recordDeviceCaRoutingOutcome(
-                    DeviceCaUrlRoutingOutcome.COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED);
-                return true;
-            } catch (final Exception ex) {
-                Logger.error(methodTag,
-                        "Failed to launch Company Portal through the compatibility path; continuing Device CA routing.",
-                        ex);
-                recordDeviceCaException(ex);
-            }
-        } else {
-            Logger.info(methodTag, "Company Portal compatibility conditions are not satisfied.");
-        }
-
-        Logger.info(methodTag, "No native handoff was started; continuing Device CA routing.");
+                + "Continuing Device CA routing.");
         return loadDeviceCaUrl(url, view);
     }
 

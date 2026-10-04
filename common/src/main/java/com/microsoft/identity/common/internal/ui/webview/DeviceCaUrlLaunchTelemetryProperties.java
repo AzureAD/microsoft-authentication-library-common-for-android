@@ -74,7 +74,6 @@ final class DeviceCaUrlLaunchTelemetryProperties {
         NATIVE_FAILED_APP_LINK_SUCCEEDED("native_handoff_failed_app_link_fallback_succeeded"),
         NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED(
                 "native_handoff_app_link_failed_generic_https_fallback_succeeded"),
-        COMPATIBILITY_COMPANY_PORTAL_SUCCEEDED("compatibility_company_portal_launch_succeeded"),
         BROWSER_LAUNCH_SUCCEEDED("browser_launch_succeeded"),
         BROWSER_LAUNCH_FAILED("browser_launch_failed"),
         WEBVIEW_LOAD_SUCCEEDED("webview_load_succeeded"),

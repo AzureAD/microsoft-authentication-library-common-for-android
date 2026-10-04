@@ -2163,13 +2163,11 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     @Config(shadows = {ShadowProcessUtil.class})
-    public void testProcessDeviceCaRequest_AuthServiceTenantWebCpOff_UsesLegacyCompanyPortal() {
+    public void testProcessDeviceCaRequest_CompanyPortalLaunchPrecedesRoutingGates() {
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(
                 CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF))
                 .thenReturn(true);
-        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW))
-                .thenReturn(false);
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
@@ -2184,9 +2182,14 @@ public class AzureActiveDirectoryWebViewClientTest {
                     Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
         }
 
-        Mockito.verify(mockFlightsProvider).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
+        Mockito.verify(mockFlightsProvider, never()).isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW);
         Mockito.verify(webViewClient, never()).getDeviceManagementAppPackage();
         Mockito.verify(webViewClient, never()).launchReWpjManagementApp(anyString());
+        assertNull(spanFactory.captured().attribute(AttributeName.is_webcp_in_webview_enabled.name()));
+        assertNull(spanFactory.captured().attribute(
+                AttributeName.is_native_device_ca_management_app_handoff_enabled.name()));
+        assertEquals("not_evaluated", spanFactory.captured().attribute(
+                AttributeName.device_ca_management_owner.name()));
         assertEquals("legacy_company_portal_launch_succeeded",
                 spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
     }
@@ -2258,7 +2261,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
         @Config(shadows = {ShadowProcessUtil.class})
-    public void testProcessDeviceCaRequest_CompatibilityCompanyPortalLaunchTelemetry() {
+        public void testProcessDeviceCaRequest_CompanyPortalLaunchPrecedesNativeRouting() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
                 new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
@@ -2273,14 +2276,15 @@ public class AzureActiveDirectoryWebViewClientTest {
                     Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
         }
 
-        assertEquals("compatibility_company_portal_launch_succeeded",
+        Mockito.verify(webViewClient, never()).getDeviceManagementAppPackage();
+        assertEquals("legacy_company_portal_launch_succeeded",
                 spanFactory.captured().attribute(AttributeName.device_ca_routing_outcome.name()));
         assertEquals(0, spanFactory.captured().recordedExceptionCount());
     }
 
     @Test
         @Config(shadows = {ShadowProcessUtil.class})
-    public void testProcessDeviceCaRequest_CompatibilityCompanyPortalFailureTelemetry() {
+        public void testProcessDeviceCaRequest_CompanyPortalFailureContinuesNativeRouting() {
         setNativeDeviceCaManagementAppHandoffFlight(true);
         final CapturingSpanFactory spanFactory =
                 new CapturingSpanFactory(SpanName.ProcessDeviceCaRequest.name());
@@ -2298,6 +2302,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                     Mockito.mock(WebView.class), TEST_PARSED_BROWSER_DEVICE_CA_URL);
         }
 
+        Mockito.verify(webViewClient).getDeviceManagementAppPackage();
         assertNull(spanFactory.captured().attribute(
                 AttributeName.device_ca_routing_outcome.name()));
         assertEquals(1, spanFactory.captured().recordedExceptionCount());
