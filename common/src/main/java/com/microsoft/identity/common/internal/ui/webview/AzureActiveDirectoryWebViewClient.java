@@ -1215,10 +1215,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
             return succeeded;
         } catch (final Throwable throwable) {
-                Logger.error(TAG + ":processDeviceCaRequest",
+            Logger.error(TAG + ":processDeviceCaRequest",
                     "Unexpected failure while routing device CA request.", throwable);
             span.recordException(throwable);
-                span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
+            span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
                     DeviceCaUrlRoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
             span.setStatus(StatusCode.ERROR);
             completeDeviceCaRequestWithError(view, throwable.getMessage());
