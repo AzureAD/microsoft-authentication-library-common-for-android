@@ -360,7 +360,11 @@ internal class DeviceCaRequestRouter(private val host: Host) {
     }
 
     private fun toHttpsUrl(url: String): String =
-        url.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, HTTPS_URL_PREFIX)
+        if (url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX)) {
+            HTTPS_URL_PREFIX + url.removePrefix(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX)
+        } else {
+            url
+        }
 
     private companion object {
         private val TAG = DeviceCaRequestRouter::class.java.simpleName
