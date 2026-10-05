@@ -46,15 +46,17 @@ import com.microsoft.identity.common.logging.Logger
 
 /** Routes Device-CA requests to the management app, browser, or current WebView. */
 internal class DeviceCaRequestRouter(private val host: Host) {
+    internal sealed class RoutingResult {
+        data object Completed : RoutingResult()
+        data class Failed(val throwable: Throwable) : RoutingResult()
+    }
+
     internal interface Host {
         fun activity(): Activity
         fun isRunningOnAuthService(): Boolean
         fun isFlightEnabled(flight: CommonFlight): Boolean
         fun launchCompanyPortal()
         fun isWebCpInWebViewEnabled(url: String): Boolean
-        fun getDeviceManagementAppPackage(): String?
-        fun launchReWpjManagementApp(managementAppPackage: String)
-        fun loadDeviceCaUrlInWebViewOrBrowser(url: String, view: WebView): Boolean
         fun openLinkInBrowser(url: String)
         fun returnMdmFlow()
         fun recordOnboardingStep(stepId: String)
@@ -62,7 +64,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         fun loadUrlWithRequestHeaders(view: WebView, url: String)
     }
 
-    fun route(view: WebView, url: String): Boolean {
+    fun route(view: WebView, url: String): RoutingResult {
         val methodTag = "$TAG:route"
         Logger.info(methodTag, "This is a device CA request.")
         host.recordOnboardingStep(STEP_MDM_ENROLLMENT_STARTED)
@@ -75,7 +77,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
                     DeviceManagementOwner.NOT_EVALUATED.telemetryValue,
                 )
                 recordRoutingOutcome(DeviceCaUrlRoutingOutcome.LEGACY_COMPANY_PORTAL_SUCCEEDED)
-                return true
+                return RoutingResult.Completed
             } catch (exception: Exception) {
                 Logger.warn(methodTag, "Failed to launch Company Portal; continuing Device CA routing.")
                 SpanExtension.current().recordException(exception)
@@ -85,7 +87,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         return routeAfterLegacyCompanyPortal(view, url)
     }
 
-    private fun routeAfterLegacyCompanyPortal(view: WebView, url: String): Boolean {
+    private fun routeAfterLegacyCompanyPortal(view: WebView, url: String): RoutingResult {
         val methodTag = "$TAG:routeAfterLegacyCompanyPortal"
         val isWebCpInWebViewEnabled = host.isWebCpInWebViewEnabled(url)
         val isNativeHandoffEnabled = isNativeManagementAppHandoffEnabled()
@@ -107,23 +109,23 @@ internal class DeviceCaRequestRouter(private val host: Host) {
                 AttributeName.device_ca_management_owner.name,
                 DeviceManagementOwner.NOT_EVALUATED.telemetryValue,
             )
-            return host.loadDeviceCaUrlInWebViewOrBrowser(url, view)
+            return loadInWebViewOrBrowser(url, view)
         }
 
         return routeWithNativeHandoff(view, url)
     }
 
-    private fun routeWithNativeHandoff(view: WebView, url: String): Boolean {
+    private fun routeWithNativeHandoff(view: WebView, url: String): RoutingResult {
         val methodTag = "$TAG:routeWithNativeHandoff"
         Logger.info(methodTag, "Checking for a supported management owner in the current Android user.")
-        val managementAppPackage = host.getDeviceManagementAppPackage()
+        val managementAppPackage = resolveDeviceManagementAppPackage()
         if (managementAppPackage == null) {
             Logger.info(
                 methodTag,
                 "No supported management owner is visible in the current Android user. " +
                     "Continuing Device CA routing.",
             )
-            return host.loadDeviceCaUrlInWebViewOrBrowser(url, view)
+            return loadInWebViewOrBrowser(url, view)
         }
 
         Logger.info(
@@ -132,13 +134,13 @@ internal class DeviceCaRequestRouter(private val host: Host) {
                 managementAppPackage,
         )
         return try {
-            host.launchReWpjManagementApp(managementAppPackage)
+            launchReWpjManagementApp(managementAppPackage)
             Logger.info(methodTag, "Targeted re-WPJ handoff started. Stopping WebView and returning MDM_FLOW.")
             view.stopLoading()
             recordCompanyPortalLaunch(managementAppPackage)
             host.returnMdmFlow()
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.NATIVE_HANDOFF_SUCCEEDED)
-            true
+            RoutingResult.Completed
         } catch (exception: RuntimeException) {
             if (exception !is ActivityNotFoundException && exception !is SecurityException) {
                 throw exception
@@ -190,7 +192,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         host.activity().startActivity(intent)
     }
 
-    fun loadInWebViewOrBrowser(originalUrl: String, view: WebView): Boolean {
+    fun loadInWebViewOrBrowser(originalUrl: String, view: WebView): RoutingResult {
         val methodTag = "$TAG:loadInWebViewOrBrowser"
         if (host.isWebCpInWebViewEnabled(originalUrl)) {
             return loadInWebView(originalUrl, view)
@@ -202,12 +204,12 @@ internal class DeviceCaRequestRouter(private val host: Host) {
             host.openLinkInBrowser(originalUrl)
             host.returnMdmFlow()
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.BROWSER_LAUNCH_SUCCEEDED)
-            true
+            RoutingResult.Completed
         } catch (throwable: Throwable) {
             Logger.error(methodTag, "Failed to launch device CA URL in browser.", throwable)
             SpanExtension.current().recordException(throwable)
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.BROWSER_LAUNCH_FAILED)
-            false
+            RoutingResult.Failed(throwable)
         }
     }
 
@@ -215,12 +217,12 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         view: WebView,
         originalUrl: String,
         managementAppPackage: String,
-    ): Boolean {
+    ): RoutingResult {
         val httpsUrl = toHttpsUrl(originalUrl)
         if (tryLaunchAppLink(view, httpsUrl, managementAppPackage) ||
             tryLaunchGenericHttps(view, httpsUrl)
         ) {
-            return true
+            return RoutingResult.Completed
         }
 
         Logger.info("$TAG:fallbackToAppLinkGenericHttpsOrWebView", "Loading the HTTPS fallback in the MSAL WebView.")
@@ -293,7 +295,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         }
     }
 
-    private fun loadInWebView(originalUrl: String, view: WebView): Boolean {
+    private fun loadInWebView(originalUrl: String, view: WebView): RoutingResult {
         val methodTag = "$TAG:loadInWebView"
         return try {
             host.markWebCpFlowStarted()
@@ -313,12 +315,12 @@ internal class DeviceCaRequestRouter(private val host: Host) {
                 host.loadUrlWithRequestHeaders(view, httpsUrl)
             }
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_SUCCEEDED)
-            true
+            RoutingResult.Completed
         } catch (throwable: Throwable) {
             Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable)
             SpanExtension.current().recordException(throwable)
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_FAILED)
-            false
+            RoutingResult.Failed(throwable)
         }
     }
 

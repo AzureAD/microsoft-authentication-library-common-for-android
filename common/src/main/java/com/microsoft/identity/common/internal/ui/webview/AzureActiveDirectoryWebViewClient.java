@@ -246,7 +246,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     @NonNull
-    private DeviceCaRequestRouter createDeviceCaRequestRouter() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    DeviceCaRequestRouter createDeviceCaRequestRouter() {
         return new DeviceCaRequestRouter(new DeviceCaRequestRouter.Host() {
             @NonNull
             @Override
@@ -272,24 +273,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             @Override
             public boolean isWebCpInWebViewEnabled(@NonNull final String url) {
                 return isWebCpInWebviewFeatureEnabled(url);
-            }
-
-            @Nullable
-            @Override
-            public String getDeviceManagementAppPackage() {
-                return AzureActiveDirectoryWebViewClient.this.getDeviceManagementAppPackage();
-            }
-
-            @Override
-            public void launchReWpjManagementApp(@NonNull final String managementAppPackage) {
-                AzureActiveDirectoryWebViewClient.this.launchReWpjManagementApp(managementAppPackage);
-            }
-
-            @Override
-            public boolean loadDeviceCaUrlInWebViewOrBrowser(@NonNull final String url,
-                                                              @NonNull final WebView view) {
-                return AzureActiveDirectoryWebViewClient.this
-                        .loadDeviceCaUrlInWebViewOrBrowser(url, view);
             }
 
             @Override
@@ -1220,18 +1203,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean processDeviceCaRequest(@NonNull final WebView view, @NonNull final String url) {
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessDeviceCaRequest.name());
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            final boolean succeeded = createDeviceCaRequestRouter().route(view, url);
+            final DeviceCaRequestRouter.RoutingResult routingResult =
+                    createDeviceCaRequestRouter().route(view, url);
+            final boolean succeeded = routingResult instanceof
+                    DeviceCaRequestRouter.RoutingResult.Completed;
             span.setStatus(succeeded ? StatusCode.OK : StatusCode.ERROR);
-            if (!succeeded) {
-                completeDeviceCaRequestWithError(view, "Failed to load device CA URL.");
+            if (routingResult instanceof DeviceCaRequestRouter.RoutingResult.Failed) {
+                final Throwable throwable =
+                        ((DeviceCaRequestRouter.RoutingResult.Failed) routingResult).getThrowable();
+                completeDeviceCaRequestWithError(view, throwable.getMessage());
             }
             return succeeded;
         } catch (final Throwable throwable) {
-            Logger.error(TAG + ":processDeviceCaRequest",
-                "Unexpected failure while routing device CA request.", throwable);
+                Logger.error(TAG + ":processDeviceCaRequest",
+                    "Unexpected failure while routing device CA request.", throwable);
             span.recordException(throwable);
-            span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
-                DeviceCaUrlRoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
+                span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
+                    DeviceCaUrlRoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
             span.setStatus(StatusCode.ERROR);
             completeDeviceCaRequestWithError(view, throwable.getMessage());
             return false;
@@ -1242,22 +1230,21 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     protected boolean isDeviceCaRequest(@NonNull final String url) {
-        final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
+        final String methodTag = TAG + ":isDeviceCaRequest";
+        try {
+            final boolean isDeviceCaRequest = DEVICE_CA_QUERY_PARAMETER_VALUE.equals(
                 Uri.parse(toHttpsUrl(url)).getQueryParameter(DEVICE_CA_QUERY_PARAMETER));
-        Logger.info(TAG + ":isDeviceCaRequest",
-            "Parsed device CA marker check result: " + isDeviceCaRequest);
-        return isDeviceCaRequest;
-    }
-
-    @Nullable
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected String getDeviceManagementAppPackage() {
-        return createDeviceCaRequestRouter().resolveDeviceManagementAppPackage();
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected void launchReWpjManagementApp(@NonNull final String managementAppPackage) {
-        createDeviceCaRequestRouter().launchReWpjManagementApp(managementAppPackage);
+            Logger.info(methodTag, "Parsed device CA marker check result: " + isDeviceCaRequest);
+            return isDeviceCaRequest;
+        } catch (final RuntimeException exception) {
+            Logger.warn(methodTag,
+                "Device CA marker query parsing failed; using the legacy substring parser."
+                    + " Exception: " + exception.getClass().getSimpleName());
+            SpanExtension.current().setAttribute(
+                AttributeName.device_ca_legacy_marker_parser_fallback_used.name(), true);
+            return url.contains(
+                AuthenticationConstants.Broker.BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER);
+        }
     }
 
     @NonNull
@@ -1267,13 +1254,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean isHttpsScheme(@NonNull final String url) {
         return url.startsWith(AuthenticationConstants.Broker.HTTPS_SCHEME);
-    }
-
-    // Loads the device CA URL in the WebView if the flight is enabled, otherwise opens it in the browser.
-    @VisibleForTesting
-    protected boolean loadDeviceCaUrlInWebViewOrBrowser(@NonNull final String originalUrl,
-                                                        @NonNull final WebView view) {
-        return createDeviceCaRequestRouter().loadInWebViewOrBrowser(originalUrl, view);
     }
 
     private void completeDeviceCaRequestWithError(@NonNull final WebView view,

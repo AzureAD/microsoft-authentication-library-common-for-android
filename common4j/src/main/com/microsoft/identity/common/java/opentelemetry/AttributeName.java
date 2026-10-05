@@ -539,6 +539,11 @@ public enum AttributeName {
     device_ca_routing_outcome,
 
     /**
+     * Records whether Device-CA marker detection fell back to the legacy substring parser.
+     */
+    device_ca_legacy_marker_parser_fallback_used,
+
+    /**
      * Records whether the package-targeted management-app HTTPS App Link had no handler, launched, or failed.
      */
     device_ca_management_app_link_outcome,
