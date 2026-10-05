@@ -1,5 +1,6 @@
 vNext
 ----------
+- [PATCH] Gate silent-caller UID/package ownership validation on both VALIDATE_SILENT_CALLER and the new default-off ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION flight, and add a trusted broker-passthrough validation entry point that retains redirect and request validation (AB#3751475)
 - [PATCH] Enforce authorize-only Device-CA credential forwarding by withholding original request headers from Device-CA WebView loads by default, with explicit ECS disablement as the rollback path (AB#3766458)
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
 

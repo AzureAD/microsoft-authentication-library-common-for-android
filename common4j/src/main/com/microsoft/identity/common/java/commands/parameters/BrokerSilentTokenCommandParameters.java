@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.SilentCallerValidationFlights;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -83,6 +84,26 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     @Override
     public void validate() throws ArgumentException, ClientException {
+        validateInternal(SilentCallerValidationFlights.isCompleteSolutionEnabled());
+    }
+
+    /**
+     * Validates a silent request forwarded by a broker that has already authenticated its immediate caller.
+     *
+     * <p>This entry point skips only the original caller's UID-to-package ownership lookup, which may
+     * not be visible to the forwarding broker. The caller must establish trust in the immediate
+     * forwarding broker before invoking this method. All other silent-request and redirect validation
+     * remains in effect.
+     *
+     * @throws ArgumentException if any silent-request or redirect validation fails.
+     * @throws ClientException if another client-side validation fails.
+     */
+    public void validateForTrustedBrokerPassthrough() throws ArgumentException, ClientException {
+        validateInternal(false);
+    }
+
+    private void validateInternal(final boolean validateCallerUidOwnership)
+            throws ArgumentException, ClientException {
         if (callerUid == 0) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
@@ -129,19 +150,11 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
         }
-        // SECURITY (AB#3687466): reject any silent request whose self-reported caller package (from the
-        // untrusted request bundle) is not owned by the kernel-attested calling uid, before the redirect-URI
-        // check runs against the verified caller. getCallerUid() is the Binder-attested uid: every silent
-        // entry point overwrites CALLER_INFO_UID with Binder.getCallingUid() before the parameters are
-        // built. When the VALIDATE_SILENT_CALLER flight is enabled (ECS-backed, secure-by-default
-        // kill-switch), we use the caller-validating isValidCallingApp overload, which enforces uid->package
-        // ownership first (throwing unknown_caller / ClientException) and then applies the redirect-URI
-        // check. With the flight off we fall back to the redirect-only two-argument overload (pre-fix
-        // behavior). The uid->package resolution lives behind IPlatformUtil (mirroring
-        // isValidCallingAppForWebApps).
+        // The combined flight gate keeps the production redirect-only behavior until both this
+        // process's caller-validation and passthrough compatibility flights are enabled. The trusted
+        // passthrough entry point disables only the UID-to-package ownership lookup.
         final boolean isCallerValid;
-        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                .isFlightEnabled(CommonFlight.VALIDATE_SILENT_CALLER)) {
+        if (validateCallerUidOwnership) {
             isCallerValid = platformUtil.isValidCallingApp(
                     getRedirectUri(), getCallerPackageName(), getCallerUid());
         } else {
