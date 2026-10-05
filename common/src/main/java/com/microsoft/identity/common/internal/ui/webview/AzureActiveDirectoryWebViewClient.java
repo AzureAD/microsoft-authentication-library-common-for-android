@@ -1221,7 +1221,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             span.setAttribute(AttributeName.device_ca_routing_outcome.name(),
                     DeviceCaUrlRoutingOutcome.UNEXPECTED_ROUTING_FAILURE.getTelemetryValue());
             span.setStatus(StatusCode.ERROR);
-            completeDeviceCaRequestWithError(view, throwable.getMessage());
+            final String errorMessage = throwable.getMessage();
+            completeDeviceCaRequestWithError(view,
+                    errorMessage != null ? errorMessage : throwable.toString());
             return false;
         } finally {
             span.end();

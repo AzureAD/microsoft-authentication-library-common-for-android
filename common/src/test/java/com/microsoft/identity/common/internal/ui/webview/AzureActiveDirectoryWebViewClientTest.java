@@ -2041,7 +2041,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final AzureActiveDirectoryWebViewClient webViewClient = spyWithRouter(
                 createWebViewClient(mActivity, mockCallback));
         Mockito.doReturn(true).when(webViewClient).isWebCpInWebviewFeatureEnabled(anyString());
-        Mockito.doThrow(new IllegalStateException("Owner lookup failed"))
+        Mockito.doThrow(new IllegalStateException())
                 .when(routerFor(webViewClient)).resolveDeviceManagementAppPackage();
 
         webViewClient.shouldOverrideUrlLoading(mockWebView, TEST_PARSED_HTTPS_DEVICE_CA_URL);
@@ -2050,6 +2050,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 .onChallengeResponseReceived(resultCaptor.capture());
         assertEquals(RawAuthorizationResult.ResultCode.NON_OAUTH_ERROR,
                 resultCaptor.getValue().getResultCode());
+        assertTrue(resultCaptor.getValue().getException().getMessage()
+                .contains(IllegalStateException.class.getSimpleName()));
         Mockito.verify(mockWebView, Mockito.atLeastOnce()).stopLoading();
         assertEquals(StatusCode.ERROR, spanFactory.captured().statusCode());
         assertEquals("unexpected_routing_failure", spanFactory.captured().attribute(
