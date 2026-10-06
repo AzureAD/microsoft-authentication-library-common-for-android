@@ -558,8 +558,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
         try {
-            final String targetUrl = request.getUrl().toString();
+            final Uri targetUri = request.getUrl();
+            final String targetUrl = targetUri.toString();
+            final String destinationHost = targetUri.getHost();
             final String currentPageUrl = mainWebView.getUrl();
+
+            if (!StringUtil.isNullOrEmpty(destinationHost)) {
+                span.setAttribute(
+                        AttributeName.target_blank_navigation_destination_host.name(),
+                        destinationHost);
+            }
 
             if (targetUrl == null) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);

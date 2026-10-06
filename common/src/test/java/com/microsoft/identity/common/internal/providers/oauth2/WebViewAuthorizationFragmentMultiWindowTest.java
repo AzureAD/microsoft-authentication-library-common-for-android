@@ -78,6 +78,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     private static final String HTTPS_TARGET_URL = "https://terms.example.com/privacy";
     private static final String HTTP_TARGET_URL = "http://terms.example.com/privacy";
     private static final String OPENID_VC_TARGET_URL = "openid-vc://authorize?request_uri=https%3A%2F%2Fexample.com";
+    private static final String HOSTLESS_TARGET_URL = "custom-scheme:path";
 
     @Before
     public void setUp() throws Exception {
@@ -162,6 +163,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         // Should load URL inline in the main WebView
         verify(mainWebView).loadUrl(eq(HTTPS_TARGET_URL));
         verify(span).setAttribute(
+                eq(AttributeName.target_blank_navigation_destination_host.name()),
+                eq("terms.example.com"));
+        verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE));
         verify(span).setStatus(StatusCode.OK);
@@ -201,6 +205,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
         verify(webViewClient).handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL);
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span).setAttribute(
+            eq(AttributeName.target_blank_navigation_destination_host.name()),
+            eq("authorize"));
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC));
@@ -248,6 +255,25 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR));
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_hostlessUrl_omitsDestinationHost() {
+        final WebView mainWebView = spy(new WebView(mContext));
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        final WebResourceRequest request = mockRequest(HOSTLESS_TARGET_URL);
+
+        mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
+
+        verify(span, never()).setAttribute(
+                eq(AttributeName.target_blank_navigation_destination_host.name()),
+                ArgumentMatchers.anyString());
+        verify(span).setAttribute(
+                eq(AttributeName.target_blank_navigation_route.name()),
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
         verify(span).setStatus(StatusCode.OK);
         verify(span).end();
     }

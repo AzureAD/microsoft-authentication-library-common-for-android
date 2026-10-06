@@ -811,6 +811,11 @@ public enum AttributeName {
      */
     target_blank_navigation_route,
 
+    /**
+     * The destination host for a target=_blank URL intercepted by onCreateWindow.
+     */
+    target_blank_navigation_destination_host,
+
     //endregion
 
     //region x-ms-clientdata server telemetry attributes
