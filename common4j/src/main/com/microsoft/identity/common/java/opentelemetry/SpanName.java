@@ -86,6 +86,11 @@ public enum SpanName {
     InstallCertActivity,
 
     /**
+     * Span name for caller attribution at the legacy install-certificate deep-link route.
+     */
+    InstallCertDeepLinkActivity,
+
+    /**
      * Span name for fetching initial ECS flight configurations.
      */
     EcsFlightsFetchConfigs,
