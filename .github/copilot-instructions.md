@@ -181,6 +181,8 @@ Check safe defaults; flag recorded securely; no code executes insecure branch be
 ## 3. Concurrency & Thread Safety (Security Intersection Where Applicable)
 Escalate to Security if a race compromises auth, tokens, or sensitive data integrity.
 
+Route changed, added, removed, or moved `synchronized` blocks/methods, Kotlin `@Synchronized`, explicit `Lock`/`withLock`/`Mutex`, and changes to lock expressions, helpers, receivers, or shared-state access paths to deeper concurrency analysis. Include refactors whose diff has no new locking tokens. The presence of synchronization elsewhere in a file is not a finding or a reason to audit unrelated code.
+
 ### 3.1 What to Flag (Non-Security)
 - Unsynchronized mutable shared state accessed across threads/coroutine contexts (lists/maps/caches/flags).
 - Lazy init races (double-checked locking lacking `volatile` / `@Volatile`).
@@ -202,16 +204,27 @@ Escalate to Security if a race compromises auth, tokens, or sensitive data integ
 - Data exposure via inconsistent logging state.
 
 ### 3.3 Patterns & Fixes
-Bad (data race):
+Bad when callers share a mutable map without a common lock (data race and non-atomic check-then-act):
 ```kotlin
 if (cache[key] == null) {
     cache[key] = computeValue()
 }
 ```
-Good:
+`MutableMap.getOrPut` is not synchronized and does not fix this race. The concurrent-map overload can invoke its initializer more than once across competing calls, even when another call installs the value. Verify the receiver's actual type and overload. Individually thread-safe map operations do not make a compound invariant atomic.
+
+Good under these explicit constraints: a safely published instance owns the map and one stable lock; **all** reads, writes, removals, and iterations use that lock, and the map does not escape. The illustrative initializer `key.length` is bounded, pure, nonblocking, and non-null; the returned `Int` is immutable.
 ```kotlin
-val value = cache.getOrPut(key) { computeValue() }
+private class LengthCache {
+    private val cacheLock = Any()
+    private val cache = mutableMapOf<String, Int>()
+
+    fun lengthFor(key: String): Int = synchronized(cacheLock) {
+        cache[key] ?: key.length.also { cache[key] = it }
+    }
+}
 ```
+Do not replace this initializer with blocking work or move a state-dependent initialization outside the lock without preserving the invariant. Check the concrete concurrent-map implementation's contract before suggesting an alternative API.
+
 (Java volatile double-checked & Kotlin lazy examples omitted here for brevity; use standard safe patterns.)
 
 ### 3.4 Coroutine Best Practices
@@ -237,6 +250,33 @@ Do NOT flag:
 - Intentional thread confinement (single-thread dispatcher/executor) clearly enforced.
 - Read-only data after construction (effectively immutable).
 - Generated code with known synchronization wrappers.
+- Consistent acquisition order across reachable paths, or same-monitor JVM reentry, without a demonstrated conflicting path.
+- Stable private `final`/`val` monitors used by all relevant accesses; non-final syntax alone is not a concurrency defect.
+- Helper extraction retaining the same monitor for every caller, or bounded pure computation on thread-owned inputs moved outside a lock while preserving the protected invariant and ordering.
+
+### 3.8 Lock Identity and Before/After Analysis
+- Trace the actual monitor object and aliases, not just lock variable names: an instance synchronized method locks `this`, while a static synchronized method locks the declaring class's `Class` object. Resolve the actual JVM owner for Kotlin `@Synchronized`, including object/companion and static bridges.
+- Compare before/after held-lock sets at each affected shared read/write and call boundary. Trace relevant caller/callee acquisitions, release paths, receiver changes, state ownership, visibility, and concurrent reachability. Follow concrete callees to establish lock order, not to speculate about unknown implementations; state any unresolved call/alias boundary and do not claim a proven deadlock beyond it.
+- Distinguish JVM monitor reentry on the same thread from non-reentrant Kotlin `Mutex`: reacquiring a held mutex before release can self-suspend, or fail for a repeated owner token. For explicit `Lock`, check its actual reentrancy contract and paired release (`finally`/`withLock`); `synchronized(lock)` does not acquire the lock used by `lock.lock()`.
+- Nested locking is not automatically deadlock. For an order-inversion finding, show concurrently reachable paths on the same two distinct locks: T1 holds A and waits for B while T2 holds B and waits for A (ABBA). Both paths using A then B, or reentering A on one thread, are counterexamples unless another concrete conflicting path exists.
+
+### 3.9 Monitor Stability
+- Flag actual concurrent reference replacement or inconsistent protection, not a missing `final`/`val` alone. Example: T1 holds the old object from `synchronized(lock)`, a concurrent assignment replaces `lock`, and T2 enters on the new object to modify the same state. Even `volatile` replacement does not make those monitors identical.
+- Prefer one stable private monitor with all relevant accesses guarded by it. A final reference alone is not proof of safety: different instances' final locks do not protect shared static state, and unguarded accesses still race. A non-final field with verified stable identity and consistent protection is not a finding.
+
+### 3.10 Critical-Section Scope
+- Flag broad/unnecessary critical sections only with a concrete blocking or contention path and a safe narrowing that preserves invariants, atomicity, visibility, ordering, snapshot consistency, and resource lifetime. Do not remove a lock for style or move guarded accesses outside it.
+- Example: a blocking disk write under `stateLock` stalls a UI reader acquiring that same lock. Writing after release is safe only if the data is an immutable snapshot captured under the lock, the resource remains valid, the write API independently prevents partial/interleaved writes where required, write completion is not part of the guarded invariant, and the contract permits the resulting write order.
+- Keep check-and-act atomic: checking `reserved < capacity` under one acquisition and incrementing under a later acquisition can let two callers exceed capacity, even though each access is synchronized.
+- Safe counterexample: compute a bounded, pure value from immutable thread-owned input before locking, then update guarded state under the original monitor. Do not extrapolate this to shared mutable inputs, escaping snapshots, side effects, or operations whose order/lifetime requires the lock.
+
+### 3.11 Refactors and Finding Evidence
+- Compare protection before and after a refactor, including a removed `synchronized`/`@Synchronized`, class-to-instance monitor change, different receiver, or helper extraction. Replacing the original caller's monitor with a helper's own monitor does not preserve the original protection.
+- Dangerous example: `synchronized nextId()` becomes an unsynchronized wrapper calling an unguarded increment helper; concurrent calls on the same instance can lose updates. Changing a static synchronized method to instance synchronization while retaining shared static state likewise splits protection across instances.
+- Safe counterexample: the original synchronized entry point calls a private helper under the same monitor, and every other helper caller holds that same monitor across the entire invariant. Do not demand redundant synchronization on the helper.
+- Cite a changed line (or the affected call/declaration for removed locking), the concrete monitor identity, conflicting paths/threads, before/after protection, actual impact, and minimal invariant-preserving fix. Apply the existing High/Medium impact criteria; never assign blanket severity based on nested locks, non-final references, or scope size.
+
+See [concurrency examples and counterexamples](skills/code-review/references/concurrency-threading.md) for the corresponding review procedure and compact cases.
 
 --------------------------------------------------------------------------------
 
