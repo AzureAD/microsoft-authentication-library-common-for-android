@@ -578,7 +578,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
                 mainWebView.loadUrl(targetUrl);
-            } else if (targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
+            } else if (targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)
+                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)) {
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);

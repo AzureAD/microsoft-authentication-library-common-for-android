@@ -375,7 +375,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
-        Logger.info(methodTag, "WebView redirect URL: " + url.substring(Math.min(2, url.length())));
+        Logger.info(methodTag, "WebView redirect received.");
         final String formattedURL = url.toLowerCase(Locale.US);
 
         try {
@@ -481,9 +481,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
-            } else if (isAnyAuthorizeUrl(url)) {
-                Logger.info(methodTag, "Navigation contains /authorize url.");
-                processWebCpAuthorize(view, url);
             } else if (isMyAccountsUrl(url)) {
                 Logger.info(methodTag, "Navigation contains myaccounts url.");
                 processMyAccountsUrl(url);
@@ -1040,48 +1037,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     ? "WebCP authorize URL contains valid WebCP client_id."
                     : "Not running WebCP flow as client_id in authorize is not webcp client_id");
             return isWebCpClient;
-        } catch (final URISyntaxException | MalformedURLException e) {
-            Logger.info(methodTag, "Invalid URL: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private boolean isAnyAuthorizeUrl(@NonNull final String url) {
-        // URL should be for authorize request for webcp.
-        final String methodTag = TAG + ":isWebCpAuthorizeUrl";
-        try {
-            final URI uri = new URI(url);
-            final String host = uri.getHost();
-            final String path = uri.getPath();
-
-            if (host == null || path == null) {
-                Logger.verbose(methodTag, "URL missing host or path");
-                return false;
-            }
-
-            if (!AzureActiveDirectory.isValidCloudHost(new URL(url))) {
-                Logger.info(methodTag, "URL host is not a valid Azure cloud host");
-                return false;
-            }
-
-            if (!path.contains("/authorize")) {
-                Logger.info(methodTag, "URL path does not contain /authorize");
-                return false;
-            }
-
-            final Map<String, String> queryParams = StringExtensions.getUrlParameters(url);
-            final String clientId = queryParams.get(AuthenticationConstants.OAuth2.CLIENT_ID);
-
-            if (StringUtil.isNullOrEmpty(clientId)) {
-                Logger.info(methodTag, "Authorize URL does not contain client_id");
-                return false;
-            }
-
-//            final boolean isWebCpClient = AuthenticationConstants.Broker.WEBCP_CLIENT_ID.equalsIgnoreCase(clientId);
-//            Logger.info(methodTag, isWebCpClient
-//                    ? "WebCP authorize URL contains valid WebCP client_id."
-//                    : "Not running WebCP flow as client_id in authorize is not webcp client_id");
-            return true;
         } catch (final URISyntaxException | MalformedURLException e) {
             Logger.info(methodTag, "Invalid URL: " + e.getMessage());
             return false;
