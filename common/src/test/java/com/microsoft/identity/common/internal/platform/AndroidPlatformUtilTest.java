@@ -151,6 +151,8 @@ public class AndroidPlatformUtilTest {
                     + " caller=" + callerPackageName);
         } catch (final ClientException e) {
             assertEquals(ErrorStrings.UNKNOWN_CALLER, e.getErrorCode());
+            assertTrue(e.getMessage().contains("uid " + callingUid));
+            assertTrue(e.getMessage().contains("'" + callerPackageName + "'"));
         }
     }
 

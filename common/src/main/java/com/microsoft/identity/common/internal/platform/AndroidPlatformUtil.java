@@ -201,14 +201,16 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                     "No package could be resolved for the OS-attested calling uid. Rejecting request.",
                     null);
             throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
-                    "Unable to resolve the calling package from the OS-attested calling uid.");
+                    "Unable to resolve a package for OS-attested calling uid " + callingUid
+                            + " while validating caller package '" + callerPackageName + "'.");
         }
         if (!ownedPackages.contains(callerPackageName)) {
             Logger.error(methodTag,
                     "Caller package in request bundle is not owned by the OS-attested calling uid. "
                             + "Rejecting potential impersonation.", null);
             throw new ClientException(ErrorStrings.UNKNOWN_CALLER,
-                    "Caller package does not match the OS-attested calling app.");
+                    "Caller package '" + callerPackageName
+                            + "' is not owned by OS-attested calling uid " + callingUid + ".");
         }
     }
     @Override
