@@ -278,7 +278,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
         verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
-        verify(span).setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).end();
     }
 
@@ -454,7 +454,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).end();
     }
 
@@ -500,7 +500,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).end();
     }
 

@@ -583,11 +583,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mainWebView.loadUrl(targetUrl);
                 span.setStatus(StatusCode.OK);
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
-                dispatchPopupToWallet(mainWebView, targetUrl, span, methodTag);
+                dispatchPopupToWallet(mainWebView, targetUrl, span);
             } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
-                span.setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
+                span.setStatus(StatusCode.ERROR);
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
             } else {
                 dispatchPopupToBrowser(mainWebView, targetUrl, span, methodTag);
@@ -605,16 +605,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private void dispatchPopupToWallet(@NonNull final WebView mainWebView,
                                        @NonNull final String targetUrl,
-                                       @NonNull final Span span,
-                                       @NonNull final String methodTag) {
+                                       @NonNull final Span span) {
         span.setAttribute(
                 AttributeName.target_blank_navigation_route.name(),
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
-        Logger.info(methodTag, "onCreateWindow: delegating wallet dispatch.");
-        if (mAADWebViewClient == null) {
+        if (mAADWebViewClient != null) {
+            mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
+        } else {
             throw new IllegalStateException("Authentication WebView client is unavailable.");
         }
-        mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
     }
 
     private void dispatchPopupToBrowser(@NonNull final WebView mainWebView,
