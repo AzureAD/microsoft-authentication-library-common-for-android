@@ -965,7 +965,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Checks if the URL uses the OpenID VC custom scheme.
+     * Checks if the URL uses the openid-vc:// custom scheme.
      * This scheme is used by OpenID Verifiable Credentials flows and must be
      * intercepted so a registered wallet app can handle it.
      *
@@ -1414,13 +1414,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Handles an OpenID VC request intercepted from normal WebView navigation.
-     * Stops the WebView and launches an {@link Intent#ACTION_VIEW} intent so
-     * the system can route the request to the registered wallet application.
+     * Handles an openid-vc:// URL by stopping the WebView and launching an
+     * {@link Intent#ACTION_VIEW} intent so the system can route it to the
+     * registered wallet application.
      *
-     * @param view the authentication WebView associated with the request.
-     * @param url the original OpenID VC URL.
-     * @return whether Android accepted wallet dispatch, not whether the wallet completed the flow.
+     * @param view The WebView that intercepted the navigation.
+     * @param url  The original (non-lowercased) openid-vc:// URL.
      */
     public boolean processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
         return processOpenIdVcRequest(view, url, null);
