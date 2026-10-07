@@ -49,7 +49,7 @@ class DeviceCaRequestRouterTest {
 
     @Before
     fun setUp() {
-        activity = Robolectric.buildActivity(Activity::class.java).get()
+        activity = Robolectric.buildActivity(TestActivity::class.java).get()
         host = TestHost(activity)
         webView = mock(WebView::class.java)
         router = spy(DeviceCaRequestRouter(host))
@@ -154,6 +154,7 @@ class DeviceCaRequestRouterTest {
         host.webCpInWebViewEnabled = true
         host.runningOnAuthService = true
         host.enabledFlights += CommonFlight.ENABLE_NATIVE_DEVICE_CA_MANAGEMENT_APP_HANDOFF
+        (activity as TestActivity).targetedLaunchFailure = ActivityNotFoundException()
         doReturn(INTUNE_APP_PACKAGE_NAME).`when`(router).resolveDeviceManagementAppPackage()
         doThrow(ActivityNotFoundException()).`when`(router).launchReWpjManagementApp(anyString())
 
@@ -167,7 +168,6 @@ class DeviceCaRequestRouterTest {
     @Test
     fun route_nativeLaunchNotFound_launchesTargetedAppLinkFirst() {
         enableNativeHandoff()
-        registerHandler(INTUNE_APP_PACKAGE_NAME, INTUNE_APP_PACKAGE_NAME + ".ReWpjActivity", true)
         doReturn(INTUNE_APP_PACKAGE_NAME).`when`(router).resolveDeviceManagementAppPackage()
         doThrow(ActivityNotFoundException()).`when`(router).launchReWpjManagementApp(anyString())
 
@@ -177,6 +177,7 @@ class DeviceCaRequestRouterTest {
         val intent = Shadows.shadowOf(activity).nextStartedActivity
         assertEquals(HTTPS_DEVICE_CA_URL, intent.dataString)
         assertEquals(INTUNE_APP_PACKAGE_NAME, intent.`package`)
+        assertTrue(intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
         verify(webView).stopLoading()
         assertEquals(1, host.mdmFlowReturnCount)
     }
@@ -184,6 +185,7 @@ class DeviceCaRequestRouterTest {
     @Test
     fun route_appLinkHandlerMissing_launchesGenericHttpsBeforeWebView() {
         enableNativeHandoff()
+        (activity as TestActivity).targetedLaunchFailure = ActivityNotFoundException()
         registerHandler("com.contoso.browser", "com.contoso.browser.BrowserActivity", false)
         doReturn(INTUNE_APP_PACKAGE_NAME).`when`(router).resolveDeviceManagementAppPackage()
         doThrow(ActivityNotFoundException()).`when`(router).launchReWpjManagementApp(anyString())
@@ -243,6 +245,17 @@ class DeviceCaRequestRouterTest {
         assertSame(DeviceCaRequestRouter.RoutingResult.Completed, result)
         verify(webView).loadUrl(HTTPS_DEVICE_CA_URL)
         assertNull(host.loadedUrl)
+    }
+
+    @Test
+    fun loadInWebViewOrBrowser_replacesOnlyLeadingBrowserScheme() {
+        host.webCpInWebViewEnabled = true
+        val url = "$DEVICE_CA_URL&redirect_uri=browser://callback"
+
+        val result = router.loadInWebViewOrBrowser(url, webView)
+
+        assertSame(DeviceCaRequestRouter.RoutingResult.Completed, result)
+        assertEquals("$HTTPS_DEVICE_CA_URL&redirect_uri=browser://callback", host.loadedUrl)
     }
 
     @Test
@@ -323,6 +336,17 @@ class DeviceCaRequestRouterTest {
             }
         }
         Shadows.shadowOf(activity.packageManager).addResolveInfoForIntent(intent, resolveInfo)
+    }
+
+    class TestActivity : Activity() {
+        var targetedLaunchFailure: RuntimeException? = null
+
+        override fun startActivity(intent: Intent) {
+            if (intent.`package` != null) {
+                targetedLaunchFailure?.let { throw it }
+            }
+            super.startActivity(intent)
+        }
     }
 
     private class TestHost(

@@ -237,15 +237,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         val methodTag = "$TAG:tryLaunchAppLink"
         val appLinkIntent = Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl))
             .setPackage(managementAppPackage)
-        if (appLinkIntent.resolveActivity(host.activity().packageManager) == null) {
-            Logger.warn(methodTag, "Management app cannot resolve the HTTPS App Link.")
-            SpanExtension.current().setAttribute(
-                AttributeName.device_ca_management_app_link_outcome.name,
-                AppLinkLaunchOutcome.HANDLER_NOT_FOUND.telemetryValue,
-            )
-            return false
-        }
-
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return try {
             host.activity().startActivity(appLinkIntent)
             SpanExtension.current().setAttribute(
