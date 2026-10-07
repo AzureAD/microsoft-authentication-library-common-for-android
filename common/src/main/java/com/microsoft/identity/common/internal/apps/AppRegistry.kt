@@ -103,6 +103,51 @@ object AppRegistry {
         signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
     )
 
+    /** Release signing identity for Island. */
+    val ISLAND = App(
+        nickName = "Island",
+        packageName = "io.island.Island",
+        signingCertificateThumbprint = "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw=="
+    )
+
+    /** Release signing identity for Island Canary. */
+    val ISLAND_CANARY = App(
+        nickName = "Island Canary",
+        packageName = "io.island.IslandCanary",
+        signingCertificateThumbprint = "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ=="
+    )
+
+    /** Release signing identity for Island Beta. */
+    val ISLAND_BETA = App(
+        nickName = "Island Beta",
+        packageName = "io.island.IslandBeta",
+        signingCertificateThumbprint = "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA=="
+    )
+
+    /** Release signing identity for Island with Intune integration. */
+    val ISLAND_INTUNE = App(
+        nickName = "Island Intune",
+        packageName = "io.island.island.intune",
+        signingCertificateThumbprint = "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA=="
+    )
+
+    /** Release signing identity for Island Canary with Intune integration. */
+    val ISLAND_CANARY_INTUNE = App(
+        nickName = "Island Canary Intune",
+        packageName = "io.island.island.canary.intune",
+        signingCertificateThumbprint = "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww=="
+    )
+
+    /** Release signing identity for Island Beta with Intune integration. */
+    val ISLAND_BETA_INTUNE = App(
+        nickName = "Island Beta Intune",
+        packageName = "io.island.island.beta.intune",
+        signingCertificateThumbprint = "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+    )
+
+    private const val ISLAND_USERDEBUG_SIGNATURE =
+        "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
     val INTUNE_CE_PROD = App(
         nickName = "Intune Company Portal (prod)",
         packageName = INTUNE_APP_PACKAGE_NAME,
@@ -200,6 +245,53 @@ object AppRegistry {
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
+    }
+
+    /**
+     * Island release identities eligible for Browser SSO when the broker's Island flight is enabled.
+     * Thumbprints are Base64-encoded SHA-512 hashes of the DER signing certificates.
+     * These identities are intentionally separate from [BROWSER_SSO_AUTHORIZED_APPS].
+     */
+    @JvmField
+    val ISLAND_BROWSER_SSO_AUTHORIZED_APPS = setOf(
+        ISLAND,
+        ISLAND_CANARY,
+        ISLAND_BETA,
+        ISLAND_INTUNE,
+        ISLAND_CANARY_INTUNE,
+        ISLAND_BETA_INTUNE
+    )
+
+    /**
+     * Island userdebug identities eligible only when the Island flight AND
+     * [BrokerData.getShouldTrustDebugBrokers] are enabled at the time of the request.
+     * The shared userdebug certificate does not authorize any other package.
+     */
+    @JvmField
+    val ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS = buildSet {
+        ISLAND_BROWSER_SSO_AUTHORIZED_APPS.forEach { releaseApp ->
+            add(
+                App(
+                    nickName = "${releaseApp.nickName} (userdebug)",
+                    packageName = releaseApp.packageName,
+                    signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+                )
+            )
+        }
+        add(
+            App(
+                nickName = "Island Dev (userdebug)",
+                packageName = "io.island.IslandDev",
+                signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+            )
+        )
+        add(
+            App(
+                nickName = "Island Dev Intune (userdebug)",
+                packageName = "io.island.island.dev.intune",
+                signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+            )
+        )
     }
 
     /**

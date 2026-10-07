@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.apps
 
+import android.util.Base64
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -210,6 +211,84 @@ class AppRegistryTest {
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_CANARY))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.MSAL_TEST_APP))
         assertFalse(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
+    }
+
+    @Test
+    fun islandBrowserSsoReleaseApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
+        val expectedIdentities = mapOf(
+            "io.island.Island" to "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw==",
+            "io.island.IslandCanary" to "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ==",
+            "io.island.IslandBeta" to "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA==",
+            "io.island.island.intune" to "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA==",
+            "io.island.island.canary.intune" to "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww==",
+            "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+        )
+
+        assertEquals(6, AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.size)
+        assertEquals(
+            expectedIdentities,
+            AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.associate {
+                it.packageName to it.signingCertificateThumbprint
+            }
+        )
+    }
+
+    @Test
+    fun islandBrowserSsoDebugApps_haveExactlyEightPackagesAndTheSharedUserdebugCertificate() {
+        val expectedPackages = setOf(
+            "io.island.Island",
+            "io.island.IslandCanary",
+            "io.island.IslandBeta",
+            "io.island.island.intune",
+            "io.island.island.canary.intune",
+            "io.island.island.beta.intune",
+            "io.island.IslandDev",
+            "io.island.island.dev.intune"
+        )
+        val expectedSignature =
+            "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
+        assertEquals(8, AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS.size)
+        assertEquals(
+            expectedPackages,
+            AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS.map { it.packageName }.toSet()
+        )
+        assertTrue(
+            AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS.all {
+                it.signingCertificateThumbprint == expectedSignature
+            }
+        )
+        assertTrue(
+            AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.intersect(
+                AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS
+            ).isEmpty()
+        )
+    }
+
+    @Test
+    fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
+        val identities = AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS +
+                AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS
+
+        identities.forEach {
+            assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
+        }
+    }
+
+    @Test
+    fun islandBrowserSsoApps_areNotAddedToExistingAuthorizationLists() {
+        val islandPackages = AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS.map { it.packageName }.toSet()
+        val existingAuthorizationLists = listOf(
+            AppRegistry.BROWSER_SSO_AUTHORIZED_APPS,
+            AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS,
+            AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST
+        )
+
+        existingAuthorizationLists.forEach { authorizedApps ->
+            assertTrue(authorizedApps.none { it.packageName in islandPackages })
+        }
     }
 
     @Test
