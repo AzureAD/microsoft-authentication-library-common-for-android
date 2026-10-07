@@ -60,6 +60,9 @@ import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWeb
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.IRequestContext;
+import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
@@ -197,6 +200,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     @Test
     public void testOnCreateWindow_createsAndEndsSpanOnlyOnNavigation() {
         mFragment = spy(mFragment);
+        final String correlationId = "11111111-1111-4111-8111-111111111111";
+        ReflectionHelpers.setField(mFragment, "mCorrelationId", correlationId);
         final AuthorizationActivity host = mock(AuthorizationActivity.class);
         final SpanContext parentSpanContext = SpanContext.getInvalid();
         when(host.getSpanContext()).thenReturn(parentSpanContext);
@@ -206,7 +211,12 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final WebView.WebViewTransport transport = mainWebView.new WebViewTransport();
         final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0, transport);
         final Span span = mockSpan();
+        final IRequestContext previousContext = DiagnosticContext.INSTANCE.getRequestContext();
         try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
+            final RequestContext otherRequestContext = new RequestContext();
+            otherRequestContext.put(DiagnosticContext.CORRELATION_ID,
+                    "22222222-2222-4222-8222-222222222222");
+            DiagnosticContext.INSTANCE.setRequestContext(otherRequestContext);
             telemetry.when(() -> OTelUtility.createSpanFromParent(
                     SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext)).thenReturn(span);
 
@@ -226,10 +236,31 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
             telemetry.verify(() -> OTelUtility.createSpanFromParent(
                     SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext));
             verify(mainWebView).loadUrl(HTTPS_TARGET_URL);
+            verify(span).setAttribute(AttributeName.correlation_id.name(), correlationId);
             verify(span).setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), false);
             verify(span).setStatus(StatusCode.OK);
             verify(span).end();
             Shadows.shadowOf(Looper.getMainLooper()).idle();
+        } finally {
+            DiagnosticContext.INSTANCE.setRequestContext(previousContext);
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_missingCorrelationId_doesNotSetAttribute() {
+        for (final String correlationId : new String[]{null, ""}) {
+            ReflectionHelpers.setField(mFragment, "mCorrelationId", correlationId);
+            final WebView mainWebView = mock(WebView.class);
+            final WebView interceptorWebView = mock(WebView.class);
+            final Span span = mockSpan();
+
+            mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView,
+                    mockRequest(HTTPS_TARGET_URL), span, false);
+
+            verify(span, never()).setAttribute(eq(AttributeName.correlation_id.name()),
+                    ArgumentMatchers.<String>any());
+            verify(mainWebView).loadUrl(HTTPS_TARGET_URL);
+            verify(span).end();
         }
     }
 
