@@ -807,7 +807,8 @@ public enum AttributeName {
 
     /**
      * Indicates which routing path was taken for a target=_blank URL intercepted
-     * by onCreateWindow: "null_url", "non_ssl", "non_tlr_inline", or "tlr_browser".
+     * by onCreateWindow: null_url, no_user_gesture, openid_vc, openid_vc_disabled,
+     * non_ssl, browser, or browser_fallback.
      */
     target_blank_navigation_route,
 
@@ -815,6 +816,18 @@ public enum AttributeName {
      * The destination host for a target=_blank URL intercepted by onCreateWindow.
      */
     target_blank_navigation_destination_host,
+
+    /**
+     * Whether the popup was initiated by a user gesture.
+     */
+    target_blank_navigation_is_user_gesture,
+
+    /**
+     * Latest operation result. Named span events retain each decision's outcome independently;
+     * failures use the existing error_type attribute with an exception class only.
+     * Dispatch/load acceptance does not confirm destination completion.
+     */
+    operation_outcome,
 
     //endregion
 

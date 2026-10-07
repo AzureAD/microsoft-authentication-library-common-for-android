@@ -119,6 +119,14 @@ public enum SpanName {
      */
     WebViewTargetBlankNavigation,
     /**
+     * Window-creation outcome, even when the popup never produces a navigation callback.
+     */
+    WebViewTargetBlankWindowCreation,
+    /**
+     * Asynchronous interceptor WebView destruction.
+     */
+    WebViewTargetBlankCleanup,
+    /**
      * Span name for WebView file upload (onShowFileChooser) operations.
      */
     WebViewFileUpload,

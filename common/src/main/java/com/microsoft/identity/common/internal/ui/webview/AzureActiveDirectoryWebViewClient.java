@@ -481,11 +481,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 // Special handling for device CA requests due to a corner case in eSTS for webapps/confidential clients, which should be handled by the WebView.
                 Logger.info(methodTag, "Navigation contains device CA request with https scheme.");
                 processDeviceCaRequest(view, url);
-            } else if (isMyAccountsUrl(url)) {
-                Logger.info(methodTag, "Navigation contains myaccounts url.");
-                processMyAccountsUrl(url);
-            }
-            else {
+            } else {
                 Logger.info(methodTag,"This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
                 processInvalidUrl(url);
                 return false;
@@ -497,22 +493,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
         }
         return true;
-    }
-
-    private boolean isMyAccountsUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Browser.MYACCOUNTS_URL_PREFIX);
-    }
-
-    private void processMyAccountsUrl(@NonNull final String url) {
-        // Open the MyAccounts URL in the default browser.
-        try {
-            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getActivity().startActivity(intent);
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(TAG, "No activity found to handle MyAccounts URL: " + url, e);
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No activity found to handle MyAccounts URL: " + url);
-        }
     }
 
     /**
@@ -1441,14 +1421,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      *
      * @param view the authentication WebView associated with the request.
      * @param url the original OpenID VC URL.
+     * @return whether Android accepted wallet dispatch, not whether the wallet completed the flow.
      */
-    public void handleOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
-        final String methodTag = TAG + ":processOpenIdVcRequest";
-        view.stopLoading();
+    public boolean handleOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
+        final String methodTag = TAG + ":handleOpenIdVcRequest";
         final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
+        String stage = "stop_webview";
+        String errorCode;
+        String errorMessage;
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+            Logger.info(methodTag, "Stopping authentication WebView before wallet dispatch.");
+            view.stopLoading();
+            SpanExtension.recordOutcome(span, stage, "stopped");
+            stage = "prepare_intent";
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            SpanExtension.recordOutcome(span, stage, "prepared");
+            Logger.info(methodTag, "Wallet launch intent prepared.");
 
             // Resolve after any pinning so the handler check matches the final intent we will launch.
             final android.content.pm.PackageManager pm = getActivity().getPackageManager();
@@ -1459,8 +1448,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // (launch the openid-vc handler without a return PendingIntent) - identical to
             // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
             // validated. It is also gated by its own flight so it can be rolled back entirely.
-            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
-                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+            stage = "return_to_caller";
+            final boolean returnEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                    .isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER);
+            if (!returnEnabled) {
+                SpanExtension.recordOutcome(span, stage, "disabled");
+                Logger.info(methodTag, "Wallet return-to-caller flight disabled; launching without return PendingIntent.");
+            } else if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
+                SpanExtension.recordOutcome(span, stage, "not_brokered");
+                Logger.info(methodTag, "Wallet request is brokerless; launching without return PendingIntent.");
+            } else {
                 // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
                 // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
                 // rely on resolveActivity() here: when more than one app claims the scheme it returns
@@ -1475,30 +1472,44 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     // Authenticator is not an installed/verified openid-vc handler: preserve the
                     // existing dispatch behavior but do NOT attach a return PendingIntent.
                     Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
+                    SpanExtension.recordOutcome(span, stage, "untrusted_handler");
                 }
             }
 
+            stage = "resolve_handler";
+            Logger.info(methodTag, "Resolving external wallet handler.");
             final ComponentName resolved = intent.resolveActivity(pm);
+            span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), resolved != null);
+            SpanExtension.recordOutcome(span, stage, resolved != null ? "found" : "no_handler");
             if (resolved != null) {
+                stage = "launch_wallet";
+                Logger.info(methodTag, "Wallet handler resolved; requesting external launch.");
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
-                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), true);
+                SpanExtension.recordOutcome(span, stage, "accepted");
                 span.setStatus(StatusCode.OK);
+                return true;
             } else {
                 Logger.warn(methodTag, "No application found to handle openid-vc:// URI.");
-                span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
                 span.setStatus(StatusCode.ERROR, "No handler found for openid-vc:// URI");
-                returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "No application found to handle the OpenID Verifiable Credentials request.");
+                errorCode = ErrorStrings.ACTIVITY_NOT_FOUND;
+                errorMessage = "No application found to handle the OpenID Verifiable Credentials request.";
             }
-        } catch (final ActivityNotFoundException e) {
-            Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
-            span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), false);
-            span.recordException(e);
-            span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
-            returnError(ErrorStrings.ACTIVITY_NOT_FOUND, "Failed to launch handler for the OpenID Verifiable Credentials request.");
+        } catch (final RuntimeException e) {
+            final String exceptionType = e.getClass().getSimpleName();
+            Logger.error(methodTag, "Wallet dispatch failed at " + stage + " (" + exceptionType + ").", null);
+            span.setAttribute(AttributeName.error_type.name(), exceptionType);
+            SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
+            span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
+            errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
+            errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
         } finally {
             span.end();
         }
+        Logger.info(methodTag, "Returning explicit wallet-dispatch authentication error.");
+        // Callback failures must not be caught as dispatch failures and delivered a second time.
+        returnError(errorCode, errorMessage);
+        return false;
     }
 
     /**
@@ -1543,9 +1554,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     com.microsoft.identity.common.internal.ui.OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA,
                     returnPendingIntent);
             Logger.info(methodTag, "Attached return PendingIntent to openid-vc intent.");
+            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "attached");
         } catch (final Exception e) {
             // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
-            Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
+            SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "failed", e.getClass().getSimpleName());
+            Logger.warn(methodTag, "Could not attach return PendingIntent (" + e.getClass().getSimpleName() + "); continuing without it.");
         }
     }
 
@@ -1561,9 +1574,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return false;
         }
         try {
-            return new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+            final boolean trusted = new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
+            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", trusted ? "verified" : "rejected");
+            Logger.info(TAG + ":isTrustedVcWalletPackage", trusted ? "Wallet signature verified." : "Wallet signature rejected.");
+            return trusted;
         } catch (final Exception e) {
-            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
+            SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", "failed", e.getClass().getSimpleName());
+            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed (" + e.getClass().getSimpleName() + ").");
             return false;
         }
     }
@@ -1580,12 +1597,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             for (final ResolveInfo info : getActivity().getPackageManager().queryIntentActivities(intent, 0)) {
                 if (info.activityInfo != null && authenticatorPackage.equals(info.activityInfo.packageName)) {
+                    SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "found");
+                    Logger.info(TAG + ":isAuthenticatorOpenIdVcHandler", "Authenticator wallet handler found.");
                     return true;
                 }
             }
         } catch (final Exception e) {
-            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
+            SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "failed", e.getClass().getSimpleName());
+            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed (" + e.getClass().getSimpleName() + ").");
+            return false;
         }
+        SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "not_found");
+        Logger.info(TAG + ":isAuthenticatorOpenIdVcHandler", "Authenticator wallet handler not found.");
         return false;
     }
 

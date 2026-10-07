@@ -41,6 +41,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -92,6 +94,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -367,9 +370,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
 
-                        // Dynamically toggle multiple-windows support so that target="_blank"
-                        // interception is active ONLY on the TLR start page. On all other
-                        // pages the WebView behaves exactly as before.
+                        // Enable target="_blank" interception for all pages when flighted.
                         if (CommonFlightsManager.INSTANCE.getFlightsProvider()
                                 .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
                             mWebView.getSettings().setSupportMultipleWindows(true);
@@ -500,37 +501,56 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             @Override
             public boolean onCreateWindow(final WebView view, boolean isDialog,
                                           boolean isUserGesture, final Message resultMsg) {
-                if (resultMsg.obj == null) {
-                    Logger.error(methodTag, "onCreateWindow: resultMsg.obj is null, cannot set up transport.", null);
-                    return false;
-                }
-
-                final SpanContext parentSpanContext = requireActivity() instanceof AuthorizationActivity
-                        ? ((AuthorizationActivity) requireActivity()).getSpanContext() : null;
+                final FragmentActivity host = getActivity();
+                final SpanContext parentSpanContext = host instanceof AuthorizationActivity
+                        ? ((AuthorizationActivity) host).getSpanContext() : null;
                 final Span span = OTelUtility.createSpanFromParent(
-                        SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
+                        SpanName.WebViewTargetBlankWindowCreation.name(), parentSpanContext);
+                span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
                 boolean windowHandled = false;
+                WebView interceptorToCleanUp = null;
                 try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                    if (host == null) {
+                        SpanExtension.recordOutcome(span, "window_creation", "host_unavailable");
+                        span.setStatus(StatusCode.ERROR, "Authorization host is unavailable");
+                        Logger.error(methodTag, "onCreateWindow: authorization host is unavailable.", null);
+                        return false;
+                    }
+                    if (resultMsg == null || !(resultMsg.obj instanceof WebView.WebViewTransport)) {
+                        SpanExtension.recordOutcome(span, "window_creation", "invalid_transport");
+                        span.setStatus(StatusCode.ERROR, "Missing or invalid WebView transport");
+                        Logger.error(methodTag, "onCreateWindow: missing or invalid WebView transport.", null);
+                        return false;
+                    }
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
                     final WebView interceptorWebView = new WebView(view.getContext());
+                    interceptorToCleanUp = interceptorWebView;
                     interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
-                            handleInterceptedUrlFromNewWindow(view, v, request, span, isUserGesture);
+                            final Span navigationSpan = OTelUtility.createSpanFromParent(
+                                    SpanName.WebViewTargetBlankNavigation.name(), span.getSpanContext());
+                            handleInterceptedUrlFromNewWindow(view, v, request, navigationSpan, isUserGesture);
                             return true;
                         }
                     });
                     final WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
-                    // Span status and end are handled in handleInterceptedUrlFromNewWindow,
-                    // which fires asynchronously when shouldOverrideUrlLoading is called.
                     windowHandled = true;
+                    SpanExtension.recordOutcome(span, "window_creation", "transport_accepted");
+                    span.setStatus(StatusCode.OK);
+                    Logger.info(methodTag, "onCreateWindow: transport accepted; awaiting popup navigation.");
                 } catch (@NonNull final Exception e) {
-                    Logger.error(methodTag, "Error handling target=_blank navigation.", e);
-                    span.recordException(e);
-                    span.setStatus(StatusCode.ERROR);
-                    span.end();
+                    recordTargetBlankFailure(span, methodTag, "window_creation", e);
+                } finally {
+                    try {
+                        if (!windowHandled && interceptorToCleanUp != null) {
+                            scheduleInterceptorCleanup(interceptorToCleanUp, span);
+                        }
+                    } finally {
+                        span.end();
+                    }
                 }
                 return windowHandled;
             }
@@ -542,7 +562,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
      * OpenID VC targets are delegated to the authentication WebView so its WebViewClient can
      * launch the wallet. User-initiated HTTPS URLs open in the external browser without navigating
-     * the authentication WebView away from its current page.
+     * the authentication WebView away from its current page. If browser dispatch throws, HTTPS
+     * URLs are loaded inline. Wallet failures remain authentication errors, without inline fallback.
+     * Dispatch/load success means the request was accepted, not that the destination completed.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -557,80 +579,147 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    @NonNull final Span span,
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
-        try {
+        String stage = "validate_url";
+        span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
+        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             final Uri targetUri = request.getUrl();
+            if (targetUri == null || StringUtil.isNullOrEmpty(targetUri.toString())) {
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
+                SpanExtension.recordOutcome(span, stage, "invalid_url");
+                span.setStatus(StatusCode.ERROR, "Missing popup destination");
+                Logger.error(methodTag, "onCreateWindow: popup destination is missing.", null);
+                return;
+            }
             final String targetUrl = targetUri.toString();
+            final String formattedUrl = targetUrl.toLowerCase(Locale.US);
             final String destinationHost = targetUri.getHost();
-            final String currentPageUrl = mainWebView.getUrl();
-
             if (!StringUtil.isNullOrEmpty(destinationHost)) {
                 span.setAttribute(
                         AttributeName.target_blank_navigation_destination_host.name(),
                         destinationHost);
             }
 
-            if (targetUrl == null) {
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
-                Logger.warn(methodTag, "onCreateWindow: target URL is null, ignoring.");
-            } else if (!isUserGesture) {
+            if (!isUserGesture) {
                 // Not initiated by user gesture: load inline as a safe fallback instead of
                 // opening an external browser, to prevent programmatic/scripted popups.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
+                stage = "inline_load";
                 mainWebView.loadUrl(targetUrl);
-            } else if (targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)
-                    && CommonFlightsManager.INSTANCE.getFlightsProvider()
-                    .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)) {
+                SpanExtension.recordOutcome(span, stage, "inline_load_requested");
+                span.setStatus(StatusCode.OK);
+                Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
+            } else if (formattedUrl.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
+                stage = "vc_flight_check";
+                final boolean vcEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
+                        .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT);
+                SpanExtension.recordOutcome(span, stage, vcEnabled ? "enabled" : "disabled");
+                if (!vcEnabled) {
+                    span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED);
+                    span.setStatus(StatusCode.ERROR, "OpenID VC redirect flight disabled");
+                    Logger.warn(methodTag, "onCreateWindow: OpenID VC redirect flight disabled; wallet dispatch blocked.");
+                    return;
+                }
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
-                Logger.info(methodTag, "onCreateWindow: delegating OpenID VC URL to authentication WebView client.");
+                Logger.info(methodTag, "onCreateWindow: VC redirect flight enabled; delegating wallet dispatch.");
+                stage = "vc_client_check";
                 if (mAADWebViewClient == null) {
                     throw new IllegalStateException("Authentication WebView client is unavailable.");
                 }
-                mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
-            } else if (!targetUrl.toLowerCase().startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
+                stage = "vc_dispatch";
+                final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
+                SpanExtension.recordOutcome(span, stage, launched ? "external_launch_accepted" : "wallet_launch_failed");
+                span.setStatus(launched ? StatusCode.OK : StatusCode.ERROR);
+                if (launched) {
+                    Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
+                } else {
+                    Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
+                }
+            } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
+                SpanExtension.recordOutcome(span, "validate_url", "blocked");
+                span.setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
             } else {
-                final boolean isTlrPage = isTlrUrl(currentPageUrl);
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
-                        isTlrPage
-                                ? AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR
-                                : AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER);
+                        AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
                 Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
+                stage = "browser_launch";
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                mainWebView.getContext().startActivity(browserIntent);
+                try {
+                    mainWebView.getContext().startActivity(browserIntent);
+                    SpanExtension.recordOutcome(span, stage, "external_launch_accepted");
+                    span.setStatus(StatusCode.OK);
+                    Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
+                } catch (final RuntimeException e) {
+                    recordTargetBlankFailure(span, methodTag, stage, e);
+                    stage = "browser_fallback";
+                    span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
+                    Logger.warn(methodTag, "onCreateWindow: browser dispatch failed; requesting HTTPS inline fallback.");
+                    mainWebView.loadUrl(targetUrl);
+                    SpanExtension.recordOutcome(span, stage, "inline_fallback_requested");
+                    span.setStatus(StatusCode.OK);
+                    Logger.info(methodTag, "onCreateWindow: HTTPS inline fallback accepted by WebView.");
+                }
             }
-            span.setStatus(StatusCode.OK);
         } catch (final Exception e) {
-            span.recordException(e);
-            span.setStatus(StatusCode.ERROR);
-            Logger.error(methodTag, "Error handling target=_blank URL.", e);
+            recordTargetBlankFailure(span, methodTag, stage, e);
         } finally {
-            span.end();
-            // Destroy the interceptor WebView after it has served its purpose
-            interceptorWebView.post(interceptorWebView::destroy);
+            try {
+                scheduleInterceptorCleanup(interceptorWebView, span);
+            } finally {
+                span.end();
+            }
         }
     }
 
-    /**
-     * Checks whether the given URL corresponds to a TLR (Terms, License, and Restrictions)
-     * start page.
-     *
-     * @param url The URL to check.
-     * @return {@code true} if the URL is a TLR start page, {@code false} otherwise.
-     */
-    @VisibleForTesting
-    boolean isTlrUrl(@Nullable final String url) {
-        if (url == null) {
-            return false;
+    private static void recordTargetBlankFailure(@NonNull final Span span,
+                                                 @NonNull final String methodTag,
+                                                 @NonNull final String stage,
+                                                 @NonNull final Exception exception) {
+        final String exceptionType = exception.getClass().getSimpleName();
+        SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
+        span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
+        // Android exception messages can contain the full authentication URL.
+        Logger.error(methodTag, "target=_blank failed at " + stage + " (" + exceptionType + ").", null);
+    }
+
+    private static void scheduleInterceptorCleanup(@NonNull final WebView interceptorWebView,
+                                                    @NonNull final Span parentSpan) {
+        final String methodTag = TAG + ":scheduleInterceptorCleanup";
+        final Span cleanupSpan = OTelUtility.createSpanFromParent(
+                SpanName.WebViewTargetBlankCleanup.name(), parentSpan.getSpanContext());
+        try {
+            Logger.info(methodTag, "Scheduling popup interceptor cleanup.");
+            // The hidden interceptor may never attach; View.post would wait for attachment.
+            final boolean scheduled = new Handler(Looper.getMainLooper()).post(() -> {
+                try {
+                    interceptorWebView.destroy();
+                    SpanExtension.recordOutcome(cleanupSpan, "cleanup", "destroyed");
+                    cleanupSpan.setStatus(StatusCode.OK);
+                    Logger.info(methodTag, "Popup interceptor destroyed.");
+                } catch (final RuntimeException e) {
+                    recordTargetBlankFailure(cleanupSpan, methodTag, "cleanup", e);
+                } finally {
+                    cleanupSpan.end();
+                }
+            });
+            SpanExtension.recordOutcome(cleanupSpan, "cleanup_scheduling", scheduled ? "scheduled" : "schedule_rejected");
+            if (scheduled) {
+                Logger.info(methodTag, "Popup interceptor cleanup scheduled.");
+            } else {
+                cleanupSpan.setStatus(StatusCode.ERROR, "WebView rejected cleanup scheduling");
+                Logger.error(methodTag, "WebView rejected popup interceptor cleanup scheduling.", null);
+                cleanupSpan.end();
+            }
+        } catch (final RuntimeException e) {
+            recordTargetBlankFailure(cleanupSpan, methodTag, "cleanup_scheduling", e);
+            cleanupSpan.end();
         }
-        final String lowerUrl = url.toLowerCase();
-        return lowerUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)
-                && lowerUrl.contains(AuthenticationConstants.Broker.TLR_START_PATH);
     }
 
     /**

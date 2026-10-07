@@ -24,6 +24,8 @@ package com.microsoft.identity.common.java.opentelemetry;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import io.opentelemetry.api.internal.ImmutableSpanContext;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -70,6 +72,41 @@ public class SpanExtension {
             Logger.error(TAG + ":getCurrentSpan", error.getMessage(), error);
             return new NoopSpan(INVALID);
         }
+    }
+
+    /**
+     * Records a named decision and updates the span's latest outcome. Distinct event names retain
+     * earlier decisions (for example a failed dispatch followed by a successful fallback).
+     *
+     * @param span the operation span
+     * @param stage the decision name
+     * @param outcome the decision result
+     */
+    public static void recordOutcome(@NonNull final Span span,
+                                     @NonNull final String stage,
+                                     @NonNull final String outcome) {
+        recordOutcome(span, stage, outcome, null);
+    }
+
+    /**
+     * Records a decision with a sanitized exception type, never an exception message or stack trace.
+     *
+     * @param span the operation span
+     * @param stage the decision name
+     * @param outcome the decision result
+     * @param exceptionType the exception class name, or null when there is no exception
+     */
+    public static void recordOutcome(@NonNull final Span span,
+                                     @NonNull final String stage,
+                                     @NonNull final String outcome,
+                                     final String exceptionType) {
+        final AttributesBuilder attributes = Attributes.builder()
+                .put(AttributeName.operation_outcome.name(), outcome);
+        if (exceptionType != null) {
+            attributes.put(AttributeName.error_type.name(), exceptionType);
+        }
+        span.addEvent(stage, attributes.build());
+        span.setAttribute(AttributeName.operation_outcome.name(), outcome);
     }
 
     /**

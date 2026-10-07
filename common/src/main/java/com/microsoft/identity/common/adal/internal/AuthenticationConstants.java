@@ -169,8 +169,6 @@ public final class AuthenticationConstants {
          * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
          */
         public static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
-
-        public static final String MYACCOUNTS_URL_PREFIX = "https://myaccount.microsoft.com";
     }
 
     /**
@@ -1503,11 +1501,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
         /**
-         * Path segment for the TLR (Total loss recovery) start page.
-         */
-        public static final String TLR_START_PATH = "/tlr/start";
-
-        /**
          * WebView routing value when the target URL from a target=_blank navigation is null.
          */
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL = "null_url";
@@ -1518,24 +1511,24 @@ public final class AuthenticationConstants {
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL = "non_ssl";
 
         /**
-         * WebView routing value when the target URL is loaded inline (non-TLR page).
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR = "non_tlr_flow";
-
-        /**
-         * WebView routing value when a target URL from a non-TLR page is delegated to the system browser.
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER = "non_tlr_browser";
-
-        /**
          * WebView routing value when an OpenID VC target is delegated to the authentication WebView.
          */
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC = "openid_vc";
 
         /**
-         * WebView routing value when the target URL is delegated to the system browser (TLR page).
+         * WebView routing value when the target URL is delegated to the system browser.
          */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_TLR = "tlr_flow";
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER = "browser";
+
+        /**
+         * HTTPS popup loaded inline after external browser dispatch failed.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK = "browser_fallback";
+
+        /**
+         * OpenID VC popup refused because its redirect flight is disabled.
+         */
+        public static final String WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED = "openid_vc_disabled";
 
         /**
          * WebView routing value when the popup was not initiated by a user gesture.

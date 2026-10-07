@@ -22,10 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -33,30 +36,48 @@ import static org.mockito.Mockito.when;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.java.flighting.CommonFlight;
+import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
+import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
+import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
+import com.microsoft.identity.common.java.opentelemetry.SpanName;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
+import org.mockito.InOrder;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.util.ReflectionHelpers;
+
+import java.util.Locale;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.common.Attributes;
 
 /**
- * Tests for the multi-window (target=_blank) URL handling logic and
- * TLR URL detection in {@link WebViewAuthorizationFragment}.
+ * Tests for the multi-window (target=_blank) URL handling logic in
+ * {@link WebViewAuthorizationFragment}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class WebViewAuthorizationFragmentMultiWindowTest {
@@ -64,13 +85,6 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     private WebViewAuthorizationFragment mFragment;
     private Context mContext;
 
-    // TLR URLs
-    private static final String TLR_URL = "https://login.microsoftonline.com/tlr/start?param=1";
-    private static final String TLR_URL_UPPER_CASE = "HTTPS://LOGIN.MICROSOFTONLINE.COM/TLR/START?PARAM=1";
-    private static final String TLR_URL_MIXED_CASE = "https://Login.Microsoftonline.com/Tlr/Start?param=1";
-
-    // Non-TLR URLs
-    private static final String NON_TLR_HTTPS_URL = "https://login.microsoftonline.com/common/oauth2/authorize";
     private static final String HTTP_URL = "http://example.com/tlr/start";
     private static final String FTP_URL = "ftp://files.example.com/document.pdf";
 
@@ -86,60 +100,10 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment = new WebViewAuthorizationFragment();
     }
 
-    // -----------------------------------------------------------------------
-    // isTlrUrl tests
-    // -----------------------------------------------------------------------
-
-    @Test
-    public void testIsTlrUrl_nullUrl_returnsFalse() {
-        assertFalse(mFragment.isTlrUrl(null));
+    @After
+    public void tearDown() {
+        CommonFlightsManager.INSTANCE.resetFlightsManager();
     }
-
-    @Test
-    public void testIsTlrUrl_emptyString_returnsFalse() {
-        assertFalse(mFragment.isTlrUrl(""));
-    }
-
-    @Test
-    public void testIsTlrUrl_validTlrUrl_returnsTrue() {
-        assertTrue(mFragment.isTlrUrl(TLR_URL));
-    }
-
-    @Test
-    public void testIsTlrUrl_upperCaseTlrUrl_returnsTrue() {
-        assertTrue(mFragment.isTlrUrl(TLR_URL_UPPER_CASE));
-    }
-
-    @Test
-    public void testIsTlrUrl_mixedCaseTlrUrl_returnsTrue() {
-        assertTrue(mFragment.isTlrUrl(TLR_URL_MIXED_CASE));
-    }
-
-    @Test
-    public void testIsTlrUrl_httpsNonTlrPath_returnsFalse() {
-        assertFalse(mFragment.isTlrUrl(NON_TLR_HTTPS_URL));
-    }
-
-    @Test
-    public void testIsTlrUrl_httpWithTlrPath_returnsFalse() {
-        // Must be HTTPS to be considered a TLR URL
-        assertFalse(mFragment.isTlrUrl(HTTP_URL));
-    }
-
-    @Test
-    public void testIsTlrUrl_ftpScheme_returnsFalse() {
-        assertFalse(mFragment.isTlrUrl(FTP_URL));
-    }
-
-    @Test
-    public void testIsTlrUrl_tlrPathOnly_returnsFalse() {
-        // No scheme prefix, just path
-        assertFalse(mFragment.isTlrUrl("/tlr/start"));
-    }
-
-    // -----------------------------------------------------------------------
-    // handleInterceptedUrlFromNewWindow tests
-    // -----------------------------------------------------------------------
 
     private WebResourceRequest mockRequest(final String url) {
         final WebResourceRequest request = mock(WebResourceRequest.class);
@@ -149,6 +113,14 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
     private Span mockSpan() {
         return mock(Span.class);
+    }
+
+    private void setOpenIdVcRedirectFlightEnabled(final boolean enabled) {
+        final IFlightsProvider flightsProvider = mock(IFlightsProvider.class);
+        when(flightsProvider.isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT)).thenReturn(enabled);
+        final MockCommonFlightsManager flightsManager = new MockCommonFlightsManager();
+        flightsManager.setMockCommonFlightsProvider(flightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(flightsManager);
     }
 
     @Test
@@ -187,12 +159,13 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(StatusCode.OK);
+        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         verify(span).end();
     }
 
     @Test
     public void testHandleInterceptedUrl_openIdVc_loadsInAuthenticationWebView() {
+        setOpenIdVcRedirectFlightEnabled(true);
         final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
@@ -200,6 +173,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final AzureActiveDirectoryWebViewClient webViewClient =
                 mock(AzureActiveDirectoryWebViewClient.class);
         ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+        when(webViewClient.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL)).thenReturn(true);
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
@@ -216,46 +190,83 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_nonTlrPage_delegatesToBrowser() {
-        final Activity activity = Robolectric.buildActivity(Activity.class).get();
-        final WebView mainWebView = mock(WebView.class);
+    public void testHandleInterceptedUrl_uppercaseOpenIdVc_turkishLocale_launchesWallet() {
+        final Locale originalLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(new Locale("tr", "TR"));
+            setOpenIdVcRedirectFlightEnabled(true);
+            final String targetUrl = "OPENID-VC://authorize?request_uri=https%3A%2F%2Fexample.com%2FCaseSensitive";
+            final WebView mainWebView = spy(new WebView(mContext));
+            final WebView interceptorWebView = spy(new WebView(mContext));
+            final Span span = mockSpan();
+            final AzureActiveDirectoryWebViewClient webViewClient =
+                    mock(AzureActiveDirectoryWebViewClient.class);
+            ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+            when(webViewClient.handleOpenIdVcRequest(mainWebView, targetUrl)).thenReturn(true);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mainWebView, interceptorWebView, mockRequest(targetUrl), span, true);
+
+            verify(webViewClient).handleOpenIdVcRequest(mainWebView, targetUrl);
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span).setAttribute(
+                    eq(AttributeName.target_blank_navigation_route.name()),
+                    eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC));
+            verify(span).setStatus(StatusCode.OK);
+            verify(span).end();
+        } finally {
+            Locale.setDefault(originalLocale);
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_openIdVc_flightDisabled_refusesToOpen() {
+        setOpenIdVcRedirectFlightEnabled(false);
+        final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
-        final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
-
-        when(mainWebView.getUrl()).thenReturn(NON_TLR_HTTPS_URL);
-        when(mainWebView.getContext()).thenReturn(activity);
+        final WebResourceRequest request = mockRequest(OPENID_VC_TARGET_URL);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        // The main authentication WebView must retain its current page.
+        verify(webViewClient, never()).handleOpenIdVcRequest(
+                ArgumentMatchers.any(WebView.class), ArgumentMatchers.anyString());
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR_BROWSER));
-        verify(span).setStatus(StatusCode.OK);
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED));
+        verify(span).addEvent("vc_flight_check", outcome("disabled"));
+        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         verify(span).end();
     }
 
     @Test
-    public void testHandleInterceptedUrl_tlrPage_delegatesToBrowser() {
+    public void testHandleInterceptedUrl_httpsUrl_delegatesToBrowserRegardlessOfCurrentPage() {
         final Activity activity = Robolectric.buildActivity(Activity.class).get();
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
         final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
 
-        // Simulate main WebView being on a TLR page
-        when(mainWebView.getUrl()).thenReturn(TLR_URL);
         when(mainWebView.getContext()).thenReturn(activity);
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
+        final Intent launched = Shadows.shadowOf(activity).getNextStartedActivity();
+        assertNotNull(launched);
+        assertEquals(Intent.ACTION_VIEW, launched.getAction());
+        assertEquals(HTTPS_TARGET_URL, launched.getDataString());
+        verify(mainWebView, never()).getUrl();
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR));
+            eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER));
         verify(span).setStatus(StatusCode.OK);
+        verify(span).addEvent("browser_launch", outcome("external_launch_accepted"));
+        verify(span, never()).addEvent(eq("browser_fallback"), ArgumentMatchers.any(Attributes.class));
         verify(span).end();
     }
 
@@ -274,7 +285,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(StatusCode.OK);
+        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         verify(span).end();
     }
 
@@ -285,7 +296,6 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final Span span = mockSpan();
         final WebResourceRequest request = mockRequest(HTTPS_TARGET_URL);
 
-        // Even for a normal non-TLR case, span.end() should always be called
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
         verify(span).end();
     }
@@ -321,7 +331,251 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(StatusCode.OK);
+        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_noBrowser_fallsBackInline() {
+        verifyBrowserFallback(new ActivityNotFoundException("Sensitive URL must not enter telemetry."));
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_browserSecurityException_fallsBackInline() {
+        verifyBrowserFallback(new SecurityException("Launch denied."));
+    }
+
+    private void verifyBrowserFallback(final RuntimeException exception) {
+        final Context context = mock(Context.class);
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        when(mainWebView.getContext()).thenReturn(context);
+        doThrow(exception).when(context).startActivity(ArgumentMatchers.any(Intent.class));
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, true);
+
+        verify(mainWebView).loadUrl(HTTPS_TARGET_URL);
+        final InOrder decisions = org.mockito.Mockito.inOrder(span);
+        decisions.verify(span).addEvent("browser_launch", failure(exception.getClass().getSimpleName()));
+        decisions.verify(span).addEvent("browser_fallback", outcome("inline_fallback_requested"));
+        verify(span).setAttribute(eq(AttributeName.target_blank_navigation_route.name()),
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK));
+        verify(span).setAttribute(eq(AttributeName.operation_outcome.name()), eq("inline_fallback_requested"));
+        verify(span).setStatus(StatusCode.OK);
+        verify(span, never()).recordException(ArgumentMatchers.any(Throwable.class));
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_browserAndFallbackFail_recordsBothFailures() {
+        final Context context = mock(Context.class);
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        when(mainWebView.getContext()).thenReturn(context);
+        doThrow(new ActivityNotFoundException()).when(context).startActivity(ArgumentMatchers.any(Intent.class));
+        doThrow(new IllegalStateException()).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, true);
+
+        final InOrder decisions = org.mockito.Mockito.inOrder(span);
+        decisions.verify(span).addEvent("browser_launch", failure("ActivityNotFoundException"));
+        decisions.verify(span).addEvent("browser_fallback", failure("IllegalStateException"));
+        verify(span).setStatus(StatusCode.ERROR, "browser_fallback: IllegalStateException");
+        verify(span, never()).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nonUserGesture_inlineFailure_recordsError() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        doThrow(new IllegalStateException()).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, false);
+
+        verify(span, never()).addEvent(eq("browser_launch"), ArgumentMatchers.any(Attributes.class));
+        verify(span).addEvent("inline_load", failure("IllegalStateException"));
+        verify(span).setStatus(StatusCode.ERROR, "inline_load: IllegalStateException");
+        verify(span, never()).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nullDestination_recordsError() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        final WebResourceRequest request = mock(WebResourceRequest.class);
+
+        mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
+
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span).addEvent("validate_url", outcome("invalid_url"));
+        verify(span).setStatus(StatusCode.ERROR, "Missing popup destination");
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_walletFailure_doesNotFallbackOrReportSuccess() {
+        setOpenIdVcRedirectFlightEnabled(true);
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+        final AzureActiveDirectoryWebViewClient webViewClient = mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+        when(webViewClient.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL)).thenReturn(false);
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
+
+        verify(span).addEvent("vc_dispatch", outcome("wallet_launch_failed"));
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span).setStatus(StatusCode.ERROR);
+        verify(span, never()).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_missingWalletClient_recordsFailureStage() {
+        setOpenIdVcRedirectFlightEnabled(true);
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = spy(new WebView(mContext));
+        final Span span = mockSpan();
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
+
+        verify(span).setStatus(StatusCode.ERROR, "vc_client_check: IllegalStateException");
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span, never()).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_emptyDestination_recordsError() {
+        final WebView mainWebView = mock(WebView.class);
+        final Span span = mockSpan();
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, mock(WebView.class), mockRequest(""), span, true);
+
+        verify(span).addEvent("validate_url", outcome("invalid_url"));
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_walletThrows_recordsFailureWithoutFallback() {
+        setOpenIdVcRedirectFlightEnabled(true);
+        final WebView mainWebView = mock(WebView.class);
+        final Span span = mockSpan();
+        final AzureActiveDirectoryWebViewClient client = mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(mFragment, "mAADWebViewClient", client);
+        when(client.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL))
+                .thenThrow(new IllegalStateException());
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, mock(WebView.class), mockRequest(OPENID_VC_TARGET_URL), span, true);
+
+        verify(span).setStatus(StatusCode.ERROR, "vc_dispatch: IllegalStateException");
+        verify(span).addEvent("vc_dispatch", failure("IllegalStateException"));
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span, never()).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_unattachedInterceptor_isDestroyed() {
+        verifyCleanup(false);
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_destroyThrows_recordsCleanupFailure() {
+        verifyCleanup(true);
+    }
+
+    private void verifyCleanup(final boolean destructionFails) {
+        final WebView interceptor = mock(WebView.class);
+        final Span span = mockSpan();
+        final Span cleanupSpan = mockSpan();
+        if (destructionFails) {
+            doThrow(new IllegalStateException()).when(interceptor).destroy();
+        }
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
+            telemetry.when(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankCleanup.name(), null)).thenReturn(cleanupSpan);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+            verify(interceptor).destroy();
+            final InOrder decisions = org.mockito.Mockito.inOrder(cleanupSpan);
+            decisions.verify(cleanupSpan).addEvent("cleanup_scheduling", outcome("scheduled"));
+            if (destructionFails) {
+                decisions.verify(cleanupSpan).addEvent("cleanup", failure("IllegalStateException"));
+                verify(cleanupSpan).setStatus(StatusCode.ERROR, "cleanup: IllegalStateException");
+            } else {
+                decisions.verify(cleanupSpan).addEvent("cleanup", outcome("destroyed"));
+                verify(cleanupSpan).setStatus(StatusCode.OK);
+            }
+            verify(cleanupSpan).end();
+            verify(span).end();
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_cleanupSchedulingRejected_recordsFailure() {
+        verifyCleanupSchedulingFailure(false);
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_cleanupSchedulingThrows_recordsFailure() {
+        verifyCleanupSchedulingFailure(true);
+    }
+
+    private void verifyCleanupSchedulingFailure(final boolean throwsException) {
+        final Span span = mockSpan();
+        final Span cleanupSpan = mockSpan();
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+             final MockedConstruction<Handler> handlers = mockConstruction(Handler.class, (handler, context) -> {
+                 if (throwsException) {
+                     when(handler.post(ArgumentMatchers.any(Runnable.class))).thenThrow(new IllegalStateException());
+                 } else {
+                     when(handler.post(ArgumentMatchers.any(Runnable.class))).thenReturn(false);
+                 }
+             })) {
+            telemetry.when(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankCleanup.name(), null)).thenReturn(cleanupSpan);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mock(WebView.class), mock(WebView.class), mockRequest(HTTPS_TARGET_URL), span, false);
+
+            if (throwsException) {
+                verify(cleanupSpan).addEvent("cleanup_scheduling", failure("IllegalStateException"));
+                verify(cleanupSpan).setStatus(StatusCode.ERROR, "cleanup_scheduling: IllegalStateException");
+            } else {
+                verify(cleanupSpan).addEvent("cleanup_scheduling", outcome("schedule_rejected"));
+            }
+            verify(cleanupSpan).end();
+            verify(span).end();
+        }
+    }
+
+    private static Attributes outcome(final String value) {
+        return Attributes.builder().put(AttributeName.operation_outcome.name(), value).build();
+    }
+
+    private static Attributes failure(final String exceptionType) {
+        return Attributes.builder()
+                .put(AttributeName.operation_outcome.name(), "failed")
+                .put(AttributeName.error_type.name(), exceptionType)
+                .build();
     }
 }
