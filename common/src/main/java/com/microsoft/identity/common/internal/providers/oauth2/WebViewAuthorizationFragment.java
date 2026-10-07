@@ -601,7 +601,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 if (mAADWebViewClient == null) {
                     throw new IllegalStateException("Authentication WebView client is unavailable.");
                 }
-                final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl, span);
+                final boolean launched = mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
                 if (launched) {
                     Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
                 } else {

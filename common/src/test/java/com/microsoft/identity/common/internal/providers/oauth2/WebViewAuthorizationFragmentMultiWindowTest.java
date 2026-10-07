@@ -295,11 +295,11 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final AzureActiveDirectoryWebViewClient webViewClient =
                 mock(AzureActiveDirectoryWebViewClient.class);
         ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
-        when(webViewClient.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span)).thenReturn(true);
+        when(webViewClient.processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span)).thenReturn(true);
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        verify(webViewClient).handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span);
+        verify(webViewClient).processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span);
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
             eq(AttributeName.target_blank_navigation_destination_host.name()),
@@ -324,12 +324,12 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
             final AzureActiveDirectoryWebViewClient webViewClient =
                     mock(AzureActiveDirectoryWebViewClient.class);
             ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
-            when(webViewClient.handleOpenIdVcRequest(mainWebView, targetUrl, span)).thenReturn(true);
+            when(webViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span)).thenReturn(true);
 
             mFragment.handleInterceptedUrlFromNewWindow(
                     mainWebView, interceptorWebView, mockRequest(targetUrl), span, true);
 
-            verify(webViewClient).handleOpenIdVcRequest(mainWebView, targetUrl, span);
+            verify(webViewClient).processOpenIdVcRequest(mainWebView, targetUrl, span);
             verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
             verify(span).setAttribute(
                     eq(AttributeName.target_blank_navigation_route.name()),
@@ -354,9 +354,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
-        verify(webViewClient, never()).handleOpenIdVcRequest(
+        verify(webViewClient, never()).processOpenIdVcRequest(
                 ArgumentMatchers.any(WebView.class), ArgumentMatchers.anyString());
-        verify(webViewClient, never()).handleOpenIdVcRequest(
+        verify(webViewClient, never()).processOpenIdVcRequest(
                 ArgumentMatchers.any(WebView.class), ArgumentMatchers.anyString(), ArgumentMatchers.any(Span.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
@@ -580,7 +580,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final Span span = mockSpan();
         final AzureActiveDirectoryWebViewClient webViewClient = mock(AzureActiveDirectoryWebViewClient.class);
         ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
-        when(webViewClient.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span)).thenAnswer(invocation -> {
+        when(webViewClient.processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span)).thenAnswer(invocation -> {
             span.setStatus(StatusCode.ERROR, "No handler found for openid-vc:// URI");
             return false;
         });
@@ -636,7 +636,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final Span span = mockSpan();
         final AzureActiveDirectoryWebViewClient client = mock(AzureActiveDirectoryWebViewClient.class);
         ReflectionHelpers.setField(mFragment, "mAADWebViewClient", client);
-        when(client.handleOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span))
+        when(client.processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span))
                 .thenThrow(new IllegalStateException());
 
         mFragment.handleInterceptedUrlFromNewWindow(

@@ -453,7 +453,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 BrokerValidator.class,
                 (mock, ctx) -> when(mock.isValidBrokerPackage(anyString()))
                         .thenThrow(new SecurityException("sensitive-query")))) {
-            assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+            assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
         }
 
         assertEquals("failed", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
@@ -602,7 +602,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
         OTelUtility.setSpanFactory(telemetry);
 
-        assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
 
         assertEquals(1, telemetry.captured().mEndCount);
         assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
@@ -620,7 +620,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final RecordingSpan span = new RecordingSpan();
         final Span previousSpan = SpanExtension.current();
 
-        assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span));
+        assertTrue(mWebViewClient.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span));
 
         assertNull(telemetry.captured());
         assertEquals(0, span.mEndCount);
@@ -641,7 +641,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         OTelUtility.setSpanFactory(telemetry);
         final RecordingSpan span = new RecordingSpan();
 
-        assertFalse(client.handleOpenIdVcRequest(webView, TEST_OPENID_VC_URL, span));
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL, span));
 
         assertNull(telemetry.captured());
         assertEquals(0, span.mEndCount);
@@ -661,7 +661,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
         OTelUtility.setSpanFactory(telemetry);
 
-        assertFalse(client.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
+        assertFalse(client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
 
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
@@ -701,7 +701,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
         OTelUtility.setSpanFactory(telemetry);
 
-        assertFalse(client.handleOpenIdVcRequest(webView, TEST_OPENID_VC_URL));
+        assertFalse(client.processOpenIdVcRequest(webView, TEST_OPENID_VC_URL));
 
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
@@ -729,7 +729,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
 
         try {
-            client.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL);
+            client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL);
             Assert.fail("Expected callback exception");
         } catch (final IllegalStateException e) {
             assertEquals(failure, e);

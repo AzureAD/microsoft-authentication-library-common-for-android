@@ -453,7 +453,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 processAmazonAppUri(url);
             } else if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_REDIRECT) && isOpenIdVcUrl(formattedURL)) {
                 Logger.info(methodTag, "It is an OpenID Verifiable Credentials request.");
-                handleOpenIdVcRequest(view, url);
+                processOpenIdVcRequest(view, url);
             } else if (isInvalidRedirectUri(url)) {
                 Logger.info(methodTag,"Check for Redirect Uri.");
                 processInvalidRedirectUri(view, url);
@@ -1422,8 +1422,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url the original OpenID VC URL.
      * @return whether Android accepted wallet dispatch, not whether the wallet completed the flow.
      */
-    public boolean handleOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
-        return handleOpenIdVcRequest(view, url, null);
+    public boolean processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
+        return processOpenIdVcRequest(view, url, null);
     }
 
     /**
@@ -1434,10 +1434,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param existingSpan the caller-owned span, or null to create and end a request span.
      * @return whether Android accepted wallet dispatch.
      */
-    public boolean handleOpenIdVcRequest(@NonNull final WebView view,
+    public boolean processOpenIdVcRequest(@NonNull final WebView view,
                                         @NonNull final String url,
                                         @Nullable final Span existingSpan) {
-        final String methodTag = TAG + ":handleOpenIdVcRequest";
+        final String methodTag = TAG + ":processOpenIdVcRequest";
         final Span span = existingSpan != null ? existingSpan
                 : createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
         String errorCode;
