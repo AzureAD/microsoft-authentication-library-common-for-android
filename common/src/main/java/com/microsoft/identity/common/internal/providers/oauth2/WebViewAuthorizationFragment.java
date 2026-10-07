@@ -561,7 +561,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    @NonNull final Span span,
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
-        String stage = "validate_url";
+        String stage = null;
         span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
         try {
             final Uri targetUri = request.getUrl();
@@ -590,7 +590,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
             } else if (formattedUrl.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
-                stage = "vc_flight_check";
                 final boolean vcEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT);
                 if (!vcEnabled) {
@@ -670,15 +669,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     private static void recordTargetBlankFailure(@NonNull final Span span,
                                                  @NonNull final String methodTag,
-                                                 @NonNull final String stage,
+                                                 @Nullable final String stage,
                                                  @NonNull final Exception exception) {
         final String exceptionType = exception.getClass().getSimpleName();
         if ("browser_launch".equals(stage) || "browser_fallback".equals(stage)) {
             SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
         }
-        span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
+        span.setStatus(StatusCode.ERROR, stage == null ? exceptionType : stage + ": " + exceptionType);
         // Android exception messages can contain the full authentication URL.
-        Logger.error(methodTag, "target=_blank failed at " + stage + " (" + exceptionType + ").", null);
+        Logger.error(methodTag, "target=_blank failed" + (stage == null ? "" : " at " + stage)
+                + " (" + exceptionType + ").", null);
     }
 
     /**
