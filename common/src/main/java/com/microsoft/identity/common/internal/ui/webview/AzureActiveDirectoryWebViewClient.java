@@ -1499,8 +1499,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String exceptionType = e.getClass().getSimpleName();
             Logger.error(methodTag, "Wallet dispatch failed (" + exceptionType + ").", null);
             span.recordException(e);
-            span.setAttribute(AttributeName.error_type.name(), exceptionType);
-            span.setStatus(StatusCode.ERROR, exceptionType);
+            span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
         }

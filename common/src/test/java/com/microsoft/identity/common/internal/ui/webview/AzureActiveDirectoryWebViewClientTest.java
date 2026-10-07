@@ -708,12 +708,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
         assertSame(exception, telemetry.captured().mRecordedException);
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
-        assertEquals(exception.getClass().getSimpleName(),
+        assertEquals("Failed to launch handler for openid-vc:// URI",
                 telemetry.captured().mStatusDescription);
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
         assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
-        assertEquals(exception.getClass().getSimpleName(), telemetry.captured().attribute(AttributeName.error_type.name()));
+        assertNull(telemetry.captured().attribute(AttributeName.error_type.name()));
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
         assertFalse(telemetry.captured().mAttributes.values().toString().contains("sensitive-query"));
         assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
