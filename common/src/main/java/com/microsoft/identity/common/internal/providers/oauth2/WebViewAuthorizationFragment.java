@@ -636,12 +636,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     + exceptionType + "); requesting HTTPS inline fallback.");
             try {
                 mainWebView.loadUrl(targetUrl);
+                SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
             } catch (final Throwable fallbackException) {
                 SpanExtension.recordOutcome(span, "browser_fallback", "failed",
                         fallbackException.getClass().getSimpleName());
                 throw fallbackException;
             }
-            SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
             span.setStatus(StatusCode.OK);
         }
     }
