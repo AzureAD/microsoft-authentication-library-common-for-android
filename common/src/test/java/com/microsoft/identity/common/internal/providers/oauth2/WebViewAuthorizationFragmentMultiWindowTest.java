@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,11 +44,17 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import androidx.fragment.app.FragmentActivity;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
@@ -55,12 +64,14 @@ import com.microsoft.identity.common.java.flighting.IFlightsProvider;
 import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 import com.microsoft.identity.common.java.opentelemetry.OTelUtility;
 import com.microsoft.identity.common.java.opentelemetry.SpanName;
+import com.microsoft.identity.common.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.InOrder;
@@ -70,8 +81,10 @@ import org.robolectric.Shadows;
 import org.robolectric.util.ReflectionHelpers;
 
 import java.util.Locale;
+import java.util.HashMap;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.common.Attributes;
 
@@ -113,6 +126,116 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
     private Span mockSpan() {
         return mock(Span.class);
+    }
+
+    private WebChromeClient setUpWindowClient(final WebView mainWebView) {
+        setOpenIdVcRedirectFlightEnabled(false);
+        when(mainWebView.getSettings()).thenReturn(mock(WebSettings.class));
+        when(mainWebView.getContext()).thenReturn(mContext);
+        final View rootView = mock(View.class);
+        when(rootView.findViewById(R.id.common_auth_webview)).thenReturn(mainWebView);
+        ReflectionHelpers.setField(mFragment, "mRequestHeaders", new HashMap<String, String>());
+        ReflectionHelpers.callInstanceMethod(mFragment, "setUpWebView",
+                ReflectionHelpers.ClassParameter.from(View.class, rootView),
+                ReflectionHelpers.ClassParameter.from(AzureActiveDirectoryWebViewClient.class,
+                        mock(AzureActiveDirectoryWebViewClient.class)));
+        final ArgumentCaptor<WebChromeClient> client = ArgumentCaptor.forClass(WebChromeClient.class);
+        verify(mainWebView).setWebChromeClient(client.capture());
+        return client.getValue();
+    }
+
+    @Test
+    public void testOnCreateWindow_hostUnavailable_logsWithoutTelemetry() {
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+             final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            assertFalse(client.onCreateWindow(mainWebView, false, true, null));
+            logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                    eq("onCreateWindow: authorization host is unavailable."), ArgumentMatchers.isNull()));
+            telemetry.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void testOnCreateWindow_invalidTransport_logsWithoutTelemetry() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final Message invalidMessage = Message.obtain();
+        invalidMessage.obj = new Object();
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+             final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            assertFalse(client.onCreateWindow(mainWebView, false, true, null));
+            assertFalse(client.onCreateWindow(mainWebView, false, true, invalidMessage));
+            logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                    eq("onCreateWindow: missing or invalid WebView transport."),
+                    ArgumentMatchers.isNull()), times(2));
+            telemetry.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void testOnCreateWindow_creationThrows_logsSanitizedFailureWithoutTelemetry() {
+        mFragment = spy(mFragment);
+        when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        when(mainWebView.getContext())
+                .thenThrow(new IllegalStateException("Sensitive URL must not enter logs."));
+        final Message message = Message.obtain();
+        message.obj = mainWebView.new WebViewTransport();
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+             final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            assertFalse(client.onCreateWindow(mainWebView, false, true, message));
+            logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                    eq("onCreateWindow: window creation failed (IllegalStateException)."),
+                    ArgumentMatchers.isNull()));
+            telemetry.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    public void testOnCreateWindow_createsAndEndsSpanOnlyOnNavigation() {
+        mFragment = spy(mFragment);
+        final AuthorizationActivity host = mock(AuthorizationActivity.class);
+        final SpanContext parentSpanContext = SpanContext.getInvalid();
+        when(host.getSpanContext()).thenReturn(parentSpanContext);
+        when(mFragment.getActivity()).thenReturn(host);
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final WebView.WebViewTransport transport = mainWebView.new WebViewTransport();
+        final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0, transport);
+        final Span span = mockSpan();
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+             final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            telemetry.when(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext)).thenReturn(span);
+
+            assertTrue(client.onCreateWindow(mainWebView, false, false, message));
+            logger.verify(() -> Logger.info(ArgumentMatchers.anyString(),
+                    eq("onCreateWindow: transport accepted; awaiting popup navigation.")));
+            telemetry.verifyNoInteractions();
+            verify(span, never()).end();
+
+            final WebView interceptor = transport.getWebView();
+            // The test SDK predates this overload on the framework's WebViewClient.
+            final boolean navigationHandled = ReflectionHelpers.callInstanceMethod(
+                    Shadows.shadowOf(interceptor).getWebViewClient(), "shouldOverrideUrlLoading",
+                    ReflectionHelpers.ClassParameter.from(WebView.class, interceptor),
+                    ReflectionHelpers.ClassParameter.from(WebResourceRequest.class,
+                            mockRequest(HTTPS_TARGET_URL)));
+            assertTrue(navigationHandled);
+
+            telemetry.verify(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext));
+            verify(mainWebView).loadUrl(HTTPS_TARGET_URL);
+            verify(span).setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), false);
+            verify(span).setStatus(StatusCode.OK);
+            verify(span).end();
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+        }
     }
 
     private void setOpenIdVcRedirectFlightEnabled(final boolean enabled) {
@@ -496,74 +619,74 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_destroyThrows_recordsCleanupFailure() {
+    public void testHandleInterceptedUrl_destroyThrows_logsCleanupFailure() {
         verifyCleanup(true);
     }
 
     private void verifyCleanup(final boolean destructionFails) {
         final WebView interceptor = mock(WebView.class);
         final Span span = mockSpan();
-        final Span cleanupSpan = mockSpan();
         if (destructionFails) {
-            doThrow(new IllegalStateException()).when(interceptor).destroy();
+            doThrow(new IllegalStateException("Sensitive URL must not enter logs.")).when(interceptor).destroy();
         }
-        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
-            telemetry.when(() -> OTelUtility.createSpanFromParent(
-                    SpanName.WebViewTargetBlankCleanup.name(), null)).thenReturn(cleanupSpan);
-
+        try (final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             mFragment.handleInterceptedUrlFromNewWindow(
                     mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
+            verify(interceptor, never()).destroy();
+            verify(span).end();
             Shadows.shadowOf(Looper.getMainLooper()).idle();
 
             verify(interceptor).destroy();
-            final InOrder decisions = org.mockito.Mockito.inOrder(cleanupSpan);
-            decisions.verify(cleanupSpan).addEvent("cleanup_scheduling", outcome("scheduled"));
             if (destructionFails) {
-                decisions.verify(cleanupSpan).addEvent("cleanup", failure("IllegalStateException"));
-                verify(cleanupSpan).setStatus(StatusCode.ERROR, "cleanup: IllegalStateException");
+                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                        eq("Popup interceptor destruction failed (IllegalStateException)."),
+                        ArgumentMatchers.isNull()));
             } else {
-                decisions.verify(cleanupSpan).addEvent("cleanup", outcome("destroyed"));
-                verify(cleanupSpan).setStatus(StatusCode.OK);
+                logger.verify(() -> Logger.info(ArgumentMatchers.anyString(),
+                        eq("Popup interceptor destroyed.")));
             }
-            verify(cleanupSpan).end();
-            verify(span).end();
+            verify(span).setStatus(StatusCode.OK);
+            verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         }
     }
 
     @Test
-    public void testHandleInterceptedUrl_cleanupSchedulingRejected_recordsFailure() {
+    public void testHandleInterceptedUrl_cleanupSchedulingRejected_logsFailure() {
         verifyCleanupSchedulingFailure(false);
     }
 
     @Test
-    public void testHandleInterceptedUrl_cleanupSchedulingThrows_recordsFailure() {
+    public void testHandleInterceptedUrl_cleanupSchedulingThrows_logsFailure() {
         verifyCleanupSchedulingFailure(true);
     }
 
     private void verifyCleanupSchedulingFailure(final boolean throwsException) {
         final Span span = mockSpan();
-        final Span cleanupSpan = mockSpan();
-        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
+        final WebView interceptor = mock(WebView.class);
+        try (final MockedStatic<Logger> logger = mockStatic(Logger.class);
              final MockedConstruction<Handler> handlers = mockConstruction(Handler.class, (handler, context) -> {
                  if (throwsException) {
-                     when(handler.post(ArgumentMatchers.any(Runnable.class))).thenThrow(new IllegalStateException());
+                     when(handler.post(ArgumentMatchers.any(Runnable.class)))
+                             .thenThrow(new IllegalStateException("Sensitive URL must not enter logs."));
                  } else {
                      when(handler.post(ArgumentMatchers.any(Runnable.class))).thenReturn(false);
                  }
              })) {
-            telemetry.when(() -> OTelUtility.createSpanFromParent(
-                    SpanName.WebViewTargetBlankCleanup.name(), null)).thenReturn(cleanupSpan);
-
             mFragment.handleInterceptedUrlFromNewWindow(
-                    mock(WebView.class), mock(WebView.class), mockRequest(HTTPS_TARGET_URL), span, false);
+                    mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
 
             if (throwsException) {
-                verify(cleanupSpan).addEvent("cleanup_scheduling", failure("IllegalStateException"));
-                verify(cleanupSpan).setStatus(StatusCode.ERROR, "cleanup_scheduling: IllegalStateException");
+                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                        eq("Popup interceptor cleanup scheduling failed (IllegalStateException)."),
+                        ArgumentMatchers.isNull()));
             } else {
-                verify(cleanupSpan).addEvent("cleanup_scheduling", outcome("schedule_rejected"));
+                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
+                        eq("Main looper rejected popup interceptor cleanup."),
+                        ArgumentMatchers.isNull()));
             }
-            verify(cleanupSpan).end();
+            verify(interceptor, never()).destroy();
+            verify(span).setStatus(StatusCode.OK);
+            verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
             verify(span).end();
         }
     }

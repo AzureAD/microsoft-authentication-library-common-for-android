@@ -416,6 +416,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Set up the web view configurations.
+     * Popup window creation is logged; navigation telemetry starts only when a URL is intercepted.
      *
      * @param view          View
      * @param webViewClient AzureActiveDirectoryWebViewClient
@@ -504,32 +505,23 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 final FragmentActivity host = getActivity();
                 final SpanContext parentSpanContext = host instanceof AuthorizationActivity
                         ? ((AuthorizationActivity) host).getSpanContext() : null;
-                final Span span = OTelUtility.createSpanFromParent(
-                        SpanName.WebViewTargetBlankWindowCreation.name(), parentSpanContext);
-                span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
                 boolean windowHandled = false;
-                WebView interceptorToCleanUp = null;
-                try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+                try {
                     if (host == null) {
-                        SpanExtension.recordOutcome(span, "window_creation", "host_unavailable");
-                        span.setStatus(StatusCode.ERROR, "Authorization host is unavailable");
                         Logger.error(methodTag, "onCreateWindow: authorization host is unavailable.", null);
                         return false;
                     }
                     if (resultMsg == null || !(resultMsg.obj instanceof WebView.WebViewTransport)) {
-                        SpanExtension.recordOutcome(span, "window_creation", "invalid_transport");
-                        span.setStatus(StatusCode.ERROR, "Missing or invalid WebView transport");
                         Logger.error(methodTag, "onCreateWindow: missing or invalid WebView transport.", null);
                         return false;
                     }
                     Logger.info(methodTag, "onCreateWindow: intercepting target=_blank navigation.");
                     final WebView interceptorWebView = new WebView(view.getContext());
-                    interceptorToCleanUp = interceptorWebView;
                     interceptorWebView.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
                             final Span navigationSpan = OTelUtility.createSpanFromParent(
-                                    SpanName.WebViewTargetBlankNavigation.name(), span.getSpanContext());
+                                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext);
                             handleInterceptedUrlFromNewWindow(view, v, request, navigationSpan, isUserGesture);
                             return true;
                         }
@@ -538,19 +530,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
                     windowHandled = true;
-                    SpanExtension.recordOutcome(span, "window_creation", "transport_accepted");
-                    span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: transport accepted; awaiting popup navigation.");
                 } catch (@NonNull final Exception e) {
-                    recordTargetBlankFailure(span, methodTag, "window_creation", e);
-                } finally {
-                    try {
-                        if (!windowHandled && interceptorToCleanUp != null) {
-                            scheduleInterceptorCleanup(interceptorToCleanUp, span);
-                        }
-                    } finally {
-                        span.end();
-                    }
+                    Logger.error(methodTag, "onCreateWindow: window creation failed ("
+                            + e.getClass().getSimpleName() + ").", null);
                 }
                 return windowHandled;
             }
@@ -565,6 +548,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * the authentication WebView away from its current page. If browser dispatch throws, HTTPS
      * URLs are loaded inline. Wallet failures remain authentication errors, without inline fallback.
      * Dispatch/load success means the request was accepted, not that the destination completed.
+     * Interceptor destruction is deferred to the main looper; cleanup outcomes are logged.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -669,10 +653,24 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } catch (final Exception e) {
             recordTargetBlankFailure(span, methodTag, stage, e);
         } finally {
+            span.end();
             try {
-                scheduleInterceptorCleanup(interceptorWebView, span);
-            } finally {
-                span.end();
+                // The hidden interceptor may never attach; View.post would wait for attachment.
+                final boolean scheduled = new Handler(Looper.getMainLooper()).post(() -> {
+                    try {
+                        interceptorWebView.destroy();
+                        Logger.info(methodTag, "Popup interceptor destroyed.");
+                    } catch (final RuntimeException e) {
+                        Logger.error(methodTag, "Popup interceptor destruction failed ("
+                                + e.getClass().getSimpleName() + ").", null);
+                    }
+                });
+                if (!scheduled) {
+                    Logger.error(methodTag, "Main looper rejected popup interceptor cleanup.", null);
+                }
+            } catch (final RuntimeException e) {
+                Logger.error(methodTag, "Popup interceptor cleanup scheduling failed ("
+                        + e.getClass().getSimpleName() + ").", null);
             }
         }
     }
@@ -686,40 +684,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
         // Android exception messages can contain the full authentication URL.
         Logger.error(methodTag, "target=_blank failed at " + stage + " (" + exceptionType + ").", null);
-    }
-
-    private static void scheduleInterceptorCleanup(@NonNull final WebView interceptorWebView,
-                                                    @NonNull final Span parentSpan) {
-        final String methodTag = TAG + ":scheduleInterceptorCleanup";
-        final Span cleanupSpan = OTelUtility.createSpanFromParent(
-                SpanName.WebViewTargetBlankCleanup.name(), parentSpan.getSpanContext());
-        try {
-            Logger.info(methodTag, "Scheduling popup interceptor cleanup.");
-            // The hidden interceptor may never attach; View.post would wait for attachment.
-            final boolean scheduled = new Handler(Looper.getMainLooper()).post(() -> {
-                try {
-                    interceptorWebView.destroy();
-                    SpanExtension.recordOutcome(cleanupSpan, "cleanup", "destroyed");
-                    cleanupSpan.setStatus(StatusCode.OK);
-                    Logger.info(methodTag, "Popup interceptor destroyed.");
-                } catch (final RuntimeException e) {
-                    recordTargetBlankFailure(cleanupSpan, methodTag, "cleanup", e);
-                } finally {
-                    cleanupSpan.end();
-                }
-            });
-            SpanExtension.recordOutcome(cleanupSpan, "cleanup_scheduling", scheduled ? "scheduled" : "schedule_rejected");
-            if (scheduled) {
-                Logger.info(methodTag, "Popup interceptor cleanup scheduled.");
-            } else {
-                cleanupSpan.setStatus(StatusCode.ERROR, "WebView rejected cleanup scheduling");
-                Logger.error(methodTag, "WebView rejected popup interceptor cleanup scheduling.", null);
-                cleanupSpan.end();
-            }
-        } catch (final RuntimeException e) {
-            recordTargetBlankFailure(cleanupSpan, methodTag, "cleanup_scheduling", e);
-            cleanupSpan.end();
-        }
     }
 
     /**
