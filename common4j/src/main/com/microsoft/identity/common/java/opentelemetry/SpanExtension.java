@@ -75,7 +75,7 @@ public class SpanExtension {
     }
 
     /**
-     * Records a named decision and updates the span's latest outcome. Distinct event names retain
+     * Records a named decision. Distinct event names retain
      * earlier decisions (for example a failed dispatch followed by a successful fallback).
      *
      * @param span the operation span
@@ -106,7 +106,6 @@ public class SpanExtension {
             attributes.put(AttributeName.error_type.name(), exceptionType);
         }
         span.addEvent(stage, attributes.build());
-        span.setAttribute(AttributeName.operation_outcome.name(), outcome);
     }
 
     /**

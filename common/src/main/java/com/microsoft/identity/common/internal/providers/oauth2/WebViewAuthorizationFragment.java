@@ -587,7 +587,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
                 stage = "inline_load";
                 mainWebView.loadUrl(targetUrl);
-                SpanExtension.recordOutcome(span, stage, "inline_load_requested");
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
             } else if (formattedUrl.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
@@ -600,7 +599,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     Logger.warn(methodTag, "onCreateWindow: OpenID VC redirect flight disabled; wallet dispatch blocked.");
                     return;
                 }
-                SpanExtension.recordOutcome(span, stage, "enabled");
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
@@ -612,7 +610,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 stage = "vc_dispatch";
                 final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
                 if (launched) {
-                    SpanExtension.recordOutcome(span, stage, "external_launch_accepted");
                     span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
                 } else {
@@ -633,14 +630,15 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                 try {
                     mainWebView.getContext().startActivity(browserIntent);
-                    SpanExtension.recordOutcome(span, stage, "external_launch_accepted");
                     span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
                 } catch (final RuntimeException e) {
-                    recordTargetBlankFailure(span, methodTag, stage, e);
+                    final String exceptionType = e.getClass().getSimpleName();
+                    SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
                     stage = "browser_fallback";
                     span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
-                    Logger.warn(methodTag, "onCreateWindow: browser dispatch failed; requesting HTTPS inline fallback.");
+                    Logger.warn(methodTag, "onCreateWindow: browser dispatch failed ("
+                            + exceptionType + "); requesting HTTPS inline fallback.");
                     mainWebView.loadUrl(targetUrl);
                     SpanExtension.recordOutcome(span, stage, "inline_fallback_requested");
                     span.setStatus(StatusCode.OK);

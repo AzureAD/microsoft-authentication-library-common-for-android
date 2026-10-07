@@ -378,8 +378,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME, started.getPackage());
         assertTrue("Trusted wallet must receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
-        assertEquals(Arrays.asList("stop_webview", "prepare_intent", "authenticator_lookup",
-                "wallet_verification", "return_to_caller", "resolve_handler", "launch_wallet"),
+        assertEquals(Arrays.asList("authenticator_lookup", "wallet_verification", "return_to_caller"),
                 telemetry.captured().mEventNames);
         assertEquals("found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
         assertEquals("verified", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
@@ -406,7 +405,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
         assertEquals("not_found", telemetry.captured().eventAttribute("authenticator_lookup", AttributeName.operation_outcome));
         assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
-        assertEquals("accepted", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
     }
 
     @Test
@@ -437,7 +437,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertFalse("Signature-failing Authenticator must NOT receive the return-to-caller PendingIntent",
                 started.hasExtra(OpenIdVcReturnActivity.RETURN_PENDING_INTENT_EXTRA));
         assertEquals("rejected", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
-        assertEquals("accepted", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
     }
 
     @Test
@@ -458,7 +459,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals("failed", telemetry.captured().eventAttribute("wallet_verification", AttributeName.operation_outcome));
         assertEquals("SecurityException", telemetry.captured().eventAttribute("wallet_verification", AttributeName.error_type));
         assertEquals("untrusted_handler", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
-        assertEquals("accepted", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertFalse(telemetry.captured().mEvents.toString().contains("sensitive-query"));
         final Intent started = Shadows.shadowOf(mActivity).getNextStartedActivity();
         assertNotNull(started);
@@ -602,11 +604,10 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
 
-        assertEquals("accepted", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
-        assertEquals(Arrays.asList("stop_webview", "prepare_intent", "return_to_caller",
-                "resolve_handler", "launch_wallet"), telemetry.captured().mEventNames);
+        assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals(Arrays.asList("return_to_caller"), telemetry.captured().mEventNames);
         assertEquals("not_brokered", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
-        assertEquals("accepted", telemetry.captured().eventAttribute("launch_wallet", AttributeName.operation_outcome));
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
     }
 
@@ -625,6 +626,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(ErrorStrings.ACTIVITY_NOT_FOUND, ((ClientException) result.getValue().getException()).getErrorCode());
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertEquals("No handler found for openid-vc:// URI", telemetry.captured().mStatusDescription);
         assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
         assertEquals(false, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
@@ -660,7 +662,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
         assertEquals("launch_wallet: " + exception.getClass().getSimpleName(),
                 telemetry.captured().mStatusDescription);
-        assertEquals("found", telemetry.captured().eventAttribute("resolve_handler", AttributeName.operation_outcome));
+        assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
         assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
         assertEquals(exception.getClass().getSimpleName(), telemetry.captured().attribute(AttributeName.error_type.name()));
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));

@@ -389,8 +389,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 eq(AttributeName.target_blank_navigation_route.name()),
             eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER));
         verify(span).setStatus(StatusCode.OK);
-        verify(span).addEvent("browser_launch", outcome("external_launch_accepted"));
-        verify(span, never()).addEvent(eq("browser_fallback"), ArgumentMatchers.any(Attributes.class));
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
         verify(span).end();
     }
 
@@ -486,7 +485,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         decisions.verify(span).addEvent("browser_fallback", outcome("inline_fallback_requested"));
         verify(span).setAttribute(eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK));
-        verify(span).setAttribute(eq(AttributeName.operation_outcome.name()), eq("inline_fallback_requested"));
+        verify(span, never()).setAttribute(eq(AttributeName.operation_outcome.name()), ArgumentMatchers.anyString());
+        verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
         verify(span).setStatus(StatusCode.OK);
         verify(span, never()).recordException(ArgumentMatchers.any(Throwable.class));
         verify(span).end();

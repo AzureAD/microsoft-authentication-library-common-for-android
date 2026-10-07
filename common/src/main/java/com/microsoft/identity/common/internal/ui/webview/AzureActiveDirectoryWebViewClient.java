@@ -1432,11 +1432,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             Logger.info(methodTag, "Stopping authentication WebView before wallet dispatch.");
             view.stopLoading();
-            SpanExtension.recordOutcome(span, stage, "stopped");
             stage = "prepare_intent";
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            SpanExtension.recordOutcome(span, stage, "prepared");
             Logger.info(methodTag, "Wallet launch intent prepared.");
 
             // Resolve after any pinning so the handler check matches the final intent we will launch.
@@ -1481,12 +1479,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final ComponentName resolved = intent.resolveActivity(pm);
             span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), resolved != null);
             if (resolved != null) {
-                SpanExtension.recordOutcome(span, stage, "found");
                 stage = "launch_wallet";
                 Logger.info(methodTag, "Wallet handler resolved; requesting external launch.");
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
-                SpanExtension.recordOutcome(span, stage, "accepted");
                 span.setStatus(StatusCode.OK);
                 return true;
             } else {
