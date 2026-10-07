@@ -312,6 +312,54 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
+    public void testHandleInterceptedUrl_openIdVcWithoutAuthority_launchesWallet() {
+        setOpenIdVcRedirectFlightEnabled(true);
+        for (final String targetUrl : new String[]{"openid-vc:authorize", "openid-vc:/authorize"}) {
+            final WebView mainWebView = mock(WebView.class);
+            final WebView interceptorWebView = mock(WebView.class);
+            final Span span = mockSpan();
+            final AzureActiveDirectoryWebViewClient webViewClient =
+                    mock(AzureActiveDirectoryWebViewClient.class);
+            ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+            when(webViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span)).thenReturn(true);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mainWebView, interceptorWebView, mockRequest(targetUrl), span, true);
+
+            verify(webViewClient).processOpenIdVcRequest(mainWebView, targetUrl, span);
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span).setAttribute(
+                    AttributeName.target_blank_navigation_route.name(),
+                    AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
+            verify(span).end();
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nonVcSchemes_doNotLaunchWallet() {
+        setOpenIdVcRedirectFlightEnabled(true);
+        for (final String targetUrl : new String[]{"openid-vc-extra://authorize", "authorize", "http://openid-vc"}) {
+            final WebView mainWebView = mock(WebView.class);
+            final WebView interceptorWebView = mock(WebView.class);
+            final Span span = mockSpan();
+            final AzureActiveDirectoryWebViewClient webViewClient =
+                    mock(AzureActiveDirectoryWebViewClient.class);
+            ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mainWebView, interceptorWebView, mockRequest(targetUrl), span, true);
+
+            verify(webViewClient, never()).processOpenIdVcRequest(
+                    mainWebView, targetUrl, span);
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span).setAttribute(
+                    AttributeName.target_blank_navigation_route.name(),
+                    AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
+            verify(span).end();
+        }
+    }
+
+    @Test
     public void testHandleInterceptedUrl_uppercaseOpenIdVc_turkishLocale_launchesWallet() {
         final Locale originalLocale = Locale.getDefault();
         try {

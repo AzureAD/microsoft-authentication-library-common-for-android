@@ -965,15 +965,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Checks if the URL uses the openid-vc:// custom scheme.
+     * Checks if the URL uses the OpenID VC custom scheme.
      * This scheme is used by OpenID Verifiable Credentials flows and must be
      * intercepted so a registered wallet app can handle it.
      *
-     * @param url The lowercase URL to check.
-     * @return true if the URL starts with the openid-vc:// scheme.
+     * @param url The URL to check.
+     * @return true if the parsed scheme is openid-vc, ignoring case.
      */
     private boolean isOpenIdVcUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX);
+        return AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(Uri.parse(url).getScheme());
     }
 
     private boolean isWebCpEnrollmentUrl(@NonNull final String url) {

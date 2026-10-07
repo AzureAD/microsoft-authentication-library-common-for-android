@@ -585,7 +585,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 mainWebView.loadUrl(targetUrl);
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
-            } else if (formattedUrl.startsWith(AuthenticationConstants.Broker.OPENID_VC_SCHEME_PREFIX)) {
+            } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
                 final boolean vcEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT);
                 if (!vcEnabled) {
