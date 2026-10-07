@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.commands.ICommand;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -80,8 +81,9 @@ public interface IPlatformUtil {
      * model (e.g. {@code AndroidPlatformUtil}) <strong>must override</strong> this to first assert that
      * {@code packageName} (the self-reported caller package from the untrusted request bundle) is owned by
      * the app that owns the kernel-attested {@code callingUid}, rejecting a mismatch fail-closed with
-     * {@code ClientException(unknown_caller)}, before applying the redirect-URI check. That ownership check
-     * must run <em>before</em> any redirect-URI short-circuit, so it cannot be bypassed.
+     * {@code ArgumentException(brokerTokenRequest, callerPackageName)}, before applying the redirect-URI
+     * check. That ownership check must run <em>before</em> any redirect-URI short-circuit, so it cannot be
+     * bypassed.
      *
      * <p>The default implementation performs <em>no</em> uid check and simply delegates to
      * {@link #isValidCallingApp(String, String)} — appropriate for platforms with no per-app uid model
@@ -95,13 +97,14 @@ public interface IPlatformUtil {
      * @param packageName  the self-reported caller package from the (untrusted) request bundle.
      * @param callingUid   the kernel-attested calling uid ({@code Binder.getCallingUid()}).
      * @return {@code true} if the app owns the redirect URI; {@code false} otherwise.
-     * @throws ClientException with {@code unknown_caller} if an overriding implementation determines that
-     *                         {@code packageName} does not match the uid's packages, or the uid resolves to
-     *                         no package.
+     * @throws ArgumentException with operation {@code brokerTokenRequest} and argument
+     *                           {@code callerPackageName} if an overriding implementation determines that
+     *                           {@code packageName} does not match the uid's packages, or the uid resolves
+     *                           to no package.
      */
     default boolean isValidCallingApp(@NonNull final String redirectUri,
                                       @NonNull final String packageName,
-                                      final int callingUid) throws ClientException {
+                                      final int callingUid) throws ArgumentException {
         return isValidCallingApp(redirectUri, packageName);
     }
 

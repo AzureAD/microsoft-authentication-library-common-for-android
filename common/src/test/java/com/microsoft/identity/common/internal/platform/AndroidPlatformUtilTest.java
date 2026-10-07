@@ -32,8 +32,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.constants.FidoConstants;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,13 +144,16 @@ public class AndroidPlatformUtilTest {
         return Shadows.shadowOf(context.getPackageManager());
     }
 
-    private void assertUnknownCaller(final int callingUid, final String callerPackageName) {
+    private void assertCallerPackageArgumentException(final int callingUid,
+                                                      final String callerPackageName) {
         try {
             platformUtil().isValidCallingApp(DUMMY_REDIRECT, callerPackageName, callingUid);
-            fail("Expected ClientException(UNKNOWN_CALLER) for uid=" + callingUid
+            fail("Expected ArgumentException for uid=" + callingUid
                     + " caller=" + callerPackageName);
-        } catch (final ClientException e) {
-            assertEquals(ErrorStrings.UNKNOWN_CALLER, e.getErrorCode());
+        } catch (final ArgumentException e) {
+            assertEquals(ArgumentException.ILLEGAL_ARGUMENT_ERROR_CODE, e.getErrorCode());
+            assertEquals(ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME, e.getOperationName());
+            assertEquals(ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME, e.getArgumentName());
             assertTrue(e.getMessage().contains("uid " + callingUid));
             assertTrue(e.getMessage().contains("'" + callerPackageName + "'"));
         }
@@ -158,7 +161,7 @@ public class AndroidPlatformUtilTest {
 
     @Test
     @Config(sdk = 28)
-    public void isValidCallingApp_callerOwnedByUid_passesCallerCheck() throws ClientException {
+    public void isValidCallingApp_callerOwnedByUid_passesCallerCheck() throws ArgumentException {
         shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
 
         // The self-reported caller package is owned by the attested uid: the caller-ownership check does not
@@ -168,7 +171,7 @@ public class AndroidPlatformUtilTest {
 
     @Test
     @Config(sdk = 28)
-    public void isValidCallingApp_sharedUidCallerIsOneOfPackages_passesCallerCheck() throws ClientException {
+    public void isValidCallingApp_sharedUidCallerIsOneOfPackages_passesCallerCheck() throws ArgumentException {
         shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE, COMPANION_PACKAGE);
 
         // A shared-uid caller naming any package the uid owns is accepted by the caller-ownership check.
@@ -177,26 +180,26 @@ public class AndroidPlatformUtilTest {
 
     @Test
     @Config(sdk = 28)
-    public void isValidCallingApp_callerNotOwnedByUid_throwsUnknownCaller() {
+    public void isValidCallingApp_callerNotOwnedByUid_throwsArgumentException() {
         shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
 
         // The uid owns OWNED_PACKAGE, but the request self-reports a victim package it does not own.
-        assertUnknownCaller(OWNER_UID, OTHER_PACKAGE);
+        assertCallerPackageArgumentException(OWNER_UID, OTHER_PACKAGE);
     }
 
     @Test
     @Config(sdk = 28)
-    public void isValidCallingApp_emptyCallerPackage_throwsUnknownCaller() {
+    public void isValidCallingApp_emptyCallerPackage_throwsArgumentException() {
         shadowPackageManager().setPackagesForUid(OWNER_UID, OWNED_PACKAGE);
 
         // An empty caller package is not owned by the uid: rejected fail-closed (no backfill).
-        assertUnknownCaller(OWNER_UID, "");
+        assertCallerPackageArgumentException(OWNER_UID, "");
     }
 
     @Test
     @Config(sdk = 28)
-    public void isValidCallingApp_uidResolvesToNoPackage_throwsUnknownCaller() {
+    public void isValidCallingApp_uidResolvesToNoPackage_throwsArgumentException() {
         // No packages mapped for the uid: getPackagesForUid returns null -> empty owned set -> fail closed.
-        assertUnknownCaller(UNMAPPED_UID, OWNED_PACKAGE);
+        assertCallerPackageArgumentException(UNMAPPED_UID, OWNED_PACKAGE);
     }
 }

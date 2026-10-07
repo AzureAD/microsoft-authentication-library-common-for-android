@@ -37,7 +37,6 @@ import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.MockFlightsManager;
@@ -115,22 +114,26 @@ public class BrokerSilentTokenCommandParametersTest {
     }
 
     /**
-     * Direct validation preserves the ownership failure error when both flights are enabled.
+     * Direct validation preserves the shared platform argument error when both flights are enabled.
      */
     @Test
-    public void validate_bothFlightsOnAndCallerRejected_throwsUnknownCaller() {
+    public void validate_bothFlightsOnAndCallerRejected_throwsArgumentException() {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         try {
             when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt()))
-                    .thenThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"));
+                    .thenThrow(new ArgumentException(
+                            ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
+                            ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME,
+                            "spoofed"));
 
             params(platformUtil).validate();
-            fail("Expected ClientException(UNKNOWN_CALLER) to propagate from the caller-validation gate.");
-        } catch (final ClientException e) {
-            assertEquals(ErrorStrings.UNKNOWN_CALLER, e.getErrorCode());
+            fail("Expected ArgumentException to propagate from the caller-validation gate.");
         } catch (final ArgumentException e) {
-            fail("Expected ClientException(UNKNOWN_CALLER), not ArgumentException: " + e.getMessage());
+            assertEquals(ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME, e.getOperationName());
+            assertEquals(ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME, e.getArgumentName());
+        } catch (final ClientException e) {
+            fail("Expected ArgumentException, not ClientException: " + e.getMessage());
         }
         verify(platformUtil, never()).isValidCallingApp(anyString(), anyString());
     }
@@ -144,7 +147,10 @@ public class BrokerSilentTokenCommandParametersTest {
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
         when(platformUtil.isValidCallingApp(anyString(), anyString(), anyInt()))
-                .thenThrow(new ClientException(ErrorStrings.UNKNOWN_CALLER, "spoofed"));
+                .thenThrow(new ArgumentException(
+                        ArgumentException.BROKER_TOKEN_REQUEST_OPERATION_NAME,
+                        ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME,
+                        "spoofed"));
 
         params(platformUtil).validateForTrustedBrokerPassthrough();
 
@@ -176,7 +182,8 @@ public class BrokerSilentTokenCommandParametersTest {
      * Trusted passthrough retains all parameter preconditions that run before caller/redirect validation.
      */
     @Test
-    public void validateForTrustedBrokerPassthrough_invalidParametersStillFail() throws ClientException {
+    public void validateForTrustedBrokerPassthrough_invalidParametersStillFail()
+            throws ClientException, ArgumentException {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         final BrokerSilentTokenCommandParameters validParams = params(platformUtil);
