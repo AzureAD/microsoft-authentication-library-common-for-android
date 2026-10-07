@@ -646,7 +646,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             Logger.error(methodTag, "Error handling target=_blank", e);
         } finally {
             span.end();
-            // TODO: Investigate cleanup of unattached interceptor WebViews in a follow-up PR.
+            // Destroy the interceptor WebView after it has served its purpose
             interceptorWebView.post(interceptorWebView::destroy);
         }
     }
