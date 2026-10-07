@@ -1480,8 +1480,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(methodTag, "Resolving external wallet handler.");
             final ComponentName resolved = intent.resolveActivity(pm);
             span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), resolved != null);
-            SpanExtension.recordOutcome(span, stage, resolved != null ? "found" : "no_handler");
             if (resolved != null) {
+                SpanExtension.recordOutcome(span, stage, "found");
                 stage = "launch_wallet";
                 Logger.info(methodTag, "Wallet handler resolved; requesting external launch.");
                 getActivity().startActivity(intent);
@@ -1499,7 +1499,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final String exceptionType = e.getClass().getSimpleName();
             Logger.error(methodTag, "Wallet dispatch failed at " + stage + " (" + exceptionType + ").", null);
             span.setAttribute(AttributeName.error_type.name(), exceptionType);
-            SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
             span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";

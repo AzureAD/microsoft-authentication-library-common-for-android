@@ -547,8 +547,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      * launch the wallet. User-initiated HTTPS URLs open in the external browser without navigating
      * the authentication WebView away from its current page. If browser dispatch throws, HTTPS
      * URLs are loaded inline. Wallet failures remain authentication errors, without inline fallback.
-     * Dispatch/load success means the request was accepted, not that the destination completed.
-     * Interceptor destruction is deferred to the main looper; cleanup outcomes are logged.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -569,7 +567,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             final Uri targetUri = request.getUrl();
             if (targetUri == null || StringUtil.isNullOrEmpty(targetUri.toString())) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
-                SpanExtension.recordOutcome(span, stage, "invalid_url");
                 span.setStatus(StatusCode.ERROR, "Missing popup destination");
                 Logger.error(methodTag, "onCreateWindow: popup destination is missing.", null);
                 return;
@@ -597,13 +594,13 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 stage = "vc_flight_check";
                 final boolean vcEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                         .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT);
-                SpanExtension.recordOutcome(span, stage, vcEnabled ? "enabled" : "disabled");
                 if (!vcEnabled) {
                     span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED);
                     span.setStatus(StatusCode.ERROR, "OpenID VC redirect flight disabled");
                     Logger.warn(methodTag, "onCreateWindow: OpenID VC redirect flight disabled; wallet dispatch blocked.");
                     return;
                 }
+                SpanExtension.recordOutcome(span, stage, "enabled");
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
@@ -614,17 +611,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
                 stage = "vc_dispatch";
                 final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
-                SpanExtension.recordOutcome(span, stage, launched ? "external_launch_accepted" : "wallet_launch_failed");
-                span.setStatus(launched ? StatusCode.OK : StatusCode.ERROR);
                 if (launched) {
+                    SpanExtension.recordOutcome(span, stage, "external_launch_accepted");
+                    span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
                 } else {
+                    span.setStatus(StatusCode.ERROR, "Wallet dispatch failed");
                     Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
                 }
             } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
-                SpanExtension.recordOutcome(span, "validate_url", "blocked");
                 span.setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
             } else {
@@ -680,7 +677,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                  @NonNull final String stage,
                                                  @NonNull final Exception exception) {
         final String exceptionType = exception.getClass().getSimpleName();
-        SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
+        if ("browser_launch".equals(stage) || "browser_fallback".equals(stage)) {
+            SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
+        }
         span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
         // Android exception messages can contain the full authentication URL.
         Logger.error(methodTag, "target=_blank failed at " + stage + " (" + exceptionType + ").", null);

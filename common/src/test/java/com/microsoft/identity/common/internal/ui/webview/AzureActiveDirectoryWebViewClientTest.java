@@ -624,8 +624,9 @@ public class AzureActiveDirectoryWebViewClientTest {
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(ErrorStrings.ACTIVITY_NOT_FOUND, ((ClientException) result.getValue().getException()).getErrorCode());
-        assertEquals("no_handler", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
-        assertEquals("no_handler", telemetry.captured().eventAttribute("resolve_handler", AttributeName.operation_outcome));
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals("No handler found for openid-vc:// URI", telemetry.captured().mStatusDescription);
+        assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
         assertEquals(false, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
     }
 
@@ -656,11 +657,11 @@ public class AzureActiveDirectoryWebViewClientTest {
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
-        assertEquals("failed", telemetry.captured().attribute(AttributeName.operation_outcome.name()));
+        assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals("launch_wallet: " + exception.getClass().getSimpleName(),
+                telemetry.captured().mStatusDescription);
         assertEquals("found", telemetry.captured().eventAttribute("resolve_handler", AttributeName.operation_outcome));
-        assertEquals("failed", telemetry.captured().eventAttribute("launch_wallet", AttributeName.operation_outcome));
-        assertEquals(exception.getClass().getSimpleName(),
-                telemetry.captured().eventAttribute("launch_wallet", AttributeName.error_type));
+        assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
         assertEquals(exception.getClass().getSimpleName(), telemetry.captured().attribute(AttributeName.error_type.name()));
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
         assertFalse(telemetry.captured().mAttributes.values().toString().contains("sensitive-query"));
@@ -1773,6 +1774,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         private final Map<AttributeKey<?>, Object> mAttributes = new HashMap<>();
         private final List<String> mEventNames = new ArrayList<>();
         private final List<Attributes> mEvents = new ArrayList<>();
+        private StatusCode mStatusCode = StatusCode.UNSET;
+        private String mStatusDescription = "";
 
         Object eventAttribute(final String eventName, final AttributeName attribute) {
             final int index = mEventNames.indexOf(eventName);
@@ -1810,6 +1813,8 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public Span setStatus(final StatusCode statusCode, final String description) {
+            mStatusCode = statusCode;
+            mStatusDescription = description;
             return this;
         }
 

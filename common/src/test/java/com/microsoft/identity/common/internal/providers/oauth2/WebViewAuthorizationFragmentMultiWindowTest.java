@@ -282,7 +282,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL));
-        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
+        verify(span).setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
         verify(span).end();
     }
 
@@ -361,8 +362,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED));
-        verify(span).addEvent("vc_flight_check", outcome("disabled"));
-        verify(span).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
+        verify(span).setStatus(StatusCode.ERROR, "OpenID VC redirect flight disabled");
         verify(span).end();
     }
 
@@ -523,7 +524,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, false);
 
         verify(span, never()).addEvent(eq("browser_launch"), ArgumentMatchers.any(Attributes.class));
-        verify(span).addEvent("inline_load", failure("IllegalStateException"));
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
         verify(span).setStatus(StatusCode.ERROR, "inline_load: IllegalStateException");
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
@@ -539,7 +540,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
-        verify(span).addEvent("validate_url", outcome("invalid_url"));
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
         verify(span).setStatus(StatusCode.ERROR, "Missing popup destination");
         verify(span).end();
     }
@@ -557,9 +558,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
 
-        verify(span).addEvent("vc_dispatch", outcome("wallet_launch_failed"));
+        verify(span, never()).addEvent(eq("vc_dispatch"), ArgumentMatchers.any(Attributes.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
-        verify(span).setStatus(StatusCode.ERROR);
+        verify(span).setStatus(StatusCode.ERROR, "Wallet dispatch failed");
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
     }
@@ -575,6 +576,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
 
         verify(span).setStatus(StatusCode.ERROR, "vc_client_check: IllegalStateException");
+        verify(span, never()).addEvent(eq("vc_client_check"), ArgumentMatchers.any(Attributes.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
@@ -588,7 +590,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, mock(WebView.class), mockRequest(""), span, true);
 
-        verify(span).addEvent("validate_url", outcome("invalid_url"));
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
+        verify(span).setStatus(StatusCode.ERROR, "Missing popup destination");
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).end();
     }
@@ -607,7 +610,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 mainWebView, mock(WebView.class), mockRequest(OPENID_VC_TARGET_URL), span, true);
 
         verify(span).setStatus(StatusCode.ERROR, "vc_dispatch: IllegalStateException");
-        verify(span).addEvent("vc_dispatch", failure("IllegalStateException"));
+        verify(span, never()).addEvent(eq("vc_dispatch"), ArgumentMatchers.any(Attributes.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
