@@ -390,7 +390,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_openIdVc_flightDisabled_refusesToOpen() {
+    public void testHandleInterceptedUrl_openIdVc_flightDisabled_launchesWallet() {
         setOpenIdVcRedirectFlightEnabled(false);
         final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
@@ -400,18 +400,19 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 mock(AzureActiveDirectoryWebViewClient.class);
         ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
 
+        when(webViewClient.processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span)).thenReturn(true);
+
         mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, true);
 
         verify(webViewClient, never()).processOpenIdVcRequest(
                 ArgumentMatchers.any(WebView.class), ArgumentMatchers.anyString());
-        verify(webViewClient, never()).processOpenIdVcRequest(
-                ArgumentMatchers.any(WebView.class), ArgumentMatchers.anyString(), ArgumentMatchers.any(Span.class));
+        verify(webViewClient).processOpenIdVcRequest(mainWebView, OPENID_VC_TARGET_URL, span);
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span).setAttribute(
                 eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED));
+                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC));
         verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
-        verify(span).setStatus(StatusCode.ERROR, "OpenID VC redirect flight disabled");
+        verify(span, never()).setStatus(ArgumentMatchers.any(StatusCode.class), ArgumentMatchers.anyString());
         verify(span).end();
     }
 

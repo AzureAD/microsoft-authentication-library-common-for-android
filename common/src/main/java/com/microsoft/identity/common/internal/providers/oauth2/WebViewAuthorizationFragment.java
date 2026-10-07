@@ -586,18 +586,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
-                final boolean vcEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                        .isFlightEnabled(CommonFlight.ENABLE_OPEN_ID_VC_REDIRECT);
-                if (!vcEnabled) {
-                    span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED);
-                    span.setStatus(StatusCode.ERROR, "OpenID VC redirect flight disabled");
-                    Logger.warn(methodTag, "onCreateWindow: OpenID VC redirect flight disabled; wallet dispatch blocked.");
-                    return;
-                }
                 span.setAttribute(
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
-                Logger.info(methodTag, "onCreateWindow: VC redirect flight enabled; delegating wallet dispatch.");
+                Logger.info(methodTag, "onCreateWindow: delegating wallet dispatch.");
                 if (mAADWebViewClient == null) {
                     throw new IllegalStateException("Authentication WebView client is unavailable.");
                 }

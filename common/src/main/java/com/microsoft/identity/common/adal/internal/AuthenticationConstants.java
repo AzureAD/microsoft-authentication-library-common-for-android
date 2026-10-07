@@ -1531,11 +1531,6 @@ public final class AuthenticationConstants {
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK = "browser_fallback";
 
         /**
-         * OpenID VC popup refused because its redirect flight is disabled.
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC_DISABLED = "openid_vc_disabled";
-
-        /**
          * WebView routing value when the popup was not initiated by a user gesture.
          */
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE = "no_user_gesture";
