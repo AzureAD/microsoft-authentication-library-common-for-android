@@ -24,11 +24,13 @@ package com.microsoft.identity.common.internal.broker
 
 import com.microsoft.identity.common.internal.numberMatch.NumberMatchHelper
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
+import com.microsoft.identity.common.java.opentelemetry.SpanExtension
 import io.opentelemetry.api.trace.Span
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mockStatic
 
 class AuthUxJavaScriptInterfaceTest {
 
@@ -135,11 +137,64 @@ class AuthUxJavaScriptInterfaceTest {
     }
 
     @Test
+    fun `test receiveAuthUxMessage with required fields but no params is a no-op`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        interfaceWithSink.receiveAuthUxMessage(
+            """
+            {
+                "correlationID": "corr-1",
+                "action_name": "log_telemetry",
+                "action_component": "host"
+            }
+            """.trimIndent()
+        )
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
     fun `test receiveAuthUxMessage with non-json string`() {
         // Call the method
         authUxJavaScriptInterface.receiveAuthUxMessage("NotAJson")
 
         // Should not get an exception
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage contains NullPointerException from span lookup`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        mockStatic(SpanExtension::class.java).use { spanExtension ->
+            spanExtension.`when`<Span> {
+                SpanExtension.current()
+            }.thenThrow(NullPointerException("test failure"))
+
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
+    }
+
+    @Test
+    fun `test receiveAuthUxMessage contains unexpected exception from span lookup`() {
+        val sink = RecordingTelemetrySink()
+        val interfaceWithSink = AuthUxJavaScriptInterface(sink)
+
+        mockStatic(SpanExtension::class.java).use { spanExtension ->
+            spanExtension.`when`<Span> {
+                SpanExtension.current()
+            }.thenThrow(IllegalStateException("test failure"))
+
+            interfaceWithSink.receiveAuthUxMessage(logTelemetryTestPayload)
+        }
+
+        Assert.assertEquals(0, sink.calls)
+        Assert.assertTrue(NumberMatchHelper.numberMatchMap.isEmpty())
     }
 
     @Test
@@ -719,6 +774,27 @@ class AuthUxJavaScriptInterfaceTest {
             "params": { "errorCode": $errorCodeLiteral }
         }
     """.trimIndent()
+
+    @Test
+    fun `test companion exposes expected tag and interface name`() {
+        Assert.assertEquals(
+            "AuthUxJavaScriptInterface",
+            AuthUxJavaScriptInterface.TAG
+        )
+        Assert.assertEquals(
+            "broker",
+            AuthUxJavaScriptInterface.getInterfaceName()
+        )
+    }
+
+    @Test
+    fun `test isValidUriForInterface with malformed escape returns false`() {
+        val malformedUrl = "https://login.microsoftonline.com/%"
+
+        Assert.assertFalse(
+            AuthUxJavaScriptInterface.isValidUriForInterface(malformedUrl)
+        )
+    }
 
     @Test
     fun `test isValidUrlForInterface with valid AAD Global URL`() {
