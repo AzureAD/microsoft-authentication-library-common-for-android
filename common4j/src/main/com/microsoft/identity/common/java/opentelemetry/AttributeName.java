@@ -807,7 +807,7 @@ public enum AttributeName {
 
     /**
      * Indicates which routing path was taken for a target=_blank URL intercepted
-     * by onCreateWindow: null_url, no_user_gesture, openid_vc, openid_vc_disabled,
+     * by onCreateWindow: null_url, no_user_gesture, openid_vc,
      * non_ssl, browser, or browser_fallback.
      */
     target_blank_navigation_route,

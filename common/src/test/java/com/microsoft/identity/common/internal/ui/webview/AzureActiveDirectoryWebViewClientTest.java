@@ -327,7 +327,6 @@ public class AzureActiveDirectoryWebViewClientTest {
                     .save("");
         }
     }
-
     @Test(expected = IllegalArgumentException.class)
     public void testUrlOverrideHandlesEmptyString() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, ""));

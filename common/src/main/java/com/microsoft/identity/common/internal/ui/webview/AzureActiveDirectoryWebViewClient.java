@@ -1445,11 +1445,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         String errorCode;
         String errorMessage;
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            Logger.info(methodTag, "Stopping authentication WebView before wallet dispatch.");
             view.stopLoading();
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            Logger.info(methodTag, "Wallet launch intent prepared.");
 
             // Resolve after any pinning so the handler check matches the final intent we will launch.
             final android.content.pm.PackageManager pm = getActivity().getPackageManager();
@@ -1480,11 +1478,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 }
             }
 
-            Logger.info(methodTag, "Resolving external wallet handler.");
             final ComponentName resolved = intent.resolveActivity(pm);
             span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), resolved != null);
             if (resolved != null) {
-                Logger.info(methodTag, "Wallet handler resolved; requesting external launch.");
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
                 span.setStatus(StatusCode.OK);
@@ -1502,7 +1498,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
         }
-        Logger.info(methodTag, "Returning explicit wallet-dispatch authentication error.");
         // Callback failures must not be caught as dispatch failures and delivered a second time.
         returnError(errorCode, errorMessage);
         return false;
@@ -1572,7 +1567,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         try {
             final boolean trusted = new BrokerValidator(getActivity().getApplicationContext()).isValidBrokerPackage(packageName);
             SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", trusted ? "verified" : "rejected");
-            Logger.info(TAG + ":isTrustedVcWalletPackage", trusted ? "Wallet signature verified." : "Wallet signature rejected.");
             return trusted;
         } catch (final Exception e) {
             SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", "failed", e.getClass().getSimpleName());
@@ -1594,7 +1588,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             for (final ResolveInfo info : getActivity().getPackageManager().queryIntentActivities(intent, 0)) {
                 if (info.activityInfo != null && authenticatorPackage.equals(info.activityInfo.packageName)) {
                     SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "found");
-                    Logger.info(TAG + ":isAuthenticatorOpenIdVcHandler", "Authenticator wallet handler found.");
                     return true;
                 }
             }
@@ -1604,7 +1597,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return false;
         }
         SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "not_found");
-        Logger.info(TAG + ":isAuthenticatorOpenIdVcHandler", "Authenticator wallet handler not found.");
         return false;
     }
 

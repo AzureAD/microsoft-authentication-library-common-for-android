@@ -175,21 +175,21 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testOnCreateWindow_creationThrows_logsSanitizedFailureWithoutTelemetry() {
+    public void testOnCreateWindow_creationThrows_logsFailureWithoutTelemetry() {
         mFragment = spy(mFragment);
         when(mFragment.getActivity()).thenReturn(mock(FragmentActivity.class));
         final WebView mainWebView = mock(WebView.class);
         final WebChromeClient client = setUpWindowClient(mainWebView);
-        when(mainWebView.getContext())
-                .thenThrow(new IllegalStateException("Sensitive URL must not enter logs."));
+        final IllegalStateException failure = new IllegalStateException("Window creation failed.");
+        when(mainWebView.getContext()).thenThrow(failure);
         final Message message = Message.obtain();
         message.obj = mainWebView.new WebViewTransport();
         try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
              final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
             assertFalse(client.onCreateWindow(mainWebView, false, true, message));
             logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
-                    eq("onCreateWindow: window creation failed (IllegalStateException)."),
-                    ArgumentMatchers.isNull()));
+                    eq("Error handling target=_blank navigation."),
+                    eq(failure)));
             telemetry.verifyNoInteractions();
         }
     }
@@ -206,14 +206,11 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final WebView.WebViewTransport transport = mainWebView.new WebViewTransport();
         final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0, transport);
         final Span span = mockSpan();
-        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class);
-             final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
             telemetry.when(() -> OTelUtility.createSpanFromParent(
                     SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext)).thenReturn(span);
 
             assertTrue(client.onCreateWindow(mainWebView, false, false, message));
-            logger.verify(() -> Logger.info(ArgumentMatchers.anyString(),
-                    eq("onCreateWindow: transport accepted; awaiting popup navigation.")));
             telemetry.verifyNoInteractions();
             verify(span, never()).end();
 

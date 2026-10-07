@@ -528,7 +528,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
                     windowHandled = true;
-                    Logger.info(methodTag, "onCreateWindow: transport accepted; awaiting popup navigation.");
                 } catch (@NonNull final Throwable e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
                 }
@@ -583,7 +582,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
                 mainWebView.loadUrl(targetUrl);
                 span.setStatus(StatusCode.OK);
-                Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
                 dispatchPopupToWallet(mainWebView, targetUrl, span, methodTag);
             } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
@@ -597,7 +595,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         } catch (final Throwable e) {
             span.recordException(e);
             span.setStatus(StatusCode.ERROR);
-            Logger.error(methodTag, "Error handling target=_blank", e);
+            Logger.error(methodTag, "Error handling target=_blank URL.", e);
         } finally {
             span.end();
             // Destroy the interceptor WebView after it has served its purpose
@@ -616,12 +614,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (mAADWebViewClient == null) {
             throw new IllegalStateException("Authentication WebView client is unavailable.");
         }
-        final boolean launched = mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
-        if (launched) {
-            Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
-        } else {
-            Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
-        }
+        mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
     }
 
     private void dispatchPopupToBrowser(@NonNull final WebView mainWebView,
@@ -636,7 +629,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         try {
             mainWebView.getContext().startActivity(browserIntent);
             span.setStatus(StatusCode.OK);
-            Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
         } catch (final Throwable e) {
             final String exceptionType = e.getClass().getSimpleName();
             SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
@@ -652,7 +644,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
             SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
             span.setStatus(StatusCode.OK);
-            Logger.info(methodTag, "onCreateWindow: HTTPS inline fallback accepted by WebView.");
         }
     }
 
