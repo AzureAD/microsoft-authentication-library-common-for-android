@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -72,7 +71,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.InOrder;
 import org.robolectric.Robolectric;
@@ -470,7 +468,12 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         verifyBrowserFallback(new SecurityException("Launch denied."));
     }
 
-    private void verifyBrowserFallback(final RuntimeException exception) {
+    @Test
+    public void testHandleInterceptedUrl_browserError_fallsBackInline() {
+        verifyBrowserFallback(new AssertionError("Sensitive URL must not enter telemetry."));
+    }
+
+    private void verifyBrowserFallback(final Throwable exception) {
         final Context context = mock(Context.class);
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
@@ -496,38 +499,60 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
     @Test
     public void testHandleInterceptedUrl_browserAndFallbackFail_recordsBothFailures() {
+        verifyBrowserAndFallbackFailure(new IllegalStateException());
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_fallbackError_recordsBothFailures() {
+        verifyBrowserAndFallbackFailure(new AssertionError("Sensitive URL must not enter telemetry."));
+    }
+
+    private void verifyBrowserAndFallbackFailure(final Throwable fallbackFailure) {
         final Context context = mock(Context.class);
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
         when(mainWebView.getContext()).thenReturn(context);
         doThrow(new ActivityNotFoundException()).when(context).startActivity(ArgumentMatchers.any(Intent.class));
-        doThrow(new IllegalStateException()).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
+        doThrow(fallbackFailure).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
 
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, true);
 
         final InOrder decisions = org.mockito.Mockito.inOrder(span);
         decisions.verify(span).addEvent("browser_launch", failure("ActivityNotFoundException"));
-        decisions.verify(span).addEvent("browser_fallback", failure("IllegalStateException"));
-        verify(span).setStatus(StatusCode.ERROR, "browser_fallback: IllegalStateException");
+        decisions.verify(span).addEvent("browser_fallback", failure(fallbackFailure.getClass().getSimpleName()));
+        verify(span).setStatus(StatusCode.ERROR, fallbackFailure.getClass().getSimpleName());
+        verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
     }
 
     @Test
     public void testHandleInterceptedUrl_nonUserGesture_inlineFailure_recordsError() {
+        verifyInlineFailure(new IllegalStateException());
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nonUserGesture_inlineError_recordsError() {
+        verifyInlineFailure(new AssertionError("Sensitive URL must not enter telemetry."));
+    }
+
+    private void verifyInlineFailure(final Throwable failure) {
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
         final Span span = mockSpan();
-        doThrow(new IllegalStateException()).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
+        doThrow(failure).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
 
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, false);
 
         verify(span, never()).addEvent(eq("browser_launch"), ArgumentMatchers.any(Attributes.class));
         verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
-        verify(span).setStatus(StatusCode.ERROR, "inline_load: IllegalStateException");
+        verify(span).setStatus(StatusCode.ERROR, failure.getClass().getSimpleName());
+        verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
         verify(span, never()).setStatus(StatusCode.OK);
         verify(span).end();
     }
@@ -572,7 +597,7 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_missingWalletClient_recordsFailureStage() {
+    public void testHandleInterceptedUrl_missingWalletClient_recordsError() {
         setOpenIdVcRedirectFlightEnabled(true);
         final WebView mainWebView = mock(WebView.class);
         final WebView interceptorWebView = spy(new WebView(mContext));
@@ -581,7 +606,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
 
-        verify(span).setStatus(StatusCode.ERROR, "vc_client_check: IllegalStateException");
+        verify(span).setStatus(StatusCode.ERROR, "IllegalStateException");
+        verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
         verify(span, never()).addEvent(eq("vc_client_check"), ArgumentMatchers.any(Attributes.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span, never()).setStatus(StatusCode.OK);
@@ -615,7 +642,9 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, mock(WebView.class), mockRequest(OPENID_VC_TARGET_URL), span, true);
 
-        verify(span).setStatus(StatusCode.ERROR, "vc_dispatch: IllegalStateException");
+        verify(span).setStatus(StatusCode.ERROR, "IllegalStateException");
+        verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
         verify(span, never()).addEvent(eq("vc_dispatch"), ArgumentMatchers.any(Attributes.class));
         verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
         verify(span, never()).setStatus(StatusCode.OK);
@@ -623,81 +652,23 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_unattachedInterceptor_isDestroyed() {
-        verifyCleanup(false);
-    }
-
-    @Test
-    public void testHandleInterceptedUrl_destroyThrows_logsCleanupFailure() {
-        verifyCleanup(true);
-    }
-
-    private void verifyCleanup(final boolean destructionFails) {
+    public void testHandleInterceptedUrl_cleanupIsPostedToInterceptor() {
         final WebView interceptor = mock(WebView.class);
         final Span span = mockSpan();
-        if (destructionFails) {
-            doThrow(new IllegalStateException("Sensitive URL must not enter logs.")).when(interceptor).destroy();
-        }
-        try (final MockedStatic<Logger> logger = mockStatic(Logger.class)) {
-            mFragment.handleInterceptedUrlFromNewWindow(
-                    mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
-            verify(interceptor, never()).destroy();
-            verify(span).end();
-            Shadows.shadowOf(Looper.getMainLooper()).idle();
+        final ArgumentCaptor<Runnable> cleanup = ArgumentCaptor.forClass(Runnable.class);
+        when(interceptor.post(ArgumentMatchers.any(Runnable.class))).thenReturn(true);
 
-            verify(interceptor).destroy();
-            if (destructionFails) {
-                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
-                        eq("Popup interceptor destruction failed (IllegalStateException)."),
-                        ArgumentMatchers.isNull()));
-            } else {
-                logger.verify(() -> Logger.info(ArgumentMatchers.anyString(),
-                        eq("Popup interceptor destroyed.")));
-            }
-            verify(span).setStatus(StatusCode.OK);
-            verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
-        }
-    }
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
 
-    @Test
-    public void testHandleInterceptedUrl_cleanupSchedulingRejected_logsFailure() {
-        verifyCleanupSchedulingFailure(false);
-    }
-
-    @Test
-    public void testHandleInterceptedUrl_cleanupSchedulingThrows_logsFailure() {
-        verifyCleanupSchedulingFailure(true);
-    }
-
-    private void verifyCleanupSchedulingFailure(final boolean throwsException) {
-        final Span span = mockSpan();
-        final WebView interceptor = mock(WebView.class);
-        try (final MockedStatic<Logger> logger = mockStatic(Logger.class);
-             final MockedConstruction<Handler> handlers = mockConstruction(Handler.class, (handler, context) -> {
-                 if (throwsException) {
-                     when(handler.post(ArgumentMatchers.any(Runnable.class)))
-                             .thenThrow(new IllegalStateException("Sensitive URL must not enter logs."));
-                 } else {
-                     when(handler.post(ArgumentMatchers.any(Runnable.class))).thenReturn(false);
-                 }
-             })) {
-            mFragment.handleInterceptedUrlFromNewWindow(
-                    mock(WebView.class), interceptor, mockRequest(HTTPS_TARGET_URL), span, false);
-
-            if (throwsException) {
-                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
-                        eq("Popup interceptor cleanup scheduling failed (IllegalStateException)."),
-                        ArgumentMatchers.isNull()));
-            } else {
-                logger.verify(() -> Logger.error(ArgumentMatchers.anyString(),
-                        eq("Main looper rejected popup interceptor cleanup."),
-                        ArgumentMatchers.isNull()));
-            }
-            verify(interceptor, never()).destroy();
-            verify(span).setStatus(StatusCode.OK);
-            verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
-            verify(span).end();
-        }
+        final InOrder order = org.mockito.Mockito.inOrder(span, interceptor);
+        order.verify(span).end();
+        order.verify(interceptor).post(cleanup.capture());
+        verify(interceptor, never()).destroy();
+        cleanup.getValue().run();
+        verify(interceptor).destroy();
+        verify(span).setStatus(StatusCode.OK);
+        verify(span, never()).setStatus(eq(StatusCode.ERROR), ArgumentMatchers.anyString());
     }
 
     private static Attributes outcome(final String value) {

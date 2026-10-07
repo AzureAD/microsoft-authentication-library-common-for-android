@@ -375,7 +375,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url, final boolean isForMainFrame) {
         final String methodTag = TAG + ":handleUrl";
-        Logger.info(methodTag, "WebView redirect received.");
         final String formattedURL = url.toLowerCase(Locale.US);
 
         try {
@@ -1441,13 +1440,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodTag = TAG + ":handleOpenIdVcRequest";
         final Span span = existingSpan != null ? existingSpan
                 : createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
-        String stage = "stop_webview";
         String errorCode;
         String errorMessage;
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
             Logger.info(methodTag, "Stopping authentication WebView before wallet dispatch.");
             view.stopLoading();
-            stage = "prepare_intent";
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Logger.info(methodTag, "Wallet launch intent prepared.");
@@ -1461,14 +1458,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // (launch the openid-vc handler without a return PendingIntent) - identical to
             // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
             // validated. It is also gated by its own flight so it can be rolled back entirely.
-            stage = "return_to_caller";
             final boolean returnEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
                     .isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER);
             if (!returnEnabled) {
-                SpanExtension.recordOutcome(span, stage, "disabled");
+                SpanExtension.recordOutcome(span, "return_to_caller", "disabled");
                 Logger.info(methodTag, "Wallet return-to-caller flight disabled; launching without return PendingIntent.");
             } else if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                SpanExtension.recordOutcome(span, stage, "not_brokered");
+                SpanExtension.recordOutcome(span, "return_to_caller", "not_brokered");
                 Logger.info(methodTag, "Wallet request is brokerless; launching without return PendingIntent.");
             } else {
                 // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
@@ -1485,16 +1481,14 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     // Authenticator is not an installed/verified openid-vc handler: preserve the
                     // existing dispatch behavior but do NOT attach a return PendingIntent.
                     Logger.warn(methodTag, "Microsoft Authenticator is not the verified openid-vc handler; launching without return PendingIntent.");
-                    SpanExtension.recordOutcome(span, stage, "untrusted_handler");
+                    SpanExtension.recordOutcome(span, "return_to_caller", "untrusted_handler");
                 }
             }
 
-            stage = "resolve_handler";
             Logger.info(methodTag, "Resolving external wallet handler.");
             final ComponentName resolved = intent.resolveActivity(pm);
             span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), resolved != null);
             if (resolved != null) {
-                stage = "launch_wallet";
                 Logger.info(methodTag, "Wallet handler resolved; requesting external launch.");
                 getActivity().startActivity(intent);
                 Logger.info(methodTag, "Launched external handler for OpenID VC request.");
@@ -1506,11 +1500,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 errorCode = ErrorStrings.ACTIVITY_NOT_FOUND;
                 errorMessage = "No application found to handle the OpenID Verifiable Credentials request.";
             }
-        } catch (final RuntimeException e) {
+        } catch (final Throwable e) {
             final String exceptionType = e.getClass().getSimpleName();
-            Logger.error(methodTag, "Wallet dispatch failed at " + stage + " (" + exceptionType + ").", null);
+            Logger.error(methodTag, "Wallet dispatch failed (" + exceptionType + ").", null);
             span.setAttribute(AttributeName.error_type.name(), exceptionType);
-            span.setStatus(StatusCode.ERROR, stage + ": " + exceptionType);
+            span.setStatus(StatusCode.ERROR, exceptionType);
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
         } finally {

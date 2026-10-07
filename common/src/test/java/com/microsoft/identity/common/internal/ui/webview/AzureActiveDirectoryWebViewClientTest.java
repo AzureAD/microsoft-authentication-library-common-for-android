@@ -684,7 +684,12 @@ public class AzureActiveDirectoryWebViewClientTest {
         verifyWalletDispatchFailure(new ActivityNotFoundException("sensitive-query"), ErrorStrings.ACTIVITY_NOT_FOUND);
     }
 
-    private void verifyWalletDispatchFailure(final RuntimeException exception, final String errorCode) {
+    @Test
+    public void testOpenIdVcDispatch_error_returnsFalseWithExplicitError() {
+        verifyWalletDispatchFailure(new AssertionError("sensitive-query"), ErrorStrings.UNKNOWN_ERROR);
+    }
+
+    private void verifyWalletDispatchFailure(final Throwable exception, final String errorCode) {
         registerOpenIdVcHandler("com.example.wallet");
         final WebView webView = Mockito.mock(WebView.class);
         final Activity failingActivity = Mockito.spy(mActivity);
@@ -702,7 +707,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
-        assertEquals("launch_wallet: " + exception.getClass().getSimpleName(),
+        assertEquals(exception.getClass().getSimpleName(),
                 telemetry.captured().mStatusDescription);
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));

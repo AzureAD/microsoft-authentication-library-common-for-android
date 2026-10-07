@@ -41,8 +41,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -531,7 +529,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     resultMsg.sendToTarget();
                     windowHandled = true;
                     Logger.info(methodTag, "onCreateWindow: transport accepted; awaiting popup navigation.");
-                } catch (@NonNull final Exception e) {
+                } catch (@NonNull final Throwable e) {
                     Logger.error(methodTag, "onCreateWindow: window creation failed ("
                             + e.getClass().getSimpleName() + ").", null);
                 }
@@ -561,7 +559,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                                                    @NonNull final Span span,
                                                    final boolean isUserGesture) {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
-        String stage = null;
         span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
         try {
             final Uri targetUri = request.getUrl();
@@ -585,7 +582,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // opening an external browser, to prevent programmatic/scripted popups.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
-                stage = "inline_load";
                 mainWebView.loadUrl(targetUrl);
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
@@ -602,11 +598,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
                 Logger.info(methodTag, "onCreateWindow: VC redirect flight enabled; delegating wallet dispatch.");
-                stage = "vc_client_check";
                 if (mAADWebViewClient == null) {
                     throw new IllegalStateException("Authentication WebView client is unavailable.");
                 }
-                stage = "vc_dispatch";
                 final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl, span);
                 if (launched) {
                     Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
@@ -623,62 +617,45 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         AttributeName.target_blank_navigation_route.name(),
                         AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
                 Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
-                stage = "browser_launch";
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
                 try {
                     mainWebView.getContext().startActivity(browserIntent);
                     span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
-                } catch (final RuntimeException e) {
+                } catch (final Throwable e) {
                     final String exceptionType = e.getClass().getSimpleName();
-                    SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
-                    stage = "browser_fallback";
+                    SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
                     span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
                     Logger.warn(methodTag, "onCreateWindow: browser dispatch failed ("
                             + exceptionType + "); requesting HTTPS inline fallback.");
-                    mainWebView.loadUrl(targetUrl);
-                    SpanExtension.recordOutcome(span, stage, "inline_fallback_requested");
+                    try {
+                        mainWebView.loadUrl(targetUrl);
+                    } catch (final Throwable fallbackException) {
+                        SpanExtension.recordOutcome(span, "browser_fallback", "failed",
+                                fallbackException.getClass().getSimpleName());
+                        throw fallbackException;
+                    }
+                    SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
                     span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: HTTPS inline fallback accepted by WebView.");
                 }
             }
-        } catch (final Exception e) {
-            recordTargetBlankFailure(span, methodTag, stage, e);
+        } catch (final Throwable e) {
+            recordTargetBlankFailure(span, methodTag, e);
         } finally {
             span.end();
-            try {
-                // The hidden interceptor may never attach; View.post would wait for attachment.
-                final boolean scheduled = new Handler(Looper.getMainLooper()).post(() -> {
-                    try {
-                        interceptorWebView.destroy();
-                        Logger.info(methodTag, "Popup interceptor destroyed.");
-                    } catch (final RuntimeException e) {
-                        Logger.error(methodTag, "Popup interceptor destruction failed ("
-                                + e.getClass().getSimpleName() + ").", null);
-                    }
-                });
-                if (!scheduled) {
-                    Logger.error(methodTag, "Main looper rejected popup interceptor cleanup.", null);
-                }
-            } catch (final RuntimeException e) {
-                Logger.error(methodTag, "Popup interceptor cleanup scheduling failed ("
-                        + e.getClass().getSimpleName() + ").", null);
-            }
+            // TODO: Investigate cleanup of unattached interceptor WebViews in a follow-up PR.
+            interceptorWebView.post(interceptorWebView::destroy);
         }
     }
 
     private static void recordTargetBlankFailure(@NonNull final Span span,
                                                  @NonNull final String methodTag,
-                                                 @Nullable final String stage,
-                                                 @NonNull final Exception exception) {
+                                                 @NonNull final Throwable exception) {
         final String exceptionType = exception.getClass().getSimpleName();
-        if ("browser_launch".equals(stage) || "browser_fallback".equals(stage)) {
-            SpanExtension.recordOutcome(span, stage, "failed", exceptionType);
-        }
-        span.setStatus(StatusCode.ERROR, stage == null ? exceptionType : stage + ": " + exceptionType);
+        span.setStatus(StatusCode.ERROR, exceptionType);
         // Android exception messages can contain the full authentication URL.
-        Logger.error(methodTag, "target=_blank failed" + (stage == null ? "" : " at " + stage)
-                + " (" + exceptionType + ").", null);
+        Logger.error(methodTag, "target=_blank failed (" + exceptionType + ").", null);
     }
 
     /**
