@@ -33,6 +33,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -705,6 +706,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
+        assertSame(exception, telemetry.captured().mRecordedException);
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
         assertEquals(exception.getClass().getSimpleName(),
                 telemetry.captured().mStatusDescription);
@@ -1826,6 +1828,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         private StatusCode mStatusCode = StatusCode.UNSET;
         private String mStatusDescription = "";
         private int mEndCount;
+        private Throwable mRecordedException;
 
         Object eventAttribute(final String eventName, final AttributeName attribute) {
             final int index = mEventNames.indexOf(eventName);
@@ -1870,6 +1873,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public Span recordException(final Throwable exception, final Attributes additionalAttributes) {
+            mRecordedException = exception;
             return this;
         }
 
