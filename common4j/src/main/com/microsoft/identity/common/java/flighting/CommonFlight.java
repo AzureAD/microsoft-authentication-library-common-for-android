@@ -201,10 +201,10 @@ public enum CommonFlight implements IFlightConfig {
 
     /**
      * Enables the complete silent-caller validation solution when
-     * {@link #VALIDATE_SILENT_CALLER} is also enabled. Defaults off to preserve redirect-only behavior
-     * until the dependent broker passthrough implementation is available.
+     * {@link #VALIDATE_SILENT_CALLER} is also enabled. Defaults on temporarily to exercise the
+     * complete solution during end-to-end validation.
      */
-    ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION("EnableSilentCallerPassthroughValidation", false),
+    ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION("EnableSilentCallerPassthroughValidation", true),
 
     /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.
