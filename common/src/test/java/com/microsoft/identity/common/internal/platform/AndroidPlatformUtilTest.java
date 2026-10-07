@@ -33,7 +33,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
