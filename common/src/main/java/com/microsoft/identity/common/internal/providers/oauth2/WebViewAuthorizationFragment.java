@@ -563,7 +563,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
         String stage = "validate_url";
         span.setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), isUserGesture);
-        try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
+        try {
             final Uri targetUri = request.getUrl();
             if (targetUri == null || StringUtil.isNullOrEmpty(targetUri.toString())) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
@@ -608,12 +608,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     throw new IllegalStateException("Authentication WebView client is unavailable.");
                 }
                 stage = "vc_dispatch";
-                final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl);
+                final boolean launched = mAADWebViewClient.handleOpenIdVcRequest(mainWebView, targetUrl, span);
                 if (launched) {
-                    span.setStatus(StatusCode.OK);
                     Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
                 } else {
-                    span.setStatus(StatusCode.ERROR, "Wallet dispatch failed");
                     Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
                 }
             } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {

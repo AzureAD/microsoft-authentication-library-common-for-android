@@ -1415,8 +1415,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     /**
-     * Handles an OpenID VC request intercepted from either normal WebView navigation or a
-     * target-blank popup. Stops the WebView and launches an {@link Intent#ACTION_VIEW} intent so
+     * Handles an OpenID VC request intercepted from normal WebView navigation.
+     * Stops the WebView and launches an {@link Intent#ACTION_VIEW} intent so
      * the system can route the request to the registered wallet application.
      *
      * @param view the authentication WebView associated with the request.
@@ -1424,8 +1424,23 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @return whether Android accepted wallet dispatch, not whether the wallet completed the flow.
      */
     public boolean handleOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
+        return handleOpenIdVcRequest(view, url, null);
+    }
+
+    /**
+     * Handles an OpenID VC request using the caller's span when provided.
+     *
+     * @param view the authentication WebView associated with the request.
+     * @param url the original OpenID VC URL.
+     * @param existingSpan the caller-owned span, or null to create and end a request span.
+     * @return whether Android accepted wallet dispatch.
+     */
+    public boolean handleOpenIdVcRequest(@NonNull final WebView view,
+                                        @NonNull final String url,
+                                        @Nullable final Span existingSpan) {
         final String methodTag = TAG + ":handleOpenIdVcRequest";
-        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
+        final Span span = existingSpan != null ? existingSpan
+                : createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
         String stage = "stop_webview";
         String errorCode;
         String errorMessage;
@@ -1499,7 +1514,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
         } finally {
-            span.end();
+            if (existingSpan == null) {
+                span.end();
+            }
         }
         Logger.info(methodTag, "Returning explicit wallet-dispatch authentication error.");
         // Callback failures must not be caught as dispatch failures and delivered a second time.

@@ -604,11 +604,52 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL));
 
+        assertEquals(1, telemetry.captured().mEndCount);
         assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertEquals(Arrays.asList("return_to_caller"), telemetry.captured().mEventNames);
         assertEquals("not_brokered", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_reusesWithoutCreatingOrEndingSpan() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+        final Span previousSpan = SpanExtension.current();
+
+        assertTrue(mWebViewClient.handleOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.OK, span.mStatusCode);
+        assertEquals(true, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        assertEquals("not_brokered", span.eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_existingSpan_noHandler_preservesErrorAndCallerOwnership() {
+        final WebView webView = Mockito.mock(WebView.class);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                mActivity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final RecordingSpan span = new RecordingSpan();
+
+        assertFalse(client.handleOpenIdVcRequest(webView, TEST_OPENID_VC_URL, span));
+
+        assertNull(telemetry.captured());
+        assertEquals(0, span.mEndCount);
+        assertEquals(StatusCode.ERROR, span.mStatusCode);
+        assertEquals("No handler found for openid-vc:// URI", span.mStatusDescription);
+        assertEquals(false, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
+        Mockito.verify(callback).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        Mockito.verify(webView, Mockito.never()).loadUrl(anyString());
     }
 
     @Test
@@ -626,6 +667,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(ErrorStrings.ACTIVITY_NOT_FOUND, ((ClientException) result.getValue().getException()).getErrorCode());
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
+        assertEquals(1, telemetry.captured().mEndCount);
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertEquals("No handler found for openid-vc:// URI", telemetry.captured().mStatusDescription);
         assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
@@ -1779,6 +1821,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         private final List<Attributes> mEvents = new ArrayList<>();
         private StatusCode mStatusCode = StatusCode.UNSET;
         private String mStatusDescription = "";
+        private int mEndCount;
 
         Object eventAttribute(final String eventName, final AttributeName attribute) {
             final int index = mEventNames.indexOf(eventName);
@@ -1833,10 +1876,12 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         @Override
         public void end() {
+            mEndCount++;
         }
 
         @Override
         public void end(final long timestamp, final TimeUnit unit) {
+            end();
         }
 
         @Override
