@@ -530,8 +530,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     windowHandled = true;
                     Logger.info(methodTag, "onCreateWindow: transport accepted; awaiting popup navigation.");
                 } catch (@NonNull final Throwable e) {
-                    Logger.error(methodTag, "onCreateWindow: window creation failed ("
-                            + e.getClass().getSimpleName() + ").", null);
+                    Logger.error(methodTag, "Error handling target=_blank navigation.", e);
                 }
                 return windowHandled;
             }

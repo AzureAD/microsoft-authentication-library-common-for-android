@@ -1496,8 +1496,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 errorMessage = "No application found to handle the OpenID Verifiable Credentials request.";
             }
         } catch (final Throwable e) {
-            final String exceptionType = e.getClass().getSimpleName();
-            Logger.error(methodTag, "Wallet dispatch failed (" + exceptionType + ").", null);
+            Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", e);
             span.recordException(e);
             span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
@@ -1555,7 +1554,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } catch (final Exception e) {
             // Best-effort: if we cannot build the return PendingIntent, still launch the VID flow without it.
             SpanExtension.recordOutcome(SpanExtension.current(), "return_to_caller", "failed", e.getClass().getSimpleName());
-            Logger.warn(methodTag, "Could not attach return PendingIntent (" + e.getClass().getSimpleName() + "); continuing without it.");
+            Logger.warn(methodTag, "Could not attach return PendingIntent: " + e.getMessage());
         }
     }
 
@@ -1577,7 +1576,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return trusted;
         } catch (final Exception e) {
             SpanExtension.recordOutcome(SpanExtension.current(), "wallet_verification", "failed", e.getClass().getSimpleName());
-            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed (" + e.getClass().getSimpleName() + ").");
+            Logger.warn(TAG + ":isTrustedVcWalletPackage", "Wallet verification failed: " + e.getMessage());
             return false;
         }
     }
@@ -1601,7 +1600,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
         } catch (final Exception e) {
             SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "failed", e.getClass().getSimpleName());
-            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed (" + e.getClass().getSimpleName() + ").");
+            Logger.warn(TAG + ":isAuthenticatorOpenIdVcHandler", "Handler lookup failed: " + e.getMessage());
             return false;
         }
         SpanExtension.recordOutcome(SpanExtension.current(), "authenticator_lookup", "not_found");
