@@ -22,16 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.opentelemetry;
 
-import com.microsoft.identity.common.java.logging.Logger;
-
 import io.opentelemetry.api.NoopOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.metrics.NoopMeterProvider;
 import io.opentelemetry.api.trace.Tracer;
-
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * A custom safe Open Telemetry Instance holder that doesn't crash on the call to "get" Open
@@ -55,61 +55,11 @@ public class OpenTelemetryHolder {
 
     private static final OpenTelemetry NOOP = new NoopOpenTelemetry();
 
-    private static volatile OpenTelemetry sOpenTelemetry = NOOP;
-
-    private static boolean sDisabled;
-
-    /**
-     * Returns the currently published instance. Previously obtained instruments retain their
-     * original provider; replacing this reference does not shut down that provider.
-     */
+    @Accessors(prefix = "s")
+    @Setter
+    @Getter
     @NonNull
-    public static OpenTelemetry getOpenTelemetry() {
-        return sOpenTelemetry;
-    }
-
-    /**
-     * Preserves the existing setup API. Once disabled, attempts to replace no-op are rejected.
-     * Lifecycle owners should use {@link #trySetOpenTelemetry(OpenTelemetry)} to detect rejection
-     * and release an instance they have already constructed.
-     */
-    public static void setOpenTelemetry(@NonNull final OpenTelemetry openTelemetry) {
-        if (!trySetOpenTelemetry(openTelemetry)) {
-            Logger.warn("OpenTelemetryHolder:setOpenTelemetry",
-                    "Telemetry is disabled for this process; replacement was rejected.");
-        }
-    }
-
-    /**
-     * Publishes an instance unless disabled. The caller retains ownership on rejection and must
-     * shut down any SDK it constructed. This method does not take ownership of SDK resources.
-     */
-    public static synchronized boolean trySetOpenTelemetry(@NonNull final OpenTelemetry openTelemetry) {
-        if (sDisabled) {
-            return false;
-        }
-        sOpenTelemetry = openTelemetry;
-        return true;
-    }
-
-    /**
-     * Irreversibly publishes no-op for this process. The returned previous instance is not shut
-     * down: its owner must coordinate asynchronous shutdown with other shared transport users.
-     */
-    @NonNull
-    public static synchronized OpenTelemetry disable() {
-        final OpenTelemetry previous = sOpenTelemetry;
-        sDisabled = true;
-        sOpenTelemetry = NOOP;
-        return previous;
-    }
-
-    /**
-     * Returns whether telemetry has been disabled for the lifetime of this process.
-     */
-    public static synchronized boolean isDisabled() {
-        return sDisabled;
-    }
+    private static OpenTelemetry sOpenTelemetry = NOOP;
 
     private static final MeterProvider NOOP_METER_PROVIDER = NoopMeterProvider.getInstance();
 
