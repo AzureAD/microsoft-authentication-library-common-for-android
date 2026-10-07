@@ -586,51 +586,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setStatus(StatusCode.OK);
                 Logger.info(methodTag, "onCreateWindow: inline navigation accepted by WebView.");
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
-                span.setAttribute(
-                        AttributeName.target_blank_navigation_route.name(),
-                        AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
-                Logger.info(methodTag, "onCreateWindow: delegating wallet dispatch.");
-                if (mAADWebViewClient == null) {
-                    throw new IllegalStateException("Authentication WebView client is unavailable.");
-                }
-                final boolean launched = mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
-                if (launched) {
-                    Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
-                } else {
-                    Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
-                }
+                dispatchPopupToWallet(mainWebView, targetUrl, span, methodTag);
             } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
                 span.setStatus(StatusCode.ERROR, "Popup destination is not HTTPS or OpenID VC");
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
             } else {
-                span.setAttribute(
-                        AttributeName.target_blank_navigation_route.name(),
-                        AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
-                Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
-                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
-                try {
-                    mainWebView.getContext().startActivity(browserIntent);
-                    span.setStatus(StatusCode.OK);
-                    Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
-                } catch (final Throwable e) {
-                    final String exceptionType = e.getClass().getSimpleName();
-                    SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
-                    span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
-                    Logger.warn(methodTag, "onCreateWindow: browser dispatch failed ("
-                            + exceptionType + "); requesting HTTPS inline fallback.");
-                    try {
-                        mainWebView.loadUrl(targetUrl);
-                    } catch (final Throwable fallbackException) {
-                        SpanExtension.recordOutcome(span, "browser_fallback", "failed",
-                                fallbackException.getClass().getSimpleName());
-                        throw fallbackException;
-                    }
-                    SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
-                    span.setStatus(StatusCode.OK);
-                    Logger.info(methodTag, "onCreateWindow: HTTPS inline fallback accepted by WebView.");
-                }
+                dispatchPopupToBrowser(mainWebView, targetUrl, span, methodTag);
             }
         } catch (final Throwable e) {
             span.recordException(e);
@@ -640,6 +603,57 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             span.end();
             // Destroy the interceptor WebView after it has served its purpose
             interceptorWebView.post(interceptorWebView::destroy);
+        }
+    }
+
+    private void dispatchPopupToWallet(@NonNull final WebView mainWebView,
+                                       @NonNull final String targetUrl,
+                                       @NonNull final Span span,
+                                       @NonNull final String methodTag) {
+        span.setAttribute(
+                AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
+        Logger.info(methodTag, "onCreateWindow: delegating wallet dispatch.");
+        if (mAADWebViewClient == null) {
+            throw new IllegalStateException("Authentication WebView client is unavailable.");
+        }
+        final boolean launched = mAADWebViewClient.processOpenIdVcRequest(mainWebView, targetUrl, span);
+        if (launched) {
+            Logger.info(methodTag, "onCreateWindow: wallet dispatch accepted.");
+        } else {
+            Logger.error(methodTag, "onCreateWindow: wallet dispatch failed; authentication error returned without inline fallback.", null);
+        }
+    }
+
+    private void dispatchPopupToBrowser(@NonNull final WebView mainWebView,
+                                        @NonNull final String targetUrl,
+                                        @NonNull final Span span,
+                                        @NonNull final String methodTag) {
+        span.setAttribute(
+                AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
+        Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
+        final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+        try {
+            mainWebView.getContext().startActivity(browserIntent);
+            span.setStatus(StatusCode.OK);
+            Logger.info(methodTag, "onCreateWindow: external browser dispatch accepted.");
+        } catch (final Throwable e) {
+            final String exceptionType = e.getClass().getSimpleName();
+            SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
+            span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
+            Logger.warn(methodTag, "onCreateWindow: browser dispatch failed ("
+                    + exceptionType + "); requesting HTTPS inline fallback.");
+            try {
+                mainWebView.loadUrl(targetUrl);
+            } catch (final Throwable fallbackException) {
+                SpanExtension.recordOutcome(span, "browser_fallback", "failed",
+                        fallbackException.getClass().getSimpleName());
+                throw fallbackException;
+            }
+            SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
+            span.setStatus(StatusCode.OK);
+            Logger.info(methodTag, "onCreateWindow: HTTPS inline fallback accepted by WebView.");
         }
     }
 
