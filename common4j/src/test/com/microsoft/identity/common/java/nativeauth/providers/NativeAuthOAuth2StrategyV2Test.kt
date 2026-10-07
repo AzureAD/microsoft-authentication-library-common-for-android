@@ -96,19 +96,22 @@ class NativeAuthOAuth2StrategyV2Test {
         val password = "P@ssw0rd!".toCharArray()
         val resetResult = mockk<NativeAuthV2InteractionApiResult>()
         val challengeResult = mockk<NativeAuthV2InteractionApiResult>()
+        val riskVerificationResult = mockk<NativeAuthV2InteractionApiResult>()
         val resendResult = mockk<NativeAuthV2InteractionApiResult>()
         val verifyResult = mockk<NativeAuthV2InteractionApiResult>()
         val updateResult = mockk<NativeAuthV2InteractionApiResult>()
         val pollResult = mockk<NativeAuthV2InteractionApiResult>()
         every { v2Interactor.performResetPasswordStart(USERNAME, state) } returns resetResult
-        every { v2Interactor.performChallenge(state) } returns challengeResult
+        every { v2Interactor.performMethodChallenge(state, "method-id") } returns challengeResult
+        every { v2Interactor.performRiskVerification(state) } returns riskVerificationResult
         every { v2Interactor.performResend(state) } returns resendResult
         every { v2Interactor.performVerify(state, OTP) } returns verifyResult
         every { v2Interactor.performUpdatePassword(state, password) } returns updateResult
         every { v2Interactor.performPoll(state) } returns pollResult
 
         assertSame(resetResult, strategy.performResetPasswordStart(USERNAME, state))
-        assertSame(challengeResult, strategy.performChallenge(state))
+        assertSame(challengeResult, strategy.performMethodChallenge(state, "method-id"))
+        assertSame(riskVerificationResult, strategy.performRiskVerification(state))
         assertSame(resendResult, strategy.performResend(state))
         assertSame(verifyResult, strategy.performVerify(state, OTP))
         assertSame(updateResult, strategy.performUpdatePassword(state, password))

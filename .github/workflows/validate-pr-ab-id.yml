@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.pull_request.labels.*.name, 'skip AB ID validation')"
     steps:
-      - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
+      - uses: danhellem/github-actions-pr-is-linked-to-work-item@32045b01bc94b783381cca6b2caa59275cb10dfe # main
         
   # Get AB#ID
   get_ab_id:

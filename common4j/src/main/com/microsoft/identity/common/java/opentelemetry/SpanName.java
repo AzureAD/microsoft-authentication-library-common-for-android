@@ -28,6 +28,7 @@ public enum SpanName {
     AcquireTokenSilent,
     SetScopeForDMAgentForFoci,
     GetAccounts,
+    FociCallerAccessDecision,
     RemoveAccount,
     WorkplaceJoin,
     ATIInteractively,
@@ -150,5 +151,10 @@ public enum SpanName {
      * default span. Emitted only when the {@code EnablePKeyAuthSubmitUrlOriginValidation} flight is
      * on (AB#3706623).
      */
-    ProcessPKeyAuthChallenge
+    ProcessPKeyAuthChallenge,
+
+    /**
+     * Span name for original-caller assessment during legacy broker account enumeration.
+     */
+    LegacyBrokerUsersCallerEvaluation
 }

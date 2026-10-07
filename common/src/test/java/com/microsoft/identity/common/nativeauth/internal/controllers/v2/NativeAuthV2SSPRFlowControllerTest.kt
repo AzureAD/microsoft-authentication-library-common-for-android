@@ -25,6 +25,7 @@ package com.microsoft.identity.common.nativeauth.internal.controllers.v2
 import com.microsoft.identity.common.java.nativeauth.authorities.NativeAuthCIAMAuthority
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SignInAfterResetPasswordCommandParameters
+import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SelectResetPasswordMethodCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitCodeCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.NativeAuthV2SubmitNewPasswordCommandParameters
 import com.microsoft.identity.common.java.nativeauth.commands.parameters.ResetPasswordV2StartCommandParameters
@@ -33,6 +34,7 @@ import com.microsoft.identity.common.java.nativeauth.controllers.results.NativeA
 import com.microsoft.identity.common.java.nativeauth.providers.NativeAuthV2OAuth2Strategy
 import com.microsoft.identity.common.java.nativeauth.providers.responses.signin.SignInTokenApiResult
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.AuthorizeChallengeApiResult
+import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2AuthMethod
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2ContinuationState
 import com.microsoft.identity.common.java.nativeauth.providers.responses.v2.NativeAuthV2InteractionApiResult
 import com.microsoft.identity.common.java.exception.ClientException
@@ -56,23 +58,15 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Focused unit tests for [NativeAuthV2FlowController], covering the app-triggered
- * sign-in-after-reset behaviour added to match the first-pass iOS E2E completion logic:
- *
- * - A successful password reset (start / submit-code / submit-new-password, including both the
- *   fast-forward and poll-completion paths) now returns
- *   [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] instead of eagerly performing the
- *   token exchange.
- * - [NativeAuthV2FlowController.signInAfterResetPassword] is the only entry point that performs
- *   the token exchange (via the shared, unchanged `completeFlow` path), and now returns typed
- *   [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] results instead of
- *   throwing.
+ * Unit tests for the V2 self-service password reset (SSPR) orchestration in
+ * [NativeAuthV2FlowController]: reset start, method selection and risk verification, code
+ * submission, password update and polling, and explicit sign-in after reset.
  *
  * [NativeAuthV2OAuth2Strategy] and [NativeAuthCIAMAuthority] are mocked so these tests exercise only
- * the controller's own branching/mapping logic, not the (unchanged) HTTP or cache layers
- * underneath `completeFlow`'s success path.
+ * the controller's branching, error mapping, and token-request/cache parameter handling, not the
+ * HTTP or cache implementations.
  */
-class NativeAuthV2FlowControllerTest {
+class NativeAuthV2SSPRFlowControllerTest {
 
     private val correlationId = "test-correlation-id"
 
@@ -121,6 +115,19 @@ class NativeAuthV2FlowControllerTest {
             .scopes(emptyList())
             .continuationState(state)
             .code(code)
+            .build()
+
+    private fun selectResetPasswordMethodParameters(
+        state: NativeAuthV2ContinuationState,
+        methodId: String
+    ): NativeAuthV2SelectResetPasswordMethodCommandParameters =
+        NativeAuthV2SelectResetPasswordMethodCommandParameters.builder()
+            .authority(mockAuthority)
+            .platformComponents(mockPlatformComponents)
+            .correlationId(correlationId)
+            .scopes(emptyList())
+            .continuationState(state)
+            .methodId(methodId)
             .build()
 
     private fun submitNewPasswordParameters(
@@ -210,10 +217,11 @@ class NativeAuthV2FlowControllerTest {
         } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
             correlationId = correlationId,
             continuationState = afterStartState,
-            hint = null
+            hint = null,
+            methods = listOf(NativeAuthV2AuthMethod("email-1", "email", null))
         )
         every {
-            mockStrategy.performChallenge(state = any())
+            mockStrategy.performMethodChallenge(state = any(), methodId = "email-1")
         } returns NativeAuthV2InteractionApiResult.ReadyToComplete(
             correlationId = correlationId,
             continuationState = readyState
@@ -263,6 +271,161 @@ class NativeAuthV2FlowControllerTest {
     }
 
     @Test
+    fun testResetPasswordStartReturnsMethodSelectionWhenEmailAndSmsAreOffered() {
+        val state = mockContinuationState()
+        every {
+            mockStrategy.performAuthorizeChallengeStart(
+                correlationId = any(),
+                entryRelation = any(),
+                scenario = any(),
+                scopes = any(),
+                claimsRequestJson = null
+            )
+        } returns AuthorizeChallengeApiResult.ContinuationRequired(
+            correlationId = correlationId,
+            continuationState = state
+        )
+        every {
+            mockStrategy.performResetPasswordStart(username = any(), state = state)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
+            correlationId = correlationId,
+            continuationState = state,
+            hint = null,
+            methods = listOf(
+                NativeAuthV2AuthMethod("email-1", "email", "u***@contoso.com"),
+                NativeAuthV2AuthMethod("sms-1", "sms", "+X XXX XXX 34")
+            )
+        )
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is NativeAuthV2CommandResult.ResetPasswordMethodRequired)
+        result as NativeAuthV2CommandResult.ResetPasswordMethodRequired
+        assertEquals(listOf("email-1", "sms-1"), result.authMethods.map { it.id })
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+    }
+
+    @Test
+    fun testResetPasswordStartReturnsAPIErrorWhenOnlyUnsupportedMethodIsOffered() {
+        val state = mockContinuationState()
+        every {
+            mockStrategy.performAuthorizeChallengeStart(
+                correlationId = any(),
+                entryRelation = any(),
+                scenario = any(),
+                scopes = any(),
+                claimsRequestJson = null
+            )
+        } returns AuthorizeChallengeApiResult.ContinuationRequired(
+            correlationId = correlationId,
+            continuationState = state
+        )
+        every {
+            mockStrategy.performResetPasswordStart(username = any(), state = state)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
+            correlationId = correlationId,
+            continuationState = state,
+            hint = null,
+            methods = listOf(
+                NativeAuthV2AuthMethod("password-1", "password", null)
+            )
+        )
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is INativeAuthCommandResult.APIError)
+        result as INativeAuthCommandResult.APIError
+        assertEquals("unsupported_challenge_method", result.error)
+        verify(exactly = 0) { mockStrategy.performMethodChallenge(any(), any()) }
+    }
+
+    @Test
+    fun testResetPasswordStartAutomaticallyChallengesSingleSmsMethod() {
+        val challengeState = mockContinuationState()
+        val riskState = mockContinuationState()
+        val verificationState = mockContinuationState()
+        every {
+            mockStrategy.performAuthorizeChallengeStart(
+                correlationId = any(),
+                entryRelation = any(),
+                scenario = any(),
+                scopes = any(),
+                claimsRequestJson = null
+            )
+        } returns AuthorizeChallengeApiResult.ContinuationRequired(
+            correlationId = correlationId,
+            continuationState = challengeState
+        )
+        every {
+            mockStrategy.performResetPasswordStart(username = any(), state = challengeState)
+        } returns NativeAuthV2InteractionApiResult.ChallengeRequired(
+            correlationId = correlationId,
+            continuationState = challengeState,
+            hint = null,
+            methods = listOf(
+                NativeAuthV2AuthMethod("sms-1", "sms", "+X XXX XXX 34")
+            )
+        )
+        every {
+            mockStrategy.performMethodChallenge(challengeState, "sms-1")
+        } returns NativeAuthV2InteractionApiResult.RiskVerificationRequired(
+            correlationId = correlationId,
+            continuationState = riskState
+        )
+        every {
+            mockStrategy.performRiskVerification(riskState)
+        } returns NativeAuthV2InteractionApiResult.CodeRequired(
+            correlationId = correlationId,
+            continuationState = verificationState,
+            challengeTargetLabel = "+X XXX XXX 34",
+            challengeChannel = "sms",
+            codeLength = 6
+        )
+
+        val result = controller.resetPasswordStart(resetPasswordStartParameters())
+
+        assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
+        result as NativeAuthV2CommandResult.CodeRequired
+        assertEquals("sms", result.challengeChannel)
+        assertEquals(6, result.codeLength)
+        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+    }
+
+    @Test
+    fun testSelectResetPasswordSmsMethodFollowsRiskVerification() {
+        val selectionState = mockContinuationState()
+        val riskState = mockContinuationState()
+        val verificationState = mockContinuationState()
+        every {
+            mockStrategy.performMethodChallenge(selectionState, "sms-1")
+        } returns NativeAuthV2InteractionApiResult.RiskVerificationRequired(
+            correlationId = correlationId,
+            continuationState = riskState
+        )
+        every {
+            mockStrategy.performRiskVerification(riskState)
+        } returns NativeAuthV2InteractionApiResult.CodeRequired(
+            correlationId = correlationId,
+            continuationState = verificationState,
+            challengeTargetLabel = "+X XXX XXX 34",
+            challengeChannel = "sms",
+            codeLength = 6
+        )
+
+        val result = controller.selectResetPasswordMethod(
+            selectResetPasswordMethodParameters(selectionState, "sms-1")
+        )
+
+        assertTrue(result is NativeAuthV2CommandResult.CodeRequired)
+        result as NativeAuthV2CommandResult.CodeRequired
+        assertEquals(verificationState, result.continuationState)
+        assertEquals("+X XXX XXX 34", result.challengeTargetLabel)
+        assertEquals("sms", result.challengeChannel)
+        assertEquals(6, result.codeLength)
+        verify(exactly = 1) { mockStrategy.performRiskVerification(riskState) }
+    }
+
+    @Test
     fun testSubmitCodeReturnsAPIErrorWhenVerifyReadyToComplete() {
         val inputState = mockContinuationState()
         val readyState = mockContinuationState()
@@ -277,7 +440,6 @@ class NativeAuthV2FlowControllerTest {
 
         val result = controller.submitCode(parameters)
 
-        // The reset cannot have completed before a new password was submitted.
         assertTrue(result is INativeAuthCommandResult.APIError)
         result as INativeAuthCommandResult.APIError
         assertEquals(correlationId, result.correlationId)

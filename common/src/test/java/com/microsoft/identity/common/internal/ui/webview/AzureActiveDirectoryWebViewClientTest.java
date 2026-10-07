@@ -98,6 +98,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPackageManager;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
@@ -125,6 +126,7 @@ import com.microsoft.identity.common.java.opentelemetry.SpanName;
 public class AzureActiveDirectoryWebViewClientTest {
     private WebView mMockWebView;
     private AzureActiveDirectoryWebViewClient mWebViewClient;
+    private HashMap<String, String> mRequestHeaders;
     private Context mContext;
     private Activity mActivity;
     private static final String TEST_REDIRECT_URI = "msauth://com.example.app/somehash=";
@@ -208,6 +210,13 @@ public class AzureActiveDirectoryWebViewClientTest {
     // used to verify the post-parse validation step.
     private static final String TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE = "intent://play.google.com/store/apps/details?referrer=;package=com.android.vending;&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.example.unrelatedapp;end";
     private static final String TEST_INTENT_WITH_EXPLICIT_COMPONENT = "intent://play.google.com/store/apps/details?id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;component=com.example.unrelatedapp/.SampleActivity;end";
+
+        private static final String TEST_INTENT_WITH_COMPONENT_AND_EXTRAS = "intent://example.com#Intent;scheme=https;package=com.android.vending;component=com.example.hostapp/.SampleActivity;action=com.example.action.OPEN;S.exampleLink=https://example.com/item;S.id=com.azure.authenticator;end";
+        private static final String TEST_INTENT_WITH_NON_BROKER_APP_ID = "intent://play.google.com/store/apps/details?id=com.example.unrelatedapp#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;S.id=com.azure.authenticator;end";
+    /** A market: operation that is not an app listing. */
+    private static final String TEST_INTENT_MARKET_SEARCH = "intent://search?q=foo&id=com.azure.authenticator#Intent;scheme=market;action=android.intent.action.VIEW;package=com.android.vending;end";
+        private static final String TEST_INTENT_PLAY_STORE_REDEEM = "intent://play.google.com/redeem?code=example-code&id=com.azure.authenticator#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
     private static final String GOOGLE_PLAY_STORE_PACKAGE_NAME = "com.android.vending";
 
     private static final String TEST_WEB_CP_ENROLLMENT_URL = "https://enterprise.google.com/android/enroll";
@@ -264,6 +273,7 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Before
     public void setup() throws ClientException {
+        DiagnosticContext.INSTANCE.clear();
         mContext = ApplicationProvider.getApplicationContext();
         mMockWebView = new WebView(mContext);
         mActivity = Robolectric.buildActivity(Activity.class).get();
@@ -290,9 +300,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                 Mockito.mock(SwitchBrowserProtocolCoordinator.class),
                 "homeTenantId",
                 false);
-        HashMap<String, String> dummyHeaders = new HashMap<>();
-        dummyHeaders.put("key", "value");
-        mWebViewClient.setRequestHeaders(dummyHeaders);
+        mRequestHeaders = new HashMap<>();
+        mRequestHeaders.put("key", "value");
+        mWebViewClient.setRequestHeaders(mRequestHeaders);
         mWebViewClient.setRequestUrl(TEST_PUBLIC_CLOUD_REDIRECT_URL);
         AzureActiveDirectory.ensureCloudDiscovery();
     }
@@ -1729,12 +1739,15 @@ public class AzureActiveDirectoryWebViewClientTest {
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getUrl()).thenReturn(FALLBACK_ORIGIN_URL);
 
+        // Exception telemetry can call a mocked DiagnosticContext; construct it before stubbing.
+        final ClientException validationException = new ClientException(
+                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
+                "SubmitUrl host is not same-origin with the challenging origin.");
+
         try (final MockedConstruction<PKeyAuthChallengeFactory> factoryCtor = mockConstruction(
                 PKeyAuthChallengeFactory.class,
                 (mock, ctx) -> when(mock.getPKeyAuthChallengeFromWebViewRedirect(any(), any()))
-                        .thenThrow(new ClientException(
-                                ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID,
-                                "SubmitUrl host is not same-origin with the challenging origin.")))) {
+                        .thenThrow(validationException))) {
 
             final boolean result = webViewClient.shouldOverrideUrlLoading(
                     mockWebView, mockNavigationRequest(TEST_PKEY_AUTH_URL, true));
@@ -1789,20 +1802,113 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     @Config(shadows = {
             ShadowProcessUtil.class})
-    public void testLoadDeviceCaUrlInWebView() {
-        // Mocks
+    public void testDeviceCaAuthorizeOnlyFlightConfiguration() {
+        assertEquals("EnableDeviceCaAuthorizeOnlyCredentialForwarding",
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getKey());
+        assertEquals(Boolean.TRUE,
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING.getDefaultValue());
+    }
+
+    @Test
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyDisabledUsesOriginalHeaders() {
         final WebView mockWebview = Mockito.mock(WebView.class);
         final AzureActiveDirectoryWebViewClient mockWebViewClient = Mockito.spy(mWebViewClient);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
+
+        final Map<String, String> headersBeforeLoad = new HashMap<>(mRequestHeaders);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
         mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
+
+        Mockito.verify(mockWebview).loadUrl(
+                eq("https://abcxyz/xyz&ismdmurl=1"),
+                Mockito.same(mRequestHeaders));
+        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString());
+        assertEquals(headersBeforeLoad, mRequestHeaders);
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.FALSE,
+                span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertNull(span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
+    }
+
+    @Test
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyEnabledSkipsHeadersForAllUrls() {
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+
+        final String[][] urls = {
+                {TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                        TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER},
+                {"https://login.microsoftonline.com/common/authorize?ismdmurl=1",
+                        "https://login.microsoftonline.com/common/authorize?ismdmurl=1"},
+                {TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER,
+                        "https://abcxyz/xyz&ismdmurl=1"},
+                {"https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1",
+                        "https://go.microsoft.com/fwlink/?LinkId=396941&ismdmurl=1"},
+                {"not a parsed URL&ismdmurl=1",
+                        "not a parsed URL&ismdmurl=1"}
+        };
+        final Map<String, String> headersBeforeLoad = new HashMap<>(mRequestHeaders);
+
+        for (final String[] url : urls) {
+            final WebView mockWebview = Mockito.mock(WebView.class);
+            mWebViewClient.loadDeviceCaUrl(url[0], mockWebview);
+
+            Mockito.verify(mockWebview).loadUrl(url[1]);
+            Mockito.verify(mockWebview, Mockito.never())
+                    .loadUrl(Mockito.anyString(), Mockito.anyMap());
+        }
+        assertEquals(headersBeforeLoad, mRequestHeaders);
+    }
+
+    @Test
+    @Config(shadows = {
+            ShadowProcessUtil.class})
+    public void testLoadDeviceCaUrlInWebViewWhenAuthorizeOnlyEnabledEmitsDecisionTelemetry() {
+        final WebView mockWebview = Mockito.mock(WebView.class);
+        final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
+        when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(true);
+
+        final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
+        mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
+        CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
+        mWebViewClient.loadDeviceCaUrl(TEST_HTTPS_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
+
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertEquals(Boolean.TRUE,
+                span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
     }
 
     @Test
@@ -1818,10 +1924,22 @@ public class AzureActiveDirectoryWebViewClientTest {
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
         CommonFlightsManager.INSTANCE.initializeCommonFlightsManager(mockCommonFlightsManager);
-        // Actual call
+        final CapturingSpanFactory spanFactory =
+                new CapturingSpanFactory(SpanName.ProcessWebCpRedirects.name());
+        OTelUtility.setSpanFactory(spanFactory);
+
         mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
-        // Verify
-        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString(), Mockito.any());
+
+        Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
+        Mockito.verify(mockWebview, Mockito.never()).loadUrl(Mockito.anyString());
+        Mockito.verify(mockWebview, Mockito.never())
+                .loadUrl(Mockito.anyString(), Mockito.anyMap());
+        final RecordingSpan span = spanFactory.captured();
+        assertNotNull(span);
+        assertNull(span.attribute(
+                AttributeName.device_ca_authorize_only_forwarding_enabled.name()));
+        assertNull(span.attribute(AttributeName.device_ca_request_headers_skipped.name()));
     }
 
     @Test
@@ -1871,6 +1989,9 @@ public class AzureActiveDirectoryWebViewClientTest {
                 true);
         final IFlightsProvider mockFlightsProvider = Mockito.mock(IFlightsProvider.class);
         when(mockFlightsProvider.isFlightEnabled(CommonFlight.ENABLE_WEB_CP_IN_WEBVIEW)).thenReturn(true);
+        when(mockFlightsProvider.isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING))
+                .thenReturn(false);
 
         final MockCommonFlightsManager mockCommonFlightsManager = new MockCommonFlightsManager();
         mockCommonFlightsManager.setMockCommonFlightsProvider(mockFlightsProvider);
@@ -1878,7 +1999,8 @@ public class AzureActiveDirectoryWebViewClientTest {
         // Actual call
         mockWebViewClient.loadDeviceCaUrl(TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER, mockWebview);
         // Verify
-        Mockito.verify(mockFlightsProvider, Mockito.never()).isFlightEnabled(Mockito.any());
+        Mockito.verify(mockFlightsProvider).isFlightEnabled(
+                CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
         Mockito.verify(mockWebview).loadUrl(Mockito.anyString(), Mockito.any());
     }
 
@@ -1908,7 +2030,6 @@ public class AzureActiveDirectoryWebViewClientTest {
 
     @Test
     public void testUrlOverrideHandlesIntentRedirectUrl() {
-        setBrokerInstallIntentValidationFlight(true);
         final Context mockContext = Mockito.mock(Context.class);
         final WebView mockWebView = Mockito.mock(WebView.class);
         when(mockWebView.getContext()).thenReturn(mockContext);
@@ -1917,112 +2038,178 @@ public class AzureActiveDirectoryWebViewClientTest {
 
         final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
         Mockito.verify(mockContext).startActivity(intentCaptor.capture());
-        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
-        assertNull(intentCaptor.getValue().getComponent());
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        final Intent launched = intentCaptor.getValue();
+        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, launched.getPackage());
+        assertNull(launched.getComponent());
+        // Play install attribution travels in the data URI's query string, not in extras, so it
+        // survives the rebuild intact.
+        assertEquals("com.azure.authenticator", launched.getData().getQueryParameter("id"));
+        assertTrue(launched.getData().getQueryParameter("referrer").contains("utm_source"));
+        assertEquals("web_auto_redirect", launched.getData().getQueryParameter("pcampaignid"));
+        assertNull(launched.getExtras());
     }
 
     @Test
-    public void testIntentToInstallBroker_blocksNonAllowlistedPackage_whenValidationEnabled() {
-        setBrokerInstallIntentValidationFlight(true);
-        final Context mockContext = Mockito.mock(Context.class);
-        final WebView mockWebView = Mockito.mock(WebView.class);
-        when(mockWebView.getContext()).thenReturn(mockContext);
-
-        // The request passes the install-intent gate (so it is "handled") ...
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
-        // ... but a parsed target package that is not on the allow-list must not be launched.
-        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    public void testIntentToInstallBroker_blocksNonAllowlistedPackage() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE);
     }
 
     @Test
-    public void testIntentToInstallBroker_clearsExplicitComponent_whenValidationEnabled() {
-        setBrokerInstallIntentValidationFlight(true);
-        final Context mockContext = Mockito.mock(Context.class);
-        final WebView mockWebView = Mockito.mock(WebView.class);
-        when(mockWebView.getContext()).thenReturn(mockContext);
-
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_EXPLICIT_COMPONENT));
-
-        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
-        Mockito.verify(mockContext).startActivity(intentCaptor.capture());
-        // Any explicit component is cleared; only the allow-listed package remains.
-        assertNull(intentCaptor.getValue().getComponent());
-        assertEquals(GOOGLE_PLAY_STORE_PACKAGE_NAME, intentCaptor.getValue().getPackage());
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+    public void testIntentToInstallBroker_blocksExplicitComponent() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_EXPLICIT_COMPONENT);
+                assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_COMPONENT_AND_EXTRAS);
     }
 
     @Test
-    public void testIntentToInstallBroker_legacyBehavior_whenValidationDisabled() {
-        setBrokerInstallIntentValidationFlight(false);
-        final Context mockContext = Mockito.mock(Context.class);
-        final WebView mockWebView = Mockito.mock(WebView.class);
-        when(mockWebView.getContext()).thenReturn(mockContext);
-
-        // With the validation flight off, the legacy launch behavior is preserved (rollback switch).
-        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_NON_ALLOWLISTED_PACKAGE));
-        Mockito.verify(mockContext).startActivity(any(Intent.class));
-        CommonFlightsManager.INSTANCE.resetFlightsManager();
+        public void testIntentToInstallBroker_blocksNonBrokerAppListing() {
+                assertIntentUrlIsNotLaunched(TEST_INTENT_WITH_NON_BROKER_APP_ID);
     }
 
-    /**
-     * A selector cannot be injected through the {@code intent://} URL scheme (Android does not
-     * (de)serialize a selector via parseUri/toUri), so the selector-clearing defense is exercised
-     * directly on the sanitizer. On Android a top-level package and a selector are mutually
-     * exclusive, so an intent that smuggles the store package inside a selector has a {@code null}
-     * top-level package: the sanitizer nulls the selector (verified on the mutated intent) and then
-     * blocks the intent because the validated package is null.
-     */
+        @Test
+        public void testIntentToInstallBroker_blocksDuplicateAppIds() throws URISyntaxException {
+                final String[] queries = {
+                                "id=com.azure.authenticator&id=com.example.unrelatedapp",
+                                "id=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&id=com.azure.authenticator"
+                };
+                for (final String query : queries) {
+                        for (final String scheme : new String[]{"https", "market"}) {
+                                final String listing = "https".equals(scheme) ? "play.google.com/store/apps/details" : "details";
+                                final String intentUrl = "intent://" + listing + "?" + query
+                                                + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                                                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                                assertIntentUrlIsNotLaunched(intentUrl);
+                        }
+                }
+        }
+
+        @Test
+        public void testIntentToInstallBroker_blocksEncodedDuplicateAppIds() throws URISyntaxException {
+                final String[] queries = {
+                                "id=com.azure.authenticator&%69d=com.example.unrelatedapp",
+                                "%69d=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&i%64=com.example.unrelatedapp",
+                                "i%64=com.example.unrelatedapp&id=com.azure.authenticator",
+                                "id=com.azure.authenticator&%69%64=com.example.unrelatedapp",
+                                "%69%64=com.example.unrelatedapp&id=com.azure.authenticator"
+                };
+                for (final String query : queries) {
+                        for (final String scheme : new String[]{"https", "market"}) {
+                                final String listing = "https".equals(scheme) ? "play.google.com/store/apps/details" : "details";
+                                final String intentUrl = "intent://" + listing + "?" + query
+                                                + "#Intent;scheme=" + scheme + ";package=com.android.vending;end";
+                                assertNull(mWebViewClient.buildBrokerInstallIntent(
+                                                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+                                assertIntentUrlIsNotLaunched(intentUrl);
+                        }
+                }
+        }
+
+        @Test
+        public void testIntentToInstallBroker_preservesEncodedAttribution() throws URISyntaxException {
+                final String intentUrl = "intent://play.google.com/store/apps/details?id=com.azure.authenticator"
+                                + "&referrer=utm_source%3Dexample%26id%3Dcampaign&pcampaignid=example"
+                                + "#Intent;scheme=https;package=com.android.vending;end";
+                final Intent parsedIntent = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
+                final Context mockContext = Mockito.mock(Context.class);
+                final WebView mockWebView = Mockito.mock(WebView.class);
+                when(mockWebView.getContext()).thenReturn(mockContext);
+
+                assertTrue(mWebViewClient.shouldOverrideUrlLoading(mockWebView, intentUrl));
+
+                final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+                Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+                assertEquals(parsedIntent.getData(), intentCaptor.getValue().getData());
+        }
+
+        /** Only the app-details operation is a store listing; market://search is not. */
     @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_clearsSelectorAndBlocks() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        final Intent selector = new Intent(Intent.ACTION_VIEW);
-        selector.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
-        intent.setSelector(selector);
-
-        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
-
-        assertNull(result);
-        // The selector was cleared before the null-package block, so it can never redirect resolution.
-        assertNull(intent.getSelector());
+    public void testIntentToInstallBroker_blocksNonDetailsMarketOperation() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_MARKET_SEARCH);
     }
 
-    /**
-     * When the validated (top-level) package is not allow-listed, the intent must be blocked
-     * (returns {@code null}) so it is never launched.
-     */
+    /** Same constraint on the https side: a broker id in the query doesn't make /redeem a listing. */
     @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_returnsNullForNonAllowlistedPackage() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setPackage("com.example.unrelatedapp");
-
-        assertNull(mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent));
+    public void testIntentToInstallBroker_blocksNonListingPlayStorePath() {
+        assertIntentUrlIsNotLaunched(TEST_INTENT_PLAY_STORE_REDEEM);
     }
 
-    /**
-     * For an allow-listed target, URI-permission grant flags are stripped and CATEGORY_BROWSABLE is
-     * added, while unrelated flags (e.g. FLAG_ACTIVITY_NEW_TASK) are preserved.
-     */
     @Test
-    public void testSanitizeAndValidateBrokerInstallIntent_stripsGrantFlagsAndAddsBrowsable() {
-        final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setPackage(GOOGLE_PLAY_STORE_PACKAGE_NAME);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
-                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
-                | Intent.FLAG_ACTIVITY_NEW_TASK);
+    public void testIntentToInstallBroker_dropsExtrasAndFlags() throws URISyntaxException {
+        final String intentUrl = "intent://play.google.com/store/apps/details?id=com.azure.authenticator"
+                + "#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;"
+                + "launchFlags=0x18000000;S.exampleExtra=value;end";
 
-        final Intent result = mWebViewClient.sanitizeAndValidateBrokerInstallIntent(intent);
+        final Intent result = mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME));
 
         assertNotNull(result);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        assertEquals(0, result.getFlags() & Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        assertNotEquals(0, result.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
+        assertNull(result.getExtras());
+        assertEquals(0, result.getFlags());
+        assertEquals(Intent.ACTION_VIEW, result.getAction());
         assertTrue(result.hasCategory(Intent.CATEGORY_BROWSABLE));
+    }
+
+    /** A {@code market://details} listing for a known broker is an equally valid request shape. */
+    @Test
+    public void testIntentToInstallBroker_allowsMarketDetailsUri() throws URISyntaxException {
+        final String intentUrl = "intent://details?id=com.azure.authenticator"
+                + "#Intent;scheme=market;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+        assertNotNull(mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+    }
+
+    /** A trailing slash on the listing path is tolerated; a different path still is not. */
+    @Test
+    public void testIntentToInstallBroker_allowsTrailingSlashOnListingPath() throws URISyntaxException {
+        final String intentUrl = "intent://play.google.com/store/apps/details/?id=com.azure.authenticator"
+                + "#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.vending;end";
+
+        assertNotNull(mWebViewClient.buildBrokerInstallIntent(
+                Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME)));
+        assertIntentUrlIsNotLaunched(TEST_INTENT_PLAY_STORE_REDEEM);
+    }
+
+        /** A selector and a top-level package are mutually exclusive. */
+    @Test
+    public void testBuildBrokerInstallIntent_blocksSelector() {
+        final Intent intent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://play.google.com/store/apps/details?id=com.azure.authenticator"));
+        final Intent selector = new Intent(Intent.ACTION_VIEW);
+        selector.setPackage("com.example.unrelatedapp");
+        intent.setSelector(selector);
+
+        assertNull(mWebViewClient.buildBrokerInstallIntent(intent));
+    }
+
+    @Test
+    public void testIntentToInstallBroker_killSwitchOffRestoresLegacyLaunch() {
+        setBrokerInstallIntentValidationFlight(false);
+        try {
+            final Context mockContext = Mockito.mock(Context.class);
+            final WebView mockWebView = Mockito.mock(WebView.class);
+            when(mockWebView.getContext()).thenReturn(mockContext);
+
+            mWebViewClient.shouldOverrideUrlLoading(mockWebView, TEST_INTENT_WITH_COMPONENT_AND_EXTRAS);
+
+            final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
+            Mockito.verify(mockContext).startActivity(intentCaptor.capture());
+            assertNotNull(intentCaptor.getValue().getComponent());
+        } finally {
+            CommonFlightsManager.INSTANCE.resetFlightsManager();
+        }
+    }
+
+    /** An intent:// URL we refuse to launch is handled, but nothing is started. */
+    private void assertIntentUrlIsNotLaunched(final String intentUrl) {
+        final Context mockContext = Mockito.mock(Context.class);
+        final WebView mockWebView = Mockito.mock(WebView.class);
+        when(mockWebView.getContext()).thenReturn(mockContext);
+
+        mWebViewClient.shouldOverrideUrlLoading(mockWebView, intentUrl);
+        Mockito.verify(mockContext, never()).startActivity(any(Intent.class));
     }
 
     private void setBrokerInstallIntentValidationFlight(final boolean enabled) {
@@ -2073,27 +2260,31 @@ public class AzureActiveDirectoryWebViewClientTest {
     /**
      * A flow started without a correlation id must still be joinable, so the thread local remains the
      * fallback rather than being dropped.
+     *
+     * Both fallback tests use a separate Robolectric instrumentation configuration because Native
+     * Auth's MockApiUtils replaces DiagnosticContext.INSTANCE with a mock in the default sandbox.
+     * Clearing the thread local cannot undo that replacement.
      */
     @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowHasNoId() {
         final String fromDiagnosticContext = "33333333-3333-4333-8333-333333333333";
-        final RequestContext requestContext = new RequestContext();
-        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
-        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId(null);
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
-        assertEquals(fromDiagnosticContext,
-                newClientWithCorrelationId(null).getFlowCorrelationId());
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
 
     @Test
+    @Config(instrumentedPackages = {"com.microsoft.identity.common.java.logging"})
     public void testGetFlowCorrelationId_fallsBackToDiagnosticContextWhenTheFlowsIdIsEmpty() {
         final String fromDiagnosticContext = "44444444-4444-4444-8444-444444444444";
-        final RequestContext requestContext = new RequestContext();
-        requestContext.put(DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
-        DiagnosticContext.INSTANCE.setRequestContext(requestContext);
+        final AzureActiveDirectoryWebViewClient webViewClient = newClientWithCorrelationId("");
+        DiagnosticContext.INSTANCE.getRequestContext().put(
+                DiagnosticContext.CORRELATION_ID, fromDiagnosticContext);
 
-        assertEquals(fromDiagnosticContext,
-                newClientWithCorrelationId("").getFlowCorrelationId());
+        assertEquals(fromDiagnosticContext, webViewClient.getFlowCorrelationId());
     }
 
     private AzureActiveDirectoryWebViewClient newClientWithCorrelationId(final String correlationId) {
@@ -2898,4 +3089,3 @@ public class AzureActiveDirectoryWebViewClientTest {
                 launched);
     }
 }
-

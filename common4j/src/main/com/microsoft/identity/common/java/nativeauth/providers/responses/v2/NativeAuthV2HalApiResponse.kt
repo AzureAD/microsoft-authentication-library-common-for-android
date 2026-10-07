@@ -42,7 +42,11 @@ class NativeAuthV2HalApiResponse private constructor(
     val challengeChannel: String?,
     val authorizationCode: String?,
     val pollIntervalMillis: Int?,
-    val serverError: HalServerError?
+    val authenticationFactor: String?,
+    val serverError: HalServerError?,
+    // Attributes the server requested via a top-level `attributes` array on a `collectAttributes`
+    // response during sign-up. Empty for every response that does not carry that array.
+    val requiredAttributes: List<RequiredAttribute>
 ) : INativeAuthApiResponse(statusCode, correlationIdValue, continuationToken) {
 
     data class EmbeddedAuthMethod(
@@ -52,16 +56,54 @@ class NativeAuthV2HalApiResponse private constructor(
         val links: Map<String, String>
     )
 
+    /**
+     * A single entry of a sign-up `collectAttributes` response's top-level `attributes` array.
+     * Only the fields the SDK acts on are modeled: [attributeId] (the wire name of the attribute),
+     * [inputType] (for example `text` or `password`), and whether it is [required].
+     */
+    data class RequiredAttribute(
+        val attributeId: String?,
+        val inputType: String?,
+        val required: Boolean?
+    )
+
     data class HalServerError(
         val code: String?,
         val message: String?,
         val innerErrorCode: String?,
-        val correlationId: String?
+        val correlationId: String?,
+        // Per-attribute error details from `error.innerError.details`. Empty when the server sent
+        // no such array. Used to attribute a sign-up failure (for example `userAlreadyExists` or
+        // `passwordPolicyViolation`) to the specific attribute(s) it concerns.
+        val details: List<HalErrorDetail>
+    )
+
+    /**
+     * A single entry of `error.innerError.details`, pairing an error [code] (for example
+     * `userAlreadyExists` or `passwordPolicyViolation`) with the [attributeIds] it applies to.
+     */
+    data class HalErrorDetail(
+        val code: String?,
+        val attributeIds: List<String>
     )
 
     val isWebFallbackRequired: Boolean
         get() = serverError?.code == REDIRECT_TO_WEB_ERROR_CODE ||
                 state == WEB_FALLBACK_REQUIRED_STATE
+
+    /**
+     * `true` when the server declared this challenge to be a multi-factor (second-factor) step via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isMultiFactorChallenge: Boolean
+        get() = authenticationFactor == MULTI_FACTOR
+
+    /**
+     * `true` when the server declared this challenge to be the single (first) factor via
+     * `challengeContext.authenticationFactor`.
+     */
+    val isSingleFactorChallenge: Boolean
+        get() = authenticationFactor == SINGLE_FACTOR
 
     /**
      * PII-bearing string. Still never includes [continuationToken], [authorizationCode], any href
@@ -71,6 +113,7 @@ class NativeAuthV2HalApiResponse private constructor(
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
             "challengeTargetLabel=$challengeTargetLabel, challengeChannel=$challengeChannel, " +
+            "authenticationFactor=$authenticationFactor, " +
             "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
@@ -83,7 +126,8 @@ class NativeAuthV2HalApiResponse private constructor(
     override fun toString(): String = "NativeAuthV2HalApiResponse(statusCode=$statusCode, " +
             "correlationId=$correlationId, state=$state, action=${action?.value}, " +
             "linkRelations=${links.keys}, methodCount=${methods.size}, codeLength=$codeLength, " +
-            "challengeChannel=$challengeChannel, hasAuthorizationCode=${authorizationCode != null}, " +
+            "challengeChannel=$challengeChannel, authenticationFactor=$authenticationFactor, " +
+            "hasAuthorizationCode=${authorizationCode != null}, " +
             "error=${serverError?.let { "(code=${it.code}, innerErrorCode=${it.innerErrorCode})" }}, " +
             "isWebFallbackRequired=$isWebFallbackRequired)"
 
@@ -94,6 +138,19 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val HINT_KEY = "hint"
         private const val TYPE_KEY = "type"
         private const val AUTHORIZATION_CODE_KEY = "authorizationCode"
+
+        /**
+         * Wrapper object carrying challenge metadata the SDK needs to interpret a `challenge`
+         * action, most importantly whether the challenge is the first factor or a second factor.
+         */
+        private const val CHALLENGE_CONTEXT_KEY = "challengeContext"
+        private const val AUTHENTICATION_FACTOR_KEY = "authenticationFactor"
+
+        /** `challengeContext.authenticationFactor` value for a first-factor challenge. */
+        const val SINGLE_FACTOR = "singleFactor"
+
+        /** `challengeContext.authenticationFactor` value for a second-factor (MFA) challenge. */
+        const val MULTI_FACTOR = "multiFactor"
 
         /**
          * Server-suggested delay, in milliseconds, before the next poll of an in-progress
@@ -112,6 +169,12 @@ class NativeAuthV2HalApiResponse private constructor(
         private const val ERROR_KEY = "error"
         private const val INNER_ERROR_KEY = "innerError"
         private const val ERROR_CODE_KEY = "code"
+        private const val ERROR_DETAILS_KEY = "details"
+        private const val ERROR_ATTRIBUTE_IDS_KEY = "attributeIds"
+        private const val ATTRIBUTES_KEY = "attributes"
+        private const val ATTRIBUTE_ID_KEY = "attributeId"
+        private const val ATTRIBUTE_INPUT_TYPE_KEY = "inputType"
+        private const val ATTRIBUTE_REQUIRED_KEY = "required"
         private const val ERROR_MESSAGE_KEY = "message"
         private const val ERROR_DESCRIPTION_KEY = "error_description"
         private const val ERROR_CORRELATION_ID_KEY = "correlationId"
@@ -147,7 +210,9 @@ class NativeAuthV2HalApiResponse private constructor(
                 authorizationCode = halResource.string(AUTHORIZATION_CODE_KEY)
                     ?: halResource.string(AUTHORIZATION_CODE_SHORT_KEY),
                 pollIntervalMillis = halResource.int(POLL_INTERVAL_KEY),
-                serverError = serverError
+                authenticationFactor = extractAuthenticationFactor(halResource),
+                serverError = serverError,
+                requiredAttributes = extractRequiredAttributes(halResource)
             )
         }
 
@@ -178,12 +243,15 @@ class NativeAuthV2HalApiResponse private constructor(
             challengeChannel = null,
             authorizationCode = null,
             pollIntervalMillis = null,
+            authenticationFactor = null,
             serverError = HalServerError(
                 code = errorCode,
                 message = errorMessage,
                 innerErrorCode = null,
-                correlationId = correlationId
-            )
+                correlationId = correlationId,
+                details = emptyList()
+            ),
+            requiredAttributes = emptyList()
         )
 
         private fun toEmbeddedAuthMethod(resource: HalResource): EmbeddedAuthMethod = EmbeddedAuthMethod(
@@ -192,6 +260,17 @@ class NativeAuthV2HalApiResponse private constructor(
             hint = resource.string(HINT_KEY),
             links = flattenFirstHref(resource.links)
         )
+
+        /**
+         * Reads `challengeContext.authenticationFactor`, accepting only a nested object shape.
+         * Any other shape leaves the factor unset, so the parser treats the challenge as
+         * unclassified rather than guessing.
+         */
+        private fun extractAuthenticationFactor(halResource: HalResource): String? {
+            val challengeContext = halResource.properties[CHALLENGE_CONTEXT_KEY] as? Map<*, *>
+                ?: return null
+            return (challengeContext[AUTHENTICATION_FACTOR_KEY] as? String)?.takeUnless { it.isBlank() }
+        }
 
         private fun flattenFirstHref(links: Map<String, List<HalLink>>): Map<String, String> =
             links.mapNotNull { (relation, halLinks) ->
@@ -248,7 +327,8 @@ class NativeAuthV2HalApiResponse private constructor(
                         code = errorValue[ERROR_CODE_KEY] as? String,
                         message = errorValue[ERROR_MESSAGE_KEY] as? String,
                         innerErrorCode = innerErrorMap?.get(ERROR_CODE_KEY) as? String,
-                        correlationId = errorValue[ERROR_CORRELATION_ID_KEY] as? String
+                        correlationId = errorValue[ERROR_CORRELATION_ID_KEY] as? String,
+                        details = extractErrorDetails(innerErrorMap)
                     )
                 }
 
@@ -257,10 +337,47 @@ class NativeAuthV2HalApiResponse private constructor(
                     message = halResource.string(ERROR_DESCRIPTION_KEY),
                     innerErrorCode = null,
                     correlationId = halResource.string(ERROR_CORRELATION_ID_SNAKE_KEY)
-                        ?: halResource.string(ERROR_CORRELATION_ID_KEY)
+                        ?: halResource.string(ERROR_CORRELATION_ID_KEY),
+                    details = emptyList()
                 )
 
                 else -> null
+            }
+        }
+
+        /**
+         * Parses `error.innerError.details` into [HalErrorDetail]s, keeping only entries that carry
+         * a usable shape. A detail with no `attributeIds` is retained with an empty list so an
+         * error keyed purely on its `code` (for example a code without a specific attribute) is not
+         * silently dropped.
+         */
+        private fun extractErrorDetails(innerErrorMap: Map<*, *>?): List<HalErrorDetail> {
+            val details = innerErrorMap?.get(ERROR_DETAILS_KEY) as? List<*> ?: return emptyList()
+            return details.mapNotNull { detail ->
+                val detailMap = detail as? Map<*, *> ?: return@mapNotNull null
+                val attributeIds = (detailMap[ERROR_ATTRIBUTE_IDS_KEY] as? List<*>)
+                    ?.mapNotNull { it as? String }
+                    .orEmpty()
+                HalErrorDetail(
+                    code = detailMap[ERROR_CODE_KEY] as? String,
+                    attributeIds = attributeIds
+                )
+            }
+        }
+
+        /**
+         * Parses a sign-up `collectAttributes` response's top-level `attributes` array into
+         * [RequiredAttribute]s. Returns an empty list when the property is absent or not an array.
+         */
+        private fun extractRequiredAttributes(halResource: HalResource): List<RequiredAttribute> {
+            val attributes = halResource.properties[ATTRIBUTES_KEY] as? List<*> ?: return emptyList()
+            return attributes.mapNotNull { attribute ->
+                val attributeMap = attribute as? Map<*, *> ?: return@mapNotNull null
+                RequiredAttribute(
+                    attributeId = attributeMap[ATTRIBUTE_ID_KEY] as? String,
+                    inputType = attributeMap[ATTRIBUTE_INPUT_TYPE_KEY] as? String,
+                    required = attributeMap[ATTRIBUTE_REQUIRED_KEY] as? Boolean
+                )
             }
         }
     }

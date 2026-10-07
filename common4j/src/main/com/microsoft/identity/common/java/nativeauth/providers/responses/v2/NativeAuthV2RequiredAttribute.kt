@@ -22,20 +22,30 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.nativeauth.providers.responses.v2
 
+import com.microsoft.identity.common.java.nativeauth.util.ILoggable
+import java.io.Serializable
+
 /**
- * SDK-issued Native Auth V2 operations. Unlike [NativeAuthV2HalAction] and
- * [NativeAuthV2LinkRelation], this set is entirely controlled by the SDK, not the server, so it is
- * closed and modeled as an enum.
+ * An account attribute the server requested during a Native Auth V2 sign-up flow, safe to hand to
+ * layers above common4j.
  *
- * This is parser context used for operation-specific error mapping (for example, distinguishing an
- * invalid code entered during [VERIFY] from an invalid password submitted during
- * [UPDATE_PASSWORD]); it is not a telemetry enum and must not be used as one.
+ * @property name The wire name of the attribute (for example `email` or `displayName`).
+ * @property type Optional input type the server declared for the attribute (for example `text` or
+ * `password`).
+ * @property required Whether the server marked the attribute as required.
  */
-internal enum class NativeAuthV2Operation {
-    RESET_PASSWORD_START,
-    CHALLENGE,
-    RESEND,
-    VERIFY,
-    UPDATE_PASSWORD,
-    POLL
+data class NativeAuthV2RequiredAttribute(
+    val name: String,
+    val type: String?,
+    val required: Boolean?
+) : ILoggable, Serializable {
+
+    override fun toUnsanitizedString(): String =
+        "NativeAuthV2RequiredAttribute(name=$name, type=$type, required=$required)"
+
+    override fun toString(): String = toUnsanitizedString()
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }

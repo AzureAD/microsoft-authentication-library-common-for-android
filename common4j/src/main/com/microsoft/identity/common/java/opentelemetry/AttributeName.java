@@ -514,6 +514,16 @@ public enum AttributeName {
     is_webcp_in_webview_enabled,
 
     /**
+     * Records whether authorize-only Device-CA credential forwarding is enabled.
+     */
+    device_ca_authorize_only_forwarding_enabled,
+
+    /**
+     * Records whether the original request headers were withheld from a Device-CA load.
+     */
+    device_ca_request_headers_skipped,
+
+    /**
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */
@@ -583,12 +593,6 @@ public enum AttributeName {
      * Records if current flow is in webcp flow.
      */
     is_in_web_cp_flow,
-
-    /**
-     * Indicates whether the filter-then-clone optimization is enabled for in-memory cache
-     * getCredentialsFilteredBy()/getAccountsFilteredBy() operations.
-     */
-    is_filter_then_clone_enabled,
 
     /**
      * Indicates whether a desync was detected between the in-memory cache and SharedPreferences
