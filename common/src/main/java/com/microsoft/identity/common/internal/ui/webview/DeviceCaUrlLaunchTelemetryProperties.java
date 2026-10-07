@@ -68,6 +68,39 @@ final class DeviceCaUrlLaunchTelemetryProperties {
         }
     }
 
+    enum GenericHttpsLaunchOutcome {
+        HANDLER_NOT_FOUND("handler_not_found"),
+        LAUNCH_SUCCEEDED("launch_succeeded"),
+        LAUNCH_FAILED("launch_failed");
+
+        private final String mTelemetryValue;
+
+        GenericHttpsLaunchOutcome(@NonNull final String telemetryValue) {
+            mTelemetryValue = telemetryValue;
+        }
+
+        @NonNull
+        String getTelemetryValue() {
+            return mTelemetryValue;
+        }
+    }
+
+    enum WebViewLoadOutcome {
+        LOAD_SUCCEEDED("load_succeeded"),
+        LOAD_FAILED("load_failed");
+
+        private final String mTelemetryValue;
+
+        WebViewLoadOutcome(@NonNull final String telemetryValue) {
+            mTelemetryValue = telemetryValue;
+        }
+
+        @NonNull
+        String getTelemetryValue() {
+            return mTelemetryValue;
+        }
+    }
+
     enum DeviceCaUrlRoutingOutcome {
         LEGACY_COMPANY_PORTAL_SUCCEEDED("legacy_company_portal_launch_succeeded"),
         NATIVE_HANDOFF_SUCCEEDED("native_handoff_succeeded"),

@@ -37,6 +37,8 @@ import com.microsoft.identity.common.internal.broker.PackageHelper
 import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.AppLinkLaunchOutcome
 import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.DeviceCaUrlRoutingOutcome
 import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.DeviceManagementOwner
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.GenericHttpsLaunchOutcome
+import com.microsoft.identity.common.internal.ui.webview.DeviceCaUrlLaunchTelemetryProperties.WebViewLoadOutcome
 import com.microsoft.identity.common.java.flighting.CommonFlight
 import com.microsoft.identity.common.java.opentelemetry.AttributeName
 import com.microsoft.identity.common.java.opentelemetry.SpanExtension
@@ -268,11 +270,13 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         val genericHttpsIntent = Intent(Intent.ACTION_VIEW, Uri.parse(httpsUrl))
         if (genericHttpsIntent.resolveActivity(host.activity().packageManager) == null) {
             Logger.warn(methodTag, "No external handler can resolve the generic HTTPS fallback.")
+            recordGenericHttpsLaunchOutcome(GenericHttpsLaunchOutcome.HANDLER_NOT_FOUND)
             return false
         }
 
         return try {
             host.activity().startActivity(genericHttpsIntent)
+            recordGenericHttpsLaunchOutcome(GenericHttpsLaunchOutcome.LAUNCH_SUCCEEDED)
             view.stopLoading()
             host.returnMdmFlow()
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.NATIVE_APP_LINK_FAILED_GENERIC_HTTPS_SUCCEEDED)
@@ -283,6 +287,7 @@ internal class DeviceCaRequestRouter(private val host: Host) {
             }
             Logger.error(methodTag, "Failed to launch the generic HTTPS handler.", exception)
             SpanExtension.current().recordException(exception)
+            recordGenericHttpsLaunchOutcome(GenericHttpsLaunchOutcome.LAUNCH_FAILED)
             false
         }
     }
@@ -306,11 +311,13 @@ internal class DeviceCaRequestRouter(private val host: Host) {
             } else {
                 host.loadUrlWithRequestHeaders(view, httpsUrl)
             }
+            recordWebViewLoadOutcome(WebViewLoadOutcome.LOAD_SUCCEEDED)
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_SUCCEEDED)
             RoutingResult.Completed
         } catch (throwable: Throwable) {
             Logger.error(methodTag, "Failed to load device CA URL in WebView.", throwable)
             SpanExtension.current().recordException(throwable)
+            recordWebViewLoadOutcome(WebViewLoadOutcome.LOAD_FAILED)
             recordRoutingOutcome(DeviceCaUrlRoutingOutcome.WEBVIEW_LOAD_FAILED)
             RoutingResult.Failed(throwable)
         }
@@ -347,6 +354,20 @@ internal class DeviceCaRequestRouter(private val host: Host) {
         Logger.info("$TAG:recordRoutingOutcome", "Device CA routing outcome: ${outcome.telemetryValue}")
         SpanExtension.current().setAttribute(
             AttributeName.device_ca_routing_outcome.name,
+            outcome.telemetryValue,
+        )
+    }
+
+    private fun recordGenericHttpsLaunchOutcome(outcome: GenericHttpsLaunchOutcome) {
+        SpanExtension.current().setAttribute(
+            AttributeName.device_ca_generic_https_launch_outcome.name,
+            outcome.telemetryValue,
+        )
+    }
+
+    private fun recordWebViewLoadOutcome(outcome: WebViewLoadOutcome) {
+        SpanExtension.current().setAttribute(
+            AttributeName.device_ca_webview_load_outcome.name,
             outcome.telemetryValue,
         )
     }

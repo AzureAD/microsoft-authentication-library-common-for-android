@@ -549,6 +549,16 @@ public enum AttributeName {
     device_ca_management_app_link_outcome,
 
     /**
+     * Records whether the generic Device-CA HTTPS fallback had no handler, launched, or failed.
+     */
+    device_ca_generic_https_launch_outcome,
+
+    /**
+     * Records whether the Device-CA URL was accepted by WebView or failed to load.
+     */
+    device_ca_webview_load_outcome,
+
+    /**
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */
