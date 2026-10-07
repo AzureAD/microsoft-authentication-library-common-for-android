@@ -1460,15 +1460,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             // (launch the openid-vc handler without a return PendingIntent) - identical to
             // ENABLE_OPEN_ID_VC_RETURN_TO_CALLER being off - as the embedded return path is not
             // validated. It is also gated by its own flight so it can be rolled back entirely.
-            final boolean returnEnabled = CommonFlightsManager.INSTANCE.getFlightsProvider()
-                    .isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER);
-            if (!returnEnabled) {
-                SpanExtension.recordOutcome(span, "return_to_caller", "disabled");
-                Logger.info(methodTag, "Wallet return-to-caller flight disabled; launching without return PendingIntent.");
-            } else if (!ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
-                SpanExtension.recordOutcome(span, "return_to_caller", "not_brokered");
-                Logger.info(methodTag, "Wallet request is brokerless; launching without return PendingIntent.");
-            } else {
+            if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(ENABLE_OPEN_ID_VC_RETURN_TO_CALLER)
+                    && ProcessUtil.isRunningOnAuthService(getActivity().getApplicationContext())) {
                 // The Microsoft VID CA-block flow can only be completed by Microsoft Authenticator,
                 // so target it explicitly when it is an installed openid-vc:// handler. We do NOT
                 // rely on resolveActivity() here: when more than one app claims the scheme it returns

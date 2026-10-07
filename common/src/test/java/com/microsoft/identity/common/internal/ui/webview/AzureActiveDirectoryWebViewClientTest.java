@@ -607,8 +607,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(1, telemetry.captured().mEndCount);
         assertEquals(StatusCode.OK, telemetry.captured().mStatusCode);
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
-        assertEquals(Arrays.asList("return_to_caller"), telemetry.captured().mEventNames);
-        assertEquals("not_brokered", telemetry.captured().eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertTrue(telemetry.captured().mEventNames.isEmpty());
         assertEquals(true, telemetry.captured().attribute(AttributeName.is_openid_vc_handler_found.name()));
     }
 
@@ -626,7 +625,7 @@ public class AzureActiveDirectoryWebViewClientTest {
         assertEquals(0, span.mEndCount);
         assertEquals(StatusCode.OK, span.mStatusCode);
         assertEquals(true, span.attribute(AttributeName.is_openid_vc_handler_found.name()));
-        assertEquals("not_brokered", span.eventAttribute("return_to_caller", AttributeName.operation_outcome));
+        assertTrue(span.mEventNames.isEmpty());
         assertEquals(previousSpan, SpanExtension.current());
     }
 
