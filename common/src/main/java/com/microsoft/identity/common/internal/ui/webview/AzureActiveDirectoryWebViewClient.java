@@ -1422,23 +1422,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The original (non-lowercased) openid-vc:// URL.
      */
     public boolean processOpenIdVcRequest(@NonNull final WebView view, @NonNull final String url) {
-        return processOpenIdVcRequest(view, url, null);
+        final Span span = createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
+        try {
+            return processOpenIdVcRequest(view, url, span);
+        } finally {
+            span.end();
+        }
     }
 
     /**
-     * Handles an OpenID VC request using the caller's span when provided.
+     * Handles an OpenID VC request using the caller-owned span.
      *
      * @param view the authentication WebView associated with the request.
      * @param url the original OpenID VC URL.
-     * @param existingSpan the caller-owned span, or null to create and end a request span.
+     * @param span the caller-owned span, which the caller must end.
      * @return whether Android accepted wallet dispatch.
      */
     public boolean processOpenIdVcRequest(@NonNull final WebView view,
                                         @NonNull final String url,
-                                        @Nullable final Span existingSpan) {
+                                        @NonNull final Span span) {
         final String methodTag = TAG + ":processOpenIdVcRequest";
-        final Span span = existingSpan != null ? existingSpan
-                : createSpanWithAttributesFromParent(SpanName.ProcessOpenIdVcRequest.name());
         String errorCode;
         String errorMessage;
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
@@ -1506,10 +1509,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             span.setStatus(StatusCode.ERROR, exceptionType);
             errorCode = e instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
             errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";
-        } finally {
-            if (existingSpan == null) {
-                span.end();
-            }
         }
         Logger.info(methodTag, "Returning explicit wallet-dispatch authentication error.");
         // Callback failures must not be caught as dispatch failures and delivered a second time.
