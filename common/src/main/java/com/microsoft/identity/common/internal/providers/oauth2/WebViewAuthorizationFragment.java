@@ -641,21 +641,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 }
             }
         } catch (final Throwable e) {
-            recordTargetBlankFailure(span, methodTag, e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR);
+            Logger.error(methodTag, "Error handling target=_blank", e);
         } finally {
             span.end();
             // TODO: Investigate cleanup of unattached interceptor WebViews in a follow-up PR.
             interceptorWebView.post(interceptorWebView::destroy);
         }
-    }
-
-    private static void recordTargetBlankFailure(@NonNull final Span span,
-                                                 @NonNull final String methodTag,
-                                                 @NonNull final Throwable exception) {
-        final String exceptionType = exception.getClass().getSimpleName();
-        span.setStatus(StatusCode.ERROR, exceptionType);
-        // Android exception messages can contain the full authentication URL.
-        Logger.error(methodTag, "target=_blank failed (" + exceptionType + ").", null);
     }
 
     /**

@@ -570,7 +570,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         final InOrder decisions = org.mockito.Mockito.inOrder(span);
         decisions.verify(span).addEvent("browser_launch", failure("ActivityNotFoundException"));
         decisions.verify(span).addEvent("browser_fallback", failure(fallbackFailure.getClass().getSimpleName()));
-        verify(span).setStatus(StatusCode.ERROR, fallbackFailure.getClass().getSimpleName());
+        verify(span).recordException(fallbackFailure);
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
         verify(span, never()).setStatus(StatusCode.OK);
@@ -598,7 +599,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
 
         verify(span, never()).addEvent(eq("browser_launch"), ArgumentMatchers.any(Attributes.class));
         verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
-        verify(span).setStatus(StatusCode.ERROR, failure.getClass().getSimpleName());
+        verify(span).recordException(failure);
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
         verify(span, never()).setStatus(StatusCode.OK);
@@ -654,7 +656,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, interceptorWebView, mockRequest(OPENID_VC_TARGET_URL), span, true);
 
-        verify(span).setStatus(StatusCode.ERROR, "IllegalStateException");
+        verify(span).recordException(ArgumentMatchers.any(IllegalStateException.class));
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
         verify(span, never()).addEvent(eq("vc_client_check"), ArgumentMatchers.any(Attributes.class));
@@ -690,7 +693,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
         mFragment.handleInterceptedUrlFromNewWindow(
                 mainWebView, mock(WebView.class), mockRequest(OPENID_VC_TARGET_URL), span, true);
 
-        verify(span).setStatus(StatusCode.ERROR, "IllegalStateException");
+        verify(span).recordException(ArgumentMatchers.any(IllegalStateException.class));
+        verify(span).setStatus(StatusCode.ERROR);
         verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_OPENID_VC);
         verify(span, never()).addEvent(eq("vc_dispatch"), ArgumentMatchers.any(Attributes.class));
