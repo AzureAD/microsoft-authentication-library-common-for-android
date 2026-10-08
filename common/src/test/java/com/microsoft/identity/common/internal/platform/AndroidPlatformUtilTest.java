@@ -28,9 +28,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.constants.FidoConstants;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 
@@ -133,9 +135,22 @@ public class AndroidPlatformUtilTest {
     private static final String COMPANION_PACKAGE = "com.test.callerapp.companion";
     private static final String OTHER_PACKAGE = "com.microsoft.emmx";
     private static final String DUMMY_REDIRECT = "msauth://com.test.callerapp/signature";
+    private static final String MSAL_TEST_APP_PACKAGE =
+            "com.msft.identity.client.sample.local";
 
     private AndroidPlatformUtil platformUtil() {
         return new AndroidPlatformUtil(ApplicationProvider.getApplicationContext(), null);
+    }
+
+    private AndroidPlatformUtil platformUtilForHost(final String hostPackageName) {
+        final Context applicationContext = ApplicationProvider.getApplicationContext();
+        final Context hostContext = new ContextWrapper(applicationContext) {
+            @Override
+            public String getPackageName() {
+                return hostPackageName;
+            }
+        };
+        return new AndroidPlatformUtil(hostContext, null);
     }
 
     private ShadowPackageManager shadowPackageManager() {
@@ -200,5 +215,30 @@ public class AndroidPlatformUtilTest {
     public void isValidCallingApp_uidResolvesToNoPackage_throwsArgumentException() {
         // No packages mapped for the uid: getPackagesForUid returns null -> empty owned set -> fail closed.
         assertCallerPackageArgumentException(UNMAPPED_UID, OWNED_PACKAGE);
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_e2eSimulationInAuthenticator_rejectsMappedMsalTestApp() {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, MSAL_TEST_APP_PACKAGE);
+
+        try {
+            platformUtilForHost(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                    .isValidCallingApp(DUMMY_REDIRECT, MSAL_TEST_APP_PACKAGE, OWNER_UID);
+            fail("Expected the Authenticator E2E simulation to hide the mapped MSAL test app.");
+        } catch (final ArgumentException e) {
+            assertEquals(ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME, e.getArgumentName());
+            assertTrue(e.getMessage().contains("Unable to resolve a package"));
+        }
+    }
+
+    @Test
+    @Config(sdk = 28)
+    public void isValidCallingApp_e2eSimulationInCompanyPortal_usesRealUidMapping()
+            throws ArgumentException {
+        shadowPackageManager().setPackagesForUid(OWNER_UID, MSAL_TEST_APP_PACKAGE);
+
+        platformUtilForHost(AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME)
+                .isValidCallingApp(DUMMY_REDIRECT, MSAL_TEST_APP_PACKAGE, OWNER_UID);
     }
 }

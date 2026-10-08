@@ -77,6 +77,10 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class AndroidPlatformUtil implements IPlatformUtil {
     private static final String TAG = AndroidPlatformUtil.class.getSimpleName();
+    // TEMPORARY E2E TESTING ONLY. Remove after validating AB#3751475.
+    private static final boolean SIMULATE_UNRESOLVED_MSAL_TEST_APP_IN_AUTHENTICATOR = true;
+    private static final String MSAL_TEST_APP_PACKAGE_NAME =
+            "com.msft.identity.client.sample.local";
 
     @NonNull
     private final Context mContext;
@@ -131,6 +135,13 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
         Logger.info(methodTag, "Inside isValidCallingApp");
+        if (shouldSimulateUnresolvedSilentCaller(packageName)) {
+            Logger.info(
+                    methodTag,
+                    "TEMPORARY E2E: Unresolved UID simulation is armed, but trusted passthrough "
+                            + "selected redirect-only validation."
+            );
+        }
         if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
             Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
             return true;
@@ -195,7 +206,16 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                                           @NonNull final String callerPackageName) throws ArgumentException {
         final String methodTag = TAG + ":validateCallerOwnedByUid";
         Logger.info(methodTag, "Inside validateCallerOwnedByUid");
-        final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
+        final String[] uidPackages;
+        if (shouldSimulateUnresolvedSilentCaller(callerPackageName)) {
+            Logger.warn(
+                    methodTag,
+                    "TEMPORARY E2E: Simulating unresolved MSAL test-app UID in Authenticator."
+            );
+            uidPackages = null;
+        } else {
+            uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
+        }
         final List<String> ownedPackages =
                 uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);
         if (ownedPackages.isEmpty()) {
@@ -219,6 +239,22 @@ public class AndroidPlatformUtil implements IPlatformUtil {
                             + "' is not owned by OS-attested calling uid " + callingUid + ".");
         }
     }
+
+    /**
+     * TEMPORARY E2E TESTING ONLY.
+     *
+     * Simulates the Android package-visibility condition where Authenticator cannot resolve the
+     * original MSAL test application's UID. Company Portal and all other callers continue to use
+     * the real PackageManager result.
+     */
+    private boolean shouldSimulateUnresolvedSilentCaller(
+            @NonNull final String callerPackageName) {
+        return SIMULATE_UNRESOLVED_MSAL_TEST_APP_IN_AUTHENTICATOR
+                && AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME
+                        .equals(mContext.getPackageName())
+                && MSAL_TEST_APP_PACKAGE_NAME.equals(callerPackageName);
+    }
+
     @Override
     @Nullable
     public String getEnrollmentId(@NonNull final String userId, @NonNull final String packageName) {
