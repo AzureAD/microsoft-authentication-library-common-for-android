@@ -67,10 +67,11 @@ public interface IPlatformUtil {
      * Returns true if nothing goes wrong.
      *
      * @deprecated This overload performs only the redirect-URI ownership check and does <em>not</em>
-     * validate the caller against the OS-attested calling uid. For the silent broker token path prefer
-     * {@link #isValidCallingApp(String, String, int)}, which additionally rejects request-bundle caller
-     * spoofing (AB#3687466). Retained for the interactive path and platforms/flows that have no
-     * OS-attested per-app caller uid.
+     * validate the caller against the OS-attested calling uid. For ordinary silent broker token
+     * requests prefer {@link #isValidCallingApp(String, String, int)}, which additionally rejects
+     * request-bundle caller spoofing (AB#3687466). Retained for interactive requests, platforms with
+     * no OS-attested per-app caller uid, and authenticated trusted-broker passthrough requests where
+     * Android package visibility may prevent the active broker from resolving the original caller.
      */
     @Deprecated
     boolean isValidCallingApp(@NonNull final String redirectUri, @NonNull final String packageName);
@@ -87,11 +88,11 @@ public interface IPlatformUtil {
      *
      * <p>The default implementation performs <em>no</em> uid check and simply delegates to
      * {@link #isValidCallingApp(String, String)} — appropriate for platforms with no per-app uid model
-     * (e.g. Linux) and for test doubles. Currently wired to the silent broker token path when
+     * (e.g. Linux) and for test doubles. Also used for authenticated trusted-broker passthrough after
+     * the immediate forwarding broker has been verified. Otherwise wired to the silent broker token path when
      * {@link com.microsoft.identity.common.java.flighting.SilentCallerValidationFlights#isCompleteSolutionEnabled()}
      * returns {@code true}, which requires both {@code VALIDATE_SILENT_CALLER} and
-     * {@code ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION}. The two-argument overload is used directly for
-     * the interactive path and for the silent path when the complete solution is disabled.
+     * {@code ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION}.
      *
      * @param redirectUri  the redirect URI to validate ownership of.
      * @param packageName  the self-reported caller package from the (untrusted) request bundle.

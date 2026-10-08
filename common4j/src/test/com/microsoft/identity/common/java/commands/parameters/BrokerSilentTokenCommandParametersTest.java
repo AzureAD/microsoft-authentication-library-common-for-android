@@ -23,12 +23,16 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +49,7 @@ import com.microsoft.identity.common.java.flighting.SilentCallerValidationFlight
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import org.junit.After;
 import org.junit.Ignore;
@@ -52,6 +57,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -144,7 +150,8 @@ public class BrokerSilentTokenCommandParametersTest {
      * Trusted passthrough skips UID/package ownership but still validates the redirect URI.
      */
     @Test
-    public void validateForTrustedBrokerPassthrough_skipsOwnershipButChecksRedirect() throws Exception {
+    public void validate_trustedBrokerPassthrough_repeatedValidationSkipsOwnershipButChecksRedirect()
+            throws Exception {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(true);
@@ -154,9 +161,14 @@ public class BrokerSilentTokenCommandParametersTest {
                         ArgumentException.CALLER_PACKAGE_NAME_ARGUMENT_NAME,
                         "spoofed"));
 
-        params(platformUtil).validateForTrustedBrokerPassthrough();
+        final BrokerSilentTokenCommandParameters parameters = params(platformUtil).toBuilder()
+                .trustedBrokerPassthrough(true)
+                .build();
 
-        verify(platformUtil).isValidCallingApp(eq(REDIRECT_URI), eq(CALLER_PACKAGE));
+        parameters.validate();
+        parameters.validate();
+
+        verify(platformUtil, times(2)).isValidCallingApp(eq(REDIRECT_URI), eq(CALLER_PACKAGE));
         verify(platformUtil, never()).isValidCallingApp(anyString(), anyString(), anyInt());
     }
 
@@ -164,13 +176,16 @@ public class BrokerSilentTokenCommandParametersTest {
      * A failed redirect check remains an error for trusted passthrough callers.
      */
     @Test
-    public void validateForTrustedBrokerPassthrough_redirectRejected_throwsArgumentException() throws Exception {
+    public void validate_trustedBrokerPassthrough_redirectRejected_throwsArgumentException() throws Exception {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
         when(platformUtil.isValidCallingApp(anyString(), anyString())).thenReturn(false);
 
         try {
-            params(platformUtil).validateForTrustedBrokerPassthrough();
+            params(platformUtil).toBuilder()
+                    .trustedBrokerPassthrough(true)
+                    .build()
+                    .validate();
             fail("Expected redirect validation to reject the request.");
         } catch (final ArgumentException expected) {
             assertEquals("mRedirectUri", expected.getArgumentName());
@@ -184,11 +199,13 @@ public class BrokerSilentTokenCommandParametersTest {
      * Trusted passthrough retains all parameter preconditions that run before caller/redirect validation.
      */
     @Test
-    public void validateForTrustedBrokerPassthrough_invalidParametersStillFail()
+    public void validate_trustedBrokerPassthrough_invalidParametersStillFail()
             throws ClientException, ArgumentException {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
-        final BrokerSilentTokenCommandParameters validParams = params(platformUtil);
+        final BrokerSilentTokenCommandParameters validParams = params(platformUtil).toBuilder()
+                .trustedBrokerPassthrough(true)
+                .build();
         final List<BrokerSilentTokenCommandParameters> invalidParams = new ArrayList<>();
         invalidParams.add(validParams.toBuilder().callerUid(0).build());
         invalidParams.add(validParams.toBuilder().authority(null).build());
@@ -209,18 +226,60 @@ public class BrokerSilentTokenCommandParametersTest {
      * WEB_APPS retains its existing dedicated caller validation and early return.
      */
     @Test
-    public void validateForTrustedBrokerPassthrough_webAppsStillUsesWebAppsValidation() throws Exception {
+    public void validate_trustedBrokerPassthrough_webAppsStillUsesWebAppsValidation() throws Exception {
         setFlights(true, true);
         final IPlatformUtil platformUtil = mock(IPlatformUtil.class);
 
         params(platformUtil).toBuilder()
                 .requestType(BrokerRequestType.WEB_APPS)
+                .trustedBrokerPassthrough(true)
                 .build()
-                .validateForTrustedBrokerPassthrough();
+                .validate();
 
         verify(platformUtil).isValidCallingAppForWebApps(CALLER_UID);
         verify(platformUtil, never()).isValidCallingApp(anyString(), anyString());
         verify(platformUtil, never()).isValidCallingApp(anyString(), anyString(), anyInt());
+    }
+
+    @Test
+    public void trustedBrokerPassthrough_defaultsFalseAndToBuilderPreservesValue() {
+        final BrokerSilentTokenCommandParameters standardParameters =
+                params(mock(IPlatformUtil.class));
+        assertFalse(standardParameters.isTrustedBrokerPassthrough());
+
+        final BrokerSilentTokenCommandParameters trustedParameters =
+                standardParameters.toBuilder()
+                        .trustedBrokerPassthrough(true)
+                        .build();
+        assertTrue(trustedParameters.isTrustedBrokerPassthrough());
+        assertTrue(trustedParameters.toBuilder().build().isTrustedBrokerPassthrough());
+    }
+
+    @Test
+    public void trustedBrokerPassthrough_isNotSerializedOrDeserialized() throws Exception {
+        assertTrue(Modifier.isTransient(
+                BrokerSilentTokenCommandParameters.class
+                        .getDeclaredField("trustedBrokerPassthrough")
+                        .getModifiers()
+        ));
+
+        final BrokerSilentTokenCommandParameters deserialized =
+                ObjectMapper.deserializeJsonStringToObject(
+                        "{\"trustedBrokerPassthrough\":true}",
+                        BrokerSilentTokenCommandParameters.class
+                );
+        assertFalse(deserialized.isTrustedBrokerPassthrough());
+    }
+
+    @Test
+    public void trustedBrokerPassthrough_participatesInEquality() {
+        final BrokerSilentTokenCommandParameters standardParameters =
+                params(mock(IPlatformUtil.class));
+        final BrokerSilentTokenCommandParameters trustedParameters =
+                standardParameters.toBuilder()
+                        .trustedBrokerPassthrough(true)
+                        .build();
+        assertNotEquals(standardParameters, trustedParameters);
     }
 
     // ---- helpers ------------------------------------------------------------------------------
@@ -251,7 +310,7 @@ public class BrokerSilentTokenCommandParametersTest {
     private void assertTrustedValidationFails(final BrokerSilentTokenCommandParameters params)
             throws ClientException {
         try {
-            params.validateForTrustedBrokerPassthrough();
+            params.validate();
             fail("Expected invalid request parameters to fail validation.");
         } catch (final ArgumentException expected) {
             // Expected: trusted passthrough retains regular request validation.

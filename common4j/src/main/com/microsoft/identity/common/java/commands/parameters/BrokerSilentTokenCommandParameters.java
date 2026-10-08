@@ -77,6 +77,17 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final String homeTenantId;
 
     /**
+     * Indicates that this request is a continuation of an authenticated trusted-broker
+     * passthrough request.
+     *
+     * <p>This value is process-local validation provenance. It must not be populated from
+     * IPC input or serialized. Preserve it only when rebuilding a continuation of the same
+     * authenticated request.
+     */
+    @EqualsAndHashCode.Include
+    private final transient boolean trustedBrokerPassthrough;
+
+    /**
      * Indicates whether the request is for a resource account or not. Resource account ATS
      * flow overrides it.
      */
@@ -86,27 +97,21 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     @Override
     public void validate() throws ArgumentException, ClientException {
-        validateInternal(SilentCallerValidationFlights.isCompleteSolutionEnabled());
-    }
-
-    /**
-     * Validates a silent request forwarded by a broker that has already authenticated its immediate caller.
-     *
-     * <p>This entry point skips only the original caller's UID-to-package ownership lookup, which may
-     * not be visible to the forwarding broker. The caller must establish trust in the immediate
-     * forwarding broker before invoking this method. All other silent-request and redirect validation
-     * remains in effect.
-     *
-     * @throws ArgumentException if any silent-request or redirect validation fails.
-     * @throws ClientException if another client-side validation fails.
-     */
-    public void validateForTrustedBrokerPassthrough() throws ArgumentException, ClientException {
-        validateInternal(false);
+        final boolean validateCallerUidOwnership =
+                SilentCallerValidationFlights.isCompleteSolutionEnabled()
+                        && !trustedBrokerPassthrough;
+        Logger.info(
+                TAG + ":validate",
+                "Silent caller validation selected. validateCallerUidOwnership: "
+                        + validateCallerUidOwnership
+                        + ", trustedBrokerPassthrough: "
+                        + trustedBrokerPassthrough
+        );
+        validateInternal(validateCallerUidOwnership);
     }
 
     private void validateInternal(final boolean validateCallerUidOwnership)
             throws ArgumentException, ClientException {
-        Logger.info(TAG, "validateInternal - validateCallerUidOwnership : " + validateCallerUidOwnership);
         if (callerUid == 0) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
@@ -153,9 +158,10 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             platformUtil.isValidCallingAppForWebApps(getCallerUid());
             return;
         }
-        // The combined flight gate keeps the production redirect-only behavior until both this
-        // process's caller-validation and passthrough compatibility flights are enabled. The trusted
-        // passthrough entry point disables only the UID-to-package ownership lookup.
+        // Direct silent requests perform UID/package ownership validation when the complete
+        // solution is enabled. Authenticated trusted-broker passthrough requests retain
+        // redirect/package validation but skip the original caller UID lookup because Android
+        // package visibility may prevent this broker from resolving the original application.
         final boolean isCallerValid;
         if (validateCallerUidOwnership) {
             isCallerValid = platformUtil.isValidCallingApp(
