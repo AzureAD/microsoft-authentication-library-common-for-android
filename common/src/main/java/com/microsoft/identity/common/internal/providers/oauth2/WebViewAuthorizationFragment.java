@@ -539,10 +539,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
-     * OpenID VC targets are delegated to the authentication WebView so its WebViewClient can
-     * launch the wallet. User-initiated HTTPS URLs open in the external browser without navigating
-     * the authentication WebView away from its current page. If browser dispatch throws, HTTPS
-     * URLs are loaded inline. Wallet failures remain authentication errors, without inline fallback.
+     * User-initiated OpenID VC targets are delegated to the authentication WebView so its
+     * WebViewClient can launch the wallet. User-initiated HTTPS URLs open in the external browser
+     * without navigating the authentication WebView away from its current page. HTTPS URLs from
+     * non-user-initiated popups are loaded inline; other schemes are refused. If browser dispatch
+     * throws, HTTPS URLs are loaded inline. Wallet failures remain authentication errors, without
+     * inline fallback.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -580,10 +582,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             }
 
             if (!isUserGesture) {
-                // Not initiated by user gesture: load inline as a safe fallback instead of
-                // opening an external browser, to prevent programmatic/scripted popups.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
-                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading URL inline.");
+                if (!AuthenticationConstants.Broker.HTTPS_SCHEME.equalsIgnoreCase(targetUri.getScheme())
+                        || StringUtil.isNullOrEmpty(destinationHost)) {
+                    span.setStatus(StatusCode.ERROR);
+                    Logger.warn(methodTag, "onCreateWindow: refusing non-HTTPS popup without user gesture.");
+                    return;
+                }
+                Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading HTTPS URL inline.");
                 mainWebView.loadUrl(targetUrl);
                 span.setStatus(StatusCode.OK);
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {

@@ -247,6 +247,48 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
+    public void testOnCreateWindow_noGestureOpenIdVc_refusesWalletDispatch() {
+        mFragment = spy(mFragment);
+        final AuthorizationActivity host = mock(AuthorizationActivity.class);
+        final SpanContext parentSpanContext = SpanContext.getInvalid();
+        when(host.getSpanContext()).thenReturn(parentSpanContext);
+        when(mFragment.getActivity()).thenReturn(host);
+        final WebView mainWebView = mock(WebView.class);
+        final WebChromeClient client = setUpWindowClient(mainWebView);
+        final AzureActiveDirectoryWebViewClient webViewClient =
+                mock(AzureActiveDirectoryWebViewClient.class);
+        ReflectionHelpers.setField(mFragment, "mAADWebViewClient", webViewClient);
+        final WebView.WebViewTransport transport = mainWebView.new WebViewTransport();
+        final Message message = Message.obtain(new Handler(Looper.getMainLooper()), 0, transport);
+        final Span span = mockSpan();
+
+        try (final MockedStatic<OTelUtility> telemetry = mockStatic(OTelUtility.class)) {
+            telemetry.when(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext)).thenReturn(span);
+
+            assertTrue(client.onCreateWindow(mainWebView, false, false, message));
+            final WebView interceptor = transport.getWebView();
+            final boolean navigationHandled = ReflectionHelpers.callInstanceMethod(
+                    Shadows.shadowOf(interceptor).getWebViewClient(), "shouldOverrideUrlLoading",
+                    ReflectionHelpers.ClassParameter.from(WebView.class, interceptor),
+                    ReflectionHelpers.ClassParameter.from(WebResourceRequest.class,
+                            mockRequest(OPENID_VC_TARGET_URL)));
+
+            assertTrue(navigationHandled);
+            telemetry.verify(() -> OTelUtility.createSpanFromParent(
+                    SpanName.WebViewTargetBlankNavigation.name(), parentSpanContext));
+            verify(webViewClient, never()).processOpenIdVcRequest(
+                    mainWebView, OPENID_VC_TARGET_URL, span);
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span).setAttribute(AttributeName.target_blank_navigation_is_user_gesture.name(), false);
+            verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                    AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+            verify(span).setStatus(StatusCode.ERROR);
+            verify(span).end();
+        }
+    }
+
+    @Test
     public void testHandleInterceptedUrl_missingCorrelationId_doesNotSetAttribute() {
         for (final String correlationId : new String[]{null, ""}) {
             ReflectionHelpers.setField(mFragment, "mCorrelationId", correlationId);
@@ -291,6 +333,24 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
                 eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE));
         verify(span).setStatus(StatusCode.OK);
         verify(span).end();
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_nonHttpsWithoutUserGesture_refusesToOpen() {
+        for (final String targetUrl : new String[]{OPENID_VC_TARGET_URL, FTP_URL, HTTP_TARGET_URL}) {
+            final WebView mainWebView = mock(WebView.class);
+            final WebView interceptorWebView = mock(WebView.class);
+            final Span span = mockSpan();
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mainWebView, interceptorWebView, mockRequest(targetUrl), span, false);
+
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                    AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+            verify(span).setStatus(StatusCode.ERROR);
+            verify(span).end();
+        }
     }
 
     @Test
