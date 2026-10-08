@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.apps
 
+import android.util.Base64
 import com.microsoft.identity.common.BuildConfig
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants
 import com.microsoft.identity.common.internal.broker.BrokerData
@@ -29,6 +30,8 @@ import com.microsoft.identity.common.java.broker.App
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
@@ -202,14 +205,146 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeVariantsAndMsalTestApp() {
-        assertEquals(5, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
+    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeIslandAndMsalTestApp() {
+        assertEquals(11, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_CANARY))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.MSAL_TEST_APP))
         assertFalse(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.EDGE))
+    }
+
+    @Test
+    fun islandBrowserSsoReleaseApps_haveExactlyTheProvidedPackageAndCertificatePairs() {
+        val expectedIdentities = mapOf(
+            "io.island.Island" to "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw==",
+            "io.island.IslandCanary" to "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ==",
+            "io.island.IslandBeta" to "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA==",
+            "io.island.island.intune" to "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA==",
+            "io.island.island.canary.intune" to "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww==",
+            "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+        )
+
+        val islandReleaseApps = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.filter {
+            it.packageName in expectedIdentities
+        }
+        assertEquals(6, islandReleaseApps.size)
+        assertEquals(
+            expectedIdentities,
+            islandReleaseApps.associate {
+                it.packageName to it.signingCertificateThumbprint
+            }
+        )
+    }
+
+    @Test
+    fun islandBrowserSsoDebugApps_haveExactlyEightPackagesAndTheSharedUserdebugCertificate() {
+        val expectedPackages = setOf(
+            "io.island.Island",
+            "io.island.IslandCanary",
+            "io.island.IslandBeta",
+            "io.island.island.intune",
+            "io.island.island.canary.intune",
+            "io.island.island.beta.intune",
+            "io.island.IslandDev",
+            "io.island.island.dev.intune"
+        )
+        val expectedSignature =
+            "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
+
+        assertEquals(8, AppRegistry.ISLAND_FAMILY.debugApps.size)
+        assertEquals(
+            expectedPackages,
+            AppRegistry.ISLAND_FAMILY.debugApps.map { it.packageName }.toSet()
+        )
+        assertTrue(
+            AppRegistry.ISLAND_FAMILY.debugApps.all {
+                it.signingCertificateThumbprint == expectedSignature
+            }
+        )
+        assertTrue(
+            AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.intersect(
+                AppRegistry.ISLAND_FAMILY.debugApps
+            ).isEmpty()
+        )
+    }
+
+    @Test
+    fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
+        val identities = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS +
+                AppRegistry.ISLAND_FAMILY.debugApps
+
+        identities.forEach {
+            assertEquals(it.packageName, 64, Base64.decode(it.signingCertificateThumbprint, Base64.NO_WRAP).size)
+        }
+    }
+
+    @Test
+    fun islandBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
+        val islandPackages = AppRegistry.ISLAND_FAMILY.debugApps.map { it.packageName }.toSet()
+        val existingAuthorizationLists = listOf(
+            AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
+            AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS,
+            AppRegistry.FORCE_BROKER_DISCOVERY_ALLOW_LIST
+        )
+
+        existingAuthorizationLists.forEach { authorizedApps ->
+            assertTrue(authorizedApps.none { it.packageName in islandPackages })
+        }
+    }
+
+    @Test
+    fun browserFamilies_groupExactlyTheRegisteredVariants() {
+        assertEquals(
+            setOf(AppRegistry.CHROME, AppRegistry.CHROME_BETA,
+                AppRegistry.CHROME_DEV, AppRegistry.CHROME_CANARY),
+            AppRegistry.CHROME_FAMILY.releaseApps
+        )
+        assertTrue(AppRegistry.CHROME_FAMILY.debugApps.isEmpty())
+        assertEquals(
+            setOf(AppRegistry.ISLAND, AppRegistry.ISLAND_CANARY, AppRegistry.ISLAND_BETA,
+                AppRegistry.ISLAND_INTUNE, AppRegistry.ISLAND_CANARY_INTUNE,
+                AppRegistry.ISLAND_BETA_INTUNE),
+            AppRegistry.ISLAND_FAMILY.releaseApps
+        )
+        assertEquals(
+            setOf(AppRegistry.CHROME_FAMILY, AppRegistry.ISLAND_FAMILY),
+            AppRegistry.BROWSER_SSO_APP_FAMILIES
+        )
+        AppRegistry.BROWSER_SSO_APP_FAMILIES.forEach { family ->
+            (family.releaseApps + family.debugApps).forEach {
+                assertSame(family, AppRegistry.getBrowserSsoAppFamily(it.packageName))
+            }
+        }
+    }
+
+    @Test
+    fun browserFamilyLookup_doesNotTreatPackagePrefixOrTestAppAsFamilyMembership() {
+        assertNull(AppRegistry.getBrowserSsoAppFamily(null))
+        assertNull(AppRegistry.getBrowserSsoAppFamily("io.island.unlisted"))
+        assertNull(AppRegistry.getBrowserSsoAppFamily("com.chrome.unlisted"))
+        assertNull(AppRegistry.getBrowserSsoAppFamily(AppRegistry.MSAL_TEST_APP.packageName))
+        assertSame(AppRegistry.ISLAND_FAMILY, AppRegistry.getBrowserSsoAppFamily("IO.ISLAND.ISLAND"))
+    }
+
+    @Test
+    fun browserSsoAllowedApps_selectDebugIdentitiesUsingCurrentTrustPolicy() {
+        val originalDebugTrust = BrokerData.getShouldTrustDebugBrokers()
+        try {
+            BrokerData.setShouldTrustDebugBrokers(false)
+            assertEquals(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS, AppRegistry.getBrowserSsoAuthorizedApps())
+            BrokerData.setShouldTrustDebugBrokers(true)
+            assertEquals(
+                AppRegistry.BROWSER_SSO_AUTHORIZED_APPS + AppRegistry.ISLAND_FAMILY.debugApps,
+                AppRegistry.getBrowserSsoAuthorizedApps()
+            )
+            BrokerData.setShouldTrustDebugBrokers(false)
+            assertEquals(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS, AppRegistry.getBrowserSsoAuthorizedApps())
+        } finally {
+            BrokerData.setShouldTrustDebugBrokers(originalDebugTrust)
+        }
     }
 
     @Test

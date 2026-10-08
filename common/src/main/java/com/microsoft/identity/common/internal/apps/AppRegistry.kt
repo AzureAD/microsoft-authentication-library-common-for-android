@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broke
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.SHARED_EDGE_SIGNATURE
 import com.microsoft.identity.common.internal.broker.BrokerData
 import com.microsoft.identity.common.java.broker.App
+import com.microsoft.identity.common.java.broker.AppFamily
 
 /**
  * Registry of known apps and their signing certificate thumbprints.
@@ -102,6 +103,51 @@ object AppRegistry {
         packageName = "com.chrome.canary",
         signingCertificateThumbprint = "QfTWFoLyXuOCZ7bMYlMN+la3J3rau5x8p+w2v7vf1gOPiTyIMgdbNDzLaLWhgiC2ioj/hFqk8oZyqdJbFG6G4g=="
     )
+
+    /** Release signing identity for Island. */
+    val ISLAND = App(
+        nickName = "Island",
+        packageName = "io.island.Island",
+        signingCertificateThumbprint = "9A0EWFnAmSLLMpJP9YP/zZL2PUxLL+eTfnTgI4wsCylaHdd5o4lwjZLjNkPZ7cu5tPYZHLCrEPJVJJNcgoRrAw=="
+    )
+
+    /** Release signing identity for Island Canary. */
+    val ISLAND_CANARY = App(
+        nickName = "Island Canary",
+        packageName = "io.island.IslandCanary",
+        signingCertificateThumbprint = "TwrYxhsZaPoxnXrFnGt5gzMg9WsV2V0LTHFd0KvqACW9cKfCQc9yPkV+e+f7lAfalMs3zdMfIzUpJZIT7tbOfQ=="
+    )
+
+    /** Release signing identity for Island Beta. */
+    val ISLAND_BETA = App(
+        nickName = "Island Beta",
+        packageName = "io.island.IslandBeta",
+        signingCertificateThumbprint = "KcVfTD7f9blSNklGx92FzIx1qwo1l7Vtp+sOUq+P2RNb7sSFZNLIBU6JdftdcNmmmv7rpMVcHTs7H1MJMfRkjA=="
+    )
+
+    /** Release signing identity for Island with Intune integration. */
+    val ISLAND_INTUNE = App(
+        nickName = "Island Intune",
+        packageName = "io.island.island.intune",
+        signingCertificateThumbprint = "q4Ycw2UxQJfVXEcREJwIeszP88D8QKdQw82y3m9Zmg8Sg+2YYP+wq9TATX9PgGjpgd2YfgcrXgsbuubbzdRqtA=="
+    )
+
+    /** Release signing identity for Island Canary with Intune integration. */
+    val ISLAND_CANARY_INTUNE = App(
+        nickName = "Island Canary Intune",
+        packageName = "io.island.island.canary.intune",
+        signingCertificateThumbprint = "XVdkJe6bsmBS3/a2utbFAfXVTg0IaXJS6hvzjx0Uyg+7q7187oXRAAxROMj8NkTiRlI43SCippiDTtRam5asww=="
+    )
+
+    /** Release signing identity for Island Beta with Intune integration. */
+    val ISLAND_BETA_INTUNE = App(
+        nickName = "Island Beta Intune",
+        packageName = "io.island.island.beta.intune",
+        signingCertificateThumbprint = "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
+    )
+
+    private const val ISLAND_USERDEBUG_SIGNATURE =
+        "+P6Af2Jk8nb0tvnmyhZ6d6mrsJ5znPI597Vq7t5EvgcgsM3LYBmwnBnrI5z/RGBZTzwHVG3+nz8Ostf13u/4YQ=="
 
     val INTUNE_CE_PROD = App(
         nickName = "Intune Company Portal (prod)",
@@ -187,20 +233,97 @@ object AppRegistry {
         }
     }
 
+    /** Chrome browser variants with their individual release signing identities. */
+    @JvmField
+    val CHROME_FAMILY = AppFamily(
+        releaseApps = buildSet {
+            add(CHROME)
+            add(CHROME_BETA)
+            add(CHROME_DEV)
+            add(CHROME_CANARY)
+        }
+    )
+
     /**
-     * Apps authorized to request Browser SSO headers (PRT credentials).
-     * Currently limited to Chrome browser variants.
+     * Island browser variants, including their userdebug identities and debug-only Dev packages.
+     * Broker must enforce the Island flight; debug identities additionally require debug trust.
+     */
+    @JvmField
+    val ISLAND_FAMILY = run {
+        val releaseApps = buildSet {
+            add(ISLAND)
+            add(ISLAND_CANARY)
+            add(ISLAND_BETA)
+            add(ISLAND_INTUNE)
+            add(ISLAND_CANARY_INTUNE)
+            add(ISLAND_BETA_INTUNE)
+        }
+        AppFamily(
+            releaseApps = releaseApps,
+            debugApps = buildSet {
+                releaseApps.forEach { releaseApp ->
+                    add(
+                        App(
+                            nickName = "${releaseApp.nickName} (userdebug)",
+                            packageName = releaseApp.packageName,
+                            signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+                        )
+                    )
+                }
+                add(
+                    App(
+                        nickName = "Island Dev (userdebug)",
+                        packageName = "io.island.IslandDev",
+                        signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+                    )
+                )
+                add(
+                    App(
+                        nickName = "Island Dev Intune (userdebug)",
+                        packageName = "io.island.island.dev.intune",
+                        signingCertificateThumbprint = ISLAND_USERDEBUG_SIGNATURE
+                    )
+                )
+            }
+        )
+    }
+
+    /** Browser families recognized for Browser SSO, subject to Broker's family-specific policy. */
+    @JvmField
+    val BROWSER_SSO_APP_FAMILIES = setOf(CHROME_FAMILY, ISLAND_FAMILY)
+
+    /**
+     * Release signing identities for Browser SSO, plus the existing debug-trusted MSAL test app.
+     * Family membership does not bypass certificate validation or Broker's flight policy.
      */
     @JvmField
     val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
-        add(CHROME)
-        add(CHROME_BETA)
-        add(CHROME_DEV)
-        add(CHROME_CANARY)
+        BROWSER_SSO_APP_FAMILIES.forEach { addAll(it.releaseApps) }
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
     }
+
+    /**
+     * Finds the browser family for an explicitly registered package, including debug-only variants.
+     *
+     * @param packageName Package resolved from the calling UID, or null if unresolved.
+     * @return Matching family, or null for an unregistered package. This does not establish trust.
+     */
+    fun getBrowserSsoAppFamily(packageName: String?): AppFamily? =
+        BROWSER_SSO_APP_FAMILIES.firstOrNull { it.containsPackage(packageName) }
+
+    /**
+     * Adds family debug identities to the existing Browser SSO allowlist only while debug trust
+     * is enabled. The existing MSAL test-app inclusion in the base allowlist is unchanged.
+     * Consumers must still validate the certificate and enforce any family-specific flight.
+     */
+    fun getBrowserSsoAuthorizedApps(): Set<App> =
+        if (BrokerData.getShouldTrustDebugBrokers()) {
+            BROWSER_SSO_AUTHORIZED_APPS + BROWSER_SSO_APP_FAMILIES.flatMap { it.debugApps }
+        } else {
+            BROWSER_SSO_AUTHORIZED_APPS
+        }
 
     /**
      * Apps authorized to trigger force broker discovery.
