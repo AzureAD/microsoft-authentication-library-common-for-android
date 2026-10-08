@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.SilentCallerValidationFlights;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -42,6 +43,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters implements IBrokerTokenCommandParameters {
+    private static final String TAG = BrokerSilentTokenCommandParameters.class.getSimpleName();
 
     @Expose
     private final int callerUid;
@@ -104,6 +106,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     private void validateInternal(final boolean validateCallerUidOwnership)
             throws ArgumentException, ClientException {
+        Logger.info(TAG, "validateInternal - validateCallerUidOwnership : " + validateCallerUidOwnership);
         if (callerUid == 0) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
