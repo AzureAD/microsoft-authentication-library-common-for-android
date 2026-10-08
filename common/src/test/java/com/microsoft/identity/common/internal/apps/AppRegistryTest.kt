@@ -203,8 +203,8 @@ class AppRegistryTest {
     }
 
     @Test
-    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeVariantsAndMsalTestApp() {
-        assertEquals(5, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
+    fun browserSsoAuthorizedApps_whenDebugBrokersTrusted_containsChromeIslandAndMsalTestApp() {
+        assertEquals(11, AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.size)
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_BETA))
         assertTrue(AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.contains(AppRegistry.CHROME_DEV))
@@ -224,10 +224,13 @@ class AppRegistryTest {
             "io.island.island.beta.intune" to "djswQiqC4rjGg2rNmkm+Y090echgP5JGoVesHJ2NnC1q7lQWJ/2a70HSOzMdXbYGtl0aZydlkR2sbMqRbeb4Lg=="
         )
 
-        assertEquals(6, AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.size)
+        val islandReleaseApps = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.filter {
+            it.packageName in expectedIdentities
+        }
+        assertEquals(6, islandReleaseApps.size)
         assertEquals(
             expectedIdentities,
-            AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.associate {
+            islandReleaseApps.associate {
                 it.packageName to it.signingCertificateThumbprint
             }
         )
@@ -259,7 +262,7 @@ class AppRegistryTest {
             }
         )
         assertTrue(
-            AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS.intersect(
+            AppRegistry.BROWSER_SSO_AUTHORIZED_APPS.intersect(
                 AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS
             ).isEmpty()
         )
@@ -267,7 +270,7 @@ class AppRegistryTest {
 
     @Test
     fun islandBrowserSsoApps_haveSha512SizedCertificateThumbprints() {
-        val identities = AppRegistry.ISLAND_BROWSER_SSO_AUTHORIZED_APPS +
+        val identities = AppRegistry.BROWSER_SSO_AUTHORIZED_APPS +
                 AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS
 
         identities.forEach {
@@ -276,10 +279,9 @@ class AppRegistryTest {
     }
 
     @Test
-    fun islandBrowserSsoApps_areNotAddedToExistingAuthorizationLists() {
+    fun islandBrowserSsoApps_areNotAddedToOtherPrivilegedAuthorizationLists() {
         val islandPackages = AppRegistry.ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS.map { it.packageName }.toSet()
         val existingAuthorizationLists = listOf(
-            AppRegistry.BROWSER_SSO_AUTHORIZED_APPS,
             AppRegistry.SSO_TOKEN_AUTHORIZED_APPS,
             AppRegistry.GET_DEVICE_TOKEN_AUTHORIZED_APPS,
             AppRegistry.DEVICE_REGISTRATION_AUTHORIZED_APPS,

@@ -234,7 +234,8 @@ object AppRegistry {
 
     /**
      * Apps authorized to request Browser SSO headers (PRT credentials).
-     * Currently limited to Chrome browser variants.
+     * Contains Chrome and Island release identities. Broker must additionally enforce the
+     * Island flight; Island userdebug identities require runtime debug trust.
      */
     @JvmField
     val BROWSER_SSO_AUTHORIZED_APPS = buildSet {
@@ -242,25 +243,16 @@ object AppRegistry {
         add(CHROME_BETA)
         add(CHROME_DEV)
         add(CHROME_CANARY)
+        add(ISLAND)
+        add(ISLAND_CANARY)
+        add(ISLAND_BETA)
+        add(ISLAND_INTUNE)
+        add(ISLAND_CANARY_INTUNE)
+        add(ISLAND_BETA_INTUNE)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(MSAL_TEST_APP)
         }
     }
-
-    /**
-     * Island release identities eligible for Browser SSO when the broker's Island flight is enabled.
-     * Thumbprints are Base64-encoded SHA-512 hashes of the DER signing certificates.
-     * These identities are intentionally separate from [BROWSER_SSO_AUTHORIZED_APPS].
-     */
-    @JvmField
-    val ISLAND_BROWSER_SSO_AUTHORIZED_APPS = setOf(
-        ISLAND,
-        ISLAND_CANARY,
-        ISLAND_BETA,
-        ISLAND_INTUNE,
-        ISLAND_CANARY_INTUNE,
-        ISLAND_BETA_INTUNE
-    )
 
     /**
      * Island userdebug identities eligible only when the Island flight AND
@@ -269,7 +261,10 @@ object AppRegistry {
      */
     @JvmField
     val ISLAND_BROWSER_SSO_DEBUG_AUTHORIZED_APPS = buildSet {
-        ISLAND_BROWSER_SSO_AUTHORIZED_APPS.forEach { releaseApp ->
+        listOf(
+            ISLAND, ISLAND_CANARY, ISLAND_BETA, ISLAND_INTUNE,
+            ISLAND_CANARY_INTUNE, ISLAND_BETA_INTUNE
+        ).forEach { releaseApp ->
             add(
                 App(
                     nickName = "${releaseApp.nickName} (userdebug)",
