@@ -1563,8 +1563,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 span.setAttribute(AttributeName.is_openid_vc_handler_found.name(), handlerFound.booleanValue());
             }
             if (dispatchFailure != null) {
-                Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", dispatchFailure);
-                span.recordException(dispatchFailure);
+                Logger.error(methodTag, "Failed to launch handler for openid-vc:// URI.", null);
+                SpanExtension.recordOutcome(span, "vc_dispatch", "failed",
+                        dispatchFailure.getClass().getSimpleName());
                 span.setStatus(StatusCode.ERROR, "Failed to launch handler for openid-vc:// URI");
                 errorCode = dispatchFailure instanceof ActivityNotFoundException ? ErrorStrings.ACTIVITY_NOT_FOUND : ErrorStrings.UNKNOWN_ERROR;
                 errorMessage = "Failed to dispatch the OpenID Verifiable Credentials request.";

@@ -762,10 +762,13 @@ public class AzureActiveDirectoryWebViewClientTest {
         final ArgumentCaptor<RawAuthorizationResult> result = ArgumentCaptor.forClass(RawAuthorizationResult.class);
         Mockito.verify(callback).onChallengeResponseReceived(result.capture());
         assertEquals(errorCode, ((ClientException) result.getValue().getException()).getErrorCode());
-        assertSame(exception, telemetry.captured().mRecordedException);
+        assertNull(telemetry.captured().mRecordedException);
         assertEquals(StatusCode.ERROR, telemetry.captured().mStatusCode);
         assertEquals("Failed to launch handler for openid-vc:// URI",
                 telemetry.captured().mStatusDescription);
+        assertEquals("failed", telemetry.captured().eventAttribute("vc_dispatch", AttributeName.operation_outcome));
+        assertEquals(exception.getClass().getSimpleName(),
+                telemetry.captured().eventAttribute("vc_dispatch", AttributeName.error_type));
         assertNull(telemetry.captured().attribute(AttributeName.operation_outcome.name()));
         assertFalse(telemetry.captured().mEventNames.contains("resolve_handler"));
         assertFalse(telemetry.captured().mEventNames.contains("launch_wallet"));
