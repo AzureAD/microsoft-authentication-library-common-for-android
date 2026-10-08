@@ -38,21 +38,23 @@ import java.util.Locale
 /**
  * Records onboarding telemetry events during interactive auth flows.
  * Called by WebView navigation fragments to track steps, blocking errors,
- * and domain navigation. Operates on an in-memory model, converts
- * to JSON at flow end. On block detection, persists sessionCorrelationId
- * to SharedPreferences for app-kill resilience (best-effort, async).
+ * and domain navigation. Imports existing blob history into an in-memory model,
+ * then converts the complete snapshot to JSON at flow end. On block detection,
+ * persists sessionCorrelationId to SharedPreferences for app-kill resilience
+ * (best-effort, async).
  *
  * Lives in Android common core so both OneAuth (non-brokered) and broker apps
  * (brokered) use the same class.
  *
  * @param seedJson  Seed blob JSON produced by the C++ xplat core (via Djinni
  *                  `OnboardingBlobConstants`) and passed in from `authParameters`.
- *                  Expected shape:
+ *                  Expected core fields:
  *                  `{ "schema_version": "1.0.0",
  *                     "session_correlation_id": "<uuid>",
  *                     "onboarding_mode": "brokered" | "non-brokered" }`.
- *                  If null/blank/malformed, the recorder still functions but with empty
- *                  seed fields; a warning is logged and `finalizeBlob()` will refuse to
+ *                  Existing steps, errors, flow tags, domain, and profile are imported
+ *                  when present. If blank/malformed, the recorder still functions but
+ *                  with empty seed fields; a warning is logged and `finalizeBlob()` will refuse to
  *                  emit a blob with an empty `sessionCorrelationId`.
  * @param clientId  Client (application) ID, used as part of the SharedPreferences
  *                  cache key for session correlation persistence.
@@ -76,6 +78,7 @@ class OnboardingTelemetryRecorder(
     private val schemaVersion: String
     val sessionCorrelationId: String
     private val onboardingMode: String
+    private val seedFields: JSONObject?
 
     // Populated fields
     private val stepsList: MutableList<StepEntry> = Collections.synchronizedList(mutableListOf())
@@ -88,35 +91,50 @@ class OnboardingTelemetryRecorder(
 
     init {
         val parsed = parseSeed(seedJson)
-        schemaVersion = parsed?.first ?: ""
-        sessionCorrelationId = parsed?.second ?: ""
-        onboardingMode = parsed?.third ?: ""
+        seedFields = parsed
+        schemaVersion = parsed?.optString(FIELD_SCHEMA_VERSION, "") ?: ""
+        sessionCorrelationId = parsed?.optString(FIELD_SESSION_CORRELATION_ID, "") ?: ""
+        onboardingMode = parsed?.optString(FIELD_ONBOARDING_MODE, "") ?: ""
+        parsed?.optJSONArray(FIELD_STEPS_LIST)?.let { steps ->
+            for (i in 0 until steps.length()) {
+                val step = steps.optJSONObject(i) ?: continue
+                if (step.opt(FIELD_STEP_ID) is String && step.opt(FIELD_TS) is String) {
+                    stepsList.add(StepEntry(
+                        step.getString(FIELD_STEP_ID),
+                        step.getString(FIELD_TS),
+                        step
+                    ))
+                }
+            }
+        }
+        parsed?.optJSONArray(OnboardingTelemetryConstants.BLOCKING_ERRORS)?.let { errors ->
+            for (i in 0 until errors.length()) {
+                (errors.opt(i) as? String)?.let(blockingErrors::add)
+            }
+        }
+        parsed?.optJSONArray(OnboardingTelemetryConstants.UX_FLOW_USED)?.let { flows ->
+            for (i in 0 until flows.length()) {
+                (flows.opt(i) as? String)?.let(uxFlowUsed::add)
+            }
+        }
+        lastLoadedDomain = parsed?.opt(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN) as? String
+        profile = parsed?.opt(OnboardingTelemetryConstants.PROFILE) as? String
     }
 
     /**
-     * Parse the seed JSON into [schemaVersion], [sessionCorrelationId], and [onboardingMode].
-     * Returns null if the seed is null/blank or fails to parse — callers fall back to
-     * empty-string defaults rather than receiving a fake-empty Triple.
+     * Parse the input JSON. Returns null if it is blank or malformed.
      */
-    private fun parseSeed(json: String): Triple<String, String, String>? {
+    private fun parseSeed(json: String): JSONObject? {
         if (json.isBlank()) return null
         return try {
-            val seed = JSONObject(json)
-            Triple(
-                seed.optString(FIELD_SCHEMA_VERSION, ""),
-                seed.optString(FIELD_SESSION_CORRELATION_ID, ""),
-                seed.optString(FIELD_ONBOARDING_MODE, "")
-            )
+            JSONObject(json)
         } catch (e: JSONException) {
-            Logger.warn(
-                TAG,
-                "Failed to parse onboarding seed JSON; recorder will operate with empty fields: " + e.message
-            )
+            Logger.warn(TAG, "Failed to parse onboarding seed JSON; recorder will operate with empty fields")
             null
         }
     }
 
-    private data class StepEntry(val stepId: String, val timestamp: String)
+    private data class StepEntry(val stepId: String, val timestamp: String, val original: JSONObject? = null)
 
     /**
      * Record a step in the onboarding flow. Captures the current time automatically.
@@ -201,7 +219,7 @@ class OnboardingTelemetryRecorder(
         }
 
         return try {
-            val blob = JSONObject().apply {
+            val blob = (seedFields?.let { JSONObject(it.toString()) } ?: JSONObject()).apply {
                 // Seed fields
                 put(FIELD_SCHEMA_VERSION, schemaVersion)
                 put(FIELD_SESSION_CORRELATION_ID, sessionCorrelationId)
@@ -214,7 +232,7 @@ class OnboardingTelemetryRecorder(
 
                 val steps = JSONArray()
                 for (entry in stepsSnapshot) {
-                    steps.put(JSONObject().apply {
+                    steps.put((entry.original?.let { JSONObject(it.toString()) } ?: JSONObject()).apply {
                         put(FIELD_STEP_ID, entry.stepId)
                         put(FIELD_TS, entry.timestamp)
                     })
@@ -234,8 +252,11 @@ class OnboardingTelemetryRecorder(
                         OnboardingTelemetryConstants.LAST_BLOCKING_ERROR,
                         errorsSnapshot.last()
                     )
+                } else {
+                    remove(OnboardingTelemetryConstants.LAST_BLOCKING_ERROR)
                 }
 
+                remove(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN)
                 lastLoadedDomain?.let {
                     put(OnboardingTelemetryConstants.LAST_LOADED_DOMAIN, it)
                 }
@@ -245,13 +266,16 @@ class OnboardingTelemetryRecorder(
                         OnboardingTelemetryConstants.LAST_COMPLETED_STEP,
                         stepsSnapshot.last().stepId
                     )
+                } else {
+                    remove(OnboardingTelemetryConstants.LAST_COMPLETED_STEP)
                 }
 
+                remove(OnboardingTelemetryConstants.PROFILE)
                 profile?.let {
                     put(OnboardingTelemetryConstants.PROFILE, it)
                 }
 
-                if (uxFlowSnapshot.isNotEmpty()) {
+                if (uxFlowSnapshot.isNotEmpty() || has(OnboardingTelemetryConstants.UX_FLOW_USED)) {
                     val flows = JSONArray()
                     for (flow in uxFlowSnapshot) {
                         flows.put(flow)
@@ -262,7 +286,7 @@ class OnboardingTelemetryRecorder(
 
             blob.toString()
         } catch (e: JSONException) {
-            Logger.error(TAG, sessionCorrelationId, "Failed to serialize onboarding blob", e)
+            Logger.warn(TAG, "Failed to serialize onboarding blob")
             IOnboardingTelemetryRecorder.EMPTY_BLOB
         }
     }
@@ -285,7 +309,16 @@ class OnboardingTelemetryRecorder(
         try {
             val prefs = appContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
             val existing = prefs.getString(PREFS_FILE, "")
-            val cache = if (!existing.isNullOrEmpty()) JSONObject(existing) else JSONObject()
+            val cache = if (existing.isNullOrEmpty()) {
+                JSONObject()
+            } else {
+                try {
+                    JSONObject(existing)
+                } catch (e: JSONException) {
+                    Logger.warn(TAG, "Invalid session correlation cache; starting a new cache")
+                    JSONObject()
+                }
+            }
 
             val key = "$clientId|$target" // target = sorted, space-joined scopes
             val entry = JSONObject().apply {
@@ -295,13 +328,11 @@ class OnboardingTelemetryRecorder(
             cache.put(key, entry)
 
             prefs.edit().putString(PREFS_FILE, cache.toString()).apply()
-            Logger.verbose(
-                TAG,
-                sessionCorrelationId,
-                "Persisted session correlation entry for key=$key"
-            )
+            Logger.verbose(TAG, "Persisted session correlation entry")
         } catch (e: JSONException) {
-            Logger.warn(TAG, sessionCorrelationId, "Failed to persist session correlation entry: " + e.message)
+            Logger.warn(TAG, "Failed to persist session correlation entry")
+        } catch (e: RuntimeException) {
+            Logger.warn(TAG, "Failed to persist session correlation entry")
         }
     }
 

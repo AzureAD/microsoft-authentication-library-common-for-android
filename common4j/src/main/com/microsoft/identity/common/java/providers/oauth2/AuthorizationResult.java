@@ -36,6 +36,16 @@ public abstract class AuthorizationResult<
     private GenericAuthorizationResponse mAuthorizationResponse;
     private GenericAuthorizationErrorResponse mAuthorizationErrorResponse;
     private boolean mSuccess = false;
+    private String mOnboardingTelemetryJson;
+
+    /** Full accumulated onboarding snapshot returned by the authorization session, if available. */
+    public String getOnboardingTelemetryJson() {
+        return mOnboardingTelemetryJson;
+    }
+
+    public void setOnboardingTelemetryJson(final String onboardingTelemetryJson) {
+        mOnboardingTelemetryJson = onboardingTelemetryJson;
+    }
 
     public AuthorizationResult(final GenericAuthorizationResponse response, final GenericAuthorizationErrorResponse errorResponse) {
 
@@ -106,4 +116,3 @@ public abstract class AuthorizationResult<
     }
 
 }
-

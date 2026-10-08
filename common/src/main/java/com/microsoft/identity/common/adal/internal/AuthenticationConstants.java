@@ -2187,6 +2187,10 @@ public final class AuthenticationConstants {
 
         public static final String MAM_CA_INSTALL_REFERRER_ENABLED = "com.microsoft.identity.mam.ca.install.referrer.enabled";
 
+        public static final String ONBOARDING_SEED_JSON = "com.microsoft.identity.onboarding.seed.json";
+        public static final String ONBOARDING_CLIENT_ID = "com.microsoft.identity.onboarding.client.id";
+        public static final String ONBOARDING_TARGET = "com.microsoft.identity.onboarding.target";
+
         public static final String OTEL_CONTEXT_CARRIER = "otel_context_carrier";
 
         public static final String WEB_VIEW_SILENT_AUTHORIZATION_FLOW_TIMEOUT = "com.microsoft.identity.web.view.silent.authorization.flow.timeout";

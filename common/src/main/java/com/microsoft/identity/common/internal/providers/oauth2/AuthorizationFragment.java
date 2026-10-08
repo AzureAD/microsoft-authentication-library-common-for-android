@@ -33,9 +33,12 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.providers.MamInstallReferrerBuilder;
@@ -50,6 +53,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.MAM_CA_INSTALL_REFERRER_ENABLED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_CLIENT_ID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_SEED_JSON;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.ONBOARDING_TARGET;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -73,6 +79,14 @@ public abstract class AuthorizationFragment extends Fragment {
     private Bundle mInstanceState;
 
     private String mCorrelationId;
+    @Nullable
+    private OnboardingState mOnboardingState;
+
+    /** Fragment-scoped, retained across view and configuration recreation, not process death. */
+    public static final class OnboardingState extends ViewModel {
+        @Nullable
+        private OnboardingTelemetryRecorder recorder;
+    }
 
     /**
      * Determines if authentication result has been sent.
@@ -120,6 +134,19 @@ public abstract class AuthorizationFragment extends Fragment {
             // If activity is killed by the os, savedInstance will be the saved bundle.
             Logger.verbose(methodTag, "Extract state from the saved bundle.");
             extractState(savedInstanceState);
+        }
+        try {
+            mOnboardingState = new ViewModelProvider(this).get(OnboardingState.class);
+            if (savedInstanceState == null && mOnboardingState.recorder == null) {
+                final String seed = mInstanceState.getString(ONBOARDING_SEED_JSON);
+                if (seed != null && !seed.isEmpty() && getContext() != null) {
+                    mOnboardingState.recorder = new OnboardingTelemetryRecorder(
+                            seed, mInstanceState.getString(ONBOARDING_CLIENT_ID, ""),
+                            mInstanceState.getString(ONBOARDING_TARGET, ""), getContext());
+                }
+            }
+        } catch (final RuntimeException e) {
+            Logger.warn(TAG, "Optional onboarding recorder unavailable.");
         }
     }
 
@@ -189,6 +216,11 @@ public abstract class AuthorizationFragment extends Fragment {
     @Nullable
     public String getCorrelationId() {
         return mCorrelationId;
+    }
+
+    @Nullable
+    protected OnboardingTelemetryRecorder getOnboardingTelemetryRecorder() {
+        return mOnboardingState == null ? null : mOnboardingState.recorder;
     }
 
     @Override
@@ -283,7 +315,19 @@ public abstract class AuthorizationFragment extends Fragment {
         // Track the final result code we got for this authorization flow
         mFinalResultCode = result.getResultCode();
 
-        final PropertyBag propertyBag = propertyBagFromAuthorizationResult(result);
+        RawAuthorizationResult enriched = result;
+        try {
+            final OnboardingTelemetryRecorder recorder = getOnboardingTelemetryRecorder();
+            if (recorder != null) {
+                final String snapshot = recorder.finalizeBlob();
+                if (!snapshot.isEmpty()) {
+                    enriched = result.withOnboardingTelemetryJson(snapshot);
+                }
+            }
+        } catch (final RuntimeException e) {
+            Logger.warn(methodTag, "Optional onboarding snapshot unavailable.");
+        }
+        final PropertyBag propertyBag = propertyBagFromAuthorizationResult(enriched);
 
         LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
         mAuthResultSent = true;
@@ -464,4 +508,3 @@ public abstract class AuthorizationFragment extends Fragment {
         return new LinkedHashMap<>(mUrlStatusTracker);
     }
 }
-

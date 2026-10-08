@@ -67,7 +67,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
-import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
 import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
@@ -329,8 +328,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         setUpWebView(view, mAADWebViewClient);
 
         final String correlationId = getCorrelationId();
-        final OnboardingTelemetryRecorder onboardingRecorder =
-                OnboardingRecorderRegistry.get(correlationId);
+        final OnboardingTelemetryRecorder onboardingRecorder = getOnboardingTelemetryRecorder();
         if (onboardingRecorder != null) {
             Logger.info(methodTag, correlationId,
                     "Attaching onboarding telemetry recorder to the authorization WebView.");
@@ -769,14 +767,22 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     @Override
     public void onDestroyView() {
-        if (mPasskeyWebListenerHooked && mWebView != null) {
-            PasskeyWebListener.unhook(mWebView);
-            mPasskeyWebListenerHooked = false;
+        try {
+            if (mPasskeyWebListenerHooked && mWebView != null) {
+                PasskeyWebListener.unhook(mWebView);
+                mPasskeyWebListenerHooked = false;
+            }
+        } finally {
+            try {
+                if (mAADWebViewClient != null) {
+                    mAADWebViewClient.removeAuthUxTelemetryWebMessageApi();
+                }
+            } catch (final RuntimeException exception) {
+                Logger.warn(TAG, "Unable to remove optional Auth UX telemetry on view destruction.");
+            } finally {
+                super.onDestroyView();
+            }
         }
-        if (mAADWebViewClient != null) {
-            mAADWebViewClient.removeAuthUxTelemetryWebMessageApi();
-        }
-        super.onDestroyView();
     }
 
     /**

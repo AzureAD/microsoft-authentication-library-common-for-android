@@ -88,15 +88,24 @@ public class AuthorizationActivity extends DualScreenActivity {
                 Logger.error(methodTag, "Exception thrown during extraction: " + e.getMessage(), e);
             }
         }
-        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
+        final Fragment restored = savedInstanceState == null ? null :
+                getSupportFragmentManager().findFragmentById(com.microsoft.identity.common.R.id.dual_screen_content);
+        final Fragment fragment = restored != null ? restored :
+                AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
         if (fragment instanceof AuthorizationFragment) {
             mFragment = (AuthorizationFragment) fragment;
-            mFragment.setInstanceState(bundle);
+            if (restored == null && bundle != null) {
+                mFragment.setInstanceState(bundle);
+            }
         } else {
             final IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
             Logger.error(methodTag, "Did not receive AuthorizationFragment from factory", ex);
         }
-        setFragment(mFragment);
+        if (restored == null) {
+            setFragment(mFragment);
+        } else {
+            restoreFragmentContainer();
+        }
     }
 
     /**
