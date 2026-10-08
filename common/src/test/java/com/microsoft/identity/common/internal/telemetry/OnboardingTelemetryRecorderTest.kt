@@ -32,6 +32,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.Collections
 
 @RunWith(RobolectricTestRunner::class)
 class OnboardingTelemetryRecorderTest {
@@ -138,6 +139,50 @@ class OnboardingTelemetryRecorderTest {
         val errors = blob.getJSONArray("blocking_errors")
         Assert.assertEquals(2, errors.length())
         Assert.assertEquals("MDM_FLOW", blob.getString("last_blocking_error"))
+    }
+
+    @Test
+    fun testFinalizeBlob_DuplicateBlockingErrorsArePreservedAndLastWins() {
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("530003")
+        recorder.addBlockingError("53003")
+
+        val blob = JSONObject(recorder.finalizeBlob())
+        val errors = blob.getJSONArray("blocking_errors")
+        Assert.assertEquals(3, errors.length())
+        Assert.assertEquals("530003", errors.getString(0))
+        Assert.assertEquals("530003", errors.getString(1))
+        Assert.assertEquals("53003", errors.getString(2))
+        Assert.assertEquals("53003", blob.getString("last_blocking_error"))
+    }
+
+    @Test
+    fun testConcurrentBlockingErrorAppendAndFinalizationIsSafe() {
+        val failures = Collections.synchronizedList(mutableListOf<Throwable>())
+        val writer = Thread {
+            try {
+                repeat(100) { recorder.addBlockingError("530003") }
+            } catch (throwable: Throwable) {
+                failures.add(throwable)
+            }
+        }
+        val reader = Thread {
+            try {
+                repeat(100) { JSONObject(recorder.finalizeBlob()) }
+            } catch (throwable: Throwable) {
+                failures.add(throwable)
+            }
+        }
+
+        writer.start()
+        reader.start()
+        writer.join()
+        reader.join()
+
+        Assert.assertTrue(failures.toString(), failures.isEmpty())
+        val finalBlob = JSONObject(recorder.finalizeBlob())
+        Assert.assertEquals(100, finalBlob.getJSONArray("blocking_errors").length())
+        Assert.assertEquals("530003", finalBlob.getString("last_blocking_error"))
     }
 
     @Test
