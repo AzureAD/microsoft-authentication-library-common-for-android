@@ -527,7 +527,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     transport.setWebView(interceptorWebView);
                     resultMsg.sendToTarget();
                     windowHandled = true;
-                } catch (@NonNull final Throwable e) {
+                } catch (@NonNull final Exception e) {
                     Logger.error(methodTag, "Error handling target=_blank navigation.", e);
                 }
                 return windowHandled;
