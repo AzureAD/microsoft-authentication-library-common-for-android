@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -685,8 +686,49 @@ public class AzureActiveDirectoryWebViewClientTest {
     }
 
     @Test
-    public void testOpenIdVcDispatch_error_returnsFalseWithExplicitError() {
-        verifyWalletDispatchFailure(new AssertionError("sensitive-query"), ErrorStrings.UNKNOWN_ERROR);
+    public void testOpenIdVcDispatch_error_propagatesWithoutErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final OutOfMemoryError failure = new OutOfMemoryError();
+        Mockito.doThrow(failure).when(activity).startActivity(any(Intent.class));
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final CapturingSpanFactory telemetry = new CapturingSpanFactory(SpanName.ProcessOpenIdVcRequest.name());
+        OTelUtility.setSpanFactory(telemetry);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(OutOfMemoryError.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL)));
+
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(telemetry.captured().mRecordedException);
+        assertEquals(1, telemetry.captured().mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
+    }
+
+    @Test
+    public void testOpenIdVcDispatch_successTelemetryFails_doesNotDeliverErrorCallback() {
+        registerOpenIdVcHandler("com.example.wallet");
+        final Activity activity = Mockito.spy(mActivity);
+        final IAuthorizationCompletionCallback callback = Mockito.mock(IAuthorizationCompletionCallback.class);
+        final AzureActiveDirectoryWebViewClient client = new AzureActiveDirectoryWebViewClient(
+                activity, callback, url -> {}, TEST_REDIRECT_URI,
+                Mockito.mock(SwitchBrowserProtocolCoordinator.class), "homeTenantId", false);
+        final RecordingSpan span = Mockito.spy(new RecordingSpan());
+        final IllegalStateException failure = new IllegalStateException("Telemetry failed");
+        Mockito.doThrow(failure).when(span).setStatus(StatusCode.OK);
+        final Span previousSpan = SpanExtension.current();
+
+        assertSame(failure, assertThrows(IllegalStateException.class, () ->
+                client.processOpenIdVcRequest(mMockWebView, TEST_OPENID_VC_URL, span)));
+
+        Mockito.verify(activity).startActivity(any(Intent.class));
+        Mockito.verify(callback, never()).onChallengeResponseReceived(any(RawAuthorizationResult.class));
+        assertNull(span.mRecordedException);
+        assertEquals(0, span.mEndCount);
+        assertEquals(previousSpan, SpanExtension.current());
     }
 
     private void verifyWalletDispatchFailure(final Throwable exception, final String errorCode) {

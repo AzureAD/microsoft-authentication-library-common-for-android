@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -354,6 +356,59 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
+    public void testHandleInterceptedUrl_hostlessHttps_refusesToOpenWithOrWithoutGesture() {
+        for (final String targetUrl : new String[]{
+                "https://", "https:///path", "https://?query=value",
+                "https:path", "HTTPS://#fragment", "https://:443/path"}) {
+            for (final boolean isUserGesture : new boolean[]{false, true}) {
+                final Context context = mock(Context.class);
+                final WebView mainWebView = mock(WebView.class);
+                final Span span = mockSpan();
+                when(mainWebView.getContext()).thenReturn(context);
+
+                mFragment.handleInterceptedUrlFromNewWindow(
+                        mainWebView, mock(WebView.class), mockRequest(targetUrl), span, isUserGesture);
+
+                verify(context, never()).startActivity(ArgumentMatchers.any(Intent.class));
+                verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+                verify(span).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                        isUserGesture
+                                ? AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL
+                                : AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
+                verify(span).setStatus(StatusCode.ERROR);
+                verify(span).end();
+            }
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_mixedCaseHttps_preservesOriginalUrlWithOrWithoutGesture() {
+        final String targetUrl = "HtTpS://terms.example.com/CaseSensitive?Token=AbCd#Section";
+        for (final boolean isUserGesture : new boolean[]{false, true}) {
+            final Context context = mock(Context.class);
+            final WebView mainWebView = mock(WebView.class);
+            final Span span = mockSpan();
+            when(mainWebView.getContext()).thenReturn(context);
+
+            mFragment.handleInterceptedUrlFromNewWindow(
+                    mainWebView, mock(WebView.class), mockRequest(targetUrl), span, isUserGesture);
+
+            if (isUserGesture) {
+                final ArgumentCaptor<Intent> intent = ArgumentCaptor.forClass(Intent.class);
+                verify(context).startActivity(intent.capture());
+                assertEquals(Intent.ACTION_VIEW, intent.getValue().getAction());
+                assertEquals(targetUrl, intent.getValue().getDataString());
+                verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            } else {
+                verify(mainWebView).loadUrl(targetUrl);
+                verify(context, never()).startActivity(ArgumentMatchers.any(Intent.class));
+            }
+            verify(span).setStatus(StatusCode.OK);
+            verify(span).end();
+        }
+    }
+
+    @Test
     public void testHandleInterceptedUrl_nonSslUrl_refusesToOpen() {
         final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
@@ -561,23 +616,6 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_nonUserGesture_nonSslUrl_loadsInline() {
-        // Non-user-gesture takes priority over non-SSL check
-        final WebView mainWebView = spy(new WebView(mContext));
-        final WebView interceptorWebView = spy(new WebView(mContext));
-        final Span span = mockSpan();
-        final WebResourceRequest request = mockRequest(HTTP_TARGET_URL);
-
-        mFragment.handleInterceptedUrlFromNewWindow(mainWebView, interceptorWebView, request, span, false);
-
-        // Even though URL is http, non-user-gesture check comes first and loads inline
-        verify(mainWebView).loadUrl(eq(HTTP_TARGET_URL));
-        verify(span).setAttribute(
-                eq(AttributeName.target_blank_navigation_route.name()),
-                eq(AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE));
-    }
-
-    @Test
     public void testHandleInterceptedUrl_ftpScheme_refusesToOpen() {
         final WebView mainWebView = spy(new WebView(mContext));
         final WebView interceptorWebView = spy(new WebView(mContext));
@@ -606,8 +644,48 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_browserError_fallsBackInline() {
-        verifyBrowserFallback(new AssertionError("Sensitive URL must not enter telemetry."));
+    public void testHandleInterceptedUrl_browserError_propagatesWithoutFallback() {
+        for (final Error error : new Error[]{new AssertionError(), new OutOfMemoryError()}) {
+            final Context context = mock(Context.class);
+            final WebView mainWebView = mock(WebView.class);
+            final WebView interceptorWebView = mock(WebView.class);
+            final Span span = mockSpan();
+            when(mainWebView.getContext()).thenReturn(context);
+            doThrow(error).when(context).startActivity(ArgumentMatchers.any(Intent.class));
+
+            assertSame(error, assertThrows(Error.class, () ->
+                    mFragment.handleInterceptedUrlFromNewWindow(
+                            mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, true)));
+
+            verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+            verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
+            verify(span, never()).recordException(ArgumentMatchers.any(Throwable.class));
+            verify(span, never()).setStatus(ArgumentMatchers.any(StatusCode.class));
+            verify(span).end();
+            verify(interceptorWebView).post(ArgumentMatchers.any(Runnable.class));
+        }
+    }
+
+    @Test
+    public void testHandleInterceptedUrl_browserSuccessTelemetryFails_doesNotFallback() {
+        final Context context = mock(Context.class);
+        final WebView mainWebView = mock(WebView.class);
+        final Span span = mockSpan();
+        final IllegalStateException failure = new IllegalStateException("Telemetry failed");
+        when(mainWebView.getContext()).thenReturn(context);
+        doThrow(failure).when(span).setStatus(StatusCode.OK);
+
+        mFragment.handleInterceptedUrlFromNewWindow(
+                mainWebView, mock(WebView.class), mockRequest(HTTPS_TARGET_URL), span, true);
+
+        verify(context).startActivity(ArgumentMatchers.any(Intent.class));
+        verify(mainWebView, never()).loadUrl(ArgumentMatchers.anyString());
+        verify(span, never()).addEvent(ArgumentMatchers.anyString(), ArgumentMatchers.any(Attributes.class));
+        verify(span, never()).setAttribute(AttributeName.target_blank_navigation_route.name(),
+                AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
+        verify(span).recordException(failure);
+        verify(span).setStatus(StatusCode.ERROR);
+        verify(span).end();
     }
 
     private void verifyBrowserFallback(final Throwable exception) {
@@ -640,8 +718,8 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_fallbackError_recordsBothFailures() {
-        verifyBrowserAndFallbackFailure(new AssertionError("Sensitive URL must not enter telemetry."));
+    public void testHandleInterceptedUrl_fallbackError_propagates() {
+        verifyInlineErrorPropagates(true);
     }
 
     private void verifyBrowserAndFallbackFailure(final Throwable fallbackFailure) {
@@ -673,8 +751,29 @@ public class WebViewAuthorizationFragmentMultiWindowTest {
     }
 
     @Test
-    public void testHandleInterceptedUrl_nonUserGesture_inlineError_recordsError() {
-        verifyInlineFailure(new AssertionError("Sensitive URL must not enter telemetry."));
+    public void testHandleInterceptedUrl_nonUserGesture_inlineError_propagates() {
+        verifyInlineErrorPropagates(false);
+    }
+
+    private void verifyInlineErrorPropagates(final boolean isUserGesture) {
+        final Context context = mock(Context.class);
+        final WebView mainWebView = mock(WebView.class);
+        final WebView interceptorWebView = mock(WebView.class);
+        final Span span = mockSpan();
+        final OutOfMemoryError failure = new OutOfMemoryError();
+        when(mainWebView.getContext()).thenReturn(context);
+        doThrow(new ActivityNotFoundException()).when(context).startActivity(ArgumentMatchers.any(Intent.class));
+        doThrow(failure).when(mainWebView).loadUrl(HTTPS_TARGET_URL);
+
+        assertSame(failure, assertThrows(OutOfMemoryError.class, () ->
+                mFragment.handleInterceptedUrlFromNewWindow(
+                        mainWebView, interceptorWebView, mockRequest(HTTPS_TARGET_URL), span, isUserGesture)));
+
+        verify(span, never()).addEvent(eq("browser_fallback"), ArgumentMatchers.any(Attributes.class));
+        verify(span, never()).recordException(ArgumentMatchers.any(Throwable.class));
+        verify(span, never()).setStatus(ArgumentMatchers.any(StatusCode.class));
+        verify(span).end();
+        verify(interceptorWebView).post(ArgumentMatchers.any(Runnable.class));
     }
 
     private void verifyInlineFailure(final Throwable failure) {

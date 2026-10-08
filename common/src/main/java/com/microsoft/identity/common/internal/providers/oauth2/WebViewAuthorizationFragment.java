@@ -92,7 +92,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -573,8 +572,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 return;
             }
             final String targetUrl = targetUri.toString();
-            final String formattedUrl = targetUrl.toLowerCase(Locale.US);
             final String destinationHost = targetUri.getHost();
+            final boolean isHttpsDestination =
+                    AuthenticationConstants.Broker.HTTPS_SCHEME.equalsIgnoreCase(targetUri.getScheme())
+                            && !StringUtil.isNullOrEmpty(destinationHost);
             if (!StringUtil.isNullOrEmpty(destinationHost)) {
                 span.setAttribute(
                         AttributeName.target_blank_navigation_destination_host.name(),
@@ -583,10 +584,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
             if (!isUserGesture) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE);
-                if (!AuthenticationConstants.Broker.HTTPS_SCHEME.equalsIgnoreCase(targetUri.getScheme())
-                        || StringUtil.isNullOrEmpty(destinationHost)) {
+                if (!isHttpsDestination) {
                     span.setStatus(StatusCode.ERROR);
-                    Logger.warn(methodTag, "onCreateWindow: refusing non-HTTPS popup without user gesture.");
+                    Logger.warn(methodTag, "onCreateWindow: refusing invalid HTTPS destination without user gesture.");
                     return;
                 }
                 Logger.warn(methodTag, "onCreateWindow: popup not initiated by user gesture, loading HTTPS URL inline.");
@@ -594,15 +594,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 span.setStatus(StatusCode.OK);
             } else if (AuthenticationConstants.Broker.OPENID_VC_SCHEME.equalsIgnoreCase(targetUri.getScheme())) {
                 dispatchPopupToWallet(mainWebView, targetUrl, span);
-            } else if (!formattedUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-                // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
+            } else if (!isHttpsDestination) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
                 span.setStatus(StatusCode.ERROR);
-                Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
+                Logger.error(methodTag, "onCreateWindow: URL is not a valid HTTPS destination, refusing to open.", null);
             } else {
                 dispatchPopupToBrowser(mainWebView, targetUrl, span, methodTag);
             }
-        } catch (final Throwable e) {
+        } catch (final Exception e) {
             span.recordException(e);
             span.setStatus(StatusCode.ERROR);
             Logger.error(methodTag, "Error handling target=_blank URL.", e);
@@ -635,10 +634,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER);
         Logger.info(methodTag, "onCreateWindow: delegating user-initiated HTTPS URL to system browser.");
         final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+        final Context context = mainWebView.getContext();
         try {
-            mainWebView.getContext().startActivity(browserIntent);
-            span.setStatus(StatusCode.OK);
-        } catch (final Throwable e) {
+            context.startActivity(browserIntent);
+        } catch (final Exception e) {
             final String exceptionType = e.getClass().getSimpleName();
             SpanExtension.recordOutcome(span, "browser_launch", "failed", exceptionType);
             span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_FALLBACK);
@@ -646,14 +645,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     + exceptionType + "); requesting HTTPS inline fallback.");
             try {
                 mainWebView.loadUrl(targetUrl);
-                SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
-            } catch (final Throwable fallbackException) {
+            } catch (final Exception fallbackException) {
                 SpanExtension.recordOutcome(span, "browser_fallback", "failed",
                         fallbackException.getClass().getSimpleName());
                 throw fallbackException;
             }
+            SpanExtension.recordOutcome(span, "browser_fallback", "inline_fallback_requested");
             span.setStatus(StatusCode.OK);
+            return;
         }
+        span.setStatus(StatusCode.OK);
     }
 
     /**
