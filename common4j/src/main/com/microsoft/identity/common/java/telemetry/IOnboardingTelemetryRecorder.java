@@ -70,10 +70,14 @@ public interface IOnboardingTelemetryRecorder {
     /**
      * Record a blocking onboarding error detected during the flow.
      *
+     * <p>The Android recorder retains the first 256 occurrences per recorder/request in order,
+     * including duplicates. On overflow it logs one warning, without adding a synthetic error;
+     * {@code last_blocking_error} remains the last retained occurrence.
+     *
      * @param errorCode Blocking-error constant from
      *                  {@link com.microsoft.identity.common.java.telemetry.OnboardingTelemetryConstants}
-     *                  (e.g. {@code BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED}). Not a numeric
-     *                  service auth error code.
+     *                  (e.g. {@code BLOCKING_ERROR_DEVICE_REGISTRATION_NEEDED}), or a numeric server
+     *                  error code already filtered for onboarding relevance.
      */
     void addBlockingError(@NonNull String errorCode);
 

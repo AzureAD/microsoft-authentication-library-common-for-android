@@ -28,6 +28,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.telemetry.OnboardingRecorderRegistry;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRecorder;
+import com.microsoft.identity.common.internal.telemetry.OnboardingTelemetryRequest;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -46,9 +50,11 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
@@ -63,6 +69,7 @@ import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
@@ -85,6 +92,7 @@ import com.microsoft.identity.common.logging.Logger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -103,9 +111,67 @@ public class LocalMSALController extends BaseController {
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
 
+    /**
+     * Runs local interactive authentication through token exchange.
+     * For locally owned onboarding telemetry, non-domain failures are wrapped in ExecutionException
+     * with the existing ExceptionAdapter classification so the dispatcher can preserve the blob.
+     * Requests without a local telemetry owner retain their original exception behavior.
+     */
     @Override
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
+            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
+        final RequestTelemetry telemetry = new RequestTelemetry();
+        if (parameters instanceof AndroidInteractiveTokenCommandParameters) {
+            final OnboardingTelemetryRecorder supplied =
+                    ((AndroidInteractiveTokenCommandParameters) parameters).getOnboardingTelemetryRecorder();
+            if (supplied != null) {
+                telemetry.suppliedRecorderExternallyOwned = OnboardingRecorderRegistry.isRegistered(supplied);
+                if (!telemetry.suppliedRecorderExternallyOwned) {
+                    telemetry.owner = new OnboardingTelemetryRequest(supplied);
+                }
+            }
+        }
+        try {
+            final AcquireTokenResult result = acquireTokenInternal(parameters, telemetry);
+            if (telemetry.owner != null) {
+                telemetry.owner.complete(result);
+            }
+            return result;
+        } catch (final ClientException | ArgumentException exception) {
+            if (telemetry.owner != null) {
+                telemetry.owner.complete(exception);
+            }
+            throw exception;
+        } catch (final ExecutionException | InterruptedException | IOException | RuntimeException exception) {
+            if (telemetry.owner == null) {
+                throw exception;
+            }
+            if (exception instanceof ExecutionException && exception.getCause() instanceof BaseException) {
+                telemetry.owner.complete((BaseException) exception.getCause());
+                throw (ExecutionException) exception;
+            }
+            final BaseException mapped = ExceptionAdapter.baseExceptionFromException(exception);
+            telemetry.owner.complete(mapped);
+            if (exception instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new ExecutionException(mapped);
+        } finally {
+            if (telemetry.owner != null) {
+                telemetry.owner.close();
+            }
+        }
+    }
+
+    private static final class RequestTelemetry {
+        private OnboardingTelemetryRequest owner;
+        private boolean suppliedRecorderExternallyOwned;
+    }
+
+    private AcquireTokenResult acquireTokenInternal(
+            @NonNull final InteractiveTokenCommandParameters parameters,
+            @NonNull final RequestTelemetry telemetry)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodTag = TAG + ":acquireToken";
 
@@ -168,7 +234,8 @@ public class LocalMSALController extends BaseController {
         //2) Request authorization interactively
         @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult result = performAuthorizationRequest(
                 oAuth2Strategy,
-                parametersWithScopes
+                parametersWithScopes,
+                telemetry
         );
         acquireTokenResult.setAuthorizationResult(result);
 
@@ -241,7 +308,8 @@ public class LocalMSALController extends BaseController {
     // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
-                                                            @NonNull final InteractiveTokenCommandParameters parameters)
+                                                            @NonNull final InteractiveTokenCommandParameters parameters,
+                                                            @NonNull final RequestTelemetry telemetry)
             throws ExecutionException, InterruptedException, ClientException {
 
         parameters.getPlatformComponents()
@@ -258,6 +326,8 @@ public class LocalMSALController extends BaseController {
                 );
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
+        registerOnboardingTelemetry(parameters, telemetry);
+
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
         mAuthorizationFuture = strategy.requestAuthorization(
                 mAuthorizationRequest,
@@ -270,6 +340,49 @@ public class LocalMSALController extends BaseController {
         mAuthorizationFuture = null;
 
         return result;
+    }
+
+    private void registerOnboardingTelemetry(
+            @NonNull final InteractiveTokenCommandParameters parameters,
+            @NonNull final RequestTelemetry telemetry) {
+        try {
+            if (!(mAuthorizationRequest instanceof MicrosoftAuthorizationRequest)) {
+                return;
+            }
+            final java.util.UUID correlationId =
+                    ((MicrosoftAuthorizationRequest) mAuthorizationRequest).getCorrelationId();
+            if (correlationId == null) {
+                return;
+            }
+            final String requestId = correlationId.toString();
+            // A pre-registered recorder belongs to its external owner, including across interruption.
+            if (telemetry.owner == null && (telemetry.suppliedRecorderExternallyOwned
+                    || OnboardingRecorderRegistry.get(requestId) != null)) {
+                return;
+            }
+            if (telemetry.owner == null
+                    && parameters instanceof AndroidInteractiveTokenCommandParameters
+                    && !TextUtils.isEmpty(parameters.getOnboardingSeedJson())
+                    && !parameters.getOnboardingSeedJson().trim().isEmpty()) {
+                final AndroidInteractiveTokenCommandParameters androidParameters =
+                        (AndroidInteractiveTokenCommandParameters) parameters;
+                if (androidParameters.getActivity() == null
+                        || androidParameters.getActivity().getApplicationContext() == null) {
+                    return;
+                }
+                telemetry.owner = new OnboardingTelemetryRequest(new OnboardingTelemetryRecorder(
+                        parameters.getOnboardingSeedJson(),
+                        parameters.getClientId(),
+                        TextUtils.join(" ", new TreeSet<>(parameters.getScopes())),
+                        androidParameters.getActivity().getApplicationContext()
+                ));
+            }
+            if (telemetry.owner != null) {
+                telemetry.owner.register(requestId);
+            }
+        } catch (final RuntimeException exception) {
+            Logger.warn(TAG, "Unable to initialize onboarding telemetry.");
+        }
     }
 
     @Override

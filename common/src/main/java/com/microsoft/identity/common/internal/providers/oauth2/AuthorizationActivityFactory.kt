@@ -133,7 +133,8 @@ object AuthorizationActivityFactory {
             )
             putExtra(
                 DiagnosticContext.CORRELATION_ID,
-                DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
+                parameters.requestCorrelationId
+                    ?: DiagnosticContext.INSTANCE.requestContext[DiagnosticContext.CORRELATION_ID]
             )
             putExtra(
                 SerializableSpanContext.SERIALIZABLE_SPAN_CONTEXT, CommonMoshiJsonAdapter().toJson(

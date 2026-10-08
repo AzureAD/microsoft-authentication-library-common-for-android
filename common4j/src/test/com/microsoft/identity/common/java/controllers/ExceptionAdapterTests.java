@@ -87,6 +87,30 @@ public class ExceptionAdapterTests {
     }
 
     @Test
+    public void testOnboardingBlobSurvivesAuthorizationFailureAndCancellation() {
+        for (final AuthorizationStatus status : new AuthorizationStatus[]{
+                AuthorizationStatus.FAIL, AuthorizationStatus.USER_CANCEL, AuthorizationStatus.SDK_CANCEL}) {
+            final AcquireTokenResult result = new AcquireTokenResult();
+            result.setAuthorizationResult(new MicrosoftStsAuthorizationResult(status,
+                    new MicrosoftStsAuthorizationErrorResponse("error", "description")));
+            result.setOnboardingBlob("{\"blocking_errors\":[\"530003\",\"530003\"]}");
+
+            assertEquals(result.getOnboardingBlob(),
+                    ExceptionAdapter.exceptionFromAcquireTokenResult(result, null).getOnboardingBlob());
+        }
+    }
+
+    @Test
+    public void testOnboardingBlobSurvivesTokenFailure() {
+        final AcquireTokenResult result = new AcquireTokenResult();
+        result.setTokenResult(new TokenResult(new TokenErrorResponse()));
+        result.setOnboardingBlob("{\"blocking_errors\":[\"530003\"]}");
+
+        assertEquals(result.getOnboardingBlob(),
+                ExceptionAdapter.exceptionFromAcquireTokenResult(result, null).getOnboardingBlob());
+    }
+
+    @Test
     public void testBaseExceptionFromException_TerminalException() throws Exception{
         final TerminalException t = new TerminalException("errorMsg", ClientException.KEY_RING_WRITE_FAILURE);
         final BaseException e = ExceptionAdapter.baseExceptionFromException(t);

@@ -231,7 +231,8 @@ public abstract class AuthorizationFragment extends Fragment {
     public void onDestroy() {
         final String methodTag = TAG + ":onDestroy";
         Logger.info(methodTag, "");
-        if (!mAuthResultSent) {
+        final FragmentActivity activity = getActivity();
+        if (!mAuthResultSent && (activity == null || !activity.isChangingConfigurations())) {
             Logger.info(methodTag,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );
@@ -464,4 +465,3 @@ public abstract class AuthorizationFragment extends Fragment {
         return new LinkedHashMap<>(mUrlStatusTracker);
     }
 }
-

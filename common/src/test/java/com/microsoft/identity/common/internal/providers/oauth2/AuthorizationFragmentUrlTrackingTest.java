@@ -26,6 +26,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
+import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationFragment.UrlStatus;
 
@@ -33,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.util.ReflectionHelpers;
 
 import java.util.Map;
 
@@ -69,6 +77,24 @@ public class AuthorizationFragmentUrlTrackingTest {
     @Before
     public void setUp() {
         mFragment = new TestAuthorizationFragment();
+    }
+
+    @Test
+    public void onDestroy_configurationChangeDoesNotCancelRequest() {
+        final TestAuthorizationFragment fragment = spy(new TestAuthorizationFragment());
+        final FragmentActivity activity = mock(FragmentActivity.class);
+        when(fragment.getActivity()).thenReturn(activity);
+        when(activity.isChangingConfigurations()).thenReturn(true);
+
+        fragment.onDestroy();
+
+        assertFalse(ReflectionHelpers.getField(fragment, "mAuthResultSent"));
+    }
+
+    @Test
+    public void onDestroy_terminalDestructionStillCancelsRequest() {
+        mFragment.onDestroy();
+        assertTrue(ReflectionHelpers.getField(mFragment, "mAuthResultSent"));
     }
 
     // -----------------------------------------------------------------------
