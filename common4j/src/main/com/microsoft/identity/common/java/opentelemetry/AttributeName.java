@@ -514,6 +514,16 @@ public enum AttributeName {
     is_webcp_in_webview_enabled,
 
     /**
+     * Records whether authorize-only Device-CA credential forwarding is enabled.
+     */
+    device_ca_authorize_only_forwarding_enabled,
+
+    /**
+     * Records whether the original request headers were withheld from a Device-CA load.
+     */
+    device_ca_request_headers_skipped,
+
+    /**
      * Records the if webview received an SSL error and
      * corresponding primary error code.
      */

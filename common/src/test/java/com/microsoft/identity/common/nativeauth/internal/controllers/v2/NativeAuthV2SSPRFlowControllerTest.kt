@@ -58,23 +58,15 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Focused unit tests for [NativeAuthV2FlowController], covering the app-triggered
- * sign-in-after-reset behaviour added to match the first-pass iOS E2E completion logic:
- *
- * - A successful password reset (start / submit-code / submit-new-password, including both the
- *   fast-forward and poll-completion paths) now returns
- *   [NativeAuthV2CommandResult.SignInAfterResetPasswordRequired] instead of eagerly performing the
- *   token exchange.
- * - [NativeAuthV2FlowController.signInAfterResetPassword] is the only entry point that performs
- *   the token exchange (via the shared, unchanged `completeFlow` path), and now returns typed
- *   [INativeAuthCommandResult.Redirect] / [INativeAuthCommandResult.APIError] results instead of
- *   throwing.
+ * Unit tests for the V2 self-service password reset (SSPR) orchestration in
+ * [NativeAuthV2FlowController]: reset start, method selection and risk verification, code
+ * submission, password update and polling, and explicit sign-in after reset.
  *
  * [NativeAuthV2OAuth2Strategy] and [NativeAuthCIAMAuthority] are mocked so these tests exercise only
- * the controller's own branching/mapping logic, not the (unchanged) HTTP or cache layers
- * underneath `completeFlow`'s success path.
+ * the controller's branching, error mapping, and token-request/cache parameter handling, not the
+ * HTTP or cache implementations.
  */
-class NativeAuthV2FlowControllerTest {
+class NativeAuthV2SSPRFlowControllerTest {
 
     private val correlationId = "test-correlation-id"
 

@@ -1182,8 +1182,25 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             if (isWebCpInWebviewFeatureEnabled(originalUrl)) {
                 Logger.info(methodTag, "Loading device CA request in WebView.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), true);
-                String httpsUrl = originalUrl.replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
-                view.loadUrl(httpsUrl, mRequestHeaders);
+                final String httpsUrl = originalUrl.replace(
+                        AuthenticationConstants.Broker.BROWSER_EXT_PREFIX,
+                        "https://");
+                final boolean authorizeOnlyForwardingEnabled =
+                        CommonFlightsManager.INSTANCE
+                                .getFlightsProvider()
+                                .isFlightEnabled(
+                                        CommonFlight.ENABLE_DEVICE_CA_AUTHORIZE_ONLY_CREDENTIAL_FORWARDING);
+                span.setAttribute(
+                        AttributeName.device_ca_authorize_only_forwarding_enabled.name(),
+                        authorizeOnlyForwardingEnabled);
+                if (authorizeOnlyForwardingEnabled) {
+                    span.setAttribute(
+                            AttributeName.device_ca_request_headers_skipped.name(),
+                            true);
+                    view.loadUrl(httpsUrl);
+                } else {
+                    view.loadUrl(httpsUrl, mRequestHeaders);
+                }
             } else {
                 Logger.info(methodTag, "Loading device CA request in browser.");
                 span.setAttribute(AttributeName.is_webcp_in_webview_enabled.name(), false);
