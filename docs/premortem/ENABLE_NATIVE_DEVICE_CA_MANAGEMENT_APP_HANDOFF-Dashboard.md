@@ -27,7 +27,7 @@ At the time of the version-specific validation, sandbox contained two spans from
 
 Both spans had `span_status=OK`, a terminal routing outcome, and `google_dpc_device_owner` as the detected management owner. Production contained no `ProcessDeviceCaRequest` spans at validation time, which is expected before a build containing the new telemetry is deployed.
 
-The flight defaults to `true`. Normal production telemetry should therefore report `is_native_device_ca_management_app_handoff_enabled=true`. A `false` value is expected only after the ECS kill switch is used.
+The flight defaults to `true`. `is_native_device_ca_management_app_handoff_enabled` records the effective native-routing gate (`isRunningOnAuthService && flight enabled`), not the raw ECS value. Within this dashboard's measured brokered WebCP scope, normal production telemetry should report `true`; `false` is expected after the ECS kill switch is used. The Teams IP Phone compatibility path returns before evaluating this gate and is displayed as `not_evaluated`.
 
 The queries use `column_ifexists()` because some newly added optional fallback columns will not be present in the production table schema until telemetry carrying those attributes is ingested.
 
@@ -43,7 +43,7 @@ This page monitors how Android Broker routes WebCP Device CA requests when `Enab
 
 For this feature, a successful routing outcome means that Android accepted the intended management-app or fallback launch/load and the broker returned `MDM_FLOW`. The original authorization request then ends with `device_needs_to_be_managed`. Re-WPJ behavior inside the management app and later authentication attempts are outside this page's scope.
 
-The page also highlights terminal broker-side routing failures, changes in fallback usage, missing terminal outcomes, and unexpected kill-switch state. `Flight=true` is the normal production state; `Flight=false` is expected only after rollback.
+The page also highlights terminal broker-side routing failures, changes in fallback usage, missing terminal outcomes, and unexpected effective routing-gate state. `Flight=true` is normal for measured brokered WebCP traffic, `Flight=not_evaluated` is expected for the Teams IP Phone compatibility path, and `Flight=false` is expected after rollback.
 
 ## Panel 1 - Device CA span volume and telemetry completeness
 
@@ -63,9 +63,13 @@ android_spans
 | where _broker_host_app_version has "all"
     or AppInfo_Version in (_broker_host_app_version)
 | where span_name == "ProcessDeviceCaRequest"
-| extend Flight = tolower(tostring(column_ifexists(
-             "is_native_device_ca_management_app_handoff_enabled", ""))),
-         Outcome = tostring(column_ifexists("device_ca_routing_outcome", ""))
+| extend Outcome = tostring(column_ifexists("device_ca_routing_outcome", "")),
+         RawFlight = tolower(tostring(column_ifexists(
+             "is_native_device_ca_management_app_handoff_enabled", "")))
+| extend Flight = iff(
+             Outcome == "legacy_company_portal_launch_succeeded",
+             "not_evaluated",
+             RawFlight)
 | summarize Spans = count(),
             MissingOutcome = countif(isempty(Outcome))
   by Day = bin(EventInfo_Time, 1d), Flight
@@ -74,17 +78,18 @@ android_spans
 
 Expected during normal operation:
 
-- `Flight` is `true`.
+- `Flight` is `true` for measured brokered WebCP traffic.
+- `Flight` is `not_evaluated` for the Teams IP Phone compatibility path.
 - `MissingOutcome` is zero.
 - `false` appears only after rollback.
 
-Any missing flight value or terminal outcome requires investigation before interpreting the other panels.
+Any other missing flight value or terminal outcome requires investigation before interpreting the other panels.
 
 ## Panel 2 - Device CA routing success rate
 
 **Visualization:** Line chart
 
-**X axis:** `Day`
+**X axis:** `Hour`
 
 **Y axis:** `RoutingSuccessRatePct`
 
@@ -104,43 +109,58 @@ android_spans
                     "browser_launch_failed",
                     "webview_load_failed",
                     "unexpected_routing_failure"))
-  by Day = bin(EventInfo_Time, 1d)
+  by Hour = bin(EventInfo_Time, 1h)
 | extend RoutingSuccessRatePct =
     round(100.0 * (Total - TerminalFailures) / Total, 2)
-| project Day, Total, TerminalFailures, RoutingSuccessRatePct
-| order by Day asc
+| project Hour, Total, TerminalFailures, RoutingSuccessRatePct
+| order by Hour asc
 ```
 
 Investigate a decrease greater than 0.5 percentage points or a terminal-failure rate greater than 2x the stable baseline, sustained for one hour with at least 100 sampled spans.
 
 ## Panel 3 - Terminal routing outcome distribution
 
-**Visualization:** Table or bar chart
+**Visualization:** Table
 
 **Category:** `Outcome`
 
-**Values:** `Count`, `SharePct`
+**Values:** `Count`, `SharePct`, `NativeHandoffSuccessPct`
 
-**Split/filter:** `AppInfo_Version`
+**Split/filter:** `AppInfo_Version`, `Owner`
 
 **Title:** `Device CA terminal routing outcomes`
 
 ```kusto
-let Counts = android_spans
+let Base = android_spans
 | where EventInfo_Time between (_startTime .. _endTime)
 | where _broker_host_app_version has "all"
     or AppInfo_Version in (_broker_host_app_version)
 | where span_name == "ProcessDeviceCaRequest"
-| extend Outcome = tostring(column_ifexists("device_ca_routing_outcome", ""))
-| summarize Count = count() by Outcome, AppInfo_Version;
+| extend Outcome = tostring(column_ifexists("device_ca_routing_outcome", "")),
+         Owner = tostring(column_ifexists("device_ca_management_owner", ""));
+let Counts = Base
+| summarize Count = count() by Outcome, Owner, AppInfo_Version;
+let Totals = Base
+| summarize Total = count() by AppInfo_Version;
+let Eligible = Base
+| where Owner in (
+    "company_portal_profile_owner",
+    "google_dpc_profile_owner",
+    "google_dpc_device_owner")
+| summarize EligibleTotal = count(),
+            NativeSuccess = countif(Outcome == "native_handoff_succeeded")
+  by AppInfo_Version;
 Counts
-| join kind=inner (
-    Counts
-    | summarize Total = sum(Count) by AppInfo_Version
-) on AppInfo_Version
-| extend SharePct = round(100.0 * Count / Total, 2)
-| project AppInfo_Version, Outcome, Count, SharePct
-| order by AppInfo_Version asc, Count desc
+| join kind=inner Totals on AppInfo_Version
+| join kind=leftouter Eligible on AppInfo_Version
+| extend SharePct = round(100.0 * Count / Total, 2),
+         NativeHandoffSuccessPct = iff(
+             EligibleTotal > 0,
+             round(100.0 * NativeSuccess / EligibleTotal, 2),
+             real(null))
+| project AppInfo_Version, Owner, Outcome, Count, SharePct,
+          EligibleTotal, NativeSuccess, NativeHandoffSuccessPct
+| order by AppInfo_Version asc, Owner asc, Count desc
 ```
 
 Successful terminal outcomes include:
@@ -159,6 +179,8 @@ Failure outcomes are:
 - `unexpected_routing_failure`
 
 Track the fallback share even when the terminal result succeeds. Investigate a fallback-share increase greater than 5 percentage points or 2x the stable baseline.
+
+`NativeHandoffSuccessPct` uses only requests with a supported management owner as its denominator. Investigate a value below 95% when there are at least 100 eligible sampled spans.
 
 ## Panel 4 - Detected management owner
 
@@ -235,11 +257,16 @@ union
 | order by AppInfo_Version asc, Stage asc, Count desc
 ```
 
-Possible App Link and generic HTTPS outcomes:
+Possible package App Link outcomes:
 
 - `launch_succeeded`
 - `launch_failed`
+
+Possible generic HTTPS outcomes:
+
 - `handler_not_found`
+- `launch_succeeded`
+- `launch_failed`
 
 Possible WebView outcomes:
 

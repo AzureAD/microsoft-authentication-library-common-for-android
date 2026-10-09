@@ -51,9 +51,9 @@ The original authorization request ends when `MDM_FLOW` is returned and is conve
 For the default-on production release:
 
 1. Use the six Device CA tiles in the [New Android Broker Dashboard](https://dataexplorer.azure.com/dashboards/3f6536b7-62e6-407d-8071-31575adb78bb#627f67cd-0bfd-450e-8a81-f5e03758a4c3) to monitor volume/completeness, routing success, terminal outcomes, management owner, fallback stages, and terminal failures. Use the existing Broker Host App Version parameter for release-specific filtering.
-2. Establish a stable `is_native_device_ca_management_app_handoff_enabled=true` baseline for terminal routing failures, fallback outcomes, and Device CA request volume.
+2. Establish a stable effective native-routing-gate baseline (`is_native_device_ca_management_app_handoff_enabled=true`) for terminal routing failures, fallback outcomes, and Device CA request volume.
 3. Validate that every sampled span has a terminal `device_ca_routing_outcome`.
-4. Confirm that production telemetry reports the flight as `true` and appears only for brokered WebCP Device CA requests. `false` should appear only after rollback.
+4. Confirm that measured brokered WebCP telemetry reports the effective native-routing gate as `true`. The Teams IP Phone compatibility path does not evaluate the gate. Within this measured scope, `false` should appear after rollback.
 5. Use ad-hoc Kusto investigation to split a suspicious app-version or management-owner segment further by Android version, broker package, OEM, or management mode.
 6. Do not make a rollback decision from fewer than 100 sampled Device CA spans in the selected app-version or management-owner segment. The Broker default sampling configuration currently samples `ProcessDeviceCaRequest` at 50%, so review sampled counts with every rate.
 
@@ -65,7 +65,7 @@ Review the [Device CA dashboard](https://dataexplorer.azure.com/dashboards/3f653
 
 1. **Device CA span volume and telemetry completeness**
    - Compare `ProcessDeviceCaRequest` volume by app version.
-   - Confirm `is_native_device_ca_management_app_handoff_enabled=true`; `false` is expected only after rollback.
+   - Confirm the effective native-routing gate is `true`; `not_evaluated` is expected for the Teams IP Phone compatibility path, and `false` is expected after rollback.
    - Verify all sampled spans have a terminal routing outcome.
    - Investigate any spans that are brokerless or not in WebCP.
 2. **Device CA routing success rate**
@@ -106,15 +106,15 @@ Expected behavior after propagation:
 
 After rollback:
 
-1. Confirm new spans report `is_native_device_ca_management_app_handoff_enabled=false`.
-2. Confirm native outcomes stop for the affected app versions after ECS propagation.
+1. Confirm new non-compatibility spans report `is_native_device_ca_management_app_handoff_enabled=false`.
+2. Confirm native outcomes stop for the affected app versions after ECS propagation; use both signals as rollback evidence.
 3. Compare terminal routing failure rates with the stable default-on baseline.
 4. Preserve the affected app-version, Android-version, and management-owner dimensions plus example correlation IDs for investigation.
 
 ## Post-release criteria to keep the default enabled
 
 - No monitoring threshold breach during the first 14 days of the production release.
-- At least 5,000 sampled Device CA spans with the flight reported as `true` across supported Android versions and management modes.
+- At least 5,000 sampled Device CA spans with the effective native-routing gate reported as `true` across supported Android versions and management modes.
 - No unexplained telemetry completeness gaps.
 - Terminal routing failures remain within the thresholds above.
 - Native handoff and fallback distributions remain stable by management owner and app version.
