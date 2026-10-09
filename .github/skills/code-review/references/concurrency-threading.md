@@ -65,21 +65,21 @@ Avoid `GlobalScope`; use lifecycle, `ViewModel`, or injected scopes. When a thre
 
 Report an order inversion only with distinct locks, conflicting held-lock order, and concurrently reachable paths. For this illustrative shared instance, concurrent `refresh()` and `rotate()` can deadlock:
 
-```java
-final class LockOrderExample {
-    private final Object cacheLock = new Object();
-    private final Object keyLock = new Object();
-    private int version;
+```kotlin
+private class LockOrderExample {
+    private val cacheLock = Any()
+    private val keyLock = Any()
+    private var version = 0
 
-    void refresh() {
-        synchronized (cacheLock) {
-            synchronized (keyLock) { version++; }
+    fun refresh() {
+        synchronized(cacheLock) {
+            synchronized(keyLock) { version++ }
         }
     }
 
-    void rotate() {
-        synchronized (keyLock) {
-            synchronized (cacheLock) { version++; }
+    fun rotate() {
+        synchronized(keyLock) {
+            synchronized(cacheLock) { version++ }
         }
     }
 }
@@ -90,7 +90,7 @@ ABBA evidence: T1 in `refresh` holds `cacheLock` and waits for `keyLock`; T2 in 
 True negatives, absent another conflicting path:
 
 - Both entry points acquire `cacheLock` then `keyLock` on this same instance. Nesting alone is not a defect.
-- `synchronized (cacheLock) { synchronized (cacheLock) { version++; } }` reenters the same JVM monitor on one thread. The same applies when a helper reacquires that exact monitor.
+- `synchronized(cacheLock) { synchronized(cacheLock) { version++ } }` reenters the same JVM monitor on one thread. The same applies when a helper reacquires that exact monitor.
 - Different instances' locks do not form this ABBA cycle unless aliases or shared callees connect them; verify object identity first.
 
 Do not apply JVM reentry reasoning to `mutex.withLock { mutex.withLock { update() } }`: if that path reacquires the same Kotlin mutex before release, it cannot reenter. Establish the actual path/identity rather than treating every nested locking construct alike.
@@ -121,35 +121,37 @@ Revalidation after an irreversible call cannot undo stale authorization, duplica
 
 These are synthetic teaching examples, not claims about an actual incident/PR or Common runtime code. Assume safe publication and shared-instance concurrent reachability where specified. A negative applies only under its stated target, state, and lifetime constraints.
 
+Use Kotlin for language-neutral examples, matching the default for new code. Kotlin classes/functions are final by default; preserve intended virtual dispatch with explicit `open`/`override`. Java comparisons remain where virtual-by-default methods or legacy blocking-thread APIs are the teaching point. Translating a JVM monitor example does not mean replacing its monitor with a coroutine `Mutex`.
+
 #### Runtime override: ABBA versus the same target with consistent order
 
 Suppose only factory/implementation selection changed from exact `BaseWork` to `LockingWork`; the interface call and its outer acquisition are unchanged:
 
-```java
-final class DispatchExample {
-    interface Work { void run(); }
-    static class BaseWork implements Work {
-        public void run() { }
+```kotlin
+private class DispatchExample {
+    interface Work { fun run() }
+    open class BaseWork : Work {
+        override fun run() {}
     }
 
-    private final Object cacheLock = new Object();
-    private final Object keyLock = new Object();
-    private final Work work = new LockingWork();
-    private int version;
+    private val cacheLock = Any()
+    private val keyLock = Any()
+    private val work: Work = LockingWork()
+    private var version = 0
 
-    private final class LockingWork extends BaseWork {
-        @Override public void run() {
-            synchronized (keyLock) { version++; }
+    private inner class LockingWork : BaseWork() {
+        override fun run() {
+            synchronized(keyLock) { version++ }
         }
     }
 
-    void refresh() {
-        synchronized (cacheLock) { work.run(); }
+    fun refresh() {
+        synchronized(cacheLock) { work.run() }
     }
 
-    void rotate() {
-        synchronized (keyLock) {
-            synchronized (cacheLock) { version++; }
+    fun rotate() {
+        synchronized(keyLock) {
+            synchronized(cacheLock) { version++ }
         }
     }
 }
@@ -159,41 +161,50 @@ final class DispatchExample {
 
 **Negative with the same runtime target:** replace `rotate` with the following, with no other reachable reverse path. Both operations acquire `cacheLock -> keyLock`; do not flag the interface or overridable call:
 
-```java
-void rotate() {
-    synchronized (cacheLock) {
-        synchronized (keyLock) { version++; }
+```kotlin
+fun rotate() {
+    synchronized(cacheLock) {
+        synchronized(keyLock) { version++ }
     }
 }
 ```
 
 Exact `BaseWork` with its verified empty nonblocking body is another negative. Abstract-method dispatch requires the same runtime-target analysis, not an automatic finding.
 
-#### Callback: partial invariant versus completed-state JVM reentry
+Compact Java comparison: a non-final instance method is virtual without Kotlin's `open`; the actual injected subclass body still matters. In Kotlin, `open class BaseWork` allows subclassing and its `override fun run()` remains overridable unless explicitly marked `final`.
 
 ```java
-final class CallbackStateExample {
-    private final Object stateLock = new Object();
-    private int left;
-    private int right;
+class JavaBaseWork {
+    void run() { }
+}
+final class JavaOverrideWork extends JavaBaseWork {
+    @Override void run() { }
+}
+```
 
-    boolean balanced() {
-        synchronized (stateLock) { return left == right; }
-    }
+#### Callback: partial invariant versus completed-state JVM reentry
 
-    void updatePartial(final int value, final Runnable listener) {
-        synchronized (stateLock) {
-            left = value;
-            listener.run();
-            right = value;
+```kotlin
+private class CallbackStateExample {
+    private val stateLock = Any()
+    private var left = 0
+    private var right = 0
+
+    fun balanced(): Boolean = synchronized(stateLock) { left == right }
+
+    fun updatePartial(value: Int, listener: () -> Unit) {
+        synchronized(stateLock) {
+            left = value
+            listener()
+            right = value
         }
     }
 
-    void updateComplete(final int value, final Runnable listener) {
-        synchronized (stateLock) {
-            left = value;
-            right = value;
-            listener.run();
+    fun updateComplete(value: Int, listener: () -> Unit) {
+        synchronized(stateLock) {
+            left = value
+            right = value
+            listener()
         }
     }
 }
@@ -208,7 +219,6 @@ final class CallbackStateExample {
 ```java
 final class WorkerExample {
     private final Object stateLock = new Object();
-    private final java.util.ArrayDeque<Runnable> pending = new java.util.ArrayDeque<>();
     private int value;
 
     int read() {
@@ -223,83 +233,103 @@ final class WorkerExample {
         }
     }
 
-    void enqueue() {
-        synchronized (stateLock) { pending.add(() -> { read(); }); }
-    }
-
-    void drainOne() {
-        final Runnable notification;
-        synchronized (stateLock) { notification = pending.poll(); }
-        if (notification != null) { notification.run(); }
-    }
 }
 ```
 
-**Positive:** T1 holds `stateLock` and waits for worker completion in `join`; the worker waits for that exact monitor in `read`. Async execution does not break this wait cycle. The pending queue in the negative path is a verified private standard `ArrayDeque`, not an unknown executor that might invoke inline.
+**Positive (legacy Java thread API):** T1 holds `stateLock` and waits for worker completion in `join`; the worker waits for that exact monitor in `read`. Async execution does not break this wait cycle.
+
+For the deferred negative, use a Kotlin function type rather than Java `Runnable` interop:
+
+```kotlin
+private class DeferredExample {
+    private val stateLock = Any()
+    private val pending = java.util.ArrayDeque<() -> Unit>()
+    private var value = 0
+
+    fun read(): Int = synchronized(stateLock) { value }
+
+    fun enqueue() {
+        synchronized(stateLock) { pending.add { read(); Unit } }
+    }
+
+    fun drainOne() {
+        val notification = synchronized(stateLock) { pending.poll() }
+        notification?.invoke()
+    }
+}
+```
 
 **Negative:** `enqueue` only stores the lambda; `drainOne` invokes it after releasing its acquisition, and no caller waits under `stateLock`. With all queue accesses guarded and no outer lock held by the draining caller, registration is not invocation-under-lock. This notification intentionally reads current state at delivery; if the contract instead needs event-time state/order, preserve that with a snapshot/ordered delivery rather than assuming equivalence.
 
+The queue is a verified private standard `ArrayDeque`, not an unknown executor that might invoke inline. `Thread.join` intentionally remains Java; coroutine suspension and `Mutex` ownership require their own analysis below.
+
 #### Collection read: verified standard implementation versus unknown custom dispatch
 
-```java
-final class CollectionExample {
-    private final Object ownerGuard = new Object();
-    private final java.util.List<String> owned = new java.util.ArrayList<>();
+```kotlin
+private class CollectionExample {
+    private val ownerGuard = Any()
+    private val owned: MutableList<String> = java.util.ArrayList()
 
-    int ownedSize() {
-        synchronized (ownerGuard) { return owned.size(); }
-    }
+    fun ownedSize(): Int = synchronized(ownerGuard) { owned.size }
 
-    int suppliedSize(final java.util.List<?> supplied) {
-        synchronized (ownerGuard) { return supplied.size(); }
-    }
+    fun suppliedSize(supplied: List<*>): Int =
+        synchronized(ownerGuard) { supplied.size }
 }
 ```
 
-**Negative:** `owned` is an actual non-escaping standard `ArrayList`; every access uses `ownerGuard`. Its bounded `size()` read adds no lock/wait edge. This conclusion follows the construction and guard, not the declared `List` name.
+**Negative:** `owned` is an actual non-escaping standard `ArrayList`; every access uses `ownerGuard`. Its bounded `size` read adds no lock/wait edge. This conclusion follows the construction and guard, not the declared `List` name.
 
 Do not generalize this leaf to all read operations: even standard `ArrayList.contains` can invoke the search argument's `equals`. Trace that target/body and any subclass override rather than treating the collection class as a whitelist.
 
-**Unknown:** `suppliedSize` alone does not establish the runtime target or a cycle. Do not call it safe or warn merely because it is an interface call. A verified custom `size()` taking B plus a reachable B -> this instance's `ownerGuard` path would be a positive ABBA case; inspect that implementation rather than whitelisting `Map`/`List` or inventing the path.
+**Unknown:** `suppliedSize` alone does not establish the runtime target or a cycle. Do not call it safe or warn merely because it is an interface call. A verified custom `size` getter taking B plus a reachable B -> this instance's `ownerGuard` path would be a positive ABBA case; inspect that implementation rather than whitelisting `Map`/`List` or inventing the path. For example, this runtime target adds a real edge to `secondLock`, but the reverse path must still be established:
+
+```kotlin
+val custom = object : AbstractList<String>() {
+    override val size: Int
+        get() = synchronized(secondLock) { 0 }
+
+    override fun get(index: Int): String =
+        throw IndexOutOfBoundsException(index.toString())
+}
+```
 
 #### Open call: version revalidation versus an invalidation race
 
-```java
-final class OpenCallExample {
-    private final Object stateLock = new Object();
-    private long generation;
-    private boolean allowed = true;
-    private int value;
+```kotlin
+private class OpenCallExample {
+    private val stateLock = Any()
+    private var generation = 0L
+    private var allowed = true
+    private var value = 0
 
-    void invalidate() {
-        synchronized (stateLock) {
-            allowed = false;
-            generation++;
+    fun invalidate() {
+        synchronized(stateLock) {
+            allowed = false
+            generation++
         }
     }
 
-    boolean computeUnsafe(final java.util.function.IntSupplier compute) {
-        synchronized (stateLock) {
-            if (!allowed) { return false; }
+    fun computeUnsafe(compute: () -> Int): Boolean {
+        synchronized(stateLock) {
+            if (!allowed) return false
         }
-        final int result = compute.getAsInt();
-        synchronized (stateLock) {
-            value = result;
-            return true;
+        val result = compute()
+        synchronized(stateLock) {
+            value = result
+            return true
         }
     }
 
-    boolean computeValidated(final java.util.function.IntSupplier compute) {
-        final long observed;
-        synchronized (stateLock) {
-            if (!allowed) { return false; }
-            observed = generation;
+    fun computeValidated(compute: () -> Int): Boolean {
+        val observed = synchronized(stateLock) {
+            if (!allowed) return false
+            generation
         }
-        final int result = compute.getAsInt();
-        synchronized (stateLock) {
-            if (!allowed || generation != observed) { return false; }
-            value = result;
-            return true;
+        val result = compute()
+        synchronized(stateLock) {
+            if (!allowed || generation != observed) return false
+            value = result
+            return true
         }
     }
 }
@@ -313,11 +343,19 @@ Assume the verified computation uses immutable thread-owned input, produces a di
 
 #### Mutex callback: reacquisition versus invocation after release
 
-These Kotlin fragments assume one owned `kotlinx.coroutines.sync.Mutex`, mutable `value` guarded by that mutex, a suspending caller, and a callback wired to `write()`:
+This Kotlin example owns one `kotlinx.coroutines.sync.Mutex`, guards mutable `value` with that mutex, and assumes a suspending caller with a callback wired to `write()`:
 
 ```kotlin
-suspend fun write() = mutex.withLock { value++ }
-suspend fun invokeLocked(callback: suspend () -> Unit) = mutex.withLock { callback() }
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+private class MutexCallbackExample {
+    private val mutex = Mutex()
+    private var value = 0
+
+    suspend fun write() = mutex.withLock { value++ }
+    suspend fun invokeLocked(callback: suspend () -> Unit) = mutex.withLock { callback() }
+}
 ```
 
 **Positive:** `invokeLocked { write() }` reacquires that same non-reentrant mutex before the outer release and self-suspends (or fails with a repeated owner token). Cite both the callback wiring and the concrete mutex identity, not just nested syntax.
@@ -326,24 +364,26 @@ suspend fun invokeLocked(callback: suspend () -> Unit) = mutex.withLock { callba
 
 ## Monitor stability
 
-Flag replacement only when it can split protection for the same shared state. Example members of a shared object:
+Flag replacement only when it can split protection for the same shared state. Example shared object:
 
-```java
-private volatile Object lock = new Object();
-private int count;
+```kotlin
+private class MonitorExample {
+    @Volatile private var lock: Any = Any()
+    private var count = 0
 
-void increment() {
-    synchronized (lock) { count++; }
-}
+    fun increment() {
+        synchronized(lock) { count++ }
+    }
 
-void replaceLock() {
-    lock = new Object();
+    fun replaceLock() {
+        lock = Any()
+    }
 }
 ```
 
 T1 can hold the old monitor while another thread replaces `lock` and T2 enters on the new monitor. Both increments now access `count` without a common exclusion/visibility boundary. `volatile` makes replacement visible, not mutually exclusive with holders of the old object.
 
-Safe counterexample: remove replacement, use `private final Object lock = new Object()` (or Kotlin `private val lock = Any()`), safely publish the owning object, and guard every relevant state access with that one stable monitor. Do not request `final` just because a monitor field is non-final if identity is verified stable.
+Safe counterexample: remove replacement, use `private val lock = Any()` (Java: `private final Object lock = new Object()`), safely publish the owning object, and guard every relevant state access with that one stable monitor. Do not request `val`/`final` just because a monitor field is mutable/non-final if identity is verified stable.
 
 A final reference alone is not proof: two instances' private-final monitors do not protect the same static mutable map, and a final lock does not protect accesses that bypass it.
 
@@ -353,14 +393,19 @@ Require a concrete blocking/contended path **and** a safe narrowing. Example: a 
 
 Do not recommend moving guarded reads/writes outside a lock or removing synchronization for style. A shorter lock is not automatically safer. Unsafe check-then-act split for shared reservation state:
 
-```java
-boolean reserve() {
-    final boolean available;
-    synchronized (lock) { available = reserved < capacity; }
-    if (available) {
-        synchronized (lock) { reserved++; }
+```kotlin
+private class ReservationExample {
+    private val lock = Any()
+    private val capacity = 1
+    private var reserved = 0
+
+    fun reserve(): Boolean {
+        val available = synchronized(lock) { reserved < capacity }
+        if (available) {
+            synchronized(lock) { reserved++ }
+        }
+        return available
     }
-    return available;
 }
 ```
 
@@ -387,18 +432,25 @@ Moving this bounded, pure normalization before acquisition is safe: each call ow
 
 Compare effective coverage, not just keywords. Before, concurrent callers on the same instance serialize ID allocation:
 
-```java
-synchronized int nextId() { return ++id; }
+```kotlin
+@Synchronized fun nextId(): Int = ++id
 ```
 
-Dangerous after: a changed wrapper and helper have lost that monitor, so T1 and T2 can lose updates and return duplicate IDs:
+Here `id` is a mutable instance field and `@Synchronized` holds that instance's JVM monitor (`this`), not a coroutine mutex. Dangerous after: a changed wrapper and helper have lost that monitor, so T1 and T2 can lose updates and return duplicate IDs:
 
-```java
-int nextId() { return increment(); }
-private int increment() { return ++id; }
+```kotlin
+fun nextId(): Int = increment()
+private fun increment(): Int = ++id
 ```
 
 Safe extraction: retain the entry point's instance monitor for the whole operation, with every other helper caller holding that exact monitor:
+
+```kotlin
+@Synchronized fun nextId(): Int = increment()
+private fun increment(): Int = ++id
+```
+
+Brief Java comparison: the instance method's `synchronized` modifier holds the same `this` monitor; removing it from an unguarded wrapper loses the same protection.
 
 ```java
 synchronized int nextId() { return increment(); }

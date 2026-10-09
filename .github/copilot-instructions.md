@@ -276,7 +276,7 @@ These suppressions require the changed path to preserve confinement, immutabilit
 
 ### 3.11 Refactors and Finding Evidence
 - Compare protection before and after a refactor, including a removed `synchronized`/`@Synchronized`, class-to-instance monitor change, different receiver, or helper extraction. Replacing the original caller's monitor with a helper's own monitor does not preserve the original protection.
-- Dangerous example: `synchronized nextId()` becomes an unsynchronized wrapper calling an unguarded increment helper; concurrent calls on the same instance can lose updates. Changing a static synchronized method to instance synchronization while retaining shared static state likewise splits protection across instances.
+- Dangerous example: Kotlin `@Synchronized fun nextId()` becomes an unannotated wrapper calling an unguarded increment helper; concurrent calls on the same instance can lose updates. The annotation and Java's instance-method `synchronized` hold `this`; changing a static synchronized method to instance synchronization while retaining shared static state likewise splits protection across instances.
 - Safe counterexample: the original synchronized entry point calls a private helper under the same monitor, and every other helper caller holds that same monitor across the entire invariant. Do not demand redundant synchronization on the helper.
 - Cite a changed line (or the affected call/declaration for removed locking), the concrete monitor identity, conflicting paths/threads, before/after protection, actual impact, and minimal invariant-preserving fix. Apply the existing High/Medium impact criteria; never assign blanket severity based on nested locks, non-final references, or scope size.
 
@@ -290,7 +290,7 @@ These suppressions require the changed path to preserve confinement, immutabilit
 - Recommend a snapshot/open call only when state transition or reservation remains atomic under the original guard, the snapshot is immutable, and callback ordering, thread affinity, visibility, resource lifetime, and auth semantics are preserved. Revalidate generation/state or reconcile results after the call where needed. Revalidation alone cannot undo an irreversible operation: establish reservation/ownership and cancellation semantics before starting it; do not introduce duplicate side effects, stale-token/key use, check-then-act splits, or unsafe `volatile` substitutions. A verified consistent lock-order contract can be an alternative; do not mechanically finalize global APIs.
 - Cite the changed call or implementation/injection/override/callback line plus the held monitor, actual runtime callee, competing path or invariant access, and concrete impact. Use existing severity criteria; an interface call is not automatically High severity or a merge blocker.
 
-See [concurrency examples and counterexamples](skills/code-review/references/concurrency-threading.md) for the corresponding review procedure and compact cases.
+See [concurrency examples and counterexamples](skills/code-review/references/concurrency-threading.md) for the corresponding review procedure and Kotlin-first compact cases. Preserve intended polymorphism with Kotlin `open`/`override` (classes/functions are final by default); retain Java comparisons for virtual-by-default methods and legacy blocking-thread APIs. Translating examples does not justify changing JVM monitors to coroutine mutexes.
 
 --------------------------------------------------------------------------------
 
