@@ -142,6 +142,18 @@ public enum AttributeName {
     camera_permission_result,
 
     /**
+     * Outcome of a WebView file upload request: "selected", "cancelled", or "no_data" (OK);
+     * "launch_error", "superseded", or "abandoned" (ERROR).
+     */
+    webview_file_upload_result,
+
+    /**
+     * Privacy-safe bucket for the number of files returned by the system picker:
+     * "0", "1", "2-5", or "6+".
+     */
+    webview_file_upload_file_count_bucket,
+
+    /**
      * The correlation id sent from client app
      */
     correlation_id,
