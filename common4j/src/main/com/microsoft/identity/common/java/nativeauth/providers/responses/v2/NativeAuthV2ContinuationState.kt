@@ -181,6 +181,7 @@ class NativeAuthV2ContinuationState private constructor(
             NativeAuthV2LinkRelation.RESEND.value,
             NativeAuthV2LinkRelation.UPDATE.value,
             NativeAuthV2LinkRelation.POLL.value,
+            NativeAuthV2LinkRelation.RISK_VERIFY.value,
             NativeAuthV2LinkRelation.CONTINUE.value,
             NativeAuthV2LinkRelation.RESET_PASSWORD.value,
             NativeAuthV2LinkRelation.SIGN_IN.value,

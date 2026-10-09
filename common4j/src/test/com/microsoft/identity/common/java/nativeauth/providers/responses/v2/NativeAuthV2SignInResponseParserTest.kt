@@ -381,6 +381,82 @@ class NativeAuthV2SignInResponseParserTest {
     }
 
     @Test
+    fun parseInteraction_whenSmsChallengeRequiresRiskVerification_returnsInternalTransition() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """
+                {
+                  "continuationToken": "ct-risk",
+                  "action": "riskverify",
+                  "_links": {
+                    "riskverify": {
+                      "href": "/tenant/api/v1.0-internal/risk/phone/verify"
+                    }
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState = secondFactorState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.RiskVerificationRequired)
+        val riskVerification = result as NativeAuthV2InteractionApiResult.RiskVerificationRequired
+        assertEquals(
+            "/tenant/api/v1.0-internal/risk/phone/verify",
+            riskVerification.continuationState.href(NativeAuthV2LinkRelation.RISK_VERIFY)
+        )
+    }
+
+    @Test
+    fun parseInteraction_whenRiskVerificationLinkIsMissing_returnsProtocolError() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """{"continuationToken":"ct-risk","action":"riskverify"}"""
+            ),
+            previousState = secondFactorState()
+        )
+
+        assertInvalidState(result, "missing required link relation 'riskverify'")
+    }
+
+    @Test
+    fun parseInteraction_whenRiskVerificationReturnsSmsCodeContract_returnsCodeRequired() {
+        val result = parser.parseInteraction(
+            response = responseFrom(
+                """
+                {
+                  "continuationToken": "ct-sms",
+                  "action": "verify",
+                  "id": "sms-1",
+                  "type": "sms",
+                  "hint": "+X XXX XXX 34",
+                  "codeLength": 7,
+                  "_links": {
+                    "verify": { "href": "/tenant/sms/sms-1/verify" },
+                    "resend": { "href": "/tenant/sms/sms-1/challenge" }
+                  }
+                }
+                """.trimIndent()
+            ),
+            previousState = secondFactorState()
+        )
+
+        assertTrue(result is NativeAuthV2InteractionApiResult.CodeRequired)
+        val code = result as NativeAuthV2InteractionApiResult.CodeRequired
+        assertEquals(7, code.codeLength)
+        assertEquals("sms", code.challengeChannel)
+        assertEquals("+X XXX XXX 34", code.challengeTargetLabel)
+        assertEquals(
+            "/tenant/sms/sms-1/verify",
+            code.continuationState.href(NativeAuthV2LinkRelation.VERIFY)
+        )
+        assertEquals(
+            "/tenant/sms/sms-1/challenge",
+            code.continuationState.href(NativeAuthV2LinkRelation.RESEND)
+        )
+    }
+
+    @Test
     fun parseInteraction_whenSignInReachesContinueState_returnsReadyToComplete() {
         val result = parser.parseInteraction(
             response = responseFrom(

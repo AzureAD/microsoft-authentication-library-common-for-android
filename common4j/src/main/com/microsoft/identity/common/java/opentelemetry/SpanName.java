@@ -68,6 +68,7 @@ public enum SpanName {
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
+    ProcessDeviceCaRequest,
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
@@ -84,6 +85,11 @@ public enum SpanName {
      * covers the DRS request that installs the certificate rather than the activity that hosts it.
      */
     InstallCertActivity,
+
+    /**
+     * Span name for caller attribution at the legacy install-certificate deep-link route.
+     */
+    InstallCertDeepLinkActivity,
 
     /**
      * Span name for fetching initial ECS flight configurations.
@@ -151,5 +157,10 @@ public enum SpanName {
      * default span. Emitted only when the {@code EnablePKeyAuthSubmitUrlOriginValidation} flight is
      * on (AB#3706623).
      */
-    ProcessPKeyAuthChallenge
+    ProcessPKeyAuthChallenge,
+
+    /**
+     * Span name for original-caller assessment during legacy broker account enumeration.
+     */
+    LegacyBrokerUsersCallerEvaluation
 }

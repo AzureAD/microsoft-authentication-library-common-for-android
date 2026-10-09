@@ -173,6 +173,15 @@ class NativeAuthV2OAuth2Strategy(
     }
 
     /**
+     * Performs the internal risk-verification hop required after an SMS method challenge.
+     */
+    fun performRiskVerification(
+        state: NativeAuthV2ContinuationState
+    ): NativeAuthV2InteractionApiResult {
+        return nativeAuthV2Interactor.performRiskVerification(state = state)
+    }
+
+    /**
      * Submits a password to the server-provided password `verify` href. The buffer is cleared by
      * the interactor on every exit path.
      */
