@@ -31,12 +31,45 @@ The router contains a separate pre-existing exception for production-signed Team
    3. the existing WebView path.
 6. Unexpected runtime failures remain terminal and return the existing authorization error.
 
-## Risks
+## Risks and mitigations
 
-1. **The wrong management app is selected or no owner is detected.** Android enterprise topology differs across work profile, fully managed, COBO, COPE, COSU, and OEM implementations. Incorrect owner detection can send remediation to the wrong package or leave a managed user on the fallback path.
-2. **The fallback chain fails after native launch fails.** Package visibility, App Link verification, intent handlers, browser availability, or WebView loading can prevent every recovery route from succeeding.
-3. **The flight affects an unintended flow.** Brokerless requests, non-WebCP requests, and ordinary external website redirects must not use native Device CA routing.
-4. **Routing launches the management app more than once.** Repeated processing of the same Device CA request or lifecycle re-entry could open duplicate management-app activities before the authorization request ends.
+The likelihood ratings below are qualitative assessments based on routing scope, automated tests, and manual validation. They are not production incident probabilities; a production baseline does not exist yet.
+
+1. **The wrong management app is selected or no owner is detected**
+   - **Likelihood:** Low for selecting the wrong app. A missing supported owner is possible on an unsupported or unexpected management topology, but it is a safe fallback condition rather than a terminal failure.
+   - **Why it is bounded:** The router does not infer the owner from installed packages. It asks Android `DevicePolicyManager` whether Company Portal or Google DPC is the profile/device owner and uses a fixed mapping: Company Portal owner -> Company Portal; Google DPC owner -> Intune.
+   - **Pre-release evidence:** Unit tests cover Company Portal profile owner, Google DPC profile owner, Google DPC device owner, no supported owner, and unavailable `DevicePolicyManager`. Manual validation results are linked below.
+   - **Mitigation and response:** If no supported owner is detected, the request stays on the existing WebView/browser path. The management-owner tile exposes `none`, `device_policy_manager_unavailable`, and distribution changes. If telemetry indicates incorrect routing, disable the flight in ECS to restore legacy routing.
+
+2. **The fallback chain fails after native launch fails**
+   - **Likelihood:** Low to medium for an individual fallback failure because package visibility, App Link verification, browser policy, and OEM behavior vary. Low for a terminal failure because every recovery route must fail.
+   - **Why it is bounded:** Expected native-launch failures (`ActivityNotFoundException` or `SecurityException`) proceed through package-targeted App Link, generic HTTPS, and finally the existing WebView path.
+   - **Pre-release evidence:** Unit tests cover App Link success, App Link failure followed by generic HTTPS success, missing browser followed by WebView success, policy-denied launches, WebView load failure, and terminal error handling. Sandbox telemetry validated both App Link fallback success and WebView fallback success.
+   - **Mitigation and response:** Dashboard tiles separately show terminal outcomes, stage-level fallback outcomes, and terminal failures. A successful fallback completes this flight's responsibility. If terminal failures breach the documented threshold, disable the flight to bypass the native-specific routes.
+
+3. **The flight affects an unintended flow**
+   - **Likelihood:** Very low.
+   - **Why it is bounded:** Native routing is reachable only for a URL whose parsed `ismdmurl` query parameter equals `1`, while running in the auth service with WebCP-in-WebView enabled. Brokerless requests, non-WebCP requests, and ordinary external website redirects retain their existing paths.
+   - **Pre-release evidence:** Parser tests accept the marker in any query position and reject `ismdmurl=0`, `notismdmurl=1`, and malformed substring matches. Existing browser-redirect tests verify that an ordinary `browser://` URL opens in the browser and returns `CANCELLED`.
+   - **Mitigation and response:** Unexpected `ProcessDeviceCaRequest` volume is visible on the dashboard and can be inspected at trace level to confirm scope. The ECS kill switch removes native owner detection and handoff without changing the ordinary browser redirect path.
+
+4. **Routing launches the management app more than once**
+   - **Likelihood:** Low, but not directly measurable as a distinct telemetry outcome.
+   - **Why it is bounded:** Each router invocation makes one native launch attempt. On accepted handoff, it stops WebView loading and returns `MDM_FLOW`, which ends the original authorization request. Recovery-path tests verify a single completion callback.
+   - **Pre-release evidence:** Unit tests verify one native launch attempt per routed request. Visible duplicate activity is a manual-validation check because telemetry cannot prove how many activities the user saw.
+   - **Mitigation and response:** Investigate duplicate-launch reports together with same-trace Device CA span volume and lifecycle details; telemetry alone cannot prove that two visible activities opened. Disable the flight in ECS if duplication is reproducible.
+
+## Rollout decision
+
+Keep the flight defaulted to `true`; do not use a percentage-based slow rollout.
+
+- The effective cohort is already narrowly constrained to brokered WebCP Device CA requests with the exact Device CA marker. Ordinary sign-ins and ordinary `browser://` redirects do not enter native routing.
+- A missing owner or expected launch failure degrades through the ordered fallbacks to the pre-existing WebView/browser behavior.
+- Automated tests cover each owner decision, eligibility boundary, fallback stage, terminal failure, and flight-off behavior; manual validation is linked below.
+- Six production dashboard tiles cover volume/completeness, routing success, terminal outcomes, owner detection, fallback stages, and terminal failures.
+- ECS remains an immediate kill switch that restores legacy routing without an app release.
+
+A percentage rollout would reduce the already-low sampled Device CA volume and delay useful confidence without materially reducing risk to ineligible authentication traffic. The release guardrail is therefore default-on monitoring with explicit thresholds and immediate ECS rollback, not progressive exposure.
 
 ## Can we measure failure?
 
