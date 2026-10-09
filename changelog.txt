@@ -2,6 +2,7 @@ vNext
 ----------
 - [PATCH] Gate silent-caller UID/package ownership validation behind the default-off VALIDATE_SILENT_CALLER and ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION paired flights, and add a trusted broker-passthrough validation entry point that preserves redirect and request validation (AB#3751475) (#3291)
 - [MINOR] Add the InstallCertDeepLinkActivity span name for Broker's legacy install-certificate deep-link caller telemetry (AB#3771034) (#3293)
+- [MAJOR] Gate silent-caller UID/package ownership validation behind the default-off VALIDATE_SILENT_CALLER and ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION paired flights, and add process-local trusted broker-passthrough provenance that preserves redirect and request validation. Migration: implementations of IPlatformUtil.isValidCallingApp(String, String, int) must replace throws ClientException with throws ArgumentException, and callers must handle ArgumentException for UID/package ownership failures (AB#3751475) (#3291)
 - [PATCH] Enforce authorize-only Device-CA credential forwarding by withholding original request headers from Device-CA WebView loads by default, with explicit ECS disablement as the rollback path (AB#3766458)
 - [PATCH] Enable WebCP flows in WebView by default for brokerless MSAL requests while preserving the host-provided override used by OneAuth flighting
 
