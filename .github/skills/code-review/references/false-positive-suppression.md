@@ -50,7 +50,7 @@ For example, verify the actual population logic before claiming where `clientDat
 
 ## Calls under locks
 
-Do not flag a call solely because its declared type is an interface/abstract class, its concrete Java method is overridable, or it invokes a callback under a lock. Verify runtime implementations, actual lock/wait edges, concurrent reachability, and invariant access using the [focused concurrency trace](concurrency-threading.md#runtime-target-trace). Do not whitelist `List`/`Map` by name: suppress a bounded nonblocking read only after verifying the concrete implementation and owner guard.
+Do not flag a call solely because its declared type is an interface/abstract class, its concrete Java or Kotlin method is overridable (including Java virtual and Kotlin `open` methods), or it invokes a callback under a lock. Verify runtime implementations, actual lock/wait edges, concurrent reachability, and invariant access using the [focused concurrency trace](concurrency-threading.md#runtime-target-trace). Do not whitelist `List`/`Map` by name: suppress a bounded nonblocking read only after verifying the concrete implementation and owner guard.
 
 Suppress benign same-thread JVM monitor reentry when the invariant is complete, and verified deferred callbacks after release with no caller wait when state, ordering, and lifetime remain valid. These are not exemptions for a callback accessing partial state, a worker awaited under its required lock, or non-reentrant `Mutex` reacquisition. Confinement, immutability, and generated-wrapper suppressions apply only if the changed implementation/callback preserves those boundaries.
 
