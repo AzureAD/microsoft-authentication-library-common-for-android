@@ -46,21 +46,6 @@ The `ProcessDeviceCaRequest` span records the flight gate, detected management o
 
 The original authorization request ends when `MDM_FLOW` is returned and is converted to an `AuthorizationStatus.FAIL` / `device_needs_to_be_managed` error. What happens inside the management app after the accepted handoff, and any later authentication request, are outside this flight's monitoring contract.
 
-Use these attributes as the monitoring contract:
-
-| Signal | Attribute / values | Interpretation |
-|---|---|---|
-| Kill-switch state | `is_native_device_ca_management_app_handoff_enabled` = `true` / `false` | `true` is the normal default-on production state. `false` is expected only after the ECS kill switch is used. Also filter to brokered WebCP requests. |
-| Management owner | `device_ca_management_owner` = `company_portal_profile_owner`, `google_dpc_profile_owner`, `google_dpc_device_owner`, `none`, `device_policy_manager_unavailable`, `not_evaluated` | Shows which package should receive the native handoff and exposes owner-detection gaps. |
-| Terminal routing outcome | `device_ca_routing_outcome` | Primary routing health signal. |
-| Native route success | `native_handoff_succeeded` | Android accepted the targeted native Re-WPJ launch. |
-| Fallback success | `native_handoff_failed_app_link_fallback_succeeded`, `native_handoff_app_link_failed_generic_https_fallback_succeeded`, `webview_load_succeeded`, `browser_launch_succeeded` | The preferred route failed, but an immediate fallback was accepted. A rising fallback share is an early warning even when terminal routing succeeds. |
-| Terminal broker failure | `browser_launch_failed`, `webview_load_failed`, `unexpected_routing_failure`, span status `ERROR`, or an exception | The broker could not hand the user to a recovery surface. |
-| Package App Link result | `device_ca_management_app_link_outcome` = `launch_succeeded`, `launch_failed`, or `handler_not_found` | Diagnoses the first fallback after native handoff failure. |
-| Generic HTTPS result | `device_ca_generic_https_launch_outcome` = `launch_succeeded`, `launch_failed`, or `handler_not_found` | Diagnoses the second fallback. |
-| WebView result | `device_ca_webview_load_outcome` = `load_succeeded` or `load_failed` | Diagnoses the final in-app fallback. |
-| Compatibility parsing | `device_ca_legacy_marker_parser_fallback_used` = `true` | Detects malformed or historical Device CA URLs that require substring parsing. |
-
 ## Monitoring baseline
 
 For the default-on production release:
