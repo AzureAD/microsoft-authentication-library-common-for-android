@@ -155,6 +155,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private ValueCallback<Uri[]> mFileUploadCallback;
 
     /**
+     * Span covering the file chooser request through its terminal result.
+     */
+    private Span mFileUploadSpan;
+
+    /**
      * Launcher for the file chooser activity, registered in {@link #onCreate}.
      * Handles the result of the file selection and passes it back to the WebView.
      */
@@ -200,33 +205,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_FILE_UPLOAD)) {
             mFileChooserLauncher = registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (mFileUploadCallback == null) {
-                            Logger.warn(methodTag, "File upload callback is null, ignoring result.");
-                            return;
-                        }
-                        Uri[] resultUris = null;
-                        if (result.getResultCode() == FragmentActivity.RESULT_OK && result.getData() != null) {
-                            final Intent data = result.getData();
-                            if (data.getClipData() != null) {
-                                // Multiple files selected
-                                final int count = data.getClipData().getItemCount();
-                                resultUris = new Uri[count];
-                                for (int i = 0; i < count; i++) {
-                                    resultUris[i] = data.getClipData().getItemAt(i).getUri();
-                                }
-                            } else if (data.getData() != null) {
-                                // Single file selected
-                                resultUris = new Uri[]{data.getData()};
-                            }
-                            Logger.info(methodTag, "File chooser returned "
-                                    + (resultUris != null ? resultUris.length : 0) + " file(s).");
-                        } else {
-                            Logger.info(methodTag, "File chooser cancelled or returned no data.");
-                        }
-                        mFileUploadCallback.onReceiveValue(resultUris);
-                        mFileUploadCallback = null;
-                    }
+                    result -> handleFileUploadResult(result.getResultCode(), result.getData())
             );
         }
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_LEGACY_FIDO_SECURITY_KEY_LOGIC)
@@ -637,17 +616,25 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             return false;
         }
 
+        // Complete any prior request before replacing its span and callback.
+        if (mFileUploadCallback != null || mFileUploadSpan != null) {
+            final ValueCallback<Uri[]> previousCallback = mFileUploadCallback;
+            mFileUploadCallback = null;
+            completeFileUploadSpan("superseded", StatusCode.ERROR, 0);
+            if (previousCallback != null) {
+                try {
+                    previousCallback.onReceiveValue(null);
+                } catch (final RuntimeException e) {
+                    Logger.error(methodTag, "Failed to cancel superseded file upload callback.", e);
+                }
+            }
+        }
+
         final Span span = OTelUtility.createSpanFromParent(
                 SpanName.WebViewFileUpload.name(), parentSpanContext);
+        mFileUploadSpan = span;
 
         try (final Scope scope = SpanExtension.makeCurrentSpan(span)) {
-            // Cancel any existing callback to avoid a dangling reference.
-            if (mFileUploadCallback != null) {
-                mFileUploadCallback.onReceiveValue(null);
-            }
-            // Clear any previous callback reference before handling the new request.
-            mFileUploadCallback = null;
-
             // Ensure the file chooser launcher is initialized before attempting to launch.
             if (mFileChooserLauncher == null) {
                 Logger.error(methodTag,
@@ -655,7 +642,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         null);
                 // Notify the caller that no file was selected/returned.
                 filePathCallback.onReceiveValue(null);
-                span.setStatus(StatusCode.ERROR);
+                completeFileUploadSpan("launch_error", StatusCode.ERROR, 0);
                 return false;
             }
 
@@ -665,25 +652,95 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             final Intent intent = fileChooserParams.createIntent();
             Logger.info(methodTag, "Launching file chooser for WebView file upload.");
             mFileChooserLauncher.launch(intent);
-            span.setStatus(StatusCode.OK);
             return true;
         } catch (final Exception e) {
             Logger.error(methodTag, "Failed to launch file chooser.", e);
             span.recordException(e);
-            span.setStatus(StatusCode.ERROR);
+            completeFileUploadSpan("launch_error", StatusCode.ERROR, 0);
             if (mFileUploadCallback != null) {
                 mFileUploadCallback.onReceiveValue(null);
                 mFileUploadCallback = null;
             }
             return false;
-        } finally {
-            span.end();
         }
+    }
+
+    @VisibleForTesting
+    void handleFileUploadResult(final int resultCode, @Nullable final Intent data) {
+        final String methodTag = TAG + ":handleFileUploadResult";
+        if (mFileUploadCallback == null) {
+            Logger.warn(methodTag, "File upload callback is null, ignoring result.");
+            completeFileUploadSpan("abandoned", StatusCode.ERROR, 0);
+            return;
+        }
+
+        Uri[] resultUris = null;
+        String result = "cancelled";
+        if (resultCode == FragmentActivity.RESULT_OK) {
+            result = "no_data";
+            if (data != null && data.getClipData() != null) {
+                final int count = data.getClipData().getItemCount();
+                if (count > 0) {
+                    resultUris = new Uri[count];
+                    for (int i = 0; i < count; i++) {
+                        resultUris[i] = data.getClipData().getItemAt(i).getUri();
+                    }
+                    result = "selected";
+                }
+            } else if (data != null && data.getData() != null) {
+                resultUris = new Uri[]{data.getData()};
+                result = "selected";
+            }
+        }
+
+        final int fileCount = resultUris == null ? 0 : resultUris.length;
+        Logger.info(methodTag, "File chooser completed with result " + result
+                + " and file count bucket " + getFileCountBucket(fileCount) + ".");
+
+        final ValueCallback<Uri[]> callback = mFileUploadCallback;
+        mFileUploadCallback = null;
+        completeFileUploadSpan(result, StatusCode.OK, fileCount);
+        callback.onReceiveValue(resultUris);
+    }
+
+    private void completeFileUploadSpan(@NonNull final String result,
+                                        @NonNull final StatusCode statusCode,
+                                        final int fileCount) {
+        if (mFileUploadSpan == null) {
+            return;
+        }
+
+        mFileUploadSpan.setAttribute(AttributeName.webview_file_upload_result.name(), result);
+        mFileUploadSpan.setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(),
+                getFileCountBucket(fileCount));
+        mFileUploadSpan.setStatus(statusCode);
+        mFileUploadSpan.end();
+        mFileUploadSpan = null;
+    }
+
+    @NonNull
+    private String getFileCountBucket(final int fileCount) {
+        if (fileCount <= 0) {
+            return "0";
+        }
+        if (fileCount == 1) {
+            return "1";
+        }
+        if (fileCount <= 5) {
+            return "2-5";
+        }
+        return "6+";
     }
 
     @VisibleForTesting
     void setFileUploadCallback(@Nullable final ValueCallback<Uri[]> callback) {
         mFileUploadCallback = callback;
+    }
+
+    @VisibleForTesting
+    void setFileUploadSpan(@Nullable final Span span) {
+        mFileUploadSpan = span;
     }
 
     @VisibleForTesting
@@ -749,6 +806,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             mFileUploadCallback.onReceiveValue(null);
             mFileUploadCallback = null;
         }
+        completeFileUploadSpan("abandoned", StatusCode.ERROR, 0);
         if (mFileChooserLauncher != null) {
             mFileChooserLauncher.unregister();
         }
