@@ -150,7 +150,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     }
 
     /**
-     * Dismisses Outlook's post-registration MFA snackbar, if present.
+     * Handles Outlook's post-registration MFA snackbar and closes its sign-in setup drawer, if present.
      */
     private void dismissSetupNewSignInSnackbarIfPresent() {
         final UiObject setupNewSignInSnackbar = UiAutomatorUtils.obtainUiObjectWithExactText(
@@ -175,8 +175,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         try {
             actionButton.click();
-            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-                    .waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
+            // OK opens sign-in setup; Back returns to the Add another account screen.
+            UiAutomatorUtils.pressBack();
+            device.waitForIdle(CommonUtils.FIND_UI_ELEMENT_TIMEOUT_SHORT);
         } catch (final UiObjectNotFoundException exception) {
             Logger.i(TAG, "Outlook setup new sign-in snackbar disappeared before it could be dismissed.");
         }
