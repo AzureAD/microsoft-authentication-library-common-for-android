@@ -94,6 +94,9 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
     @Override
     public void validate() throws ArgumentException, ClientException {
+        // The paired flights enable original-caller ownership validation for direct requests.
+        // For authenticated broker passthrough, the forwarding broker owns that check, so the active
+        // broker skips only the duplicate UID/package lookup; redirect and all other validation still run.
         final boolean validateCallerUidOwnership =
                 SilentCallerValidationFlights.isCompleteSolutionEnabled()
                         && !trustedBrokerPassthrough;
