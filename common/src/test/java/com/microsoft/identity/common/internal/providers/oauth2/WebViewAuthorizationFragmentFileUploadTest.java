@@ -33,6 +33,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.app.Activity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.webkit.ValueCallback;
@@ -44,12 +46,16 @@ import com.microsoft.identity.common.internal.mocks.MockCommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.CommonFlight;
 import com.microsoft.identity.common.java.flighting.CommonFlightsManager;
 import com.microsoft.identity.common.java.flighting.IFlightsProvider;
+import com.microsoft.identity.common.java.opentelemetry.AttributeName;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 
 /**
  * Tests for the WebView file upload feature in {@link WebViewAuthorizationFragment}.
@@ -151,7 +157,9 @@ public class WebViewAuthorizationFragmentFileUploadTest {
     @Test
     public void testHandleFileUploadRequest_cancelsExistingCallback() {
         final ValueCallback<Uri[]> existingCallback = mockFilePathCallback();
+        final Span existingSpan = mock(Span.class);
         mFragment.setFileUploadCallback(existingCallback);
+        mFragment.setFileUploadSpan(existingSpan);
 
         final ValueCallback<Uri[]> newCallback = mockFilePathCallback();
         final WebChromeClient.FileChooserParams params = mockFileChooserParams();
@@ -159,6 +167,12 @@ public class WebViewAuthorizationFragmentFileUploadTest {
         mFragment.handleFileUploadRequest(newCallback, params, null);
 
         verify(existingCallback).onReceiveValue(null);
+        verify(existingSpan).setAttribute(
+                AttributeName.webview_file_upload_result.name(), "superseded");
+        verify(existingSpan).setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(), "0");
+        verify(existingSpan).setStatus(StatusCode.ERROR);
+        verify(existingSpan).end();
     }
 
     // -----------------------------------------------------------------------
@@ -213,5 +227,82 @@ public class WebViewAuthorizationFragmentFileUploadTest {
         mFragment.handleFileUploadRequest(callback, params, null);
 
         assertNull(mFragment.getFileUploadCallback());
+    }
+
+    @Test
+    public void testHandleFileUploadResult_singleFile_recordsSelected() {
+        final ValueCallback<Uri[]> callback = mockFilePathCallback();
+        final Span span = mock(Span.class);
+        final Intent data = new Intent().setData(Uri.parse("content://picker/file"));
+        mFragment.setFileUploadCallback(callback);
+        mFragment.setFileUploadSpan(span);
+
+        mFragment.handleFileUploadResult(Activity.RESULT_OK, data);
+
+        verify(span).setAttribute(AttributeName.webview_file_upload_result.name(), "selected");
+        verify(span).setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(), "1");
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+        verify(callback).onReceiveValue(any(Uri[].class));
+        assertNull(mFragment.getFileUploadCallback());
+    }
+
+    @Test
+    public void testHandleFileUploadResult_multipleFiles_recordsBucketedCount() {
+        final ValueCallback<Uri[]> callback = mockFilePathCallback();
+        final Span span = mock(Span.class);
+        final Intent data = new Intent();
+        final ClipData clipData = new ClipData(
+                "files",
+                new String[]{"text/uri-list"},
+                new ClipData.Item(Uri.parse("content://picker/1")));
+        clipData.addItem(new ClipData.Item(Uri.parse("content://picker/2")));
+        clipData.addItem(new ClipData.Item(Uri.parse("content://picker/3")));
+        data.setClipData(clipData);
+        mFragment.setFileUploadCallback(callback);
+        mFragment.setFileUploadSpan(span);
+
+        mFragment.handleFileUploadResult(Activity.RESULT_OK, data);
+
+        verify(span).setAttribute(AttributeName.webview_file_upload_result.name(), "selected");
+        verify(span).setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(), "2-5");
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+    }
+
+    @Test
+    public void testHandleFileUploadResult_cancelled_recordsNormalCompletion() {
+        final ValueCallback<Uri[]> callback = mockFilePathCallback();
+        final Span span = mock(Span.class);
+        mFragment.setFileUploadCallback(callback);
+        mFragment.setFileUploadSpan(span);
+
+        mFragment.handleFileUploadResult(Activity.RESULT_CANCELED, null);
+
+        verify(span).setAttribute(AttributeName.webview_file_upload_result.name(), "cancelled");
+        verify(span).setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(), "0");
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+        verify(callback).onReceiveValue(null);
+    }
+
+    @Test
+    public void testHandleFileUploadResult_okWithoutData_recordsNoData() {
+        final ValueCallback<Uri[]> callback = mockFilePathCallback();
+        final Span span = mock(Span.class);
+        mFragment.setFileUploadCallback(callback);
+        mFragment.setFileUploadSpan(span);
+
+        mFragment.handleFileUploadResult(Activity.RESULT_OK, null);
+
+        verify(span).setAttribute(AttributeName.webview_file_upload_result.name(), "no_data");
+        verify(span).setAttribute(
+                AttributeName.webview_file_upload_file_count_bucket.name(), "0");
+        verify(span).setStatus(StatusCode.OK);
+        verify(span).end();
+        verify(callback).onReceiveValue(null);
     }
 }
