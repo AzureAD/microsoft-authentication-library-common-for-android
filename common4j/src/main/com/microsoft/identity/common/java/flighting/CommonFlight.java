@@ -198,18 +198,17 @@ public enum CommonFlight implements IFlightConfig {
     DISABLE_WEB_APPS_API("DisableWebAppsApi", false),
 
     /**
-     * Flight controlling silent-caller ownership validation (AB#3687466). This flight defaults off and
-     * must be enabled together with {@link #ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION} to enforce
-     * ownership for direct silent broker token requests.
+     * Flight controlling silent-caller ownership validation (AB#3687466). This manual-test branch
+     * defaults the flight on together with {@link #ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION}.
      */
-    VALIDATE_SILENT_CALLER("ValidateSilentCaller", false),
+    VALIDATE_SILENT_CALLER("ValidateSilentCaller", true),
 
     /**
      * Enables the complete silent-caller validation solution when
-     * {@link #VALIDATE_SILENT_CALLER} is also enabled. Defaults off until the coordinated Common and
-     * Broker implementation is explicitly enabled.
+     * {@link #VALIDATE_SILENT_CALLER} is also enabled. This manual-test branch defaults both flights
+     * on for end-to-end validation.
      */
-    ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION("EnableSilentCallerPassthroughValidation", false),
+    ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION("EnableSilentCallerPassthroughValidation", true),
 
     /**
      * Flight to control whether or not to use in memory cache for accounts and credentials.

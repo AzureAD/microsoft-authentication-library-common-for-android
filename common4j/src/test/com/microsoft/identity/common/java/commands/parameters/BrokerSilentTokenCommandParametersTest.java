@@ -81,8 +81,8 @@ public class BrokerSilentTokenCommandParametersTest {
      */
     @Test
     public void validate_flightMatrix_enablesOwnershipOnlyWhenBothFlightsAreOn() throws Exception {
-        assertEquals(Boolean.FALSE, CommonFlight.VALIDATE_SILENT_CALLER.getDefaultValue());
-        assertEquals(Boolean.FALSE, CommonFlight.ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION.getDefaultValue());
+        assertEquals(Boolean.TRUE, CommonFlight.VALIDATE_SILENT_CALLER.getDefaultValue());
+        assertEquals(Boolean.TRUE, CommonFlight.ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION.getDefaultValue());
         for (final boolean validateSilentCaller : new boolean[]{false, true}) {
             for (final boolean passthroughValidation : new boolean[]{false, true}) {
                 setFlights(validateSilentCaller, passthroughValidation);
