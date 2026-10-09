@@ -68,6 +68,7 @@ public enum SpanName {
     SwitchBrowserProcess,
     WrappedKeyAlgorithmIdentifier,
     ProcessWebCpRedirects,
+    ProcessDeviceCaRequest,
     ProvisionResourceAccount,
     ProcessWebsiteRequest,
     GetAllSsoTokens,
@@ -84,6 +85,11 @@ public enum SpanName {
      * covers the DRS request that installs the certificate rather than the activity that hosts it.
      */
     InstallCertActivity,
+
+    /**
+     * Span name for caller attribution at the legacy install-certificate deep-link route.
+     */
+    InstallCertDeepLinkActivity,
 
     /**
      * Span name for fetching initial ECS flight configurations.
