@@ -52,7 +52,6 @@ import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -80,10 +79,10 @@ public class BrokerSilentTokenCommandParametersTest {
     /**
      * Only the combination of both flights enables caller UID/package ownership validation.
      */
-    @Ignore("Temporarily disabled while silent caller validation is forced on for end-to-end testing.")
     @Test
     public void validate_flightMatrix_enablesOwnershipOnlyWhenBothFlightsAreOn() throws Exception {
-        assertEquals(Boolean.TRUE, CommonFlight.ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION.getDefaultValue());
+        assertEquals(Boolean.FALSE, CommonFlight.VALIDATE_SILENT_CALLER.getDefaultValue());
+        assertEquals(Boolean.FALSE, CommonFlight.ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION.getDefaultValue());
         for (final boolean validateSilentCaller : new boolean[]{false, true}) {
             for (final boolean passthroughValidation : new boolean[]{false, true}) {
                 setFlights(validateSilentCaller, passthroughValidation);

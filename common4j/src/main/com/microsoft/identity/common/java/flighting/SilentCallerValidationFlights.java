@@ -33,11 +33,17 @@ public final class SilentCallerValidationFlights {
     /**
      * Returns whether silent-caller ownership validation is enabled.
      *
-     * <p>Temporarily forced on for end-to-end validation.
+     * <p>The complete solution is enabled only when both silent-caller validation flights are
+     * enabled.
      *
-     * @return {@code true} while the end-to-end validation override is active.
+     * @return {@code true} when both silent-caller validation flights are enabled.
      */
     public static boolean isCompleteSolutionEnabled() {
-        return true;
+        final IFlightsProvider flightsProvider =
+                CommonFlightsManager.INSTANCE.getFlightsProvider();
+
+        return flightsProvider.isFlightEnabled(CommonFlight.VALIDATE_SILENT_CALLER)
+                && flightsProvider.isFlightEnabled(
+                        CommonFlight.ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION);
     }
 }

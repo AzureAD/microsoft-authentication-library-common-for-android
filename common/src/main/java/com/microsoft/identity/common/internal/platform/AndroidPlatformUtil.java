@@ -130,7 +130,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public boolean isValidCallingApp(@NonNull String redirectUri, @NonNull String packageName) {
         final String methodTag = TAG + ":isValidCallingApp";
-        Logger.info(methodTag, "Inside isValidCallingApp");
         if (BuildConfig.bypassRedirectUriCheck || isValidHubRedirectURIForNAATests(redirectUri)) {
             Logger.warn(methodTag, "Bypassing RedirectUri Check. This should not be enabled in PROD. "+ redirectUri);
             return true;
@@ -194,7 +193,6 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     private void validateCallerOwnedByUid(final int callingUid,
                                           @NonNull final String callerPackageName) throws ArgumentException {
         final String methodTag = TAG + ":validateCallerOwnedByUid";
-        Logger.info(methodTag, "Inside validateCallerOwnedByUid");
         final String[] uidPackages = mContext.getPackageManager().getPackagesForUid(callingUid);
         final List<String> ownedPackages =
                 uidPackages == null ? Collections.emptyList() : Arrays.asList(uidPackages);

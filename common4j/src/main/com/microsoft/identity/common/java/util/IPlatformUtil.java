@@ -88,8 +88,8 @@ public interface IPlatformUtil {
      *
      * <p>The default implementation performs <em>no</em> uid check and simply delegates to
      * {@link #isValidCallingApp(String, String)} — appropriate for platforms with no per-app uid model
-     * (e.g. Linux) and for test doubles. Also used for authenticated trusted-broker passthrough after
-     * the immediate forwarding broker has been verified. Otherwise wired to the silent broker token path when
+     * (e.g. Linux) and for test doubles. The caller-validating overload is wired to the silent broker
+     * token path when
      * {@link com.microsoft.identity.common.java.flighting.SilentCallerValidationFlights#isCompleteSolutionEnabled()}
      * returns {@code true}, which requires both {@code VALIDATE_SILENT_CALLER} and
      * {@code ENABLE_SILENT_CALLER_PASSTHROUGH_VALIDATION}.
