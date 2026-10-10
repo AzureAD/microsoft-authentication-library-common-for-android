@@ -1531,21 +1531,6 @@ public final class AuthenticationConstants {
         public static final String WEBVIEW_TARGET_BLANK_ROUTE_NO_USER_GESTURE = "no_user_gesture";
 
         /**
-         * WebView routing value when a target URL without the external-browser marker is loaded inline.
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_INLINE = "inline";
-
-        /**
-         * WebView routing value when a marked target URL is delegated to the system browser.
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_EXTERNAL_BROWSER = "external_browser";
-
-        /**
-         * WebView routing value when a marked target URL cannot be delegated to the system browser.
-         */
-        public static final String WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_LAUNCH_FAILED = "browser_launch_failed";
-
-        /**
          * Prefix in the redirect for PlayStore.
          */
         public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";

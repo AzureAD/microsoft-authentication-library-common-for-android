@@ -230,7 +230,7 @@ public enum CommonFlight implements IFlightConfig {
     
     /**
      * Flight to enable multiple window support in WebView, which allows target="_blank" links
-     * to be intercepted via onCreateWindow. Marked destinations can then be opened externally.
+     * to be intercepted via onCreateWindow and opened in an external browser.
      */
     ENABLE_WEBVIEW_MULTIPLE_WINDOWS("EnableWebViewMultipleWindows", true),
 

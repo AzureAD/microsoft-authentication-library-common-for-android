@@ -68,7 +68,6 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.fido.LegacyFido2ApiObject;
 import com.microsoft.identity.common.internal.fido.LegacyFidoActivityResultContract;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.BrokerWebViewExternalBrowserRedirect;
 import com.microsoft.identity.common.internal.ui.webview.ISendResultCallback;
 import com.microsoft.identity.common.internal.ui.webview.IUrlLoadTracker;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
@@ -368,13 +367,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             mWebView.evaluateJavascript(javascriptToExecute[0], null);
                         }
 
-                        // Dynamically toggle multiple-windows support so that target="_blank"
-                        // interception is active ONLY on the TLR start page. On all other
-                        // pages the WebView behaves exactly as before.
-                        if (CommonFlightsManager.INSTANCE.getFlightsProvider()
-                                .isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_MULTIPLE_WINDOWS)) {
-                            mWebView.getSettings().setSupportMultipleWindows(isTlrUrl(url));
-                        }
                     }
                 },
                 mRedirectUri,
@@ -432,6 +424,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         webSettings.setUserAgentString(
                 userAgent + AuthenticationConstants.Broker.CLIENT_TLS_NOT_SUPPORTED);
         webSettings.setJavaScriptEnabled(true);
+        webSettings.setSupportMultipleWindows(false);
 
         // Security settings to prevent unauthorized access - controlled by flight
         if (CommonFlightsManager.INSTANCE.getFlightsProvider().isFlightEnabled(CommonFlight.ENABLE_WEBVIEW_SECURITY_SETTINGS)) {
@@ -541,8 +534,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     /**
      * Handles the URL intercepted from a target=_blank navigation (onCreateWindow).
-     * Opens a marked HTTPS destination in an external browser and otherwise preserves the existing
-     * inline WebView behavior.
+     * Routes the URL based on whether the main WebView is currently on a TLR page:
+     * - TLR page: opens the URL in an external browser.
+     * - Non-TLR page: loads the URL inline in the main WebView.
      *
      * @param mainWebView        The main authentication WebView.
      * @param interceptorWebView The temporary interceptor WebView (will be destroyed after handling).
@@ -559,6 +553,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodTag = TAG + ":handleInterceptedUrlFromNewWindow";
         try {
             final String targetUrl = request.getUrl().toString();
+            final String currentPageUrl = mainWebView.getUrl();
 
             if (targetUrl == null) {
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NULL_URL);
@@ -573,17 +568,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 // Non-SSL URL: refuse to open, matching AzureActiveDirectoryWebViewClient behavior.
                 span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_SSL);
                 Logger.error(methodTag, "onCreateWindow: URL is not SSL protected, refusing to open.", null);
-            } else if (!BrokerWebViewExternalBrowserRedirect.isMarked(targetUrl)) {
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_INLINE);
-                Logger.info(methodTag, "onCreateWindow: external-browser marker is absent, loading URL inline.");
+            } else if (!isTlrUrl(currentPageUrl)) {
+                // Non-TLR page: load inline, same as WebView default behavior.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_NON_TLR);
+                Logger.warn(methodTag, "onCreateWindow: non-TLR page, loading URL inline as fallback.");
                 mainWebView.loadUrl(targetUrl);
-            } else if (BrokerWebViewExternalBrowserRedirect.launch(mainWebView.getContext(), targetUrl)) {
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_EXTERNAL_BROWSER);
-                Logger.info(methodTag, "onCreateWindow: delegating marked HTTPS URL to system browser.");
             } else {
-                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_BROWSER_LAUNCH_FAILED);
-                Logger.warn(methodTag, "onCreateWindow: browser launch failed, loading URL inline as recovery.");
-                mainWebView.loadUrl(targetUrl);
+                // TLR page: delegate to system browser so user can view terms externally.
+                span.setAttribute(AttributeName.target_blank_navigation_route.name(), AuthenticationConstants.Broker.WEBVIEW_TARGET_BLANK_ROUTE_TLR);
+                Logger.info(methodTag, "onCreateWindow: TLR page, delegating URL to system browser.");
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl));
+                mainWebView.getContext().startActivity(browserIntent);
             }
             span.setStatus(StatusCode.OK);
         } catch (final Exception e) {
