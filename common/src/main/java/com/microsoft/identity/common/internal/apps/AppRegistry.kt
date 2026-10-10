@@ -145,6 +145,30 @@ object AppRegistry {
         signingCertificateThumbprint = "k0ZSm/+bEPZAq6mXujRXqP3B6+Zb2yXCiqwuvtCooLfKS91zvHCf+D9FFUYIkJyIKmn1onyWbwRXHEWfS5SaHQ=="
     )
 
+    val BOOT_MENU_PROD = App(
+        nickName = "Microsoft Boot Menu (prod)",
+        packageName = "com.microsoft.apps.bootmenu",
+        signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+    )
+
+    val BOOT_MENU_DEBUG = App(
+        nickName = "Microsoft Boot Menu (debug)",
+        packageName = "com.microsoft.apps.bootmenu",
+        signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+    )
+
+    val MDEP_ZTE_SERVICE_PROD = App(
+        nickName = "Microsoft MDEP ZTE Service (prod)",
+        packageName = "com.microsoft.mdep.zte.service",
+        signingCertificateThumbprint = "5uz4ymmE6MKGJGZl9lZSwFVXEUe+v2JK5S7NalKLcw4EK645krf3c/GXt99A8sJLWedNHfQA+l+BZMJIj9Uy7A=="
+    )
+
+    val MDEP_ZTE_SERVICE_DEBUG = App(
+        nickName = "Microsoft MDEP ZTE Service (debug)",
+        packageName = "com.microsoft.mdep.zte.service",
+        signingCertificateThumbprint = "tc2+6Lf/ODCxvB9e5RRIe2svcpSQ/avZwJgaNMwRUtm/HTFVFDA9q8ZDGOQgJmACJbzpwBiLxgTpSW7sRfkvPA=="
+    )
+
     @JvmField
     val SSO_TOKEN_AUTHORIZED_APPS = buildSet {
         add(EDGE)
@@ -160,11 +184,15 @@ object AppRegistry {
     val GET_DEVICE_TOKEN_AUTHORIZED_APPS = buildSet {
         add(INTUNE_AOSP_AGENT_PROD)
         add(MDE_APP_PROD)
+        add(BOOT_MENU_PROD)
+        add(MDEP_ZTE_SERVICE_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
             add(BrokerData.debugMicrosoftAuthenticator)
             add(MDE_APP_DEBUG)
+            add(BOOT_MENU_DEBUG)
+            add(MDEP_ZTE_SERVICE_DEBUG)
         }
     }
 
@@ -176,6 +204,8 @@ object AppRegistry {
         add(INTUNE_AOSP_AGENT_PROD)
         add(TEAMS_IPPHONE_PROD)
         add(MDE_APP_PROD)
+        add(BOOT_MENU_PROD)
+        add(MDEP_ZTE_SERVICE_PROD)
         if (BrokerData.getShouldTrustDebugBrokers()) {
             add(INTUNE_AOSP_AGENT_DEBUG)
             add(BrokerData.debugBrokerHost)
@@ -184,6 +214,8 @@ object AppRegistry {
             add(INTUNE_CE_DEBUG)
             add(TEAMS_IPPHONE_DEBUG)
             add(MDE_APP_DEBUG)
+            add(BOOT_MENU_DEBUG)
+            add(MDEP_ZTE_SERVICE_DEBUG)
         }
     }
 
